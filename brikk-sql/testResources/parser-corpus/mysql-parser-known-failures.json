@@ -1,17 +1,4 @@
 {
  "sqlglot_version": "v30.12.0-44-g93d16591",
- "cases": [
-  {
-   "sql": "CREATE TRIGGER check_age BEFORE INSERT ON users FOR EACH ROW BEGIN SET NEW.created_at = NOW() END",
-   "reason": "CREATE TRIGGER raise-gated in base parser (trigger bodies / control-flow statements not ported); Python falls back to Command: CREATE TRIGGER is not supported yet. Line 1, Col: 24."
-  },
-  {
-   "sql": "CREATE TRIGGER audit_update AFTER UPDATE ON accounts FOR EACH ROW BEGIN INSERT INTO audit_log (user_id, old_balance, new_balance, changed_at) VALUES (OLD.user_id, OLD.balance, NEW.balance, NOW()) END",
-   "reason": "CREATE TRIGGER raise-gated in base parser (trigger bodies / control-flow statements not ported); Python falls back to Command: CREATE TRIGGER is not supported yet. Line 1, Col: 27."
-  },
-  {
-   "sql": "CREATE TRIGGER track_deletes BEFORE DELETE ON orders FOR EACH ROW BEGIN UPDATE statistics SET delete_count = delete_count + 1 WHERE table_name = 'orders' END",
-   "reason": "CREATE TRIGGER raise-gated in base parser (trigger bodies / control-flow statements not ported); Python falls back to Command: CREATE TRIGGER is not supported yet. Line 1, Col: 28."
-  }
- ]
+ "cases": []
 }
