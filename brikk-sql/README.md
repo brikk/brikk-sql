@@ -8,7 +8,16 @@ of being desugared away at parse time.
 Parity with sqlglot is enforced by differential test gates against the pinned upstream
 (`v30.17.0-93-gdcc36544a`): token streams, AST structure (serde-compared), and generated SQL
 are verified byte-for-byte against the Python implementation across thousands of corpus
-cases. See `docs/parsing-research-and-plan.md` at the repo root for architecture and status.
+cases. See [parsing research and plan](../../docs/parsing-research-and-plan.md) for
+architecture and status. This compares generated output with the Python oracle,
+not with the author's original SQL text.
+
+This module now lives at `brikk-sql/brikk-sql/`, alongside
+[metadata](../brikk-sql-metadata/), [verification](../brikk-sql-verify/), and
+[real-engine oracles](../brikk-sql-oracle/). Its Toolchain name remains `brikk-sql`
+and its Maven coordinate remains `dev.brikk.house:brikk-sql-jvm`. The Kotlin
+runtime/compiler consumer lives in [Brikk Engine](../../brikk-engine/README.md);
+Kotlin packages and annotations have not changed.
 
 Targets: JVM, Linux (x64/arm64), macOS (arm64), Windows (mingw x64). Pure common Kotlin —
 no platform-specific code.
@@ -31,9 +40,26 @@ ast.sql(dialect = "postgres", pretty = true)
 transpile("SELECT `col` FROM t LIMIT 5, 10", read = "mysql", write = "postgres")
 ```
 
-Available dialects (registry: `Dialects.forName`): `""`/`"sqlglot"` (base), `"mysql"`,
-`"doris"`, `"presto"`, `"trino"`, `"duckdb"`, `"postgres"`/`"postgresql"`. Unknown names
-throw; `Dialects.forNameOrNull` probes availability.
+See the [dialect list](../../README.md#dialects) for supported names and aliases.
+Unknown names throw in `Dialects.forName`; `Dialects.forNameOrNull` probes availability.
+
+## SQL preservation requirement
+
+Parsing for validation, shapes, or lineage does not imply regenerating executable
+SQL. Brikk Engine must leave same-dialect native SQL as written when no composition
+or transpilation is requested. Binding may change only parameter representation;
+native relation inputs permit only necessary slot/CTE changes. Pipe lowering may
+change required structure, but must keep unaffected native SQL as close to source
+as possible, including important hints, comments, and statement semantics.
+Cross-dialect translation is explicit. Unchanged SQL must not go through automatic
+optimization or canonicalization.
+
+This is a requirement, not a source-preserving parse/generate API claim. The AST
+generator regenerates SQL, and `Rel.render()` currently uses that path even for a
+single unchanged native query. The [SQL preservation policy](../../brikk-engine/README.md#sql-preservation)
+requires output-diff inspection as well as semantic tests. Pipe lowering is the
+largest migration risk: fix failures here with synthetic regressions rather than
+keeping permanent copied handwritten SQL in the consumer as a workaround.
 
 ## Working with the AST
 
@@ -131,7 +157,9 @@ standard.sql(dialect = "doris")                // ...in any dialect
 ast.sql()                                      // FROM Produce |> WHERE item != :varthing |> ...
 ```
 
-Round-trip guarantee: generated pipe SQL re-parses to the identical tree.
+Round-trip guarantee: generated pipe SQL re-parses to the identical tree. This is
+structural equality, not preservation of the original text, formatting, comments,
+or hints. It does not establish the SQL preservation requirement above.
 
 ### Lightweight stage splitting (no parser)
 
@@ -172,9 +200,9 @@ The full sqlglot semantic pipeline is ported and oracle-gated:
   `describe()`/`contract()` serializable payloads.
 - **Source mapping** — AST nodes carry original source positions; `transpileTo(target,
   trackSourceMap = true)` maps errors in *generated* SQL back to the original text.
-- **Native-grammar verification** — the `brikk-sql-verify` module (JVM) checks emitted
+- **Native-grammar verification** — the [brikk-sql-verify](../brikk-sql-verify/) module (JVM) checks emitted
   SQL against the target engine's real parser (Doris FE, Trino, DuckDB embedded).
-- **Function catalogs + semantics** — the `brikk-sql-metadata` module (featherweight,
+- **Function catalogs + semantics** — the [brikk-sql-metadata](../brikk-sql-metadata/) module (featherweight,
   ~100KB) ships each engine's registered functions with signatures where extractable,
   per-function `SemanticProfile`s (null propagation from Doris's own source; DuckDB
   parameter names on 96% of overloads), grammar-builtin allowlists for names the
@@ -235,7 +263,7 @@ there is no silent misparsing.
   enforced two-directionally (a stale ledger entry fails the build). Remaining entries
   are few and documented (e.g. UPDATE ... FROM rewrites, `explode_projection_to_unnest`).
 - Deliberate divergences from upstream sqlglot are registered in
-  `docs/brikk-extensions.md` (18 entries, most upstream-PR candidates).
+  [brikk extensions](../../docs/brikk-extensions.md).
   Verifier-backed entries there are intentional and must not be copied into
   actionable TODO inventories or "fixed" toward SQLGlot unless that policy is
   reversed.
@@ -248,4 +276,4 @@ test corpus derive from sqlglot; ported functions carry `// sqlglot: <symbol>` p
 comments referencing their Python counterparts, and generated tables are pinned to a
 specific upstream version. Pipe-syntax semantics follow the
 [GoogleSQL pipe query syntax](https://cloud.google.com/bigquery/docs/reference/standard-sql/pipe-syntax)
-specification. See `ATTRIBUTIONS.md` at the repository root for license texts.
+specification. See [ATTRIBUTIONS.md](../../ATTRIBUTIONS.md) for license texts.

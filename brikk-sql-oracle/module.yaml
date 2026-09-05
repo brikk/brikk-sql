@@ -9,7 +9,7 @@ product: jvm/lib
 description: High-fidelity SQL verification oracles (real engines) — embedded PostgreSQL + chDB ClickHouse, plus the JVM Trino/Doris/DuckDB parsers re-exposed as a full oracle set.
 
 apply:
-  - ../publish.module-template.yaml
+  - ../../publish.module-template.yaml
 
 dependencies:
   # Re-exposes the SqlVerifier interface + VerifyResult + the lightweight fidelity verifiers
@@ -17,7 +17,7 @@ dependencies:
   # consumers of brikk-sql-oracle see the interface and those verifiers transitively.
   - ../brikk-sql-verify: exported
   # The in-process chDB FFM binding, for the ClickHouse oracle.
-  - ../brikk-chdb
+  - ../../brikk-chdb/brikk-chdb
   # Embedded PostgreSQL for PostgresVerifier. Postgres has no parse-only wire API and no
   # mature JVM libpg_query binding, so verification is done by a REAL PG engine and
   # SQLSTATE discrimination. Zonky ships PG as a NATIVE binary (PostgreSQL 14.22) launched

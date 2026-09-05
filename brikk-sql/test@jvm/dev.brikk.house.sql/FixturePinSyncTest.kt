@@ -35,7 +35,7 @@ class FixturePinSyncTest {
     private val json = Json { ignoreUnknownKeys = true }
 
     private fun testResourcesRoot(): File =
-        listOf("brikk-sql/testResources", "testResources").map(::File).firstOrNull { it.isDirectory }
+        listOf("brikk-sql/brikk-sql/testResources", "testResources").map(::File).firstOrNull { it.isDirectory }
             ?: fail("cannot locate testResources/ from ${File(".").absolutePath}")
 
     private fun isOracleDerived(rel: String): Boolean =

@@ -10,7 +10,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "177 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/doris-clickhouse-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/doris-clickhouse-hazards.json",
         coveredConcepts = scopeKeys0(),
     ),
     ("clickhouse" to "doris") to SemanticPairScope(
@@ -19,7 +19,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "177 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/doris-clickhouse-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/doris-clickhouse-hazards.json",
         coveredConcepts = scopeKeys1(),
     ),
     ("doris" to "starrocks") to SemanticPairScope(
@@ -28,7 +28,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "4.1.3 live all-in-one oracle; repository Doris catalog pin",
         targetCatalog = "4.1.4 SHOW FULL BUILTIN FUNCTIONS: 820 functions / 6242 overloads",
         scope = "92 behavior vectors yielding 82 named concepts; partial against the 820-function StarRocks catalog; unlisted functions are unprobed",
-        evidence = "brikk-sql/testResources/semantics/doris-starrocks-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/doris-starrocks-hazards.json",
         coveredConcepts = scopeKeys2(),
     ),
     ("starrocks" to "doris") to SemanticPairScope(
@@ -37,7 +37,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "4.1.4 SHOW FULL BUILTIN FUNCTIONS: 820 functions / 6242 overloads",
         targetCatalog = "4.1.3 live all-in-one oracle; repository Doris catalog pin",
         scope = "92 behavior vectors yielding 82 named concepts; partial against the 820-function StarRocks catalog; unlisted functions are unprobed",
-        evidence = "brikk-sql/testResources/semantics/doris-starrocks-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/doris-starrocks-hazards.json",
         coveredConcepts = scopeKeys3(),
     ),
     ("duckdb" to "clickhouse") to SemanticPairScope(
@@ -46,7 +46,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "213 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/duckdb-clickhouse-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/duckdb-clickhouse-hazards.json",
         coveredConcepts = scopeKeys4(),
     ),
     ("clickhouse" to "duckdb") to SemanticPairScope(
@@ -55,7 +55,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "213 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/duckdb-clickhouse-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/duckdb-clickhouse-hazards.json",
         coveredConcepts = scopeKeys5(),
     ),
     ("duckdb" to "doris") to SemanticPairScope(
@@ -64,7 +64,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "258 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/duckdb-doris-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/duckdb-doris-hazards.json",
         coveredConcepts = scopeKeys6(),
     ),
     ("doris" to "duckdb") to SemanticPairScope(
@@ -73,7 +73,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "258 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/duckdb-doris-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/duckdb-doris-hazards.json",
         coveredConcepts = scopeKeys7(),
     ),
     ("trino" to "clickhouse") to SemanticPairScope(
@@ -82,7 +82,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "134 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/trino-clickhouse-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/trino-clickhouse-hazards.json",
         coveredConcepts = scopeKeys8(),
     ),
     ("clickhouse" to "trino") to SemanticPairScope(
@@ -91,7 +91,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "134 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/trino-clickhouse-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/trino-clickhouse-hazards.json",
         coveredConcepts = scopeKeys9(),
     ),
     ("trino" to "doris") to SemanticPairScope(
@@ -100,7 +100,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "216 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/trino-doris-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/trino-doris-hazards.json",
         coveredConcepts = scopeKeys10(),
     ),
     ("doris" to "trino") to SemanticPairScope(
@@ -109,7 +109,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "216 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/trino-doris-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/trino-doris-hazards.json",
         coveredConcepts = scopeKeys11(),
     ),
     ("trino" to "duckdb") to SemanticPairScope(
@@ -118,7 +118,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "246 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/trino-duckdb-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/trino-duckdb-hazards.json",
         coveredConcepts = scopeKeys12(),
     ),
     ("duckdb" to "trino") to SemanticPairScope(
@@ -127,7 +127,7 @@ internal val GENERATED_SEMANTIC_PAIR_SCOPES: Map<Pair<String, String>, SemanticP
         sourceCatalog = "unversioned hazard source",
         targetCatalog = "unversioned hazard source",
         scope = "246 evidence entries; no closed-world completeness declaration",
-        evidence = "brikk-sql/testResources/semantics/trino-duckdb-hazards.json",
+        evidence = "brikk-sql/brikk-sql/testResources/semantics/trino-duckdb-hazards.json",
         coveredConcepts = scopeKeys13(),
     ),
 )

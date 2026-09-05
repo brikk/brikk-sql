@@ -24,7 +24,7 @@ class SemanticCoverageSyncTest {
 
     private fun hazardPairFiles(): List<Pair<String, String>> {
         val dir = File("testResources/semantics").takeIf { it.isDirectory }
-            ?: File("brikk-sql/testResources/semantics")
+            ?: File("brikk-sql/brikk-sql/testResources/semantics")
         return dir.listFiles { f -> f.name.endsWith("-hazards.json") }!!
             .map { it.name.removeSuffix("-hazards.json") }
             .map { stem ->

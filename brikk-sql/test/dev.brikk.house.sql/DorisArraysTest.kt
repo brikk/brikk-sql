@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
  * target. sqlglot's Doris dialect inherits MySQL's array rejection and 0-based
  * INDEX_OFFSET; Doris genuinely supports arrays (1-based). Every rendering asserted here
  * is pinned against the real Doris FE parser in
- * brikk-sql-verify/test/.../SqlVerifierTest.dorisAcceptsBrikkArrayRenderings.
+ * brikk-sql/brikk-sql-verify/test/.../SqlVerifierTest.dorisAcceptsBrikkArrayRenderings.
  */
 class DorisArraysTest {
 
