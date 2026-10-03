@@ -1,0 +1,5 @@
+modules:
+  - brikk-sql
+  - brikk-sql-metadata
+  - brikk-sql-oracle
+  - brikk-sql-verify

@@ -6,7 +6,7 @@ product: jvm/lib
 description: SQL verification oracles (Trino, DuckDB, Doris fidelity; ShardingSphere advisory) for brikk-sql.
 
 apply:
-  - ../../publish.module-template.yaml
+  - ../publish.module-template.yaml
 
 dependencies:
   # Pure-JVM ShardingSphere 5.5.2 SQL parser: the portable/advisory grammar oracle for

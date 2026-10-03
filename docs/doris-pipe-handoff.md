@@ -102,10 +102,10 @@ The unchanged client is at `49caa9a8f187367393852e71cde4fb0de4696beb`. From
 `/home/jayson/DEV/sortdev/doris-intellij-plugin`, the exact candidate gate was:
 
 ```sh
-mise exec -- bash /home/jayson/DEV/brikk/brikk-house/tools/verify_doris_consumer.sh \
+mise exec -- bash /home/jayson/DEV/brikk/brikk-sql/tools/verify_doris_consumer.sh \
   --client /home/jayson/DEV/sortdev/doris-intellij-plugin \
-  --core-jar /home/jayson/DEV/brikk/brikk-house/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
-  --metadata-jar /home/jayson/DEV/brikk/brikk-house/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar \
+  --core-jar /home/jayson/DEV/brikk/brikk-sql/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
+  --metadata-jar /home/jayson/DEV/brikk/brikk-sql/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar \
   --scratch-dir /home/jayson/DEV/brikk/brikk-house/build
 ```
 

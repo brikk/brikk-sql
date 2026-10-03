@@ -5,7 +5,7 @@
 > `v30.18.0-43-g3ca82489` in `reference/sqlglot/`.
 >
 > The authoritative cases remain in
-> `brikk-sql/brikk-sql/testResources/dialect-corpus/*-transpile-known-failures.json`.
+> `brikk-sql/testResources/dialect-corpus/*-transpile-known-failures.json`.
 > Native BigQuery generation currently has no ledgered failures.
 >
 > Owner: this BigQuery workstream. Compiler/shape review belongs to the separate

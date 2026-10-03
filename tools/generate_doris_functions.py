@@ -68,7 +68,7 @@ RELEASE_ADDITIONS_JSON = ROOT / "vendor" / "data" / "doris-4.1.4-additions.json"
 RELEASE_ADDITIONS_SHA = "ad35a140c7fd0b842f18c23300bac581f7d04326"
 # Pin of the vendored registry copy (update when refreshing vendor/data/doris-registry/):
 VENDORED_VERSION = "v0.8.2-31011-gd8fd23f7f38"
-OUT = ROOT / "brikk-sql" / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedDorisFunctionCatalog.kt"
+OUT = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedDorisFunctionCatalog.kt"
 
 IDENT = re.compile(r"[A-Za-z][A-Za-z0-9_]*$")
 QUOTED = re.compile(r'"([^"]+)"')

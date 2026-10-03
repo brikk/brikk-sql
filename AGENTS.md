@@ -6,7 +6,7 @@ When you (a Buzz agent) commit on someone's behalf, attribute the commit to the
 **human who issued the request**, not to the machine's global git identity.
 
 1. The requester is the signed author pubkey of the triggering Buzz event.
-2. Look that pubkey up in [`.buzz/authors.toml`](.buzz/authors.toml) to get the
+2. Look that pubkey up in a configured `.buzz/authors.toml` to get the
    git `name` / `email`.
 3. Commit as that identity, crediting the model as a co-author:
 

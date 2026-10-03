@@ -35,10 +35,10 @@ either `sha256sum` or `shasum` are required. No Python or global mise is needed.
 Alternatively, from the client directory, let its mise configuration select Java:
 
 ```sh
-mise exec -- bash /absolute/path/to/brikk-house/tools/verify_doris_consumer.sh \
+mise exec -- bash /absolute/path/to/brikk-sql/tools/verify_doris_consumer.sh \
   --client "$PWD" \
-  --core-jar /absolute/path/to/brikk-house/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
-  --metadata-jar /absolute/path/to/brikk-house/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar
+  --core-jar /absolute/path/to/brikk-sql/build/tasks/_brikk-sql_jarJvm/brikk-sql-jvm.jar \
+  --metadata-jar /absolute/path/to/brikk-sql/build/tasks/_brikk-sql-metadata_jarJvm/brikk-sql-metadata-jvm.jar
 ```
 
 The gate invokes the copied client `gradlew`, pins `JAVA_HOME` for the Gradle and

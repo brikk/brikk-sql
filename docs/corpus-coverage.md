@@ -2,7 +2,7 @@
 
 ASTRA-014, SQLGlot pin `v30.18.0-43-g3ca82489`.
 
-`brikk-sql/brikk-sql/testResources/corpus-policy.json` defines the SQLGlot-backed,
+`brikk-sql/testResources/corpus-policy.json` defines the SQLGlot-backed,
 native-only, and deliberately excluded dialects. Both semantic corpus generators
 read it. `CorpusCoverageTest` compares it with Kotlin's canonical registry and
 checks the concrete transpile test classes. A supported dialect flagged unavailable,

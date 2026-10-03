@@ -41,7 +41,7 @@ internal fun projectRoot(start: File? = null): File {
 }
 
 internal fun testResourcesRoot(root: File = projectRoot()): File =
-    File(root, "brikk-sql/brikk-sql/testResources").also {
+    File(root, "brikk-sql/testResources").also {
         if (!it.isDirectory) fail("cannot locate testResources at ${it.absolutePath}")
     }
 

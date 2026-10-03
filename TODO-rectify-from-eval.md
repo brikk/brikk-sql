@@ -5,7 +5,7 @@ quality and correctness evaluation. Resolved findings are removed rather than
 retained as completed-item noise.
 
 `brikk-sql` is pinned to SQLGlot `v30.18.0-43-g3ca82489`; generated fixtures
-and exact known-failure ledgers under `brikk-sql/brikk-sql/testResources/` are
+and exact known-failure ledgers under `brikk-sql/testResources/` are
 the behavioral oracle. Intentional divergences in `docs/brikk-extensions.md`
 are out of scope.
 

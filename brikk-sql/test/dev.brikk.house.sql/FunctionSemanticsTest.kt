@@ -8,8 +8,8 @@ import kotlin.test.assertTrue
 
 /**
  * Cross-engine function-semantics fixes, evidence-gated by
- * brikk-sql/brikk-sql/testResources/semantics/trino-duckdb-hazards.json (live-probe-verified
- * verdicts) and brikk-sql/brikk-sql/testResources/semantics/gap-report.json (catalog gaps).
+ * brikk-sql/testResources/semantics/trino-duckdb-hazards.json (live-probe-verified
+ * verdicts) and brikk-sql/testResources/semantics/gap-report.json (catalog gaps).
  *
  * Tier 1 — the two hazard contradictions (GREATEST/LEAST NULL algebra and
  * REGEXP_REPLACE replace-first vs replace-all), both directions.

@@ -5,24 +5,24 @@ SQL tokenizer, parser, AST, and generator for Kotlin Multiplatform, derived from
 BigQuery/GoogleSQL pipe syntax (`|>`) stays first-class in the AST instead of being
 desugared away at parse time.
 Target-specific fixes and other deliberate differences are listed in the
-[extensions registry](../../docs/brikk-extensions.md).
+[extensions registry](../docs/brikk-extensions.md).
 
 Differential gates compare token streams, serialized AST structure, and generated SQL
 against pinned sqlglot (`v30.18.0-43-g3ca82489`) across thousands of corpus cases,
 with explicit expectations for deliberate divergences. Separate semantic tests check
-row results and output schemas. See [parsing research and plan](../../docs/parsing-research-and-plan.md)
+row results and output schemas. See [parsing research and plan](../docs/parsing-research-and-plan.md)
 for architecture and status. Oracle parity alone does not prove correct row results
 or preservation of the author's original SQL text.
 
-This module now lives at `brikk-sql/brikk-sql/`, alongside
+This module lives at `brikk-sql/` in the standalone SQL repository, alongside
 [metadata](../brikk-sql-metadata/), [verification](../brikk-sql-verify/), and
 [real-engine oracles](../brikk-sql-oracle/). Its Toolchain name remains `brikk-sql`
 and its Maven coordinate remains `dev.brikk.house:brikk-sql-jvm`. The Kotlin
-runtime/compiler consumer lives in [Brikk Engine](../../brikk-engine/README.md);
+runtime/compiler consumer lives in [Brikk Engine](https://github.com/brikk/brikk-house/tree/main/brikk-engine);
 Kotlin packages and annotations have not changed.
 
-Targets: JVM, Linux (x64/arm64), macOS (arm64), Windows (mingw x64). Pure common Kotlin —
-no platform-specific code.
+Publications currently target JVM, with Java 21-compatible bytecode. The core is
+predominantly common Kotlin; the schema-cache file API lives in `src@jvm/`.
 
 ## Quick start
 
@@ -46,7 +46,7 @@ transpile("SELECT `col` FROM t LIMIT 5, 10", read = "mysql", write = "postgres")
 transpileAll("SELECT 1; SELECT 2", read = "mysql", write = "postgres")
 ```
 
-See the [dialect list](../../README.md#dialects) for supported names and aliases.
+See the [dialect list](../README.md#dialects) for supported names and aliases.
 Unknown names throw in `Dialects.forName`; `Dialects.forNameOrNull` probes availability.
 
 ## SQL preservation requirement
@@ -63,7 +63,7 @@ optimization or canonicalization.
 This is a requirement, not a source-preserving parse/generate API claim. The AST
 generator regenerates SQL. Engine's `Rel.render()` now bypasses generation for a
 standalone same-dialect native query unless its binding names need rewriting;
-other composition/lowering paths still use generation. The [SQL preservation policy](../../brikk-engine/README.md#sql-preservation)
+other composition/lowering paths still use generation. The [SQL preservation policy](https://github.com/brikk/brikk-house/tree/main/brikk-engine#sql-preservation)
 requires output-diff inspection as well as semantic tests. Pipe lowering is the
 largest migration risk: fix failures here with synthetic regressions rather than
 keeping permanent copied handwritten SQL in the consumer as a workaround.
@@ -259,7 +259,7 @@ best-effort SQL that was returned; it is not an exception container. Callers mus
 handle expected refusals as translation failures. Do not execute the original pipe
 or delegate to a previous execution handler after a refusal, and do not catch
 cancellation or arbitrary failures as though they were supported translations.
-The [candidate consumer gate](../../docs/consumer-verification.md) tests this
+The [candidate consumer gate](../docs/consumer-verification.md) tests this
 contract against the Doris plugin's actual adapter and dispatch helper.
 
 Pipe LIMIT/OFFSET lowering accepts only non-negative signed-64-bit integer
@@ -292,7 +292,7 @@ there is no silent misparsing.
   enforced two-directionally (a stale ledger entry fails the build). Remaining entries
   are few and documented (e.g. UPDATE ... FROM rewrites, `explode_projection_to_unnest`).
 - Deliberate divergences from upstream sqlglot are registered in
-  [brikk extensions](../../docs/brikk-extensions.md).
+  [brikk extensions](../docs/brikk-extensions.md).
   Verifier-backed entries there are intentional and must not be copied into
   actionable TODO inventories or "fixed" toward SQLGlot unless that policy is
   reversed.
@@ -305,4 +305,4 @@ test corpus derive from sqlglot; ported functions carry `// sqlglot: <symbol>` p
 comments referencing their Python counterparts, and generated tables are pinned to a
 specific upstream version. Pipe-syntax semantics follow the
 [GoogleSQL pipe query syntax](https://cloud.google.com/bigquery/docs/reference/standard-sql/pipe-syntax)
-specification. See [ATTRIBUTIONS.md](../../ATTRIBUTIONS.md) for license texts.
+specification. See [ATTRIBUTIONS.md](../ATTRIBUTIONS.md) for license texts.

@@ -22,7 +22,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 VERSION="${1:-}"
-if [ -z "$VERSION" ]; then
+if [ "$#" -ne 1 ] || [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
   echo "usage: $0 <version>   (e.g. 0.1.0)" >&2
   exit 2
 fi
@@ -69,19 +69,15 @@ sed -i \
   "$TMPL"
 
 echo ">> Publishing release ${VERSION} to Maven Central (all modules)..."
-# Toolchain 0.12's publish command rejects the Portal target during repository
-# validation. Invoke its registered Portal tasks directly until that bug is fixed.
+# Invoke the registered Portal tasks directly, avoiding repository validation
+# of the special Maven Central Portal target in the generic publish command.
 # Keep this explicit public-library list in sync with publishing.enabled modules;
 # Engine tooling and private consumers must never enter the release graph.
 ./kotlin task \
   :brikk-sql:publishToMavenCentral \
   :brikk-sql-metadata:publishToMavenCentral \
   :brikk-sql-verify:publishToMavenCentral \
-  :brikk-sql-oracle:publishToMavenCentral \
-  :brikk-chdb:publishToMavenCentral \
-  :brikk-chdb-native-linux-x64:publishToMavenCentral \
-  :brikk-chdb-native-linux-arm64:publishToMavenCentral \
-  :brikk-chdb-native-macos-arm64:publishToMavenCentral
+  :brikk-sql-oracle:publishToMavenCentral
 
 echo ""
 echo ">> Bundles uploaded for automatic validation and publication. Track deployments at:"

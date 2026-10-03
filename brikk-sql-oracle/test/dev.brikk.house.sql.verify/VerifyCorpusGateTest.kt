@@ -11,7 +11,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Gate: every SQL in brikk-sql/brikk-sql/testResources/ast-corpus/<dialect>-serde.json is re-parsed
+ * Gate: every SQL in brikk-sql/testResources/ast-corpus/<dialect>-serde.json is re-parsed
  * and re-generated through brikk's own dialect pipeline, and the *actual* output is fed to
  * the target engine's own parser via [SqlOracles]. A reject means the engine's native
  * grammar does not accept SQL we emit for it — a real dialect bug.
@@ -238,14 +238,14 @@ class VerifyCorpusGateTest {
 
     /** Cross-module corpus files, read from the filesystem relative to repo root or module dir. */
     private fun corpusResource(path: String): String {
-        val file = java.io.File(oracleProjectRoot(), "brikk-sql/brikk-sql/testResources/$path")
+        val file = java.io.File(oracleProjectRoot(), "brikk-sql/testResources/$path")
         if (!file.isFile) fail("corpus $path not found at ${file.absolutePath}")
         return file.readText()
     }
 
     private fun ledgerResource(path: String): String {
         val stream = javaClass.classLoader.getResourceAsStream(path)
-            ?: java.io.File(oracleProjectRoot(), "brikk-sql/brikk-sql-oracle/testResources/$path")
+            ?: java.io.File(oracleProjectRoot(), "brikk-sql-oracle/testResources/$path")
                 .takeIf { it.isFile }?.inputStream()
             ?: fail("ledger $path not found on classpath or filesystem")
         return stream.use { it.readBytes().decodeToString() }

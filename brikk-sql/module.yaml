@@ -9,7 +9,7 @@ product:
 description: SQL parser, transpiler, and optimizer for Kotlin — a multiplatform port of sqlglot.
 
 apply:
-  - ../../publish.module-template.yaml
+  - ../publish.module-template.yaml
 
 dependencies:
   # exported: Dialect.functionCatalog exposes metadata types in brikk-sql's public API.

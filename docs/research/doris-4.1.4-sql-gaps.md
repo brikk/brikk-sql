@@ -274,13 +274,13 @@ rules. This is an existing compatibility defect, not a new datatype in 4.1.4.
 ## Implementation targets and order
 
 1. Fix TIMESTAMPTZ generation in
-   `brikk-sql/brikk-sql/src/dev.brikk.house.sql/dialects/DorisGenerator.kt`.
+   `brikk-sql/src/dev.brikk.house.sql/dialects/DorisGenerator.kt`.
 2. Add the three missing function definitions through
    `vendor/data/doris-registry/`, `vendor/data/doris-signatures.json`,
    `tools/extract_doris_signatures.py`, and `tools/generate_doris_functions.py`.
    Regenerate `GeneratedDorisFunctionCatalog.kt`; do not hand-edit it.
 3. Implement DEFAULT and nested-column ADD/MODIFY in
-   `brikk-sql/brikk-sql/src/dev.brikk.house.sql/dialects/DorisParser.kt`, with
+   `brikk-sql/src/dev.brikk.house.sql/dialects/DorisParser.kt`, with
    matching AST/generator support and DEFAULT grammar-builtin recognition.
 4. Add ADMIN compaction acceptance. Structured SHOW COMPUTE GROUPS is lower priority.
 5. Refresh the native grammar oracle and add acceptance tests for the implemented

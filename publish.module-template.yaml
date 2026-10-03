@@ -1,5 +1,5 @@
 # Shared publishing configuration for the public Brikk libraries.
-# Applied by each publishable module via `apply: [ ../../publish.module-template.yaml ]`.
+# Applied by each publishable module via `apply: [ ../publish.module-template.yaml ]`.
 #
 # Credentials for the regular Central snapshots repo are read from the project-root `.env`
 # file (gitignored) under `brikk.mavencentral.user` / `brikk.mavencentral.pass`.
@@ -41,8 +41,8 @@ settings:
     #mavenCentral: { enabled: true, publishingMode: auto }
     #signArtifacts: true
     pom:
-      url: https://github.com/brikk/brikk-house
-      scm: https://github.com/brikk/brikk-house.git
+      url: https://github.com/brikk/brikk-sql
+      scm: https://github.com/brikk/brikk-sql.git
       licenses:
         - name: The Apache License, Version 2.0
           url: https://www.apache.org/licenses/LICENSE-2.0.txt

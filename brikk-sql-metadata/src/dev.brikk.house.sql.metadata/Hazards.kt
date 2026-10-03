@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
  * SEMANTIC HAZARD REGISTRY
  *
  * Live-probe-verified cross-engine semantics verdicts for function pairs, generated from
- * brikk-sql/brikk-sql/testResources/semantics/<a>-<b>-hazards.json (one file per dialect pair; the
+ * brikk-sql/testResources/semantics/<a>-<b>-hazards.json (one file per dialect pair; the
  * source of truth) by tools/generate_hazards_registry.py into GeneratedABHazards.kt per pair.
  *
  * Same stable-accessor posture as FunctionCatalog.kt: this module is the featherweight
