@@ -573,6 +573,9 @@ open class Generator(
     }
 
     // sqlglot: Generator.sql
+    // Internal opt-in: reuse only parser-proved, structurally unchanged source text.
+    internal var sourcePreservingSql: ((Expression) -> String?)? = null
+
     open fun sql(expression: kotlin.Any?, key: String? = null, comment: Boolean = true): String {
         if (expression == null || expression == false || expression == "") return ""
         if (expression is String) return expression
@@ -582,6 +585,8 @@ open class Generator(
             val value = expression.args[key]
             return if (isTruthyArg(value)) sql(value) else ""
         }
+
+        sourcePreservingSql?.invoke(expression)?.let { return it }
 
         // brikk-native: span recording — push a child collector for this node's frame
         val collecting = trackSpans && spanStack.isNotEmpty()
@@ -3685,7 +3690,7 @@ open class Generator(
         var thisSql = sql(expression, "this")
         if (thisSql.isNotEmpty()) {
             if (!includeKeyword && (thisExpr as? Expression)?.isString == true) {
-                thisSql = (thisExpr as Expression).name
+                thisSql = thisExpr.name
             }
             if (!isUnwrappedIntervalValue(thisExpr)) thisSql = "($thisSql)"
             if (includeKeyword) thisSql = " $thisSql"

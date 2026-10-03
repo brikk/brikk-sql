@@ -34,9 +34,9 @@ dependencies:
   # committed file:// Maven layout is out too. DorisVerifier loads the jar reflectively
   # via a URLClassLoader instead (see its KDoc). Swap to the org.apache.doris:fe-sql-parser
   # coordinate once Doris publishes it.
-  # NOTE: trino-parser pulls antlr4-runtime 4.13.2, which overrides this declaration;
+  # Align with trino-parser's antlr4-runtime 4.13.2 to avoid a version-override warning;
   # ANTLR 4.13.x runtimes are compatible with the 4.13.1-generated Doris parser.
-  - org.antlr:antlr4-runtime:4.13.1
+  - org.antlr:antlr4-runtime:4.13.2
 
 test-dependencies:
   # The verify gate re-generates every corpus SQL through brikk's own parser+generator:

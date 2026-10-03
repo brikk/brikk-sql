@@ -27,8 +27,24 @@ separate commit because the release branch has no `fe-sql-parser` module.
 | Facade/build SHA | `2a58ad96ac3ca6330a6df3d0b90f437351f63701` |
 | Refreshed | 2026-09-20 |
 | Artifact version | `1.2-SNAPSHOT` (internal Doris build version — NOT a stable coordinate) |
+| JAR SHA-256 | `358ecccb39e84c65e62dc72b4090191c445fad4be1fb64e79ddaf68787d8703a` |
 | License | Apache License 2.0 (see ATTRIBUTIONS.md at repo root) |
-| Runtime dependency | `org.antlr:antlr4-runtime:4.13.1` (from Maven Central, not bundled) |
+| Runtime dependency | `org.antlr:antlr4-runtime:4.13.2` (from Maven Central, not bundled; compatible with this 4.13.1-generated parser) |
+
+Checked 2026-10-03: the [current Doris release](https://doris.apache.org/download/)
+is **4.1.4.1**, a [hotfix for 4.1.4](https://doris.apache.org/releases/v4.1/release-4.1.4.1/).
+The [six-commit comparison](https://github.com/apache/doris/compare/4.1.4...4.1.4.1)
+changes execution, materialized-view refresh, WAL reads, and platform dependencies;
+neither SQL grammar file nor the parser facade changes. The 4.1.4 grammar pin
+therefore remains current for this parser artifact, without claiming an engine upgrade.
+
+Verify the committed binary before use or refresh:
+
+```bash
+printf '%s  %s\n' \
+  358ecccb39e84c65e62dc72b4090191c445fad4be1fb64e79ddaf68787d8703a \
+  vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar | sha256sum --check
+```
 
 ### Rebuilding / refreshing
 

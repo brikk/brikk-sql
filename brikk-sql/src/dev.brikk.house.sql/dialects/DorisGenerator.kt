@@ -409,7 +409,7 @@ open class DorisGenerator(
             val create = expression.findAncestor(Create::class)
             val isMaterializedView = (create?.args?.get("properties") as? Expression)
                 ?.find(MaterializedProperty::class) != null
-            if (isMaterializedView && expression.parent === create?.thisArg) {
+            if (isMaterializedView && expression.parent === create.thisArg) {
                 val bare = expression.copy() as ColumnDef
                 bare.set("kind", null)
                 return super.columndefSql(bare, sep)

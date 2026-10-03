@@ -126,7 +126,7 @@ open class StarrocksParser(
                         },
                     )
                 )
-            ) as RollupIndex
+            )
 
         return expression(
             RollupProperty(args("expressions" to parseWrappedCsv({ parseRollupIndex() })))

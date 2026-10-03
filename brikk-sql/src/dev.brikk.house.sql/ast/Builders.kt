@@ -29,7 +29,7 @@ internal fun foldIntLiteral(expression: Expression?): Long? {
             return -inner
         }
         is Add, is Sub, is Mul -> {
-            val binary = expression as Binary
+            val binary = expression
             val l = foldIntLiteral(binary.left) ?: return null
             val r = foldIntLiteral(binary.right) ?: return null
             return when (expression) {

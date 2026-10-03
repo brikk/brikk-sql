@@ -3,7 +3,6 @@ package dev.brikk.house.sql.shape
 import dev.brikk.house.sql.ast.Add
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.AnonymousAggFunc
-import dev.brikk.house.sql.ast.Binary
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Expression
@@ -475,7 +474,7 @@ private fun SqlFragment.findConstructHazards(target: String, findings: MutableSe
 
     for (node in ast.walk(bfs = false)) {
         if (node !is Add && node !is Sub) continue
-        val binary = node as Binary
+        val binary = node
         val left = binary.left
         val right = binary.right
 

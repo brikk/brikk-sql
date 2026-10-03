@@ -6,7 +6,6 @@ import dev.brikk.house.sql.optimizer.annotateTypes
 import kotlin.test.Test
 import kotlin.test.fail
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -72,8 +71,8 @@ class AnnotateTypesCorpusTest : LedgerGate() {
                 val exp = expected[i].jsonObject
                 val cls = (exp["c"] as? JsonPrimitive)?.content?.substringAfterLast(".")
                 val key = (exp["k"] as? JsonPrimitive)?.content
-                val expT = (expected[i].jsonObject["t"] as? JsonElement)?.toString()?.take(80)
-                val actT = (actual[i].jsonObject["t"] as? JsonElement)?.toString()?.take(80)
+                val expT = expected[i].jsonObject["t"]?.toString()?.take(80)
+                val actT = actual[i].jsonObject["t"]?.toString()?.take(80)
                 return "type-mismatch at #$i (${cls ?: "?"}${key?.let { " k=$it" } ?: ""}): " +
                     "expected t=$expT actual t=$actT"
             }

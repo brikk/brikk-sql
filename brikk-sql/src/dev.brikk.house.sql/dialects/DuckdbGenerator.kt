@@ -2312,14 +2312,14 @@ open class DuckdbGenerator(
                     Cast(
                         args(
                             "this" to func("DATE_TRUNC", unit, dateTime),
-                            "to" to timestamp?.type,
+                            "to" to timestamp.type,
                         )
                     )
                 )
             }
 
             if (tsType != null && tsType in TEMPORAL_TYPES && !(dateUnit && tsType == DType.DATE)) {
-                return sql(Cast(args("this" to result, "to" to timestamp?.type)))
+                return sql(Cast(args("this" to result, "to" to timestamp.type)))
             }
         }
 
@@ -2725,7 +2725,7 @@ open class DuckdbGenerator(
                 val fmt = e.args["format"] as? Expression
                 val fmtIsInt = fmt is Literal && !fmt.isString && fmt.name.toLongOrNull() != null
                 if (fmtIsInt) {
-                    func("FORMAT", "'{:,.${fmt!!.name}f}'", e.thisArg)
+                    func("FORMAT", "'{:,.${fmt.name}f}'", e.thisArg)
                 } else {
                     unsupported("Only integer formats are supported by NumberToStr")
                     functionFallbackSql(e as Func)

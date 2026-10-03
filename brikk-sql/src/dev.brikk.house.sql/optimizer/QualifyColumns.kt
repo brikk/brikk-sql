@@ -695,7 +695,7 @@ private fun expandPositionalReferences(
                     }
 
                     ambiguous = selectExpr.findAll(Column::class).any {
-                        (it as Column).parts[0].name in ambiguousProjections!!
+                        (it as Column).parts[0].name in ambiguousProjections
                     }
                 } else {
                     ambiguous = false

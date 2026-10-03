@@ -903,6 +903,26 @@ open class Parser(
     internal var hasFromFirstQuery: kotlin.Boolean = false
         private set
 
+    /** Whole-syntax provenance is opt-in; ordinary parsing/parity metadata is unchanged. */
+    internal var captureSourceRanges: kotlin.Boolean = false
+
+    protected fun <T : Expression?> captureSyntax(start: Int = index, block: () -> T): T {
+        val result = block()
+        if (captureSourceRanges && result != null && index > start) {
+            val first = tokens.getOrNull(start)
+            val last = tokens.getOrNull(index - 1)
+            if (first != null && last != null) {
+                // Include intervening trivia, but never the following grammar token.
+                val end = if (currToken.exists) currToken.start else last.end + 1
+                result.syntaxOrigin = SyntaxOrigin(
+                    SyntacticRange(first.start, end),
+                    result is Select && (first.tokenType == TokenType.FROM || result.syntaxOrigin?.fromFirst == true),
+                )
+            }
+        }
+        return result
+    }
+
     val errors: MutableList<ParseError> = mutableListOf()
 
     protected var tokens: List<Token> = emptyList()
@@ -1270,7 +1290,7 @@ open class Parser(
         // Chunkification binds if/while statements with the first statement of the body
         if (sepFirstStatement) {
             match(TokenType.BEGIN)
-            expressions.add(parseMethod(this))
+            expressions.add(captureSyntax { parseMethod(this) })
         }
 
         val chunksLength = chunks.size
@@ -1287,7 +1307,7 @@ open class Parser(
                 continue
             }
 
-            expressions.add(parseMethod(this))
+            expressions.add(captureSyntax { parseMethod(this) })
 
             if (index < tokensSize) {
                 raiseError("Invalid expression / Unexpected token")
@@ -1312,13 +1332,19 @@ open class Parser(
         sep: TokenType = TokenType.COMMA,
         parseMethod: () -> T?,
     ): MutableList<T> {
-        var parseResult = parseMethod()
+        fun parseItem(): T? {
+            val start = index
+            val result = parseMethod()
+            if (result is Expression) captureSyntax(start) { result }
+            return result
+        }
+        var parseResult = parseItem()
         val items = mutableListOf<T>()
         if (parseResult != null) items.add(parseResult)
 
         while (match(sep)) {
             if (parseResult is Expression) addTokenComments(parseResult)
-            parseResult = parseMethod()
+            parseResult = parseItem()
             if (parseResult != null) items.add(parseResult)
         }
 
@@ -1350,7 +1376,7 @@ open class Parser(
     // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_expression
-    open fun parseExpression(): Expression? = parseAlias(parseAssignment())
+    open fun parseExpression(): Expression? = captureSyntax { parseAlias(parseAssignment()) }
 
     // sqlglot: Parser._parse_expressions
     fun parseExpressions(): MutableList<Expression> = parseCsv { parseExpression() }
@@ -1836,6 +1862,15 @@ open class Parser(
         table: kotlin.Boolean = false,
         parseSubqueryAlias: kotlin.Boolean = true,
         parseSetOperation: kotlin.Boolean = true,
+    ): Expression? = captureSyntax {
+        parseSelectQueryBody(nested, table, parseSubqueryAlias, parseSetOperation)
+    }
+
+    private fun parseSelectQueryBody(
+        nested: kotlin.Boolean,
+        table: kotlin.Boolean,
+        parseSubqueryAlias: kotlin.Boolean,
+        parseSetOperation: kotlin.Boolean,
     ): Expression? {
         val cte = parseWith()
 
@@ -1973,7 +2008,7 @@ open class Parser(
                 Select(
                     args(
                         "expressions" to mutableListOf<Expression>(selectStar()),
-                        "from_" to expression(From(args("this" to from.thisArg))),
+                        "from_" to expression(From(args("this" to from.thisArg))).also { it.syntaxOrigin = from.syntaxOrigin },
                     )
                 )
             )
@@ -2025,7 +2060,11 @@ open class Parser(
         } else null
 
     // sqlglot: Parser._parse_wrapped_select
-    protected fun parseWrappedSelect(table: kotlin.Boolean = false): Expression? {
+    protected fun parseWrappedSelect(table: kotlin.Boolean = false): Expression? = captureSyntax {
+        parseWrappedSelectBody(table)
+    }
+
+    private fun parseWrappedSelectBody(table: kotlin.Boolean): Expression? {
         var this_: Expression?
         if (matchSet(setOf(TokenType.PIVOT, TokenType.UNPIVOT))) {
             this_ = parseSimplifiedPivot(
@@ -2269,9 +2308,14 @@ open class Parser(
             while (true) {
                 if (matchSet(queryModifierParsers.keys, advance = false)) {
                     val modifierToken = currToken
+                    val syntaxStart = index
                     val (key, value) = queryModifierParsers.getValue(modifierToken.tokenType)(this)
 
                     if (value != null) {
+                        // LIMIT's comma-offset is split below: it is not one reusable clause.
+                        if (value is Expression && key != "limit" && key != "offset") {
+                            captureSyntax(syntaxStart) { value }
+                        }
                         if (this_.args[key] != null) {
                             raiseError(
                                 "Found multiple '${modifierToken.text.uppercase()}' clauses",
@@ -2318,7 +2362,7 @@ open class Parser(
         }
 
         val implicitFrom = this_?.args?.get("from_") as? From
-        if (supportsImplicitUnnest && implicitFrom != null && this_ != null) {
+        if (supportsImplicitUnnest && implicitFrom != null) {
             val source = implicitFrom.thisArg as Expression
             val refs = mutableSetOf(dev.brikk.house.sql.optimizer.normalizeIdentifiers(source.copy(), dialect).aliasOrName)
             for (join in (this_.args["joins"] as? List<*>).orEmpty().filterIsInstance<Join>()) {
@@ -2424,13 +2468,16 @@ open class Parser(
         skipFromToken: kotlin.Boolean = false,
         consumePipe: kotlin.Boolean = false,
     ): From? {
+        val syntaxStart = if (skipFromToken) index - 1 else index
         if (!skipFromToken && !match(TokenType.FROM)) return null
 
         val comments = prevComments
-        return expression(
-            From(args("this" to parseTable(joins = joins, consumePipe = consumePipe))),
-            comments = comments,
-        )
+        return captureSyntax(syntaxStart) {
+            expression(
+                From(args("this" to parseTable(joins = joins, consumePipe = consumePipe))),
+                comments = comments,
+            )
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -3558,13 +3605,16 @@ open class Parser(
 
     // sqlglot: Parser._parse_where
     fun parseWhere(skipWhereToken: kotlin.Boolean = false): Expression? {
+        val syntaxStart = if (skipWhereToken) index - 1 else index
         if (!skipWhereToken && !match(TokenType.WHERE)) return null
 
         val comments = prevComments
-        return expression(
-            Where(args("this" to parseDisjunction())),
-            comments = comments,
-        )
+        return captureSyntax(syntaxStart) {
+            expression(
+                Where(args("this" to captureSyntax { parseDisjunction() })),
+                comments = comments,
+            )
+        }
     }
 
     // sqlglot: Parser._parse_group
@@ -5062,7 +5112,7 @@ open class Parser(
 
             if (overloadMode && expressionArg != null) {
                 expressionArg = parseMacroOverloads(
-                    this_ as UserDefinedFunction, expressionArg!!, isTable
+                    this_ as UserDefinedFunction, expressionArg, isTable
                 )
             }
         } else if (createTokenType == TokenType.INDEX) {
@@ -5835,7 +5885,7 @@ open class Parser(
             }
 
             match(TokenType.INTO)
-            prevComments?.let { comments.addAll(it) }
+            comments.addAll(prevComments)
             match(TokenType.TABLE)
             isFunction = match(TokenType.FUNCTION)
 
@@ -9082,7 +9132,7 @@ open class Parser(
             }
 
             // sqlglot: result = result.update_positions(token)
-            result?.updatePositions(token)
+            result.updatePositions(token)
         }
 
         result?.addComments(comments)
@@ -10087,7 +10137,7 @@ open class Parser(
             over = prevToken.text.uppercase()
         }
 
-        if (!comments.isNullOrEmpty() && func != null) {
+        if (!comments.isNullOrEmpty()) {
             func.popComments()
         }
 
@@ -10328,8 +10378,9 @@ open class Parser(
 
     // sqlglot: Parser._parse_parameter
     open fun parseParameter(): Expression {
+        val syntaxStart = index - 1 // the @/$ introducer was consumed by the primary parser
         val this_ = parseIdentifier() ?: parsePrimaryOrVar()
-        return expression(Parameter(args("this" to this_)))
+        return captureSyntax(syntaxStart) { expression(Parameter(args("this" to this_))) }
     }
 
     // sqlglot: Parser._parse_introducer
@@ -10410,9 +10461,10 @@ open class Parser(
 
     // sqlglot: Parser._parse_placeholder
     fun parsePlaceholder(): Expression? {
+        val syntaxStart = index
         if (matchSet(placeholderParsers.keys)) {
             val placeholder = placeholderParsers.getValue(prevToken.tokenType)(this)
-            if (placeholder != null) return placeholder
+            if (placeholder != null) return captureSyntax(syntaxStart) { placeholder }
 
             advance(-1)
         }
@@ -10513,6 +10565,13 @@ open class Parser(
 
         return expression(PipeQuery(args("this" to query, "expressions" to stages)))
             .updatePositions(pipeToken)
+            .also { pipe ->
+                if (captureSourceRanges) query.syntaxOrigin?.range?.let { head ->
+                    pipe.syntaxOrigin = SyntaxOrigin(
+                        SyntacticRange(head.start, if (currToken.exists) currToken.start else prevToken.end + 1)
+                    )
+                }
+            }
     }
 
     // sqlglot: Parser.PIPE_SYNTAX_TRANSFORM_PARSERS (brikk: each handler builds a stage node)

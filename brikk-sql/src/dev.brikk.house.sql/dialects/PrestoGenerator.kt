@@ -415,7 +415,7 @@ open class PrestoGenerator(
         is Cast -> (expression.args["to"] as? Expression)?.thisArg in INTEGER_TYPES
         is Floor, is Ceil -> isIntTyped(expression.thisArg as? Expression)
         is Add, is Sub, is Mul, is Mod -> {
-            val b = expression as Binary
+            val b = expression
             isIntTyped(b.left) && isIntTyped(b.right)
         }
         else -> false
@@ -1063,7 +1063,7 @@ open class PrestoGenerator(
             while (!used.add(name.lowercase())) name += "_"
             return sql(Identifier(args("this" to name)))
         }
-        val table = (alias?.thisArg as? Expression)?.let { sql(it) } ?: fresh("_bq_unnest")
+        val table = (alias.thisArg as? Expression)?.let { sql(it) } ?: fresh("_bq_unnest")
         val valueSql = sql(value)
         val arraySql = sql(array)
         // The extra ROW is flattened once, leaving the original nullable struct as one column.

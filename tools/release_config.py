@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+"""Validate release SemVer and compose a Toolchain release override (stdlib only)."""
+
+import argparse
+import json
+import re
+
+
+NUMBER = r"(?:0|[1-9][0-9]*)"
+PRERELEASE_ID = rf"(?:{NUMBER}|[0-9]*[A-Za-z-][0-9A-Za-z-]*)"
+SEMVER = re.compile(
+    rf"{NUMBER}\.{NUMBER}\.{NUMBER}"
+    rf"(?:-(?P<prerelease>{PRERELEASE_ID}(?:\.{PRERELEASE_ID})*))?"
+    r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
+)
+
+
+def validate_version(version: str) -> str:
+    match = SEMVER.fullmatch(version)
+    if not match:
+        raise ValueError(f"Release version must be SemVer 2.0.0: {version!r}")
+    prerelease = match.group("prerelease") or ""
+    if "SNAPSHOT" in prerelease.upper().split("."):
+        raise ValueError(f"Release version must not be a SNAPSHOT: {version!r}")
+    return version
+
+
+def release_template(version: str, base_template: str) -> str:
+    """Use native template inheritance, not text edits or a separate YAML parser."""
+    validate_version(version)
+    # JSON double-quoted strings are also YAML scalars, including escaped paths.
+    return (
+        "# Temporary release overrides; publish-release.sh restores the base on exit.\n"
+        f"apply:\n  - {json.dumps(base_template)}\n"
+        "settings:\n  publishing:\n"
+        f"    version: {json.dumps(version)}\n"
+        "    mavenCentral: { enabled: true, publishingMode: auto }\n"
+        "    signArtifacts: true\n"
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    validate = commands.add_parser("validate")
+    validate.add_argument("version")
+    template = commands.add_parser("template")
+    template.add_argument("version")
+    template.add_argument("base_template")
+    args = parser.parse_args()
+    try:
+        validate_version(args.version)
+        if args.command == "template":
+            print(release_template(args.version, args.base_template), end="")
+    except ValueError as error:
+        parser.error(str(error))
+
+
+if __name__ == "__main__":
+    main()

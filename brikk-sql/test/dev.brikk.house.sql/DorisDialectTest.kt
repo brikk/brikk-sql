@@ -563,7 +563,7 @@ class DorisDialectTest {
         val rendered = parsed.sql("doris")
         assertEquals(expected, rendered)
         assertEquals(expected, roundTrip(rendered), "unstable re-parse")
-        return parsed as T
+        return parsed
     }
 
     @Test

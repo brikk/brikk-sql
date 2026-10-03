@@ -54,6 +54,11 @@ jobs:
       - name: Build
         run: ./kotlin build
 
+      - name: Test release configuration (offline)
+        env:
+          TEST_KOTLIN_RELEASE_MODEL: '1'
+        run: python3 -m unittest discover -s tools -p 'test_release_config.py'
+
       - name: Test
         run: ./kotlin test
 

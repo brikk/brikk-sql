@@ -122,37 +122,97 @@ class HazardRegistryTest {
         )
     }
 
-    // ------------------------------------------------------- generated data pins
+    // ------------------------------------------------------- generated data structure
 
-    @Test
-    fun entryAndVerdictCountsArePinned() {
-        // Pinned to trino-duckdb-hazards.json (242 probe-verified pairs); the sync test
-        // in brikk-sql test@jvm cross-checks content against the JSON itself.
-        assertEquals(246, TRINO_TO_DUCKDB_HAZARD_ENTRIES.size)
-        val counts = TRINO_TO_DUCKDB_HAZARD_ENTRIES.groupingBy { it.verdict }.eachCount()
-        assertEquals(106, counts[HazardVerdict.IDENTICAL])
-        assertEquals(38, counts[HazardVerdict.DIVERGENT])
-        assertEquals(52, counts[HazardVerdict.CONDITIONALLY_EQUIVALENT])
-        assertEquals(44, counts[HazardVerdict.NO_EQUIVALENT])
-        assertEquals(6, counts[HazardVerdict.UNCLEAR])
+    private data class PairRegistry(
+        val source: String,
+        val target: String,
+        val forwardEntries: List<FunctionHazard>,
+        val reverseEntries: List<FunctionHazard>,
+        val forward: Map<String, FunctionHazard>,
+        val reverse: Map<String, FunctionHazard>,
+    )
+
+    private val registries = listOf(
+        PairRegistry("trino", "duckdb", TRINO_TO_DUCKDB_HAZARD_ENTRIES, DUCKDB_TO_TRINO_HAZARD_ENTRIES,
+            TRINO_TO_DUCKDB_HAZARDS, DUCKDB_TO_TRINO_HAZARDS),
+        PairRegistry("duckdb", "doris", DUCKDB_TO_DORIS_HAZARD_ENTRIES, DORIS_TO_DUCKDB_HAZARD_ENTRIES,
+            DUCKDB_TO_DORIS_HAZARDS, DORIS_TO_DUCKDB_HAZARDS),
+        PairRegistry("trino", "doris", TRINO_TO_DORIS_HAZARD_ENTRIES, DORIS_TO_TRINO_HAZARD_ENTRIES,
+            TRINO_TO_DORIS_HAZARDS, DORIS_TO_TRINO_HAZARDS),
+        PairRegistry("duckdb", "clickhouse", DUCKDB_TO_CLICKHOUSE_HAZARD_ENTRIES, CLICKHOUSE_TO_DUCKDB_HAZARD_ENTRIES,
+            DUCKDB_TO_CLICKHOUSE_HAZARDS, CLICKHOUSE_TO_DUCKDB_HAZARDS),
+        PairRegistry("trino", "clickhouse", TRINO_TO_CLICKHOUSE_HAZARD_ENTRIES, CLICKHOUSE_TO_TRINO_HAZARD_ENTRIES,
+            TRINO_TO_CLICKHOUSE_HAZARDS, CLICKHOUSE_TO_TRINO_HAZARDS),
+        PairRegistry("doris", "clickhouse", DORIS_TO_CLICKHOUSE_HAZARD_ENTRIES, CLICKHOUSE_TO_DORIS_HAZARD_ENTRIES,
+            DORIS_TO_CLICKHOUSE_HAZARDS, CLICKHOUSE_TO_DORIS_HAZARDS),
+        PairRegistry("doris", "starrocks", DORIS_TO_STARROCKS_HAZARD_ENTRIES, STARROCKS_TO_DORIS_HAZARD_ENTRIES,
+            DORIS_TO_STARROCKS_HAZARDS, STARROCKS_TO_DORIS_HAZARDS),
+    )
+
+    private fun verdictRank(verdict: HazardVerdict): Int = when (verdict) {
+        HazardVerdict.DIVERGENT -> 0
+        HazardVerdict.UNCLEAR -> 1
+        HazardVerdict.CONDITIONALLY_EQUIVALENT -> 2
+        HazardVerdict.NO_EQUIVALENT -> 3
+        HazardVerdict.IDENTICAL -> 4
+    }
+
+    private fun expectedKeys(entries: List<FunctionHazard>): Map<String, FunctionHazard> = buildMap {
+        val identifier = Regex("[A-Za-z_][A-Za-z_0-9]*")
+        for (entry in entries) {
+            val name = assertNotNull(entry.sourceName)
+            val keys = buildSet {
+                add(name.trim().uppercase())
+                for (alternative in name.split('/')) {
+                    val bare = alternative.trim().removeSuffix("()")
+                    if (identifier.matches(bare)) add(bare.uppercase())
+                }
+            }
+            for (key in keys) {
+                val previous = get(key)
+                if (previous == null || verdictRank(entry.verdict) < verdictRank(previous.verdict)) {
+                    put(key, entry)
+                }
+            }
+        }
     }
 
     @Test
-    fun keyCountsPerDirectionArePinned() {
-        assertEquals(386, TRINO_TO_DUCKDB_HAZARDS.size)
-        assertEquals(309, DUCKDB_TO_TRINO_HAZARDS.size)
-        // Every keyed value comes from that direction's oriented entries list (each
-        // direction has its own list so sourceName/targetName are correctly oriented).
-        assertTrue(TRINO_TO_DUCKDB_HAZARDS.values.all { it in TRINO_TO_DUCKDB_HAZARD_ENTRIES })
-        assertTrue(DUCKDB_TO_TRINO_HAZARDS.values.all { it in DUCKDB_TO_TRINO_HAZARD_ENTRIES })
+    fun generatedEntriesAndKeysAreConsistentInBothDirections() {
+        for (registry in registries) {
+            val label = "${registry.source}->${registry.target}"
+            assertTrue(registry.forwardEntries.isNotEmpty(), "$label has no probe evidence")
+            for (entry in registry.forwardEntries) {
+                val sourceName = assertNotNull(entry.sourceName, "$label: missing source field")
+                val targetName = assertNotNull(entry.targetName, "$label: missing target field")
+                assertTrue(sourceName.isNotBlank() || targetName.isNotBlank(), "$label: both names are blank")
+                // NO_EQUIVALENT evidence may deliberately leave the unavailable side blank.
+                if (sourceName.isBlank() || targetName.isBlank()) {
+                    assertEquals(HazardVerdict.NO_EQUIVALENT, entry.verdict, "$label: blank equivalent name")
+                }
+                assertTrue(entry.provenance.isNotBlank(), "$label: missing provenance")
+            }
+            assertEquals(
+                registry.forwardEntries.map { it.copy(sourceName = it.targetName, targetName = it.sourceName) },
+                registry.reverseEntries,
+                "$label reverse entries must preserve evidence and swap names in JSON order",
+            )
+            assertEquals(expectedKeys(registry.forwardEntries), registry.forward, "$label key/alias/collision drift")
+            assertEquals(expectedKeys(registry.reverseEntries), registry.reverse, "$label reverse key/alias/collision drift")
+            for ((key, entry) in registry.forward) {
+                assertEquals(entry, HazardRegistry.lookup(registry.source, registry.target, key), "$label: $key")
+            }
+            for ((key, entry) in registry.reverse) {
+                assertEquals(entry, HazardRegistry.lookup(registry.target, registry.source, key), "$label reverse: $key")
+            }
+        }
     }
 
     @Test
     fun dorisPairsArePopulatedByLiveProbes() {
         // Populated by the doris live-probe program (REPORT-doris-differential-probe-
-        // 2026-07-13); counts pinned to the ingested registries.
-        assertEquals(258, DUCKDB_TO_DORIS_HAZARD_ENTRIES.size)
-        assertEquals(216, TRINO_TO_DORIS_HAZARD_ENTRIES.size)
+        // 2026-07-13); structure and exact JSON content are checked separately.
         assertTrue(DUCKDB_TO_DORIS_HAZARDS.isNotEmpty())
         assertTrue(DORIS_TO_DUCKDB_HAZARDS.isNotEmpty())
         assertTrue(TRINO_TO_DORIS_HAZARDS.isNotEmpty())
@@ -166,9 +226,7 @@ class HazardRegistryTest {
     fun clickhousePairsArePopulatedByLiveProbes() {
         // Populated by the clickhouse differential-probe program (REPORT-clickhouse-
         // differential-probe-2026-07-13; ClickHouse 26.5.1.1 via chdb vs DuckDB 1.5.4);
-        // counts pinned to the ingested registries.
-        assertEquals(213, DUCKDB_TO_CLICKHOUSE_HAZARD_ENTRIES.size)
-        assertEquals(134, TRINO_TO_CLICKHOUSE_HAZARD_ENTRIES.size)
+        // structure and exact JSON content are checked separately.
         assertTrue(DUCKDB_TO_CLICKHOUSE_HAZARDS.isNotEmpty())
         assertTrue(CLICKHOUSE_TO_DUCKDB_HAZARDS.isNotEmpty())
         assertTrue(TRINO_TO_CLICKHOUSE_HAZARDS.isNotEmpty())
@@ -187,7 +245,6 @@ class HazardRegistryTest {
     fun dorisClickhousePairIsPopulatedByLiveProbes() {
         // Populated by the doris<->clickhouse live differential probe (Doris FE pr62767-local
         // / BE 4.1.2 vs ClickHouse 26.5.1.1 via chdb; docs/research/probe-runs/doris-clickhouse.*).
-        assertEquals(177, DORIS_TO_CLICKHOUSE_HAZARD_ENTRIES.size)
         assertTrue(DORIS_TO_CLICKHOUSE_HAZARDS.isNotEmpty())
         assertTrue(CLICKHOUSE_TO_DORIS_HAZARDS.isNotEmpty())
         // Live-probed spot checks: both round half-away vs banker's; both single-arg log is

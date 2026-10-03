@@ -41,6 +41,7 @@ class VerifyCorpusGateTest {
     private data class Ledger(val engine: String, val cases: List<LedgerCase>)
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val ledgerJson = Json { prettyPrint = true }
 
     @Serializable
     private data class TranspileCase(val sql: String, val write: Map<String, String> = emptyMap())
@@ -198,7 +199,7 @@ class VerifyCorpusGateTest {
             })
         }
         val actualFile = oracleLedgerActualFile("$label-verify-ledger-actual.json")
-        actualFile.writeText(Json { prettyPrint = true }.encodeToString(JsonObject.serializer(), actualLedger))
+        actualFile.writeText(ledgerJson.encodeToString(JsonObject.serializer(), actualLedger))
 
         val unledgered = failures.keys - ledgered.keys
         val stale = ledgered.keys - failures.keys

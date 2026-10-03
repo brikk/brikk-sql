@@ -45,7 +45,6 @@ class LineageCorpusTest : LedgerGate() {
                 is JsonObject -> toPlainMap(v)
                 is JsonArray -> v.map { (it as JsonPrimitive).content }
                 is JsonPrimitive -> v.content
-                else -> null
             }
         }
         return out

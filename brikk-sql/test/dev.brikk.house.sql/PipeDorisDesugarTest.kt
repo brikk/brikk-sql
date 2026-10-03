@@ -41,7 +41,7 @@ class PipeDorisDesugarTest {
         assertTrue(ast is PipeQuery)
         assertEquals(
             listOf("PipeWhere", "PipeExtend", "PipeAggregate", "PipeWhere", "PipeOrderBy", "PipeLimit"),
-            (ast as PipeQuery).expressionsArg.map { it!!::class.simpleName },
+            ast.expressionsArg.map { it!!::class.simpleName },
         )
     }
 

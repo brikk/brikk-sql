@@ -26,13 +26,13 @@ coordinates. They emit Java 21-compatible bytecode. Verification modules require
 JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest release: **`0.16.0`**. Current snapshot: **`1.0.0-SNAPSHOT`**.
+Release: **`0.17.0`**. Current snapshot: **`1.0.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.16.0")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.16.0")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.17.0")
+    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.17.0")
 }
 ```
 
@@ -53,6 +53,10 @@ semantic matrix; unprobed functions do not receive inferred certification.
 See the [core API guide](brikk-sql/README.md),
 [corpus coverage policy](docs/corpus-coverage.md), and
 [vendor provenance](vendor/README.md).
+
+New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
+retains proved native text while lowering pipes and reports regenerated intervals.
+The opt-in API leaves the existing rendering paths unchanged.
 
 ## Build and test
 
@@ -95,11 +99,13 @@ Required GitHub organization/repository secrets:
 `KOTLIN_TOOLCHAIN_SIGNING_KEY`, and `KOTLIN_TOOLCHAIN_SIGNING_PASSPHRASE`.
 The workflows also accept `KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME/PASSWORD`.
 For local snapshots, `.env` uses `brikk.mavencentral.user/pass`; local releases
-use the corresponding `KOTLIN_TOOLCHAIN_*` environment variables. The release
-launcher temporarily sets the release version/enables signing and restores the
-template even on failure. It invokes the explicit Portal tasks rather than the
-repository-validation-sensitive `publish mavenCentral` command. Do not reuse an
-already published version. SQL and chDB release versions can now advance independently.
+use Python 3 (standard library only) and the corresponding `KOTLIN_TOOLCHAIN_*`
+environment variables. The release launcher validates SemVer 2.0.0, composes a
+temporary Toolchain template override for the version/Portal/signing settings,
+and restores the original even on failure or termination. It invokes the explicit
+Portal tasks rather than the repository-validation-sensitive `publish mavenCentral`
+command. Do not reuse an already published version. SQL and chDB release versions
+can now advance independently.
 
 Snapshots resolve by adding the snapshots repository explicitly. Releases
 resolve from Maven Central with no extra repository.

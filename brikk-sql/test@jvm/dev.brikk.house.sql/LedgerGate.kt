@@ -152,6 +152,7 @@ internal fun validateCorpusLedger(
 /** Gates approve assertion IDs and exact failure signatures, not human-readable case labels. */
 abstract class LedgerGate {
     protected val json = Json { ignoreUnknownKeys = true }
+    private val ledgerJson = Json { prettyPrint = true }
 
     protected fun loadLedger(path: String, caseKey: String): Map<String, CorpusFailure> {
         val text = testResourceOrNull(path) ?: return emptyMap()
@@ -169,7 +170,7 @@ abstract class LedgerGate {
     ) {
         val actualLedger = serializeCorpusLedger(failures, caseKey, sqlglotVersion, ledger)
         val actualFile = ledgerActualFile(actualLedgerName)
-        actualFile.writeText(Json { prettyPrint = true }.encodeToString(JsonObject.serializer(), actualLedger))
+        actualFile.writeText(ledgerJson.encodeToString(JsonObject.serializer(), actualLedger))
         println(summary)
         val problems = validateCorpusLedger(ledger, failures, mismatchDetails)
         if (problems.isNotEmpty()) fail(

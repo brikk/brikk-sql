@@ -1,7 +1,9 @@
 package dev.brikk.house.sql
 
+import dev.brikk.house.sql.metadata.FunctionHazard
 import dev.brikk.house.sql.metadata.HazardRegistry
 import dev.brikk.house.sql.metadata.HazardVerdict
+import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.contentOrNull
@@ -10,7 +12,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -19,45 +20,28 @@ import kotlin.test.assertTrue
  * tools/generate_hazards_registry.py is byte-deterministic, and this test fails when
  * the JSON changes without a regeneration (or vice versa).
  *
- * Collision policy under test (see the tool's docstring): several JSON entries can
- * claim the same lookup key (e.g. Trino 'concat'); the registry keeps the WORST
- * verdict — so a raw-name lookup must return a verdict at least as severe as the
- * entry's own.
- *
- * Empty skeleton pairs (duckdb↔doris, trino↔doris) are wired through HazardRegistry
- * but contribute no keys until probes land.
+ * Checks all pair files, both orientations, aliases, full evidence fields and
+ * worst-verdict/first-in-JSON collision resolution without hardcoded inventory counts.
  */
 class HazardsRegistrySyncTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private data class JsonPair(
-        val trino: String,
-        val duckdb: String,
-        val verdict: HazardVerdict,
-        val hazard: String?,
-        val provenance: String,
-    )
-
-    private fun loadTrinoDuckdbPairs(): List<JsonPair> {
-        val root = json.parseToJsonElement(testResource("semantics/trino-duckdb-hazards.json")).jsonObject
+    private fun loadPairs(path: String, source: String, target: String): List<FunctionHazard> {
+        val root = json.parseToJsonElement(testResource(path)).jsonObject
         return root.getValue("pairs").jsonArray.map { entry ->
             val obj = entry.jsonObject
-            JsonPair(
-                trino = obj.getValue("trino").jsonPrimitive.content,
-                duckdb = obj.getValue("duckdb").jsonPrimitive.content,
+            FunctionHazard(
+                sourceName = obj.getValue(source).jsonPrimitive.content,
+                targetName = obj.getValue(target).jsonPrimitive.content,
                 verdict = HazardVerdict.valueOf(
                     obj.getValue("verdict").jsonPrimitive.content.uppercase().replace('-', '_')
                 ),
-                hazard = obj["hazard"]?.jsonPrimitive?.contentOrNull,
+                hazard = obj["hazard"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotEmpty() },
+                areas = obj["areas"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList(),
                 provenance = obj.getValue("provenance").jsonPrimitive.content,
             )
         }
-    }
-
-    private fun loadPairCount(path: String): Int {
-        val root = json.parseToJsonElement(testResource(path)).jsonObject
-        return root.getValue("pairs").jsonArray.size
     }
 
     /** Worst-first severity rank (must match tools/generate_hazards_registry.py). */
@@ -70,71 +54,56 @@ class HazardsRegistrySyncTest {
     )
 
     @Test
-    fun everyJsonPairIsRetrievableInBothDirections() {
-        val pairs = loadTrinoDuckdbPairs()
-        assertEquals(246, pairs.size, "hazards JSON pair count changed — regenerate the registry")
-        for (pair in pairs) {
-            val fwd = HazardRegistry.lookup("trino", "duckdb", pair.trino)
-            assertNotNull(fwd, "trino->duckdb lookup missing for ${pair.trino}")
-            assertTrue(
-                rank.getValue(fwd.verdict) <= rank.getValue(pair.verdict),
-                "trino->duckdb '${pair.trino}': registry verdict ${fwd.verdict} is less " +
-                    "severe than the JSON entry's ${pair.verdict}",
-            )
-            val rev = HazardRegistry.lookup("duckdb", "trino", pair.duckdb)
-            assertNotNull(rev, "duckdb->trino lookup missing for ${pair.duckdb}")
-            assertTrue(
-                rank.getValue(rev.verdict) <= rank.getValue(pair.verdict),
-                "duckdb->trino '${pair.duckdb}': registry verdict ${rev.verdict} is less " +
-                    "severe than the JSON entry's ${pair.verdict}",
-            )
+    fun everyJsonLookupMatchesOrientedEvidenceAndCollisionPolicy() {
+        val files = File(testResourcesRoot(), "semantics")
+            .listFiles { file -> file.name.endsWith("-hazards.json") }!!.sortedBy { it.name }
+        assertTrue(files.isNotEmpty(), "no hazard evidence files found")
+        for (file in files) {
+            val dialects = file.name.removeSuffix("-hazards.json").split('-')
+            assertTrue(dialects.size == 2 && dialects.all { it.isNotBlank() }, "bad file: ${file.name}")
+            for ((source, target) in listOf(dialects[0] to dialects[1], dialects[1] to dialects[0])) {
+                val pairs = loadPairs("semantics/${file.name}", source, target)
+                assertTrue(pairs.isNotEmpty(), "${file.name} has no live-probe evidence")
+                val expected = linkedMapOf<String, FunctionHazard>()
+                for (pair in pairs) {
+                    val sourceName = assertNotNull(pair.sourceName, "${file.name}: missing source field")
+                    val targetName = assertNotNull(pair.targetName, "${file.name}: missing target field")
+                    assertTrue(sourceName.isNotBlank() || targetName.isNotBlank(), "${file.name}: both names are blank")
+                    if (sourceName.isBlank() || targetName.isBlank()) {
+                        assertEquals(HazardVerdict.NO_EQUIVALENT, pair.verdict, "${file.name}: blank equivalent name")
+                    }
+                    assertTrue(pair.provenance.isNotBlank(), "${file.name}: missing provenance")
+                    for (key in nameKeys(sourceName)) {
+                        val previous = expected[key]
+                        if (previous == null || rank.getValue(pair.verdict) < rank.getValue(previous.verdict)) {
+                            expected[key] = pair
+                        }
+                    }
+                }
+                for ((key, evidence) in expected) {
+                    assertEquals(evidence, HazardRegistry.lookup(source, target, key), "$source->$target: $key")
+                }
+            }
         }
     }
 
-    @Test
-    fun collisionFreeKeysMatchTheirJsonEntryExactly() {
-        val pairs = loadTrinoDuckdbPairs()
-        // Raw side-names claimed by exactly one entry must round-trip all fields.
-        for (side in listOf("trino", "duckdb")) {
-            val byName = pairs.groupBy {
-                (if (side == "trino") it.trino else it.duckdb).trim().uppercase()
-            }
-            val (source, target) = if (side == "trino") "trino" to "duckdb" else "duckdb" to "trino"
-            for ((name, claimants) in byName) {
-                if (claimants.size != 1) continue
-                val expected = claimants.single()
-                val got = HazardRegistry.lookup(source, target, name)
-                // A '/'-alternative of ANOTHER entry may still out-sever a unique raw
-                // name (e.g. 'lower' also keyed from 'lower/upper case folding...') —
-                // only assert exact equality when the registry returned this entry.
-                assertNotNull(got, "$source->$target lookup missing for $name")
-                if (got.provenance == expected.provenance && got.verdict == expected.verdict) {
-                    assertEquals(expected.hazard, got.hazard, "hazard text drift for $name")
-                }
-                assertTrue(
-                    rank.getValue(got.verdict) <= rank.getValue(expected.verdict),
-                    "$source->$target '$name': ${got.verdict} less severe than ${expected.verdict}",
-                )
-            }
+    private fun nameKeys(name: String): Set<String> = buildSet {
+        add(name.trim().uppercase())
+        for (alternative in name.split('/')) {
+            val bare = alternative.trim().removeSuffix("()")
+            if (Regex("[A-Za-z_][A-Za-z_0-9]*").matches(bare)) add(bare.uppercase())
         }
     }
 
     @Test
     fun dorisJsonsCarryLiveProbePairs() {
-        // Populated by the doris live-probe program; counts must match the generated
-        // registries (see HazardRegistryTest pins).
-        assertEquals(258, loadPairCount("semantics/duckdb-doris-hazards.json"))
-        assertEquals(216, loadPairCount("semantics/trino-doris-hazards.json"))
+        // Exact evidence and registry structure are checked without inventory pins.
         assertNotNull(HazardRegistry.lookup("duckdb", "doris", "lower"))
         assertNotNull(HazardRegistry.lookup("trino", "doris", "ascii"))
     }
 
     @Test
     fun clickhouseJsonsCarryLiveProbePairs() {
-        // Populated by the clickhouse differential-probe program; counts must match the
-        // generated registries (see HazardRegistryTest pins).
-        assertEquals(213, loadPairCount("semantics/duckdb-clickhouse-hazards.json"))
-        assertEquals(134, loadPairCount("semantics/trino-clickhouse-hazards.json"))
         assertNotNull(HazardRegistry.lookup("duckdb", "clickhouse", "length"))
         assertNotNull(HazardRegistry.lookup("trino", "clickhouse", "date_format"))
     }
@@ -142,7 +111,6 @@ class HazardsRegistrySyncTest {
     @Test
     fun dorisClickhouseJsonCarriesLiveProbePairs() {
         // The last core pair, filled by the doris<->clickhouse live differential probe.
-        assertEquals(177, loadPairCount("semantics/doris-clickhouse-hazards.json"))
         assertNotNull(HazardRegistry.lookup("doris", "clickhouse", "round"))
         assertNotNull(HazardRegistry.lookup("clickhouse", "doris", "length"))
     }
@@ -150,7 +118,6 @@ class HazardsRegistrySyncTest {
     @Test
     fun starrocksDorisJsonCarriesLiveProbePairs() {
         // StarRocks 4.1.4 <-> Doris 4.1.3 behavior-matrix probe (common MySQL lineage).
-        assertEquals(82, loadPairCount("semantics/doris-starrocks-hazards.json"))
         assertNotNull(HazardRegistry.lookup("starrocks", "doris", "abs"))
         assertNotNull(HazardRegistry.lookup("doris", "starrocks", "abs"))
         // element_at: positive index agrees, negative index diverges (StarRocks NULL vs

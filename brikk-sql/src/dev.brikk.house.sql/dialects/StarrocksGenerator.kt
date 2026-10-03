@@ -229,7 +229,7 @@ open class StarrocksGenerator(
                 @Suppress("UNCHECKED_CAST")
                 val exprs = (props.args["expressions"] as? MutableList<Expression>)
                     ?: mutableListOf<Expression>().also { props.set("expressions", it) }
-                val pk = primaryKey.pop() as Expression
+                val pk = primaryKey.pop()
                 exprs.add((engineIndex + 1).coerceIn(0, exprs.size), pk)
             }
         }

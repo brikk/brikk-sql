@@ -50,9 +50,7 @@ jobs:
             echo "::error::Could not derive a version from ref '$GITHUB_REF_NAME'. Use a branch named release/<version> or the workflow_dispatch input."
             exit 1
           fi
-          case "$VERSION" in
-            *-SNAPSHOT) echo "::error::Release version must not be a SNAPSHOT ($VERSION)."; exit 1 ;;
-          esac
+          python3 tools/release_config.py validate "$VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Release version: $VERSION"
 

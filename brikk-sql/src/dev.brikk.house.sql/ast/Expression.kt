@@ -78,6 +78,9 @@ abstract class Expression(initArgs: Args = emptyMap()) {
     // sqlglot: Expression._meta (lazily created via the `meta` property)
     internal var metaOrNull: MutableMap<String, kotlin.Any?>? = null
 
+    // Opt-in, parser-proved whole-syntax provenance; never serialized as SQLGlot metadata.
+    internal var syntaxOrigin: dev.brikk.house.sql.parser.SyntaxOrigin? = null
+
     // sqlglot: Expression.meta
     val meta: MutableMap<String, kotlin.Any?>
         get() = metaOrNull ?: LinkedHashMap<String, kotlin.Any?>().also { metaOrNull = it }
@@ -401,6 +404,7 @@ abstract class Expression(initArgs: Args = emptyMap()) {
             node.comments?.let { copy.comments = it.toMutableList() }
             node.typeSlot?.let { copy.typeSlot = it.copy() }
             node.metaOrNull?.let { copy.metaOrNull = LinkedHashMap(it) }
+            copy.syntaxOrigin = node.syntaxOrigin
 
             for ((k, vs) in node.args) {
                 if (vs is Expression) {

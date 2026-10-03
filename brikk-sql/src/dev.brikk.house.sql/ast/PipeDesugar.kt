@@ -66,7 +66,7 @@ private class PipeCteCounter(val takenNames: kotlin.collections.Set<String>, val
 }
 
 private fun desugarNode(node: Expression, counter: PipeCteCounter): Expression {
-    if (node is PipeQuery) return desugarPipeQuery(node, counter)
+    if (node is PipeQuery) return desugarPipeQuery(node, counter).also { it.syntaxOrigin = node.syntaxOrigin }
     desugarChildren(node, counter)
     return node
 }

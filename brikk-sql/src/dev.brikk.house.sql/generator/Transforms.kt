@@ -674,11 +674,11 @@ fun unnestToExplode(expression: Expression, unnestUsingArraysZip: kotlin.Boolean
         for (join in joins.toList()) {
             val joinExpr = join.thisArg as? Expression
             val isLateral = joinExpr is Lateral
-            val unnestCandidate = if (isLateral) (joinExpr as Lateral).thisArg else joinExpr
+            val unnestCandidate = if (isLateral) joinExpr.thisArg else joinExpr
 
             if (unnestCandidate is Unnest) {
                 val alias: TableAlias? = if (isLateral) {
-                    (joinExpr as Lateral).args["alias"] as? TableAlias
+                    joinExpr.args["alias"] as? TableAlias
                 } else {
                     unnestCandidate.args["alias"] as? TableAlias
                 }

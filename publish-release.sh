@@ -11,9 +11,9 @@
 #   KOTLIN_TOOLCHAIN_SIGNING_KEY             full ASCII-armored PGP private key
 #   KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE  (or KOTLIN_TOOLCHAIN_SIGNING_PASSPHRASE) if encrypted
 #
-# This temporarily enables the release settings in publish.module-template.yaml
-# (version + mavenCentral + signArtifacts) and restores the file on exit, so the committed
-# config keeps the keyless SNAPSHOT flow working.
+# Requires Python 3 (standard library only). This temporarily wraps the shared publishing
+# template with Toolchain-native release overrides and restores the original on exit,
+# so the committed config keeps the keyless SNAPSHOT flow working. No YAML text edits.
 #
 # Publishing mode is "auto": Central validates and publishes each deployment without a
 # manual Portal step. Track deployments at https://central.sonatype.com/publishing/deployments.
@@ -22,13 +22,11 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 VERSION="${1:-}"
-if [ "$#" -ne 1 ] || [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+if [ "$#" -ne 1 ]; then
   echo "usage: $0 <version>   (e.g. 0.1.0)" >&2
   exit 2
 fi
-case "$VERSION" in
-  *-SNAPSHOT) echo "ERROR: Maven Central rejects SNAPSHOT versions ('$VERSION')." >&2; exit 2 ;;
-esac
+python3 tools/release_config.py validate "$VERSION"
 
 # Env-var name compatibility. The name the toolchain reads changed between versions:
 #   - 0.11 reads KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME/PASSWORD   (NO underscore)
@@ -57,16 +55,16 @@ if [ -n "$missing" ]; then
 fi
 
 TMPL="publish.module-template.yaml"
-BACKUP="$(mktemp)"
+BACKUP="$(mktemp "$PWD/.publish-base.XXXXXX.module-template.yaml")"
 cp "$TMPL" "$BACKUP"
 restore() { cp "$BACKUP" "$TMPL"; rm -f "$BACKUP"; }
-trap restore EXIT INT TERM
+trap restore EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-sed -i \
-  -e "s|^    version: .*|    version: ${VERSION}|" \
-  -e "s|^    #mavenCentral: { enabled: true, publishingMode: auto }|    mavenCentral: { enabled: true, publishingMode: auto }|" \
-  -e "s|^    #signArtifacts: true|    signArtifacts: true|" \
-  "$TMPL"
+# Keep the base beside the original so its relative apply/repository paths retain
+# their meaning. Toolchain merges these publishing overrides after the base settings.
+python3 tools/release_config.py template "$VERSION" "./$(basename "$BACKUP")" > "$TMPL"
 
 echo ">> Publishing release ${VERSION} to Maven Central (all modules)..."
 # Invoke the registered Portal tasks directly, avoiding repository validation

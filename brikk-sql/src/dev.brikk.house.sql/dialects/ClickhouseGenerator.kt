@@ -1227,9 +1227,7 @@ open class ClickhouseGenerator(
                 val removalValue = e.args["expression"] as? Expression
                 // ClickHouse: ARRAY_FUNCS_PROPAGATES_NULLS=False (target)
                 if (e.args["null_propagation"] == true) {
-                    if ((removalValue is Literal && removalValue !is Null) ||
-                        removalValue is ArrayNode
-                    ) {
+                    if (removalValue is Literal || removalValue is ArrayNode) {
                         filterSql
                     } else {
                         sql(
