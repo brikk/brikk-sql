@@ -8,7 +8,7 @@ and exact known-failure ledgers under `brikk-sql/testResources/` are
 the behavioral oracle. Intentional divergences in `docs/brikk-extensions.md`
 are out of scope.
 
-The completed hygiene work closes **SQL-07 / EVAL-15**:
+The completed hygiene work is indexed as **SQL-07** in [TODO.md](TODO.md):
 compiler warnings were removed without suppression, release versions use shared
 SemVer 2.0.0 validation, publishing settings use Toolchain template inheritance
 rather than indentation-sensitive edits, the Doris parser JAR checksum is recorded

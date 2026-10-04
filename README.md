@@ -52,7 +52,8 @@ semantic matrix; unprobed functions do not receive inferred certification.
 
 See the [core API guide](brikk-sql/README.md),
 [corpus coverage policy](docs/corpus-coverage.md), and
-[vendor provenance](vendor/README.md).
+[vendor provenance](vendor/README.md). Current priorities and ownership:
+[work list](TODO.md) (`SQL-*`).
 
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
