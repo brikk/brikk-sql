@@ -26,13 +26,14 @@ coordinates. They emit Java 21-compatible bytecode. Verification modules require
 JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Release: **`0.17.0`**. Current snapshot: **`1.0.0-SNAPSHOT`**.
+Release: **`0.18.0`**. This release branch pins the publication version to `0.18.0`;
+development on `main` advances to `0.19.0-SNAPSHOT` after publication.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.17.0")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.17.0")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.18.0")
+    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.18.0")
 }
 ```
 
@@ -57,6 +58,9 @@ See the [core API guide](brikk-sql/README.md),
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
 The opt-in API leaves the existing rendering paths unchanged.
+
+`0.18.0` adds the DDB-001 DuckDB template-projection fix and updates the DuckDB
+reference engine/catalogs to 1.5.6 (JDBC 1.5.6.0).
 
 ## Build and test
 
@@ -88,7 +92,7 @@ This repository publishes **only the four SQL artifacts** above. The module
 template owns the version, sources, POM metadata, and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
-  `1.0.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
+  the current development version to `https://central.sonatype.com/repository/maven-snapshots/`.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.

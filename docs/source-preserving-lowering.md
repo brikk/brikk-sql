@@ -1,14 +1,15 @@
 # Source-preserving executable lowering (SQL-05)
 
-**Release version: `0.17.0`.** This API is included in the four SQL artifacts
-published by the `release/0.17.0` workflow. Engine integration remains ENG-01.
+**Release version: `0.18.0`.** This API was introduced in `0.17.0`; `0.18.0` also
+fixes DDB-001 and updates the DuckDB reference to 1.5.6. All four SQL artifacts
+are published by the `release/0.18.0` workflow. Engine integration remains ENG-01.
 
-After Central publication, use `dev.brikk.house:brikk-sql-jvm:0.17.0` in all three
-SQL consumers. Core's POM points to `brikk-sql-metadata-jvm:0.17.0`; verification
+After Central publication, use `dev.brikk.house:brikk-sql-jvm:0.18.0` in all three
+SQL consumers. Core's POM points to `brikk-sql-metadata-jvm:0.18.0`; verification
 and oracle artifacts use the same release version. No Maven Local or sibling source
-dependency is required for final delivery. The tested `0.17.0-SNAPSHOT` candidate
-remains installed in Maven Local on the development machine. Normal snapshot
-configuration remains `1.0.0-SNAPSHOT`.
+dependency is required for final delivery. The tested `0.18.0-SNAPSHOT` candidate
+remains installed in Maven Local on the development machine. Development on `main`
+advances to `0.19.0-SNAPSHOT` after this release.
 
 ## Public API
 
@@ -117,6 +118,24 @@ the fragment. This API has no knowledge of Rel, slot values or graph ownership. 
 parameter intervals let Engine replace its ambiguity-prone punctuation scan with
 parser-proved coordinates with the `0.17.0` release.
 
+### Portable DuckDB projection markers (DDB-001, fixed in 0.18.0)
+
+The published `0.17.0` parser rejects bare `SELECT :name` and parenthesized
+`(:name)` projections because it confuses them with prefix-alias syntax. The
+SQL-side correction is documented in [extension 33](brikk-extensions.md#33-duckdb-prefix-alias-lookahead-and-portable-template-markers-ddb-001):
+only an actual identifier can introduce a DuckDB prefix alias. The source remains
+unchanged, and actual parameter/name intervals remain available to Engine.
+This is still a portable template contract: Engine must adapt/bind markers for
+DuckDB JDBC, not execute raw `:name` as native DuckDB syntax. Engine can replace
+its published-version blocker reproducers after integrating `0.18.0`.
+
+For local consumer testing, all four SQL artifacts are now installed in Maven Local
+as **`0.18.0-SNAPSHOT`**, including this fix and the DuckDB 1.5.6 reference update.
+Resolve Maven Local before Central and use
+`dev.brikk.house:brikk-sql-jvm:0.18.0-SNAPSHOT` in the SQL consumers. The installed
+JAR passes the original DDB-001 source/parameter-range reproducers on Java 21;
+this is a test candidate, not a Central publication or completed Engine integration.
+
 ## Verification and delivery
 
 Focused tests:
@@ -136,8 +155,8 @@ nested pipelines, recursive/colliding CTEs, repeated WHERE after SELECT/EXTEND,
 DISTINCT, ORDER/LIMIT/OFFSET, quoted join namespaces, embedding and Unicode/literal
 punctuation. It also exercises the vendored Doris FE grammar, including retained hints.
 
-Verified before release: `./kotlin build`, all 1,084 Kotlin tests (one optional
+Verified before release: `./kotlin build`, all 1,090 Kotlin tests (one optional
 native integration test skipped), and nine offline release-configuration tests.
 Exact known-failure signatures and intentional-divergence entries are unchanged.
-After publication, Engine can update all three consumers to `0.17.0`, adopt this
+After publication, Engine can update all three consumers to `0.18.0`, adopt this
 signature, and complete ENG-01 integration with its own build and full suite.

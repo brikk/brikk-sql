@@ -318,8 +318,10 @@ open class DuckdbParser(
 
     // sqlglot: DuckDBParser._parse_expression (prefix aliases, e.g. foo: 1)
     override fun parseExpression(): Expression? {
-        if (nextToken.tokenType == TokenType.COLON) {
-            val alias = parseIdVar(tokens = aliasTokens)
+        // brikk extension (docs/brikk-extensions.md #33, DDB-001): the alias must
+        // be an identifier. SELECT :n and (:n) start a query/paren, not a prefix alias.
+        if (nextToken.tokenType == TokenType.COLON && currToken.tokenType in aliasTokens) {
+            val alias = parseIdVar(anyToken = false, tokens = aliasTokens)
             match(TokenType.COLON)
             val comments = prevComments.toMutableList()
 

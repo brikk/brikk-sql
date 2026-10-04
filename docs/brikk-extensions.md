@@ -993,6 +993,45 @@ and the all-weekday LAST_DAY behavior from section 31 remain unchanged.
 year boundaries, explicit zones, and result types. These are DuckDB checks, not live
 BigQuery verification. Upstream issue/PR status: not reported.
 
+## 33. DuckDB prefix-alias lookahead and portable template markers (DDB-001)
+
+Engine's portable interpolation spelling is `:name`, including a bare projection
+such as `SELECT :n AS n`. The pinned SQLGlot DuckDB parser checks only whether the
+next token is a colon, then parses the current token as an unrestricted identifier.
+It therefore mistakes `SELECT` in `SELECT :n`, or `(` in `(:n)`, for a prefix-alias
+name and fails before the actual placeholder can be parsed.
+
+Brikk's `DuckdbParser.parseExpression` requires the current token to be in the
+dialect's identifier/alias-token set before entering the prefix-alias branch.
+`SELECT`, opening delimiters, numeric literals and string literals do not become
+alias declarations. Actual native prefix aliases such as `answer: :n`,
+`"odd alias": :n`, and `current_date: :n` remain supported.
+
+`SELECT :n AS n`, `SELECT :value AS result`, `SELECT :n::INTEGER AS n`, and
+`SELECT (:n) AS n` now produce the intended Placeholder/Alias/Cast/Paren shapes.
+Scalar parameter discovery and parser-proved UTF-16 occurrence/name intervals
+remain accurate, including repeated markers, nested queries, CTEs and pipe stages.
+Source-preserving rendering keeps the portable marker and authored text unchanged;
+ordinary DuckDB generation still emits its native `$name` marker spelling.
+
+This does **not** claim that DuckDB JDBC natively accepts `:name`. Consumers must
+continue their parameter-only adaptation/binding. `DuckdbTemplateParameterTest`
+pins the AST/source/interval contract and native prefix-alias controls.
+`DuckdbTemplateBindingResultTest` adapts only proved marker intervals to `?` and
+executes every bare/cast/parenthesized/prefix-alias case in DuckDB 1.5.6 with both
+integer and NULL bindings, checking column labels and returned rows. No copied
+sample SQL, regex rewriting, or SQL-regeneration fallback is used.
+
+The finding is recorded by Engine's `samples/duckdb-pipelines/FINDINGS.md` as
+DDB-001. This SQL-side fix ships in `0.18.0`, not `0.17.0`; Engine's compiler/sample
+blocker reproducers need updating after `0.18.0` is integrated.
+The `0.18.0-SNAPSHOT` testing candidate is installed in Maven Local
+on the development machine (all four SQL artifacts, with DuckDB JDBC 1.5.6.0).
+Its installed core JAR was exercised directly on Java 21 against the reported
+bare/cast/parenthesized projection reproducers and a native prefix-alias control.
+Upstream issue/PR status: not reported. Existing corpus fixtures and known-failure
+signatures are unchanged.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
