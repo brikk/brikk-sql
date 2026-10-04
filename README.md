@@ -26,8 +26,7 @@ coordinates. They emit Java 21-compatible bytecode. Verification modules require
 JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Release: **`0.18.0`**. This release branch pins the publication version to `0.18.0`;
-development on `main` advances to `0.19.0-SNAPSHOT` after publication.
+Latest release: **`0.18.0`**. Current development snapshot: **`0.19.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
@@ -92,7 +91,7 @@ This repository publishes **only the four SQL artifacts** above. The module
 template owns the version, sources, POM metadata, and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
-  the current development version to `https://central.sonatype.com/repository/maven-snapshots/`.
+  `0.19.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.

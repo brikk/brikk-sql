@@ -26,7 +26,7 @@ settings:
   publishing:
     enabled: true
     group: dev.brikk.house
-    version: 0.18.0
+    version: 0.19.0-SNAPSHOT
     publishSources: true
     # Releases use publish-release.sh: it temporarily wraps this template via `apply`
     # and overrides version, mavenCentral (auto), and signArtifacts, restoring this

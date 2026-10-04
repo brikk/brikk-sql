@@ -4,12 +4,12 @@
 fixes DDB-001 and updates the DuckDB reference to 1.5.6. All four SQL artifacts
 are published by the `release/0.18.0` workflow. Engine integration remains ENG-01.
 
-After Central publication, use `dev.brikk.house:brikk-sql-jvm:0.18.0` in all three
+Use `dev.brikk.house:brikk-sql-jvm:0.18.0` from Maven Central in all three
 SQL consumers. Core's POM points to `brikk-sql-metadata-jvm:0.18.0`; verification
 and oracle artifacts use the same release version. No Maven Local or sibling source
 dependency is required for final delivery. The tested `0.18.0-SNAPSHOT` candidate
 remains installed in Maven Local on the development machine. Development on `main`
-advances to `0.19.0-SNAPSHOT` after this release.
+now uses `0.19.0-SNAPSHOT`; the release branch retains `0.18.0`.
 
 ## Public API
 
