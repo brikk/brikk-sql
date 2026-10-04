@@ -9,7 +9,7 @@
   "starrocks": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",
   "presto": "sqlglot-codegen: pinned parser/canonical-node/generator evidence only",
   "trino": "engine-catalog: vendor/data/trino-functions-483.tsv",
-  "duckdb": "engine-catalog: duckdb_functions() 1.5.5",
+  "duckdb": "engine-catalog: duckdb_functions() 1.5.6",
   "postgres": "sqlglot-codegen: pinned parser/canonical-node/generator evidence only",
   "clickhouse": "engine-catalog: system.functions 26.5.1.1",
   "hive": "sqlglot-codegen: pinned parser/canonical-node/generator evidence only",
@@ -48,13 +48,13 @@
  "pairs": {
   "duckdb->trino": {
    "analysisStatus": "classified",
-   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "targetEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
    "counts": {
     "A": 127,
     "B": 81,
     "C": 35,
-    "D": 544
+    "D": 539
    },
    "subCounts": {
     "A_arity_compatible": 119,
@@ -66,18 +66,18 @@
     "C_with_c1_or_c2": 9,
     "C_c3_hint_only": 26
    },
-   "entryCount": 787,
+   "entryCount": 782,
    "file": "function-gaps/duckdb__trino.json"
   },
   "duckdb->doris": {
    "analysisStatus": "classified",
-   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "targetEvidence": "engine-catalog: vendor/data/doris-signatures.json",
    "counts": {
     "A": 181,
     "B": 56,
     "C": 51,
-    "D": 499
+    "D": 494
    },
    "subCounts": {
     "A_arity_compatible": 150,
@@ -89,18 +89,18 @@
     "C_with_c1_or_c2": 14,
     "C_c3_hint_only": 37
    },
-   "entryCount": 787,
+   "entryCount": 782,
    "file": "function-gaps/duckdb__doris.json"
   },
   "duckdb->starrocks": {
    "analysisStatus": "classified",
-   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "targetEvidence": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",
    "counts": {
     "A": 146,
     "B": 66,
     "C": 32,
-    "D": 543
+    "D": 538
    },
    "subCounts": {
     "A_arity_compatible": 135,
@@ -112,18 +112,18 @@
     "C_with_c1_or_c2": 7,
     "C_c3_hint_only": 25
    },
-   "entryCount": 787,
+   "entryCount": 782,
    "file": "function-gaps/duckdb__starrocks.json"
   },
   "duckdb->clickhouse": {
    "analysisStatus": "classified",
-   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "sourceEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "targetEvidence": "engine-catalog: system.functions 26.5.1.1",
    "counts": {
     "A": 152,
     "B": 58,
     "C": 39,
-    "D": 538
+    "D": 533
    },
    "subCounts": {
     "A_arity_compatible": 0,
@@ -135,13 +135,13 @@
     "C_with_c1_or_c2": 7,
     "C_c3_hint_only": 32
    },
-   "entryCount": 787,
+   "entryCount": 782,
    "file": "function-gaps/duckdb__clickhouse.json"
   },
   "trino->duckdb": {
    "analysisStatus": "classified",
    "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "counts": {
     "A": 150,
     "B": 52,
@@ -233,7 +233,7 @@
   "doris->duckdb": {
    "analysisStatus": "classified",
    "sourceEvidence": "engine-catalog: vendor/data/doris-signatures.json",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "counts": {
     "A": 191,
     "B": 57,
@@ -325,7 +325,7 @@
   "starrocks->duckdb": {
    "analysisStatus": "classified",
    "sourceEvidence": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "counts": {
     "A": 173,
     "B": 54,
@@ -417,7 +417,7 @@
   "clickhouse->duckdb": {
    "analysisStatus": "classified",
    "sourceEvidence": "engine-catalog: system.functions 26.5.1.1",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "counts": {
     "A": 98,
     "B": 71,

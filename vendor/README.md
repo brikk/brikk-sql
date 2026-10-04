@@ -261,11 +261,21 @@ by `tools/generate_duckdb_functions.py` from the embedded engine itself: the pyt
 module's `duckdb_functions()` view — the engine's own resolved registry, with per-overload
 signatures, varargs, and parameter names (`parameters` → `FunctionOverload.argNames`,
 verbatim — the only engine catalog that exposes names) included for free. `duckdb_functions()`
-has **no null-handling column** (checked v1.5.5: `has_side_effects` and `stability` are the
+has **no null-handling column** (checked v1.5.6: `has_side_effects` and `stability` are the
 only behavioral flags), so `FunctionDef.profile` stays null for every DuckDB def. Pinned to
-the python module version at generation time (currently **v1.5.5**; the generator refuses to
-run if module and engine versions disagree). Refresh: bump the python `duckdb` module,
-re-run the script. DuckDB is MIT licensed (see ATTRIBUTIONS.md).
+the python module version at generation time (currently **v1.5.6**, source ID
+`069cc9f9b5`, refreshed 2026-10-04). The generator requires its explicit
+`DUCKDB_VERSION` pin and refuses module/engine disagreement. The native verifier
+uses the matching `org.duckdb:duckdb_jdbc:1.5.6.0`. Refresh: update that dependency
+and the generator pin, install the pinned Python version in an isolated environment, and rerun
+`tools/generate_duckdb_functions.py`. DuckDB is MIT licensed (see ATTRIBUTIONS.md).
+
+The current catalog contains **876 definitions / 2,677 overloads**, with parameter
+names on 2,567 overloads. Compared with the 1.5.5 catalog, the 1.5.6 registry no
+longer exposes `icu_collate_fy`, `icu_collate_lij`, `icu_collate_nso`,
+`icu_collate_st`, or `icu_collate_tn`; all other modeled signatures are unchanged.
+The live JDBC version/source-ID regression also checks these removals. Historical
+cross-engine hazard evidence retains the engine versions actually probed.
 
 ## `data/trino-functions-483.tsv`
 

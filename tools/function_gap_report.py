@@ -60,6 +60,7 @@ import sys
 import time
 from collections import OrderedDict
 from pathlib import Path
+from generate_duckdb_functions import DUCKDB_VERSION
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "reference" / "sqlglot"))
@@ -179,6 +180,8 @@ def load_trino():
 def load_duckdb():
     import duckdb
 
+    if duckdb.__version__ != DUCKDB_VERSION:
+        sys.exit(f"error: install duckdb=={DUCKDB_VERSION}; found {duckdb.__version__}")
     rows = duckdb.sql(
         """
         select function_name, alias_of, function_type, parameter_types, varargs
@@ -940,7 +943,7 @@ def main():
         "clickhouse": load_clickhouse(),
     }
     evidence = {
-        "duckdb": "engine-catalog: duckdb_functions() 1.5.5",
+        "duckdb": f"engine-catalog: duckdb_functions() {DUCKDB_VERSION}",
         "trino": "engine-catalog: vendor/data/trino-functions-483.tsv",
         "doris": "engine-catalog: vendor/data/doris-signatures.json",
         "starrocks": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",

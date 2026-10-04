@@ -14,6 +14,27 @@ import java.sql.SQLException
 class SqlVerifierTest {
 
     @Test
+    fun duckdbRuntimeUsesThePinnedReferenceVersion() {
+        java.sql.DriverManager.getConnection("jdbc:duckdb:").use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery("SELECT library_version, source_id FROM pragma_version()").use { rows ->
+                    assertTrue(rows.next())
+                    assertEquals("v1.5.6", rows.getString(1))
+                    assertEquals("069cc9f9b5", rows.getString(2))
+                    assertFalse(rows.next())
+                }
+                statement.executeQuery(
+                    "SELECT count(*) FROM duckdb_functions() WHERE function_name IN " +
+                        "('icu_collate_fy', 'icu_collate_lij', 'icu_collate_nso', 'icu_collate_st', 'icu_collate_tn')"
+                ).use { rows ->
+                    assertTrue(rows.next())
+                    assertEquals(0, rows.getInt(1), "JDBC must agree with the refreshed Python registry")
+                }
+            }
+        }
+    }
+
+    @Test
     fun nestedPipesLowerBeforeNativeVerification() {
         for (source in listOf(
             "SELECT * FROM (FROM (SELECT 1 AS metric) AS t |> SELECT metric) AS s",

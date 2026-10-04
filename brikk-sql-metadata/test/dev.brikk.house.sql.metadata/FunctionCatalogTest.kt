@@ -4,6 +4,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -235,8 +236,13 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbCatalogLoadsWithExpectedSurface() {
-        // Pinned to DuckDB v1.5.5 (the python module the generator embeds).
-        assertEquals(881, DUCKDB_FUNCTION_CATALOG.size)
+        // Pinned to DuckDB v1.5.6 (the python module the generator embeds).
+        assertEquals(876, DUCKDB_FUNCTION_CATALOG.size)
+        // The 1.5.6 Python registry no longer exposes these ICU locale functions.
+        for (locale in listOf("fy", "lij", "nso", "st", "tn")) {
+            assertFalse("icu_collate_$locale" in DUCKDB_FUNCTION_CATALOG)
+        }
+        assertTrue("icu_collate_en" in DUCKDB_FUNCTION_CATALOG)
         assertTrue("list_transform" in DUCKDB_FUNCTION_CATALOG)
         // Engine-verified overload: list_transform(ANY[], LAMBDA) -> ANY[], with the
         // engine's verbatim parameter names incl. the lambda shape.
@@ -281,7 +287,7 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbArgNamesArePinnedAgainstTheEngine() {
-        // duckdb_functions() (v1.5.5) lists round's parameters as ['x'] and
+        // duckdb_functions() (v1.5.6) lists round's parameters as ['x'] and
         // ['x', 'precision'] per numeric overload — names attach per overload, in
         // argTypes order.
         val round = DUCKDB_FUNCTION_CATALOG["round"]!!
@@ -299,11 +305,11 @@ class FunctionCatalogTest {
             setOf(listOf("x"), listOf("x", "precision")),
             round.overloads.mapNotNull { it.argNames }.toSet(),
         )
-        // Engine-wide coverage pin at v1.5.5: 2572 of 2682 overloads carry names
+        // Engine-wide coverage pin at v1.5.6: 2567 of 2677 overloads carry names
         // (the rest: duckdb lists no parameters for the row).
         val all = DUCKDB_FUNCTION_CATALOG.functions.flatMap { it.overloads }
-        assertEquals(2682, all.size)
-        assertEquals(2572, all.count { it.argNames != null })
+        assertEquals(2677, all.size)
+        assertEquals(2567, all.count { it.argNames != null })
         // Named overloads keep names aligned with the fixed parameter types (variadic
         // rows may name the vararg tail, e.g. concat(string, ...)).
         assertTrue(
@@ -314,7 +320,7 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbProfilesStayNull() {
-        // duckdb_functions() exposes no null-handling column (v1.5.5: has_side_effects
+        // duckdb_functions() exposes no null-handling column (v1.5.6: has_side_effects
         // and stability are the only behavioral flags) — honest UNKNOWN as null.
         assertTrue(DUCKDB_FUNCTION_CATALOG.functions.all { it.profile == null })
     }

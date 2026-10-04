@@ -1,7 +1,7 @@
 {
  "analysisStatus": "classified",
  "sourceEvidence": "engine-catalog: system.functions 26.5.1.1",
- "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+ "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
  "counts": {
   "A": 98,
   "B": 71,
@@ -96,7 +96,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "abs",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Abs"
   },
@@ -128,7 +128,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "acos",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Acos"
   },
@@ -139,7 +139,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "acosh",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Acosh"
   },
@@ -283,7 +283,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "age",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -442,7 +442,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "approx_top_k",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "ApproxTopK"
   },
@@ -489,7 +489,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "arg_max",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "ArgMax",
    "sqlglotTranslatesTo": "arg_max",
@@ -502,7 +502,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "arg_min",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "ArgMin",
    "sqlglotTranslatesTo": "arg_min",
@@ -1190,7 +1190,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ascii",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Ascii"
   },
@@ -1201,7 +1201,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "asin",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Asin"
   },
@@ -1212,7 +1212,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "asinh",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Asinh"
   },
@@ -1230,7 +1230,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "atan",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Atan"
   },
@@ -1241,7 +1241,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "atan2",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Atan2"
   },
@@ -1252,7 +1252,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "atanh",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Atanh"
   },
@@ -1274,7 +1274,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "avg",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Avg"
   },
@@ -1299,7 +1299,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "bar",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -1394,7 +1394,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "bin",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -1805,7 +1805,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cbrt",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Cbrt"
   },
@@ -1820,7 +1820,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ceil",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Ceil"
   },
@@ -1955,7 +1955,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "concat",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Concat"
   },
@@ -2031,7 +2031,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "corr",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Corr"
   },
@@ -2056,7 +2056,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cos",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Cos"
   },
@@ -2067,7 +2067,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cosh",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Cosh"
   },
@@ -2105,7 +2105,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "count",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Count"
   },
@@ -2274,7 +2274,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cume_dist",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "CumeDist"
   },
@@ -2508,7 +2508,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "datediff",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "DateDiff",
    "sqlglotTranslatesTo": "date_diff",
@@ -2567,7 +2567,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "datetrunc",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "DateTrunc",
    "sqlglotTranslatesTo": "date_trunc",
@@ -2647,7 +2647,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "degrees",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Degrees"
   },
@@ -3024,7 +3024,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "divide",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -3326,7 +3326,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "entropy",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "AnonymousAggFunc"
   },
@@ -3379,7 +3379,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "exp",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Exp"
   },
@@ -3554,7 +3554,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "factorial",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Factorial"
   },
@@ -3711,7 +3711,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "floor",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Floor"
   },
@@ -3722,7 +3722,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "format",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Format"
   },
@@ -3784,7 +3784,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "formatreadabledecimalsize",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -3805,7 +3805,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "format_bytes",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -3964,7 +3964,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "greatest_common_divisor",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -4219,7 +4219,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "greatest",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Greatest"
   },
@@ -4865,7 +4865,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "hex",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Hex"
   },
@@ -4904,7 +4904,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "histogram",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "AnonymousAggFunc"
   },
@@ -5308,7 +5308,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "isfinite",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -5353,7 +5353,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "isnan",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "IsNan"
   },
@@ -5492,7 +5492,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "json_exists",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -5509,7 +5509,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "json_value",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -5971,7 +5971,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lag",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Lag"
   },
@@ -6000,7 +6000,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "least_common_multiple",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -6010,7 +6010,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lead",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Lead"
   },
@@ -6028,7 +6028,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "least",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Least"
   },
@@ -6039,7 +6039,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "left",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Left"
   },
@@ -6085,7 +6085,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "length",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Length"
   },
@@ -6129,7 +6129,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lgamma",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -6199,7 +6199,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "log",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Ln",
    "sqlglotTranslatesTo": "ln",
@@ -6212,7 +6212,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "log10",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Log",
    "sqlglotTranslatesTo": "log",
@@ -6232,7 +6232,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "log2",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Log",
    "sqlglotTranslatesTo": "log",
@@ -6270,7 +6270,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lower",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Lower"
   },
@@ -6384,7 +6384,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "VarMap"
   },
@@ -6608,7 +6608,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "max",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Max"
   },
@@ -6654,7 +6654,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "md5",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "MD5Digest",
    "sqlglotTranslatesTo": "unhex",
@@ -6695,7 +6695,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "min",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Min"
   },
@@ -6788,7 +6788,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "monthname",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Monthname"
   },
@@ -6867,7 +6867,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "multiply",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -7387,7 +7387,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "get_current_timestamp",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -7418,7 +7418,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "nth_value",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "NthValue"
   },
@@ -7429,7 +7429,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ntile",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Ntile"
   },
@@ -7440,7 +7440,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "nullif",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Nullif"
   },
@@ -7905,7 +7905,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "pi",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Pi"
   },
@@ -8077,7 +8077,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "instr",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "StrPosition",
    "sqlglotTranslatesTo": "strpos",
@@ -8150,7 +8150,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "pow",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Pow",
    "sqlglotTranslatesTo": "power",
@@ -8170,7 +8170,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "printf",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -8198,7 +8198,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "quantile_disc",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Quantile"
   },
@@ -8554,7 +8554,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "radians",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Radians"
   },
@@ -8710,7 +8710,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "range",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -8720,7 +8720,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "rank",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Rank"
   },
@@ -9105,7 +9105,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "repeat",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Repeat"
   },
@@ -9181,7 +9181,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "reverse",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Reverse"
   },
@@ -9213,7 +9213,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "right",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Right"
   },
@@ -9261,7 +9261,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "round",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Round"
   },
@@ -9279,7 +9279,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "roundbankers",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -9310,7 +9310,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "row_number",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "RowNumber"
   },
@@ -9419,7 +9419,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sha1",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "SHA"
   },
@@ -9437,7 +9437,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sha256",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "SHA2"
   },
@@ -9501,7 +9501,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sign",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Sign"
   },
@@ -9596,7 +9596,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sin",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Sin"
   },
@@ -9614,7 +9614,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sinh",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Sinh"
   },
@@ -9844,7 +9844,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sqrt",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Sqrt"
   },
@@ -10057,7 +10057,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "substring",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Substring"
   },
@@ -10190,7 +10190,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sum",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Sum"
   },
@@ -10208,7 +10208,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "kahan_sum",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -10260,7 +10260,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "tan",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Tan"
   },
@@ -10271,7 +10271,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "tanh",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Tanh"
   },
@@ -10558,7 +10558,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "timezone",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -10741,7 +10741,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "today",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -12267,7 +12267,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "translate",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Translate"
   },
@@ -12337,7 +12337,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "trunc",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Trunc"
   },
@@ -12556,7 +12556,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "unbin",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown"
   },
   {
@@ -12566,7 +12566,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "unhex",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Unhex"
   },
@@ -12628,7 +12628,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "upper",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Upper"
   },
@@ -12808,7 +12808,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "version",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "CurrentVersion"
   },
@@ -12963,7 +12963,7 @@
    "bucket": "A",
    "classification": "same-name",
    "targetName": "xor",
-   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.5",
+   "targetEvidence": "engine-catalog: duckdb_functions() 1.5.6",
    "arity": "arity-unknown",
    "nodeClass": "Xor"
   },

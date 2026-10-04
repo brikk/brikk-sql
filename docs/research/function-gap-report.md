@@ -82,7 +82,7 @@ parser/codegen function registry as explicitly weaker relationship evidence.
 | starrocks | 820 |
 | presto | 674 |
 | trino | 441 |
-| duckdb | 787 |
+| duckdb | 782 |
 | postgres | 666 |
 | clickhouse | 1570 |
 | hive | 661 |
@@ -95,10 +95,10 @@ parser/codegen function registry as explicitly weaker relationship evidence.
 
 | pair | total | A | A-arity-suspect | B | B-render-err | C (c1/c2) | C (c3 only) | D |
 |---|---|---|---|---|---|---|---|---|
-| duckdb->trino | 787 | 127 | 3 | 81 | 0 | 9 | 26 | 544 |
-| duckdb->doris | 787 | 181 | 2 | 56 | 1 | 14 | 37 | 499 |
-| duckdb->starrocks | 787 | 146 | 2 | 66 | 1 | 7 | 25 | 543 |
-| duckdb->clickhouse | 787 | 152 | 0 | 58 | 0 | 7 | 32 | 538 |
+| duckdb->trino | 782 | 127 | 3 | 81 | 0 | 9 | 26 | 539 |
+| duckdb->doris | 782 | 181 | 2 | 56 | 1 | 14 | 37 | 494 |
+| duckdb->starrocks | 782 | 146 | 2 | 66 | 1 | 7 | 25 | 538 |
+| duckdb->clickhouse | 782 | 152 | 0 | 58 | 0 | 7 | 32 | 533 |
 | trino->duckdb | 441 | 150 | 5 | 52 | 2 | 0 | 9 | 230 |
 | trino->doris | 441 | 178 | 4 | 37 | 0 | 3 | 7 | 216 |
 | trino->starrocks | 441 | 148 | 5 | 48 | 1 | 1 | 2 | 242 |

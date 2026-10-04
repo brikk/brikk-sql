@@ -179,7 +179,7 @@ exceptions today:
   deduplication key. Unresolved compound output-alias references and star orderings
   requiring new hidden columns are also refused pending input-schema expansion.
 - **Regressions:** `QualifyLoweringResultTest` executes the source and actual generated
-  SQL in DuckDB JDBC 1.5.5.0, comparing ordered rows and column names. It covers the
+   SQL in DuckDB JDBC 1.5.6.0, comparing ordered rows and column names. It covers the
   counterexample, pagination, DISTINCT, DISTINCT ON composition, qualified names,
   helper-name collisions, aggregate/subquery ordering, and CTE visibility. These are
   executed-result checks for the tested DuckDB-compatible target SQL, not live

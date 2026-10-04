@@ -26,7 +26,7 @@ Modeling decisions (documented in the generated header too):
     col0/col1 names and lambda shapes like `lambda(x)` are kept as-is). Rows without
     names yield argNames=null.
   - FunctionDef.profile stays null: duckdb_functions() exposes NO null-propagation
-    column (v1.5.5 columns checked: has_side_effects and stability are the only
+    column (v1.5.6 columns checked: has_side_effects and stability are the only
     behavioral flags, neither describes NULL handling) — honest UNKNOWN.
 
 Usage: python3 tools/generate_duckdb_functions.py
@@ -42,6 +42,7 @@ import duckdb
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedDuckdbFunctionCatalog.kt"
+DUCKDB_VERSION = "1.5.6"
 
 IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
@@ -63,6 +64,8 @@ def kstr(s: str) -> str:
 
 
 def main() -> None:
+    if duckdb.__version__ != DUCKDB_VERSION:
+        sys.exit(f"error: install duckdb=={DUCKDB_VERSION}; found {duckdb.__version__}")
     con = duckdb.connect()
     version_row = con.sql("SELECT library_version, source_id FROM pragma_version()").fetchone()
     assert version_row is not None
