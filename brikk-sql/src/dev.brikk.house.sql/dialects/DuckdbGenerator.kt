@@ -9,7 +9,6 @@ import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.inheritStructFieldNames
 import dev.brikk.house.sql.optimizer.annotateTypes
-import dev.brikk.house.sql.parser.DuckdbTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -47,7 +46,7 @@ open class DuckdbGenerator(
     identify: kotlin.Any = false,
     comments: Boolean = true,
     normalizeFunctions: kotlin.Any = "upper",
-    tokenizerConfig: TokenizerConfig = DuckdbTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB,
     // extra dispatch overlay for subclasses (sqlglot: further TRANSFORMS merges)
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
@@ -107,7 +106,39 @@ open class DuckdbGenerator(
     override val byteStart: String? get() = "e'"
     override val byteEnd: String? get() = "'"
     override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
-    override val escapedSequences: Map<String, String> get() = MysqlGenerator.ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
+
+    // DuckDB 1.5.6 rejects NUL in ordinary SQL source and in e'\x00' (its parser's
+    // pg_verifymbstr is unimplemented). CHR(0) creates the same text at execution time.
+    private fun nulTextSql(text: String, segment: (String) -> String): String {
+        val pieces = text.split('\u0000').map { if (it.isEmpty()) null else segment(it) }
+        val parts = mutableListOf<String>()
+        pieces.forEachIndexed { index, piece ->
+            if (index > 0) parts.add(func("CHR", Literal.number(0)))
+            if (piece != null) parts.add(piece)
+        }
+        val result = parts.joinToString(" || ")
+        return if (parts.size == 1) result else "($result)"
+    }
+
+    override fun literalSql(expression: Literal): String =
+        if (expression.isString && '\u0000' in expression.name) {
+            nulTextSql(expression.name) { super.literalSql(Literal.string(it)) }
+        } else super.literalSql(expression)
+
+    override fun bytestringSql(expression: ByteString): String =
+        if (expression.args["is_bytes"] != true && '\u0000' in expression.name) {
+            nulTextSql(expression.name) { segment ->
+                super.bytestringSql((expression.copy() as ByteString).also { it.set("this", segment) })
+            }
+        } else super.bytestringSql(expression)
+
+    override fun rawstringSql(expression: RawString): String =
+        if ('\u0000' in expression.name) {
+            nulTextSql(expression.name) { segment ->
+                super.rawstringSql((expression.copy() as RawString).also { it.set("this", segment) })
+            }
+        } else super.rawstringSql(expression)
 
     // sqlglot: DuckDB dialect-level flags read by the generator
     override val dialectNullOrdering: String get() = "nulls_are_last"

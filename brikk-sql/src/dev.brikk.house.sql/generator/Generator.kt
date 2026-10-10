@@ -4307,7 +4307,7 @@ open class Generator(
         if (start != null) {
             val escaped = escapeStr(
                 this_,
-                escapeBackslash = false,
+                escapeBackslash = tokenizerConfig.numericEscapes.isNotEmpty() || tokenizerConfig.dropUnknownEscapes,
                 delimiter = byteEnd,
                 escapedDelimiter = escapedByteQuoteEnd,
                 isByteString = true,

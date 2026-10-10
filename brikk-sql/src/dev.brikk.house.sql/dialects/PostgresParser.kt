@@ -225,7 +225,7 @@ internal fun buildJsonExtractPath(
 // sqlglot: parsers.postgres.PostgresParser
 open class PostgresParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.PostgresTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.POSTGRES,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     override val quotedTypesToPreserve: Set<String> get() = setOf("char")

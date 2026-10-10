@@ -3,8 +3,8 @@ package dev.brikk.house.sql.dialects
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.Parser
-import dev.brikk.house.sql.parser.PostgresTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
+import dev.brikk.house.sql.parser.StringEscapeProfiles
 
 /**
  * Port of sqlglot's Postgres dialect umbrella (reference/sqlglot/sqlglot/dialects/postgres.py
@@ -32,7 +32,7 @@ open class PostgresDialect : Dialect() {
     // sqlglot: Postgres.EXPRESSION_METADATA (sqlglot/typing/postgres.py)
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.POSTGRES
 
-    override val tokenizerConfig: TokenizerConfig get() = PostgresTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = StringEscapeProfiles.POSTGRES
 
     // sqlglot: Postgres.TIME_MAPPING
     override val timeMapping: Map<String, String> get() = TIME_MAPPING

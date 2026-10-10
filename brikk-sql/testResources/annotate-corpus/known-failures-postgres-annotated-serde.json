@@ -1,3 +1,20 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:00876f959bdbbe5c8a2e47d373b87e0a1e024f1b650a5471541ffbed00eff462:1",
+            "sql": "SELECT e'\\xDEADBEEF'",
+            "signature": "type-mismatch:v1:sha256:a312dd20e233ce85c21936578813b03bff32063914d3a87b73f5958df1a579b4",
+            "reason": "DDB-01 / SQLGlot #8484 old-pin drift in AST payload, not type evidence: numeric decoding now stores ÞADBEEF instead of literal backslash syntax. Matches frozen a00dc2e's invalid-byte fallback; native PostgreSQL rejects the original invalid UTF-8. The gate's type-mismatch label includes payload differences (both t fields remain null). Exact assertion/signature reviewed; remove on coherent target fixture refresh.",
+            "issue": "DDB-01 / sqlglot#8484",
+            "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:79c24491f5699ed785b7f36b05af78e6fe80daaa3552f498f6777db87f516b22:1",
+            "sql": "SELECT CAST(e'\\176' AS BYTEA)",
+            "signature": "type-mismatch:v1:sha256:59cdd8ddd75feb62cf656f01ababe5b525c8d61d6e708b13b6fa69bf74064d27",
+            "reason": "DDB-01 / SQLGlot #8484 old-pin drift in AST payload, not type evidence: octal decoding stores ~ instead of literal backslash-176. Matches frozen a00dc2e and live PostgreSQL 18.4. The gate's type-mismatch label includes payload differences (both t fields remain null). Exact assertion/signature reviewed; remove on coherent target fixture refresh.",
+            "issue": "DDB-01 / sqlglot#8484",
+            "status": "oracle-pin-drift"
+        }
+    ]
 }

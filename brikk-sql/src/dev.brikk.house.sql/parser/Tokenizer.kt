@@ -167,9 +167,11 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         // colStart is 1-based: distance from the char after the preceding newline.
         // lineStart backs out the newlines the token itself spans (multi-line strings).
         var newlinesInToken = 0
-        for (i in start until current) if (sql[i] == '\n') newlinesInToken++
+        for (i in start until current) {
+            if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlinesInToken++
+        }
         val lineStart = line - newlinesInToken
-        val colStart = start - sql.lastIndexOf('\n', start - 1)
+        val colStart = start - maxOf(sql.lastIndexOf('\n', start - 1), sql.lastIndexOf('\r', start - 1))
 
         tokens.add(
             Token(
@@ -508,7 +510,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             } else {
                 config.stringEscapes
             },
-            rawString = tokenType == TokenType.RAW_STRING,
+            rawString = tokenType == TokenType.RAW_STRING || tokenType == TokenType.HEREDOC_STRING,
         )
 
         if (base != 0 && text.isNotEmpty()) {
@@ -558,6 +560,79 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         add(tokenType)
     }
 
+    // sqlglot: TokenizerCore._read_numeric_escape (#8470 / #8484)
+    private fun readNumericEscape(start: Int, spec: TokenizerConfig.NumericEscape): Pair<Int, Int> {
+        var value = 0
+        var end = start
+        val limit = minOf(start + spec.maxDigits, size)
+        while (end < limit) {
+            val digit = sql[end].digitToIntOrNull(spec.base) ?: break
+            if (value > (spec.maxValue - digit) / spec.base) break
+            value = value * spec.base + digit
+            end++
+        }
+        return (if (end - start >= spec.minDigits) value else -1) to end
+    }
+
+    private fun readByteEscape(pos: Int): Pair<Int, Int> {
+        val next = sql.getOrNull(pos + 1) ?: return -1 to pos
+        val octal = next in '0'..'7'
+        val spec = config.numericEscapes[if (octal) '0' else next] ?: return -1 to pos
+        if (spec.base != 8 && spec.maxValue > 0xFF) return -1 to pos
+        val (value, end) = readNumericEscape(pos + if (octal) 1 else 2, spec)
+        return (if (value >= 0) value and 0xFF else value) to end
+    }
+
+    private fun codePointText(value: Int): String = if (value <= 0xFFFF) value.toChar().toString() else {
+        val cp = value - 0x10000
+        "${(0xD800 + (cp shr 10)).toChar()}${(0xDC00 + (cp and 0x3FF)).toChar()}"
+    }
+
+    // Decode only valid, complete escapes; the caller handles unknown/truncated ones.
+    private fun scanNumericEscape(): String? {
+        val start = current
+        val octal = peek in '0'..'7'
+        val spec = config.numericEscapes[if (octal) '0' else peek] ?: return null
+        var (value, end) = readNumericEscape(start + if (octal) 0 else 1, spec)
+        val bytes = config.numericEscapesAreBytes && (spec.base == 8 || spec.maxValue <= 0xFF)
+        if (bytes && value >= 0) value = value and 0xFF
+        if (value in 0xD800..0xDFFF) {
+            val (low, lowEnd) = if (value <= 0xDBFF && sql.getOrNull(end) == '\\' && sql.getOrNull(end + 1) == peek) {
+                readNumericEscape(end + 2, spec)
+            } else -1 to end
+            if (low in 0xDC00..0xDFFF) {
+                value = 0x10000 + ((value - 0xD800) shl 10) + (low - 0xDC00)
+                end = lowEnd
+            } else if (config.loneSurrogateReplacement.isNotEmpty() && end < size) {
+                advance(end - start + 1)
+                return config.loneSurrogateReplacement
+            } else value = -1
+        }
+        if (bytes && value in 0xC2..0xF4) {
+            val count = if (value < 0xE0) 2 else if (value < 0xF0) 3 else 4
+            var cp = value and (0x7F shr count)
+            var runEnd = end
+            var read = 1
+            while (read < count && sql.getOrNull(runEnd) == '\\') {
+                val (byte, byteEnd) = readByteEscape(runEnd)
+                if (byte !in 0x80..0xBF) break
+                cp = (cp shl 6) or (byte and 0x3F)
+                runEnd = byteEnd
+                read++
+            }
+            val minimum = when (count) { 2 -> 0x80; 3 -> 0x800; else -> 0x10000 }
+            if (read == count && cp in minimum..0x10FFFF && cp !in 0xD800..0xDFFF && runEnd < size) {
+                advance(runEnd - start + 1)
+                return codePointText(cp)
+            }
+        }
+        if (value >= 0 && end < size) {
+            advance(end - start + 1)
+            return codePointText(value)
+        }
+        return null
+    }
+
     // sqlglot: TokenizerCore._extract_string
     private fun extractString(
         delimiter: String,
@@ -590,10 +665,12 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                     )
             ) {
                 var newlines = 0
-                for (i in pos until endIdx) if (sql[i] == '\n') newlines++
+                for (i in pos until endIdx) {
+                    if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlines++
+                }
                 if (newlines > 0) {
                     line += newlines
-                    col = endIdx - sql.lastIndexOf('\n', endIdx - 1)
+                    col = endIdx - maxOf(sql.lastIndexOf('\n', endIdx - 1), sql.lastIndexOf('\r', endIdx - 1))
                 } else {
                     col += endIdx - pos
                 }
@@ -607,13 +684,31 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
 
         while (true) {
-            if (!rawString && unescapedSequences.isNotEmpty() && peek != NONE && char in esc) {
+            val backslashEscape = !rawString && char == '\\' && '\\' in esc
+            if (backslashEscape && config.numericEscapes.isNotEmpty()) {
+                val decoded = scanNumericEscape()
+                if (decoded != null) {
+                    text.append(decoded)
+                    continue
+                }
+            }
+            if (!rawString && unescapedSequences.isNotEmpty() && current < size && char in esc) {
                 val unescaped = unescapedSequences["$char$peek"]
                 if (unescaped != null) {
-                    advance(2)
+                    if (peek == '\n' || peek == '\r') {
+                        advance()
+                        advance()
+                    } else advance(2)
                     text.append(unescaped)
                     continue
                 }
+            }
+            if (backslashEscape && config.dropUnknownEscapes && current < size) {
+                val next = peek
+                advance()
+                advance()
+                text.append(next)
+                continue
             }
 
             val isValidCustomEscape =

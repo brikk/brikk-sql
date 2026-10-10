@@ -39,9 +39,19 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 
 ## DuckDB
 
-- [ ] **DDB-01 — String escaping:** shared escape changes (`5fe5606b90`, #8484),
+- [x] **DDB-01 — String escaping:** shared escape changes (`5fe5606b90`, #8484),
   tokenizer backslash handling (`ac940f016a`, #8470); escaped/newline/raw literals,
   parse/generate round-trips and native results. Preserve template/UTF-16 ranges.
+  Shared numeric decoder handles byte-valued UTF-8, octal wrapping, Unicode scalar/
+  surrogate pairs, unknown/truncated escapes and empty fixed escape values. Native
+  DuckDB/PostgreSQL/ClickHouse profiles and control/backslash generation are wired
+  through hand-owned overlays; published TokenizerConfig constructors remain intact.
+  Live DuckDB rows and PostgreSQL 18.4 source/generated rows pass. DuckDB NUL text
+  uses CHR(0), because its escape-string parser rejects NUL/byte-UTF8 inputs with
+  `pg_verifymbstr NOT IMPLEMENTED`; those rejections are explicitly tested. LF/CRLF/
+  CR, supplementary text, template ranges and generated source mapping are covered.
+  Six exact PostgreSQL old-pin discrepancies (two source cases in three gates)
+  are marked temporary `oracle-pin-drift`; no live ClickHouse execution is claimed.
 - [x] **DDB-02 — Timestamp timezone/precision:** drop unsupported TIMESTAMP_LTZ
   precision (`9beb769dbf`, #8403); preserve TIMESTAMP_FROM_PARTS zones
   (`d2fbb215ff`, #8434). Check source-aware generation, types, NULLs and zone results.
@@ -136,6 +146,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 
 - [ ] Audit dependencies exposed by these ports (AST fields, tokenizer tables,
   typing metadata, alias/scope changes) at the frozen target; keep the scope boundary.
+  Ensure generated tokenizer tooling emits numeric escape/byte/unknown-escape policy
+  before retiring StringEscapeProfiles overlays; retain TokenizerConfig's old ABI.
 - [ ] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
   Bump `FixturePinSyncTest.SQLGLOT_PIN` only with a coherent fixture refresh;
   leave the shipped pin unchanged while individual ports are under review.
@@ -184,3 +196,12 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   proved in Trino 483. No existing assertion signatures/reasons were changed.
   Shipped fixtures/pin remain unchanged. Isolated Trino/MySQL containers were
   created without host ports/volumes and removed after verification.
+- Fifth batch: DDB-01 implemented and verified. Build and **1,167 Kotlin tests**
+  pass with opt-in PostgreSQL execution enabled; five optional native tests skip
+  (chDB, two StarRocks gates, and the two previously-proved Trino/MySQL gates).
+  Nine offline release tests pass. Six exact old-pin rows were added for the two
+  PostgreSQL literals in parser, annotated AST and old-dump generator gates. Each
+  was checked against frozen a00dc2e; invalid original UTF-8 is not claimed native-
+  equivalent. No existing ledger signatures/reasons or generated fixtures changed.
+  PostgreSQL 18.4 image `4efc78b0491e...` ran without host ports/volumes; its isolated
+  container was removed after verification. Shipped pin remains unchanged.

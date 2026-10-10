@@ -1193,6 +1193,73 @@ matches the frozen a00dc2e reference and has independent native result proof.
 Remove this row during the coherent target fixture refresh. No other existing
 ledger entries, generated fixture stamps or shipped pin were changed by this batch.
 
+## 39. Native string escape profiles, source ranges and DuckDB NUL text
+
+SQLGlot #8470/#8484 require shared numeric escape decoding, not just replacements
+in a generator string. The tokenizer now reads bounded numeric escapes, handles
+octal byte wrapping, combines byte-valued escapes into valid UTF-8 scalars, and
+combines Unicode surrogate pairs. Unknown, truncated and unterminated escapes
+follow each configured dialect's rules; fixed escapes may decode to the empty
+string (ClickHouse `\N`). Invalid UTF-8 runs retain the frozen target's single-byte
+code-point fallback. That tokenizer behavior is not a claim of native equivalence
+for invalid source bytes: PostgreSQL rejects such input, explicitly proved by the
+native test rather than treating its normalized Unicode result as an engine proof.
+
+DuckDB and PostgreSQL use byte-valued hex/octal escapes only in escape strings;
+PostgreSQL also has Unicode escapes. ClickHouse hex escapes require two digits.
+DuckDB `\a`/`\v` and PostgreSQL `\a` drop their backslash, rather than inventing
+control characters. Generation inverts only real escape mappings, keeps printable
+letters literal and emits numeric control escapes where supported. It does not
+invert a rule that merely drops a backslash before a literal newline. Parsed
+backslashes in escape-string text are escaped again during generation.
+
+`StringEscapeProfiles` supplies hand-owned overlays atop the shipped generated
+tables. High-level dialects, direct parser/generator defaults and TokenizerConfigs
+all use those overlays. Raw generated table constants remain at the shipped pin
+until the coherent refresh. Tokenizer tooling must emit the new numeric policy
+before the overlays can be retired. `TokenizerConfig.withStringEscapes` adds the
+policy without changing the old constructor or Kotlin default bridge; keyword
+overlays copy it without mutating the original config.
+
+Source offsets remain UTF-16 positions in original SQL, never offsets in decoded
+literal text. LF/CRLF/lone CR, supplementary characters, templates and emitted
+source mappings are covered. Both fast and escaped-string scans count actual
+source line breaks; a decoded `\n` does not create a fictitious source line.
+
+DuckDB 1.5.6 rejects NUL in SQL source and in `e'\x00'`, and rejects byte-valued
+UTF-8 escape runs, with `pg_verifymbstr NOT IMPLEMENTED`. Decoded Unicode literals
+execute normally. NUL text is therefore generated as CHR(0) and concatenated text
+segments for ordinary, escape and raw string nodes. The source AST/mapping remains
+unchanged. These are text-string lowerings, not a new binary/BLOB escape policy.
+
+`StringEscapeCatchupTest` covers semantic values, serde, native spelling, raw/
+dollar-quoted strings, failure/reset behavior, control characters and source ranges.
+`StringEscapeAbiContractTest` checks both published TokenizerConfig constructors.
+`StringEscapeResultTest` executes DuckDB native/generated results, translated
+PostgreSQL/Spark/ClickHouse text, and NUL lowering; known native source rejections
+are asserted separately. `StringEscapeEngineTest` runs PostgreSQL 18.4 source and
+generated UTF-8/octal/Unicode/backslash/bytea results and invalid-source failures.
+No live ClickHouse result proof is claimed.
+
+```sh
+BRIKK_POSTGRES_TEST_CONTAINER=<18-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*StringEscapeEngineTest'
+```
+
+The native gate skips without a configured container. Verification used cached
+PostgreSQL 18.4 image `4efc78b0491e...` in an isolated container with no host ports
+or volumes, removed afterward.
+
+The old pin has two PostgreSQL cases whose raw numeric syntax was stored as text:
+`e'\xDEADBEEF'` (invalid native UTF-8) and `CAST(e'\176' AS BYTEA)`. Fresh parsing
+now matches a00dc2e's decoded payloads. Generating from the *old dumped ASTs* instead
+escapes their stored backslashes, also matching a00dc2e when it loads those exact
+old dumps. Six exact assertion/signature rows across parser, annotated-AST and
+generator ledgers record this temporary `oracle-pin-drift`; annotated-AST payload
+mismatches do not imply changed type evidence. Remove the rows during the coherent
+fixture refresh. No pre-existing signatures/reasons or shipped fixture stamps/pin
+were changed by this batch.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

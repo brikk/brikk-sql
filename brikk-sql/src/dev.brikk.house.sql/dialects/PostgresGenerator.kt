@@ -10,7 +10,6 @@ import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.eliminateQualify
 import dev.brikk.house.sql.generator.eliminateSemiAndAntiJoins
-import dev.brikk.house.sql.parser.PostgresTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -49,7 +48,7 @@ open class PostgresGenerator(
     identify: kotlin.Any = false,
     comments: Boolean = true,
     normalizeFunctions: kotlin.Any = "upper",
-    tokenizerConfig: TokenizerConfig = PostgresTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.POSTGRES,
     // extra dispatch overlay for subclasses (sqlglot: further TRANSFORMS merges)
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
@@ -102,7 +101,7 @@ open class PostgresGenerator(
     override val byteStart: String? get() = "e'"
     override val byteEnd: String? get() = "'"
     override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
-    override val escapedSequences: Map<String, String> get() = MysqlGenerator.ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
 
     // sqlglot: Postgres dialect-level flags read by the generator
     override val dialectTablesampleSizeIsPercent: Boolean get() = true

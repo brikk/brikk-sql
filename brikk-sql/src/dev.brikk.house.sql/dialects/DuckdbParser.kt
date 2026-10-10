@@ -201,7 +201,7 @@ private fun duckdbBuildExtractJsonWithPath(
 // sqlglot: parsers.duckdb.DuckDBParser
 open class DuckdbParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.DuckdbTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     // sqlglot: dialect back-reference for annotate_types-driven paths

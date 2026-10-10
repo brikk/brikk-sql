@@ -3,10 +3,10 @@ package dev.brikk.house.sql.dialects
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
-import dev.brikk.house.sql.parser.DuckdbTokenizerTables
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenizerConfig
+import dev.brikk.house.sql.parser.StringEscapeProfiles
 
 /**
  * Port of sqlglot's DuckDB dialect umbrella (reference/sqlglot/sqlglot/dialects/duckdb.py
@@ -31,7 +31,7 @@ open class DuckdbDialect : Dialect() {
     // (tools/generate_duckdb_functions.py).
     override val functionCatalog: FunctionCatalog get() = DUCKDB_FUNCTION_CATALOG
 
-    override val tokenizerConfig: TokenizerConfig get() = DuckdbTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = StringEscapeProfiles.DUCKDB
 
     // sqlglot: DuckDB.TIME_MAPPING is the base (empty) mapping; only
     // INVERSE_TIME_MAPPING carries dialect-specific entries (see DuckdbGenerator).

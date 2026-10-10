@@ -9,7 +9,6 @@ import dev.brikk.house.sql.ast.Map as MapNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
-import dev.brikk.house.sql.parser.ClickhouseTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -84,7 +83,7 @@ open class ClickhouseGenerator(
     comments: Boolean = true,
     // sqlglot: ClickHouse.NORMALIZE_FUNCTIONS = False
     normalizeFunctions: kotlin.Any = false,
-    tokenizerConfig: TokenizerConfig = ClickhouseTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.CLICKHOUSE,
     // extra dispatch overlay for subclasses (sqlglot: further TRANSFORMS merges)
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
@@ -147,7 +146,7 @@ open class ClickhouseGenerator(
     // sqlglot: ClickHouse STRING_ESCAPES include "\\" -> ESCAPED_SEQUENCES active
     override val dialectStringsSupportEscapedSequences: Boolean get() = true
     override val alterSetType: String get() = "TYPE"
-    override val escapedSequences: Map<String, String> get() = ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
 
     // sqlglot: ClickHouseGenerator.TYPE_MAPPING
     override val typeMapping: Map<DType, String> get() = TYPE_MAPPING

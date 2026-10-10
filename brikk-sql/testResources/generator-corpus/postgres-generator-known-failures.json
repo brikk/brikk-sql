@@ -1,4 +1,21 @@
 {
     "sqlglot_version": "v30.18.0-43-g3ca82489",
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:405e9ed7cd99ceef0dfaf87dd07ae3b22d2586a934dd1e9946f454154e2bd2a9:1",
+            "sql": "SELECT e'\\xDEADBEEF'",
+            "signature": "sql-mismatch:v1:sha256:5b0c327f28d4f388c5b2a3b8fb77e153c723674196afe9040bcc859f0a2f925d",
+            "reason": "DDB-01 / SQLGlot #8484 old-dump drift: the pinned dumped ByteString stores literal backslash-xDEADBEEF text. New generation must escape its backslash, not reinterpret it as undecoded SQL source. Frozen a00dc2e generates the same doubled backslash from this exact old dump. Fresh parsing instead decodes the numeric escape; native original SQL is invalid UTF-8. Exact assertion/signature reviewed; remove when target dumps refresh.",
+            "issue": "DDB-01 / sqlglot#8484",
+            "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:4a13a91e31dd4828457e61872d7aba67e98377865894aaf53e6487395d04ebfc:1",
+            "sql": "SELECT CAST(e'\\176' AS BYTEA)",
+            "signature": "sql-mismatch:v1:sha256:1eb0b760ed0dd984ee2a3be19f3bc39f686ed419c659b0e448f148f5bb3577a9",
+            "reason": "DDB-01 / SQLGlot #8484 old-dump drift: the pinned dumped ByteString stores literal backslash-176 text, not decoded ~. Generation doubles that backslash, matching frozen a00dc2e when it loads this exact old dump. Fresh parsing/native round trips decode octal to ~. Exact assertion/signature reviewed; remove when target dumps refresh.",
+            "issue": "DDB-01 / sqlglot#8484",
+            "status": "oracle-pin-drift"
+        }
+    ]
 }

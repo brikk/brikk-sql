@@ -4,10 +4,10 @@ import dev.brikk.house.sql.ast.GeneratedTypingMetadata
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.metadata.CLICKHOUSE_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
-import dev.brikk.house.sql.parser.ClickhouseTokenizerTables
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenizerConfig
+import dev.brikk.house.sql.parser.StringEscapeProfiles
 
 /**
  * Port of sqlglot's ClickHouse dialect umbrella (reference/sqlglot/sqlglot/dialects/clickhouse.py
@@ -63,7 +63,7 @@ open class ClickhouseDialect : Dialect() {
     // vendored engine registry by tools/generate_clickhouse_functions.py.
     override val functionCatalog: FunctionCatalog get() = CLICKHOUSE_FUNCTION_CATALOG
 
-    override val tokenizerConfig: TokenizerConfig get() = ClickhouseTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = StringEscapeProfiles.CLICKHOUSE
 
     override fun parser(errorLevel: ErrorLevel?): Parser =
         ClickhouseParser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig)

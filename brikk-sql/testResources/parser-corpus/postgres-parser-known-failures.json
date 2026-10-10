@@ -1,4 +1,21 @@
 {
     "sqlglot_version": "v30.18.0-43-g3ca82489",
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:8d738dbf97363af570a554812456a43d21aafd7320162e5a070b21a923289238:1",
+            "sql": "SELECT e'\\xDEADBEEF'",
+            "signature": "ast-mismatch:v1:sha256:a4092616f6be0ba547ed518c98dee6c13b4730b1f18278b2b4f501b616bc6758",
+            "reason": "DDB-01 / SQLGlot #8484 old-pin drift: target numeric decoding gives ByteString text ÞADBEEF, matching frozen a00dc2e's invalid-byte fallback, not the pin's unprocessed backslash syntax. Native PostgreSQL rejects the original invalid UTF-8; no native equivalence is claimed. Valid UTF-8 and octal forms have live result proof. Exact assertion/signature reviewed; remove on coherent target fixture refresh.",
+            "issue": "DDB-01 / sqlglot#8484",
+            "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:b7a4ded7e8f2bfad6bc06791bf3853d8f89c752630e9251f9fb8a4226e38513c:1",
+            "sql": "SELECT CAST(e'\\176' AS BYTEA)",
+            "signature": "ast-mismatch:v1:sha256:e4cf2e7a188c5cc3fd83a3aec4ac108a2f4928c5e66348d32ad04141bc062f2a",
+            "reason": "DDB-01 / SQLGlot #8484 old-pin drift: numeric octal decoding stores ~, matching frozen a00dc2e. The pin stores unprocessed backslash-176 instead. StringEscapeCatchupTest fixes the semantic value and StringEscapeEngineTest proves both generated/native bytea results in PostgreSQL 18.4. Exact assertion/signature reviewed; remove on coherent target fixture refresh.",
+            "issue": "DDB-01 / sqlglot#8484",
+            "status": "oracle-pin-drift"
+        }
+    ]
 }
