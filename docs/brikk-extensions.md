@@ -1118,6 +1118,31 @@ image/source version documented in `vendor/README.md`; no ports or host volumes
 are needed for the container. No implementation of a live Spark/BigQuery engine
 oracle is implied by these tests.
 
+## 37. Set-operation scope and full-join replacement pagination
+
+Set-operation generation now keeps each branch's LIMIT/OFFSET/ORDER inside that
+branch where the target requires parentheses. A nested set's own modifiers and
+WITH scope prevent flattening it into the enclosing set chain. ClickHouse's
+native branch-local limits remain native; global set modifiers instead use an
+outer SELECT wrapper, with WITH retained above it so pagination subqueries can
+still see the same CTEs. The shared TOP parser hook retains branch TOP and defers
+trailing global LIMIT/FETCH until a set operation exists; this adds no unsupported
+T-SQL dialect to the registry.
+
+The existing MySQL full-outer-join replacement had stored global ORDER/LIMIT on
+its final UNION arm, depending on unparenthesized rendering to make them look
+global. Once branch scoping is explicit, that produces wrong rows (e.g. LIMIT 0
+would retain the left-join arm). The rewrite now attaches ORDER/LIMIT/OFFSET/WITH
+to the replacement UNION itself. This restores both row restriction and CTE
+ownership rather than approving the exposed parity difference as a new failure.
+
+`SetOperationPaginationCatchupTest` checks AST-level branch/root placement and the
+shared TOP hook. `SetOperationPaginationResultTest` executes branch restrictions,
+nested set restrictions, outer wrappers, CTE-dependent limits, and the portable
+MySQL full-join replacement in DuckDB. DuckDB, Doris and Trino native grammars
+accept the branch-scoped outputs. No live MySQL or ClickHouse execution is claimed.
+Existing exact known-failure ledgers remain unchanged.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

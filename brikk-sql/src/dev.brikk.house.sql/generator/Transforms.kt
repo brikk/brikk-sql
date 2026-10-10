@@ -349,8 +349,6 @@ fun eliminateFullOuterJoin(expression: Expression): Expression {
     }
     if (fullOuterJoins.size != 1) return expression
 
-    val expressionCopy = expression.copy() as Select
-    expression.set("limit", null)
     val (index, fullOuterJoin) = fullOuterJoins.single()
     val from = expression.args["from_"] as? From ?: return expression
     val leftTable = from.aliasOrName
@@ -369,6 +367,12 @@ fun eliminateFullOuterJoin(expression: Expression): Expression {
         combineAnd(conditions)
     }
 
+    // Global full-join pagination belongs to the replacement UNION, never one arm.
+    // The old unparenthesized renderer hid the incorrect AST placement (#8385).
+    val outerModifiers = listOf("limit", "offset", "order", "with_").mapNotNull { key ->
+        (expression.args[key] as? Expression)?.let { key to it.pop() }
+    }.toMap()
+    val expressionCopy = expression.copy() as Select
     fullOuterJoin.set("side", "left")
     val antiJoin = Select(
         args(
@@ -384,7 +388,7 @@ fun eliminateFullOuterJoin(expression: Expression): Expression {
     expressionCopy.set("with_", null)
     expression.set("order", null)
 
-    return Union(args("this" to expression, "expression" to expressionCopy, "distinct" to false))
+    return Union(args("this" to expression, "expression" to expressionCopy, "distinct" to false) + outerModifiers)
 }
 
 /** sqlglot: transforms.remove_within_group_for_percentiles. */

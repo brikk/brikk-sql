@@ -72,8 +72,13 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 
 ## Shared correctness
 
-- [ ] **CORE-01 — Set-operation pagination scope:** preserve per-arm versus outer
+- [x] **CORE-01 — Set-operation pagination scope:** preserve per-arm versus outer
   LIMIT/OFFSET (`eeece5a564`, #8385), parentheses, nesting, CTEs and row results.
+  Branch/nested-set modifiers remain scoped; targets needing an outer SELECT
+  (ClickHouse) retain pagination and CTE visibility there. The shared TOP parser
+  hook distinguishes a final branch TOP from trailing set LIMIT/FETCH without
+  adding a T-SQL dialect. Related full-join rewrite modifier placement is corrected
+  instead of hiding a new failure in the MySQL parity ledger (extension #37).
 - [ ] **CORE-02 — Integer division:** truncate toward zero instead of relying on
   rounding casts (`f5dd70bff7`, #8532; `6aeb6a0ab7` fixes). Check positive/negative
   inputs, division by zero, NULLs, target capabilities and result types.
@@ -160,3 +165,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Nine offline release tests pass; known-failure ledgers remain unchanged. Native
   StarRocks 4.1.4 image `faf7ce9c24d9...` was run in an isolated container with no
   host ports or volumes. The container was removed after verification.
+- Second batch committed/pushed as `1834230`.
+- Third batch: CORE-01 implemented and tested. Full suite: **1,140 Kotlin tests
+  pass**, with three optional native tests skipped (chDB and the two already-proved
+  live StarRocks gates); nine release tests pass. No ledger entries were added or
+  signatures changed. Remaining requested items and target-fixture refresh are open.

@@ -127,6 +127,7 @@ open class ClickhouseGenerator(
     override val tableHints: Boolean get() = false
     override val groupingsSep: String get() = ""
     override val setOpModifiers: Boolean get() = false
+    override val setOpLimits: Boolean get() = true
     override val arraySizeName: String get() = "LENGTH"
     override val wrapDerivedValues: Boolean get() = false
 

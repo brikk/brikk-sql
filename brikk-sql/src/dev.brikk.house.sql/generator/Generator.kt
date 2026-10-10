@@ -219,6 +219,8 @@ open class Generator(
     open val supportsToNumber: Boolean get() = true
     open val supportsWindowExclude: Boolean get() = false
     open val setOpModifiers: Boolean get() = true
+    open val setOpLimits: Boolean get() = false
+    open val setOpParenthesizedOperands: Boolean get() = true
     open val trySupported: Boolean get() = true
     open val starExcept: String get() = "EXCEPT"
     open val withPropertiesPrefix: String get() = "WITH"
@@ -1593,17 +1595,36 @@ open class Generator(
 
     // sqlglot: Generator.set_operations (base: SET_OP_MODIFIERS=true)
     open fun setOperations(expression: SetOperation): String {
+        if (!setOpModifiers && listOf("limit", "offset", "order").any { expression.args[it] != null }) {
+            val outer = Select(args("expressions" to listOf(Star()), "from_" to From(args("this" to
+                Subquery(args("this" to expression, "alias" to TableAlias(args("this" to toIdentifier("_l_0")))))))))
+            for (key in listOf("limit", "offset", "order")) {
+                (expression.args[key] as? Expression)?.let { outer.set(key, it.pop()) }
+            }
+            (expression.args["with_"] as? With)?.let { outer.set("with_", it.pop()) }
+            return sql(moveCtesToTopLevelIfNeeded(outer))
+        }
         val sqls = mutableListOf<String>()
         val stack = mutableListOf<kotlin.Any?>(expression)
 
         while (stack.isNotEmpty()) {
             val node = stack.removeLast()
-            if (node is SetOperation) {
+            // A nested set's own pagination belongs to that set, not the outer chain.
+            if (node is SetOperation && (node === expression ||
+                    listOf("limit", "offset", "order", "with_").all { node.args[it] == null })) {
                 stack.add(node.args["expression"])
                 stack.add(maybeComment(setOperation(node), comments = node.comments, separated = true))
                 stack.add(node.args["this"])
             } else {
-                sqls.add(sql(node))
+                val paginatedSelect = node is Select && !setOpLimits &&
+                    listOf("limit", "offset", "order").any { node.args[it] != null }
+                val paginatedSet = node is SetOperation
+                val operand = if ((paginatedSelect || paginatedSet) && node is Expression) {
+                    val subquery = Subquery(args("this" to node))
+                    if (setOpParenthesizedOperands) subquery else
+                        Select(args("expressions" to listOf(Star()), "from_" to From(args("this" to subquery))))
+                } else node
+                sqls.add(sql(operand))
             }
         }
 

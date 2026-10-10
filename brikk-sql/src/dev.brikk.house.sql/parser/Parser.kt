@@ -2308,6 +2308,10 @@ open class Parser(
             while (true) {
                 if (matchSet(queryModifierParsers.keys, advance = false)) {
                     val modifierToken = currToken
+                    // sqlglot #8385: a final branch TOP and an outer LIMIT/FETCH are
+                    // different scopes. Defer the trailing modifier until the set exists.
+                    if (modifierToken.tokenType in setOf(TokenType.LIMIT, TokenType.FETCH) &&
+                        (this_.args["limit"] as? Expression)?.metaOrNull?.get("top") == true) break
                     val syntaxStart = index
                     val (key, value) = queryModifierParsers.getValue(modifierToken.tokenType)(this)
 
@@ -3852,6 +3856,7 @@ open class Parser(
                 comments = comments,
             )
 
+            if (top) limitExp.meta["top"] = true
             return limitExp
         }
 
@@ -4024,10 +4029,13 @@ open class Parser(
             if (expr != null) {
                 for (arg in setOpModifiers) {
                     val modifier = expr.args[arg] as? Expression
-                    if (modifier != null) {
+                    if (modifier != null && !(arg == "limit" && modifier.metaOrNull?.get("top") == true)) {
                         current.set(arg, modifier.pop())
                     }
                 }
+            }
+            if (currToken.tokenType in setOf(TokenType.LIMIT, TokenType.FETCH)) {
+                current = parseQueryModifiers(current)
             }
         }
 
