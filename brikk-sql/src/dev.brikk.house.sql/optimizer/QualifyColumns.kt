@@ -73,7 +73,19 @@ import dev.brikk.house.sql.shape.ShapeError
  * GROUP BY/ORDER BY/DISTINCT ON positional and alias expansion, validation and
  * identifier quoting.
  */
-// sqlglot: qualify_columns.qualify_columns
+/** Upstream-shaped entry point: unknown column ownership is not inferred. */
+fun <E : Expression> qualifyColumns(
+    expression: E,
+    schema: Any?,
+    expandAliasRefs: Boolean = true,
+    expandStars: Boolean = true,
+    allowPartialQualification: Boolean = false,
+    dialect: Dialect? = null,
+): E = qualifyColumns(expression, schema, expandAliasRefs, expandStars,
+    inferSchema = false, allowPartialQualification, dialect)
+
+// brikk extension (docs/brikk-extensions.md #34): preserve the published inference API.
+/** Explicit compatibility policy, including the historical nullable/default JVM bridge. */
 fun <E : Expression> qualifyColumns(
     expression: E,
     schema: Any?,
@@ -86,6 +98,7 @@ fun <E : Expression> qualifyColumns(
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
     val annotator = TypeAnnotator(resolvedSchema)
     val resolvedInferSchema = inferSchema ?: resolvedSchema.empty
+    val legacyAliasOrder = inferSchema != false
     val resolvedDialect = resolvedSchema.dialect ?: Dialects.BASE
     val pseudocolumns = resolvedDialect.pseudocolumns
 
@@ -104,7 +117,7 @@ fun <E : Expression> qualifyColumns(
         popTableColumnAliases(scope.derivedTables)
         val usingColumnTables = expandUsing(scope, resolver)
 
-        if ((resolvedSchema.empty || resolvedDialect.forceEarlyAliasRefExpansion) &&
+        if (((legacyAliasOrder && resolvedSchema.empty) || resolvedDialect.forceEarlyAliasRefExpansion) &&
             expandAliasRefs
         ) {
             expandAliasRefsInScope(
@@ -112,6 +125,7 @@ fun <E : Expression> qualifyColumns(
                 resolver,
                 resolvedDialect,
                 expandOnlyGroupby = resolvedDialect.expandOnlyGroupAliasRef,
+                legacyAliasOrder = legacyAliasOrder,
             )
         }
 
@@ -126,8 +140,8 @@ fun <E : Expression> qualifyColumns(
         // cached as external
         scope.clearColumnCache()
 
-        if (!resolvedSchema.empty && expandAliasRefs) {
-            expandAliasRefsInScope(scope, resolver, resolvedDialect)
+        if ((!legacyAliasOrder || !resolvedSchema.empty) && expandAliasRefs) {
+            expandAliasRefsInScope(scope, resolver, resolvedDialect, legacyAliasOrder = legacyAliasOrder)
         }
 
         if (isSelect) {
@@ -402,6 +416,7 @@ private fun expandAliasRefsInScope(
     resolver: Resolver,
     dialect: Dialect,
     expandOnlyGroupby: Boolean = false,
+    legacyAliasOrder: Boolean = true,
 ) {
     val expression = scope.expression
 
@@ -504,7 +519,7 @@ private fun expandAliasRefsInScope(
                         newColumn = simplified
                     }
 
-                    if (resolveTable && resolver.schema.empty) {
+                    if (resolveTable && (!legacyAliasOrder || resolver.schema.empty)) {
                         // resolve alias spliced into QUALIFY/HAVING with unqualified columns
                         for (inner in walkInScope(newColumn)) {
                             if (inner is Column && inner.table.isEmpty()) {

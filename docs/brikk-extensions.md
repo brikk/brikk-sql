@@ -1032,6 +1032,32 @@ bare/cast/parenthesized projection reproducers and a native prefix-alias control
 Upstream issue/PR status: not reported. Existing corpus fixtures and known-failure
 signatures are unchanged.
 
+## 34. Qualification inference compatibility alongside upstream no-inference APIs
+
+The catch-up to SQLGlot `a00dc2e` retains Brikk's published parameterized
+`qualify` / `qualifyColumns` signatures and Kotlin default-argument bridges after
+upstream #8552 removes `infer_schema`. Explicit `inferSchema=true` keeps legacy
+ownership inference; null keeps the historical empty-schema automatic policy.
+`inferSchema=false` uses evidence-only ownership and the upstream alias-expansion
+ordering. New overloads without that parameter select the same disabled policy.
+Kotlin prefers the shorter overload for new source calls that omit the flag;
+already-compiled callers still reach the unchanged old default bridge. Resolver
+likewise has a new two-argument no-inference constructor and retains its explicit
+three-argument legacy policy and historical constructor bridge.
+
+Brikk's shape discovery, stage shapes, star-expansion/standard-SQL preparation and
+schema-less lineage explicitly select the legacy nullable policy. They must not
+silently become schema-required optimizer operations. This includes Engine's
+two-step `toStandardSql` then strict qualification path, not just outputShape.
+Optional schema and legacy attribution remain part of Brikk's lineage facade;
+upstream's new mandatory schema signature is not imposed on our consumers.
+
+See [Engine analysis contract](engine-analysis-contract.md) for hand-owned
+regressions, enabled/disabled/new-signature tests, and the ABI/default-bridge checks.
+The upstream-shaped path follows alias-expansion-after-qualification, while legacy
+true/null paths retain the old ordering to protect shipped shape behavior. Exact
+parity-fixture refresh at the new target is a separate integration gate.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

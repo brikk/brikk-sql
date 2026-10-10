@@ -1076,6 +1076,9 @@ open class ClickhouseGenerator(
             reg(AutoRefreshProperty::class) { e -> ch().autorefreshpropertySql(e as AutoRefreshProperty) }
             reg(AnyValue::class) { e -> ch().renameFuncSql("any", e) }
             reg(ApproxDistinct::class) { e -> ch().renameFuncSql("uniq", e) }
+            reg(BitwiseAndAgg::class) { e -> ch().renameFuncSql("groupBitAnd", e) }
+            reg(BitwiseOrAgg::class) { e -> ch().renameFuncSql("groupBitOr", e) }
+            reg(BitwiseXorAgg::class) { e -> ch().renameFuncSql("groupBitXor", e) }
             // SOURCE-AWARE rewrites (SPIKE-source-aware-generator-transforms, now implemented
             // via Generator.sourceDialect / isCrossDialectFrom). These rewrites are CORRECT
             // for cross-dialect (DuckDB/Trino/Doris -> ClickHouse) but would CORRUPT a native

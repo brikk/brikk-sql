@@ -212,6 +212,7 @@ private fun prepareLineage(
             expression,
             dialect = dialect,
             schema = ensuredSchema,
+            inferSchema = null, // Keep Brikk's schema-less lineage contract across the upstream API split.
             validateQualifyColumns = false,
             identify = false,
         )

@@ -281,8 +281,9 @@ open class DuckdbGenerator(
         }
 
         // Modifiers are not supported for TIME, [TIME | TIMESTAMP] WITH TIME ZONE
-        if (expression.thisArg in setOf(DType.TIME, DType.TIMETZ, DType.TIMESTAMPTZ)) {
-            return (expression.thisArg as DType).value
+        if (expression.thisArg in setOf(DType.TIME, DType.TIMETZ, DType.TIMESTAMPTZ, DType.TIMESTAMPLTZ)) {
+            val type = expression.thisArg as DType
+            return typeMapping[type] ?: type.value
         }
 
         return datatypeSql(expression)
@@ -1524,6 +1525,9 @@ open class DuckdbGenerator(
             expression.set("sec", sec)
         }
 
+        (expression.args["zone"] as? Expression)?.let { zone ->
+            return sql(AtTimeZone(args("this" to expression, "zone" to zone.pop())))
+        }
         return renameFuncSql("MAKE_TIMESTAMP", expression)
     }
 
@@ -2411,6 +2415,14 @@ open class DuckdbGenerator(
     }
 
     // sqlglot: DuckDBGenerator.tablesample_sql
+    override fun afterHavingModifierSqls(expression: Expression): List<String> =
+        super.afterHavingModifierSqls(expression) + sql(expression, "sample")
+
+    override fun afterLimitModifiers(expression: Expression): List<String> {
+        val locks = expressions(expression, key = "locks", sep = " ")
+        return listOf(if (locks.isEmpty()) "" else " $locks")
+    }
+
     override fun tablesampleSql(expression: TableSample, tablesampleKeyword: String?): String {
         var keyword = tablesampleKeyword
         if (expression.parent !is Select) {

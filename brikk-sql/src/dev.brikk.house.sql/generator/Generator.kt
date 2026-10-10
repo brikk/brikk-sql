@@ -953,6 +953,13 @@ open class Generator(
         val lower = text.lowercase()
         val quoted = expression.quoted
         if (normalize && !quoted) text = lower
+        // sqlglot #8533: escape the escape character before doubling quote delimiters.
+        for ((escaped, plain) in tokenizerConfig.unescapedSequences) {
+            if (escaped.firstOrNull() in tokenizerConfig.identifierEscapes &&
+                plain.singleOrNull() in tokenizerConfig.identifierEscapes) {
+                text = text.replace(plain, escaped)
+            }
+        }
         text = text.replace(identifierEnd, escapedIdentifierEnd)
         if (
             quoted ||

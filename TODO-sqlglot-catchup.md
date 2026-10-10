@@ -8,6 +8,9 @@ transpiler, semantic-analysis, and dialect surface.
 - Supported dialects: base, MySQL, Doris, StarRocks, Presto, Trino, DuckDB,
   PostgreSQL, ClickHouse, Hive, Spark2, Spark, and BigQuery
 
+Active next sync: [catch-up to a00dc2e](TODO-sqlglot-a00dc2e.md). The shipped
+oracle pin below stays unchanged until the integration/fixture gates are complete.
+
 ## Current Sync
 
 - [x] Regenerate AST nodes, tokenizer tables, typing metadata, and all oracle
@@ -61,3 +64,13 @@ canonicalization, and full simplification passes.
 - Remove passing entries from exact known-failure ledgers; never mask new gaps.
 - Preserve verifier-backed intentional divergences registered in
   `docs/brikk-extensions.md`.
+
+## Engine analysis compatibility gate
+
+Before adopting upstream's `infer_schema` removal, run the hand-owned
+[Engine analysis contract](docs/engine-analysis-contract.md). It protects legacy
+best-effort shape discovery, Engine's two-step preparation/strict-validation
+path, explicit disabled inference, and published JVM/default-bridge signatures.
+The new upstream-shaped overloads now have direct no-inference tests; shape,
+lineage and preparation paths explicitly retain legacy policy. Do not replace
+these consumer expectations with oracle snapshots.

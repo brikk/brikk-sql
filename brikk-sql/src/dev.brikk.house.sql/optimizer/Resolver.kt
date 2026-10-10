@@ -36,6 +36,9 @@ class Resolver(
     val schema: Schema,
     private val inferSchema: Boolean = true,
 ) {
+    /** Upstream-shaped construction; explicit three-argument callers retain their policy. */
+    constructor(scope: Scope, schema: Schema) : this(scope, schema, inferSchema = false)
+
     val dialect: Dialect = schema.dialect ?: Dialects.BASE
 
     private var sourceColumnsAll: MutableMap<String, List<String>>? = null
