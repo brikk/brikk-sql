@@ -9,6 +9,7 @@ import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Func
 import dev.brikk.house.sql.ast.Interval
 import dev.brikk.house.sql.ast.Sub
+import dev.brikk.house.sql.ast.TryCast
 import dev.brikk.house.sql.ast.sqlName
 import dev.brikk.house.sql.ast.sqlNames
 import dev.brikk.house.sql.dialects.Dialects
@@ -173,8 +174,9 @@ data class TranspileReport(
  *       - the node rendered under the SOURCE dialect — recovers the source SURFACE name
  *         (e.g. a node parsed as ARRAY_OVERLAPS that the source spells `list_has_any`);
  *       - the node rendered under the TARGET dialect — the emitted target name.
- *     Any hit counts. This is a strict improvement: it can only ADD true matches (a name
- *     the node genuinely carries for this pair), never introduce a false one.
+ *     Any semantic-alias hit counts. TRY_CAST explicitly excludes plain CAST: a target
+ *     may emit that name while changing the NULL-on-failure contract, so CAST evidence
+ *     cannot certify the source TRY_CAST concept.
  *
  *     VERDICT + RENDERER DRIVE THE DECISION (B — policy #2, middle-ground, 2026-07-13):
  *     the ORIGINAL rule SKIPPED the hazard whenever the target generator had a dedicated
@@ -398,6 +400,9 @@ private fun verdictRank(v: HazardVerdict): Int = when (v) {
  *     (e.g. a node parsed as ARRAY_OVERLAPS that duckdb spells `list_has_any`).
  *  3. the TARGET-dialect rendering's leading call name — the emitted target name.
  *
+ * TRY_CAST cannot borrow plain CAST evidence: some targets lower it to CAST, but that
+ * can change the error/NULL contract rather than preserve a semantic alias.
+ *
  * Rendering that produces an operator form (`a || b`, `a IN b`) carries no leading call
  * name and simply contributes nothing — correct: an operator emission is not a function
  * name that could match a same-name-passthrough entry.
@@ -415,6 +420,12 @@ private fun SqlFragment.functionHazardKeys(node: Func, target: String): Set<Stri
         ?.let { keys.add(it) }
     leadingCallName(runCatching { Dialects.forName(target).generate(node as Expression) }.getOrNull())
         ?.let { keys.add(it) }
+
+    // Doris inherits MySQL's TryCast -> CAST renderer. A matching emitted name is not
+    // evidence that the source's NULL-on-failure contract survives (Doris strict mode
+    // can throw). Require independent TRY_CAST evidence instead of certifying it from
+    // CAST's different failure contract. This also protects other CAST-lowering targets.
+    if (node is TryCast) keys.remove("CAST")
 
     return keys
 }

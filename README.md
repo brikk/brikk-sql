@@ -26,13 +26,13 @@ coordinates. They emit Java 21-compatible bytecode. Verification modules require
 JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest release: **`0.18.0`**. Current development snapshot: **`0.19.0-SNAPSHOT`**.
+Latest release: **`0.18.1`**. Current development snapshot: **`0.19.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.18.0")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.18.0")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.18.1")
+    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.18.1")
 }
 ```
 
@@ -61,6 +61,12 @@ The opt-in API leaves the existing rendering paths unchanged.
 
 `0.18.0` adds the DDB-001 DuckDB template-projection fix and updates the DuckDB
 reference engine/catalogs to 1.5.6 (JDBC 1.5.6.0).
+
+`0.18.1` registers researched DuckDB ↔ Doris CAST coverage: `::BIGINT` and
+explicit CAST now receive a conditional semantic warning instead of an unknown-
+coverage refusal. Rounding, parsing and error/NULL divergences remain visible;
+the pair stays PARTIAL, and TRY_CAST cannot borrow plain CAST evidence.
+See the [CAST research report](docs/research/REPORT-duckdb-doris-cast-coverage-2026-10-10.md).
 
 ## Build and test
 
