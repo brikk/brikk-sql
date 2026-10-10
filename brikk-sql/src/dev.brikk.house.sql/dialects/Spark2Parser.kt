@@ -158,7 +158,11 @@ object Spark2ParserTables {
         put("SHIFTLEFT") { a -> BitwiseLeftShift(args("this" to seqGet(a, 0), "expression" to seqGet(a, 1))) }
         put("SHIFTRIGHT") { a -> BitwiseRightShift(args("this" to seqGet(a, 0), "expression" to seqGet(a, 1))) }
         put("STRING", buildAsCast("string"))
-        put("SLICE", fromArgList(listOf("this", "start", "length"), false) { ArraySlice(it) })
+        // sqlglot: Spark2Parser.FUNCTIONS[SLICE] — the third argument is a length.
+        put("SLICE") { a ->
+            ArraySlice(args("this" to seqGet(a, 0), "start" to seqGet(a, 1),
+                "end" to seqGet(a, 2), "is_length" to true))
+        }
         put("TIMESTAMP", buildAsCast("timestamp"))
         put("TO_TIMESTAMP") { a ->
             if (a.size == 1) {

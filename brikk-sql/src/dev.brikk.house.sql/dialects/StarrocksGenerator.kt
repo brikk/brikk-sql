@@ -52,6 +52,28 @@ open class StarrocksGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
 
+    // sqlglot: StarRocksGenerator.ignorenulls_sql (#8412), after the first argument.
+    override fun ignorenullsSql(expression: IgnoreNulls): String {
+        val function = expression.thisArg as? Expression
+        if (function is FirstValue || function is LastValue || function is Lag || function is Lead) {
+            return func((function as Func).sqlName(), "${sql(function.thisArg)} IGNORE NULLS",
+                function.args["offset"], function.args["default"])
+        }
+        return super.ignorenullsSql(expression)
+    }
+
+    // RESPECT NULLS is the StarRocks window default; its explicit keyword is rejected.
+    override fun respectnullsSql(expression: RespectNulls): String = sql(expression.thisArg)
+
+    // sqlglot: StarRocksGenerator.timeslice_sql (#8555), numeric INTERVAL amount.
+    open fun timeSliceSql(expression: TimeSlice): String {
+        val interval = Interval(args("this" to (expression.expressionArg as Expression).copy(),
+            "unit" to (expression.args["unit"] as Expression).copy()))
+        val kind = expression.text("kind").uppercase()
+        val boundary = if (kind.isEmpty()) null else Var(args("this" to if (kind == "END") "CEIL" else "FLOOR"))
+        return func("TIME_SLICE", expression.thisArg, interval, boundary)
+    }
+
     // ------------------------------------------------------------------
     // Flags (sqlglot: StarRocksGenerator class attributes)
     // ------------------------------------------------------------------
@@ -367,6 +389,7 @@ open class StarrocksGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             fun Generator.sg(): StarrocksGenerator = this as StarrocksGenerator
+            reg(TimeSlice::class) { e -> sg().timeSliceSql(e as TimeSlice) }
 
             reg(ArgMax::class) { e -> sg().renameFuncSql("MAX_BY", e) }
             reg(ArgMin::class) { e -> sg().renameFuncSql("MIN_BY", e) }

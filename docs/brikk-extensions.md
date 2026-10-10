@@ -1058,6 +1058,66 @@ The upstream-shaped path follows alias-expansion-after-qualification, while lega
 true/null paths retain the old ordering to protect shipped shape behavior. Exact
 parity-fixture refresh at the new target is a separate integration gate.
 
+## 35. Spark array-slice counts and CONCAT_WS target boundaries during catch-up
+
+Spark SLICE stores a length, not an inclusive end index. The parser's canonical
+`end`/`is_length` representation is preserved through serde and native Spark
+generation; older serialized `length` nodes remain readable. DuckDB normalizes
+negative starts before computing the inclusive end. Unlike a bare upstream index
+calculation, the local lowering propagates NULL inputs first and raises a target
+ERROR for invalid non-NULL zero starts/negative lengths. Those Spark runtime
+errors must not become successful DuckDB slices.
+
+Hive/Spark CONCAT_WS carries its array-flattening policy explicitly. DuckDB casts
+array/scalar elements to text and joins a combined list, preserving skipped NULLs
+and empty arrays; an outer CONCAT_WS retains NULL-separator and empty-result
+semantics. Native DuckDB CONCAT_WS remains native, including its array stringification.
+The companion Trino route coalesces NULL arrays and flattens mixed arrays/scalars.
+Unknown mixed argument types produce unsupported diagnostics. DuckDB row-dependent
+ARRAY_TO_STRING delimiters retain the existing diagnosed execution limitation
+rather than bypassing it through this new rewrite.
+
+`SparkDuckdbArrayCatchupTest` covers parser/serde/native round-trips, legacy nodes,
+wide slice ends and target diagnostics. `SparkDuckdbArrayResultTest` executes
+actual DuckDB rows and invalid-count errors, typed columns and NULL behavior;
+the Trino direction also passes its native grammar. No live Spark or Trino
+execution is claimed. These catch-up ports are not in published `0.18.0`.
+
+## 36. Source-aware StarRocks TIME_SLICE bucket origin
+
+StarRocks TIME_SLICE parses numeric INTERVAL amounts and FLOOR/CEIL into the
+dedicated TimeSlice node; CEIL corresponds to the next boundary even when the
+input is already on a boundary. Unknown boundary identifiers refuse rather than
+silently selecting FLOOR. The generic four-argument form remains understood for
+AST/cross-dialect compatibility.
+
+For explicit StarRocks-to-DuckDB requests, TIME_BUCKET uses a timestamp origin of
+`0001-01-01 00:00:00` and a timestamp input. DuckDB's default origins (2000) are
+not interchangeable: 2019-07-10 floors to July 8 in StarRocks for three-day slices,
+but July 10 with default DuckDB TIME_BUCKET; four-year slices floor to 2017 in
+StarRocks versus 2016 with DuckDB's default. CEIL adds the period after the floor.
+Source-unknown/other-source generation retains the ordinary target/default-origin
+path instead of globally assigning StarRocks semantics.
+
+`StarrocksTimeSliceCatchupTest` checks AST, serde and source-aware/native rendering.
+The opt-in `StarrocksWindowEngineTest` executes actual generated SQL in the pinned
+StarRocks 4.1.4 engine and compares emitted DuckDB results across minute/hour/day/
+month/year periods, exact boundaries and NULLs. It separately verifies FIRST_VALUE,
+LAST_VALUE, LAG and LEAD IGNORE NULLS and native-default RESPECT NULLS row behavior.
+These are native engine result proofs, not advisory MySQL parser acceptance.
+
+Run the native gate with an isolated pinned container:
+
+```sh
+BRIKK_STARROCKS_TEST_CONTAINER=<4.1.4-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*StarrocksWindowEngineTest'
+```
+
+The gate skips when no container is configured. It requires the cached pinned
+image/source version documented in `vendor/README.md`; no ports or host volumes
+are needed for the container. No implementation of a live Spark/BigQuery engine
+oracle is implied by these tests.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

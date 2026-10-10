@@ -1531,6 +1531,21 @@ open class DuckdbGenerator(
         return renameFuncSql("MAKE_TIMESTAMP", expression)
     }
 
+    // sqlglot: DuckDBGenerator.timeslice_sql, with source-aware StarRocks origin (#36).
+    open fun timeSliceSql(expression: TimeSlice): String {
+        val interval = Interval(args("this" to (expression.expressionArg as Expression).copy(),
+            "unit" to (expression.args["unit"] as Expression).copy()))
+        val input = (expression.thisArg as Expression).copy()
+        val bucket = if (sourceDialect.equals("starrocks", ignoreCase = true)) {
+            val timestamp = Cast(args("this" to input, "to" to DataType.build(DType.TIMESTAMP)))
+            val origin = Cast(args("this" to Literal.string("0001-01-01 00:00:00"), "to" to DataType.build(DType.TIMESTAMP)))
+            func("TIME_BUCKET", interval, timestamp, origin)
+        } else func("TIME_BUCKET", interval, input)
+        return if (expression.text("kind").uppercase() == "END") {
+            sql(Add(args("this" to bucket, "expression" to interval)))
+        } else bucket
+    }
+
     // sqlglot: DuckDBGenerator.approxtopk_sql
     open fun approxtopkSql(expression: ApproxTopK): String {
         unsupported(
@@ -1677,6 +1692,107 @@ open class DuckdbGenerator(
             )),
         ))
         return func("ARRAY_TO_STRING", transformed, (expression.expressionArg as? Expression)?.copy())
+    }
+
+    // sqlglot: DuckDBGenerator.arrayslice_sql (#8524)
+    open fun arraySliceSql(expression: ArraySlice): String {
+        var start = expression.args["start"] as? Expression
+        var end = (expression.args["length"] ?: expression.args["end"]) as? Expression
+        val isLength = expression.args["is_length"] == true || expression.args["length"] != null
+        val originalStart = start?.copy()
+        val originalLength = end?.copy()
+        if (expression.args["zero_based"] == true) {
+            start = start?.let {
+                Case(args("ifs" to listOf(If(args(
+                    "this" to GTE(args("this" to it.copy(), "expression" to Literal.number(0))),
+                    "true" to Add(args("this" to it.copy(), "expression" to Literal.number(1))),
+                ))), "default" to it))
+            }
+            if (!isLength) end = end?.let {
+                Case(args("ifs" to listOf(If(args(
+                    "this" to LT(args("this" to it.copy(), "expression" to Literal.number(0))),
+                    "true" to Sub(args("this" to it.copy(), "expression" to Literal.number(1))),
+                ))), "default" to it))
+            }
+        }
+        fun integer(value: Expression?): Long? = when (value) {
+            is Literal -> value.takeUnless { it.isString }?.name?.toLongOrNull()
+            is Neg -> (value.thisArg as? Literal)?.takeUnless { it.isString }?.name?.toLongOrNull()
+                ?.takeUnless { it == Long.MIN_VALUE }?.let { -it }
+            else -> null
+        }
+        if (isLength && start != null && end != null) {
+            val startValue = integer(start)
+            if (startValue == null || startValue < 0) {
+                val size = ArraySize(args("this" to (expression.thisArg as Expression).copy()))
+                start = Case(args("ifs" to listOf(
+                    If(args("this" to LT(args("this" to start.copy(), "expression" to Neg(args("this" to size.copy())))),
+                        "true" to Add(args("this" to size.copy(), "expression" to Literal.number(1))))),
+                    If(args("this" to LT(args("this" to start.copy(), "expression" to Literal.number(0))),
+                        "true" to Add(args("this" to Add(args("this" to size.copy(), "expression" to start.copy())),
+                            "expression" to Literal.number(1))))),
+                ), "default" to start))
+            }
+            val normalizedStart = integer(start)
+            val length = integer(end)
+            end = if (normalizedStart != null && length != null &&
+                length >= 0 && normalizedStart <= Long.MAX_VALUE - length) {
+                Literal.number(normalizedStart + length - 1)
+            } else {
+                Sub(args("this" to Add(args("this" to start.copy(),
+                    "expression" to Cast(args("this" to end, "to" to DataType.build(DType.BIGINT))))),
+                    "expression" to Literal.number(1)))
+            }
+        }
+        val result = func("ARRAY_SLICE", expression.thisArg, start, end, expression.args["step"])
+        if (isLength && originalStart != null && originalLength != null) {
+            val invalid = mutableListOf<Expression>()
+            if (expression.args["zero_based"] != true && integer(originalStart) in listOf(null, 0L)) {
+                invalid += EQ(args("this" to originalStart.copy(), "expression" to Literal.number(0)))
+            }
+            if (integer(originalLength)?.let { it < 0 } != false) {
+                invalid += LT(args("this" to originalLength.copy(), "expression" to Literal.number(0)))
+            }
+            if (invalid.isNotEmpty()) {
+                // brikk extension (#35): Spark propagates NULLs, but invalid non-NULL
+                // start/length values must fail rather than become successful DuckDB slices.
+                val nullChecks: List<Expression> = listOf(expression.thisArg as Expression, originalStart, originalLength)
+                    .map { Is(args("this" to it.copy(), "expression" to Null())) }
+                val nulls = nullChecks.reduce { a, b -> Or(args("this" to a, "expression" to b)) }
+                val guard = invalid.reduce { a, b -> Or(args("this" to a, "expression" to b)) }
+                return sql(Case(args("ifs" to listOf(
+                    If(args("this" to nulls, "true" to Null())),
+                    If(args("this" to guard, "true" to func("ERROR", Literal.string("Spark SLICE requires a nonzero start and a non-negative length")))),
+                ), "default" to result)))
+            }
+        }
+        return result
+    }
+
+    // sqlglot: DuckDBGenerator.concatws_sql (#8523)
+    override fun concatwsSql(expression: ConcatWs): String {
+        val operands = expression.expressionsArg.filterIsInstance<Expression>()
+        val separator = operands.firstOrNull() ?: return super.concatwsSql(expression)
+        val values = operands.drop(1)
+        fun array(value: Expression) = value is ArrayNode || value.type?.isType(DType.ARRAY) == true
+        if (expression.args["flatten"] != true || values.none(::array)) return super.concatwsSql(expression)
+        val arrays = values.map { value ->
+            if (array(value)) {
+                Cast(args("this" to value.copy(), "to" to DataType(args(
+                    "this" to DType.ARRAY, "expressions" to listOf(DataType.build(DType.TEXT)), "nested" to true))))
+            } else {
+                if ((value.type == null || value.type?.isType(DType.UNKNOWN) == true) &&
+                    value !is Literal && value !is Null && value !is BooleanNode) {
+                    unsupported("Cannot transpile CONCAT_WS with unknown argument types to DuckDB.")
+                }
+                ArrayNode(args("expressions" to listOf(Cast(args("this" to value.copy(), "to" to DataType.build(DType.TEXT))))))
+            }
+        }
+        val combined = if (arrays.size == 1) arrays.single() else ArrayConcat(args(
+            "this" to arrays.first(), "expressions" to arrays.drop(1), "null_propagation" to false))
+        // Retain the existing constant-delimiter guard instead of bypassing its diagnostics.
+        val joined = arrayToStringSql(ArrayToString(args("this" to combined, "expression" to separator.copy())))
+        return func("CONCAT_WS", separator, joined)
     }
 
     // sqlglot: DuckDBGenerator.arraydistinct_sql
@@ -2883,6 +2999,7 @@ open class DuckdbGenerator(
             reg(TimestampFromParts::class) { e ->
                 dg().timestampfrompartsSql(e as TimestampFromParts)
             }
+            reg(TimeSlice::class) { e -> dg().timeSliceSql(e as TimeSlice) }
             reg(DateAdd::class) { e -> dg().dateDeltaSql(e) }
             reg(DateSub::class) { e -> dg().dateDeltaSql(e) }
             reg(DatetimeAdd::class) { e -> dg().dateDeltaSql(e) }
@@ -2901,6 +3018,7 @@ open class DuckdbGenerator(
             reg(ParseTime::class) { e -> dg().parsetimeSql(e as ParseTime) }
             reg(ParseJSON::class) { e -> dg().parsejsonSql(e as ParseJSON) }
             reg(ArrayDistinct::class) { e -> dg().arraydistinctSql(e as ArrayDistinct) }
+            reg(ArraySlice::class) { e -> dg().arraySliceSql(e as ArraySlice) }
             reg(ArrayToString::class) { e -> dg().arrayToStringSql(e as ArrayToString) }
             reg(RegexpLike::class) { e -> dg().regexplikeSql(e as RegexpLike) }
             reg(RegexpReplace::class) { e -> dg().regexpreplaceSql(e as RegexpReplace) }

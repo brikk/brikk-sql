@@ -9,6 +9,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.StarrocksTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
+import dev.brikk.house.sql.parser.TokenType
 
 /**
  * Port of sqlglot's StarRocks dialect umbrella (reference/sqlglot/sqlglot/dialects/starrocks.py
@@ -34,7 +35,7 @@ class StarrocksDialect : Dialect() {
     // Version-pinned StarRocks builtin function registry (see brikk-sql-metadata).
     override val functionCatalog: FunctionCatalog get() = STARROCKS_FUNCTION_CATALOG
 
-    override val tokenizerConfig: TokenizerConfig get() = StarrocksTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = TOKENIZER_CONFIG
 
     // sqlglot: StarRocks.TIME_MAPPING (inherited from MySQL)
     override val timeMapping: Map<String, String> get() = MysqlDialect.TIME_MAPPING
@@ -49,4 +50,11 @@ class StarrocksDialect : Dialect() {
 
     override fun generator(pretty: Boolean, sourceDialect: String?): Generator =
         StarrocksGenerator(pretty = pretty, tokenizerConfig = tokenizerConfig, sourceDialect = sourceDialect)
+
+    companion object {
+        // sqlglot #8412: StarRocks has no INSERT IGNORE/index hint grammar; IGNORE
+        // must reach the window NULL-modifier parser as a contextual identifier.
+        val TOKENIZER_CONFIG: TokenizerConfig = StarrocksTokenizerTables.CONFIG
+            .withKeywords(mapOf("IGNORE" to TokenType.VAR))
+    }
 }

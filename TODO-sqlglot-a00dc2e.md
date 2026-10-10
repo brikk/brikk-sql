@@ -50,13 +50,18 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Audit: upstream changes REGEXP_COUNT/REGEXP_INSTR lowerings not yet present in
   our DuckDB generator; port/review that prerequisite rather than claim the flag
   ordering fix applies to our existing REGEXP_MATCHES/REGEXP_REPLACE paths.
-- [ ] **DDB-04 — Spark array slicing:** preserve start/length semantics
+- [x] **DDB-04 — Spark array slicing:** preserve start/length semantics
   (`818483464b`, #8524), including negative/zero/boundary/NULL cases.
-  Audit: our older Spark builder stores `length`, while the target uses `end` plus
-  `is_length`. Reconcile the AST/parser/generator contract and source round-trip
-  first; do not drop the length by adding only the final generator calculation.
-- [ ] **DDB-05 — Spark CONCAT_WS arrays:** use ARRAY_TO_STRING semantics
+  Parser now uses `end` plus `is_length`; native Spark round-trips, serde and legacy
+  `length` AST loading remain supported. DuckDB result checks cover negative starts,
+  zero lengths, empty/NULL inputs, dynamic bounds and wide inclusive ends. Runtime
+  NULL/error guards preserve invalid non-NULL Spark counts (extension #35).
+- [x] **DDB-05 — Spark CONCAT_WS arrays:** use ARRAY_TO_STRING semantics
   (`3096a591d6`, #8523); compare scalar/array mixtures and NULL elements/separators.
+  Shared Hive/Spark flatten flag and companion Trino route (#8391) are ported.
+  Native DuckDB calls remain native. DuckDB result tests cover scalars, typed array
+  columns, empty/NULL arrays and separators. Unknown mixed argument types and
+  row-dependent DuckDB delimiters are diagnosed; Trino grammar is verified.
 - [x] **DDB-06 — SAMPLE ordering:** emit USING SAMPLE before ORDER BY/LIMIT
   (`022bb41fc5`, #8550). Verify native grammar and PIPE TABLESAMPLE contexts.
 - [ ] **DDB-07 — List-comprehension qualification:** bind lambda variables locally
@@ -84,10 +89,18 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 
 ## Other supported dialects
 
-- [ ] **SR-01 — Window NULL modifiers:** preserve IGNORE/RESPECT NULLS
+- [x] **SR-01 — Window NULL modifiers:** preserve IGNORE/RESPECT NULLS
   (`284ea43fe7`, #8412); parser/generator/typing round-trips and native grammar.
-- [ ] **SR-02 — TIME_SLICE:** dedicated TimeSlice AST parsing
+  FIRST_VALUE/LAST_VALUE/LAG/LEAD keep IGNORE NULLS after their first argument;
+  offsets/defaults are retained. RESPECT NULLS uses the native default. Actual
+  StarRocks 4.1.4 execution proves the window row results.
+- [x] **SR-02 — TIME_SLICE:** dedicated TimeSlice AST parsing
   (`8abe7f8382`, #8555; `6b5191d9e3` fixes). Preserve interval/unit/boundary semantics.
+  Source-aware DuckDB translation explicitly preserves StarRocks' 0001 origin
+  (extension #36); default DuckDB origins differ for three-day/four-year periods.
+  Live StarRocks and emitted DuckDB results agree for FLOOR/CEIL, exact boundaries,
+  minute/hour/day/month/year periods and NULL inputs. Native parser/serde round-trips
+  are covered; unknown boundary names refuse instead of silently becoming FLOOR.
 - [ ] **TRINO-01 — Temporal precision:** timestamp/time literal precision
   (`e1e0d2e52f`, #8538; all-temporal follow-up `862fd55467`, #8564).
 - [ ] **CH-01 — Calendar functions:** ISO calendar directions (`0ceaf1319e`, #8494),
@@ -138,3 +151,12 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 - First-batch verification: build and **1,119 Kotlin tests** pass, one optional
   native integration test skipped; nine offline release tests pass. Existing
   known-failure ledgers are unchanged. Remaining requested work is not complete.
+- First batch committed/pushed as `72c476b`; branch CI passed.
+- Second batch: DDB-04/05 and SR-01/02 implemented, including a pinned opt-in live
+  StarRocks gate. The generated arg-type/tokenizer manifests are deliberately not
+  hand-edited; their coherent target refresh remains part of integration below.
+- Second-batch verification: build and **1,135 Kotlin tests** pass with the live
+  StarRocks gates enabled; the optional chDB integration test remains skipped.
+  Nine offline release tests pass; known-failure ledgers remain unchanged. Native
+  StarRocks 4.1.4 image `faf7ce9c24d9...` was run in an isolated container with no
+  host ports or volumes. The container was removed after verification.

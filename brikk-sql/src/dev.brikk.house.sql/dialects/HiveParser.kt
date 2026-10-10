@@ -437,7 +437,7 @@ object HiveParserTables {
         put("COLLECT_LIST") { a -> ArrayAgg(args("this" to seqGet(a, 0), "nulls_excluded" to true)) }
         put("COLLECT_SET") { a -> ArrayUniqueAgg(args("this" to seqGet(a, 0))) }
         put("CONCAT_WS") { a ->
-            ConcatWs(args("expressions" to a, "safe" to true, "coalesce" to true))
+            ConcatWs(args("expressions" to a, "safe" to true, "coalesce" to true, "flatten" to true))
         }
         put("DATE_ADD") { a ->
             dev.brikk.house.sql.parser.applyTimeUnitCoercion(
