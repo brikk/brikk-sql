@@ -1143,6 +1143,56 @@ MySQL full-join replacement in DuckDB. DuckDB, Doris and Trino native grammars
 accept the branch-scoped outputs. No live MySQL or ClickHouse execution is claimed.
 Existing exact known-failure ledgers remain unchanged.
 
+## 38. Integer-division truncation, type evidence and temporary oracle drift
+
+The SQLGlot #8532 port lowers non-native integer division to a BIGINT quotient,
+with TRUNC/TRUNCATE before casts on targets whose integer casts round (BigQuery,
+DuckDB, MySQL/Doris and Presto/Trino). Native operators/functions remain native.
+The follow-up MySQL DIV rendering preserves binary operands, nested right-hand
+divisions and unary negation/bitwise NOT; TRUNCATE supplies its required default
+scale of zero. StarRocks explicitly retains its non-rounding-cast capability.
+
+Typed source division now uses proven operand types as well as syntactic casts;
+unknown types are not fabricated. A fresh untyped quotient prevents recursive
+typed-division lowering. Source integer annotations alone do not establish that a
+target's function returns integers (e.g. FLOOR in DuckDB), so that path uses the
+truncated quotient rather than assuming target-native integer operand types.
+DuckDB's NULL-on-zero integer operator is not substituted for erroring typed
+source division. NULLIF guards retain the divisor's proven type so safe typed
+integer division cannot accidentally become fractional division after guarding.
+
+`IntegerDivisionCatchupTest` fixes the target SQL, AST immutability/serde, typing
+policy, precedence, native spelling and target capability choices.
+`IntegerDivisionResultTest` executes DuckDB signs, NULLs, zero-divisor failures,
+safe division and BIGINT results beyond 32-bit range; native integer operators
+also retain exact Long.MAX_VALUE inputs. Generic real-quotient fallbacks still
+have the target's floating precision/overflow behavior; native exactness is not
+a claim that every floating fallback has full 64-bit precision. Trino and Doris
+grammar checks run without a live engine.
+
+The opt-in `IntegerDivisionEngineTest` runs actual generated SQL in Trino 483 and
+MySQL 8.4. Trino proves the shipped old rounding cast returns 4/-4, while the new
+fallback returns BIGINT 3/-3. It checks NULLs, zero-divisor failure and safe NULL
+behavior. MySQL verifies native DIV precedence, signs, NULL/zero policy, wide
+integers and TRUNCATE scale, plus the typed-column fallback.
+
+```sh
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+BRIKK_MYSQL_TEST_CONTAINER=<8.4-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*IntegerDivisionEngineTest'
+```
+
+Each native gate skips if its container is not configured. The catch-up proof
+used cached images `db58cc93e593...` (Trino 483) and `c831a0f11348...` (MySQL 8.4.10),
+in isolated containers with no host ports/volumes, removed after verification.
+
+The shipped oracle still expects `CAST(CAST(x AS DOUBLE) / y AS INTEGER)` for one
+Hive-to-Presto assertion. Its exact reviewed ID/signature is temporarily recorded
+as `oracle-pin-drift` in `hive-transpile-known-failures.json`; the corrected output
+matches the frozen a00dc2e reference and has independent native result proof.
+Remove this row during the coherent target fixture refresh. No other existing
+ledger entries, generated fixture stamps or shipped pin were changed by this batch.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

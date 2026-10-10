@@ -82,6 +82,7 @@ open class PrestoGenerator(
     override val tableHints: Boolean get() = false
     override val queryHints: Boolean get() = false
     override val isBoolAllowed: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
     override val tzToWithTimeZone: Boolean get() = true
     override val nvl2Supported: Boolean get() = false
     override val structDelimiter: Pair<String, String> get() = "(" to ")"

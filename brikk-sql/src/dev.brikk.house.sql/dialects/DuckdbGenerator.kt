@@ -82,6 +82,8 @@ open class DuckdbGenerator(
     override val structDelimiter: Pair<String, String> get() = "(" to ")"
     override val renameTableWithDb: Boolean get() = false
     override val semiAntiJoinWithSide: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
+    override val safeIntDivision: Boolean get() = true
     override val tablesampleKeywords: String get() = "USING SAMPLE"
     override val tablesampleSeedKeyword: String get() = "REPEATABLE"
     override val jsonKeyValuePairSep: String get() = ","

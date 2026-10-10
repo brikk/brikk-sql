@@ -7,6 +7,14 @@
             "signature": "sql-mismatch:v1:sha256:8b364ff6689a027bdf137008831e7c03e78eae75eefcc924f6dd0d9a53bfef17",
             "issue": "BQ-7",
             "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:ab93b325eb149507bd83c9a0b82fa76c32a15b15b06e1156a007717fca4cf642:1",
+            "case": "write|presto|x DIV y",
+            "reason": "CORE-02 catch-up to frozen a00dc2e, SQLGlot #8532: use CAST(TRUNCATE(CAST(x AS DOUBLE) / y) AS BIGINT), not the shipped pin's rounding INTEGER cast. Reviewed exact assertion/signature; IntegerDivisionCatchupTest pins the target output and IntegerDivisionEngineTest proves Trino 483 returns 3/-3 rather than 4/-4. Remove this temporary pin-drift row when behavioral fixtures refresh to a00dc2e.",
+            "signature": "sql-mismatch:v1:sha256:16154df44a1eb233b5f2ff6e15dea1df82355b147f626162d1a1fd01e72600e9",
+            "issue": "CORE-02 / sqlglot#8532",
+            "status": "oracle-pin-drift"
         }
     ]
 }

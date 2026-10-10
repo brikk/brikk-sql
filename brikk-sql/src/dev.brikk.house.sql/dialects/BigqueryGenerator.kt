@@ -82,6 +82,7 @@ open class BigqueryGenerator(
     override val renameTableWithDb: Boolean get() = false
     override val nvl2Supported: Boolean get() = false
     override val unnestWithOrdinality: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
     override val collateIsFunc: Boolean get() = true
     override val limitOnlyLiterals: Boolean get() = true
     override val supportsTableAliasColumns: Boolean get() = false

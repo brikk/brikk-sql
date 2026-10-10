@@ -182,6 +182,9 @@ open class Generator(
     open val queryHints: Boolean get() = true
     open val queryHintSep: String get() = ", "
     open val isBoolAllowed: Boolean get() = true
+    // sqlglot: Generator.CAST_TO_INT_ROUNDS / SAFE_INT_DIVISION (#8532)
+    open val castToIntRounds: Boolean get() = false
+    open val safeIntDivision: Boolean get() = false
     open val duplicateKeyUpdateWithSet: Boolean get() = true
     open val limitIsTop: Boolean get() = false
     open val returningEnd: Boolean get() = true
@@ -4815,14 +4818,14 @@ open class Generator(
     }
 
     // sqlglot: Generator.intdiv_sql
-    open fun intdivSql(expression: IntDiv): String = sql(
-        Cast(
-            args(
-                "this" to Div(args("this" to expression.args["this"], "expression" to expression.args["expression"])),
-                "to" to DataType(args("this" to DType.INT)),
-            )
-        )
-    )
+    open fun intdivSql(expression: IntDiv): String = truncatedDivSql(expression.left, expression.right)
+
+    // Use a fresh untyped division so typed-source lowering cannot recurse.
+    protected open fun truncatedDivSql(numerator: Expression, divisor: Expression): String {
+        var quotient: Expression = Div(args("this" to numerator.copy(), "expression" to divisor.copy()))
+        if (castToIntRounds) quotient = Trunc(args("this" to quotient))
+        return sql(Cast(args("this" to quotient, "to" to DataType.build(DType.BIGINT))))
+    }
 
     // sqlglot: Generator.dpipe_sql (base: STRICT_STRING_CONCAT=false)
     open fun dpipeSql(expression: DPipe): String {
@@ -4853,27 +4856,30 @@ open class Generator(
         val l = expression.left
         if (!dialectSafeDivision && expression.args["safe"] == true) {
             val r = expression.right
-            r.replace(Nullif(args("this" to r.copy(), "expression" to Literal.number("0"))))
+            // NULLIF preserves the operand's proven type; dropping it here would turn
+            // safe typed integer division into fractional division after the guard.
+            val guarded = Nullif(args("this" to r.copy(), "expression" to Literal.number("0")))
+            guarded.typeSlot = r.type?.copy()
+            r.replace(guarded)
         }
 
-        // sqlglot: div_sql TYPED_DIVISION handling. Untyped ASTs answer is_type()=False
-        // like Python's un-annotated expressions; Cast nodes check their target type.
+        // sqlglot: div_sql TYPED_DIVISION handling; use annotated types or cast targets.
         if (dialectTypedDivision && expression.args["typed"] != true) {
-            if (!isCastToType(l, REAL_TYPES) && !isCastToType(expression.right, REAL_TYPES)) {
+            if (!l.isType(*REAL_TYPES.toTypedArray()) && !expression.right.isType(*REAL_TYPES.toTypedArray())) {
                 l.replace(
                     Cast(args("this" to l.copy(), "to" to DataType(args("this" to DType.DOUBLE))))
                 )
             }
         } else if (!dialectTypedDivision && expression.args["typed"] == true) {
-            if (isCastToType(l, INTEGER_TYPES) && isCastToType(expression.right, INTEGER_TYPES)) {
-                return sql(
-                    Cast(
-                        args(
-                            "this" to expression.copy(),
-                            "to" to DataType(args("this" to DType.BIGINT)),
-                        )
-                    )
-                )
+            val r = expression.right
+            if (l.isType(*INTEGER_TYPES.toTypedArray()) && r.isType(*INTEGER_TYPES.toTypedArray())) {
+                // A source's inferred integer result need not stay integer in the target.
+                // Also do not replace an erroring typed division with a NULL-on-zero operator.
+                if (listOf(l, r).all { it.isInt || it is Cast } &&
+                    (expression.args["safe"] == true || !safeIntDivision)) {
+                    return sql(IntDiv(args("this" to l.copy(), "expression" to r.copy())))
+                }
+                return truncatedDivSql(l, r)
             }
         }
 

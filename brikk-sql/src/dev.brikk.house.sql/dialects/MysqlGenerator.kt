@@ -113,6 +113,7 @@ open class MysqlGenerator(
     override val supportsMedian: Boolean get() = false
     override val updateStatementSupportsFrom: Boolean get() = false
     override val limitFetch: String get() = "LIMIT"
+    override val castToIntRounds: Boolean get() = true
 
     // sqlglot: MySQLGenerator.LIMIT_ONLY_LITERALS = True
     override val limitOnlyLiterals: Boolean get() = true
@@ -669,6 +670,17 @@ open class MysqlGenerator(
         return sql(expression.thisArg)
     }
 
+    // sqlglot: MySQLGenerator.intdiv_sql (6aeb6a0ab7): DIV needs operand and parent
+    // grouping, including right-nested divisions and unary negation/bitwise NOT.
+    override fun intdivSql(expression: IntDiv): String {
+        fun operand(value: Expression): String = if (value is Binary) sql(Paren(args("this" to value.copy()))) else sql(value)
+        val rendered = "${operand(expression.left)} ${maybeComment("DIV", comments = expression.comments)} ${operand(expression.right)}"
+        val parent = expression.parent
+        return if (parent is Neg || parent is BitwiseNot ||
+            ((parent is Mul || parent is Div || parent is IntDiv || parent is Mod) &&
+                parent.expressionArg === expression)) wrap(rendered) else rendered
+    }
+
     // sqlglot: MySQLGenerator.currentschema_sql (@unsupported_args("this"))
     open fun currentschemaSql(expression: CurrentSchema): String {
         if (isTruthy(expression.args["this"])) {
@@ -894,7 +906,7 @@ open class MysqlGenerator(
                 func("DATE_FORMAT", e.thisArg, formatTime(e))
             }
             reg(Trim::class) { e -> mg().mysqlTrimSql(e as Trim) }
-            reg(Trunc::class) { e -> mg().renameFuncSql("TRUNCATE", e) }
+            reg(Trunc::class) { e -> func("TRUNCATE", e.thisArg, e.args["decimals"] ?: Literal.number(0)) }
             reg(TryCast::class) { e -> castSql(e as TryCast) }
             reg(TsOrDsAdd::class) { e -> mg().dateAddSql("ADD", e) }
             reg(TsOrDsDiff::class) { e -> func("DATEDIFF", e.thisArg, e.args["expression"]) }

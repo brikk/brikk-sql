@@ -51,6 +51,7 @@ open class StarrocksGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
+    override val castToIntRounds: Boolean get() = false
 
     // sqlglot: StarRocksGenerator.ignorenulls_sql (#8412), after the first argument.
     override fun ignorenullsSql(expression: IgnoreNulls): String {

@@ -79,9 +79,15 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   hook distinguishes a final branch TOP from trailing set LIMIT/FETCH without
   adding a T-SQL dialect. Related full-join rewrite modifier placement is corrected
   instead of hiding a new failure in the MySQL parity ledger (extension #37).
-- [ ] **CORE-02 — Integer division:** truncate toward zero instead of relying on
+- [x] **CORE-02 — Integer division:** truncate toward zero instead of relying on
   rounding casts (`f5dd70bff7`, #8532; `6aeb6a0ab7` fixes). Check positive/negative
   inputs, division by zero, NULLs, target capabilities and result types.
+  Fallbacks use BIGINT and explicit truncation for rounding-cast targets. Proven
+  integer source types participate in lowering without recursive typed division;
+  safe-divisor guards keep that type evidence. MySQL/Doris/StarRocks native DIV
+  precedence and MySQL TRUNCATE's required scale are corrected. DuckDB rows and
+  live Trino 483/MySQL 8.4.10 results pass. One exact Hive-to-Presto old-pin mismatch
+  is recorded as temporary `oracle-pin-drift`, to remove on target fixture refresh.
 - [x] **CORE-03 — Identifier escaping:** escape delimiter-escape characters
   (`d5d436bc32`, #8533), including backticks, double quotes and embedded backslashes.
 - [ ] **CORE-04 — Star/USING output order:** FROM source ordering (`ee7567c86d`,
@@ -170,3 +176,11 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   pass**, with three optional native tests skipped (chDB and the two already-proved
   live StarRocks gates); nine release tests pass. No ledger entries were added or
   signatures changed. Remaining requested items and target-fixture refresh are open.
+- Fourth batch: CORE-02 ported with source typing and native precedence regressions.
+  Build and **1,153 Kotlin tests** pass with opt-in Trino/MySQL execution enabled;
+  three optional native tests skip (chDB and the two StarRocks gates). Nine offline
+  release tests pass. Only one ledger row was added: the reviewed exact old-pin
+  Hive-to-Presto rounding-cast discrepancy, independently pinned to a00dc2e and
+  proved in Trino 483. No existing assertion signatures/reasons were changed.
+  Shipped fixtures/pin remain unchanged. Isolated Trino/MySQL containers were
+  created without host ports/volumes and removed after verification.
