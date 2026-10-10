@@ -55,11 +55,19 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 - [x] **DDB-02 — Timestamp timezone/precision:** drop unsupported TIMESTAMP_LTZ
   precision (`9beb769dbf`, #8403); preserve TIMESTAMP_FROM_PARTS zones
   (`d2fbb215ff`, #8434). Check source-aware generation, types, NULLs and zone results.
-- [ ] **DDB-03 — Empty regex patterns:** do not prepend regex flags to an empty pattern
+- [x] **DDB-03 — Empty regex patterns:** do not prepend regex flags to an empty pattern
   (`cb5d8da1ba`, #8474). Execute affected native and translated regex forms.
-  Audit: upstream changes REGEXP_COUNT/REGEXP_INSTR lowerings not yet present in
-  our DuckDB generator; port/review that prerequisite rather than claim the flag
-  ordering fix applies to our existing REGEXP_MATCHES/REGEXP_REPLACE paths.
+  Prerequisite REGEXP_COUNT/REGEXP_INSTR lowerings are ported; canonical zero-result
+  checks use the original pattern before flags. Canonical runtime NULL checks come first.
+  Source-aware PostgreSQL/Trino count semantics and PostgreSQL/MySQL INSTR empty-
+  pattern behavior are retained, including source NULL/error/overflow rules.
+  PostgreSQL newline modes are translated explicitly. Whole-match occurrence and
+  dynamic start/end options execute with BIGINT results. Unsupported flags/groups,
+  PostgreSQL restarted-anchor uncertainty and nonempty zero-width positions are
+  diagnosed/refused rather than silently claimed equivalent (extension #40).
+  Actual DuckDB, PostgreSQL 18.4, MySQL 8.4.10 and Trino 483 checks pass. Native
+  DuckDB MATCHES/REPLACE/EXTRACT_ALL behavior remains native. No Snowflake dialect
+  is added; no live Spark or arbitrary cross-regex-engine equivalence is claimed.
 - [x] **DDB-04 — Spark array slicing:** preserve start/length semantics
   (`818483464b`, #8524), including negative/zero/boundary/NULL cases.
   Parser now uses `end` plus `is_length`; native Spark round-trips, serde and legacy
@@ -205,3 +213,9 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   equivalent. No existing ledger signatures/reasons or generated fixtures changed.
   PostgreSQL 18.4 image `4efc78b0491e...` ran without host ports/volumes; its isolated
   container was removed after verification. Shipped pin remains unchanged.
+- Sixth batch: DDB-03 and its missing lowerings implemented. Build and **1,180
+  Kotlin tests** pass with opt-in PostgreSQL/MySQL/Trino execution enabled (including
+  the earlier string/division gates); three optional tests skip (chDB/two StarRocks
+  gates). Nine offline release tests pass. Existing ledgers, generated fixtures and
+  shipped pin are unchanged in this batch. Isolated source-engine containers ran
+  without host ports/volumes and were removed after verification.

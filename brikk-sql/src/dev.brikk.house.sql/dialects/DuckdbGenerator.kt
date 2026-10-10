@@ -1895,6 +1895,146 @@ open class DuckdbGenerator(
         return filtered.ifEmpty { null }
     }
 
+    private fun regexpNullChecks(expression: Expression, keys: List<String>): Expression = keys
+        .mapNotNull { expression.args[it] as? Expression }
+        .map<Expression, Expression> { Is(args("this" to it.copy(), "expression" to Null())) }
+        .reduce { a, b -> Or(args("this" to a, "expression" to b)) }
+
+    private fun embeddedRegexpPattern(pattern: Expression, parameters: Expression?): Expression {
+        val postgres = sourceDialect.equals("postgres", ignoreCase = true) || sourceDialect.equals("postgresql", ignoreCase = true)
+        var flags = if (parameters is Null) null else validateRegexpFlags(parameters,
+            if (sourceDialect.equals("mysql", ignoreCase = true)) "im" else "ims")
+        if (postgres) {
+            // PostgreSQL defaults to non-newline-sensitive matching; m/s are opposing
+            // modes, not independent RE2 switches. The last such flag selects the mode.
+            val newlineSensitive = flags?.lastOrNull { it == 'm' || it == 's' } == 'm'
+            flags = (if ('i' in flags.orEmpty()) "i" else "") + if (newlineSensitive) "m" else "s"
+        }
+        return if (flags == null) pattern.copy() else Concat(args("expressions" to listOf(
+            Literal.string("(?$flags)"), pattern.copy())))
+    }
+
+    private fun checkRegexpSearchBoundary(pattern: Expression, position: Expression?, function: String) {
+        if (!(sourceDialect.equals("postgres", ignoreCase = true) || sourceDialect.equals("postgresql", ignoreCase = true))) return
+        if (position != null && !(position.isInt && position.name == "1") && pattern !is Null &&
+            (!pattern.isString || "^" in pattern.name || "\\A" in pattern.name)) {
+            unsupported("$function starting-position lowering cannot preserve PostgreSQL start anchors")
+        }
+    }
+
+    // sqlglot: DuckDBGenerator.regexpcount_sql (#8474), with native-source empty/NULL rules.
+    open fun regexpCountSql(expression: RegexpCount): String {
+        val input = expression.thisArg as Expression
+        val pattern = expression.expressionArg as Expression
+        val position = expression.args["position"] as? Expression
+        val parameters = expression.args["parameters"] as? Expression
+        checkRegexpSearchBoundary(pattern, position, "REGEXP_COUNT")
+        val source = sourceDialect?.lowercase()
+        val postgres = source == "postgres" || source == "postgresql"
+        val nativeEmptyMatches = postgres || source == "trino" || source == "spark"
+        if (source in setOf("trino", "spark") && (position != null || parameters != null)) {
+            unsupported("Native $source REGEXP_COUNT only supports subject and pattern arguments")
+        }
+        val isEmpty = EQ(args("this" to pattern.copy(), "expression" to Literal.string("")))
+        val embedded = embeddedRegexpPattern(pattern, parameters)
+        val subject = if (position == null) input.copy() else Substring(args("this" to input.copy(), "start" to position.copy()))
+        val count = Length(args("this" to Anonymous(args("this" to "REGEXP_EXTRACT_ALL", "expressions" to listOf(subject, embedded)))))
+        val branches = mutableListOf<Expression>(If(args("this" to regexpNullChecks(expression,
+            listOf("this", "expression", "position", "parameters")), "true" to Null())))
+        if (position != null) {
+            branches += If(args("this" to LTE(args("this" to position.copy(), "expression" to Literal.number(0))),
+                "true" to func("ERROR", Literal.string("REGEXP_COUNT position must be positive"))))
+            if (postgres) branches += If(args("this" to GT(args("this" to position.copy(), "expression" to
+                Add(args("this" to Length(args("this" to input.copy())), "expression" to Literal.number(1))))),
+                "true" to Literal.number(0)))
+        }
+        // Test the ORIGINAL pattern, never the flags-prefixed expression.
+        if (!nativeEmptyMatches) branches += If(args("this" to isEmpty, "true" to Literal.number(0)))
+        return sql(Case(args("ifs" to branches, "default" to count)))
+    }
+
+    // sqlglot: DuckDBGenerator.regexpinstr_sql (#8474). Whole-match positions are 1-based.
+    open fun regexpInstrSql(expression: RegexpInstr): String {
+        val input = expression.thisArg as Expression
+        val pattern = expression.expressionArg as Expression
+        val position = expression.args["position"] as? Expression ?: Literal.number(1)
+        val occurrence = expression.args["occurrence"] as? Expression ?: Literal.number(1)
+        val option = expression.args["option"] as? Expression
+        val group = expression.args["group"] as? Expression
+        checkRegexpSearchBoundary(pattern, expression.args["position"] as? Expression, "REGEXP_INSTR")
+        if (pattern.isString && pattern.name.isNotEmpty() &&
+            runCatching { Regex(pattern.name).containsMatchIn("") }.getOrDefault(false)) {
+            unsupported("REGEXP_INSTR nonempty zero-width match positions are not supported in DuckDB")
+        }
+        if (group != null && !(group.isInt && group.name == "0") && group !is Null) {
+            unsupported("REGEXP_INSTR capture-group positions are not supported in DuckDB")
+        }
+        val source = sourceDialect?.lowercase()
+        val postgres = source == "postgres" || source == "postgresql"
+        val mysql = source == "mysql"
+        val isEmpty = EQ(args("this" to pattern.copy(), "expression" to Literal.string("")))
+        val embedded = embeddedRegexpPattern(pattern, expression.args["parameters"] as? Expression)
+        val subject = if (position.isInt && position.name == "1") input.copy() else
+            Substring(args("this" to input.copy(), "start" to position.copy()))
+        val offset = if (position.isInt && position.name == "1") Literal.number(0) else
+            Sub(args("this" to position.copy(), "expression" to Literal.number(1)))
+        fun matches(): Expression = Anonymous(args("this" to "REGEXP_EXTRACT_ALL",
+            "expressions" to listOf(subject.copy(), embedded.copy())))
+        fun sumLengths(function: String, end: Expression): Expression {
+            val values = Bracket(args("this" to Anonymous(args("this" to function,
+                "expressions" to listOf(subject.copy(), embedded.copy()))), "offset" to 1,
+                "expressions" to listOf(Slice(args("this" to Literal.number(1), "expression" to end)))))
+            val transform = Anonymous(args("this" to "LIST_TRANSFORM", "expressions" to listOf(values,
+                Lambda(args("this" to Length(args("this" to toIdentifier("x"))), "expressions" to listOf(toIdentifier("x")))))))
+            return Coalesce(args("this" to Anonymous(args("this" to "LIST_SUM", "expressions" to listOf(transform))),
+                "expressions" to listOf(Literal.number(0))))
+        }
+        var result: Expression = Add(args("this" to Add(args("this" to Add(args("this" to Literal.number(1),
+            "expression" to sumLengths("STRING_SPLIT_REGEX", occurrence.copy()))),
+            "expression" to sumLengths("REGEXP_EXTRACT_ALL", Sub(args("this" to occurrence.copy(), "expression" to Literal.number(1)))))),
+            "expression" to offset))
+        if (option != null) {
+            val endLength = Coalesce(args("this" to Length(args("this" to Bracket(args("this" to matches(), "offset" to 1,
+                "expressions" to listOf(occurrence.copy()))))), "expressions" to listOf(Literal.number(0))))
+            val delta = if (option.isInt && option.name == "1") endLength else If(args(
+                "this" to EQ(args("this" to option.copy(), "expression" to Literal.number(1))),
+                "true" to endLength, "false" to Literal.number(0)))
+            if (!(option.isInt && option.name == "0")) result = Add(args("this" to result, "expression" to delta))
+        }
+        val branches = mutableListOf<Expression>()
+        // MySQL validates the empty regex even when the subject is NULL.
+        if (mysql) branches += If(args("this" to isEmpty.copy(), "true" to func("ERROR",
+            Literal.string("MySQL REGEXP_INSTR rejects an empty pattern"))))
+        branches += If(args("this" to regexpNullChecks(expression,
+            listOf("this", "expression", "position", "occurrence", "option", "parameters", "group")), "true" to Null()))
+        branches += If(args("this" to Or(args("this" to LTE(args("this" to position.copy(), "expression" to Literal.number(0))),
+            "expression" to LTE(args("this" to occurrence.copy(), "expression" to Literal.number(0))))),
+            "true" to func("ERROR", Literal.string("REGEXP_INSTR position and occurrence must be positive"))))
+        if (option != null) branches += If(args("this" to And(args(
+            "this" to NEQ(args("this" to option.copy(), "expression" to Literal.number(0))),
+            "expression" to NEQ(args("this" to option.copy(), "expression" to Literal.number(1))))),
+            "true" to func("ERROR", Literal.string("REGEXP_INSTR option must be 0 or 1"))))
+        val lastBoundary = Add(args("this" to Length(args("this" to input.copy())), "expression" to Literal.number(1)))
+        if (postgres) branches += If(args("this" to GT(args("this" to position.copy(), "expression" to lastBoundary.copy())),
+            "true" to Literal.number(0)))
+        if (mysql) branches += If(args("this" to GT(args("this" to position.copy(), "expression" to Length(args("this" to input.copy())))),
+            "true" to func("ERROR", Literal.string("MySQL REGEXP_INSTR search position is out of bounds"))))
+        val emptyPosition = Sub(args("this" to Add(args("this" to position.copy(), "expression" to occurrence.copy())),
+            "expression" to Literal.number(1)))
+        val emptyResult = if (postgres || source == "spark") If(args("this" to
+            LTE(args("this" to emptyPosition.copy(), "expression" to lastBoundary)), "true" to emptyPosition,
+            "false" to Literal.number(0))) else Literal.number(0)
+        if (!mysql) branches += If(args("this" to isEmpty, "true" to emptyResult))
+        branches += If(args("this" to LT(args("this" to Length(args("this" to matches())), "expression" to occurrence.copy())),
+            "true" to Literal.number(0)))
+        // STRING_SPLIT_REGEX drops zero-width separators, so the length-summing
+        // algorithm must refuse such matches rather than report wrong positions.
+        branches += If(args("this" to Anonymous(args("this" to "LIST_CONTAINS",
+            "expressions" to listOf(matches(), Literal.string("")))), "true" to func("ERROR",
+            Literal.string("REGEXP_INSTR nonempty zero-width matches are not supported"))))
+        return sql(Cast(args("this" to Case(args("ifs" to branches, "default" to result)), "to" to DataType.build(DType.BIGINT))))
+    }
+
     // sqlglot: DuckDBGenerator.regexplike_sql
     open fun regexplikeSql(expression: RegexpLike): String {
         val this_ = expression.thisArg
@@ -3054,6 +3194,8 @@ open class DuckdbGenerator(
             reg(ArraySlice::class) { e -> dg().arraySliceSql(e as ArraySlice) }
             reg(ArrayToString::class) { e -> dg().arrayToStringSql(e as ArrayToString) }
             reg(RegexpLike::class) { e -> dg().regexplikeSql(e as RegexpLike) }
+            reg(RegexpCount::class) { e -> dg().regexpCountSql(e as RegexpCount) }
+            reg(RegexpInstr::class) { e -> dg().regexpInstrSql(e as RegexpInstr) }
             reg(RegexpReplace::class) { e -> dg().regexpreplaceSql(e as RegexpReplace) }
             reg(Round::class) { e -> dg().roundSql(e as Round) }
             // sqlglot: DuckDBGenerator.{getignorecase,compress,encrypt,decrypt,decryptraw,

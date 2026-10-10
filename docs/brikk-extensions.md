@@ -1260,6 +1260,66 @@ mismatches do not imply changed type evidence. Remove the rows during the cohere
 fixture refresh. No pre-existing signatures/reasons or shipped fixture stamps/pin
 were changed by this batch.
 
+## 40. REGEXP_COUNT/REGEXP_INSTR empty-pattern scope and source-aware lowering
+
+SQLGlot #8474 fixes empty checks in REGEXP_COUNT/REGEXP_INSTR lowerings that were
+not yet present locally. Both lowerings are now implemented. The canonical zero-
+result policy compares the **original** pattern with the empty string, before
+embedding literal i/m/s flags; testing the flags-prefixed pattern would turn an
+empty pattern into a nonempty expression and produce unintended matches. Runtime
+NULL checks cover all provided arguments, including empty-pattern calls with NULL
+subjects, positions, occurrences, options or flags. No compile-time substitution
+of a NULL result is used.
+
+The canonical zero rule is not universal native SQL behavior. PostgreSQL and
+Trino count empty matches between characters (four for `abc`); PostgreSQL INSTR
+returns boundary positions, including the final boundary. MySQL INSTR rejects an
+empty pattern, even with a NULL subject, and rejects out-of-bounds start positions.
+Explicit source context retains these differences. PostgreSQL starts beyond the
+last boundary return zero; its default newline mode and opposing m/s flags map to
+the appropriate RE2 flags. Spark's native empty-match policy is carried through
+for its two-argument calls, but no live Spark result proof is claimed. Extra native
+Trino/Spark COUNT arguments produce diagnostics rather than inventing overloads.
+
+Whole-match INSTR uses lengths of split prefixes and prior matches to compute
+1-based positions. Occurrence selection, starting offsets and runtime start/end
+options are retained. An explicit BIGINT cast prevents LIST_SUM's wider DuckDB
+accumulator type from becoming the exposed position result. Positive-position/
+occurrence and valid-option checks refuse invalid non-NULL calls. Original ASTs,
+parents, serde and type evidence remain unchanged; missing source type metadata
+is not fabricated merely because the target lowering has a known type.
+
+This is a portable **RE2-compatible whole-match subset**, not a promise of arbitrary
+POSIX/ICU/Java/Snowflake regex equivalence. Unsupported flags and nonzero capture-
+group position arguments are diagnosed. PostgreSQL starting-position lowering
+restarts a substring's boundary: known start anchors or dynamic patterns combined
+with a nontrivial start position therefore produce a portability diagnostic.
+Nonempty zero-width position patterns are diagnosed when recognizable and refused
+at execution time otherwise: STRING_SPLIT_REGEX drops zero-width separators, so
+using the length-summing result would silently report wrong positions. Empty
+patterns instead use the appropriate explicit source/canonical branch.
+
+`EmptyRegexpCatchupTest` fixes original-pattern/flag ordering, source policies,
+diagnostics, AST immutability, conservative typing and native DuckDB spellings.
+`EmptyRegexpResultTest` executes flags, NULLs, row-dependent patterns/options,
+occurrences, Unicode positions and refusal cases. Native DuckDB MATCHES, REPLACE
+and EXTRACT_ALL still retain their own empty-pattern behavior; no zero rule is
+added to them. `EmptyRegexpEngineTest` compares actual generated DuckDB rows with
+PostgreSQL 18.4, MySQL 8.4.10 and Trino 483 results/errors.
+
+```sh
+BRIKK_POSTGRES_TEST_CONTAINER=<18-container> \
+BRIKK_MYSQL_TEST_CONTAINER=<8.4-container> \
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*EmptyRegexpEngineTest'
+```
+
+Each live gate skips without its configured container. Verification reused the
+cached pinned PostgreSQL/MySQL/Trino images documented in extensions #38/#39,
+with isolated containers, no host ports/volumes, removed afterward. No Snowflake
+dialect/engine is added. No ledger rows or shipped generated fixture stamps/pin
+were changed by this batch; earlier reviewed pin-drift rows remain pending refresh.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
