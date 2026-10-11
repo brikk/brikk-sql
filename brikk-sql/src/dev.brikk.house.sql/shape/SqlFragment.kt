@@ -514,6 +514,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * catalog first (bound slots included) so `*` becomes explicit columns — for
      * engines without star/star-except support. Qualification keeps identifiers
      * unquoted for readability.
+     *
+     * For executable projection expansion, [inputs] must describe complete column
+     * layouts. A trait/minimum shape is useful analysis evidence, not proof that
+     * unlisted fields do not exist; this API does not encode the caller's closedness.
      */
     fun toStandardSql(
         target: String = dialect,
@@ -822,6 +826,8 @@ data class FragmentContract(
  * collisions cannot be checked until the input is known. Repeated RENAME sources/targets and
  * unsupported source syntax are rejected even without schema. Dialects without native
  * RENAME support must refuse surviving modifiers during generation.
+ * Executable expansion requires complete input layouts: a minimum trait schema is
+ * not permission to discard runtime columns absent from that minimum.
  */
 fun expandStarModifiers(
     tree: Expression,

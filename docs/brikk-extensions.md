@@ -1740,6 +1740,47 @@ snapshot. No Maven Local or public release was published. See
 [candidate verification](engine-candidate-verification.md) for artifact hashes,
 reproduction and the limits of that gate.
 
+## 51. Presto/Trino refusal for unexpanded pipe RENAME
+
+Presto and Trino do not support `SELECT * RENAME (...)`. Previously a valid pipe
+such as `FROM t |> RENAME id AS x` could reach executable generation with that
+syntax and an empty unsupported-message list. The shared Presto generator now
+throws `UnsupportedError` for surviving star RENAME modifiers, including Trino's
+inherited path, matching the existing Doris refusal policy. No SQL result is
+returned for that unsupported translation; this is not a warning callers can miss.
+
+A minimum trait proving `id` exists does not prove the complete row layout. The
+Brikk-house runtime erases its `Rel<T>` shape and uses schema-less source-preserving
+executable rendering, so it must refuse this translation rather than guess the
+unlisted fields. Analysis may still infer the known renamed field. SQL-side Shape
+does not encode Engine's Partial/closed distinction: callers supplying schemas
+for executable star expansion must supply complete layouts, not trait minima.
+
+An explicit projection established from a complete schema remains supported and
+preserves column positions, simultaneous swaps, types, NULLs and duplicate rows.
+`SELECT * EXCEPT (id), id AS x` is neither Trino syntax nor generally an equivalent
+rename: it appends x, changing column order. Native DuckDB star RENAME and ordinary
+Presto/Trino stars remain supported. Explicit pipe-formatting mode still preserves
+authored `|>` text; it is not executable engine SQL and its public defaults are
+unchanged.
+
+`PipeRenameGenerationTest` protects the schema-less/trait runtime path, source-map
+and pretty modes, nested pipes, qualified/direct stars, unresolved joined layouts,
+complete projections and AST nonmutation. `TrinoPipeRenameResultTest` independently
+rejects the old output with Trino 483's native grammar, checks complete-projection
+grammar and portable row/header/type semantics in DuckDB, and has an opt-in live
+Trino execution check. The malformed trailing `c` in `RENAME id AS x c` remains a
+separate parse error, not the valid generator input used to reproduce this defect.
+
+Verification: the new regression class initially failed three refusal methods;
+after the guard, build, 1,277 Kotlin methods (24 optional native skips), 38 existing
+consumer/editor contracts, sixteen offline release and three candidate safety
+tests pass. Trino 483 ran the complete-projection row checks; all existing ledgers
+are unchanged. The retained precompiled brikk-house runtime also refuses a bound
+`Rel<HasId>` rename against the new core JAR while explicit SELECT still renders;
+the original peer checkout stays clean. Logs are retained under
+`/tmp/opencode/trino-pipe-rename-*`; only the isolated task container is removed.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

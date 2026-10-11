@@ -13,6 +13,7 @@ import dev.brikk.house.sql.generator.explodeProjectionToUnnest
 import dev.brikk.house.sql.generator.inheritStructFieldNames
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.PrestoTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -73,6 +74,18 @@ open class PrestoGenerator(
     override val dialect: Dialect get() = Dialects.PRESTO
 
     open val supportsTemporalPrecision: Boolean get() = false
+
+    // brikk extension: an open/trait row cannot be enumerated for a faithful rename.
+    // Presto/Trino have no native star RENAME; never return invalid executable SQL,
+    // drop the modifier, or append the renamed column in a different position.
+    override fun starSql(expression: Star): String {
+        if (!(expression.args["rename"] as? List<*>).isNullOrEmpty()) {
+            val target = dialect.name.replaceFirstChar { it.uppercaseChar() }
+            throw UnsupportedError("$target star RENAME requires a complete column layout " +
+                "expanded to an explicit projection before generation")
+        }
+        return super.starSql(expression)
+    }
 
     override fun datatypeSql(expression: DataType): String {
         if (!supportsTemporalPrecision && expression.thisArg in DataType.TEMPORAL_TYPES) {
