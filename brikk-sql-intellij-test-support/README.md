@@ -30,6 +30,22 @@ RecordingConsole(project, file, "my-driver-id").use { recording ->
 
 Set the file's SQL dialect before constructing the fixture and clear it after closing.
 
+## PipeExecutionContract
+
+The PIPE execution contracts for a `PipeDialect`: only PIPE is claimed; stale input,
+cancellation, destination changes during prompting and refusals submit nothing;
+nested-only pipelines lower; run-to-stage runs only top-level stages to the caret.
+Call each check from a light platform test with PIPE enabled:
+
+```kotlin
+private val contract = PipeExecutionContract(MyPipeDialect, "my-driver-id") { sql ->
+    myFixture.configureByText("pipe-${UUID.randomUUID()}.sql", sql)
+    // Map the file to the dialect here and undo it when the test ends.
+    myFixture.editor
+}
+fun testRefusesStaleInput() = contract.refusesStaleInput()
+```
+
 ## Platform tests
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run

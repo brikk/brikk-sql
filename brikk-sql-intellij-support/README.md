@@ -15,7 +15,8 @@ Database Tools APIs only in packages listed here (none).
 - `CooperativeExecutePromoter`: promote the underlying database action via the
   public registered promoter, then map back to the installed wrapper.
 - `EditorSnapshot`: refuse stale document identity/revisions, including edit/revert,
-  with `SqlExecutionRefusal`. Cancellation propagates unchanged.
+  with `SqlExecutionRefusal`. Cancellation propagates unchanged. `captureAfterSave`
+  pins the revision after a save that resets the stamp, refusing edits made before it.
 - `TranslatingScriptModel`: preserve statement anchors and parameter prompting,
   replace only claimed statements, then finalize all translations before submission.
 - `SqlExecutionAdapter`: product-owned claims, translation, parameter ranges and
@@ -26,6 +27,32 @@ Database Tools APIs only in packages listed here (none).
   three-state nullability, source alias and origin label. Same-named columns from
   different aliases retain distinct lookup identities. Consumers provide copied
   facts, so the helper acquires no Kotlin IDE or engine dependency.
+- `ToggleSettings` and `ToggleConfigurable`: a persisted project switch that reparses
+  its language's files, and its settings page with a `-D<property>=false` veto.
+- `notifyEscaped`: plain-text notifications. `FileBanner` and `FileBannerProvider`:
+  per-file editor banners scoped to their project.
+
+## PIPE (`dev.brikk.house.sql.intellij.pipe`, experimental)
+
+A plugin implements one `PipeDialect` profile (core dialect, label, veto property,
+language, project setting, session ownership; optional validator, statement ranges,
+parameter spans, first-stage rule, server column convention, submit listener) and
+registers no-arg subclasses:
+
+- `PipeExecuteInterceptor` as its `CooperativeExecuteConfiguration.interceptor`. It claims
+  PIPE input in owned consoles, pins the document after the stock save, captures the
+  destination before preparation and rechecks it, with the setting, before submission.
+  Refusals are notified in the profile's group; claimed input never falls back to raw SQL.
+- `PipePreviewIntention`, `PipeRunToStageIntention`, `PipePreviewAction`,
+  `PipeRunToStageAction`. Run-to-stage cuts at top-level stages and submits through
+  the same checks; injected and inspection-only files cannot run.
+- `PipeStageCompletionContributor` and `PipeStageKeywordAnnotator`: core stage phrases
+  and offline stage input columns, also in injected SQL (`PipeText`).
+
+`lower` turns one statement into `PipeTranslation` over core `lowerForExecution`,
+also refusing what the profile's statement ranges refuse, and applies the optional
+`NativeSqlValidator` at lowering (parameters masked) or at submission. `Unavailable`
+does not block. `PipeText.errorRange` gives annotators a clamped, non-empty range.
 
 Rich column examples, using a nullable Kotlin Boolean for nullability:
 
@@ -103,6 +130,6 @@ Shared platform contracts run in a real IDE against the test kit:
 
 They compile against 261; `BRIKK_INTELLIJ_RUNTIME_SDK` runs them on another installation.
 
-Consumer runtime, classloader, second-dialect and console tests live in Trino's
-test suite. They are not shipped in the library. The test names and release results
-are recorded in the consumer verification report and handoff documents.
+`PipeExecutionContract` in the test kit runs the PIPE execution contracts against
+a consumer's own profile. Classloader isolation and real-dialect console tests live
+in the consumers' suites.
