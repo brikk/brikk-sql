@@ -29,7 +29,7 @@ from Maven Central, without a sibling source checkout or bundled native engine.
 
 Latest core, metadata, verify and oracle release: **`0.19.1`**. SQL IntelliJ
 support is independently versioned at **`0.1.0`**. Current core development
-snapshot: **`0.19.0-SNAPSHOT`**.
+snapshot: **`0.20.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
@@ -117,7 +117,7 @@ IntelliJ support has its own version and scoped release command; build tooling i
 never published. The template owns sources, POM metadata and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
-  `0.19.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
+  `0.20.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.

@@ -34,9 +34,9 @@ def main():
     try:
         backup.write_text(originals[template])
         if args.local:
-            template.write_text(f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    version: {json.dumps(args.core_version or "0.19.0-SNAPSHOT")}\n')
+            template.write_text(f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    version: {json.dumps(args.core_version or "0.20.0-SNAPSHOT")}\n')
         else:
-            template.write_text(release_template(args.core_version or "0.19.0-SNAPSHOT", f"./{backup.name}")
+            template.write_text(release_template(args.core_version or "0.20.0-SNAPSHOT", f"./{backup.name}")
                                if args.core_version else f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    mavenCentral: {{ enabled: true, publishingMode: auto }}\n    signArtifacts: true\n')
         old_version = "    version: 0.1.0-SNAPSHOT"
         if originals[support].count(old_version) != 1: raise SystemExit("Unexpected support development version")
