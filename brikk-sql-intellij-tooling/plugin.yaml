@@ -6,6 +6,25 @@ tasks:
       license: ${project.rootDir}/LICENSE
       resourceDir: ${taskOutputDir}/resources
 
+  # Shared platform contracts live with the test kit; this module owns the SDK preparation.
+  testIntellijPlatform:
+    action: !dev.brikk.house.sql.intellij.tooling.testIntellijPlatform
+      apiDir: ${project.rootDir}/build/intellij-sql-api
+      libraries:
+        dependencies:
+          - ../brikk-sql-intellij-test-support
+      testSources: ${project.rootDir}/brikk-sql-intellij-test-support/platform-test
+      toolchain:
+        dependencies:
+          - org.jetbrains.kotlin:kotlin-compiler-embeddable:2.4.10
+          - junit:junit:4.13.2
+          - org.opentest4j:opentest4j:1.3.0
+      outputDir: ${taskOutputDir}
+
+checks:
+  - name: intellijPlatform
+    performedBy: testIntellijPlatform
+
 generated:
   sources:
     - directory: ${tasks.prepareSqlIdeApi.action.revisionDir}

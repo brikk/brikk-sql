@@ -1,0 +1,21 @@
+product: jvm/lib
+
+description: Test fixtures for IntelliJ database dialect plugins built on Brikk SQL IntelliJ support.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  - ../brikk-sql-intellij-support
+
+settings:
+  jvm:
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -classpath=build/intellij-sql-api/intellij-sql-api.jar
+      - -Xexplicit-api=strict
+  publishing:
+    artifactId: brikk-sql-intellij-test-support
+    version: 0.1.2-SNAPSHOT

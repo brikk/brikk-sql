@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scoped, restoring release overrides. Publishes support and optionally its core prerequisites."""
+"""Scoped, restoring release overrides. Publishes support, its test kit, and optionally its core prerequisites."""
 import argparse
 import json
 import os
@@ -16,9 +16,10 @@ def main():
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    support = root / "brikk-sql-intellij-support/module.yaml"
+    intellij = ["brikk-sql-intellij-support", "brikk-sql-intellij-test-support"]
+    descriptors = [root / m / "module.yaml" for m in intellij]
     template = root / "publish.module-template.yaml"
-    originals = {p: p.read_text() for p in (support, template)}
+    originals = {p: p.read_text() for p in (*descriptors, template)}
     backup = root / ".intellij-publish-base.module-template.yaml"
     if backup.exists():
         raise SystemExit("An interrupted/active release owns the backup; inspect it before proceeding")
@@ -30,7 +31,7 @@ def main():
             os.environ[new] = os.environ[old] = value
         if not os.environ.get("KOTLIN_TOOLCHAIN_SIGNING_KEY"):
             raise SystemExit("Missing KOTLIN_TOOLCHAIN_SIGNING_KEY")
-    modules = ["brikk-sql-intellij-support"]
+    modules = intellij
     if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql"] + modules
     try:
         backup.write_text(originals[template])
@@ -39,9 +40,10 @@ def main():
         else:
             template.write_text(release_template(args.core_version or "0.20.0-SNAPSHOT", f"./{backup.name}")
                                if args.core_version else f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    mavenCentral: {{ enabled: true, publishingMode: auto }}\n    signArtifacts: true\n')
-        released, count = re.subn(r"^    version: \S+-SNAPSHOT$", f"    version: {args.version}", originals[support], flags=re.M)
-        if count != 1: raise SystemExit("Unexpected support development version")
-        support.write_text(released)
+        for descriptor in descriptors:
+            released, count = re.subn(r"^    version: \S+-SNAPSHOT$", f"    version: {args.version}", originals[descriptor], flags=re.M)
+            if count != 1: raise SystemExit(f"Unexpected development version in {descriptor}")
+            descriptor.write_text(released)
         if args.local:
             command = ["./kotlin", "publish", "mavenLocal"] + [v for m in modules for v in ("-m", m)]
         else:

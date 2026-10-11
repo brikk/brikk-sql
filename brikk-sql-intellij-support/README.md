@@ -79,15 +79,24 @@ installation. SDK bytes are compile inputs only. The published POM exposes only
 Kotlin stdlib, which IntelliJ consumers should exclude in favor of the platform copy.
 
 ```sh
-./kotlin publish mavenLocal -m brikk-sql-intellij-support
+./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support
 python3 tools/publish_intellij_support.py 0.1.2 --local
 python3 tools/publish_intellij_support.py 0.1.2
 ```
 
 The last command requires the existing Central/signing environment. It publishes
-only this module. `--core-version 0.19.0` explicitly adds core and metadata, never
+only this module and its test kit, `brikk-sql-intellij-test-support`, at the same
+version. `--core-version 0.19.0` explicitly adds core and metadata, never
 verify/oracle. The module has independent `0.1.x` versioning. Temporary release
 overrides restore on success or failure.
+
+Shared platform contracts run in a real IDE against the test kit:
+
+```sh
+./kotlin check intellijPlatform -m brikk-sql-intellij-support
+```
+
+They compile against 261; `BRIKK_INTELLIJ_RUNTIME_SDK` runs them on another installation.
 
 Consumer runtime, classloader, second-dialect and console tests live in Trino's
 test suite. They are not shipped in the library. The test names and release results

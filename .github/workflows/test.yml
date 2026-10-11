@@ -63,6 +63,9 @@ jobs:
       - name: Test
         run: ./kotlin test
 
+      - name: Test IntelliJ platform contracts
+        run: ./kotlin check intellijPlatform -m brikk-sql-intellij-support
+
       # Exercise the public publication graph and package sources/native resources
       # without credentials, signing, or uploading anything to a remote repository.
       - name: Verify Maven publications locally
