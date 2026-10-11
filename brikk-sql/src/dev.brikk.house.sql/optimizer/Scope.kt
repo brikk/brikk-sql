@@ -99,6 +99,7 @@ class Scope(
     private var derivedTablesList: MutableList<Expression> = mutableListOf()
     private var udtfsList: MutableList<Expression> = mutableListOf()
     private var tablesList: MutableList<Table> = mutableListOf()
+    private var orderedSourcesList: MutableList<Expression> = mutableListOf()
     private var ctesList: MutableList<CTE> = mutableListOf()
     private var subqueriesList: MutableList<Expression> = mutableListOf()
     private var joinHintsList: MutableList<JoinHint> = mutableListOf()
@@ -135,6 +136,7 @@ class Scope(
         derivedTablesList = mutableListOf()
         udtfsList = mutableListOf()
         tablesList = mutableListOf()
+        orderedSourcesList = mutableListOf()
         ctesList = mutableListOf()
         subqueriesList = mutableListOf()
         joinHintsList = mutableListOf()
@@ -173,6 +175,7 @@ class Scope(
     // sqlglot: Scope._collect (classification per COLLECTIBLE_TYPES)
     private fun collect() {
         tablesList = mutableListOf()
+        orderedSourcesList = mutableListOf()
         ctesList = mutableListOf()
         subqueriesList = mutableListOf()
         derivedTablesList = mutableListOf()
@@ -209,13 +212,19 @@ class Scope(
                         semiAntiJoinTables.add(node.aliasOrName)
                     }
                     tablesList.add(node)
+                    orderedSourcesList.add(node)
                 }
                 node is JoinHint -> joinHintsList.add(node)
                 node::class == Lateral::class ||
-                    (node is UDTF && (node.parent is From || node.parent is Join)) ->
+                    (node is UDTF && (node.parent is From || node.parent is Join)) -> {
                     udtfsList.add(node)
+                    orderedSourcesList.add(node)
+                }
                 node is CTE -> ctesList.add(node)
-                isDerivedTableNode(node) && isFromOrJoin(node) -> derivedTablesList.add(node)
+                isDerivedTableNode(node) && isFromOrJoin(node) -> {
+                    derivedTablesList.add(node)
+                    orderedSourcesList.add(node)
+                }
                 // sqlglot: exp.UNWRAPPED_QUERIES = (Select, SetOperation)
                 (node is Select || node is SetOperation) && !isFromOrJoin(node) &&
                     node !== innerQuery ->
@@ -371,17 +380,13 @@ class Scope(
         get() {
             var cached = referencesCache
             if (cached == null) {
+                ensureCollected()
                 cached = mutableListOf()
 
-                for (table in tables) {
-                    cached.add(table.aliasOrName to table)
-                }
-                for (expr in derivedTables + udtfs) {
-                    val pivots = expr.args["pivots"]
-                    cached.add(
-                        getSourceAlias(expr) to
-                            (if (truthy(pivots)) expr else expr.unnest())
-                    )
+                for (source in orderedSourcesList) {
+                    if (source is Table) cached.add(source.aliasOrName to source)
+                    else cached.add(getSourceAlias(source) to
+                        (if (truthy(source.args["pivots"])) source else source.unnest()))
                 }
 
                 referencesCache = cached

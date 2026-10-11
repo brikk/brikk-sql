@@ -15,6 +15,8 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 class MysqlDialect : Dialect() {
 
     override val name: String get() = "mysql"
+    override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
     // sqlglot: MySQL.EXPRESSION_METADATA (sqlglot/typing/mysql.py)
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL

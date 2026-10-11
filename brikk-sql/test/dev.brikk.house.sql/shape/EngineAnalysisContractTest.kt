@@ -299,4 +299,27 @@ class EngineAnalysisContractTest {
         }
         assertEquals(original, fragment.ast)
     }
+
+    @Test
+    fun usingJoinStarPreparationKeepsNativeOrderTypesAndUnresolvedKeys() {
+        val a = Shape(listOf(ColumnShape("left_id", "INT", false), ColumnShape("k", "INT", false),
+            ColumnShape("left_value", "TEXT", true)))
+        val b = Shape(listOf(ColumnShape("k", "BIGINT", false), ColumnShape("right_id", "INT", false),
+            ColumnShape("right_value", "TEXT", true)))
+        val full = ShapeCatalog(linkedMapOf("a" to a, "b" to b))
+        val fragment = SqlFragment("SELECT * FROM a LEFT JOIN b USING (k)", "duckdb")
+        val original = fragment.ast.copy()
+        assertEquals(listOf("left_id", "k", "left_value", "right_id", "right_value"),
+            fragment.outputShape(full).columns.map { it.name })
+        assertEquals(ColumnShape("k", "INT", false), fragment.outputShape(full).columns[1])
+        assertEquals(true, fragment.outputShape(full).columns[3].nullable)
+        for (inputs in listOf(ShapeCatalog.EMPTY, ShapeCatalog(mapOf("a" to a)))) {
+            val unknown = SqlFragment("SELECT *, k AS joined_key FROM a RIGHT JOIN b USING (k)", "duckdb")
+            val standard = unknown.toStandardSql(inputs = inputs, expandStars = true)
+            assertTrue("USING" in standard && "*" in standard, standard)
+            assertFalse("\"a\".\"k\" AS \"joined_key\"" in standard, standard)
+            validateLikeEngine(unknown.sql, "duckdb", inputs)
+        }
+        assertEquals(original, fragment.ast)
+    }
 }

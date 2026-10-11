@@ -1397,6 +1397,88 @@ multirow query arrays. Portable BigQuery-shaped output is also executed in DuckD
 no live BigQuery engine or general BigQuery grammar proof is claimed. Source ASTs
 remain unchanged during generation. No new array ledger entries were needed.
 
+## 43. Source-order stars, native USING policies and conservative expansion
+
+SQLGlot #8529 keeps table/derived-table/UDTF references in source walk order rather
+than grouping ordinary tables first. #8530 expands every level of parenthesized
+join constructs before alias assignment, rebuilding scopes until stable; sources
+starting with queries and aliased inner join groups remain present. Source order
+now governs star fields and positional consumers. Aliasing callbacks still run
+once per source, not once per expansion pass.
+
+The #8536 port exposes UsingColumnOrder: default USING_LIST puts each join's keys
+first in USING order; MySQL/Doris LEFT_TABLE uses the left output order; DuckDB
+IN_PLACE keeps keys at their left-side position. Native MySQL RIGHT USING instead
+uses the right side's key and residual-source order, preserved explicitly. Earlier
+keys move behind later USING keys where the policy requires it. Natural common
+keys follow the current left-side layout when they can be determined.
+
+Native qualified-star behavior is also dialect-specific. PostgreSQL, DuckDB and
+MySQL expose raw source fields, including duplicate keys and source-side NULLs.
+Trino hides joined keys from qualified stars. StarRocks exposes merged keys first,
+sharing them across distinct qualified sources but retaining them for repeated
+source-star occurrences. QualifiedStarUsing captures these policies; other
+unprobed dialects retain their existing merged-key default rather than claiming
+new native proof. Every unqualified star expands independently, so `*, *` does
+not lose the second set of keys. Literals, EXCEPT/REPLACE/RENAME and other selections
+remain in their own positions; existing rename refusal/atomicity gates still pass.
+
+Merged-key expressions retain logical join stages instead of assuming that a key
+always comes from the first physical source. Later FULL joins compare the previous
+merged key, preserving right-only rows. RIGHT prefers the right value (including
+MySQL case-insensitive matches). DuckDB INNER/LEFT keys retain the left field/type,
+RIGHT uses the right field/type, and FULL coalesces; blindly coalescing mixed INT/
+BIGINT keys would widen DuckDB's native INNER/LEFT result incorrectly. Other
+merged expressions retain their nested coercion/merge stages rather than flattening
+them merely for old-oracle text parity.
+
+**Conservative boundaries:** converting USING to ON while leaving an unresolved
+bare star changes native output into duplicate keys. If visible columns are
+unknown, wildcard-shaped or duplicated, native USING/NATURAL and the bare star
+remain intact. Merged-name references retain unqualified native spelling and
+unknown type evidence, not invented single-table ownership. Flat scopes cannot
+model separate comma-join key families safely, so those groups likewise retain
+native syntax. Known qualified/raw fields can still carry their evidence.
+StarRocks 4.1.4 FULL USING has native star-slot behavior unlike the generic merged
+projection; its stars/USING are retained rather than silently changing those rows.
+These cases may keep UNKNOWN star shapes even with some available schema evidence.
+
+`StarUsingOrderingCatchupTest` checks source order, caches, policies, repeated/raw
+stars, wrapper retention, callbacks and safe unknown-star behavior.
+`StarUsingOrderingResultTest` compares actual DuckDB column labels, types and rows,
+including all join sides, mixed INT/BIGINT keys, duplicate names, chained FULL
+joins, UDTFs, comma groups, NULL supply and partial/no schema.
+`StarUsingOrderingEngineTest` compares original/qualified headers and rows in
+PostgreSQL 18.4, MySQL 8.4.10, Trino 483 and StarRocks 4.1.4, including MySQL RIGHT
+ordering/collation and StarRocks qualified-star cases. NATURAL is not implemented
+by native Trino; StarRocks parses that token as an implicit alias in this form.
+Neither is claimed as a native NATURAL-join equivalence proof. PostgreSQL/MySQL/
+DuckDB natural joins are covered. No new live Doris/Presto/Spark/ClickHouse/BigQuery
+execution proof is claimed here. The added Engine contract protects DuckDB order,
+key type/nullability and two-step preparation/validation for unresolved USING stars.
+
+```sh
+BRIKK_POSTGRES_TEST_CONTAINER=<18-container> \
+BRIKK_MYSQL_TEST_CONTAINER=<8.4-container> \
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+BRIKK_STARROCKS_TEST_CONTAINER=<4.1.4-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*StarUsingOrderingEngineTest'
+```
+
+Verification reused the pinned cached images from extensions #36/#38/#39 in
+isolated containers, no host ports/volumes, removed afterward. Public qualification
+signatures/default bridges and the general true/false/null inference policy are
+unchanged. Scope and dialect additions do not alter existing constructor descriptors.
+
+The full texts of fourteen qualification discrepancies and one lineage discrepancy
+were reviewed individually. Eight are old-pin source/key ordering changes matching
+the frozen target and are temporary oracle-pin-drift. Six intentionally retain
+logical merged-expression stages; one retains unresolved native USING in lineage's
+source SQL while preserving both downstream source nodes. Their exact signatures
+and curated reasons are recorded separately as intentional-divergence, not approved
+by counts. Remove only the eight stale ordering rows during coherent fixture refresh;
+retain intentional safeguards unless the new oracle genuinely adopts them.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

@@ -116,6 +116,10 @@ open class Dialect {
     // sqlglot: Dialect.TABLES_REFERENCEABLE_AS_COLUMNS (BigQuery, Postgres)
     open val tablesReferenceableAsColumns: Boolean get() = false
 
+    // sqlglot: Dialect.USING_COLUMN_ORDER (#8536)
+    open val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.USING_LIST
+    open val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.MERGED
+
     // sqlglot: Dialect.SUPPORTS_STRUCT_STAR_EXPANSION (BigQuery, RisingWave)
     open val supportsStructStarExpansion: Boolean get() = false
 

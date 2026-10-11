@@ -17,6 +17,8 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
 open class DuckdbDialect : Dialect() {
 
     override val name: String get() = "duckdb"
+    override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.IN_PLACE
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
     // sqlglot: DuckDB.EXPRESSION_METADATA (sqlglot/typing/duckdb.py)
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.DUCKDB

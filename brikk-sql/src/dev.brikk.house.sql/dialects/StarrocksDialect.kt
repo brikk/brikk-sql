@@ -25,6 +25,7 @@ import dev.brikk.house.sql.parser.TokenType
 class StarrocksDialect : Dialect() {
 
     override val name: String get() = "starrocks"
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.MERGED_FIRST
 
     // sqlglot: StarRocks(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL

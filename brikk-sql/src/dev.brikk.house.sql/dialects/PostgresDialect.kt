@@ -15,6 +15,7 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
 open class PostgresDialect : Dialect() {
 
     override val name: String get() = "postgres"
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
     // sqlglot: Postgres.ASCII_ONLY_NORMALIZATION = True
     override val asciiOnlyNormalization: Boolean get() = true

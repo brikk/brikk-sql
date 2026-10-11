@@ -77,8 +77,8 @@ bridges and argument-mask positions remain available for compiled consumers.
 ./kotlin test
 ```
 
-The gate now has **23 test methods**, including the tokenizer constructor ABI check
-and DuckDB comprehension preparation/validation regression. Most cases run under PostgreSQL,
+The gate now has **24 test methods**, including the tokenizer constructor ABI check,
+DuckDB comprehension regression and USING-star preparation/type/order safeguards. Most cases run under PostgreSQL,
 DuckDB and Doris. These are hand-owned assertions, not current-output snapshots.
 
 Mutation checks were performed and then reverted:

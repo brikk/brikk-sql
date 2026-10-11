@@ -65,6 +65,8 @@ import dev.brikk.house.sql.ast.selects
 import dev.brikk.house.sql.ast.toIdentifier
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.UsingColumnOrder
+import dev.brikk.house.sql.dialects.QualifiedStarUsing
 import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.shape.ShapeError
 
@@ -119,7 +121,7 @@ fun <E : Expression> qualifyColumns(
         qualifyComprehensions(scope, resolver)
         popTableColumnAliases(scope.ctes)
         popTableColumnAliases(scope.derivedTables)
-        val usingColumnTables = expandUsing(scope, resolver)
+        val using = expandUsing(scope, resolver)
 
         if (((legacyAliasOrder && resolvedSchema.empty) || resolvedDialect.forceEarlyAliasRefExpansion) &&
             expandAliasRefs
@@ -149,11 +151,15 @@ fun <E : Expression> qualifyColumns(
         }
 
         if (isSelect) {
-            if (expandStars) {
+            if (expandStars && !using.preserveAllStars) {
                 expandStarsInScope(
                     scope,
                     resolver,
-                    usingColumnTables,
+                    using.tables,
+                    using.columnsFirst,
+                    using.values,
+                    using.sourceOrder,
+                    using.preserveBareStar,
                     pseudocolumns,
                     annotator,
                 )
@@ -260,7 +266,16 @@ private fun popTableColumnAliases(derivedTables: Iterable<Expression>) {
 }
 
 // sqlglot: qualify_columns._expand_using
-private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<String, Any?>> {
+private data class UsingExpansion(
+    val tables: Map<String, Map<String, Any?>> = emptyMap(),
+    val columnsFirst: List<String> = emptyList(),
+    val values: Map<String, Expression> = emptyMap(),
+    val sourceOrder: List<String>? = null,
+    val preserveBareStar: Boolean = false,
+    val preserveAllStars: Boolean = false,
+)
+
+private fun expandUsing(scope: Scope, resolver: Resolver): UsingExpansion {
     val columns = LinkedHashMap<String, String>()
 
     fun updateSourceColumns(sourceName: String) {
@@ -273,7 +288,7 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
 
     val joins = scope.findAll(Join::class).filterIsInstance<Join>().toList()
     if (joins.isEmpty()) {
-        return emptyMap()
+        return UsingExpansion()
     }
 
     val names = joins.map { it.aliasOrName }.toSet()
@@ -287,25 +302,66 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
     val columnTables = LinkedHashMap<String, LinkedHashMap<String, Any?>>()
 
     if (joins.none { !(it.args["using"] as? List<*>).isNullOrEmpty() || it.method == "NATURAL" }) {
-        return columnTables
+        return UsingExpansion(columnTables)
+    }
+
+    // Replacing USING by ON changes an unresolved '*' into duplicate keys. Keep
+    // native join/star syntax when the available columns cannot safely expand it.
+    val unresolvedStar = scope.expression.selects.any { it is Star } && scope.selectedSources.keys.any {
+        val fields = resolver.getSourceColumns(it, onlyVisible = true)
+        fields.isEmpty() || "*" in fields || fields.size != fields.toSet().size
+    }
+    // Flat scopes cannot model comma-group precedence and separate USING key
+    // families. Preserve native syntax rather than merge keys across those groups.
+    val commaGroups = joins.any { it.args["on"] == null && it.args["using"] == null &&
+        it.method.isEmpty() && it.side.isEmpty() && it.kind.isEmpty() }
+    // StarRocks 4.1.4 FULL USING has native star-slot behavior that cannot be
+    // reproduced by the generic merged-key expansion. Keep that source syntax.
+    val nativeFullStarrocks = resolver.dialect.name == "starrocks" && joins.any { it.side == "FULL" }
+    if (unresolvedStar || commaGroups || nativeFullStarrocks) {
+        val keys = joins.flatMap { (it.args["using"] as? List<*>)?.filterIsInstance<Expression>().orEmpty() }
+            .map { it.name }.toSet()
+        val natural = joins.any { it.method == "NATURAL" }
+        var converted = false
+        for (reference in scope.columns.toList()) {
+            if (reference.table.isEmpty() && (reference.name in keys || natural)) {
+                val symbol = (reference.thisArg as Expression).copy()
+                symbol.updatePositions(reference)
+                symbol.addComments(reference.comments)
+                reference.replace(symbol)
+                converted = true
+            }
+        }
+        if (converted) scope.clearCache()
+        return UsingExpansion(preserveBareStar = true, preserveAllStars = nativeFullStarrocks)
     }
 
     for (sourceName in ordered.toList()) {
         updateSourceColumns(sourceName)
     }
 
+    var usingColumns = emptyList<String>()
+    val mergedValues = LinkedHashMap<String, Expression>()
+    val sourceOrder = ordered.toMutableList()
+    val columnOrder = resolver.dialect.usingColumnOrder
+    var moveUsingColumns = columnOrder != UsingColumnOrder.IN_PLACE
+
     for ((i, join) in joins.withIndex()) {
         val sourceTable = ordered.last()
-        if (sourceTable.isNotEmpty()) {
+        if (sourceTable.isNotEmpty() && sourceTable in scope.selectedSources) {
             updateSourceColumns(sourceTable)
         }
 
         val joinTable = join.aliasOrName
         ordered.add(joinTable)
+        if (joinTable in scope.selectedSources) sourceOrder.add(joinTable)
 
         val joinColumns = resolver.getSourceColumns(joinTable)
 
         var using = (join.args["using"] as? List<*>)?.filterIsInstance<Expression>()
+        if (using.isNullOrEmpty() && join.args["on"] == null && join.method.isEmpty() &&
+            join.side.isEmpty() && join.kind.isEmpty()) moveUsingColumns = false
+        val leftColumns = usingColumns + columns.keys.filter { it !in usingColumns }
         if (using.isNullOrEmpty() && join.method == "NATURAL") {
             // A NATURAL JOIN is a USING join over the columns common to both sides; when those
             // can't be determined (unknown schema, no common columns), NATURAL stays in place
@@ -313,7 +369,7 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
             if (columns.isNotEmpty() && "*" !in columns &&
                 joinColumns.isNotEmpty() && "*" !in joinColumns
             ) {
-                val naturalUsing = columns.keys
+                val naturalUsing = leftColumns
                     .filter { it in joinColumns }
                     .mapNotNull { toIdentifier(it) }
                 if (naturalUsing.isNotEmpty()) {
@@ -330,6 +386,18 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
         val usingIdentifierCount = using.size
         val isSemiOrAntiJoin = join.isSemiOrAntiJoin
 
+        if (moveUsingColumns) {
+            var keys = using.map { it.name }
+            if (columnOrder == UsingColumnOrder.LEFT_TABLE) {
+                keys = (if (join.side == "RIGHT") joinColumns else leftColumns).filter { it in keys }
+                if (join.side == "RIGHT") {
+                    sourceOrder.remove(joinTable)
+                    sourceOrder.add(0, joinTable)
+                }
+            }
+            usingColumns = keys + usingColumns.filter { it !in keys }
+        }
+
         for (identifierExpr in using) {
             val identifier = identifierExpr.name
             var table = columns[identifier]
@@ -342,7 +410,7 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
 
             table = table ?: sourceTable
 
-            val lhs: Expression = if (i == 0 || usingIdentifierCount == 1) {
+            val lhs: Expression = mergedValues[identifier]?.copy() ?: if (i == 0 || usingIdentifierCount == 1) {
                 column(identifier, table = table)
             } else {
                 val coalesceColumns = ordered.dropLast(1)
@@ -355,24 +423,30 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
                 }
             }
 
+            val right = column(identifier, table = joinTable)
             conditions.add(
                 dev.brikk.house.sql.ast.EQ(
-                    args("this" to lhs, "expression" to column(identifier, table = joinTable))
+                    args("this" to lhs.copy(), "expression" to right.copy())
                 )
             )
 
             // We only care about the key ordering
             val tables = columnTables.getOrPut(identifier) { LinkedHashMap() }
+            if (table !in tables) tables[table] = null
 
             // Do not update the dict if this was a SEMI/ANTI join in
             // order to avoid generating COALESCE columns for this join pair
             if (!isSemiOrAntiJoin) {
-                if (table !in tables) {
-                    tables[table] = null
-                }
                 if (joinTable !in tables) {
                     tables[joinTable] = null
                 }
+            }
+            mergedValues[identifier] = when {
+                isSemiOrAntiJoin -> lhs
+                resolver.dialect.name == "duckdb" && join.side == "RIGHT" -> right
+                resolver.dialect.name == "duckdb" && join.side != "FULL" -> lhs
+                join.side == "RIGHT" -> coalesce(listOf(right, lhs))
+                else -> coalesce(listOf(lhs, right))
             }
         }
 
@@ -383,9 +457,7 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
     if (columnTables.isNotEmpty()) {
         for (column in scope.columns) {
             if (column.table.isEmpty() && column.name in columnTables) {
-                val tables = columnTables.getValue(column.name)
-                val coalesceArgs = tables.keys.map { column(column.name, table = it) }
-                var replacement: Expression = coalesce(coalesceArgs)
+                var replacement: Expression = mergedValues.getValue(column.name).copy()
 
                 if (column.parent is Select) {
                     // Ensure the USING column keeps its name if it's projected
@@ -407,7 +479,8 @@ private fun expandUsing(scope: Scope, resolver: Resolver): Map<String, Map<Strin
         }
     }
 
-    return columnTables
+    return UsingExpansion(columnTables, usingColumns, mergedValues,
+        sourceOrder.takeIf { it != scope.selectedSources.keys.toList() })
 }
 
 /**
@@ -1162,6 +1235,10 @@ private fun expandStarsInScope(
     scope: Scope,
     resolver: Resolver,
     usingColumnTables: Map<String, Map<String, Any?>>,
+    usingColumns: List<String>,
+    usingValues: Map<String, Expression>,
+    usingSourceOrder: List<String>?,
+    preserveBareStar: Boolean,
     pseudocolumns: Set<String>,
     annotator: TypeAnnotator,
 ) {
@@ -1170,8 +1247,9 @@ private fun expandStarsInScope(
     val replaceColumns = HashMap<Any, Map<String, Alias>>()
     var ilikePattern: String? = null
 
-    val coalescedColumns = mutableSetOf<String>()
     val dialect = resolver.dialect
+    val seenStarSources = mutableSetOf<String>()
+    val priorMergedKeys = mutableSetOf<String>()
 
     val annotatedAhead = dialect.supportsStructStarExpansion && scope.stars.any { it is Dot }
     if (annotatedAhead) {
@@ -1186,6 +1264,10 @@ private fun expandStarsInScope(
     }
 
     for (expression in scopeExpression.selects) {
+        if (preserveBareStar && expression is Star) {
+            newSelections.add(expression)
+            continue
+        }
         // Doris Scope.findSlotIgnoreCase folds column names even when table names
         // retain case. Keep spelling/quotedness, but do not admit colliding outputs.
         fun renameKey(name: String): String = if (dialect.name == "doris") name.lowercase() else name
@@ -1220,7 +1302,7 @@ private fun expandStarsInScope(
         // `t.*` gets a per-occurrence key (its identifier's string object in Python).
         val tables = mutableListOf<Pair<String, Any>>()
         if (expression is Star) {
-            for (name in scope.selectedSources.keys) {
+            for (name in usingSourceOrder ?: scope.selectedSources.keys.toList()) {
                 tables.add(name to name)
             }
             val tableKeys = tables.map { it.second }
@@ -1257,6 +1339,15 @@ private fun expandStarsInScope(
             newSelections.add(expression)
             continue
         }
+
+        val coalescedColumns = mutableSetOf<String>()
+        val usingSelections = LinkedHashMap<String, Expression?>()
+        if (expression is Star || dialect.qualifiedStarUsing == QualifiedStarUsing.MERGED_FIRST) {
+            for (name in usingColumns) usingSelections[name] = null
+        }
+        if (expression !is Star && dialect.qualifiedStarUsing in
+            setOf(QualifiedStarUsing.MERGED, QualifiedStarUsing.MERGED_FIRST) &&
+            tables.none { it.first in seenStarSources }) coalescedColumns.addAll(priorMergedKeys)
 
         for ((table, tableId) in tables) {
             var source = scope.sources[table]
@@ -1367,7 +1458,12 @@ private fun expandStarsInScope(
             }
 
             for (name in columns) {
-                if (name in columnsToExclude || name in coalescedColumns) {
+                val usingTables = usingColumnTables[name]
+                val key = usingTables != null && table in usingTables
+                if (expression !is Star && key && dialect.qualifiedStarUsing == QualifiedStarUsing.OMIT) continue
+                val merged = key && (expression is Star || dialect.qualifiedStarUsing in
+                    setOf(QualifiedStarUsing.MERGED, QualifiedStarUsing.MERGED_FIRST))
+                if (name in columnsToExclude || (merged && name in coalescedColumns)) {
                     continue
                 }
                 if (ilikePattern != null &&
@@ -1375,14 +1471,10 @@ private fun expandStarsInScope(
                 ) {
                     continue
                 }
-                val usingTables = usingColumnTables[name]
-                if (usingTables != null && table in usingTables) {
+                val selection: Expression = if (merged) {
                     coalescedColumns.add(name)
-                    val coalesceArgs = usingTables.keys.map { column(name, table = it) }
-
-                    newSelections.add(
-                        aliasExpression(coalesce(coalesceArgs), alias = name, copy = false)
-                    )
+                    val value = usingValues[name]?.copy() ?: coalesce(usingTables.keys.map { column(name, table = it) })
+                    aliasExpression(value, alias = name, copy = false)
                 } else {
                     val quoted = name in quotedColumns ||
                         // if it has characters that the dialect would have changed,
@@ -1390,10 +1482,17 @@ private fun expandStarsInScope(
                         (source is Table && dialect.caseSensitive(name))
                     val selectionExpr: Expression = replacedColumns[name]
                         ?: column(name, table = table, quoted = true.takeIf { quoted })
-                    newSelections.add(selectionExpr)
+                    selectionExpr
                 }
+                if (name in usingSelections && usingSelections[name] == null &&
+                    (merged || usingTables.isNullOrEmpty())) usingSelections[name] = selection
+                else newSelections.add(selection)
             }
         }
+
+        newSelections.addAll(selectionStart, usingSelections.values.filterNotNull())
+        seenStarSources.addAll(tables.map { it.first })
+        priorMergedKeys.addAll(coalescedColumns)
 
         if (renamedColumns.isNotEmpty()) {
             val selections = newSelections.subList(selectionStart, newSelections.size)

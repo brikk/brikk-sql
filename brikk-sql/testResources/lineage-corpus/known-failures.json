@@ -1,3 +1,12 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:3667336fc28ad080a026b6a67c1d41dd9d43ef6c3a72aaed909ecdd2ec92d17f:1",
+            "key": "test_lineage_join_with_star#1",
+            "signature": "ast-mismatch:v1:sha256:5031295de034990427f69e5900090719c271742a3849ffe067a26228e0550afe",
+            "reason": "CORE-04 extension #43: an unresolved bare star retains native USING syntax rather than becoming ON plus duplicate keys. Exact graph diff reviewed: both x/y downstream nodes and names are unchanged; only source SQL stays SELECT * ... USING(uid). Required semantic/partial-schema safeguard, independently executed in DuckDB; intentional divergence rather than fabricated star expansion.",
+            "issue": "CORE-04",
+            "status": "intentional-divergence"
+        }
+    ]
 }

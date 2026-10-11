@@ -24,6 +24,7 @@ import dev.brikk.house.sql.parser.TrinoTokenizerTables
 class TrinoDialect : PrestoDialect() {
 
     override val name: String get() = "trino"
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.OMIT
 
     // Generated from Trino 481's SHOW FUNCTIONS registry (tools/generate_trino_functions.py
     // over vendor/data/trino-functions-481.tsv). Trino-only: Presto's surface differs.

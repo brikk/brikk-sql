@@ -123,9 +123,19 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   is recorded as temporary `oracle-pin-drift`, to remove on target fixture refresh.
 - [x] **CORE-03 — Identifier escaping:** escape delimiter-escape characters
   (`d5d436bc32`, #8533), including backticks, double quotes and embedded backslashes.
-- [ ] **CORE-04 — Star/USING output order:** FROM source ordering (`ee7567c86d`,
+- [x] **CORE-04 — Star/USING output order:** FROM source ordering (`ee7567c86d`,
   #8529), USING columns first (`aa64321744`, #8536), nested joins (`5b7b413451`,
   #8530). Pin output column order, types, duplicate-name behavior and outer joins.
+  Scope references retain source walk order; all nested join wrapper levels expand
+  before alias assignment, with rebuilt scopes. Dialect policies retain USING-list,
+  left-table/MySQL-right-side and DuckDB in-place ordering. Qualified stars follow
+  native raw/hidden/merged-key behavior; repeated stars keep all their fields.
+  Logical merged expressions preserve chained outer-join values and DuckDB key types.
+  Unknown/duplicate-source bare stars and comma groups keep native USING/NATURAL;
+  StarRocks FULL USING stars retain native slot behavior rather than unsafe expansion.
+  Native DuckDB/PostgreSQL/MySQL/Trino/StarRocks headers and rows pass (extension #43).
+  Eight exact old-pin ordering rows and seven intentional native-first rows were
+  individually reviewed; existing ledger reasons/signatures remain untouched.
 - [ ] **CORE-05 — Correlated UNNEST resolution:** resolve projection types in child
   scopes (`9f2f4cd5a2` / `6683ad28a4`, #8571), with TVF/PIVOT column-resolution
   changes (`30958d6152`, #8472). Test nested structs, stars, aliases, shadowing,
@@ -244,3 +254,11 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   pre-existing signatures/reasons and the shipped fixtures/pin remain unchanged.
   All eight requested DuckDB boxes are now verified within their stated bounds;
   shared correctness, other dialects and coherent target integration remain open.
+- 2026-10-11: eighth batch completes CORE-04 within the conservative boundaries
+  above. Build and **1,212 Kotlin tests** pass with all four cached source-engine
+  containers enabled; only optional chDB skips. Nine release tests pass. The Engine
+  compatibility gate now contains 24 methods. Full mismatch texts were reviewed:
+  eight ordering pin-drift entries await refresh; six merged-expression and one
+  unresolved-star lineage entries are intentional safeguards. No generated fixture
+  stamps/pin or pre-existing ledger signatures/reasons changed. Isolated containers
+  had no host ports/volumes and were removed after verification.
