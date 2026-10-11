@@ -82,7 +82,7 @@ class PresentationTest {
     fun everyGrammarBuiltinHasAGrammarForm() {
         for (metadata in listOf(DUCKDB_METADATA, TRINO_METADATA, DORIS_METADATA, STARROCKS_METADATA)) {
             val snapshot = metadata.default
-            val forms = snapshot.grammarForms.map { it.name }.toSet()
+            val forms = checkNotNull(snapshot.grammarForms).map { it.name }.toSet()
             assertTrue(forms.containsAll(snapshot.functions.grammarBuiltins), metadata.dialect)
         }
     }

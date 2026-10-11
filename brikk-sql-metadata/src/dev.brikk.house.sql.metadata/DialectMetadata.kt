@@ -1,7 +1,8 @@
 package dev.brikk.house.sql.metadata
 
 /**
- * What metadata knows about one engine release; a null part is unknown, not empty.
+ * What metadata knows about one engine release. Every optional part means the same thing
+ * when null: not known for this dialect (not captured or not researched), never "none".
  * [extensionFunctions] are functions that loadable extensions add on top of [functions]
  * (each with [FunctionDef.extension]); they stay out of [functions], so its lookups answer
  * for the base engine only. [tableFunctions] adds call-site knowledge to table functions;
@@ -14,13 +15,13 @@ class MetadataSnapshot(
     val pragmas: List<PragmaDef>? = null,
     val settings: List<SettingDef>? = null,
     val extensions: List<ExtensionDef>? = null,
-    val extensionFunctions: List<FunctionDef> = emptyList(),
-    val tableFunctions: List<TableFunctionInfo> = emptyList(),
-    val grammarForms: List<GrammarForm> = emptyList(),
+    val extensionFunctions: List<FunctionDef>? = null,
+    val tableFunctions: List<TableFunctionInfo>? = null,
+    val grammarForms: List<GrammarForm>? = null,
 ) {
     /** The [TableFunctionInfo] for [name], matched by the dialect's name policy. */
     fun tableFunction(name: String): TableFunctionInfo? =
-        functions.nameKey(name).let { key -> tableFunctions.find { functions.nameKey(it.name) == key } }
+        functions.nameKey(name).let { key -> tableFunctions?.find { functions.nameKey(it.name) == key } }
 }
 
 /** Every bundled snapshot of one dialect, oldest first. */

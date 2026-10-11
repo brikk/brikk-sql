@@ -3,6 +3,7 @@ package dev.brikk.house.sql.metadata
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DuckdbDumpTest {
@@ -37,6 +38,17 @@ class DuckdbDumpTest {
             ),
             dump.userFunctions().map { Triple(it.database, it.schema, it.def.overloads.single().argNames) },
         )
+    }
+
+    @Test
+    fun partsThatWereNotCapturedAreUnknown() {
+        val snapshot = DuckdbDump("1.5.6", listOf(DuckdbFunctionRow("abs", "scalar"))).toSnapshot()
+
+        assertNull(snapshot.keywords)
+        assertNull(snapshot.settings)
+        assertNull(snapshot.extensions)
+        assertNull(snapshot.extensionFunctions)
+        assertEquals(emptyList(), DuckdbDump("1.5.6", emptyList(), extensionFunctions = emptyList()).toSnapshot().extensionFunctions)
     }
 
     @Test

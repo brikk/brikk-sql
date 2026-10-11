@@ -11,7 +11,7 @@ class ExtensionMetadataTest {
 
     @Test
     fun extensionFunctionsStayOutOfTheBaseCatalog() {
-        val area = duckdb.extensionFunctions.filter { it.name == "ST_Area" }
+        val area = checkNotNull(duckdb.extensionFunctions).filter { it.name == "ST_Area" }
 
         assertTrue(area.isNotEmpty())
         assertTrue(area.all { it.extension == "spatial" && it.overloads.isNotEmpty() })
@@ -21,7 +21,7 @@ class ExtensionMetadataTest {
 
     @Test
     fun extensionFunctionsKeepEveryKind() {
-        val kinds = duckdb.extensionFunctions.filter { it.extension == "spatial" }.map { it.kind }.toSet()
+        val kinds = checkNotNull(duckdb.extensionFunctions).filter { it.extension == "spatial" }.map { it.kind }.toSet()
 
         assertEquals(setOf(FunctionKind.SCALAR, FunctionKind.AGGREGATE, FunctionKind.TABLE_VALUED), kinds)
     }

@@ -45,5 +45,7 @@ class PragmaSettingTest {
     fun dialectsWithoutCapturedPragmasOrSettingsReportUnknown() {
         assertNull(TRINO_METADATA.default.pragmas)
         assertNull(TRINO_METADATA.default.settings)
+        assertNull(TRINO_METADATA.default.tableFunctions)
+        assertNull(CLICKHOUSE_METADATA.default.grammarForms)
     }
 }

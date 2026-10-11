@@ -12,7 +12,7 @@ class DuckdbDump(
     val keywords: List<DuckdbKeywordRow>? = null,
     val settings: List<DuckdbSettingRow>? = null,
     val extensions: List<DuckdbExtensionRow>? = null,
-    val extensionFunctions: List<DuckdbExtensionFunctionRow> = emptyList(),
+    val extensionFunctions: List<DuckdbExtensionFunctionRow>? = null,
 )
 
 /**
@@ -42,7 +42,7 @@ class DuckdbDump(
  */
 fun DuckdbDump.toSnapshot(): MetadataSnapshot {
     val builtIn = functions.filter { it.internal }
-    val byExtension = extensionFunctions.groupBy({ it.extension }, { it.function }).toSortedMap()
+    val byExtension = extensionFunctions.orEmpty().groupBy({ it.extension }, { it.function }).toSortedMap()
     val functionCatalog = FunctionCatalog(functionDefs(builtIn), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS)
     return MetadataSnapshot(
         engineVersion,
@@ -53,10 +53,12 @@ fun DuckdbDump.toSnapshot(): MetadataSnapshot {
             .sortedWith(compareBy({ it.name }, { it.extension })),
         settings = settings?.map { SettingDef(it.name, it.inputType, it.scope, it.aliases, it.description) },
         extensions = extensions?.map { row ->
-            val version = extensionFunctions.filter { it.extension == row.name }.map { it.extensionVersion }.distinct().singleOrNull()
+            val version = extensionFunctions.orEmpty().filter { it.extension == row.name }.map { it.extensionVersion }.distinct().singleOrNull()
             ExtensionDef(row.name, row.staticallyLinked, row.aliases, row.description, version?.ifEmpty { null })
         },
-        extensionFunctions = byExtension.flatMap { (extension, rows) -> functionDefs(rows).map { it.copy(extension = extension) } },
+        extensionFunctions = extensionFunctions?.let {
+            byExtension.flatMap { (extension, rows) -> functionDefs(rows).map { it.copy(extension = extension) } }
+        },
         grammarForms = DUCKDB_GRAMMAR_FORMS,
     )
 }

@@ -86,13 +86,15 @@ private fun GrammarForm.presentation() = FunctionPresentation(
  * functions and the grammar forms, so a name defined as both scalar and table function
  * yields two entries. Names are compared by the dialect's case policy
  * ([FunctionCatalog.caseSensitive]); the base registry wins over an extension, and a grammar
- * form supplies the invocation syntaxes of the registered entry it matches.
+ * form supplies the invocation syntaxes of the registered entry it matches. An entry that
+ * only a grammar form provides keeps the form's spelling (uppercase, `CURRENT_TIMESTAMP`);
+ * registered entries keep the registry's spelling.
  */
 fun MetadataSnapshot.completionEntries(): List<FunctionPresentation> {
     fun key(name: String, kind: FunctionKind) = functions.nameKey(name) to kind
-    val forms = grammarForms.associateBy { key(it.name, it.kind) }
+    val forms = grammarForms.orEmpty().associateBy { key(it.name, it.kind) }
     val entries = LinkedHashMap<Pair<String, FunctionKind>, FunctionPresentation>()
-    for (def in functions.functions + extensionFunctions) {
+    for (def in functions.functions + extensionFunctions.orEmpty()) {
         for (name in listOf(def.name) + def.aliases) {
             val key = key(name, def.kind)
             entries.getOrPut(key) {
@@ -101,6 +103,6 @@ fun MetadataSnapshot.completionEntries(): List<FunctionPresentation> {
             }
         }
     }
-    for (form in grammarForms) entries.getOrPut(key(form.name, form.kind)) { form.presentation() }
+    for (form in grammarForms.orEmpty()) entries.getOrPut(key(form.name, form.kind)) { form.presentation() }
     return entries.values.toList()
 }

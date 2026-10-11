@@ -35,8 +35,7 @@ class DuckdbCaptureTest {
         settings = DUCKDB_SETTINGS.vendored(version),
         extensions = DUCKDB_EXTENSIONS.vendored(version),
         extensionFunctions = vendorData.resolve("duckdb-extension-functions-$version.tsv").takeIf { it.exists() }
-            ?.let { file -> readDump(file).rows.map { DuckdbExtensionFunctionRow(checkNotNull(it[0]), checkNotNull(it[1]), DUCKDB_FUNCTIONS.decode(it.drop(2))) } }
-            .orEmpty(),
+            ?.let { file -> readDump(file).rows.map { DuckdbExtensionFunctionRow(checkNotNull(it[0]), checkNotNull(it[1]), DUCKDB_FUNCTIONS.decode(it.drop(2))) } },
     )
 
     @Test
@@ -67,7 +66,7 @@ class DuckdbCaptureTest {
     fun noVendoredOverloadHasConflictingParameterNames() {
         val normalizedType = mapOf("macro" to "scalar", "table_macro" to "table")
         for (dump in DUCKDB_DUMPS) {
-            val rows = dump.functions + dump.extensionFunctions.map { it.function }
+            val rows = dump.functions + dump.extensionFunctions.orEmpty().map { it.function }
             val conflicts = rows
                 .groupBy { row ->
                     listOf(

@@ -13,6 +13,7 @@ class TableFunctionInfoTest {
 
     private val duckdb = DUCKDB_METADATA.default.functions
     private val doris = DORIS_METADATA.default
+    private val dorisTableFunctions = checkNotNull(doris.tableFunctions)
 
     private fun tableOverloads(name: String) =
         duckdb.functions.single { it.name == name && it.kind == FunctionKind.TABLE_VALUED }.overloads
@@ -60,15 +61,15 @@ class TableFunctionInfoTest {
 
     @Test
     fun everyDorisEntryIsARegisteredTableFunction() {
-        for (info in doris.tableFunctions) assertTrue(doris.functions.isTableFunction(info.name), info.name)
+        for (info in dorisTableFunctions) assertTrue(doris.functions.isTableFunction(info.name), info.name)
         assertNull(doris.tableFunction("iceberg_meta"))
     }
 
     @Test
     fun tableFunctionInfoRoundTripsThroughJson() {
         val serializer = ListSerializer(TableFunctionInfo.serializer())
-        val json = Json.encodeToString(serializer, doris.tableFunctions)
+        val json = Json.encodeToString(serializer, dorisTableFunctions)
 
-        assertEquals(doris.tableFunctions, Json.decodeFromString(serializer, json))
+        assertEquals(dorisTableFunctions, Json.decodeFromString(serializer, json))
     }
 }
