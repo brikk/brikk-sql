@@ -28,7 +28,7 @@ JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
 Latest core, metadata, verify and oracle release: **`0.19.1`**. SQL IntelliJ
-support is independently versioned at **`0.1.0`**. Current core development
+support is independently versioned at **`0.1.1`**. Current core development
 snapshot: **`0.20.0-SNAPSHOT`**.
 
 ```kotlin
@@ -75,6 +75,8 @@ See the [CAST research report](docs/research/REPORT-duckdb-doris-cast-coverage-2
 ranges and zero-argument `rows()` relation slots. The independently published
 IntelliJ support 0.1.0 uses platform types and callbacks, with no engine dependency.
 See [the release record](docs/intellij-support-0.1.0.md).
+IntelliJ support [0.1.1](docs/intellij-support-0.1.1.md) adds a shared rich
+column-completion formatter with aliases, nullability and origin labels.
 The matching verify/oracle artifacts followed in a
 [separate scoped release](docs/verify-oracle-0.19.0.md).
 
