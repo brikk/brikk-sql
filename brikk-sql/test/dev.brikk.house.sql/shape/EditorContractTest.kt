@@ -57,4 +57,22 @@ class EditorContractTest {
         assertEquals(2, ranges.size)
         assertNull(ranges[0].boundaryError)
     }
+
+    @Test fun editorCommandsExposeOperatorsButParserCommandBehaviorIsUnchanged() {
+        val tokenizer = dev.brikk.house.sql.parser.Tokenizer(dev.brikk.house.sql.parser.TokenizerConfigs.forName("trino"))
+        val sql = "SHOW TABLES |> WHERE x = 1"
+        assertTrue(tokenizer.tokenizeForEditor(sql).tokens.any { it.tokenType == dev.brikk.house.sql.parser.TokenType.PIPE_GT })
+        assertFalse(tokenizer.tokenize(sql).any { it.tokenType == dev.brikk.house.sql.parser.TokenType.PIPE_GT })
+        assertTrue(SqlScriptSnapshot.parse(sql, "trino").statements.single().hasPipe)
+        assertFalse(SqlScriptSnapshot.parse("SHOW TABLES LIKE '|>'", "trino").statements.single().hasPipe)
+    }
+
+    @Test fun unsupportedProceduralBoundariesAreOpaqueAndColumnNamesAreNotRoutineHeads() {
+        val script = "CREATE TABLE t (function bigint); FROM t |> SELECT function;"
+        val ranges = SqlScriptSnapshot.parse(script, "trino").statements
+        assertEquals(2, ranges.size)
+        assertTrue(ranges.all { it.boundaryError == null })
+        for (sql in listOf("DELIMITER //; SELECT 1 |> LIMIT 1", "CREATE PROCEDURE p() BEGIN SELECT 1; END; SELECT 1 |> LIMIT 1"))
+            assertNotNull(SqlScriptSnapshot.parse(sql, "mysql").statements.single().boundaryError)
+    }
 }

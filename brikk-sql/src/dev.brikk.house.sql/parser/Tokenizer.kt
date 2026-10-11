@@ -23,6 +23,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var end: Boolean = false
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
+    private var editorMode: Boolean = false
 
     // sqlglot: TokenizerCore.reset
     private fun reset() {
@@ -65,10 +66,14 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     }
 
     /** Editor recovery stops at the failing lexical construct, never inside its tail. */
-    fun tokenizeForEditor(sql: String): EditorTokens = try {
-        EditorTokens(tokenize(sql).toList())
-    } catch (e: TokenError) {
-        EditorTokens(tokens.toList(), start.coerceIn(0, sql.length), e.message ?: "Incomplete SQL token")
+    fun tokenizeForEditor(sql: String): EditorTokens {
+        val previous = editorMode
+        editorMode = true
+        return try {
+            EditorTokens(tokenize(sql).toList())
+        } catch (e: TokenError) {
+            EditorTokens(tokens.toList(), start.coerceIn(0, sql.length), e.message ?: "Incomplete SQL token")
+        } finally { editorMode = previous }
     }
 
     // sqlglot: TokenizerCore._scan
@@ -196,7 +201,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         // If we have either a semicolon or a begin token before the command's token, we'll parse
         // whatever follows the command's token as a string
         if (
-            tokenType in config.commands &&
+            !editorMode && tokenType in config.commands &&
             peek != ';' &&
             (tokens.size == 1 || tokens[tokens.size - 2].tokenType in config.commandPrefixTokens)
         ) {

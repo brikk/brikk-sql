@@ -46,7 +46,12 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 val visibleWord = kind != TokenType.IDENTIFIER && kind != TokenType.STRING &&
                     !kind.name.endsWith("_STRING") && token.text.firstOrNull()?.isLetter() == true
                 if (head == null && visibleWord) head = word
-                if (visibleWord && word == "FUNCTION" && head in setOf("CREATE", "WITH")) routine = true
+                val previousWord = tokens.getOrNull(index - 1)?.text?.uppercase()
+                val declaration = brackets.isEmpty() && head in setOf("CREATE", "WITH") &&
+                    previousWord in setOf("CREATE", "REPLACE", "WITH", "TEMP", "TEMPORARY", "AGGREGATE")
+                if (visibleWord && word == "FUNCTION" && declaration) routine = true
+                if (head == "DELIMITER" || visibleWord && declaration && word in setOf("PROCEDURE", "TRIGGER"))
+                    error = "Unsupported procedural/client delimiter boundary; select a complete supported statement"
                 when (kind) {
                     TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> brackets.add(kind)
                     TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> {
