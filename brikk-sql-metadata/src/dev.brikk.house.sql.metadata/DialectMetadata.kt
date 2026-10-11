@@ -56,6 +56,10 @@ class DialectMetadata(
     data class Selection(val snapshot: MetadataSnapshot, val exact: Boolean)
 }
 
+/** A dialect with one bundled snapshot, which is also its default. */
+internal fun singleSnapshot(dialect: String, snapshot: MetadataSnapshot) =
+    DialectMetadata(dialect, listOf(snapshot), defaultVersion = snapshot.engineVersion)
+
 private val MetadataSnapshot.version: Version
     get() = requireNotNull(parseVersion(engineVersion)?.takeUnless { it.prerelease }) {
         "snapshot version '$engineVersion' is not a release version"
