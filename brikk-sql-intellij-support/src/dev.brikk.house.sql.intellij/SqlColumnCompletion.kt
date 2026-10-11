@@ -5,11 +5,11 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 
 /** Shared column presentation. Consumers supply semantic facts; no Kotlin IDE types are required. */
-object SqlColumnCompletion {
+public object SqlColumnCompletion {
     private data class Identity(val name: String, val alias: String)
 
     /** [nullable] is true/false when known and null when the contract cannot prove it. */
-    fun create(
+    public fun create(
         name: String,
         typeName: String?,
         nullable: Boolean?,

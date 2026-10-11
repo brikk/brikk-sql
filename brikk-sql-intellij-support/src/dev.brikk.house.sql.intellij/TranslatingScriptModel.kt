@@ -2,27 +2,29 @@ package dev.brikk.house.sql.intellij
 
 import com.intellij.database.script.ScriptModel
 import com.intellij.database.script.ScriptModelUtilCore
+import com.intellij.lang.Language
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Condition
 import com.intellij.openapi.util.Conditions
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.SyntaxTraverser
 import com.intellij.psi.tree.IElementType
 import com.intellij.util.containers.JBIterable
 
 /** Expected, displayable refusal. Unexpected failures and cancellation propagate separately. */
-class SqlExecutionRefusal(message: String) : RuntimeException(message)
+public class SqlExecutionRefusal(message: String) : RuntimeException(message)
 
 /** Map, when present, indexes this rendering's exact input, not an earlier document version. */
-data class RenderedSql(val sql: String, val input: String, val mapToInput: ((Int, Int) -> TextRange?)? = null)
-data class SqlParameterSpan(val name: String, val start: Int, val end: Int)
+public data class RenderedSql(public val sql: String, public val input: String, public val mapToInput: ((Int, Int) -> TextRange?)? = null)
+public data class SqlParameterSpan(public val name: String, public val start: Int, public val end: Int)
 
-interface SqlExecutionAdapter {
-    fun claims(text: String): Boolean
+public interface SqlExecutionAdapter {
+    public fun claims(text: String): Boolean
     /** Implementations enforce their own findings/native-validation policy or throw a refusal. */
-    fun translate(text: String, beforeSubstitution: Boolean): RenderedSql
-    fun parameters(text: String): List<SqlParameterSpan> = emptyList()
+    public fun translate(text: String, beforeSubstitution: Boolean): RenderedSql
+    public fun parameters(text: String): List<SqlParameterSpan> = emptyList()
 }
 
 /**
@@ -30,7 +32,7 @@ interface SqlExecutionAdapter {
  * original ranges and owner remain with the console. finalizeTranslations must run AFTER parameter
  * prompting and BEFORE executeQueries. It validates the entire selected script before submission.
  */
-class TranslatingScriptModel<E>(
+public class TranslatingScriptModel<E>(
     private val delegate: ScriptModel<E>,
     private val editor: Editor,
     private val adapter: SqlExecutionAdapter,
@@ -97,7 +99,7 @@ class TranslatingScriptModel<E>(
         key(statement) to Plan(statement, current)
     }.toList().toMap()
 
-    fun finalizeTranslations(storage: PStorage) {
+    public fun finalizeTranslations(storage: PStorage) {
         snapshot.requireCurrent()
         for (plan in plans.values) {
             ProgressManager.checkCanceled()
@@ -108,7 +110,7 @@ class TranslatingScriptModel<E>(
     }
 
     /** Authored coordinates are available only when parameter expansion preserved exact input. */
-    fun authoredMap(range: TextRange, rangeOffset: Long): ((Int, Int) -> TextRange?)? {
+    public fun authoredMap(range: TextRange, rangeOffset: Long): ((Int, Int) -> TextRange?)? {
         val plan = plans[Key(range, rangeOffset)] ?: return null
         val rendered = plan.rendered ?: return null
         if (!plan.finalized || rendered.input != plan.original || editor.document.modificationStamp != snapshot.revision) return null
@@ -122,9 +124,9 @@ class TranslatingScriptModel<E>(
     override fun parameters(): JBIterable<out ParamIt<E>> = JBIterable.from(
         (baseParameters + plans.values.flatMap { it.parameters }).distinctBy { it.name() to it.range() })
     override fun externals(): JBIterable<out ExternalIt<E>> = delegate.externals()
-    override fun getVirtualFile() = delegate.virtualFile
-    override fun getTextRange() = delegate.textRange
-    override fun getLanguage() = delegate.language
+    override fun getVirtualFile(): VirtualFile? = delegate.virtualFile
+    override fun getTextRange(): TextRange = delegate.textRange
+    override fun getLanguage(): Language = delegate.language
     override fun <EE : Any?> rawTransform(transform: com.intellij.util.Function<in SyntaxTraverser<E>, out SyntaxTraverser<EE>>): ScriptModel<EE> =
         TranslatingScriptModel(delegate.rawTransform(transform), editor, adapter)
 
