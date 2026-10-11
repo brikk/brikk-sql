@@ -2,7 +2,9 @@
 
 An embedded Apache-2.0 JVM library for SQL dialect plugins. The first consumer is
 SQL Dialect for Trino. Each consumer owns its copy through its plugin classloader.
-It registers no extensions itself and has no SQL engine or Kotlin IDE dependency.
+It registers no extensions itself. It depends on Brikk SQL core and metadata, has no
+Kotlin IDE dependency, uses no Brikk (Kotlin-embedded SQL) types, and uses internal
+Database Tools APIs only in packages listed here (none).
 
 ## API
 
@@ -76,20 +78,22 @@ source-preserving renderer has no source map and cannot borrow another rendering
 
 Compile against IDEA 261, with Java 21 bytecode. Linux x64 builds provision a pinned,
 SHA-256-verified IDEA 2026.1.3 SDK, or accept `BRIKK_INTELLIJ_SDK` pointing to a 261
-installation. SDK bytes are compile inputs only. The published POM exposes only
-Kotlin stdlib, which IntelliJ consumers should exclude in favor of the platform copy.
+installation. SDK bytes are compile inputs only. The published POM exposes core,
+metadata and Kotlin stdlib; IntelliJ consumers should exclude stdlib in favor of the
+platform copy.
 
 ```sh
-./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support
-python3 tools/publish_intellij_support.py 0.1.2 --local
-python3 tools/publish_intellij_support.py 0.1.2
+./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support --transitive
+python3 tools/publish_intellij_support.py 0.2.0 --local
+python3 tools/publish_intellij_support.py 0.2.0 --core-version 0.20.0
 ```
 
 The last command requires the existing Central/signing environment. It publishes
-only this module and its test kit, `brikk-sql-intellij-test-support`, at the same
-version. `--core-version 0.19.0` explicitly adds core and metadata, never
-verify/oracle. The module has independent `0.1.x` versioning. Temporary release
-overrides restore on success or failure.
+this module and its test kit, `brikk-sql-intellij-test-support`, at the same version,
+plus core and metadata at `--core-version`, never verify/oracle. Without
+`--core-version`, only a local publication is allowed; it references the core
+snapshot already in Maven Local. The module has independent `0.x` versioning.
+Temporary release overrides restore on success or failure.
 
 Shared platform contracts run in a real IDE against the test kit:
 

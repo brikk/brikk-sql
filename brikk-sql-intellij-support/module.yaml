@@ -1,9 +1,14 @@
 product: jvm/lib
 
-description: Cooperative SQL execution and editor snapshot support for IntelliJ database dialect plugins.
+description: Cooperative SQL execution, PIPE and editor support for IntelliJ database dialect plugins.
 
 apply:
   - ../publish.module-template.yaml
+
+dependencies:
+  # exported: the PIPE API exposes core types (statement ranges, lowering results).
+  - ../brikk-sql: exported
+  - ../brikk-sql-metadata
 
 plugins:
   brikk-sql-intellij-tooling: enabled
@@ -18,4 +23,4 @@ settings:
       - -Xexplicit-api=strict
   publishing:
     artifactId: brikk-sql-intellij-support
-    version: 0.1.2-SNAPSHOT
+    version: 0.2.0-SNAPSHOT

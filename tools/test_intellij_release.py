@@ -45,7 +45,8 @@ class ScopedReleaseTest(unittest.TestCase):
     def test_intellij_only_and_restoration(self):
         result = self.run_release()
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-test-support'],
+        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-test-support',
+                          '--non-transitive'],
                          json.loads((self.root / 'calls.json').read_text()))
         for observed in ('observed-module', 'observed-test-module'):
             self.assertIn('version: 0.1.0\n', (self.root / observed).read_text())
@@ -61,6 +62,12 @@ class ScopedReleaseTest(unittest.TestCase):
 
     def test_failed_toolchain_restores_templates(self):
         self.assertNotEqual(0, self.run_release(exit_code=23).returncode)
+        self.assert_restored()
+
+    def test_central_release_requires_core_version(self):
+        result = subprocess.run(['python3', 'tools/publish_intellij_support.py', '0.1.0'], cwd=self.root, capture_output=True)
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse((self.root / 'calls.json').exists())
         self.assert_restored()
 
     def test_snapshot_rejected_without_invocation(self):

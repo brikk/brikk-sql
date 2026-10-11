@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 STDLIB = ('org.jetbrains.kotlin', 'kotlin-stdlib')
 
 
-def verify(repository: Path, version: str, artifact: str, package: str, dependencies: list, sources: bool):
+def verify(repository: Path, version: str, artifact: str, package: str, dependencies: list, sources: bool, versions: dict):
     folder = repository / 'dev/brikk/house' / artifact / version
     stem = f'{artifact}-{version}'
     jar = folder / f'{stem}.jar'
@@ -33,7 +33,8 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
     assert declared == dependencies, declared
     for dependency in pom.findall('.//m:dependency', ns):
         if dependency.findtext('m:groupId', namespaces=ns) == 'dev.brikk.house':
-            assert dependency.findtext('m:version', namespaces=ns) == version, ET.tostring(dependency)
+            expected = versions[dependency.findtext('m:artifactId', namespaces=ns)]
+            assert dependency.findtext('m:version', namespaces=ns) == expected, ET.tostring(dependency)
     metadata = json.loads((folder / f'{stem}.module').read_text())
     for variant in metadata['variants']:
         for dependency in variant.get('dependencies', []):
@@ -44,9 +45,12 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('version')
+    parser.add_argument('--core-version', default='0.20.0-SNAPSHOT')
     parser.add_argument('--repository', type=Path, default=Path.home() / '.m2/repository')
     args = parser.parse_args()
+    versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-metadata-jvm': args.core_version,
+                'brikk-sql-intellij-support': args.version}
     verify(args.repository, args.version, 'brikk-sql-intellij-support', 'dev/brikk/house/sql/intellij/',
-           [STDLIB], sources=True)
+           [('dev.brikk.house', 'brikk-sql-jvm'), ('dev.brikk.house', 'brikk-sql-metadata-jvm'), STDLIB], sources=True, versions=versions)
     verify(args.repository, args.version, 'brikk-sql-intellij-test-support', 'dev/brikk/house/sql/intellij/testing/',
-           [('dev.brikk.house', 'brikk-sql-intellij-support'), STDLIB], sources=False)
+           [('dev.brikk.house', 'brikk-sql-intellij-support'), STDLIB], sources=False, versions=versions)

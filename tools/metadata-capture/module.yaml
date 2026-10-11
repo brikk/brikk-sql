@@ -3,6 +3,9 @@
 #   ./kotlin run -m metadata-capture -- <capture>   (see main.kt for the captures)
 product: jvm/app
 
+apply:
+  - ../../publish-targets.module-template.yaml
+
 dependencies:
   - ../../brikk-sql-metadata
   # The engine a DuckDB dump describes: bump this coordinate to capture another release.
@@ -13,6 +16,8 @@ dependencies:
   - org.antlr:antlr4-runtime:4.13.2
 
 settings:
+  publishing:
+    enabled: false
   jvm:
     jdk:
       version: 25

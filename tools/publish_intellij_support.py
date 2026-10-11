@@ -15,6 +15,8 @@ def main():
     parser.add_argument("--core-version", type=validate_version)
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
     args = parser.parse_args()
+    if not args.local and not args.core_version:
+        raise SystemExit("Central releases need --core-version: support depends on released core and metadata")
     root = Path(__file__).resolve().parents[1]
     intellij = ["brikk-sql-intellij-support", "brikk-sql-intellij-test-support"]
     descriptors = [root / m / "module.yaml" for m in intellij]
@@ -46,6 +48,7 @@ def main():
             descriptor.write_text(released)
         if args.local:
             command = ["./kotlin", "publish", "mavenLocal"] + [v for m in modules for v in ("-m", m)]
+            if not args.core_version: command.append("--non-transitive")
         else:
             command = ["./kotlin", "task"] + [f":{m}:publishToMavenCentral" for m in modules]
         subprocess.run(command, cwd=root, check=True)
