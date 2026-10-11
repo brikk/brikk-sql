@@ -85,6 +85,13 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     /** Whether the fragment is written in pipe (`|>`) syntax at the top level. */
     val isPipe: Boolean by lazy { ast is PipeQuery }
 
+    /**
+     * Whether a pipe (`|>`) query occurs anywhere in the statement, including subqueries and
+     * CTEs. Unlike [isPipe], which checks only the root, this decides whether execution needs
+     * lowering.
+     */
+    val containsPipe: Boolean by lazy { ast.find<PipeQuery>() != null }
+
     /** Includes nested FROM-first queries, even when parsing produced ordinary Select nodes. */
     val hasFromFirstQuery: Boolean get() { ast; return parsedFromFirstQuery }
 
