@@ -27,6 +27,9 @@ open class DuckdbDialect : Dialect() {
     // sqlglot: DuckDB.ASCII_ONLY_NORMALIZATION = True
     override val asciiOnlyNormalization: Boolean get() = true
 
+    // sqlglot #8557: table aliases may be referenced as whole-row struct values.
+    override val tablesReferenceableAsColumns: Boolean get() = true
+
     // Generated from the embedded engine's duckdb_functions() registry
     // (tools/generate_duckdb_functions.py).
     override val functionCatalog: FunctionCatalog get() = DUCKDB_FUNCTION_CATALOG

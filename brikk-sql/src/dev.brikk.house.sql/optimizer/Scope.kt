@@ -2,6 +2,7 @@ package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Comprehension
 import dev.brikk.house.sql.ast.Count
 import dev.brikk.house.sql.ast.DDL
 import dev.brikk.house.sql.ast.DML
@@ -55,10 +56,10 @@ private fun isTraversable(expression: Expression): Boolean =
     expression is Query || expression is DDL || expression is DML
 
 // sqlglot: scope.COLLECTIBLE_TYPES (Column, Dot, Table, Query, UDTF, CTE, Star,
-// TableColumn, JoinHint)
+// TableColumn, JoinHint, Comprehension)
 private fun isCollectible(node: Expression): Boolean =
     node is Column || node is Dot || node is Table || node is Query || node is UDTF ||
-        node is CTE || node is Star || node is TableColumn || node is JoinHint
+        node is CTE || node is Star || node is TableColumn || node is JoinHint || node is Comprehension
 
 /** Identity-keyed wrapper (Python uses `id(obj)`; Expression equality is structural). */
 class IdentityKey(val value: Any) {
@@ -101,6 +102,7 @@ class Scope(
     private var ctesList: MutableList<CTE> = mutableListOf()
     private var subqueriesList: MutableList<Expression> = mutableListOf()
     private var joinHintsList: MutableList<JoinHint> = mutableListOf()
+    private var comprehensionsList: MutableList<Comprehension> = mutableListOf()
     private var semiAntiJoinTables: MutableSet<String> = mutableSetOf()
     private var columnIndexList: MutableList<Column> = mutableListOf()
     private var selectedSourcesCache: LinkedHashMap<String, Pair<Expression, Any>>? = null
@@ -136,6 +138,7 @@ class Scope(
         ctesList = mutableListOf()
         subqueriesList = mutableListOf()
         joinHintsList = mutableListOf()
+        comprehensionsList = mutableListOf()
         semiAntiJoinTables = mutableSetOf()
         columnIndexList = mutableListOf()
         selectedSourcesCache = null
@@ -178,6 +181,7 @@ class Scope(
         tableColumnsList = mutableListOf()
         starsList = mutableListOf()
         joinHintsList = mutableListOf()
+        comprehensionsList = mutableListOf()
         semiAntiJoinTables = mutableSetOf()
         columnIndexList = mutableListOf()
 
@@ -188,7 +192,7 @@ class Scope(
 
         for (node in walk()) {
             // sqlglot: COLLECTIBLE_TYPES gate (Column, Dot, Table, Query, UDTF, CTE, Star,
-            // TableColumn, JoinHint)
+            // TableColumn, JoinHint, Comprehension)
             if (node === expression || !isCollectible(node)) continue
 
             when {
@@ -217,6 +221,7 @@ class Scope(
                     node !== innerQuery ->
                     subqueriesList.add(node)
                 node is TableColumn -> tableColumnsList.add(node)
+                node is Comprehension -> comprehensionsList.add(node)
                 // sqlglot: ROW_LEVEL_AGG_FUNCS = (exp.Count,)
                 node is Star &&
                     (truthy(node.args["except_"]) || node.parent !is Count) ->
@@ -250,6 +255,9 @@ class Scope(
 
     // sqlglot: Scope.tables
     val tables: List<Table> get() { ensureCollected(); return tablesList }
+
+    // sqlglot: Scope.comprehensions — local to this query scope, with the usual cache lifecycle.
+    val comprehensions: List<Comprehension> get() { ensureCollected(); return comprehensionsList }
 
     // sqlglot: Scope.ctes
     val ctes: List<CTE> get() { ensureCollected(); return ctesList }

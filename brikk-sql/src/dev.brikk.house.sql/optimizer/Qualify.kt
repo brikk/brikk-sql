@@ -78,6 +78,8 @@ fun <E : Expression> qualify(
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
     val resolvedDialect = dialect ?: Dialects.BASE
 
+    preserveComprehensionIdentifierCase(expression, resolvedDialect)
+
     var result: E = normalizeIdentifiers(
         expression,
         dialect = resolvedDialect,

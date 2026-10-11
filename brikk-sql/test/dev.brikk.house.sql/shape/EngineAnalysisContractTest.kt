@@ -10,6 +10,7 @@ import dev.brikk.house.sql.optimizer.qualify
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -271,5 +272,31 @@ class EngineAnalysisContractTest {
             assertEquals(mapOf("chosen" to setOf("src"), "note" to setOf("src")), contract.dependencies, dialect)
             assertEquals(contract.dependencies, fragment.columnDependencies(inputs = inputs), dialect)
         }
+    }
+
+    @Test
+    fun duckdbComprehensionLocalsSurviveEnginePreparationWithoutTakingSchemaColumnTypes() {
+        val source = "SELECT marker, [x FOR x IN items IF x > 0] AS result FROM t"
+        val inputs = ShapeCatalog(mapOf("t" to Shape(listOf(
+            ColumnShape("marker", "TEXT", nullable = false), ColumnShape("items", "ARRAY<INT>", nullable = true),
+            ColumnShape("x", "TEXT", nullable = false),
+        ))))
+        val fragment = SqlFragment(source, "duckdb")
+        val original = fragment.ast.copy()
+        for (catalog in listOf(inputs, ShapeCatalog.EMPTY, ShapeCatalog(mapOf("other" to Shape.of("x" to "TEXT"))))) {
+            val output = fragment.outputShape(catalog)
+            assertEquals(listOf("marker", "result"), output.columns.map { it.name })
+            assertEquals(null, output.columns.last().nullable, "do not manufacture non-null comprehension results")
+            val standard = fragment.toStandardSql(inputs = catalog, expandStars = true)
+            assertTrue("FOR" in standard)
+            assertFalse("\"t\".\"x\"" in standard, standard)
+        }
+        assertEquals(ColumnShape("marker", "TEXT", false), fragment.outputShape(inputs).columns.first())
+        validateLikeEngine(source, "duckdb", inputs)
+        validateLikeEngine(source, "duckdb", ShapeCatalog.EMPTY)
+        assertFailsWith<OptimizeError> {
+            validateLikeEngine(source, "duckdb", ShapeCatalog(mapOf("other" to Shape.of("x" to "TEXT"))))
+        }
+        assertEquals(original, fragment.ast)
     }
 }

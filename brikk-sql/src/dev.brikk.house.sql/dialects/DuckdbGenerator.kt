@@ -3043,14 +3043,7 @@ open class DuckdbGenerator(
             // sqlglot: TRANSFORMS[exp.Array] (inherit_struct_field_names + inline_array_unless_query)
             reg(ArrayNode::class) { e ->
                 val array = inheritStructFieldNames(e) as ArrayNode
-                val elem = array.expressionsArg.firstOrNull() as? Expression
-                if (elem?.find(Select::class, Union::class, Except::class, Intersect::class) != null) {
-                    func("ARRAY", elem)
-                } else {
-                    "[" + expressions(
-                        array, dynamic = true, newLine = true, skipFirst = true, skipLast = true
-                    ) + "]"
-                }
+                inlineArrayUnlessQuerySql(array)
             }
             reg(ArrayFilter::class) { e -> dg().renameFuncSql("LIST_FILTER", e) }
             reg(ArraySum::class) { e -> dg().renameFuncSql("LIST_SUM", e) }

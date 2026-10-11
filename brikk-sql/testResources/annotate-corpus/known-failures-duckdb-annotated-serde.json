@@ -1,3 +1,20 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:fe42a472409b4f8f78380b40039da3785a319f605fe09e6cbccf6bb2545141f9:1",
+            "sql": "[x.STRING_SPLIT(' ')[i] FOR x IN ['1', '2', 3] IF x.CONTAINS('1')]",
+            "signature": "type-mismatch:v1:sha256:d1a2e4914b5c70c102189cc5cd13131187075b64087416a2a4f31aa3ae5cd04d",
+            "reason": "DDB-07 / SQLGlot #8557 old-pin drift in declaration class, not type evidence: the declaration is now Identifier instead of Column. Both remain UNKNOWN in annotation, matching frozen a00dc2e; no list-element type is fabricated from similarly named source columns. Exact assertion/signature reviewed; remove on coherent fixture refresh.",
+            "issue": "DDB-07 / sqlglot#8557",
+            "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:93722b049103981bbab269bbac4c90e7b63a91e2e53eb6735118ff067b3f1b75:1",
+            "sql": "SELECT [4, 5, 6] AS l, [x FOR x, i IN l IF i = 2] AS filtered",
+            "signature": "type-mismatch:v1:sha256:667b5ca2b2d25d649320c22d72a503281b6babc6bc5bc0ba615e8b90f107e512",
+            "reason": "DDB-07 / SQLGlot #8557 old-pin drift in declaration class, not type evidence: item/index declarations are Identifiers instead of Columns. Both declaration types remain UNKNOWN, matching frozen a00dc2e. Native index/filter and Engine compatibility regressions are independently checked. Exact assertion/signature reviewed; remove on coherent fixture refresh.",
+            "issue": "DDB-07 / sqlglot#8557",
+            "status": "oracle-pin-drift"
+        }
+    ]
 }

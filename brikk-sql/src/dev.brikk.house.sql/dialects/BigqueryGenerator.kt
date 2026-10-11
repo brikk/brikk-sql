@@ -730,14 +730,7 @@ open class BigqueryGenerator(
 
             // sqlglot: dialect.inline_array_unless_query
             reg(ArrayNode::class) { e ->
-                val elem = e.expressionsArg.firstOrNull() as? Expression
-                if (elem?.find(Select::class, Union::class, Except::class, Intersect::class) != null) {
-                    func("ARRAY", elem)
-                } else {
-                    "[" + expressions(
-                        e, dynamic = true, newLine = true, skipFirst = true, skipLast = true
-                    ) + "]"
-                }
+                inlineArrayUnlessQuerySql(e)
             }
             reg(ArrayContains::class) { e -> bg().arrayContainsSql(e as ArrayContains) }
             reg(AIEmbed::class) { e -> bg().renameFuncSql("EMBED", e) }

@@ -5075,6 +5075,16 @@ open class Generator(
         return "$thisSql FOR $expr$position IN $iterator$condition"
     }
 
+    // sqlglot: dialect.inline_array_unless_query (#8575 and 51864e76b4).
+    // Queries supply rows only for a sole direct query operand; scalar constructors
+    // and nested queries must remain values, never discard sibling elements.
+    open fun inlineArrayUnlessQuerySql(expression: Expression): String {
+        val elements = expression.expressionsArg
+        val element = elements.singleOrNull()
+        return if (element is Query && expression.args["value_constructor"] != true) func("ARRAY", element) else
+            "[" + expressions(expression, dynamic = true, newLine = true, skipFirst = true, skipLast = true) + "]"
+    }
+
     // sqlglot: Generator.columnprefix_sql
     open fun columnprefixSql(expression: ColumnPrefix): String =
         "${sql(expression, "this")}(${sql(expression, "expression")})"

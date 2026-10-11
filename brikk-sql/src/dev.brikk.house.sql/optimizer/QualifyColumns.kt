@@ -8,6 +8,7 @@ import dev.brikk.house.sql.ast.Binary
 import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ColumnDef
+import dev.brikk.house.sql.ast.Comprehension
 import dev.brikk.house.sql.ast.Condition
 import dev.brikk.house.sql.ast.Connector
 import dev.brikk.house.sql.ast.DType
@@ -20,6 +21,7 @@ import dev.brikk.house.sql.ast.Group
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Is
 import dev.brikk.house.sql.ast.Join
+import dev.brikk.house.sql.ast.Lambda
 import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.Mul
 import dev.brikk.house.sql.ast.Neg
@@ -101,6 +103,7 @@ fun <E : Expression> qualifyColumns(
     val legacyAliasOrder = inferSchema != false
     val resolvedDialect = resolvedSchema.dialect ?: Dialects.BASE
     val pseudocolumns = resolvedDialect.pseudocolumns
+    preserveComprehensionIdentifierCase(expression, resolvedDialect)
 
     for (scope in traverseScope(expression)) {
         if (resolvedDialect.preferCteAliasColumn) {
@@ -113,6 +116,7 @@ fun <E : Expression> qualifyColumns(
         separatePseudocolumns(scope, pseudocolumns)
 
         val resolver = Resolver(scope, resolvedSchema, inferSchema = resolvedInferSchema)
+        qualifyComprehensions(scope, resolver)
         popTableColumnAliases(scope.ctes)
         popTableColumnAliases(scope.derivedTables)
         val usingColumnTables = expandUsing(scope, resolver)
@@ -756,6 +760,89 @@ private fun selectByPos(expression: Expression, node: Literal): Alias {
     return select
 }
 
+// DuckDB's lambda-name lookup can distinguish spelling before its ordinary
+// case-insensitive column lookup. Do not fold away that distinction (#41).
+internal fun preserveComprehensionIdentifierCase(expression: Expression, dialect: Dialect) {
+    if (dialect.name != "duckdb") return
+    fun normalized(name: String): String = dialect.normalizeIdentifier(toIdentifier(name)!!).name
+    for (comprehension in expression.findAll<Comprehension>()) {
+        val names = listOf("expression", "position").mapNotNull { key ->
+            val declaration = comprehension.args[key] as? Expression ?: return@mapNotNull null
+            val identifier = if (declaration is Column) declaration.thisArg as? Identifier else declaration as? Identifier
+            identifier?.meta?.set("case_sensitive", true)
+            normalized(declaration.name)
+        }.toSet()
+        for (key in listOf("this", "condition")) {
+            val body = comprehension.args[key] as? Expression ?: continue
+            for (node in findAllInScope(body, Column::class, Dot::class, Lambda::class)) {
+                if (node is Lambda) {
+                    // If a nested lambda shadows a protected name, protect its
+                    // declaration too so normalization cannot separate the two.
+                    for (declaration in node.expressionsArg.filterIsInstance<Identifier>()) {
+                        if (normalized(declaration.name) in names) declaration.meta["case_sensitive"] = true
+                    }
+                } else {
+                    var head = node
+                    while (head is Dot) head = head.thisArg as Expression
+                    val root = if (head is Column) head.parts.firstOrNull() else head
+                    if (root is Identifier && normalized(root.name) in names) root.meta["case_sensitive"] = true
+                }
+            }
+        }
+    }
+}
+
+// sqlglot: qualify_columns._qualify_comprehensions (#8557)
+private fun qualifyComprehensions(scope: Scope, resolver: Resolver) {
+    var converted = false
+    fun normalized(name: String): String = resolver.dialect.normalizeIdentifier(toIdentifier(name)!!).name
+    for (comprehension in scope.comprehensions) {
+        // Older serialized trees stored declarations as Columns. Keep them usable.
+        for (key in listOf("expression", "position")) {
+            val declaration = comprehension.args[key] as? Column ?: continue
+            if (declaration.parts.size == 1) {
+                val identifier = declaration.toDot(includeDots = false)
+                identifier.updatePositions(declaration)
+                identifier.addComments(declaration.comments)
+                declaration.replace(identifier)
+                converted = true
+            }
+        }
+        val names = listOf("expression", "position").mapNotNull {
+            (comprehension.args[it] as? Expression)?.name
+        }.toSet()
+        val normalizedNames = names.map(::normalized).toSet()
+        for (key in listOf("this", "condition")) {
+            val body = comprehension.args[key] as? Expression ?: continue
+            for (node in findAllInScope(body, Column::class).toList()) {
+                val column = node as Column
+                if (column.parent is Comprehension && column.argKey in setOf("expression", "position")) continue
+                val parts = column.parts
+                if (parts.isEmpty() || normalized(parts[0].name) !in normalizedNames) continue
+                val root = parts[0]
+                val rootName = normalized(root.name)
+                fun normalizeRoot() {
+                    root.set("this", rootName)
+                    root.metaOrNull?.remove("case_sensitive")
+                }
+                // A proven local table-qualified column wins over a lambda struct field.
+                if (parts.size > 1 && rootName in scope.selectedSources &&
+                    parts[1].name in resolver.getSourceColumns(rootName)) {
+                    normalizeRoot()
+                    continue
+                }
+                val local = column.toDot(includeDots = false)
+                local.updatePositions(column)
+                local.addComments(column.comments)
+                // Column annotations cannot prove the type of this local symbol.
+                column.replace(local)
+                converted = true
+            }
+        }
+    }
+    if (converted) scope.clearCache()
+}
+
 /**
  * sqlglot: qualify_columns._convert_columns_to_dots — converts Column instances that
  * represent STRUCT or JSON field lookups into chained Dots, so they can be qualified.
@@ -858,6 +945,14 @@ private fun qualifyColumnsInScope(
 
             // column_table can be a '' because bigquery unnest has no table alias
             val table = resolver.getTable(column)
+
+            // With no column evidence, preserve DuckDB's whole-row spelling rather
+            // than infer a nonexistent alias.alias column. Known columns still win.
+            if (resolver.dialect.name == "duckdb" && table?.name == columnName &&
+                columnName in scope.selectedSources && columnName !in resolver.getSourceColumns(columnName)) {
+                scope.replace(column, TableColumn(args("this" to column.thisArg)))
+                continue
+            }
 
             if (table != null) {
                 val source = scope.sources[table.name]

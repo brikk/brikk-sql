@@ -62,6 +62,7 @@ import dev.brikk.house.sql.ast.CopyParameter
 import dev.brikk.house.sql.ast.Credentials
 import dev.brikk.house.sql.ast.ColumnPosition
 import dev.brikk.house.sql.ast.Comprehension
+import dev.brikk.house.sql.ast.Query
 import dev.brikk.house.sql.ast.Concat
 import dev.brikk.house.sql.ast.Columns
 import dev.brikk.house.sql.ast.Command
@@ -8831,11 +8832,16 @@ open class Parser(
             )
         } else if (current == null) {
             // sqlglot: build_array_constructor (HAS_DISTINCT_ARRAY_CONSTRUCTORS=false)
-            current = expression(Array(args("expressions" to expressions)))
+            current = expression(Array(args("expressions" to expressions)).also {
+                // Sparse optional flag: leave false absent until the coherent fixture refresh.
+                if (expressions.singleOrNull() is Query) it.set("value_constructor", true)
+            })
         } else {
             val constructorType = arrayConstructors[current.name.uppercase()]
             if (constructorType != null) {
-                return expression(constructorType(args("expressions" to expressions)))
+                return expression(constructorType(args("expressions" to expressions)).also {
+                    if (it is Array && expressions.singleOrNull() is Query) it.set("value_constructor", true)
+                })
             }
             // sqlglot: apply_index_offset(this, expressions, -self.dialect.INDEX_OFFSET)
             val adjusted = applyIndexOffset(current, expressions, -indexOffset, dialect = dialect)
@@ -8852,9 +8858,9 @@ open class Parser(
     // sqlglot: Parser._parse_comprehension
     fun parseComprehension(this_: Expression?): Expression? {
         val startIndex = index
-        val expr = parseColumn()
-        // sqlglot: `self._match(...) and self._parse_column()` — False when unmatched
-        val position: kotlin.Any? = if (match(TokenType.COMMA)) parseColumn() else false
+        // sqlglot #8557: declarations are local identifiers, never source columns.
+        val expr = parseIdVar()
+        val position = if (match(TokenType.COMMA)) parseIdVar() else null
         if (!match(TokenType.IN)) {
             retreat(startIndex - 1)
             return null

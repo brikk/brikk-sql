@@ -82,11 +82,26 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   row-dependent DuckDB delimiters are diagnosed; Trino grammar is verified.
 - [x] **DDB-06 — SAMPLE ordering:** emit USING SAMPLE before ORDER BY/LIMIT
   (`022bb41fc5`, #8550). Verify native grammar and PIPE TABLESAMPLE contexts.
-- [ ] **DDB-07 — List-comprehension qualification:** bind lambda variables locally
+- [x] **DDB-07 — List-comprehension qualification:** bind lambda variables locally
   (`507cbf99ca`, #8557), without capturing outer columns/aliases.
-- [ ] **DDB-08 — Arrays following subqueries:** retain every array element
+  Item/index declarations are identifiers; body/filter locals are separated before
+  alias/column qualification. Iterators/free columns, nested shadowing, query boundaries,
+  proven table-field precedence, old serialized declarations and scope caches are covered.
+  Native binding-sensitive casing (including methods/nested lambdas) is retained.
+  DuckDB whole-row aliases survive schema-less legacy inference without becoming
+  invented alias.alias columns. Engine preparation/validation, types/nullability and
+  source ranges remain conservative. Four reviewed declaration-class pin-drift rows
+  await refresh; all old inference signatures and policies remain intact (extension #41).
+- [x] **DDB-08 — Arrays following subqueries:** retain every array element
   (`bea35b336c`, #8575; BigQuery follow-up `51864e76b4`). Test ARRAY/LIST_VALUE
   constructors and source-aware cross-dialect output.
+  Shared DuckDB/BigQuery rendering only promotes a sole direct query to ARRAY(query).
+  Scalar bracket/LIST_VALUE constructors retain explicit value-constructor intent,
+  including NULL elements versus empty row arrays; nested functions/structs and later
+  elements survive. Parser/serde/rendering and actual DuckDB results pass. Portable
+  BigQuery outputs are executed in DuckDB; no live BigQuery result proof is claimed.
+  Sparse true-only intent flags leave existing false defaults/manifest at the shipped
+  pin until coherent refresh (extension #42).
 
 ## Shared correctness
 
@@ -156,6 +171,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   typing metadata, alias/scope changes) at the frozen target; keep the scope boundary.
   Ensure generated tokenizer tooling emits numeric escape/byte/unknown-escape policy
   before retiring StringEscapeProfiles overlays; retain TokenizerConfig's old ABI.
+  Regenerate Array.argTypes with value_constructor and expand sparse false defaults
+  only with the corresponding target behavioral fixtures.
 - [ ] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
   Bump `FixturePinSyncTest.SQLGLOT_PIN` only with a coherent fixture refresh;
   leave the shipped pin unchanged while individual ports are under review.
@@ -219,3 +236,11 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   gates). Nine offline release tests pass. Existing ledgers, generated fixtures and
   shipped pin are unchanged in this batch. Isolated source-engine containers ran
   without host ports/volumes and were removed after verification.
+- 2026-10-11: seventh batch completes DDB-07/08. Build and **1,191 Kotlin tests**
+  pass; ten optional source-engine/native gates skip (live containers are not
+  configured; optional chDB remains absent). DuckDB JDBC result tests run normally. Nine
+  offline release tests pass. Four exact temporary pin-drift rows were added for
+  the two declaration AST cases in parser/annotation gates, checked against a00dc2e;
+  pre-existing signatures/reasons and the shipped fixtures/pin remain unchanged.
+  All eight requested DuckDB boxes are now verified within their stated bounds;
+  shared correctness, other dialects and coherent target integration remain open.

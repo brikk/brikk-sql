@@ -1320,6 +1320,83 @@ with isolated containers, no host ports/volumes, removed afterward. No Snowflake
 dialect/engine is added. No ledger rows or shipped generated fixture stamps/pin
 were changed by this batch; earlier reviewed pin-drift rows remain pending refresh.
 
+## 41. DuckDB comprehension binding, native casing and schema-less whole rows
+
+SQLGlot #8557 parses comprehension item/index declarations as Identifiers, not
+source Columns. Qualification converts local body/filter references to identifier/
+dot expressions before alias expansion and ordinary column resolution. Iterators
+remain outside their own declaration scope, so `[x FOR x IN x]` can still resolve
+the iterator from a source column or preceding alias. Nested bindings are retained;
+query boundaries prevent an inner SELECT's columns from becoming loop variables.
+Scope.comprehensions follows the existing collection/cache lifecycle.
+
+Proven local table-qualified columns take precedence over lambda struct fields:
+if `x.field` names a real field in the selected table alias x, its Column kind and
+ownership remain intact. Without that evidence, struct lookup stays a local Dot.
+Older serialized Column declarations are normalized when qualified, preserving
+positions/comments. Column type annotations do not prove the local element type
+and are not transferred into the new local symbol. Missing local element/whole-row
+typing and nullability stay unknown rather than being fabricated from similarly
+named schema columns.
+
+Native DuckDB 1.5.6 can distinguish variable spelling during binding before its
+case-insensitive column lookup: with a table column x, `[X FOR x IN items]` can
+produce the table column's value while `[x FOR x IN items]` uses the loop value.
+Nested frames and qualified method calls also require the original spelling.
+The local port protects declarations and candidate body/filter roots with the
+existing case_sensitive normalization hint, including method-call Identifier
+heads and nested lambda declarations that shadow those names. It preserves native
+spelling rather than assigning invented source ownership to ambiguous symbols.
+No precise element-type proof is implied by this protection.
+
+DuckDB also supports table aliases as whole-row values. With no column evidence,
+legacy inference must not turn `SELECT t FROM t` into an invented `t.t` reference.
+The local whole-row fallback retains t; a real schema column named t still wins
+and qualifies to t.t. This preserves execution under all true/false/null policies
+without changing their general inference rules or published JVM signatures.
+
+`ComprehensionQualificationCatchupTest` checks parser/serde, policies, aliases,
+struct/table distinction, query boundaries, caches, source mapping and legacy ASTs.
+`ComprehensionQualificationResultTest` executes actual original/qualified DuckDB
+rows for filters, indices, nested shadowing, casing, methods, whole rows, quoted
+variables and empty/NULL inputs. DuckDB still rejects subqueries inside lambdas;
+the native refusal is checked separately, not claimed newly supported. The added
+`EngineAnalysisContractTest` method protects output names, known external types,
+unknown comprehension nullability and the Engine's two-step standard-SQL/strict
+qualification path under full, empty and unrelated catalogs.
+
+Two old-pin comprehension cases still contain Column declarations. Four exact
+reviewed parser/annotated-AST rows record temporary oracle-pin-drift. The Identifier
+declarations and their unchanged UNKNOWN types match a00dc2e. Remove the rows at
+coherent fixture refresh; the existing UTF-16 divergence reason/signature is untouched.
+
+## 42. Scalar array values versus row-query constructors
+
+SQLGlot #8575 and 51864e76b4 distinguish a sole direct query supplying rows from
+scalar/value array elements. Shared DuckDB/BigQuery generation no longer searches
+arbitrarily inside the first element for a query, which could discard later
+elements or promote a function/struct/comprehension into invalid ARRAY(query) SQL.
+
+Bracket and LIST_VALUE scalar-query constructors retain value_constructor=true
+in ordinary AST args/serde. ARRAY(SELECT ...) and ARRAY((SELECT ...)) remain row
+constructors. Thus a scalar subquery returning no row produces `[NULL]`, while a
+row query returning no rows produces `[]`. Other elements, nested arrays/functions
+and struct fields survive unchanged. Legacy unmarked single-query ASTs retain the
+row-constructor default; absent source intent is not reconstructed by guessing.
+
+The optional intent is currently sparse (only true is stored). Existing generated
+arg-type metadata and false defaults remain at the shipped oracle until coherent
+target regeneration. That refresh must add Array.value_constructor to generated
+argTypes and emit corresponding false defaults with the refreshed fixtures, not
+rewrite current stamps while those fixture changes are pending.
+
+`ArraySubqueryCatchupTest` fixes parser/serde and both-direction output distinctions.
+`ArraySubqueryResultTest` executes DuckDB rows for every retained element, scalar
+NULL versus empty row arrays, LIST_VALUE, nested functions/structs and ordered
+multirow query arrays. Portable BigQuery-shaped output is also executed in DuckDB;
+no live BigQuery engine or general BigQuery grammar proof is claimed. Source ASTs
+remain unchanged during generation. No new array ledger entries were needed.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

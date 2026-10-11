@@ -678,7 +678,9 @@ object DuckdbParserTables {
         put("LIST_REVERSE_SORT", ::buildSortArrayDesc)
         put("LIST_SORT", fromArgList(listOf("this", "asc", "nulls_first"), false) { SortArray(it) })
         put("LIST_TRANSFORM", fromArgList(listOf("this", "expression"), false) { Transform(it) })
-        put("LIST_VALUE") { a -> ArrayNode(args("expressions" to a)) }
+        put("LIST_VALUE") { a -> ArrayNode(args("expressions" to a)).also {
+            if (a.singleOrNull() is dev.brikk.house.sql.ast.Query) it.set("value_constructor", true)
+        } }
         put(
             "MAKE_DATE",
             fromArgList(listOf("year", "month", "day", "allow_overflow"), false) { DateFromParts(it) },
