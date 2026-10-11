@@ -250,14 +250,16 @@ object PipeStageSplitter {
  * brikk-native: the phrases that can start a pipe stage after `|>` in [dialect], from the
  * parser's own tables: transform operators (`WHERE`, `ORDER BY`, ...), joins (`JOIN`,
  * `side [OUTER] JOIN`, kind and method joins) and set operations (`ALL`/`DISTINCT`, and bare
- * where the dialect has a default). Words the dialect does not tokenize as keywords are omitted.
+ * where the dialect has a default). Join and set-operation phrases are omitted when a word in
+ * them is not a keyword of the dialect.
  */
 fun pipeStageKeywords(dialect: String): List<String> {
     val source = Dialects.forName(dialect)
     val parser = source.parser()
-    val words = buildMap {
-        for ((word, type) in source.tokenizerConfig.keywords) if (' ' !in word) putIfAbsent(type, word)
-    }
+    val words = source.tokenizerConfig.keywords.entries
+        .filter { ' ' !in it.key }
+        .groupBy({ it.value }, { it.key })
+        .mapValues { (type, spellings) -> spellings.firstOrNull { it == type.name } ?: spellings.first() }
     val joins = words[TokenType.JOIN]?.let { join ->
         buildList {
             add(join)
