@@ -5,7 +5,7 @@ package dev.brikk.house.sql.metadata
  * (Postgres-derived) parser accepts as function-shaped calls that duckdb_functions()
  * does NOT list (they become dedicated expression nodes at parse time, so they never
  * enter the registry captured in vendor/data/duckdb-functions-<version>.tsv).
- * DuckdbDump.functionCatalog() wires this set into every DuckDB FunctionCatalog
+ * DuckdbDump.toSnapshot() wires this set into every DuckDB FunctionCatalog
  * constructor (grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS).
  *
  * Verified against the pinned engine (v1.5.6, python duckdb module): each name below

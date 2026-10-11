@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 
 class DuckdbDumpTest {
 
-    private fun catalogOf(vararg rows: DuckdbFunctionRow) = DuckdbDump("2.0.0", rows.toList()).functionCatalog()
+    private fun catalogOf(vararg rows: DuckdbFunctionRow) = DuckdbDump("2.0.0", rows.toList()).toSnapshot().functions
 
     @Test
     fun windowRowsMapToTheWindowKind() {

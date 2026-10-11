@@ -11,7 +11,8 @@ class DuckdbDump(
 )
 
 /**
- * The registered functions, one [FunctionDef] per (name, normalized kind):
+ * This release's metadata. [MetadataSnapshot.functions] holds the registered functions, one
+ * [FunctionDef] per (name, normalized kind):
  *  - `macro`/`table_macro` normalize to SCALAR/TABLE_VALUED and keep [FunctionDef.nativeKind]
  *    when every row of the def is that macro kind (a scalar+macro name stays a plain SCALAR).
  *  - `pragma` rows are not functions; operator rows (`%`, `||`, `~~`) are grammar, not names.
@@ -22,8 +23,10 @@ class DuckdbDump(
  *
  * Fails on a function type it does not know, so a new engine kind is mapped deliberately.
  */
-fun DuckdbDump.functionCatalog(): FunctionCatalog =
-    FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS)
+fun DuckdbDump.toSnapshot(): MetadataSnapshot = MetadataSnapshot(
+    engineVersion,
+    FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS),
+)
 
 private fun functionDefs(rows: List<DuckdbFunctionRow>): List<FunctionDef> =
     rows.filter { it.type != PRAGMA && IDENTIFIER.matches(it.name) }

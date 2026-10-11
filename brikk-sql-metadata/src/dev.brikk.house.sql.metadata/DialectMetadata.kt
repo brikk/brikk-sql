@@ -1,0 +1,64 @@
+package dev.brikk.house.sql.metadata
+
+/** What metadata knows about one engine release. */
+class MetadataSnapshot(
+    val engineVersion: String,
+    val functions: FunctionCatalog,
+)
+
+/** Every bundled snapshot of one dialect, oldest first. */
+class DialectMetadata(
+    val dialect: String,
+    snapshots: List<MetadataSnapshot>,
+    defaultVersion: String,
+) {
+    val snapshots: List<MetadataSnapshot> = snapshots.sortedBy { it.version }
+
+    /** The snapshot used when the server version is unknown. */
+    val default: MetadataSnapshot = requireNotNull(snapshots.find { it.engineVersion == defaultVersion }) {
+        "$dialect has no $defaultVersion snapshot"
+    }
+
+    /**
+     * The snapshot for a server's reported version ("v1.5.5", "v2.0.0-alpha43143", "483"):
+     * the same major.minor first (the nearest older one, else the oldest of that line), then
+     * the nearest older snapshot; a server older than every snapshot gets the oldest. A missing
+     * or unparsable version gets [default].
+     */
+    fun forServerVersion(raw: String?): Selection {
+        val server = raw?.let(::parseVersion) ?: return Selection(default, exact = false)
+        val line = snapshots.filter { it.version.majorMinor == server.number.majorMinor }
+        val snapshot = line.lastOrNull { it.version <= server.number }
+            ?: line.firstOrNull()
+            ?: snapshots.lastOrNull { it.version <= server.number }
+            ?: snapshots.first()
+        return Selection(snapshot, exact = !server.prerelease && snapshot.version.compareTo(server.number) == 0)
+    }
+
+    /** [exact] is true only for a release server whose version equals the snapshot's. */
+    data class Selection(val snapshot: MetadataSnapshot, val exact: Boolean)
+}
+
+private val MetadataSnapshot.version: Version
+    get() = requireNotNull(parseVersion(engineVersion)?.takeUnless { it.prerelease }) {
+        "snapshot version '$engineVersion' is not a release version"
+    }.number
+
+private class Version(val parts: List<Int>) : Comparable<Version> {
+    val majorMinor: Pair<Int, Int> get() = part(0) to part(1)
+
+    private fun part(index: Int) = parts.getOrElse(index) { 0 }
+
+    override fun compareTo(other: Version): Int =
+        (0 until maxOf(parts.size, other.parts.size))
+            .firstNotNullOfOrNull { i -> part(i).compareTo(other.part(i)).takeIf { it != 0 } } ?: 0
+}
+
+private class ParsedVersion(val number: Version, val prerelease: Boolean)
+
+private val VERSION = Regex("""(\d+(?:\.\d+)*)(-)?""")
+
+private fun parseVersion(raw: String): ParsedVersion? = VERSION.find(raw)?.let { match ->
+    val parts = match.groupValues[1].split('.').map { it.toIntOrNull() ?: return null }
+    ParsedVersion(Version(parts), prerelease = match.groups[2] != null)
+}
