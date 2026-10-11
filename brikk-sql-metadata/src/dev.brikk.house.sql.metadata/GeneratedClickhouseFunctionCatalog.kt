@@ -7,7 +7,8 @@ package dev.brikk.house.sql.metadata
 
 /** ClickHouse 26.5.1.1 builtins: 1570 definitions, 200 aliases, 181 aggregates. */
 val CLICKHOUSE_FUNCTION_CATALOG: FunctionCatalog = FunctionCatalog(
-    chunk0() + chunk1() + chunk2() + chunk3()
+    chunk0() + chunk1() + chunk2() + chunk3(),
+    caseSensitive = true,
 )
 
 private fun chunk0(): List<FunctionDef> = listOf(

@@ -50,6 +50,7 @@ fun DuckdbDump.toSnapshot(): MetadataSnapshot {
         settings = settings?.map { SettingDef(it.name, it.inputType, it.scope, it.aliases, it.description) },
         extensions = extensions?.map { ExtensionDef(it.name, it.staticallyLinked, it.aliases, it.description) },
         extensionFunctions = byExtension.flatMap { (extension, rows) -> functionDefs(rows).map { it.copy(extension = extension) } },
+        grammarForms = DUCKDB_GRAMMAR_FORMS,
     )
 }
 

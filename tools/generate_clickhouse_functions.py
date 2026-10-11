@@ -84,7 +84,8 @@ def main() -> None:
         f"/** ClickHouse 26.5.1.1 builtins: {len(entries)} definitions, {alias_count} aliases, "
         f"{aggregate_count} aggregates. */",
         "val CLICKHOUSE_FUNCTION_CATALOG: FunctionCatalog = FunctionCatalog(",
-        "    " + " + ".join(f"chunk{i}()" for i in range(len(chunks))),
+        "    " + " + ".join(f"chunk{i}()" for i in range(len(chunks))) + ",",
+        "    caseSensitive = true,",
         ")",
     ]
     for i, chunk in enumerate(chunks):

@@ -15,6 +15,13 @@ import kotlinx.serialization.json.Json
  *
  *  - [FunctionKind], [FunctionOverload], [FunctionDef], [FunctionCatalog]
  *  - the generated per-dialect catalog vals (DORIS_FUNCTION_CATALOG, ...)
+ *  - versioned snapshots: [DialectMetadata], [MetadataSnapshot] and the per-dialect vals
+ *    (DUCKDB_METADATA, TRINO_METADATA, ...); their parts [KeywordCatalog], [KeywordDef],
+ *    [KeywordCategory], [PragmaDef], [SettingDef], [ExtensionDef], [TableFunctionInfo],
+ *    [PropertyDef], [ColumnDef], [OutputSchema], [GrammarForm], [InvocationSyntax]
+ *  - the completion projection: [FunctionPresentation], [presentation], [completionEntries]
+ *  - the DuckDB capture shape shared with live harvests: [DuckdbCapture], the `DUCKDB_*`
+ *    capture vals, the `Duckdb*Row` types, [DuckdbDump] and [toSnapshot]
  *
  * Changes here are API changes for the plugin — additive only, and prefer defaulted
  * fields (serialization stays backward-compatible for persisted JSON).
@@ -175,10 +182,14 @@ data class FunctionDef(
  * [toJson] (persisted catalogs stay pure registry dumps). Use [isKnown] when asking
  * "would this name reach the engine unrecognized?" — [contains]/[get] stay
  * registry-only.
+ *
+ * [caseSensitive] is the dialect's name policy (ClickHouse: names differ by case). [getAll]
+ * and the snapshot projections follow it; [get], [contains] and [isKnown] always ignore case.
  */
 class FunctionCatalog(
     val functions: List<FunctionDef>,
     val grammarBuiltins: Set<String> = emptySet(),
+    val caseSensitive: Boolean = false,
 ) {
 
     private val byName: Map<String, FunctionDef> = buildMap {
@@ -207,8 +218,26 @@ class FunctionCatalog(
         }
     }
 
-    /** Case-insensitive lookup by primary name or alias. */
+    private val allByName: Map<String, List<FunctionDef>> by lazy {
+        buildMap<String, MutableList<FunctionDef>> {
+            for (def in functions) {
+                for (key in (listOf(def.name) + def.aliases).map(::nameKey).distinct()) getOrPut(key, ::mutableListOf) += def
+            }
+        }
+    }
+
+    /**
+     * Case-insensitive lookup by primary name or alias. A name defined under several kinds
+     * (DuckDB `range` as scalar and table function) returns the LAST such def; use [getAll]
+     * to see every one.
+     */
     operator fun get(name: String): FunctionDef? = byName[name.uppercase()]
+
+    /** Every def registered under [name] (primary name or alias), across kinds, by [caseSensitive]. */
+    fun getAll(name: String): List<FunctionDef> = allByName[nameKey(name)].orEmpty()
+
+    /** [name] as the dialect compares names: unchanged when [caseSensitive], else uppercased. */
+    internal fun nameKey(name: String): String = if (caseSensitive) name else name.uppercase()
 
     operator fun contains(name: String): Boolean = byName.containsKey(name.uppercase())
 
