@@ -62,6 +62,21 @@ class PipeSplitResult(
     )
 }
 
+/** Where run-to-stage may cut a pipe program; see [PipeStageSplitter.topLevelPrefixAt]. */
+sealed interface PipeStageCut {
+    /**
+     * [sql] is the program through its last token in top-level [stage], a 0-based index into
+     * [PipeSplitResult.stages] of [stageCount].
+     */
+    data class Prefix(val sql: String, val stage: Int, val stageCount: Int) : PipeStageCut
+
+    /** Stages inside a bracketed pipeline are not top-level stages. */
+    data object InsideNestedPipeline : PipeStageCut
+
+    /** Fewer than two stages, an offset outside every stage, or untokenizable text. */
+    data object Unavailable : PipeStageCut
+}
+
 /**
  * Splits a pipe-syntax SQL query (`FROM t |> WHERE ... |> ...`) into raw stages.
  *
@@ -131,6 +146,44 @@ object PipeStageSplitter {
             stages = stages,
             pipeOperatorCount = pipeOperatorCount,
         )
+    }
+
+    /**
+     * The executable prefix of [sql] for running up to the top-level stage at [offset], a caret
+     * position in `0..sql.length`. Stage ranges are half-open: a stage owns everything from its
+     * first token up to the next stage's first token, and the last stage owns the rest of [sql].
+     * A bracketed pipeline owns the positions from just before its `(` through just before its `)`.
+     */
+    fun topLevelPrefixAt(sql: String, offset: Int, dialect: String = ""): PipeStageCut {
+        if (offset !in 0..sql.length) return PipeStageCut.Unavailable
+        val split = try {
+            split(sql, dialect)
+        } catch (_: TokenError) {
+            return PipeStageCut.Unavailable
+        }
+        if (split.isInsideNestedPipeline(offset)) return PipeStageCut.InsideNestedPipeline
+        val stages = split.stages
+        val stage = stages.indexOfLast { offset >= it.start }
+        if (stages.size < 2 || stage < 0) return PipeStageCut.Unavailable
+        return PipeStageCut.Prefix(sql.substring(0, stages[stage].endInclusive + 1), stage, stages.size)
+    }
+
+    private class Bracket(val start: Int) {
+        var hasPipe = false
+    }
+
+    private fun PipeSplitResult.isInsideNestedPipeline(offset: Int): Boolean {
+        val open = ArrayList<Bracket>()
+        for (token in tokens) when (token.tokenType) {
+            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> open.add(Bracket(token.start))
+            TokenType.PIPE_GT -> open.lastOrNull()?.hasPipe = true
+            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> open.removeLastOrNull()?.let {
+                if (it.hasPipe && offset in it.start..token.end) return true
+            }
+            else -> {}
+        }
+        // An unclosed pipeline extends to the end of the text.
+        return open.any { it.hasPipe && offset >= it.start }
     }
 
     /**
