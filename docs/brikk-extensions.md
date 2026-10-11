@@ -1,6 +1,6 @@
 # brikk-sql extensions registry — deliberate divergences from sqlglot
 
-brikk-sql is a SQLGlot-derived Kotlin engine (pinned: `v30.18.0-43-g3ca82489`), checked by
+brikk-sql is a SQLGlot-derived Kotlin engine (branch pin: `v30.22.0-5-ga00dc2e5c`), checked by
 differential and semantic gates. This file registers where brikk **deliberately diverges**
 from or **extends beyond** sqlglot, so that upstream syncs know exactly where conflicts
 can arise: when a future sqlglot version adds its own handling for one of these, the
@@ -1705,9 +1705,32 @@ limitations remain independently inventoried. None of these counts approves a
 failure signature. New hand-owned TargetBehavior/TargetByte/TargetTyping tests,
 native result tests and all existing compatibility/corpus gates pass.
 
-This is verified branch integration, not publication, merge or downstream compiler
-verification. Native Doris follow-up and an explicitly authorized candidate check
-remain tracked separately.
+This is verified branch integration, not publication or merge. The original port
+rounds above describe their then-current pin/overlay state; this coherent refresh
+supersedes their temporary drift rows and policies. Final native and downstream
+candidate evidence follows below.
+
+### Final native and downstream candidate validation
+
+`DorisCatchupResultTest` runs the shared MySQL-family escape/comment, IF/CASE,
+DATE_ADD/SUB and generic-property paths against an actual cached Doris engine.
+The image `apache/doris:all-in-one-4.1.3`, ID `4f8ae854f4d2...`, reports
+`doris-4.1.3-rc02-7126cf65d96` in SHOW FRONTENDS/BACKENDS; VERSION() is only the
+MySQL wire-compatibility value `5.7.99`. Both native and generated statements agree
+on HEX values, dates, rows and SHOW CREATE output. MySQL's singular INSERT VALUE
+normalizes to VALUES before Doris execution; Doris itself rejects singular VALUE.
+Enable this optional gate with `BRIKK_DORIS_TEST_CONTAINER`. This is not live
+4.1.4.1-specific feature proof, a production-database probe or a new Doris SQL-mode
+equivalence claim.
+
+The exact private core/metadata JARs from `dd1ea09` pass 163 peer compiler/runtime/
+schema/tooling tests, CLI plugin assembly, a real compiler-plugin smoke build and
+ten exact IDE compiler fixtures. Both relocated plugins contain the frozen target
+pin. The peer checkout stays clean on its original main commit; candidate files,
+dependency overrides, generated inputs and logs are confined to a retained scratch
+snapshot. No Maven Local or public release was published. See
+[candidate verification](engine-candidate-verification.md) for artifact hashes,
+reproduction and the limits of that gate.
 
 ## Upstream sync protocol
 

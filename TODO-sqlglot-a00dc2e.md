@@ -36,7 +36,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   true/null preserves legacy ordering and the optional-schema lineage facade. Old
   JVM signatures/default bridges and Resolver construction remain compatible.
   Shape/preparation/lineage wrappers explicitly choose null. All existing corpus
-  gates pass against the unchanged shipped oracle pin; target-fixture refresh remains below.
+  gates pass against the coherently refreshed target oracle pin (integration below).
 
 ## DuckDB
 
@@ -46,13 +46,13 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Shared numeric decoder handles byte-valued UTF-8, octal wrapping, Unicode scalar/
   surrogate pairs, unknown/truncated escapes and empty fixed escape values. Native
   DuckDB/PostgreSQL/ClickHouse profiles and control/backslash generation are wired
-  through hand-owned overlays; published TokenizerConfig constructors remain intact.
+  through generated policies; published TokenizerConfig constructors remain intact.
   Live DuckDB rows and PostgreSQL 18.4 source/generated rows pass. DuckDB NUL text
   uses CHR(0), because its escape-string parser rejects NUL/byte-UTF8 inputs with
   `pg_verifymbstr NOT IMPLEMENTED`; those rejections are explicitly tested. LF/CRLF/
   CR, supplementary text, template ranges and generated source mapping are covered.
   Six exact PostgreSQL old-pin discrepancies (two source cases in three gates)
-  are marked temporary `oracle-pin-drift`; no live ClickHouse execution is claimed.
+  were removed at coherent refresh; no live ClickHouse string execution is claimed.
 - [x] **DDB-02 — Timestamp timezone/precision:** drop unsupported TIMESTAMP_LTZ
   precision (`9beb769dbf`, #8403); preserve TIMESTAMP_FROM_PARTS zones
   (`d2fbb215ff`, #8434). Check source-aware generation, types, NULLs and zone results.
@@ -92,7 +92,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   DuckDB whole-row aliases survive schema-less legacy inference without becoming
   invented alias.alias columns. Engine preparation/validation, types/nullability and
   source ranges remain conservative. Four reviewed declaration-class pin-drift rows
-  await refresh; all old inference signatures and policies remain intact (extension #41).
+  were removed at refresh; all old inference signatures and policies remain intact (extension #41).
 - [x] **DDB-08 — Arrays following subqueries:** retain every array element
   (`bea35b336c`, #8575; BigQuery follow-up `51864e76b4`). Test ARRAY/LIST_VALUE
   constructors and source-aware cross-dialect output.
@@ -101,8 +101,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   including NULL elements versus empty row arrays; nested functions/structs and later
   elements survive. Parser/serde/rendering and actual DuckDB results pass. Portable
   BigQuery outputs are executed in DuckDB; no live BigQuery result proof is claimed.
-  Sparse true-only intent flags leave existing false defaults/manifest at the shipped
-  pin until coherent refresh (extension #42).
+  Value-constructor metadata and false defaults were refreshed coherently with
+  the target fixtures (extensions #42/#50).
 
 ## Shared correctness
 
@@ -120,8 +120,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   integer source types participate in lowering without recursive typed division;
   safe-divisor guards keep that type evidence. MySQL/Doris/StarRocks native DIV
   precedence and MySQL TRUNCATE's required scale are corrected. DuckDB rows and
-  live Trino 483/MySQL 8.4.10 results pass. One exact Hive-to-Presto old-pin mismatch
-  is recorded as temporary `oracle-pin-drift`, to remove on target fixture refresh.
+  live Trino 483/MySQL 8.4.10 results pass. The exact Hive-to-Presto old-pin mismatch
+  was removed on target fixture refresh.
 - [x] **CORE-03 — Identifier escaping:** escape delimiter-escape characters
   (`d5d436bc32`, #8533), including backticks, double quotes and embedded backslashes.
 - [x] **CORE-04 — Star/USING output order:** FROM source ordering (`ee7567c86d`,
@@ -173,7 +173,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   explicit cast parameters survive parse/serde/typing/rendering. Presto removes
   unsupported parameters and reports precision loss; Trino retains them. Native
   Trino 483 values/types, NULLs and precision-sensitive DATE_ADD pass. Twelve exact
-  reviewed pin-drift rows await coherent refresh; existing ledger reasons unchanged.
+  reviewed pin-drift rows were removed at coherent refresh; existing ledger reasons unchanged.
 - [x] **CH-01 — Calendar functions:** ISO calendar directions (`0ceaf1319e`, #8494),
   toDayOfMonth/toDayOfYear (`61fc386dc7`, #8473), with week/year boundary tests.
   One-argument ISO calls parse canonically; ISO year generation and companion DuckDB
@@ -197,14 +197,15 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   actions (#8539), options/actions in any order (#8565), bare MySQL DROP (#8432),
   keyword-column typing and partition option separation. Live MySQL/PostgreSQL
   schemas match original SQL; unsupported tails stay whole Commands. Six exact
-  options-vs-actions pin-drift rows await refresh. MySQL-specific items complete:
+  options-vs-actions pin-drift rows were removed at refresh. MySQL-specific items complete:
   comment boundary/newline policies preserve constructor ABI and derivative policies;
   native escapes include NUL/SUB and preserve pattern escapes. INSERT VALUE is scoped
   to INSERT sources. Charset aliases/ASCII/UNICODE, SIGNED, DROP KEY/CHECK, table/index
   options, WEIGHT_STRING AS, charset cast lengths, IF and DATE_ADD/SUB are verified.
   Native MySQL schemas/rows/HEX values pass; three additional exact pin-drift rows
-  await refresh. WeightString has an exact target-only metadata contract (not a native
-  allowlist entry) until its generated manifest refresh. No publication requested.
+  were removed at refresh. WeightString is now in the generated manifest; its temporary
+  target-only contract is retired. Native Doris shared lexical/IF/date/property probes
+  also pass on the cached 4.1.3 engine (not live 4.1.4.1 proof). No publication requested.
 - [x] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
   (`a00dc2e5c4`, #8579); path/scalar/default/error/null behavior and target grammar.
   PostgreSQL retains raw native literal/dynamic/CASE/concatenated JSONPATH expressions.
@@ -212,7 +213,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   MySQL/Trino). Native PostgreSQL 18.4 values/types, defaults, NULLs and explicit
   SQLSTATE errors pass. Native return evidence supplies declared/TEXT shape types
   without path type/nullability guesses. Two exact Trino old-pin type-parser rows
-  await refresh; source ASTs and existing published signatures remain intact.
+  were removed at refresh; source ASTs and existing published signatures remain intact.
 
 ## Integration and oracle refresh
 
@@ -236,15 +237,19 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   leave the shipped pin unchanged while individual ports are under review.
 - [x] Review actual ledger differences by assertion ID/signature, retain curated
   reasons, remove only fixed/stale actionable entries, and preserve intentional ones.
-- [ ] Run build, full Kotlin tests, offline release tests, Engine compatibility gates,
+- [x] Run build, full Kotlin tests, offline release tests, Engine compatibility gates,
   and native DuckDB/Doris/Trino probes as applicable.
-  Build, 1,281 Kotlin tests, 38 compatibility/editor methods, two generator tests
-  and 16 release tests pass. Native DuckDB/PostgreSQL/MySQL/Trino and chDB calendar
-  tests run; embedded PG fidelity now uses 18.4.0. Native Doris follow-up remains.
-- [ ] Verify the peer compiler/runtime against an explicitly authorized candidate
-  release before final integration; SQL-side tests do not replace Kotlin plugin tests.
-- [ ] Commit/publish only when requested. Do not alter `main` or peer source during
-  this worktree task.
+  Build, 1,283 Kotlin tests, 38 compatibility/editor methods, two generator tests,
+  three candidate-gate safety tests and 16 release tests pass. Native DuckDB/Doris/
+  PostgreSQL/MySQL/Trino and chDB calendar tests run; embedded PG fidelity uses 18.4.0.
+  Four optional tests skip (Java chDB and three StarRocks tests proved in prior rounds).
+- [x] Verify the peer compiler/runtime against an explicitly authorized private
+  candidate before final integration; SQL-side tests do not replace Kotlin plugin tests.
+  Exact core/metadata JARs from `dd1ea09` pass 163 peer tests, relocated CLI/IDE plugin
+  assembly, the smoke build and ten exact IDE-compiler fixtures; peer source/main
+  remain unchanged. See [candidate evidence](docs/engine-candidate-verification.md).
+- [x] Commit/push the requested rounds on `sqlglot-catchup`. No publication or merge
+  to `main` is authorized; neither was performed. Peer source remains untouched.
 
 ## Progress log
 
@@ -350,4 +355,17 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Six obsolete PG-14 grammar rejects are removed after real PG-18 verification.
   Existing corpus deferrals remain explicit inventories, not parity claims. No
   failures are approved by counts. Native Doris and authorized downstream candidate
-  verification are the remaining integration work; no release has been published.
+  verification followed in the final round below; no release has been published.
+- Final validation round (2026-10-11): native Doris shared escapes/comments, IF/CASE,
+  DATE_ADD/SUB, generic properties and normalized MySQL INSERT VALUE rows pass on
+  `doris-4.1.3-rc02-7126cf65d96`; this is not a 4.1.4.1 execution claim. All 1,283
+  Kotlin tests pass with the configured native gates (four optional skips); build,
+  38 compatibility/editor methods, two generator, three candidate safety and sixteen
+  offline release tests pass. Private candidate validation against unchanged peer
+  commit `3cc5b5a` passes 40 runtime, 100 compiler, nine schema-input and fourteen
+  tooling tests, CLI assembly, smoke build and ten IDE compiler `2.4.20-ij262-34`
+  fixtures. Both relocated plugins contain the frozen target pin. Candidate hashes
+  and retained scratch logs are recorded in the linked evidence document. Branch
+  CI for `dd1ea09` passed; no publication, main merge or peer-source edit occurred.
+  The four isolated task containers were removed after verification; candidate
+  scratch inputs, artifacts and logs remain retained. Pausing after this round.

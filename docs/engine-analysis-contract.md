@@ -91,5 +91,8 @@ Mutation checks were performed and then reverted:
 | Change automatic inference to always disabled | 3: nullable legacy policy, single-source lineage, and Engine's two-step preparation/validation |
 | Force inference even when disabled | 5: old default-bridge behavior, explicit disabled policy, populated-schema default, empty-slot nullability safety, and unrelated-catalog validation |
 
-Neither mutation is retained. Production entry points now use the explicit split
-above; the shipped parity-oracle pin is unchanged pending the catch-up integration.
+Neither mutation is retained. Production entry points use the explicit split above.
+The catch-up branch now coherently pins parity fixtures to `v30.22.0-5-ga00dc2e5c`.
+The exact private candidate from `dd1ea09` also passes the peer compiler/runtime,
+assembly, smoke and IDE-compiler gates without publication or peer-source edits;
+see [candidate verification](engine-candidate-verification.md) for hashes and scope.
