@@ -34,6 +34,22 @@ class EditorContractTest {
         assertTrue(ranges[1].hasPipe)
     }
 
+    @Test fun unterminatedDuckdbCommentsMakeTheBoundaryOpaque() {
+        for (sql in listOf("FROM t |> LIMIT 1 /* open", "FROM t |> LIMIT 1 /* outer /* nested */")) {
+            val range = SqlScriptSnapshot.parse(sql, "duckdb").statements.single()
+            assertTrue(range.hasPipe)
+            assertNotNull(range.boundaryError)
+        }
+    }
+
+    @Test fun unterminatedTrailingCommentIsNotTrivia() {
+        val ranges = SqlScriptSnapshot.parse("SELECT 1; /* unfinished", "doris").statements
+        assertEquals(2, ranges.size)
+        assertNull(ranges[0].boundaryError)
+        assertTrue(ranges[1].hasSql)
+        assertNotNull(ranges[1].boundaryError)
+    }
+
     @Test fun parametersWithoutLowering() {
         val sql = "FROM t |> WHERE x = :value OR y = :value |> SELECT ':not_a_bind' AS s"
         val params = parseParameterOccurrences(sql, "trino")

@@ -1,9 +1,13 @@
 package dev.brikk.house.sql
 
+import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.parser.TokenizerConfigs
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Tokenizer parity tests. All expectations below were produced by running the pinned
@@ -66,6 +70,15 @@ class TokenizerTest {
             tokens.map { it.tokenType to it.text },
         )
         assertEquals(listOf(" outer /* inner */ still "), tokens[0].comments)
+    }
+
+    @Test
+    fun unterminatedCommentsFail() {
+        val tokenizer = Tokenizer(TokenizerConfigs.forName("duckdb"))
+        for (sql in listOf("SELECT 1 /* open", "SELECT 1 /* outer /* nested */")) {
+            val error = assertFailsWith<TokenError> { tokenizer.tokenize(sql) }
+            assertContains(error.message.orEmpty(), "Missing */")
+        }
     }
 
     @Test

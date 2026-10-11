@@ -307,6 +307,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 }
             }
 
+            if (commentCount != 0) {
+                throw TokenError("Missing $commentEnd from $commentStartLine:$start")
+            }
+
             val t = text
             val sliceEnd = t.length - commentEndSize + 1
             comments.add(if (sliceEnd < commentStartSize) "" else t.substring(commentStartSize, sliceEnd))
