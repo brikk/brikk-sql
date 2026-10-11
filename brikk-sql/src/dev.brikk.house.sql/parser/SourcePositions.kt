@@ -34,7 +34,14 @@ fun sourceOffset(
     if (relative < 0) return null
     return when (unit) {
         ColumnUnit.UTF16 -> relative.takeIf { it <= lineEnd - lineStart }?.let { lineStart + it }
-        ColumnUnit.CODE_POINT -> relative.takeIf { it <= text.codePointCount(lineStart, lineEnd) }
-            ?.let { text.offsetByCodePoints(lineStart, it) }
+        ColumnUnit.CODE_POINT -> {
+            var index = lineStart
+            repeat(relative) {
+                if (index >= lineEnd) return null
+                val pair = text[index].isHighSurrogate() && index + 1 < lineEnd && text[index + 1].isLowSurrogate()
+                index += if (pair) 2 else 1
+            }
+            index
+        }
     }
 }
