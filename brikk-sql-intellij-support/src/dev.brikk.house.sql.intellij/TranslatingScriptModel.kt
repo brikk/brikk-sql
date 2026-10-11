@@ -118,17 +118,17 @@ public class TranslatingScriptModel<E>(
     }
 
     override fun isActual(): Boolean = delegate.isActual && editor.document.modificationStamp == snapshot.revision
-    override fun subModel(range: TextRange?): ScriptModel<E> = TranslatingScriptModel(delegate.subModel(range), editor, adapter)
-    override fun everything(): JBIterable<E> = delegate.everything()
+    override fun subModel(range: TextRange?): ScriptModel<E>? = delegate.subModel(range)?.let { TranslatingScriptModel(it, editor, adapter) }
+    override fun everything(): JBIterable<E>? = delegate.everything()
     override fun statements(): JBIterable<out StatementIt<E>> = delegate.statements().transform { plans[key(it)]?.let(::TranslatedStatement) ?: it }
     override fun parameters(): JBIterable<out ParamIt<E>> = JBIterable.from(
         (baseParameters + plans.values.flatMap { it.parameters }).distinctBy { it.name() to it.range() })
-    override fun externals(): JBIterable<out ExternalIt<E>> = delegate.externals()
+    override fun externals(): JBIterable<out ExternalIt<E>>? = delegate.externals()
     override fun getVirtualFile(): VirtualFile? = delegate.virtualFile
     override fun getTextRange(): TextRange? = delegate.textRange
     override fun getLanguage(): Language = delegate.language
-    override fun <EE : Any?> rawTransform(transform: com.intellij.util.Function<in SyntaxTraverser<E>, out SyntaxTraverser<EE>>): ScriptModel<EE> =
-        TranslatingScriptModel(delegate.rawTransform(transform), editor, adapter)
+    override fun <EE : Any?> rawTransform(transform: com.intellij.util.Function<in SyntaxTraverser<E>, out SyntaxTraverser<EE>>): ScriptModel<EE>? =
+        delegate.rawTransform(transform)?.let { TranslatingScriptModel(it, editor, adapter) }
 
     private inner class TranslatedStatement(private val plan: Plan) : StatementIt<E> {
         override fun query() = plan.rendered?.sql ?: plan.original
