@@ -7,10 +7,11 @@ import java.util.concurrent.CancellationException
 
 /** Exact document identity/revision. A later edit-and-revert also invalidates work. */
 class EditorSnapshot private constructor(val document: Document, val text: String, val revision: Long) {
+    /** Throws [SqlExecutionRefusal] for stale input; cancellation propagates unchanged. */
     fun requireCurrent() {
         ProgressManager.checkCanceled()
-        check(document.modificationStamp == revision && document.text == text) {
-            "SQL changed during preparation. Run the current statement again."
+        if (document.modificationStamp != revision || document.text != text) {
+            throw SqlExecutionRefusal("SQL changed during preparation. Run the current statement again.")
         }
     }
     companion object {

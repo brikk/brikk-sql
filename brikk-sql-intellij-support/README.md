@@ -12,7 +12,8 @@ It registers no extensions itself and has no SQL engine or Kotlin IDE dependency
   presentation and captured-predecessor delegation. Only `DECLINED` delegates.
 - `CooperativeExecutePromoter`: promote the underlying database action via the
   public registered promoter, then map back to the installed wrapper.
-- `EditorSnapshot`: reject stale document identity/revisions, including edit/revert.
+- `EditorSnapshot`: refuse stale document identity/revisions, including edit/revert,
+  with `SqlExecutionRefusal`. Cancellation propagates unchanged.
 - `TranslatingScriptModel`: preserve statement anchors and parameter prompting,
   replace only claimed statements, then finalize all translations before submission.
 - `SqlExecutionAdapter`: product-owned claims, translation, parameter ranges and
