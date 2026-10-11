@@ -20,15 +20,16 @@ fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccur
 /**
  * [sql] with every named placeholder ([ParamStyle.NAMED_COLON] in any spelling the dialect
  * parses) replaced by the scalar `0` padded with spaces, so a native parser can check the
- * statement before substitution. Offsets and length are unchanged. Refusals propagate as in
- * [parseParameterOccurrences].
+ * statement before substitution. Offsets, length and line breaks are unchanged, so native
+ * error positions address [sql] too. Refusals propagate as in [parseParameterOccurrences].
  */
 fun maskNamedParameters(sql: String, dialect: String): String {
     val masked = StringBuilder(sql)
     for (parameter in parseParameterOccurrences(sql, dialect)) {
         if (parameter.style != ParamStyle.NAMED_COLON) continue
         val (start, end) = parameter.range
-        masked.setRange(start, end, "0".padEnd(end - start))
+        masked[start] = '0'
+        for (index in start + 1 until end) if (sql[index] != '\r' && sql[index] != '\n') masked[index] = ' '
     }
     return masked.toString()
 }

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.shape
 
+import dev.brikk.house.sql.parser.sourceOffset
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,6 +21,15 @@ class MaskNamedParametersTest {
             assertEquals(masked, result, dialect)
             assertTrue(parseParameterOccurrences(result, dialect).none { it.style == ParamStyle.NAMED_COLON }, dialect)
         }
+    }
+
+    @Test
+    fun lineBreaksInsideAPlaceholderSurviveSoNativePositionsStillMap() {
+        val sql = "SELECT :\r\nname, bad FROM t"
+        val masked = maskNamedParameters(sql, "duckdb")
+        assertEquals("SELECT 0\r\n    , bad FROM t", masked)
+        val badColumn = sql.indexOf("bad") - sql.indexOf('\n')
+        assertEquals(sql.indexOf("bad"), sourceOffset(masked, 2, badColumn))
     }
 
     @Test
