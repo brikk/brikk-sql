@@ -38,6 +38,12 @@ changes execution, materialized-view refresh, WAL reads, and platform dependenci
 neither SQL grammar file nor the parser facade changes. The 4.1.4 grammar pin
 therefore remains current for this parser artifact, without claiming an engine upgrade.
 
+Separately verified 2026-10-11: the catch-up native gate now executes official
+digest-pinned FE/BE images reporting `doris-4.1.4.1-rc02-5dbec55b399`, including
+the hotfix's nullable JSON Boolean OR/CASE regression. See
+[native execution evidence](../docs/doris-native-catchup-verification.md); the
+grammar artifact above and historical probe provenance are not relabeled.
+
 Verify the committed binary before use or refresh:
 
 ```bash

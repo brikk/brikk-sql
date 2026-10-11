@@ -7,10 +7,10 @@ import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.eliminateQualify
 import dev.brikk.house.sql.generator.eliminateSemiAndAntiJoins
-import dev.brikk.house.sql.parser.PostgresTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -49,7 +49,7 @@ open class PostgresGenerator(
     identify: kotlin.Any = false,
     comments: Boolean = true,
     normalizeFunctions: kotlin.Any = "upper",
-    tokenizerConfig: TokenizerConfig = PostgresTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.POSTGRES,
     // extra dispatch overlay for subclasses (sqlglot: further TRANSFORMS merges)
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
@@ -65,6 +65,25 @@ open class PostgresGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.POSTGRES
+
+    override fun bytestringSql(expression: ByteString): String {
+        if (expression.args["is_bytes"] != true) return super.bytestringSql(expression)
+        if (expression.name.any { it.code > 255 }) throw UnsupportedError("ByteString contains non-byte characters")
+        return func("DECODE", Literal.string(expression.name.map { it.code.toString(16).padStart(2, '0') }.joinToString("")), Literal.string("hex"))
+    }
+
+    private fun lateralUnnestOrdinalitySql(expression: Lateral): String? {
+        val unnest = expression.thisArg as? Unnest ?: return null
+        val offset = unnest.args["offset"]
+        if (offset == null || offset == false) return null
+        val alias = (expression.args["alias"] as? TableAlias)?.copy()
+        if (offset is Identifier && alias != null &&
+            ((alias.args["columns"] as? List<*>)?.lastOrNull() as? Expression)?.name != offset.name) {
+            alias.append("columns", offset.copy())
+        }
+        val aliasSql = alias?.let { sql(it) }.orEmpty().let { if (it.isEmpty()) "" else " AS $it" }
+        return "LATERAL UNNEST(${expressions(unnest, flat = true)}) WITH ORDINALITY$aliasSql"
+    }
 
     // ------------------------------------------------------------------
     // Flags (sqlglot: PostgresGenerator class attributes)
@@ -102,7 +121,7 @@ open class PostgresGenerator(
     override val byteStart: String? get() = "e'"
     override val byteEnd: String? get() = "'"
     override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
-    override val escapedSequences: Map<String, String> get() = MysqlGenerator.ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
 
     // sqlglot: Postgres dialect-level flags read by the generator
     override val dialectTablesampleSizeIsPercent: Boolean get() = true
@@ -148,7 +167,7 @@ open class PostgresGenerator(
 
     // sqlglot: PostgresGenerator.lateral_sql
     override fun lateralSql(expression: Lateral): String {
-        var sql = super.lateralSql(expression)
+        var sql = lateralUnnestOrdinalitySql(expression) ?: super.lateralSql(expression)
 
         if (expression.args.containsKey("cross_apply") && expression.args["cross_apply"] != null) {
             sql = "$sql ON TRUE"

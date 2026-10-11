@@ -1,7 +1,27 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "mysql",
   "identity": [
+    {
+      "sql": "INSERT INTO t VALUE (1)",
+      "expected": "INSERT INTO t VALUES (1)",
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO t (a) value (1), (2)",
+      "expected": "INSERT INTO t (a) VALUES (1), (2)",
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO value (value) VALUE (1)",
+      "expected": "INSERT INTO value (value) VALUES (1)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT value FROM value",
+      "expected": null,
+      "pretty": false
+    },
     {
       "sql": "DROP TEMPORARY TABLE IF EXISTS db.t1, t2 CASCADE",
       "expected": null,
@@ -159,6 +179,26 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t DROP KEY k",
+      "expected": "ALTER TABLE t DROP INDEX k",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a BIGINT SIGNED, b DECIMAL(5, 2) SIGNED)",
+      "expected": "CREATE TABLE t (a BIGINT, b DECIMAL(5, 2))",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT SIGNED NOT NULL",
+      "expected": "ALTER TABLE t ADD COLUMN a INT NOT NULL",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN a, ALGORITHM=INPLACE",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "ALTER TABLE test_table MODIFY COLUMN test_column LONGTEXT",
       "expected": null,
       "pretty": false
@@ -264,6 +304,16 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t ENGINE=InnoDB PARTITION BY LIST (a) (PARTITION p0 VALUES IN (1))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8",
+      "expected": "ALTER TABLE t ROW_FORMAT=COMPRESSED, KEY_BLOCK_SIZE=8",
+      "pretty": false
+    },
+    {
       "sql": "ALTER VIEW v AS SELECT a, b, c, d FROM foo",
       "expected": null,
       "pretty": false
@@ -363,6 +413,11 @@
     },
     {
       "sql": "INSERT INTO x VALUES (1, 'a', 2.0) ON DUPLICATE KEY UPDATE x.id = 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO t (id, a) VALUES (1, FALSE) ON DUPLICATE KEY UPDATE a = x OR y, b = x AND y",
       "expected": null,
       "pretty": false
     },
@@ -532,6 +587,21 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t ADD PRIMARY KEY (a) KEY_BLOCK_SIZE=8",
+      "expected": "ALTER TABLE t ADD PRIMARY KEY (a) KEY_BLOCK_SIZE = 8",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD PRIMARY KEY (a) COMMENT 'c'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT, PRIMARY KEY (a) USING BTREE KEY_BLOCK_SIZE = 8 COMMENT 'c')",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "ALTER TABLE t ADD UNIQUE KEY u (c(20))",
       "expected": "ALTER TABLE t ADD UNIQUE u (c(20))",
       "pretty": false
@@ -547,8 +617,38 @@
       "pretty": false
     },
     {
+      "sql": "CREATE TABLE t (a INT) KEY_BLOCK_SIZE=8",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT) ENGINE=InnoDB KEY_BLOCK_SIZE=8 MAX_ROWS=100",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "CREATE TABLE t (c DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC",
       "expected": "CREATE TABLE t (c DATETIME DEFAULT CURRENT_TIMESTAMP() ON UPDATE CURRENT_TIMESTAMP()) DEFAULT CHARACTER SET=utf8 ROW_FORMAT=DYNAMIC",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN c VARCHAR(25) ASCII NULL, ADD COLUMN a BINARY(16) NULL",
+      "expected": "ALTER TABLE t ADD COLUMN c VARCHAR(25) CHARACTER SET latin1 NULL, ADD COLUMN a BINARY(16) NULL",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a VARCHAR(5) UNICODE BINARY, b VARCHAR(5) BINARY ASCII)",
+      "expected": "CREATE TABLE t (a VARCHAR(5) CHARACTER SET ucs2 BINARY, b VARCHAR(5) BINARY CHARACTER SET latin1)",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT) ENGINE=InnoDB, COMMENT='c' ROW_FORMAT=DYNAMIC",
+      "expected": "CREATE TABLE t (a INT) ENGINE=InnoDB COMMENT='c' ROW_FORMAT=DYNAMIC",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (a INT) ENGINE=InnoDB, /* c */ ROW_FORMAT=DYNAMIC",
+      "expected": "CREATE TABLE t (a INT) ENGINE=InnoDB /* c */ ROW_FORMAT=DYNAMIC",
       "pretty": false
     },
     {
@@ -583,6 +683,11 @@
     },
     {
       "sql": "ALTER TABLE t RENAME INDEX a TO b",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t RENAME INDEX any TO b",
       "expected": null,
       "pretty": false
     },
@@ -652,6 +757,12 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t ADD COLUMN c INT SECONDARY_ENGINE_ATTRIBUTE='{}', ADD COLUMN z INT",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
       "sql": "CREATE TABLE t1 (id INT KEY AUTO_INCREMENT)",
       "expected": "CREATE TABLE t1 (id INT PRIMARY KEY AUTO_INCREMENT)",
       "pretty": false
@@ -664,6 +775,76 @@
     {
       "sql": "CREATE TABLE t1 (id INT KEY)",
       "expected": "CREATE TABLE t1 (id INT PRIMARY KEY)",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b",
+      "expected": "ALTER TABLE t DROP COLUMN b",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b, DROP c",
+      "expected": "ALTER TABLE t DROP COLUMN b, DROP COLUMN c",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b RESTRICT",
+      "expected": "ALTER TABLE t DROP COLUMN b RESTRICT",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP materialized",
+      "expected": "ALTER TABLE t DROP COLUMN materialized",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP temporary",
+      "expected": "ALTER TABLE t DROP COLUMN temporary",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP iceberg",
+      "expected": "ALTER TABLE t DROP COLUMN iceberg",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP date",
+      "expected": "ALTER TABLE t DROP COLUMN date",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP concurrently",
+      "expected": "ALTER TABLE t DROP COLUMN concurrently",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP INDEX concurrently, DROP b",
+      "expected": "ALTER TABLE t DROP INDEX concurrently, DROP COLUMN b",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP concurrently RESTRICT",
+      "expected": "ALTER TABLE t DROP COLUMN concurrently RESTRICT",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b, DROP view RESTRICT",
+      "expected": "ALTER TABLE t DROP COLUMN b, DROP COLUMN view RESTRICT",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b, DROP COLUMN any RESTRICT",
+      "expected": "ALTER TABLE t DROP COLUMN b, DROP COLUMN any RESTRICT",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN charset RESTRICT",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "DROP INDEX concurrently ON t",
+      "expected": null,
       "pretty": false
     },
     {
@@ -1284,6 +1465,26 @@
       "pretty": false
     },
     {
+      "sql": "SELECT CAST('ab' AS CHAR(4) CHARACTER SET utf8mb4)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CAST('ab' AS CHAR(4) CHARSET binary)",
+      "expected": "SELECT CAST('ab' AS CHAR(4) CHARACTER SET binary)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CONVERT('abc', CHAR(2) CHARACTER SET latin1)",
+      "expected": "SELECT CAST('abc' AS CHAR(2) CHARACTER SET latin1)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CONVERT('abc', CHAR CHARACTER SET latin1)",
+      "expected": "SELECT CAST('abc' AS CHAR CHARACTER SET latin1)",
+      "pretty": false
+    },
+    {
       "sql": "SELECT CONVERT(`col` USING `utf8mb4`)",
       "expected": "SELECT CAST(`col` AS CHAR CHARACTER SET utf8mb4)",
       "pretty": false
@@ -1415,6 +1616,26 @@
     },
     {
       "sql": "SHOW FULL COLUMNS FROM tbl_name FROM db_name LIKE '%foo%'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SHOW CREATE TABLE foo FROM db_name",
+      "expected": "SHOW CREATE TABLE db_name.foo",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT IF(a, 1, 2)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT IF(a, 1, IF(b, 2, 3))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CASE WHEN a THEN 1 ELSE 2 END",
       "expected": null,
       "pretty": false
     },
@@ -1587,6 +1808,21 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t FORCE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP b, ADD COLUMN c INT",
+      "expected": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN b, ADD COLUMN c INT",
+      "pretty": false
+    },
+    {
+      "sql": "DROP INDEX i ON db.t",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "UTC_TIME()",
       "expected": null,
       "pretty": false
@@ -1634,6 +1870,156 @@
     {
       "sql": "TRUNC(3.14159, 2)",
       "expected": "TRUNCATE(3.14159, 2)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT WEIGHT_STRING('ab', 0, 3, 0)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP CHECK c",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD FULLTEXT INDEX i (s)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD SPATIAL INDEX i (g)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN `cascade`",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP INDEX `restrict`",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN concurrently",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN charset",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP INDEX concurrently",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t PARTITION BY RANGE (a) (PARTITION p0 VALUES LESS THAN (10), PARTITION p1 VALUES LESS THAN MAXVALUE)",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t PARTITION BY RANGE COLUMNS (a, b) (PARTITION p0 VALUES LESS THAN (10, 20))",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t PARTITION BY LIST COLUMNS (a) (PARTITION p0 VALUES IN (1, 2))",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t PARTITION BY LIST (a) (PARTITION p0 VALUES IN (1) COMMENT = 'x')",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t PARTITION BY RANGE (a) (PARTITION p0 VALUES LESS THAN (10) ENGINE = InnoDB)",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN b, ADD COLUMN c INT, DROP COLUMN d",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD INDEX `i` (`a`), DROP INDEX `j`",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP INDEX i, ADD FULLTEXT INDEX i1 (s)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD CONSTRAINT c UNIQUE (a), DROP CONSTRAINT d",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ALTER COLUMN c SET DEFAULT 1, ADD COLUMN d INT",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP INDEX concurrently",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP INDEX concurrently, DROP COLUMN b",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN concurrently",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN concurrently RESTRICT",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN any RESTRICT",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, RENAME INDEX any TO b",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN charset",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT WEIGHT_STRING('ab')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT WEIGHT_STRING('1' AS CHAR(1))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT WEIGHT_STRING('ab' AS BINARY(4))",
+      "expected": null,
       "pretty": false
     },
     {
@@ -2215,6 +2601,13 @@
       "write": {}
     },
     {
+      "sql": "WITH x AS (SELECT 1 AS id), y AS (SELECT 2 AS id) SELECT COALESCE(x.id, y.id) AS id FROM x LEFT JOIN y ON x.id = y.id UNION ALL SELECT COALESCE(x.id, y.id) AS id FROM x RIGHT JOIN y ON x.id = y.id WHERE NOT EXISTS(SELECT 1 FROM x WHERE x.id = y.id) ORDER BY 1 LIMIT 1 OFFSET 1",
+      "read": {
+        "postgres": "WITH x AS (SELECT 1 AS id), y AS (SELECT 2 AS id) SELECT COALESCE(x.id, y.id) AS id FROM x FULL JOIN y ON x.id = y.id ORDER BY 1 LIMIT 1 OFFSET 1"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT * FROM t1 LEFT OUTER JOIN t2 ON t1.x = t2.x UNION ALL SELECT * FROM t1 RIGHT OUTER JOIN t2 ON t1.x = t2.x WHERE NOT EXISTS(SELECT 1 FROM t1 WHERE t1.x = t2.x)",
       "read": {
         "postgres": "SELECT * FROM t1 FULL OUTER JOIN t2 ON t1.x = t2.x"
@@ -2362,7 +2755,7 @@
       "read": {},
       "write": {
         "mysql": "GROUP_CONCAT(DISTINCT x ORDER BY y DESC SEPARATOR ',')",
-        "sqlite": "GROUP_CONCAT(DISTINCT x)",
+        "sqlite": "GROUP_CONCAT(DISTINCT x ORDER BY y DESC)",
         "tsql": "STRING_AGG(x, ',') WITHIN GROUP (ORDER BY y DESC)",
         "databricks": "LISTAGG(DISTINCT x, ',') WITHIN GROUP (ORDER BY y DESC)",
         "postgres": "STRING_AGG(DISTINCT x, ',' ORDER BY y DESC NULLS LAST)"
@@ -2373,7 +2766,7 @@
       "read": {},
       "write": {
         "mysql": "GROUP_CONCAT(x ORDER BY y SEPARATOR z)",
-        "sqlite": "GROUP_CONCAT(x, z)",
+        "sqlite": "GROUP_CONCAT(x, z ORDER BY y)",
         "tsql": "STRING_AGG(x, z) WITHIN GROUP (ORDER BY y)",
         "databricks": "LISTAGG(x, z) WITHIN GROUP (ORDER BY y)",
         "postgres": "STRING_AGG(x, z ORDER BY y NULLS FIRST)"
@@ -2384,7 +2777,7 @@
       "read": {},
       "write": {
         "mysql": "GROUP_CONCAT(DISTINCT x ORDER BY y DESC SEPARATOR '')",
-        "sqlite": "GROUP_CONCAT(DISTINCT x, '')",
+        "sqlite": "GROUP_CONCAT(DISTINCT x, '' ORDER BY y DESC)",
         "tsql": "STRING_AGG(x, '') WITHIN GROUP (ORDER BY y DESC)",
         "databricks": "LISTAGG(DISTINCT x, '') WITHIN GROUP (ORDER BY y DESC)",
         "postgres": "STRING_AGG(DISTINCT x, '' ORDER BY y DESC NULLS LAST)"
@@ -2429,7 +2822,7 @@
       "read": {},
       "write": {
         "mysql": "GROUP_CONCAT(CONCAT(a, b, c) ORDER BY d SEPARATOR '')",
-        "sqlite": "GROUP_CONCAT(a || b || c, '')",
+        "sqlite": "GROUP_CONCAT(a || b || c, '' ORDER BY d)",
         "tsql": "STRING_AGG(a + b + c, '') WITHIN GROUP (ORDER BY d)",
         "databricks": "LISTAGG(CONCAT(a, b, c), '') WITHIN GROUP (ORDER BY d)",
         "postgres": "STRING_AGG(a || b || c, '' ORDER BY d NULLS FIRST)"
@@ -2440,7 +2833,7 @@
       "read": {},
       "write": {
         "mysql": "GROUP_CONCAT(DISTINCT CONCAT(a, b, c) ORDER BY d SEPARATOR '')",
-        "sqlite": "GROUP_CONCAT(DISTINCT a || b || c, '')",
+        "sqlite": "GROUP_CONCAT(DISTINCT a || b || c, '' ORDER BY d)",
         "tsql": "STRING_AGG(a + b + c, '') WITHIN GROUP (ORDER BY d)",
         "databricks": "LISTAGG(DISTINCT CONCAT(a, b, c), '') WITHIN GROUP (ORDER BY d)",
         "postgres": "STRING_AGG(DISTINCT a || b || c, '' ORDER BY d NULLS FIRST)"
@@ -2453,6 +2846,28 @@
         "mysql": "CREATE TABLE `t_customer_account` (\n  `id` INT(11) NOT NULL AUTO_INCREMENT,\n  `customer_id` INT(11) DEFAULT NULL COMMENT '客户id',\n  `bank` VARCHAR(100) COLLATE utf8_bin DEFAULT NULL COMMENT '行别',\n  `account_no` VARCHAR(100) COLLATE utf8_bin DEFAULT NULL COMMENT '账号',\n  PRIMARY KEY (`id`)\n)\nENGINE=InnoDB\nAUTO_INCREMENT=1\nDEFAULT CHARACTER SET=utf8\nCOLLATE=utf8_bin\nCOMMENT='客户账户表'"
       },
       "pretty": true
+    },
+    {
+      "sql": "SELECT IF(a, 1, 2)",
+      "read": {
+        "bigquery": "SELECT IF(a, 1, 2)",
+        "tsql": "SELECT IIF(a, 1, 2)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT IF(a, 1, NULL)",
+      "read": {
+        "spark": "SELECT IF(a, 1)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT IF(a, 1, NULL)",
+      "read": {
+        "presto": "SELECT IF(a, 1)"
+      },
+      "write": {}
     },
     {
       "sql": "SHOW INDEX FROM bar.foo",
@@ -2630,11 +3045,53 @@
         "duckdb": "SELECT t1.x + t2.y AS s FROM t1 JOIN t2 ON t1.id = t2.id ORDER BY s"
       },
       "write": {}
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(v ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v) AS v FROM t",
+      "read": {
+        "trino": "SELECT ARRAY_AGG(v ORDER BY v) AS v FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(v ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v SEPARATOR ',') AS v FROM t",
+      "read": {
+        "trino": "SELECT LISTAGG(v, ',') WITHIN GROUP (ORDER BY v) AS v FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT x AS v, GROUP_CONCAT(v ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v) AS w FROM t GROUP BY x",
+      "read": {
+        "trino": "SELECT x AS v, ARRAY_AGG(v ORDER BY v) AS w FROM t GROUP BY x"
+      },
+      "write": {}
+    },
+    {
+      "sql": "WITH c AS (SELECT a AS v, b AS x FROM t UNION ALL SELECT a, b FROM u ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v LIMIT 1) SELECT x AS v FROM c",
+      "read": {
+        "postgres": "WITH c AS (SELECT a AS v, b AS x FROM t UNION ALL SELECT a, b FROM u ORDER BY v LIMIT 1) SELECT x AS v FROM c"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT a + 1 AS v FROM t UNION ALL SELECT b FROM u ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v",
+      "read": {
+        "trino": "SELECT a + 1 AS v FROM t UNION ALL SELECT b FROM u ORDER BY v"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT x AS v, ROW_NUMBER() OVER (ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v) AS rn FROM t",
+      "read": {
+        "postgres": "SELECT x AS v, ROW_NUMBER() OVER (ORDER BY v) AS rn FROM t"
+      },
+      "write": {}
     }
   ],
   "stats": {
-    "identity_count": 339,
-    "transpile_count": 104,
-    "skipped_dynamic": 34
+    "identity_count": 415,
+    "transpile_count": 114,
+    "skipped_dynamic": 41
   }
 }

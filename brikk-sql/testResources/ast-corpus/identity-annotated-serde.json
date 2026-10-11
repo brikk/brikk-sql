@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
  "fixture": "tests/fixtures/identity.sql",
  "dialect": "",
  "case_count": 984,
@@ -63825,7 +63825,7 @@
        "i": 0,
        "k": "this",
        "c": "DataType.Type",
-       "v": "INT"
+       "v": "UNKNOWN"
       }
      ]
     },
@@ -63974,7 +63974,7 @@
        "i": 0,
        "k": "this",
        "c": "DataType.Type",
-       "v": "INT"
+       "v": "UNKNOWN"
       }
      ]
     },
@@ -65054,7 +65054,7 @@
        "i": 0,
        "k": "this",
        "c": "DataType.Type",
-       "v": "INT"
+       "v": "UNKNOWN"
       }
      ]
     },
@@ -65203,7 +65203,7 @@
        "i": 0,
        "k": "this",
        "c": "DataType.Type",
-       "v": "INT"
+       "v": "UNKNOWN"
       }
      ]
     },
@@ -111963,7 +111963,7 @@
     {
      "i": 16,
      "k": "this",
-     "c": "sqlglot.expressions.core.Anonymous",
+     "c": "sqlglot.expressions.array.Stack",
      "t": [
       {
        "c": "sqlglot.expressions.datatypes.DataType"
@@ -111985,12 +111985,6 @@
     {
      "i": 17,
      "k": "this",
-     "v": "STACK"
-    },
-    {
-     "i": 17,
-     "k": "expressions",
-     "a": true,
      "c": "sqlglot.expressions.core.Literal",
      "t": [
       {
@@ -112012,12 +112006,12 @@
      }
     },
     {
-     "i": 19,
+     "i": 18,
      "k": "this",
      "v": "1"
     },
     {
-     "i": 19,
+     "i": 18,
      "k": "is_string",
      "v": false
     },
@@ -112046,12 +112040,12 @@
      }
     },
     {
-     "i": 22,
+     "i": 21,
      "k": "this",
      "v": "2"
     },
     {
-     "i": 22,
+     "i": 21,
      "k": "is_string",
      "v": false
     },
@@ -112082,7 +112076,7 @@
      ]
     },
     {
-     "i": 27,
+     "i": 26,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "t": [
@@ -112104,12 +112098,12 @@
      }
     },
     {
-     "i": 28,
+     "i": 27,
      "k": "this",
      "v": "tf"
     },
     {
-     "i": 28,
+     "i": 27,
      "k": "quoted",
      "v": false
     }
@@ -112354,7 +112348,7 @@
     {
      "i": 16,
      "k": "this",
-     "c": "sqlglot.expressions.core.Anonymous",
+     "c": "sqlglot.expressions.array.Stack",
      "t": [
       {
        "c": "sqlglot.expressions.datatypes.DataType"
@@ -112376,12 +112370,6 @@
     {
      "i": 17,
      "k": "this",
-     "v": "STACK"
-    },
-    {
-     "i": 17,
-     "k": "expressions",
-     "a": true,
      "c": "sqlglot.expressions.core.Literal",
      "t": [
       {
@@ -112403,12 +112391,12 @@
      }
     },
     {
-     "i": 19,
+     "i": 18,
      "k": "this",
      "v": "1"
     },
     {
-     "i": 19,
+     "i": 18,
      "k": "is_string",
      "v": false
     },
@@ -112437,12 +112425,12 @@
      }
     },
     {
-     "i": 22,
+     "i": 21,
      "k": "this",
      "v": "2"
     },
     {
-     "i": 22,
+     "i": 21,
      "k": "is_string",
      "v": false
     },
@@ -112473,7 +112461,7 @@
      ]
     },
     {
-     "i": 27,
+     "i": 26,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "t": [
@@ -112495,17 +112483,17 @@
      }
     },
     {
-     "i": 28,
+     "i": 27,
      "k": "this",
      "v": "tf"
     },
     {
-     "i": 28,
+     "i": 27,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 27,
+     "i": 26,
      "k": "columns",
      "a": true,
      "c": "sqlglot.expressions.core.Identifier",
@@ -112528,17 +112516,17 @@
      }
     },
     {
-     "i": 31,
+     "i": 30,
      "k": "this",
      "v": "col0"
     },
     {
-     "i": 31,
+     "i": 30,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 27,
+     "i": 26,
      "k": "columns",
      "a": true,
      "c": "sqlglot.expressions.core.Identifier",
@@ -112561,17 +112549,17 @@
      }
     },
     {
-     "i": 34,
+     "i": 33,
      "k": "this",
      "v": "col1"
     },
     {
-     "i": 34,
+     "i": 33,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 27,
+     "i": 26,
      "k": "columns",
      "a": true,
      "c": "sqlglot.expressions.core.Identifier",
@@ -112594,12 +112582,12 @@
      }
     },
     {
-     "i": 37,
+     "i": 36,
      "k": "this",
      "v": "col2"
     },
     {
-     "i": 37,
+     "i": 36,
      "k": "quoted",
      "v": false
     }
@@ -180870,7 +180858,8 @@
        "c": "DataType.Type",
        "v": "UNKNOWN"
       }
-     ]
+     ],
+     "m": {}
     },
     {
      "i": 45,
@@ -195907,7 +195896,8 @@
        "c": "DataType.Type",
        "v": "UNKNOWN"
       }
-     ]
+     ],
+     "m": {}
     },
     {
      "i": 22,
@@ -196389,7 +196379,8 @@
        "c": "DataType.Type",
        "v": "UNKNOWN"
       }
-     ]
+     ],
+     "m": {}
     },
     {
      "i": 34,

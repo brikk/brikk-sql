@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "fabric",
   "identity": [
     {
@@ -29,7 +29,7 @@
     },
     {
       "sql": "CAST(x AS IMAGE)",
-      "expected": "CAST(x AS VARBINARY)",
+      "expected": "CAST(x AS VARBINARY(MAX))",
       "pretty": false
     },
     {
@@ -39,12 +39,12 @@
     },
     {
       "sql": "CAST(x AS JSON)",
-      "expected": "CAST(x AS VARCHAR)",
+      "expected": "CAST(x AS VARCHAR(MAX))",
       "pretty": false
     },
     {
       "sql": "CAST(x AS MONEY)",
-      "expected": "CAST(x AS DECIMAL)",
+      "expected": "CAST(x AS DECIMAL(19, 4))",
       "pretty": false
     },
     {
@@ -69,7 +69,7 @@
     },
     {
       "sql": "CAST(x AS SMALLMONEY)",
-      "expected": "CAST(x AS DECIMAL)",
+      "expected": "CAST(x AS DECIMAL(10, 4))",
       "pretty": false
     },
     {
@@ -109,7 +109,7 @@
     },
     {
       "sql": "CAST(x AS XML)",
-      "expected": "CAST(x AS VARCHAR)",
+      "expected": "CAST(x AS VARCHAR(MAX))",
       "pretty": false
     },
     {
@@ -230,6 +230,13 @@
   ],
   "transpile": [
     {
+      "sql": "CREATE TABLE t (a DECIMAL(19, 4), b DECIMAL(10, 4), c VARCHAR(MAX), d VARBINARY(MAX), e VARCHAR(MAX))",
+      "read": {
+        "tsql": "CREATE TABLE t (a MONEY, b SMALLMONEY, c XML, d IMAGE, e JSON)"
+      },
+      "write": {}
+    },
+    {
       "sql": "CREATE TABLE t (col VARCHAR(MAX))",
       "read": {
         "postgres": "CREATE TABLE t (col VARCHAR)",
@@ -248,7 +255,7 @@
   ],
   "stats": {
     "identity_count": 45,
-    "transpile_count": 2,
+    "transpile_count": 3,
     "skipped_dynamic": 0
   }
 }

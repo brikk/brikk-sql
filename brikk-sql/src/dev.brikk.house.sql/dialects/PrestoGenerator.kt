@@ -72,6 +72,19 @@ open class PrestoGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.PRESTO
 
+    open val supportsTemporalPrecision: Boolean get() = false
+
+    override fun datatypeSql(expression: DataType): String {
+        if (!supportsTemporalPrecision && expression.thisArg in DataType.TEMPORAL_TYPES) {
+            if (expression.expressionsArg.isNotEmpty() &&
+                (expression.expressionsArg[0] as Expression).name != "3") {
+                unsupported("Presto only supports millisecond precision for temporal types")
+            }
+            expression.set("expressions", null)
+        }
+        return super.datatypeSql(expression)
+    }
+
     // ------------------------------------------------------------------
     // Flags (sqlglot: PrestoGenerator class attributes)
     // ------------------------------------------------------------------
@@ -82,6 +95,7 @@ open class PrestoGenerator(
     override val tableHints: Boolean get() = false
     override val queryHints: Boolean get() = false
     override val isBoolAllowed: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
     override val tzToWithTimeZone: Boolean get() = true
     override val nvl2Supported: Boolean get() = false
     override val structDelimiter: Pair<String, String> get() = "(" to ")"

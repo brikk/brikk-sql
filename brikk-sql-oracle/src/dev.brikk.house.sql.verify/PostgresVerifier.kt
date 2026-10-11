@@ -311,6 +311,8 @@ class PostgresVerifier internal constructor(
             "22P02", // invalid_text_representation (e.g. bad literal cast)
             "22P03", // invalid_binary_representation
             "22032", // invalid_json_text
+            "22034", // more_than_one_sql_json_item (after native JSON path evaluation)
+            "22035", // no_sql_json_item (after native JSON path evaluation)
             "2203A", // sql_json_member_not_found
             // --- Class 55: object not in prerequisite state (parses, wrong state) ---
             "55000", // object_not_in_prerequisite_state

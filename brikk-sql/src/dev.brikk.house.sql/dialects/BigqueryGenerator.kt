@@ -5,6 +5,7 @@ import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.eliminateDistinctOn
 import dev.brikk.house.sql.generator.unqualifyUnnest
@@ -65,6 +66,22 @@ open class BigqueryGenerator(
 
     override val dialect: Dialect get() = Dialects.BIGQUERY
 
+    override fun bytestringSql(expression: ByteString): String {
+        if (expression.args["is_bytes"] != true) return super.bytestringSql(expression)
+        if (expression.name.any { it.code > 255 }) throw UnsupportedError("ByteString contains non-byte characters")
+        val text = expression.name.map {
+            when {
+                it == '\'' -> "\\'"
+                escapedSequences[it.toString()] != null -> escapedSequences.getValue(it.toString())
+                it.code !in 32..126 || it == '\\' -> "\\x" + it.code.toString(16).padStart(2, '0')
+                else -> it.toString()
+            }
+        }.joinToString("")
+        return "b'$text'"
+    }
+    override fun parsejsonSql(expression: ParseJSON): String = if (expression.args["is_literal"] == true)
+        "JSON ${sql(expression, "this")}" else super.parsejsonSql(expression)
+
     // sqlglot: BigQuery.ARRAY_AGG_INCLUDES_NULLS = False
     override val dialectArrayAggIncludesNulls: Boolean get() = false
 
@@ -82,6 +99,7 @@ open class BigqueryGenerator(
     override val renameTableWithDb: Boolean get() = false
     override val nvl2Supported: Boolean get() = false
     override val unnestWithOrdinality: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
     override val collateIsFunc: Boolean get() = true
     override val limitOnlyLiterals: Boolean get() = true
     override val supportsTableAliasColumns: Boolean get() = false
@@ -729,14 +747,7 @@ open class BigqueryGenerator(
 
             // sqlglot: dialect.inline_array_unless_query
             reg(ArrayNode::class) { e ->
-                val elem = e.expressionsArg.firstOrNull() as? Expression
-                if (elem?.find(Select::class, Union::class, Except::class, Intersect::class) != null) {
-                    func("ARRAY", elem)
-                } else {
-                    "[" + expressions(
-                        e, dynamic = true, newLine = true, skipFirst = true, skipLast = true
-                    ) + "]"
-                }
+                inlineArrayUnlessQuerySql(e)
             }
             reg(ArrayContains::class) { e -> bg().arrayContainsSql(e as ArrayContains) }
             reg(AIEmbed::class) { e -> bg().renameFuncSql("EMBED", e) }

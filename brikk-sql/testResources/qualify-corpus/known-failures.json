@@ -1,3 +1,88 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:6c272145cb4abce9c0dd335b6b40442d306e2a8a51ab876d6fc2e996d23370d8:1",
+            "key": "qualify_columns::SELECT x.b FROM x JOIN y USING (b) JOIN z USING (b)",
+            "signature": "sql-mismatch:v1:sha256:08c84ff8bfd76c189be1685e2ff8c130d0712ff7506715963f9eeb6664b8e8b2",
+            "reason": "CORE-04 extension #43: subsequent USING comparisons consume the prior logical merged key, not an arbitrary original source field. Full exact diff reviewed: the second ON uses COALESCE(x.b,y.b). Native chained joins are verified; retaining merged expressions also preserves outer-join/coercion semantics. Intentional native-first divergence, not a blanket old-pin waiver.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:981cae3475c3de5dec970933cedddaa9c43b33747025ccec46eda5d67f6f6341:1",
+            "key": "qualify_columns::SELECT b FROM x JOIN y USING (b) JOIN z USING (b)",
+            "signature": "sql-mismatch:v1:sha256:d7011a40ddd932cddb813fec4f657e902521e79b041961b6c2599e00e8a903a0",
+            "reason": "CORE-04 extension #43: preserve the stage-by-stage merged expression in both the second ON and output key. Full diff reviewed: nested COALESCE(COALESCE(x.b,y.b),z.b), not a flattened source list. Native chains pass independently; logical type/coercion stages must not be discarded for parity.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:a30b189032664399a0a1b4167fde87a7683c419900e20053d120bfee33e384cf:1",
+            "key": "qualify_columns::SELECT * FROM x JOIN y USING(b)",
+            "signature": "sql-mismatch:v1:sha256:68f6691d6caf8a65d86b41c5aadd609b957040dce2688f3e42b533affdf413a0",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:0da20e31bc43a8259d05afdbaf2a6274c463142858d4a4f149493db9de86c14c:1",
+            "key": "qualify_columns::SELECT * FROM w, x JOIN y USING (b)",
+            "signature": "sql-mismatch:v1:sha256:c3d9d3855792bbb176f145d234e6ec2cb5f346e55285724fe6077bafb9e0ba7c",
+            "reason": "CORE-04 extension #43: reviewed comma-group star keeps native USING and star syntax instead of flattening separate key families. Native DuckDB original/generated labels/types/rows pass; unknown or grouped stars must not fabricate duplicate or wrongly-owned keys.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:7660e0c9c00f2aa200b9018476edc6ef68f179069222e567dc8d2b0693e5c6bf:1",
+            "key": "qualify_columns::SELECT * FROM x LEFT JOIN y USING(b)",
+            "signature": "sql-mismatch:v1:sha256:9086e478ad35edc050a2651385906d3b6d510e0ebac91efe37d5dff3a05f2d2a",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:f7781abcaf6dddc256570292aeebaec7cfa75918e515c136f5bc8c81cf1b0750:1",
+            "key": "qualify_columns::WITH t1 AS (SELECT 'x' AS id, DATE '2024-01-01' AS foo, 000 AS value), t2 AS (SELECT 'x' AS id, DATE '2024-02-02' AS foo, 123 AS value), t3 AS (SELECT 'x' AS id, DATE '2024-02-02' AS foo, 456 AS value) SELECT * FROM t1 FULL OUTER JOIN t2 USING(id, foo) FULL OUTER JOIN t3 USING(id, foo)",
+            "signature": "sql-mismatch:v1:sha256:5ec153059a8e52713108edbead6a58860b8505233ea70e4d15ae645ef85e0ae1",
+            "reason": "CORE-04 extension #43: reviewed full CTE/projection/ON diff; only output id/foo COALESCE is nested to retain the logical prior join result. All non-key projections and predicates remain present. Native FULL chains verify rows and types; intentional stage-preserving rendering.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:78af35f5c679ced61ed036c49dd4d926b03e6d5e86a048d480efc9657bc944ba:1",
+            "key": "qualify_columns::WITH t1 AS (SELECT 'x' AS id, CAST('2024-01-01' AS DATE) AS foo, 000 AS value), t2 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 123 AS value), t3 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 456 AS value) SELECT * FROM t1 FULL OUTER JOIN t2 USING (id, foo, value) FULL OUTER JOIN t3 USING (id, foo, value)",
+            "signature": "sql-mismatch:v1:sha256:af21bb31bedb2e5bdf1658b15e56d15bf4ab4baf0d2f50d7c1754281e7e8c66f",
+            "reason": "CORE-04 extension #43: full reviewed diff nests each id/foo/value merged projection; predicates still compare the prior FULL join's logical keys. No source or key is dropped. Preserve coercion/merge stages rather than flattening for oracle text parity; native FULL row/type regressions pass.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:a9b92c191d1bd95ab4597928ff1253f84f4279e006f14be446cfe865582cadc2:1",
+            "key": "qualify_columns::WITH t1 AS (SELECT 'x' AS id, CAST('2024-01-01' AS DATE) AS foo, 000 AS value), t2 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 123 AS value), t3 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 456 AS value), t4 AS (SELECT 'x' AS id, CAST('2024-03-03' AS DATE) AS foo, 789 AS value) SELECT * FROM t1 FULL OUTER JOIN t2 USING (id, foo) FULL OUTER JOIN t3 USING (id, foo) FULL OUTER JOIN t4 USING (id, foo)",
+            "signature": "sql-mismatch:v1:sha256:830ed819a9d570dffa7c384d4efca97313606710d6bd4382ba229f5e8fc869c9",
+            "reason": "CORE-04 extension #43: full reviewed diff preserves nested id/foo expressions through the third/fourth FULL joins and final projections. All four value columns remain in order. Intentional logical-stage rendering, independently tested with multi-join native rows/types, not failure-count approval.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:c9737b60dfff399c2282ea42af0837943c3787ac38f1b3d7c938c54d0a9e41fb:1",
+            "key": "qualify_columns::SELECT * FROM x NATURAL JOIN y",
+            "signature": "sql-mismatch:v1:sha256:68f6691d6caf8a65d86b41c5aadd609b957040dce2688f3e42b533affdf413a0",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:6d2b1d20bba97fdb5371c030b68e53e7271ab06d2799b209aaed2b1aabf8bc9d:1",
+            "key": "qualify_columns::SELECT b FROM x NATURAL JOIN y NATURAL JOIN z",
+            "signature": "sql-mismatch:v1:sha256:60ff87307010da51dc79a44d9629002543d3f78efc30b5cc1718fb8bc07fe8b7",
+            "reason": "CORE-04 extension #43: full diff reviewed; output b retains nested prior merged value while both existing NATURAL-derived ON predicates remain unchanged. Keeps logical type/coercion stages; intentional native-first expression form.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:197b99c609f34f86ae372a753138a0eac2b1c25b42e9a050192f18f9f8be0c70:1",
+            "key": "qualify_columns::SELECT * FROM x SEMI JOIN y USING (b) JOIN y USING (b)",
+            "signature": "sql-mismatch:v1:sha256:d25ded1ba03abad510886c57036c7e61d8dc513be2d2c10a9561266cdefa426d",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:0cdd4c6776e17f6b4fbe5d126d66fe85e2e18084f288669852e697ce2b623615:1",
+            "key": "qualify_columns::SELECT * FROM x ANTI JOIN y USING (b) JOIN y USING (b)",
+            "signature": "sql-mismatch:v1:sha256:c0c40440c73084d12cc5a4f660ac9b9e97a568777f8ffb1519f552322389c6bc",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        }
+    ]
 }

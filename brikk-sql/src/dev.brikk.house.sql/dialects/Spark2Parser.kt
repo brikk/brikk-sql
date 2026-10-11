@@ -74,6 +74,8 @@ open class Spark2Parser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.SPARK2
+    override val normalizeDecimalLiterals: Boolean get() = false
+    override val decimalLiteralsAllowNegativeScale: Boolean get() = true
 
     // sqlglot: Spark2Parser.TRIM_PATTERN_FIRST = True
     override val trimPatternFirst: Boolean get() = true
@@ -158,7 +160,11 @@ object Spark2ParserTables {
         put("SHIFTLEFT") { a -> BitwiseLeftShift(args("this" to seqGet(a, 0), "expression" to seqGet(a, 1))) }
         put("SHIFTRIGHT") { a -> BitwiseRightShift(args("this" to seqGet(a, 0), "expression" to seqGet(a, 1))) }
         put("STRING", buildAsCast("string"))
-        put("SLICE", fromArgList(listOf("this", "start", "length"), false) { ArraySlice(it) })
+        // sqlglot: Spark2Parser.FUNCTIONS[SLICE] — the third argument is a length.
+        put("SLICE") { a ->
+            ArraySlice(args("this" to seqGet(a, 0), "start" to seqGet(a, 1),
+                "end" to seqGet(a, 2), "is_length" to true))
+        }
         put("TIMESTAMP", buildAsCast("timestamp"))
         put("TO_TIMESTAMP") { a ->
             if (a.size == 1) {

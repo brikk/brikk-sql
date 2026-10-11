@@ -18,6 +18,8 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 class DorisDialect : Dialect() {
 
     override val name: String get() = "doris"
+    // sqlglot: inherited MySQL ordering; the Kotlin umbrella does not subclass MySQL.
+    override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE
 
     // sqlglot: Doris(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
@@ -59,7 +61,7 @@ class DorisDialect : Dialect() {
          * - `REFRESH` statement token; `BUILD` / `CANCEL` / `PAUSE` / `RECOVER` / `RESUME` as
          *   COMMAND so their statements degrade to Command rather than a parse error.
          */
-        val TOKENIZER_CONFIG: TokenizerConfig = DorisTokenizerTables.CONFIG.withKeywords(
+        val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DORIS.withKeywords(
             mapOf(
                 "LARGEINT" to TokenType.INT128,
                 "IPV4" to TokenType.IPV4,

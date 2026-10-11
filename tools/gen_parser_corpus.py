@@ -79,7 +79,7 @@ QUERIES = [
 def sqlglot_version() -> str:
     try:
         return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags"],
+            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
             capture_output=True,
             text=True,
             check=True,

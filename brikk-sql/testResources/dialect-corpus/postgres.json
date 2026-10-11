@@ -1,7 +1,38 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "postgres",
   "identity": [
+    {
+      "sql": "SELECT JSON_VALUE(j, '$.a' RETURNING BIGINT) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('\"2020-01-01T01:02:03\"', '$' RETURNING TIMESTAMP WITH TIME ZONE)",
+      "expected": "SELECT JSON_VALUE('\"2020-01-01T01:02:03\"', '$' RETURNING TIMESTAMPTZ)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('42', '$' RETURNING BIGINT)",
+      "expected": null,
+      "pretty": false,
+      "identify": true
+    },
+    {
+      "sql": "SELECT JSON_VALUE(j, p) FROM (VALUES (CAST('{\"a\":42}' AS JSONB), CAST('$.a' AS JSONPATH))) AS t(j, p)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":42}', '$' || '.a')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":42}', CASE WHEN TRUE THEN '$.a' ELSE '$.b' END)",
+      "expected": null,
+      "pretty": false
+    },
     {
       "sql": "UPDATE character SET x = 1",
       "expected": null,
@@ -288,13 +319,13 @@
       "pretty": false
     },
     {
-      "sql": "SELECT e'\\xDEADBEEF'",
-      "expected": null,
+      "sql": "SELECT e'\\x44EADBEEF'",
+      "expected": "SELECT e'DEADBEEF'",
       "pretty": false
     },
     {
       "sql": "SELECT CAST(e'\\176' AS BYTEA)",
-      "expected": null,
+      "expected": "SELECT CAST(e'~' AS BYTEA)",
       "pretty": false
     },
     {
@@ -1019,6 +1050,11 @@
       "pretty": false
     },
     {
+      "sql": "a ^@ b",
+      "expected": "STARTS_WITH(a, b)",
+      "pretty": false
+    },
+    {
       "sql": "SELECT '{\"a\":1, \"b\":2, \"c\":3}'::jsonb ?| array['b', 'c']",
       "expected": "SELECT CAST('{\"a\":1, \"b\":2, \"c\":3}' AS JSONB) ?| ARRAY['b', 'c']",
       "pretty": false
@@ -1197,6 +1233,11 @@
       "pretty": false
     },
     {
+      "sql": "UPDATE t SET (b, c) = (3, 4), xs[1] = 7",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "CREATE TABLE cities_partdef PARTITION OF cities DEFAULT",
       "expected": null,
       "pretty": false
@@ -1288,6 +1329,11 @@
     },
     {
       "sql": "INSERT INTO newtable AS t(a, b, c) VALUES (1, 2, 3) ON CONFLICT(c) DO UPDATE SET a = t.a + 1 WHERE t.a < 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO t (id, a) VALUES (1, FALSE) ON CONFLICT(id) DO UPDATE SET a = t.x OR t.y, b = t.x AND t.y WHERE t.id = 1 RETURNING a",
       "expected": null,
       "pretty": false
     },
@@ -1452,6 +1498,24 @@
       "sql": "ALTER TABLE foo ADD COLUMN id BIGINT NOT NULL PRIMARY KEY DEFAULT 1, ADD CONSTRAINT fk_orders_user FOREIGN KEY (id) REFERENCES foo (id)",
       "expected": null,
       "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ALTER COLUMN b RESTART",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t ALTER COLUMN b SET STATISTICS 100",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t ALTER COLUMN b OPTIONS (ADD x 'a')",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
     },
     {
       "sql": "CREATE TABLE t (col integer ARRAY[3])",
@@ -1649,12 +1713,72 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t DROP b",
+      "expected": "ALTER TABLE t DROP COLUMN b",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b, DROP c",
+      "expected": "ALTER TABLE t DROP COLUMN b, DROP COLUMN c",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b CASCADE",
+      "expected": "ALTER TABLE t DROP COLUMN b CASCADE",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP IF EXISTS b CASCADE",
+      "expected": "ALTER TABLE t DROP COLUMN IF EXISTS b CASCADE",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP type",
+      "expected": "ALTER TABLE t DROP COLUMN type",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP if",
+      "expected": "ALTER TABLE t DROP COLUMN if",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP IF EXISTS if CASCADE",
+      "expected": "ALTER TABLE t DROP COLUMN IF EXISTS if CASCADE",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b, DROP view CASCADE",
+      "expected": "ALTER TABLE t DROP COLUMN b, DROP COLUMN view CASCADE",
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN partitioned_by CASCADE",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM UNNEST(ARRAY[1, 2], ARRAY['foo', 'bar', 'baz']) AS x(a, b)",
       "expected": null,
       "pretty": false
     },
     {
       "sql": "SELECT TRIM(ARRAY_TO_STRING(ARRAY(SELECT val FROM UNNEST(ARRAY['a', 'b']) WITH ORDINALITY AS u(val, rn)), ' '))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT r.v, r.idx FROM t CROSS JOIN LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t, LATERAL UNNEST(t.a) WITH ORDINALITY AS r",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t, LATERAL UNNEST(t.a, t.b) WITH ORDINALITY AS r(x, y, idx)",
       "expected": null,
       "pretty": false
     },
@@ -1800,6 +1924,16 @@
     },
     {
       "sql": "WITH RECURSIVE search_graph(id, link, data, depth) AS (SELECT g.id, g.link, g.data, 1 FROM graph AS g UNION ALL SELECT g.id, g.link, g.data, sg.depth + 1 FROM graph AS g, search_graph AS sg WHERE g.id = sg.link) CYCLE id SET is_cycle USING path SELECT * FROM search_graph",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "WITH RECURSIVE search_graph(id, link, data, depth) AS (SELECT g.id, g.link, g.data, 1 FROM graph AS g UNION ALL SELECT g.id, g.link, g.data, sg.depth + 1 FROM graph AS g, search_graph AS sg WHERE g.id = sg.link) CYCLE id SET is_cycle TO 'Y' DEFAULT 'N' USING path SELECT * FROM search_graph",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "WITH RECURSIVE search_graph(id, link, data, depth) AS (SELECT g.id, g.link, g.data, 1 FROM graph AS g UNION ALL SELECT g.id, g.link, g.data, sg.depth + 1 FROM graph AS g, search_graph AS sg WHERE g.id = sg.link) SEARCH DEPTH FIRST BY id SET ordercol CYCLE id SET is_cycle USING path SELECT * FROM search_graph ORDER BY ordercol",
       "expected": null,
       "pretty": false
     },
@@ -1956,6 +2090,11 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t DROP COLUMN if CASCADE, DROP COLUMN b",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "1::\"int\"",
       "expected": "CAST(1 AS INT)",
       "pretty": false
@@ -1971,9 +2110,133 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t ADD COLUMN if INT",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "x::JSON -> 'duration' ->> -1",
       "expected": "CAST(x AS JSON) -> 'duration' ->> -1",
       "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN cascade",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN restrict",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP CONSTRAINT restrict",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN partitioned_by",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":42}', '$.a')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":{\"b\":42}}', '$.a.b' RETURNING BIGINT)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"my key\":42}', '$.\"my key\"' RETURNING BIGINT)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('[1,2]', 'strict $[1]' RETURNING BIGINT)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('[1,2]', 'strict $[*]' DEFAULT 9 ON ERROR)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":[1,2,3]}', 'lax $.a[*] ? (@ > 2)' RETURNING BIGINT)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{}', '$.a' RETURNING BIGINT DEFAULT 7 ON EMPTY DEFAULT 9 ON ERROR)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":\"bad\"}', '$.a' RETURNING BIGINT NULL ON EMPTY NULL ON ERROR)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('{\"a\":42}', '$.a' RETURNING BIGINT ERROR ON EMPTY ERROR ON ERROR)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT JSON_VALUE('\"123.45\"', '$' RETURNING DECIMAL(5, 2))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN b, ADD COLUMN c INT, DROP COLUMN d",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD CONSTRAINT c UNIQUE (a), DROP CONSTRAINT d",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ALTER COLUMN c SET DEFAULT 1, ADD COLUMN d INT",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN if",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, DROP COLUMN partitioned_by CASCADE",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP COLUMN b, ADD index INT",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN b INT, DROP partition",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, ALTER COLUMN b RESTART",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
+      "sql": "ALTER TABLE t ADD COLUMN a INT, ALTER COLUMN b SET STATISTICS 100",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
     },
     {
       "sql": "GRANT SELECT ON TABLE users TO role1",
@@ -2859,6 +3122,15 @@
       }
     },
     {
+      "sql": "SELECT r.v, r.idx FROM t, LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+      "read": {},
+      "write": {
+        "postgres": "SELECT r.v, r.idx FROM t, LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+        "duckdb": "SELECT r.v, r.idx FROM t, LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+        "spark": "SELECT r.v, r.idx FROM t LATERAL VIEW POSEXPLODE(t.a) r AS idx, v"
+      }
+    },
+    {
       "sql": "SELECT UNNEST(c) FROM t",
       "read": {},
       "write": {
@@ -3102,8 +3374,8 @@
     }
   ],
   "stats": {
-    "identity_count": 428,
-    "transpile_count": 99,
-    "skipped_dynamic": 17
+    "identity_count": 479,
+    "transpile_count": 100,
+    "skipped_dynamic": 20
   }
 }

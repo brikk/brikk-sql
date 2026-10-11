@@ -9,7 +9,6 @@ import dev.brikk.house.sql.ast.Map as MapNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
-import dev.brikk.house.sql.parser.ClickhouseTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -84,7 +83,7 @@ open class ClickhouseGenerator(
     comments: Boolean = true,
     // sqlglot: ClickHouse.NORMALIZE_FUNCTIONS = False
     normalizeFunctions: kotlin.Any = false,
-    tokenizerConfig: TokenizerConfig = ClickhouseTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.CLICKHOUSE,
     // extra dispatch overlay for subclasses (sqlglot: further TRANSFORMS merges)
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
@@ -100,6 +99,21 @@ open class ClickhouseGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.CLICKHOUSE
+    override fun selectSql(expression: Select): String {
+        val fetch = expression.args["limit"] as? Fetch
+        if (fetch != null && expression.args["order"] == null) {
+            expression.set("limit", Limit(args("expression" to (fetch.args["count"] ?: Literal.number(1)))))
+        }
+        return super.selectSql(expression)
+    }
+    open fun containsSql(expression: Contains): String {
+        fun operand(value: Expression?): Expression? = if (sourceDialect == null &&
+            expression.metaOrNull?.get("bigquery_name") != null && value is Lower) {
+            value.copy().also { it.meta["clickhouse_name"] = "LOWER" }
+        } else value
+        return sql(GT(args("this" to StrPosition(args("this" to operand(expression.thisArg as? Expression),
+            "substr" to operand(expression.expressionArg as? Expression))), "expression" to Literal.number(0))))
+    }
 
     // ------------------------------------------------------------------
     // Flags (sqlglot: ClickHouseGenerator class attributes)
@@ -127,6 +141,7 @@ open class ClickhouseGenerator(
     override val tableHints: Boolean get() = false
     override val groupingsSep: String get() = ""
     override val setOpModifiers: Boolean get() = false
+    override val setOpLimits: Boolean get() = true
     override val arraySizeName: String get() = "LENGTH"
     override val wrapDerivedValues: Boolean get() = false
 
@@ -146,7 +161,7 @@ open class ClickhouseGenerator(
     // sqlglot: ClickHouse STRING_ESCAPES include "\\" -> ESCAPED_SEQUENCES active
     override val dialectStringsSupportEscapedSequences: Boolean get() = true
     override val alterSetType: String get() = "TYPE"
-    override val escapedSequences: Map<String, String> get() = ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
 
     // sqlglot: ClickHouseGenerator.TYPE_MAPPING
     override val typeMapping: Map<DType, String> get() = TYPE_MAPPING
@@ -1076,6 +1091,9 @@ open class ClickhouseGenerator(
             reg(AutoRefreshProperty::class) { e -> ch().autorefreshpropertySql(e as AutoRefreshProperty) }
             reg(AnyValue::class) { e -> ch().renameFuncSql("any", e) }
             reg(ApproxDistinct::class) { e -> ch().renameFuncSql("uniq", e) }
+            reg(BitwiseAndAgg::class) { e -> ch().renameFuncSql("groupBitAnd", e) }
+            reg(BitwiseOrAgg::class) { e -> ch().renameFuncSql("groupBitOr", e) }
+            reg(BitwiseXorAgg::class) { e -> ch().renameFuncSql("groupBitXor", e) }
             // SOURCE-AWARE rewrites (SPIKE-source-aware-generator-transforms, now implemented
             // via Generator.sourceDialect / isCrossDialectFrom). These rewrites are CORRECT
             // for cross-dialect (DuckDB/Trino/Doris -> ClickHouse) but would CORRUPT a native
@@ -1091,11 +1109,13 @@ open class ClickhouseGenerator(
             //     is byte-level and errors on multibyte). Faithful CH keeps byte `translate`.
             reg(Lower::class) { e ->
                 if (ch().isCrossDialectFrom("clickhouse")) func("lowerUTF8", e.thisArg)
-                else func("lower", e.thisArg)
+                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", "name") } == true)
+                    functionFallbackSql(e as Func) else func("lower", e.thisArg)
             }
             reg(Upper::class) { e ->
                 if (ch().isCrossDialectFrom("clickhouse")) func("upperUTF8", e.thisArg)
-                else func("upper", e.thisArg)
+                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", "name") } == true)
+                    functionFallbackSql(e as Func) else func("upper", e.thisArg)
             }
             // week() semantics are SOURCE-SPECIFIC (not uniformly cross-dialect): DuckDB
             // week is ISO-8601 -> toISOWeek, but MySQL-family (Doris/MySQL) week defaults to
@@ -1128,6 +1148,10 @@ open class ClickhouseGenerator(
             // is ISO -> toISOWeek (result-identical). SAFE for CH->CH: ClickHouse never
             // parses to the WeekOfYear node, so this only fires cross-dialect (Trino->CH).
             reg(WeekOfYear::class) { e -> func("toISOWeek", e.thisArg) }
+            reg(YearOfWeekIso::class) { e -> func("toISOYear", e.thisArg) }
+            reg(VariancePop::class) { e -> func("varPop", e.thisArg) }
+            reg(Contains::class) { e -> ch().containsSql(e as Contains) }
+            reg(IsInf::class) { e -> func("isInfinite", e.thisArg) }
             // BUGS-clickhouse-generator-mappings row 9 (P2): the emitted DAY_OF_WEEK does
             // not exist in ClickHouse. toDayOfWeek is the valid name. SAFE for CH->CH:
             // ClickHouse `dayofweek` == `toDayOfWeek` (both ISO Mon=1..Sun=7, verified 7==7),

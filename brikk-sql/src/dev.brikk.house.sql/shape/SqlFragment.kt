@@ -431,6 +431,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             prepared,
             dialect = dialectObj,
             schema = schema,
+            inferSchema = null, // Explicit legacy automatic policy; Engine accepts partial inputs.
             validateQualifyColumns = false,
         )
         val typeAnnotator = TypeAnnotator(
@@ -835,6 +836,7 @@ fun expandStarModifiers(
         tree,
         dialect = dialect,
         schema = schema,
+        inferSchema = null, // Engine's disposable preparation must retain best-effort qualification.
         validateQualifyColumns = false,
         quoteIdentifiers = false,
     )

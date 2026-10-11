@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
  "fixture": "qualify_columns__invalid",
  "schema": {
   "x": {
@@ -125,6 +125,22 @@
   },
   {
    "sql": "SELECT u2.* FROM unpivotable UNPIVOT(revenue FOR month IN (jan, feb)) AS u1 CROSS JOIN x UNPIVOT(w FOR k IN (b)) AS u2",
+   "raises": true
+  },
+  {
+   "sql": "SELECT w.d FROM w JOIN y ON TRUE JOIN z ON b > 0;",
+   "raises": true
+  },
+  {
+   "sql": "SELECT w.d FROM w JOIN y ON TRUE ANTI JOIN z ON b > 0;",
+   "raises": true
+  },
+  {
+   "sql": "SELECT w.d FROM w JOIN y ON TRUE SEMI JOIN z ON b > 0;",
+   "raises": true
+  },
+  {
+   "sql": "SELECT w.d FROM w JOIN (SELECT b FROM y) AS n ON TRUE ANTI JOIN z ON b > 0;",
    "raises": true
   }
  ]

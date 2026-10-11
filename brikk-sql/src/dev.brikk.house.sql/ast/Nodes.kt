@@ -646,7 +646,7 @@ class With(initArgs: Args = emptyMap()) : Expression(initArgs) {
     companion object {
         private val ARG_TYPES = argTypesOf(
             // sqlglot: `expressions` now optional; `udfs` added to With.arg_types.
-            "expressions" to false, "recursive" to false, "search" to false, "udfs" to false,
+            "expressions" to false, "recursive" to false, "search" to false, "cycle" to false, "udfs" to false,
         )
     }
 }
@@ -753,6 +753,15 @@ class If(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
 
     companion object {
         private val ARG_TYPES = argTypesOf("this" to true, "true" to true, "false" to false)
+    }
+}
+
+/** sqlglot #8544; hand-owned until the coherent generated AST refresh. */
+class WeightString(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
+    override val argTypes get() = ARG_TYPES
+    override val sqlNamesOverride get() = listOf("WEIGHT_STRING")
+    companion object {
+        private val ARG_TYPES = argTypesOf("this" to true, "to" to false)
     }
 }
 

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.optimizer
 
+import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.DataType
@@ -36,6 +37,9 @@ class Resolver(
     val schema: Schema,
     private val inferSchema: Boolean = true,
 ) {
+    /** Upstream-shaped construction; explicit three-argument callers retain their policy. */
+    constructor(scope: Scope, schema: Schema) : this(scope, schema, inferSchema = false)
+
     val dialect: Dialect = schema.dialect ?: Dialects.BASE
 
     private var sourceColumnsAll: MutableMap<String, List<String>>? = null
@@ -43,6 +47,18 @@ class Resolver(
     private var allColumnsCache: Set<String>? = null
     private val getSourceColumnsCache = HashMap<Pair<String, Boolean>, List<String>>()
     private val columnTypeFromScopeCache = HashMap<Pair<Long, String>, DataType?>()
+    private var outerResolversCache: List<Resolver>? = null
+
+    /** Correlatable outer scopes, innermost first; reuse their column/type caches. */
+    fun outerResolvers(): List<Resolver> {
+        return outerResolversCache ?: buildList {
+            var current = scope
+            while (current.canBeCorrelated) {
+                current = current.parent ?: break
+                add(Resolver(current, schema, inferSchema))
+            }
+        }.also { outerResolversCache = it }
+    }
 
     /**
      * sqlglot: Resolver.get_table — get the table for a column name (or Column node).
@@ -51,14 +67,14 @@ class Resolver(
     fun getTable(column: Any): Identifier? {
         val columnName = if (column is String) column else (column as Column).name
 
-        var tableName: String? = getTableNameFromSources(columnName)
+        val joinContext = if (column is Column) getColumnJoinContext(column) else null
+        var tableName: String? = if (joinContext?.isSemiOrAntiJoin == true) null else getTableNameFromSources(columnName)
 
         if (tableName.isNullOrEmpty() && column is Column) {
             // Fall-back case: If we couldn't find the `table_name` from ALL of the
             // sources, attempt to disambiguate the column based on other characteristics,
             // e.g. if this column is in a join condition, we may be able to disambiguate
             // based on the source order.
-            val joinContext = getColumnJoinContext(column)
             if (joinContext != null) {
                 // Catch OptimizeError if the column is still ambiguous and try to resolve
                 // with schema inference below
@@ -319,7 +335,8 @@ class Resolver(
 
         val joinAncestor = column.findAncestor(Join::class, Select::class)
 
-        if (joinAncestor is Join && joinAncestor.aliasOrName in scope.selectedSources) {
+        if (joinAncestor is Join && (joinAncestor.aliasOrName in scope.selectedSources ||
+            joinAncestor.aliasOrName in scope.semiOrAntiJoinTables)) {
             // Ensure that the found ancestor is a join that contains an actual source,
             // e.g in Clickhouse `b` is an array expression in `a ARRAY JOIN b`
             return joinAncestor
@@ -432,27 +449,31 @@ class Resolver(
 
     /**
      * sqlglot: Resolver._get_unnest_column_type — the type of a column being
-     * unnested/exploded, tracing through CTEs/subqueries to find the base table.
+     * unnested/exploded, using source projections before underlying table schemas.
      */
     private fun getUnnestColumnType(column: Column, scope: Scope): DataType? {
-        // If column is qualified, use that table, otherwise disambiguate using the resolver
-        val tableName: String
-        if (column.table.isNotEmpty()) {
-            tableName = column.table
-        } else {
-            // Use the parent scope's resolver to disambiguate the column
-            val parentResolver = Resolver(scope, schema, inferSchema)
-            val tableIdentifier = parentResolver.getTable(column) ?: return null
-            tableName = tableIdentifier.name
+        val parentResolver = outerResolvers().firstOrNull { it.scope === scope }
+            ?: Resolver(scope, schema, inferSchema)
+        for (candidate in listOf(parentResolver) + parentResolver.outerResolvers()) {
+            val tableName = column.table.takeIf { it.isNotEmpty() }
+                ?: candidate.getTable(column)?.name
+            if (tableName != null && (tableName in candidate.scope.selectedSources ||
+                    tableName in candidate.scope.lateralSources)) {
+                val source = candidate.scope.sources[tableName] ?: return null
+                // A nearer UNKNOWN binding shadows outer evidence too.
+                return getColumnTypeFromScope(source, column)
+            }
+            // An unresolved local source may own an unqualified input. Do not
+            // bypass it to claim ownership from a farther outer source.
+            if (column.table.isEmpty() && candidate.getAllSourceColumns().values.any {
+                    it.isEmpty() || "*" in it }) return null
         }
-
-        val source = scope.sources[tableName] ?: return null
-        return getColumnTypeFromScope(source, column)
+        return null
     }
 
     /**
      * sqlglot: Resolver._get_column_type_from_scope — a column's type found by tracing
-     * through scopes/tables to the base table, memoized per (source identity, name).
+     * through annotated projections/tables, memoized per (source identity, name).
      */
     private fun getColumnTypeFromScope(source: Any, column: Column): DataType? {
         val sourceId = when (source) {
@@ -464,6 +485,8 @@ class Resolver(
         if (cacheKey in columnTypeFromScopeCache) {
             return columnTypeFromScopeCache[cacheKey]
         }
+        // Recursive CTEs can revisit the same binding before its type is known.
+        columnTypeFromScopeCache[cacheKey] = null
 
         // None is a valid result if DataType could not be determined!
         var result: DataType? = null
@@ -474,14 +497,28 @@ class Resolver(
                 result = colType
             }
         } else if (source is Scope) {
-            // Iterate over all sources in the scope
-            for (nestedSource in source.sources.values) {
-                val nestedType = getColumnTypeFromScope(nestedSource, column)
-                if (nestedType != null && !nestedType.isType(DType.UNKNOWN)) {
-                    result = nestedType
-                    break
+            if (source.expression is Select) {
+                val projections = source.expression.selects.filter { it.aliasOrName == column.name }
+                val projection = projections.singleOrNull()
+                val projectionType = projection?.type as? DataType
+                if (projectionType != null && !projectionType.isType(DType.UNKNOWN)) {
+                    result = projectionType
+                } else {
+                    // brikk extension (docs/brikk-extensions.md #44): UNKNOWN
+                    // computations/renames must not borrow a same-named
+                    // physical field. Only a direct, qualified pass-through proves
+                    // which underlying binding supplies this projection's type.
+                    val reference = (if (projection is Alias) projection.thisArg
+                        else projection) as? Column
+                    if (reference != null && (reference.table in source.selectedSources ||
+                            reference.table in source.lateralSources)) {
+                        val nestedSource = source.sources[reference.table]
+                        if (nestedSource != null) result = getColumnTypeFromScope(nestedSource, reference)
+                    }
                 }
             }
+            // A set operation needs reconciled output types, not an arbitrary
+            // underlying arm's schema. The target deliberately defers that port.
         }
 
         columnTypeFromScopeCache[cacheKey] = result

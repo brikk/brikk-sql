@@ -92,6 +92,13 @@ open class Spark2Generator(
     // sqlglot: Spark2Generator.struct_sql — delegates to the base Generator (named structs OK)
     override fun structSql(expression: Struct): String = baseStructSql(expression)
 
+    // sqlglot: Spark2Generator.arrayslice_sql. Keep old serialized `length` nodes readable.
+    open fun sparkArraySliceSql(expression: ArraySlice): String =
+        if (expression.args["is_length"] == true || expression.args["length"] != null) {
+            func("SLICE", expression.thisArg, expression.args["start"],
+                expression.args["length"] ?: expression.args["end"])
+        } else renameFuncSql("SLICE", expression)
+
     // sqlglot: transforms.unqualify_pivot_fields; aggregate qualifiers remain intact.
     override fun pivotSql(expression: Pivot): String {
         val copy = expression.copy() as Pivot
@@ -250,7 +257,7 @@ open class Spark2Generator(
                 "AGGREGATE(${sql(e, "this")}, 0, (acc, x) -> acc + x, acc -> acc)"
             }
             reg(ArrayToString::class) { e -> sg().renameFuncSql("ARRAY_JOIN", e) }
-            reg(ArraySlice::class) { e -> sg().renameFuncSql("SLICE", e) }
+            reg(ArraySlice::class) { e -> sg().sparkArraySliceSql(e as ArraySlice) }
             reg(AtTimeZone::class) { e -> func("FROM_UTC_TIMESTAMP", e.thisArg, e.args["zone"]) }
             reg(BitwiseLeftShift::class) { e -> sg().renameFuncSql("SHIFTLEFT", e) }
             reg(BitwiseRightShift::class) { e -> sg().renameFuncSql("SHIFTRIGHT", e) }

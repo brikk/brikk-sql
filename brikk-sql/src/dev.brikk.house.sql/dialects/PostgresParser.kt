@@ -225,13 +225,16 @@ internal fun buildJsonExtractPath(
 // sqlglot: parsers.postgres.PostgresParser
 open class PostgresParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.PostgresTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.POSTGRES,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     override val quotedTypesToPreserve: Set<String> get() = setOf("char")
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.POSTGRES
+    override val alterTableMixedActions: Boolean get() = true
+    override val alterDropRequiresColumn: Boolean get() = false
+    override val alterColumnTypeRequiresKeyword: Boolean get() = true
     override val normalizeNotNull: Boolean get() = false
 
     // sqlglot: PostgresParser.SUPPORTS_OMITTED_INTERVAL_SPAN_UNIT = True
@@ -277,6 +280,32 @@ open class PostgresParser(
 
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = PostgresParserTables.FUNCTION_PARSERS
+
+    fun parseJsonValueRaw(): Expression {
+        val document = parseBitwise()
+        match(TokenType.COMMA)
+        val path = parseBitwise()
+        val returning: kotlin.Any? = if (match(TokenType.RETURNING)) parseTypes() else false
+        fun handling(kind: String): kotlin.Any? {
+            for (value in listOf("ERROR", "NULL", "TRUE", "FALSE", "EMPTY")) {
+                if (matchTextSeq(value, "ON", kind)) return "$value ON $kind"
+            }
+            val start = index
+            if (match(TokenType.DEFAULT)) {
+                val value = parseBitwise()
+                if (matchTextSeq("ON", kind)) return value
+                retreat(start)
+            }
+            return null
+        }
+        val empty = handling("EMPTY")
+        val error = handling("ERROR")
+        val nullHandling = handling("NULL")
+        val condition = if (empty == null && error == null && nullHandling == null) null else
+            expression(dev.brikk.house.sql.ast.OnCondition(args("empty" to empty, "error" to error, "null" to nullHandling)))
+        return expression(dev.brikk.house.sql.ast.JSONValue(args("this" to document, "path" to path,
+            "returning" to returning, "on_condition" to condition)))
+    }
 
     override val bitwise: Map<TokenType, NodeFactory> get() = PostgresParserTables.BITWISE
 
@@ -596,6 +625,7 @@ object PostgresParserTables {
                 )
             },
             "JSONB_EXISTS" to { p -> (p as PostgresParser).parseJsonbExists() },
+            "JSON_VALUE" to { p -> (p as PostgresParser).parseJsonValueRaw() },
         )
 
     // sqlglot: PostgresParser.BITWISE

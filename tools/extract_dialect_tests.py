@@ -448,7 +448,7 @@ def verify_cases(
 def sqlglot_version() -> str:
     try:
         return subprocess.run(
-            ["git", "describe", "--tags"],
+            ["git", "describe", "--tags", "--abbrev=9"],
             cwd=SQLGLOT_DIR,
             capture_output=True,
             text=True,

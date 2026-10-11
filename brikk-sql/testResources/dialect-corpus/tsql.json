@@ -1,10 +1,75 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "tsql",
   "identity": [
     {
+      "sql": "SELECT t.x FROM (VALUES (1)) AS t(x) UNION ALL SELECT 2 ORDER BY (t.x)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT (t.x + 1) FROM (VALUES (1)) AS t(x) UNION ALL SELECT 2 ORDER BY t.x + 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT -1 AS x UNION ALL SELECT TOP 2 x FROM (VALUES (2), (1), (0)) AS t(x) ORDER BY x OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT x.a FROM x UNION ALL SELECT y.a FROM y ORDER BY x.a OFFSET 1 ROWS",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 UNION ALL SELECT 2 ORDER BY 1 OFFSET 1 ROWS",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a, a FROM x UNION ALL SELECT a, a FROM y ORDER BY 1 OFFSET 1 ROWS",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a FROM x UNION ALL SELECT TOP 50 PERCENT a FROM y ORDER BY a OFFSET 1 ROWS",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a FROM x UNION SELECT a FROM y UNION SELECT a FROM z ORDER BY a OFFSET 1 ROWS FETCH NEXT 2 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT a FROM x UNION SELECT a FROM (SELECT a AS a FROM y ORDER BY a OFFSET 1 ROWS FETCH NEXT 2 ROWS ONLY) AS t ORDER BY a OFFSET 1 ROWS FETCH NEXT 2 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "WITH x(a) AS (SELECT 1), y(a) AS (SELECT 2) SELECT a FROM x UNION SELECT a FROM y ORDER BY a OFFSET 1 ROWS FETCH NEXT 2 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 AS x ORDER BY x FOR JSON PATH OPTION(RECOMPILE)",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM a..b",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT output FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 output",
+      "expected": "SELECT 1 AS output",
       "pretty": false
     },
     {
@@ -148,8 +213,8 @@
       "pretty": false
     },
     {
-      "sql": "SELECT TOP 10 s.RECORDID, n.c.VALUE('(/*:FORM_ROOT/*:SOME_TAG)[1]', 'float') AS SOME_TAG_VALUE FROM source_table.dbo.source_data AS s(nolock) CROSS APPLY FormContent.nodes('/*:FORM_ROOT') AS N(C)",
-      "expected": null,
+      "sql": "SELECT TOP 10 s.RECORDID, n.c.value('(/*:FORM_ROOT/*:SOME_TAG)[1]', 'float') AS SOME_TAG_VALUE FROM source_table.dbo.source_data AS s(nolock) CROSS APPLY FormContent.nodes('/*:FORM_ROOT') AS N(C)",
+      "expected": "SELECT TOP 10 s.RECORDID, n.c.value('(/*:FORM_ROOT/*:SOME_TAG)[1]', 'float') AS SOME_TAG_VALUE FROM source_table.dbo.source_data AS s WITH (nolock) CROSS APPLY FormContent.nodes('/*:FORM_ROOT') AS N(C)",
       "pretty": false
     },
     {
@@ -923,6 +988,46 @@
       "pretty": false
     },
     {
+      "sql": "UPDATE dbo.t (ROWLOCK) SET x = 1",
+      "expected": "UPDATE dbo.t WITH (ROWLOCK) SET x = 1",
+      "pretty": false
+    },
+    {
+      "sql": "DELETE FROM dbo.t (ROWLOCK)",
+      "expected": "DELETE FROM dbo.t WITH (ROWLOCK)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.t (NOLOCK) JOIN dbo.u AS u (ROWLOCK) ON t.id = u.id",
+      "expected": "SELECT * FROM dbo.t WITH (NOLOCK) JOIN dbo.u AS u WITH (ROWLOCK) ON t.id = u.id",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.t (NOLOCK) AS s JOIN dbo.u AS u ON s.id = u.id",
+      "expected": "SELECT * FROM dbo.t AS s WITH (NOLOCK) JOIN dbo.u AS u ON s.id = u.id",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.t AS s /* alias */ (NOLOCK /* hint */)",
+      "expected": "SELECT * FROM dbo.t AS s /* alias */ WITH (NOLOCK /* hint */)",
+      "pretty": false
+    },
+    {
+      "sql": "INSERT INTO dbo.t (nolock) SELECT 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "UPDATE s SET x = 1 FROM dbo.t AS s (ROWLOCK) JOIN dbo.u AS u ON s.id = u.id",
+      "expected": "UPDATE s SET x = 1 FROM dbo.t AS s WITH (ROWLOCK) JOIN dbo.u AS u ON s.id = u.id",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.t AS s (NOLOCK) PIVOT(SUM(x) FOR id IN ([1])) AS p",
+      "expected": "SELECT * FROM dbo.t AS s WITH (NOLOCK) PIVOT(SUM(x) FOR id IN ([1])) AS p",
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM OPENJSON(@json)",
       "expected": null,
       "pretty": false
@@ -1079,6 +1184,16 @@
       "pretty": false
     },
     {
+      "sql": "DROP INDEX IF EXISTS i ON dbo.t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE tbl DROP COLUMN col1, col2",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "ALTER TABLE tbl ADD CONSTRAINT cnstr PRIMARY KEY CLUSTERED (ID), CONSTRAINT cnstr2 UNIQUE CLUSTERED (ID)",
       "expected": null,
       "pretty": false
@@ -1147,9 +1262,138 @@
       "sql": "ALTER TABLE a ALTER COLUMN b CHAR(10) COLLATE abc",
       "expected": null,
       "pretty": false
+    },
+    {
+      "sql": "SELECT (SELECT x FROM t ORDER BY x OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY FOR JSON PATH) AS y",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "(SELECT x FROM (VALUES (1), (2)) AS t(x)) ORDER BY x OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "(SELECT 1 AS x UNION ALL SELECT 2 AS x) ORDER BY x OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT s.nolock FROM (SELECT 1 AS x) AS s(nolock)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT s.nolock FROM (VALUES (1)) AS s(nolock)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT s.nolock.query('.') FROM dbo.t CROSS APPLY t.doc.nodes('/root') AS s(nolock)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.FN(1)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.FN(1) AS s",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.FN('NOLOCK')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.FN(@NOLOCK)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.src CROSS APPLY dbo.fn(NOLOCK)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.src CROSS APPLY dbo.fn(x)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.src CROSS APPLY dbo.fn([NOLOCK])",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM dbo.src CROSS APPLY dbo.fn(NOLOCK, 1)",
+      "expected": null,
+      "pretty": false
     }
   ],
   "transpile": [
+    {
+      "sql": "SELECT * FROM (SELECT a FROM x UNION ALL SELECT a FROM y) AS _l_0 ORDER BY CASE WHEN a IS NULL THEN 1 ELSE 0 END DESC, a DESC OFFSET 1 ROWS FETCH FIRST 2 ROWS ONLY",
+      "read": {
+        "postgres": "SELECT a FROM x UNION ALL SELECT a FROM y ORDER BY a DESC LIMIT 2 OFFSET 1"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT a FROM x UNION SELECT a FROM y ORDER BY a OFFSET 1 ROWS FETCH NEXT 2 ROWS ONLY",
+      "read": {},
+      "write": {
+        "": "SELECT a FROM x UNION SELECT a FROM y ORDER BY a OFFSET 1 FETCH NEXT 2 ROWS ONLY",
+        "clickhouse": "SELECT * FROM (SELECT a FROM x UNION DISTINCT SELECT a FROM y) AS _l_0 ORDER BY a NULLS FIRST OFFSET 1 ROWS FETCH NEXT 2 ROWS ONLY"
+      }
+    },
+    {
+      "sql": "SELECT a FROM x UNION ALL SELECT TOP 1 a FROM y ORDER BY a OFFSET 1 ROWS",
+      "read": {},
+      "write": {
+        "clickhouse": "SELECT * FROM (SELECT a FROM x UNION ALL SELECT a FROM y LIMIT 1) AS _l_0 ORDER BY a NULLS FIRST OFFSET 1"
+      }
+    },
+    {
+      "sql": "SELECT TOP 1 a FROM x UNION ALL SELECT TOP 1 a FROM y",
+      "read": {},
+      "write": {
+        "clickhouse": "SELECT a FROM x LIMIT 1 UNION ALL SELECT a FROM y LIMIT 1",
+        "teradata": "SELECT TOP 1 a FROM x UNION ALL SELECT TOP 1 a FROM y",
+        "tsql": "SELECT TOP 1 a FROM x UNION ALL SELECT TOP 1 a FROM y"
+      }
+    },
+    {
+      "sql": "SELECT 1 AS x UNION ALL SELECT 2 AS x ORDER BY x",
+      "read": {
+        "clickhouse": "SELECT 1 AS x UNION ALL SELECT 2 AS x ORDER BY x NULLS FIRST"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 AS x UNION ALL SELECT TOP 1 x FROM (VALUES (2), (3)) AS t(x) ORDER BY x",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT 1 AS x UNION ALL (SELECT x FROM (VALUES (2), (3)) AS t(x) LIMIT 1) ORDER BY x NULLS FIRST"
+      }
+    },
+    {
+      "sql": "SELECT a FROM x UNION ALL SELECT TOP 1 a FROM y UNION ALL SELECT a FROM z",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT a FROM x UNION ALL (SELECT a FROM y LIMIT 1) UNION ALL SELECT a FROM z"
+      }
+    },
+    {
+      "sql": "SELECT a FROM x UNION ALL SELECT TOP 1 a FROM y",
+      "read": {},
+      "write": {
+        "duckdb": "SELECT a FROM x UNION ALL (SELECT a FROM y LIMIT 1)"
+      }
+    },
     {
       "sql": "WITH x AS (SELECT 1 AS [1]) SELECT TOP 0 * FROM (SELECT * FROM x UNION SELECT * FROM x) AS _l_0 ORDER BY 1",
       "read": {
@@ -1436,7 +1680,7 @@
       "write": {
         "tsql": "STRING_AGG(x, y) WITHIN GROUP (ORDER BY z DESC)",
         "mysql": "GROUP_CONCAT(x ORDER BY z DESC SEPARATOR y)",
-        "sqlite": "GROUP_CONCAT(x, y)",
+        "sqlite": "GROUP_CONCAT(x, y ORDER BY z DESC)",
         "postgres": "STRING_AGG(x, y ORDER BY z DESC NULLS LAST)"
       }
     },
@@ -1446,7 +1690,7 @@
       "write": {
         "tsql": "STRING_AGG(x, '|') WITHIN GROUP (ORDER BY z ASC)",
         "mysql": "GROUP_CONCAT(x ORDER BY z ASC SEPARATOR '|')",
-        "sqlite": "GROUP_CONCAT(x, '|')",
+        "sqlite": "GROUP_CONCAT(x, '|' ORDER BY z ASC)",
         "postgres": "STRING_AGG(x, '|' ORDER BY z ASC NULLS FIRST)"
       }
     },
@@ -1548,6 +1792,20 @@
       "sql": "SELECT t1.x + t2.y AS s FROM t1 JOIN t2 ON t1.id = t2.id ORDER BY CASE WHEN t1.x + t2.y IS NULL THEN 1 ELSE 0 END, t1.x + t2.y",
       "read": {
         "duckdb": "SELECT t1.x + t2.y AS s FROM t1 JOIN t2 ON t1.id = t2.id ORDER BY s"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT STRING_AGG(v, ',') WITHIN GROUP (ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v) AS v FROM t",
+      "read": {
+        "trino": "SELECT LISTAGG(v, ',') WITHIN GROUP (ORDER BY v) AS v FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT x AS v, STRING_AGG(v, ',') WITHIN GROUP (ORDER BY CASE WHEN v IS NULL THEN 1 ELSE 0 END, v) AS w FROM t GROUP BY x",
+      "read": {
+        "postgres": "SELECT x AS v, STRING_AGG(v, ',' ORDER BY v) AS w FROM t GROUP BY x"
       },
       "write": {}
     },
@@ -2642,6 +2900,14 @@
       }
     },
     {
+      "sql": "SELECT FORMAT(a, 'ffffff')",
+      "read": {},
+      "write": {
+        "mysql": "SELECT DATE_FORMAT(a, '%f')",
+        "tsql": "SELECT FORMAT(a, 'ffffff')"
+      }
+    },
+    {
       "sql": "SELECT FORMAT('01-01-1991', 'dd.mm.yyyy')",
       "read": {},
       "write": {
@@ -2743,7 +3009,7 @@
         "bigquery": "LAST_DAY(DATE_ADD(CAST(CURRENT_TIMESTAMP() AS DATE), INTERVAL -1 MONTH))",
         "clickhouse": "LAST_DAY(DATE_ADD(MONTH, -1, CAST(CURRENT_TIMESTAMP() AS Nullable(DATE))))",
         "duckdb": "LAST_DAY(CAST(CURRENT_TIMESTAMP AS DATE) + INTERVAL (-1) MONTH)",
-        "mysql": "LAST_DAY(DATE_ADD(CURRENT_TIMESTAMP(), INTERVAL -1 MONTH))",
+        "mysql": "LAST_DAY(DATE_ADD(DATE(CURRENT_TIMESTAMP()), INTERVAL -1 MONTH))",
         "postgres": "CAST(DATE_TRUNC('MONTH', CAST(CURRENT_TIMESTAMP AS DATE) + INTERVAL '-1 MONTH') + INTERVAL '1 MONTH' - INTERVAL '1 DAY' AS DATE)",
         "presto": "LAST_DAY_OF_MONTH(DATE_ADD('MONTH', -1, CAST(CAST(CURRENT_TIMESTAMP AS TIMESTAMP) AS DATE)))",
         "redshift": "LAST_DAY(DATEADD(MONTH, -1, CAST(GETDATE() AS DATE)))",
@@ -2853,6 +3119,14 @@
         "spark": "SELECT x FROM a",
         "tsql": "SELECT x FROM a WITH (NOLOCK)",
         "": "SELECT x FROM a WITH (NOLOCK)"
+      }
+    },
+    {
+      "sql": "SELECT * FROM dbo.t (NOLOCK)",
+      "read": {},
+      "write": {
+        "tsql": "SELECT * FROM dbo.t WITH (NOLOCK)",
+        "spark": "SELECT * FROM dbo.t"
       }
     },
     {
@@ -2992,8 +3266,8 @@
     }
   ],
   "stats": {
-    "identity_count": 227,
-    "transpile_count": 216,
-    "skipped_dynamic": 21
+    "identity_count": 264,
+    "transpile_count": 228,
+    "skipped_dynamic": 43
   }
 }

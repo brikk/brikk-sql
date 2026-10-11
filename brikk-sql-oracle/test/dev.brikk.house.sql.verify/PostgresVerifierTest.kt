@@ -51,6 +51,17 @@ class PostgresVerifierTest {
     }
 
     @Test
+    fun postgresVerifierUsesModernJsonValueGrammarRatherThanAnOldVersionRejection() {
+        for (source in listOf("SELECT JSON_VALUE('42', '$' RETURNING BIGINT)",
+            "SELECT JSON_VALUE('{}', '$.a' RETURNING BIGINT DEFAULT 7 ON EMPTY)",
+            "SELECT JSON_VALUE('{}', '$.a' RETURNING BIGINT ERROR ON EMPTY)",
+            "SELECT JSON_VALUE('[1,2]', 'strict $[*]' RETURNING BIGINT ERROR ON ERROR)")) {
+            val result = pg.verify(source)
+            assertTrue(result.verified && result.accepted, "$source/${result.error}/${result.warning}")
+        }
+    }
+
+    @Test
     fun postgresRejectsSyntaxErrorWithPosition() {
         // A keyword typo: PG reports `42601 syntax error at or near "SELCT"` at position 1.
         val result = pg.verify("SELCT 1")

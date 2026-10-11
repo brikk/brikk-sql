@@ -3,12 +3,16 @@
 Tracking upstream SQLGlot changes that affect Brikk's supported parser,
 transpiler, semantic-analysis, and dialect surface.
 
-- Previous pin: `v30.17.0-93-gdcc36544a`
-- Current pin: `v30.18.0-43-g3ca82489`
+- Previous pin: `v30.18.0-43-g3ca82489`
+- Current pin: `v30.22.0-5-ga00dc2e5c`
 - Supported dialects: base, MySQL, Doris, StarRocks, Presto, Trino, DuckDB,
   PostgreSQL, ClickHouse, Hive, Spark2, Spark, and BigQuery
 
-## Current Sync
+Completed latest sync: [catch-up to a00dc2e](TODO-sqlglot-a00dc2e.md), merged into
+`main` for `0.20.0-SNAPSHOT`. Generated metadata, fixtures and exact ledgers were
+refreshed together; inference/Engine contracts and native candidate gates pass.
+
+## Previous Sync — 3ca824895
 
 - [x] Regenerate AST nodes, tokenizer tables, typing metadata, and all oracle
   corpora at `3ca824895`.
@@ -61,3 +65,13 @@ canonicalization, and full simplification passes.
 - Remove passing entries from exact known-failure ledgers; never mask new gaps.
 - Preserve verifier-backed intentional divergences registered in
   `docs/brikk-extensions.md`.
+
+## Engine analysis compatibility gate
+
+Before adopting upstream's `infer_schema` removal, run the hand-owned
+[Engine analysis contract](docs/engine-analysis-contract.md). It protects legacy
+best-effort shape discovery, Engine's two-step preparation/strict-validation
+path, explicit disabled inference, and published JVM/default-bridge signatures.
+The new upstream-shaped overloads now have direct no-inference tests; shape,
+lineage and preparation paths explicitly retain legacy policy. Do not replace
+these consumer expectations with oracle snapshots.

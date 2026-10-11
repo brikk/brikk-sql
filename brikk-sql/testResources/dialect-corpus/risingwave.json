@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "risingwave",
   "identity": [
     {
@@ -15,6 +15,11 @@
     {
       "sql": "WITH t1 AS MATERIALIZED (SELECT 1), t2 AS NOT MATERIALIZED (SELECT 2) SELECT * FROM t1, t2",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP IF EXISTS b",
+      "expected": "ALTER TABLE t DROP COLUMN IF EXISTS b",
       "pretty": false
     },
     {
@@ -48,7 +53,7 @@
     }
   ],
   "stats": {
-    "identity_count": 7,
+    "identity_count": 8,
     "transpile_count": 1,
     "skipped_dynamic": 0
   }

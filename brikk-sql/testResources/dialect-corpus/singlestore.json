@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "singlestore",
   "identity": [
     {
@@ -248,6 +248,11 @@
       "pretty": false
     },
     {
+      "sql": "SELECT ('a' RLIKE '^[\u0000-]*$')",
+      "expected": "SELECT ('a' RLIKE '^[\\0-]*$')",
+      "pretty": false
+    },
+    {
       "sql": "SELECT 'a' REGEXP 'b'",
       "expected": "SELECT 'a' RLIKE 'b'",
       "pretty": false
@@ -284,7 +289,7 @@
     },
     {
       "sql": "SELECT name :> LONGTEXT COLLATE 'utf8mb4_bin' FROM `users`",
-      "expected": "SELECT name :> LONGTEXT :> LONGTEXT COLLATE 'utf8mb4_bin' FROM `users`",
+      "expected": null,
       "pretty": false
     },
     {
@@ -495,6 +500,11 @@
     {
       "sql": "ALTER TABLE t MODIFY COLUMN name TEXT COLLATE 'binary'",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t DROP b",
+      "expected": "ALTER TABLE t DROP COLUMN b",
       "pretty": false
     },
     {
@@ -832,7 +842,13 @@
     {
       "sql": "SELECT SUM(CASE WHEN age > 18 THEN 1 ELSE 0 END) FROM `users`",
       "read": {
-        "singlestore": "SELECT SUM(CASE WHEN age > 18 THEN 1 ELSE 0 END) FROM `users`",
+        "singlestore": "SELECT SUM(CASE WHEN age > 18 THEN 1 ELSE 0 END) FROM `users`"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT SUM(IF(age > 18, 1, 0)) FROM `users`",
+      "read": {
         "": "SELECT COUNT_IF(age > 18) FROM users"
       },
       "write": {}
@@ -898,6 +914,27 @@
       "write": {}
     },
     {
+      "sql": "SELECT ('a' RLIKE '^[\\0-]*$')",
+      "read": {
+        "": "SELECT IS_ASCII('a')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 + ('a' RLIKE '^[\\0-]*$')",
+      "read": {
+        "": "SELECT 1 + IS_ASCII('a')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT NOT ('é' RLIKE '^[\\0-]*$')",
+      "read": {
+        "": "SELECT NOT IS_ASCII('é')"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT 'a' RLIKE 'b'",
       "read": {
         "bigquery": "SELECT REGEXP_CONTAINS('a', 'b')",
@@ -918,14 +955,6 @@
       "read": {
         "": "SELECT REGEXP_EXTRACT('adog', 'O', 1, 1, 'c', 'gr1')",
         "singlestore": "SELECT REGEXP_SUBSTR('adog', 'O', 1, 1, 'c')"
-      },
-      "write": {}
-    },
-    {
-      "sql": "SELECT ('a' RLIKE '^[\u0000-]*$')",
-      "read": {
-        "singlestore": "SELECT ('a' RLIKE '^[\u0000-]*$')",
-        "": "SELECT IS_ASCII('a')"
       },
       "write": {}
     },
@@ -1444,8 +1473,8 @@
     }
   ],
   "stats": {
-    "identity_count": 106,
-    "transpile_count": 113,
+    "identity_count": 108,
+    "transpile_count": 116,
     "skipped_dynamic": 2
   }
 }

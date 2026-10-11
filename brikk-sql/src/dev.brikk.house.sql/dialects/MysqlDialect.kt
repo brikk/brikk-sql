@@ -15,6 +15,8 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 class MysqlDialect : Dialect() {
 
     override val name: String get() = "mysql"
+    override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
     // sqlglot: MySQL.EXPRESSION_METADATA (sqlglot/typing/mysql.py)
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
@@ -22,7 +24,7 @@ class MysqlDialect : Dialect() {
     // sqlglot: MySQL.NORMALIZATION_STRATEGY
     override val normalizationStrategy get() = NormalizationStrategy.CASE_SENSITIVE
 
-    override val tokenizerConfig: TokenizerConfig get() = MysqlTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = dev.brikk.house.sql.parser.StringEscapeProfiles.MYSQL
 
     // sqlglot: MySQL.TIME_MAPPING
     override val timeMapping: Map<String, String> get() = TIME_MAPPING

@@ -40,6 +40,52 @@ class TokenizerConfig(
     // sqlglot: Dialect.UNESCAPED_SEQUENCES (base default empty)
     val unescapedSequences: Map<String, String> = emptyMap(),
 ) {
+    // Keep the published constructor/default bridge intact while adding escape policy.
+    private var numericPolicy = NumericPolicy()
+    private var commentPolicy = CommentPolicy()
+    private var bytePolicy = false
+    val byteStringsAreBytes: Boolean get() = bytePolicy
+
+    fun withByteStringPolicy(byteStringsAreBytes: Boolean): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences).also { it.bytePolicy = byteStringsAreBytes }
+    val dashCommentRequiresBoundary: Boolean get() = commentPolicy.dashBoundary
+    val commentsTerminateAtNewlineOnly: Boolean get() = commentPolicy.newlineOnly
+
+    private data class CommentPolicy(val dashBoundary: Boolean = false, val newlineOnly: Boolean = false)
+
+    fun withCommentPolicy(
+        dashCommentRequiresBoundary: Boolean = this.dashCommentRequiresBoundary,
+        commentsTerminateAtNewlineOnly: Boolean = this.commentsTerminateAtNewlineOnly,
+    ): TokenizerConfig = copyWith(emptyMap(), unescapedSequences).also {
+        it.commentPolicy = CommentPolicy(dashCommentRequiresBoundary, commentsTerminateAtNewlineOnly)
+    }
+    val numericEscapes: Map<Char, NumericEscape> get() = numericPolicy.escapes
+    val dropUnknownEscapes: Boolean get() = numericPolicy.dropUnknown
+    val numericEscapesAreBytes: Boolean get() = numericPolicy.bytes
+    val loneSurrogateReplacement: String get() = numericPolicy.loneSurrogateReplacement
+
+    /** sqlglot: Tokenizer.NUMERIC_ESCAPES tuples (base, min digits, max digits, max value). */
+    data class NumericEscape(val base: Int, val minDigits: Int, val maxDigits: Int, val maxValue: Int)
+
+    private data class NumericPolicy(
+        val escapes: Map<Char, NumericEscape> = emptyMap(),
+        val dropUnknown: Boolean = false,
+        val bytes: Boolean = false,
+        val loneSurrogateReplacement: String = "",
+    )
+
+    /** A new configuration, leaving this configuration and its ABI unchanged. */
+    fun withStringEscapes(
+        numericEscapes: Map<Char, NumericEscape> = this.numericEscapes,
+        dropUnknownEscapes: Boolean = this.dropUnknownEscapes,
+        numericEscapesAreBytes: Boolean = this.numericEscapesAreBytes,
+        loneSurrogateReplacement: String = this.loneSurrogateReplacement,
+        unescapedSequences: Map<String, String> = this.unescapedSequences,
+    ): TokenizerConfig = copyWith(emptyMap(), unescapedSequences).also {
+        it.numericPolicy = NumericPolicy(numericEscapes.toMap(), dropUnknownEscapes,
+            numericEscapesAreBytes, loneSurrogateReplacement)
+    }
+
     /**
      * sqlglot: _TokenizerBase.__init_subclass__ _KEYWORD_TRIE — a trie over all
      * keyword/comment/quote/format-string starts that contain a space or any
@@ -61,7 +107,9 @@ class TokenizerConfig(
      * [keywords]. Lets a dialect extend a GENERATED `<Dialect>TokenizerTables.CONFIG`
      * without editing the generated file (e.g. DorisDialect.TOKENIZER_CONFIG).
      */
-    fun withKeywords(extra: Map<String, TokenType>): TokenizerConfig = TokenizerConfig(
+    fun withKeywords(extra: Map<String, TokenType>): TokenizerConfig = copyWith(extra, unescapedSequences)
+
+    private fun copyWith(extra: Map<String, TokenType>, sequences: Map<String, String>): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
         keywords = keywords + extra,
         quotes = quotes,
@@ -87,8 +135,8 @@ class TokenizerConfig(
         numbersCanBeUnderscoreSeparated = numbersCanBeUnderscoreSeparated,
         numbersCanHaveDecimals = numbersCanHaveDecimals,
         identifiersCanStartWithDigit = identifiersCanStartWithDigit,
-        unescapedSequences = unescapedSequences,
-    )
+        unescapedSequences = sequences,
+    ).also { it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy }
 
     companion object {
         /** The base "sqlglot" dialect configuration. */
