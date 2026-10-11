@@ -1,5 +1,6 @@
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
 import dev.brikk.house.sql.metadata.DUCKDB_KEYWORDS
+import dev.brikk.house.sql.metadata.DUCKDB_SETTINGS
 import dev.brikk.house.sql.metadata.DuckdbCapture
 import java.nio.file.Path
 import java.sql.Connection
@@ -10,7 +11,7 @@ fun captureDuckdb(vendorData: Path) {
     DriverManager.getConnection("jdbc:duckdb:").use { connection ->
         val version = connection.engineVersion()
         println("DuckDB $version (${connection.sourceId()})")
-        for (capture in listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS)) {
+        for (capture in listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS, DUCKDB_SETTINGS)) {
             writeDump(vendorData.resolve("duckdb-${capture.name}-$version.tsv"), capture.dump(connection))
         }
     }

@@ -5,6 +5,8 @@ class MetadataSnapshot(
     val engineVersion: String,
     val functions: FunctionCatalog,
     val keywords: KeywordCatalog? = null,
+    val pragmas: List<PragmaDef>? = null,
+    val settings: List<SettingDef>? = null,
 )
 
 /** Every bundled snapshot of one dialect, oldest first. */

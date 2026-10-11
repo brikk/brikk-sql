@@ -86,6 +86,15 @@ def keyword_row(r: dict[str, str | None]) -> tuple[str, int]:
     return f"DuckdbKeywordRow({kstr(r['keyword_name'])}, {kstr(r['keyword_category'])})", 3
 
 
+def setting_row(r: dict[str, str | None]) -> tuple[str, int]:
+    aliases = json_list(r["aliases"])
+    literal = (
+        f"DuckdbSettingRow({kstr(r['name'])}, {kstr(r['input_type'])}, {kstr(r['scope'])}, "
+        f"{klist(aliases)}, {knullable(r['description'])})"
+    )
+    return literal, 6 + len(aliases)
+
+
 def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tuple[str, list[str]]:
     """A `chunk() + chunk() ...` expression plus the private chunk functions it calls."""
     chunks: list[list[str]] = [[]]
@@ -109,6 +118,7 @@ def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tu
 CAPTURES = {
     "functions": ("DuckdbFunctionRow", function_row),
     "keywords": ("DuckdbKeywordRow", keyword_row),
+    "settings": ("DuckdbSettingRow", setting_row),
 }
 
 

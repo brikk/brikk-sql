@@ -1,5 +1,6 @@
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
 import dev.brikk.house.sql.metadata.DUCKDB_KEYWORDS
+import dev.brikk.house.sql.metadata.DUCKDB_SETTINGS
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DuckdbCapture
@@ -18,7 +19,7 @@ class DuckdbCaptureTest {
 
     private val vendorData = Path("../../vendor/data")
 
-    private val captures = listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS)
+    private val captures = listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS, DUCKDB_SETTINGS)
 
     private fun <T> DuckdbCapture<T>.vendored(version: String): List<T>? =
         vendorData.resolve("duckdb-$name-$version.tsv").takeIf { it.exists() }?.let { readDump(it).rows.map(::decode) }
@@ -27,6 +28,7 @@ class DuckdbCaptureTest {
         engineVersion = version,
         functions = checkNotNull(DUCKDB_FUNCTIONS.vendored(version)),
         keywords = DUCKDB_KEYWORDS.vendored(version),
+        settings = DUCKDB_SETTINGS.vendored(version),
     )
 
     @Test
@@ -38,6 +40,8 @@ class DuckdbCaptureTest {
             val vendored = vendoredDump(bundled.engineVersion).toSnapshot()
             assertEquals(vendored.functions.functions, bundled.functions.functions, bundled.engineVersion)
             assertEquals(vendored.keywords?.keywords, bundled.keywords?.keywords, bundled.engineVersion)
+            assertEquals(vendored.pragmas, bundled.pragmas, bundled.engineVersion)
+            assertEquals(vendored.settings, bundled.settings, bundled.engineVersion)
         }
     }
 

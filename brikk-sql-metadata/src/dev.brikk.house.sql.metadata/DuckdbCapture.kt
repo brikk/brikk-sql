@@ -72,6 +72,33 @@ val DUCKDB_KEYWORDS: DuckdbCapture<DuckdbKeywordRow> = DuckdbCapture(
     columns = listOf("keyword_name", "keyword_category"),
 ) { row -> DuckdbKeywordRow(row.required(0), row.required(1)) }
 
+/** One `duckdb_settings()` row, without the connection-dependent current value. */
+data class DuckdbSettingRow(
+    val name: String,
+    val inputType: String,
+    val scope: String,
+    val aliases: List<String> = emptyList(),
+    val description: String? = null,
+)
+
+val DUCKDB_SETTINGS: DuckdbCapture<DuckdbSettingRow> = DuckdbCapture(
+    name = "settings",
+    sql = """
+        SELECT name, input_type, scope, to_json(aliases)::VARCHAR AS aliases, description
+        FROM duckdb_settings()
+        ORDER BY ALL
+    """.trimIndent(),
+    columns = listOf("name", "input_type", "scope", "aliases", "description"),
+) { row ->
+    DuckdbSettingRow(
+        name = row.required(0),
+        inputType = row.required(1),
+        scope = row.required(2),
+        aliases = row.jsonList(3).map { checkNotNull(it) { "null alias in $row" } },
+        description = row[4],
+    )
+}
+
 private fun List<String?>.required(index: Int): String = checkNotNull(this[index]) { "column $index is null in $this" }
 
 private fun List<String?>.jsonList(index: Int): List<String?> =

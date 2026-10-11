@@ -10,6 +10,7 @@ class DuckdbDump(
     val engineVersion: String,
     val functions: List<DuckdbFunctionRow>,
     val keywords: List<DuckdbKeywordRow>? = null,
+    val settings: List<DuckdbSettingRow>? = null,
 )
 
 /**
@@ -24,13 +25,33 @@ class DuckdbDump(
  *  - [FunctionOverload.argNames] are the row's parameter names (null when it lists none).
  *
  * Fails on a function type it does not know, so a new engine kind is mapped deliberately.
- * A keyword category it does not know reads as [KeywordCategory.UNKNOWN].
+ *
+ * [MetadataSnapshot.pragmas] are the `pragma` rows, one [PragmaDef] per name with the same
+ * overload shape, linked to a `pragma_<name>` table function when one exists. A keyword
+ * category it does not know reads as [KeywordCategory.UNKNOWN].
  */
-fun DuckdbDump.toSnapshot(): MetadataSnapshot = MetadataSnapshot(
-    engineVersion,
-    FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS),
-    keywords = keywords?.let { rows -> KeywordCatalog(rows.map { KeywordDef(it.name, keywordCategory(it.category)) }) },
-)
+fun DuckdbDump.toSnapshot(): MetadataSnapshot {
+    val functionCatalog = FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS)
+    return MetadataSnapshot(
+        engineVersion,
+        functionCatalog,
+        keywords = keywords?.let { rows -> KeywordCatalog(rows.map { KeywordDef(it.name, keywordCategory(it.category)) }) },
+        pragmas = pragmaDefs(functions, functionCatalog),
+        settings = settings?.map { SettingDef(it.name, it.inputType, it.scope, it.aliases, it.description) },
+    )
+}
+
+private fun pragmaDefs(rows: List<DuckdbFunctionRow>, functions: FunctionCatalog): List<PragmaDef> =
+    rows.filter { it.type == PRAGMA }
+        .groupBy { it.name }
+        .map { (name, group) ->
+            PragmaDef(
+                name = name,
+                overloads = group.overloads(),
+                tableFunction = "pragma_$name".takeIf(functions::isTableFunction),
+            )
+        }
+        .sortedBy { it.name }
 
 private fun keywordCategory(category: String): KeywordCategory = when (category) {
     "reserved" -> KeywordCategory.RESERVED
@@ -48,9 +69,7 @@ private fun functionDefs(rows: List<DuckdbFunctionRow>): List<FunctionDef> =
             FunctionDef(
                 name = name,
                 kind = kind,
-                overloads = group.map { it.overload() }
-                    .distinctBy { Triple(it.argTypes, it.returnType, it.variadic) }
-                    .sortedWith(OVERLOAD_ORDER),
+                overloads = group.overloads(),
                 nativeKind = group.map { duckdbKind(it).native }.distinct().singleOrNull(),
             )
         }
@@ -69,6 +88,9 @@ private fun duckdbKind(row: DuckdbFunctionRow): DuckdbKind = when (row.type) {
         "unknown DuckDB function_type '${row.type}' (function ${row.name}); map it in duckdbKind",
     )
 }
+
+private fun List<DuckdbFunctionRow>.overloads(): List<FunctionOverload> =
+    map { it.overload() }.distinctBy { Triple(it.argTypes, it.returnType, it.variadic) }.sortedWith(OVERLOAD_ORDER)
 
 private fun DuckdbFunctionRow.overload() = FunctionOverload(
     argTypes = parameterTypes.map { it ?: ANY },
