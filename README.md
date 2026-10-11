@@ -20,18 +20,21 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-metadata](brikk-sql-metadata/) | `brikk-sql-metadata-jvm` | Function/type catalogs and evidence-backed semantic metadata; exported by core. |
 | [brikk-sql-verify](brikk-sql-verify/) | `brikk-sql-verify` | Native-grammar verification using Trino, DuckDB, and Doris; ShardingSphere advisory parsers. |
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
+| [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Embedded IntelliJ action, snapshot and console-preparation mechanics; independently versioned. |
 
 Core and metadata target JVM for current publications and retain the `-jvm`
 coordinates. They emit Java 21-compatible bytecode. Verification modules require
 JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest release: **`0.18.1`**. Current development snapshot: **`0.19.0-SNAPSHOT`**.
+Latest core/metadata release: **`0.19.0`**. Verify/oracle remain at **`0.18.1`**;
+they were not republished by the scoped IDE release. SQL IntelliJ support is
+**`0.1.0`**. Current core development snapshot: **`0.19.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.18.1")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.19.0")
     // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.18.1")
 }
 ```
@@ -68,6 +71,11 @@ coverage refusal. Rounding, parsing and error/NULL divergences remain visible;
 the pair stays PARTIAL, and TRY_CAST cannot borrow plain CAST evidence.
 See the [CAST research report](docs/research/REPORT-duckdb-doris-cast-coverage-2026-10-10.md).
 
+`0.19.0` adds editor-facing script snapshots, parse-only parameter occurrence
+ranges and zero-argument `rows()` relation slots. The independently published
+IntelliJ support 0.1.0 uses platform types and callbacks, with no engine dependency.
+See [the release record](docs/intellij-support-0.1.0.md).
+
 ## Build and test
 
 Use the pinned **Kotlin Toolchain 0.13.0** wrapper. Kotlin remains pinned to
@@ -87,6 +95,10 @@ and the vendored Doris parser are sufficient. The optional explicit-library
 ClickHouse integration test skips when its library property is not configured.
 Corpus failures write review artifacts under `build/ledger-actual/`.
 
+The IntelliJ helper build provisions a checksum-pinned IDEA 261 SDK on Linux x64,
+or accepts `BRIKK_INTELLIJ_SDK` on other hosts. SDK classes are build inputs only.
+Core-only commands such as `./kotlin build -m brikk-sql` do not provision that SDK.
+
 Generators live in `tools/`. Some require pinned, gitignored upstream checkouts
 under `reference/`; see the research and vendor documentation before refreshing
 them. The [consumer verification harness](docs/consumer-verification.md) validates
@@ -94,8 +106,9 @@ candidate SQL JARs against a separate Doris IDE consumer.
 
 ## Publishing
 
-This repository publishes **only the four SQL artifacts** above. The module
-template owns the version, sources, POM metadata, and repository URLs.
+The four engine/metadata/verification artifacts share the publishing template.
+IntelliJ support has its own version and scoped release command; build tooling is
+never published. The template owns sources, POM metadata and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
   `0.19.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
@@ -103,6 +116,9 @@ template owns the version, sources, POM metadata, and repository URLs.
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.
 - Local release: `./publish-release.sh <version>`.
+- IDE support release: `python3 tools/publish_intellij_support.py <support-version>`.
+  Add `--core-version <version>` only when explicitly releasing core and metadata
+  prerequisites too. This command never releases verify/oracle.
 
 Required GitHub organization/repository secrets:
 `KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME`, `KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD`,
