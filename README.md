@@ -115,7 +115,11 @@ never published. The template owns sources, POM metadata and repository URLs.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.
-- Local release: `./publish-release.sh <version>`.
+- Local release: `./publish-release.sh <version>` for all four aligned SQL modules,
+  or name a subset, for example
+  `./publish-release.sh 0.19.0 brikk-sql-verify brikk-sql-oracle`.
+  Manual release workflow dispatch accepts the same selection as a comma-separated
+  `modules` input. Selected releases preserve the existing core artifacts.
 - IDE support release: `python3 tools/publish_intellij_support.py <support-version>`.
   Add `--core-version <version>` only when explicitly releasing core and metadata
   prerequisites too. This command never releases verify/oracle.

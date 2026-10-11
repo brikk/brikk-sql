@@ -74,9 +74,9 @@ class ReleaseLauncherTest(unittest.TestCase):
             "KOTLIN_TOOLCHAIN_SIGNING_KEY": "test-key",
         }
 
-    def run_release(self, version="0.16.1", exit_code=0):
+    def run_release(self, version="0.16.1", exit_code=0, modules=()):
         return subprocess.run(
-            ["bash", "publish-release.sh", version], cwd=self.root,
+            ["bash", "publish-release.sh", version, *modules], cwd=self.root,
             env={**self.env, "FAKE_EXIT_CODE": str(exit_code)},
             text=True, capture_output=True,
         )
@@ -100,6 +100,33 @@ class ReleaseLauncherTest(unittest.TestCase):
 
     def test_failed_publication_restores_original(self):
         result = self.run_release(exit_code=17)
+        self.assertEqual(17, result.returncode, result.stderr)
+        self.assert_restored()
+
+    def test_verifier_oracle_release_does_not_republish_core(self):
+        result = self.run_release("0.19.0", modules=("brikk-sql-verify", "brikk-sql-oracle"))
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([
+            "task", ":brikk-sql-verify:publishToMavenCentral",
+            ":brikk-sql-oracle:publishToMavenCentral",
+        ], (self.root / "observed-args.txt").read_text().splitlines())
+        self.assertIn('version: "0.19.0"', (self.root / "observed.yaml").read_text())
+        self.assert_restored()
+
+    def test_invalid_and_duplicate_modules_never_invoke_toolchain(self):
+        for modules in (
+            ("brikk-sql-intellij-support",), ("brikk-sql-intellij-tooling",),
+            ("brikk-sql-verify; echo bad",), ("",),
+            ("brikk-sql-verify", "brikk-sql-verify"),
+        ):
+            with self.subTest(modules=modules):
+                result = self.run_release(modules=modules)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertFalse((self.root / "observed-args.txt").exists())
+                self.assert_restored()
+
+    def test_selected_release_failure_restores_original(self):
+        result = self.run_release("0.19.0", exit_code=17, modules=("brikk-sql-verify", "brikk-sql-oracle"))
         self.assertEqual(17, result.returncode, result.stderr)
         self.assert_restored()
 
