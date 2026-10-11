@@ -114,8 +114,9 @@ class Scope(
     private var referencesCache: MutableList<Pair<String, Expression>>? = null
 
     init {
-        this.sources.putAll(this.lateralSources)
         this.sources.putAll(this.cteSources)
+        // Visible lateral inputs shadow same-named CTE declarations.
+        this.sources.putAll(this.lateralSources)
     }
 
     // sqlglot: Scope.clear_column_cache — invalidate the column-classification caches

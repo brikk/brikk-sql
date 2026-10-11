@@ -136,10 +136,21 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Native DuckDB/PostgreSQL/MySQL/Trino/StarRocks headers and rows pass (extension #43).
   Eight exact old-pin ordering rows and seven intentional native-first rows were
   individually reviewed; existing ledger reasons/signatures remain untouched.
-- [ ] **CORE-05 — Correlated UNNEST resolution:** resolve projection types in child
+- [x] **CORE-05 — Correlated UNNEST resolution:** resolve projection types in child
   scopes (`9f2f4cd5a2` / `6683ad28a4`, #8571), with TVF/PIVOT column-resolution
   changes (`30958d6152`, #8472). Test nested structs, stars, aliases, shadowing,
   correlations and no-schema conservatism.
+  Annotated projection types precede physical schema tracing; UNKNOWN computations
+  cannot borrow same-named underlying fields. Direct qualified pass-throughs retain
+  memoized schema evidence. Outer resolvers are cached and preserve inference policy;
+  permitted multi-level correlations stop at nearer UNKNOWN/unknown-source bindings.
+  Selected/lateral aliases shadow inherited CTE declarations during type annotation.
+  Nested struct fields, unaliased/element-qualified stars, alias lists, TVFs, Spark
+  lateral fields and CTE PIVOT outputs have hand-owned regressions. Native DuckDB
+  headers/types/rows and Trino 483 rows pass; portable BigQuery output executes in
+  DuckDB (no live BigQuery proof). Set-operation UNNEST discovery remains conservative,
+  matching the target's explicit deferral instead of guessing an arm's schema.
+  Both parameterized and parameter-free paths and Engine contracts pass (extension #44).
 
 ## Other supported dialects
 
@@ -262,3 +273,11 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   unresolved-star lineage entries are intentional safeguards. No generated fixture
   stamps/pin or pre-existing ledger signatures/reasons changed. Isolated containers
   had no host ports/volumes and were removed after verification.
+- 2026-10-11: ninth batch completes CORE-05 within the boundaries above. Build and
+  **1,216 Kotlin tests** pass with Trino's opt-in gates enabled; eleven other optional
+  native/source-engine tests skip. Nine release tests pass. The Engine compatibility
+  gate now contains 26 methods. No ledger entries, reasons, signatures, generated
+  fixtures or shipped pin changed. Trino 483 reused the cached pinned image in an
+  isolated container without host ports/volumes, removed after verification.
+  Final offline rerun: 1,212 pass, fifteen optional gates skip; non-projected
+  SEMI/ANTI join predicates retain their real source types under the visibility fix.

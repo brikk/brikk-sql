@@ -322,4 +322,36 @@ class EngineAnalysisContractTest {
         }
         assertEquals(original, fragment.ast)
     }
+
+    @Test
+    fun correlatedUnnestProjectionEvidenceSurvivesEnginePreparationWithoutFabricatedNullability() {
+        val source = "WITH t AS (SELECT [STRUCT('a' AS email, CAST(2 AS FLOAT64) AS magnitude)] AS items) " +
+            "SELECT (SELECT email FROM UNNEST(items)) AS linked_email, " +
+            "(SELECT MAX(magnitude) FROM UNNEST(items)) AS gallons FROM t"
+        val fragment = SqlFragment(source, "bigquery")
+        val original = fragment.ast.copy()
+        assertColumns(listOf(ColumnShape("linked_email", "VARCHAR"), ColumnShape("gallons", "DOUBLE")),
+            fragment.outputShape(), "computed correlated projection")
+        validateLikeEngine(source, "bigquery", ShapeCatalog.EMPTY)
+        val slots = ShapeCatalog(tables = emptyMap(), slots = mapOf("src" to Shape.of("items" to "INT64")))
+        val computed = SqlFragment("WITH t AS (SELECT [STRUCT('computed' AS email)] AS items FROM src()) " +
+            "SELECT (SELECT email FROM UNNEST(items)) AS linked_email FROM t", "bigquery")
+        assertColumns(listOf(ColumnShape("linked_email", "VARCHAR")), computed.outputShape(slots), "slot field must not override computation")
+        validateLikeEngine(computed.sql, "bigquery", slots)
+        assertEquals(original, fragment.ast)
+        assertEquals(source, fragment.sql)
+    }
+
+    @Test
+    fun unknownUnnestComputationsStayUnknownEvenWithSameNamedCatalogEvidence() {
+        val inputs = ShapeCatalog(mapOf("tbl" to Shape.of("items" to "ARRAY<STRUCT<email STRING>>")))
+        val fragment = SqlFragment("WITH t AS (SELECT MYSTERY(items) AS items FROM tbl) " +
+            "SELECT (SELECT email FROM UNNEST(items)) AS linked_email FROM t", "bigquery")
+        val original = fragment.ast.copy()
+        for (catalog in listOf(ShapeCatalog.EMPTY, inputs)) {
+            assertColumns(listOf(ColumnShape("linked_email", "UNKNOWN")), fragment.outputShape(catalog), "unknown computation/$catalog")
+            assertFailsWith<OptimizeError> { validateLikeEngine(fragment.sql, "bigquery", catalog) }
+        }
+        assertEquals(original, fragment.ast)
+    }
 }

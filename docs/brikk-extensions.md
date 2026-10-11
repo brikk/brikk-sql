@@ -1479,6 +1479,65 @@ and curated reasons are recorded separately as intentional-divergence, not appro
 by counts. Remove only the eight stale ordering rows during coherent fixture refresh;
 retain intentional safeguards unless the new oracle genuinely adopts them.
 
+## 44. Correlated UNNEST projection evidence and lexical source precedence
+
+SQLGlot #8571 (`9f2f4cd5a2`, corrected tests `6683ad28a4`) resolves correlated
+UNNEST struct fields from annotated source projections before searching physical
+schemas. Computed arrays/nested structs can supply child field types without a
+catalog, and a computed projection shadows a same-named physical column. CTE
+column aliases remain visible. #8472 caches the outer resolver chain; this port
+keeps those caches and propagates our existing explicit inference policy rather
+than reconstructing every resolver with a different default.
+
+**Evidence boundaries:** the upstream fallback walks arbitrary nested sources by
+name. We instead trace an UNKNOWN projection only when a direct qualified column
+proves its source binding. An unknown function result, duplicate projected name,
+or renamed scalar cannot borrow a same-named ARRAY/STRUCT from another projection
+or physical input. Known and UNKNOWN trace results are memoized; recursive visits
+have an in-progress guard. Set-operation UNNEST field discovery remains deferred
+(as explicitly reverted in #8571), not guessed from the first physical arm. This
+does not remove the existing reconciled type summaries for ordinary set outputs.
+
+Type annotation also respects lexical visibility. Inherited CTE declarations are
+not themselves FROM bindings: selected sources and visible lateral inputs win,
+and outer lookup crosses only correlatable scopes. This fixes the frozen target's
+same-name CTE/inner-source shadowing bug, independently proved with native DuckDB
+and Trino results. Multi-level UNNEST input discovery follows the permitted outer
+resolver chain and stops at a nearer UNKNOWN binding or a potentially owning
+unknown local source, rather than stealing farther-out type evidence.
+
+`CorrelatedUnnestCatchupTest` covers the upstream computed/nested cases, physical
+name collisions, CTE aliases, local/UNKNOWN shadowing, multi-level correlations,
+unaliased bare stars and element-qualified struct stars, missing-field refusal,
+TVF conservatism, Spark lateral schema fields and CTE PIVOT outputs. A twelve-level
+shared-source DAG checks memoization of both known and UNKNOWN schema types. The
+new-signature APIs still disable inference; explicit true/null keeps legacy TVF
+qualification with UNKNOWN types. No public constructor/default bridge changed.
+
+`CorrelatedUnnestResultTest` compares native DuckDB field labels, types and rows
+before/after qualification, including NULL/empty arrays, nested structs, computed
+schema collisions, same-name CTE shadowing, real parquet TVFs and CTE PIVOTs. Typed
+portable BigQuery correlated output also executes in DuckDB with asserted values;
+that is not a live BigQuery proof or a general BigQuery-to-DuckDB UNNEST lowering.
+No live Spark/Doris proof is claimed by the schema-resolution regressions.
+
+`CorrelatedUnnestTrinoTest` compares native Trino 483 headers and rows across all
+three inference policies, including nearer-source shadowing and NULL/empty arrays.
+The shadowed scalar output is also asserted BIGINT in the annotated tree.
+
+```sh
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*CorrelatedUnnestTrinoTest'
+```
+
+Verification reused image `db58cc93e593...` (extension #38) in an isolated
+container without host ports/volumes, removed afterward. Two added Engine
+contracts protect computed correlated shape types (including bound partial slots),
+UNKNOWN computations despite same-named catalog fields, conservative nullability,
+strict two-step validation and nonmutation of the original SqlFragment AST.
+All existing exact corpus gates pass: no ledger waivers or fixture/pin changes
+were needed for this batch.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

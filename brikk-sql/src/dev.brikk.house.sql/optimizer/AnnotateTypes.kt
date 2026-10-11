@@ -603,9 +603,15 @@ class TypeAnnotator(
         var source: Any? = null
         var sourceScope: Scope? = scope
         while (sourceScope != null && source == null) {
-            source = sourceScope.sources[table]
+            // brikk extension (docs/brikk-extensions.md #44): an inherited CTE
+            // declaration is not a FROM binding. A nearer
+            // selected/lateral alias must win before looking into outer scopes.
+            if (table in sourceScope.selectedSources || table in sourceScope.lateralSources ||
+                table in sourceScope.semiOrAntiJoinTables) {
+                source = sourceScope.sources[table]
+            }
             if (source == null) {
-                sourceScope = sourceScope.parent
+                sourceScope = if (sourceScope.canBeCorrelated) sourceScope.parent else null
             }
         }
 
