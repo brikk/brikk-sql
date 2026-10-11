@@ -34,7 +34,7 @@ class DuckdbCaptureTest {
         settings = DUCKDB_SETTINGS.vendored(version),
         extensions = DUCKDB_EXTENSIONS.vendored(version),
         extensionFunctions = vendorData.resolve("duckdb-extension-functions-$version.tsv").takeIf { it.exists() }
-            ?.let { file -> readDump(file).rows.map { DuckdbExtensionFunctionRow(checkNotNull(it[0]), DUCKDB_FUNCTIONS.decode(it.drop(1))) } }
+            ?.let { file -> readDump(file).rows.map { DuckdbExtensionFunctionRow(checkNotNull(it[0]), checkNotNull(it[1]), DUCKDB_FUNCTIONS.decode(it.drop(2))) } }
             .orEmpty(),
     )
 

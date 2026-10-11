@@ -107,7 +107,7 @@ def extension_row(r: dict[str, str | None]) -> tuple[str, int]:
 
 def extension_function_row(r: dict[str, str | None]) -> tuple[str, int]:
     function, cost = function_row(r)
-    return f"DuckdbExtensionFunctionRow({kstr(r['extension'])}, {function})", cost + 2
+    return f"DuckdbExtensionFunctionRow({kstr(r['extension'])}, {kstr(r['extension_version'])}, {function})", cost + 3
 
 
 def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tuple[str, list[str]]:

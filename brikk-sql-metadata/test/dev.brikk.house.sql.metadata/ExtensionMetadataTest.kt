@@ -41,4 +41,12 @@ class ExtensionMetadataTest {
         assertEquals(false, extensions["spatial"]?.staticallyLinked)
         assertEquals(listOf("http", "https", "s3"), extensions["httpfs"]?.aliases)
     }
+
+    @Test
+    fun capturedExtensionsRecordTheLoadedBuild() {
+        val extensions = checkNotNull(duckdb.extensions).associateBy { it.name }
+
+        assertTrue(extensions["spatial"]?.version.orEmpty().isNotEmpty())
+        assertEquals(null, extensions["icu"]?.version)
+    }
 }

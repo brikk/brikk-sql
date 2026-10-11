@@ -49,7 +49,10 @@ fun DuckdbDump.toSnapshot(): MetadataSnapshot {
             byExtension.flatMap { (extension, rows) -> pragmaDefs(rows, functionCatalog, extension) })
             .sortedWith(compareBy({ it.name }, { it.extension })),
         settings = settings?.map { SettingDef(it.name, it.inputType, it.scope, it.aliases, it.description) },
-        extensions = extensions?.map { ExtensionDef(it.name, it.staticallyLinked, it.aliases, it.description) },
+        extensions = extensions?.map { row ->
+            val version = extensionFunctions.filter { it.extension == row.name }.map { it.extensionVersion }.distinct().singleOrNull()
+            ExtensionDef(row.name, row.staticallyLinked, row.aliases, row.description, version?.ifEmpty { null })
+        },
         extensionFunctions = byExtension.flatMap { (extension, rows) -> functionDefs(rows).map { it.copy(extension = extension) } },
         grammarForms = DUCKDB_GRAMMAR_FORMS,
     )

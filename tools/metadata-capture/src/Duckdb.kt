@@ -23,7 +23,8 @@ fun captureDuckdb(vendorData: Path) {
 
 /**
  * Writes vendor/data/duckdb-extension-functions-<version>.tsv: for each of [CAPTURED_EXTENSIONS],
- * the `duckdb_functions()` rows that `LOAD` adds on a fresh engine. Installing an extension
+ * the `duckdb_functions()` rows that `LOAD` adds on a fresh engine, with the loaded
+ * `extension_version` (empty for a statically linked extension). Installing an extension
  * needs the DuckDB extension repository (network); a statically linked one adds no rows.
  */
 fun captureDuckdbExtensionFunctions(vendorData: Path) {
@@ -31,13 +32,19 @@ fun captureDuckdbExtensionFunctions(vendorData: Path) {
         DriverManager.getConnection("jdbc:duckdb:").use { connection ->
             val baseline = DUCKDB_FUNCTIONS.dump(connection).rows.toSet()
             connection.createStatement().use { it.execute("INSTALL $extension; LOAD $extension;") }
+            val extensionVersion = connection.scalar(
+                "SELECT extension_version FROM duckdb_extensions() WHERE extension_name = '$extension'",
+            )
             val added = DUCKDB_FUNCTIONS.dump(connection).rows.filterNot(baseline::contains)
-            println("$extension: ${added.size} rows")
-            added.map { listOf(extension) + it }
+            println("$extension $extensionVersion: ${added.size} rows")
+            added.map { listOf(extension, extensionVersion) + it }
         }
     }
     val version = DriverManager.getConnection("jdbc:duckdb:").use { it.engineVersion() }
-    writeDump(vendorData.resolve("duckdb-extension-functions-$version.tsv"), Dump(listOf("extension") + DUCKDB_FUNCTIONS.columns, rows))
+    writeDump(
+        vendorData.resolve("duckdb-extension-functions-$version.tsv"),
+        Dump(listOf("extension", "extension_version") + DUCKDB_FUNCTIONS.columns, rows),
+    )
 }
 
 fun DuckdbCapture<*>.dump(connection: Connection): Dump = connection.createStatement().use { statement ->

@@ -136,11 +136,16 @@ val DUCKDB_EXTENSIONS: DuckdbCapture<DuckdbExtensionRow> = DuckdbCapture(
 }
 
 /**
- * A `duckdb_functions()` row that appeared after `LOAD [extension]` on a fresh engine. The
- * vendored `duckdb-extension-functions-<version>.tsv` holds `extension` followed by the
- * [DUCKDB_FUNCTIONS] columns.
+ * A `duckdb_functions()` row that appeared after `LOAD [extension]` on a fresh engine, where
+ * `duckdb_extensions()` reported [extensionVersion] (empty for a statically linked one). The
+ * vendored `duckdb-extension-functions-<version>.tsv` holds `extension`, `extension_version`,
+ * then the [DUCKDB_FUNCTIONS] columns.
  */
-data class DuckdbExtensionFunctionRow(val extension: String, val function: DuckdbFunctionRow)
+data class DuckdbExtensionFunctionRow(
+    val extension: String,
+    val extensionVersion: String,
+    val function: DuckdbFunctionRow,
+)
 
 private fun List<String?>.required(index: Int): String = checkNotNull(this[index]) { "column $index is null in $this" }
 
