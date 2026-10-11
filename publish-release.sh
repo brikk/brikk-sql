@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 #
-# Publish a RELEASE of all publishable modules to Maven Central (Central Portal).
+# Publish a RELEASE of the SQL modules to Maven Central (Central Portal).
 #
-#   ./publish-release.sh <version>          e.g.  ./publish-release.sh 0.1.0
+#   ./publish-release.sh <version> [module ...]
+#   ./publish-release.sh 0.19.0 brikk-sql-verify brikk-sql-oracle
+# With no module arguments, publish the four aligned SQL modules.
+# IntelliJ support has its own independently versioned release command.
 #
 # Required environment variables (Central Portal user token + PGP signing key). The Central
 # credential name differs by toolchain version — set EITHER spelling, this script exports both:
@@ -22,11 +25,31 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 VERSION="${1:-}"
-if [ "$#" -ne 1 ]; then
-  echo "usage: $0 <version>   (e.g. 0.1.0)" >&2
+if [ "$#" -lt 1 ]; then
+  echo "usage: $0 <version> [brikk-sql|brikk-sql-metadata|brikk-sql-verify|brikk-sql-oracle ...]" >&2
   exit 2
 fi
 python3 tools/release_config.py validate "$VERSION"
+shift
+
+MODULES=("$@")
+if [ "${#MODULES[@]}" -eq 0 ]; then
+  MODULES=(brikk-sql brikk-sql-metadata brikk-sql-verify brikk-sql-oracle)
+fi
+TASKS=()
+declare -A SEEN=()
+for module in "${MODULES[@]}"; do
+  case "$module" in
+    brikk-sql|brikk-sql-metadata|brikk-sql-verify|brikk-sql-oracle) ;;
+    *) echo "ERROR: unsupported SQL release module: $module" >&2; exit 2 ;;
+  esac
+  if [ -n "${SEEN[$module]:-}" ]; then
+    echo "ERROR: duplicate SQL release module: $module" >&2
+    exit 2
+  fi
+  SEEN[$module]=1
+  TASKS+=(":${module}:publishToMavenCentral")
+done
 
 # Env-var name compatibility. The name the toolchain reads changed between versions:
 #   - 0.11 reads KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME/PASSWORD   (NO underscore)
@@ -66,16 +89,12 @@ trap 'exit 143' TERM
 # their meaning. Toolchain merges these publishing overrides after the base settings.
 python3 tools/release_config.py template "$VERSION" "./$(basename "$BACKUP")" > "$TMPL"
 
-echo ">> Publishing release ${VERSION} to Maven Central (all modules)..."
+echo ">> Publishing release ${VERSION} to Maven Central: ${MODULES[*]}"
 # Invoke the registered Portal tasks directly, avoiding repository validation
 # of the special Maven Central Portal target in the generic publish command.
-# Keep this explicit public-library list in sync with publishing.enabled modules;
-# Engine tooling and private consumers must never enter the release graph.
-./kotlin task \
-  :brikk-sql:publishToMavenCentral \
-  :brikk-sql-metadata:publishToMavenCentral \
-  :brikk-sql-verify:publishToMavenCentral \
-  :brikk-sql-oracle:publishToMavenCentral
+# The allowlist above prevents build tooling or independently versioned libraries
+# entering this release graph. Dependency compilation does not publish dependencies.
+./kotlin task "${TASKS[@]}"
 
 echo ""
 echo ">> Bundles uploaded for automatic validation and publication. Track deployments at:"

@@ -280,7 +280,7 @@ private fun sameSyntax(left: Expression, right: Expression): Boolean {
     return true
 }
 
-private fun parameterOccurrences(root: Expression, tokens: List<Token>): List<ParameterOccurrence> =
+internal fun parameterOccurrences(root: Expression, tokens: List<Token>): List<ParameterOccurrence> =
     root.walk().filter { it is Parameter || it is Placeholder }.map { node ->
         val origin = node.syntaxOrigin
             ?: throw UnsupportedError("Cannot prove the syntactic interval of parameter '${node.name}'")

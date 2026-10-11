@@ -1,0 +1,14 @@
+tasks:
+  prepareSqlIdeApi:
+    action: !dev.brikk.house.sql.intellij.tooling.prepareSqlIdeApi
+      outputDir: ${project.rootDir}/build/intellij-sql-api
+      revisionDir: ${project.rootDir}/build/intellij-sql-api-revision
+      license: ${project.rootDir}/LICENSE
+      resourceDir: ${taskOutputDir}/resources
+
+generated:
+  sources:
+    - directory: ${tasks.prepareSqlIdeApi.action.revisionDir}
+      language: kotlin
+  resources:
+    - directory: ${tasks.prepareSqlIdeApi.action.resourceDir}

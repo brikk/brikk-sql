@@ -2618,10 +2618,23 @@ open class Parser(
 
     // sqlglot: Parser._parse_table_part
     protected open fun parseTablePart(schema: kotlin.Boolean = false): Expression? =
-        (if (!schema) parseFunction(optionalParens = false) else null)
+        (if (!schema) parseEmptyRowsTableCall() ?: parseFunction(optionalParens = false) else null)
             ?: parseIdVar(anyToken = false)
             ?: parseStringAsIdentifier()
             ?: parsePlaceholder()
+
+    // A named zero-argument relation slot may use ROWS, which the tokenizer reserves for
+    // window frames. Only this exact table-position call is extended; native ROWS clauses
+    // and calls with arguments keep their existing grammar.
+    private fun parseEmptyRowsTableCall(): Expression? {
+        if (currToken.tokenType != TokenType.ROWS || nextToken.tokenType != TokenType.L_PAREN ||
+            tokens.getOrNull(index + 2)?.tokenType != TokenType.R_PAREN) return null
+        return captureSyntax {
+            val token = currToken
+            advance(3)
+            expression(Anonymous(args("this" to token.text, "expressions" to emptyList<Expression>())), token)
+        }
+    }
 
     // sqlglot: Parser._parse_table_parts_fast
     protected fun parseTablePartsFast(): Expression? {

@@ -4,7 +4,7 @@ name: Release to Maven Central
 # version of all modules to Maven Central. The version is the branch-name suffix after
 # "release/". Central validates and publishes the deployment bundles automatically.
 #
-# A manual run (workflow_dispatch) with an explicit version input is also supported.
+# A manual run can select comma-separated modules to complete a partial release.
 #
 # The full test suite (test.yml) must be green first; a red gate blocks the release (EVAL-03).
 
@@ -16,6 +16,10 @@ on:
       version:
         description: 'Release version (e.g. 0.1.0)'
         required: true
+      modules:
+        description: 'Optional comma-separated SQL modules; empty releases all four'
+        required: false
+        default: ''
 
 concurrency:
   group: release-${{ github.ref }}
@@ -77,4 +81,11 @@ jobs:
           KOTLIN_TOOLCHAIN_SIGNING_KEY: ${{ secrets.KOTLIN_TOOLCHAIN_SIGNING_KEY }}
           KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE: ${{ secrets.KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE || secrets.KOTLIN_TOOLCHAIN_SIGNING_PASSPHRASE }}
           KOTLIN_TOOLCHAIN_SIGNING_PASSPHRASE: ${{ secrets.KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE || secrets.KOTLIN_TOOLCHAIN_SIGNING_PASSPHRASE }}
-        run: ./publish-release.sh "${{ steps.ver.outputs.version }}"
+          RELEASE_VERSION: ${{ steps.ver.outputs.version }}
+          RELEASE_MODULES: ${{ github.event.inputs.modules }}
+        run: |
+          modules=()
+          if [ -n "$RELEASE_MODULES" ]; then
+            IFS=',' read -r -a modules <<< "$RELEASE_MODULES"
+          fi
+          ./publish-release.sh "$RELEASE_VERSION" "${modules[@]}"

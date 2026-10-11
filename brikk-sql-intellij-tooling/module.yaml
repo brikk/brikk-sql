@@ -1,0 +1,10 @@
+product: jvm/amper-plugin
+
+apply:
+  - ../publish-targets.module-template.yaml
+
+settings:
+  publishing:
+    enabled: false
+  kotlin:
+    version: 2.4.10

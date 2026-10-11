@@ -9,7 +9,7 @@
 // verdict, ties keep JSON order).
 package dev.brikk.house.sql.metadata
 
-/** The 258 probe-verified (duckdb->doris) verdicts, in JSON order. */
+/** The 259 probe-verified (duckdb->doris) verdicts, in JSON order. */
 internal val DUCKDB_TO_DORIS_HAZARD_ENTRIES: List<FunctionHazard> = duckdbDorisChunk0() +
     duckdbDorisChunk1() +
     duckdbDorisChunk2() +
@@ -1804,10 +1804,17 @@ private fun duckdbDorisChunk6(): List<FunctionHazard> = listOf(
         provenance = "cross-engine aggregate probe 2026-07-13: DuckDB 1.5.4 / ClickHouse 26.5.1.1 (chdb) / Trino 481 / Doris (FE pr62767-local, BE 4.1.2); docs/research/probe-runs/aggregates-round.*",
         sourceName = "array_agg",
         targetName = "array_agg"),
+    // [258] duckdb: 'CAST' | doris: 'CAST'
+    FunctionHazard(HazardVerdict.CONDITIONALLY_EQUIVALENT,
+        hazard = "Live-probed DuckDB 1.5.6 / Doris 4.1.4.1: NULL, signed integer widening/identity, in-range integer text and ordinary valid DATE text agree. Equivalence requires compatible source/target types, representable values and matching conversion rules; a bare column's type/domain is unknown. Fractional DECIMAL/DOUBLE to integer diverges: DuckDB rounds (3.5 -> 4, -1.7 -> -2), Doris truncates (3, -1). Integer text also differs: '1.5' -> DuckDB 2 vs Doris 1 in non-strict mode/error in strict mode; '1e2' -> DuckDB 100 vs Doris NULL/error. Invalid input, overflow, NaN/Infinity and invalid dates throw in DuckDB CAST but return NULL in Doris when enable_strict_cast=false; enable_strict_cast=true restores errors, not rounding/parser parity. Other type families are not blanket-equivalent: BOOLEAN to VARCHAR is 'true' vs '1'; DATE to BIGINT errors in DuckDB but yields YYYYMMDD in Doris. Temporal range/precision/timezone, string formatting and complex-type conversions require separate review. TRY_CAST is not an alias of this evidence. Certification records a conditional warning, not type/value proof or a rewrite.",
+        areas = listOf("numeric", "null", "string", "datetime", "type"),
+        provenance = "REPORT-duckdb-doris-cast-coverage-2026-10-10.md#cast",
+        sourceName = "CAST",
+        targetName = "CAST"),
 )
 
 
-/** The 258 probe-verified (doris->duckdb) verdicts, in JSON order. */
+/** The 259 probe-verified (doris->duckdb) verdicts, in JSON order. */
 internal val DORIS_TO_DUCKDB_HAZARD_ENTRIES: List<FunctionHazard> = dorisDuckdbChunk0() +
     dorisDuckdbChunk1() +
     dorisDuckdbChunk2() +
@@ -3602,10 +3609,17 @@ private fun dorisDuckdbChunk6(): List<FunctionHazard> = listOf(
         provenance = "cross-engine aggregate probe 2026-07-13: DuckDB 1.5.4 / ClickHouse 26.5.1.1 (chdb) / Trino 481 / Doris (FE pr62767-local, BE 4.1.2); docs/research/probe-runs/aggregates-round.*",
         sourceName = "array_agg",
         targetName = "array_agg"),
+    // [258] duckdb: 'CAST' | doris: 'CAST'
+    FunctionHazard(HazardVerdict.CONDITIONALLY_EQUIVALENT,
+        hazard = "Live-probed DuckDB 1.5.6 / Doris 4.1.4.1: NULL, signed integer widening/identity, in-range integer text and ordinary valid DATE text agree. Equivalence requires compatible source/target types, representable values and matching conversion rules; a bare column's type/domain is unknown. Fractional DECIMAL/DOUBLE to integer diverges: DuckDB rounds (3.5 -> 4, -1.7 -> -2), Doris truncates (3, -1). Integer text also differs: '1.5' -> DuckDB 2 vs Doris 1 in non-strict mode/error in strict mode; '1e2' -> DuckDB 100 vs Doris NULL/error. Invalid input, overflow, NaN/Infinity and invalid dates throw in DuckDB CAST but return NULL in Doris when enable_strict_cast=false; enable_strict_cast=true restores errors, not rounding/parser parity. Other type families are not blanket-equivalent: BOOLEAN to VARCHAR is 'true' vs '1'; DATE to BIGINT errors in DuckDB but yields YYYYMMDD in Doris. Temporal range/precision/timezone, string formatting and complex-type conversions require separate review. TRY_CAST is not an alias of this evidence. Certification records a conditional warning, not type/value proof or a rewrite.",
+        areas = listOf("numeric", "null", "string", "datetime", "type"),
+        provenance = "REPORT-duckdb-doris-cast-coverage-2026-10-10.md#cast",
+        sourceName = "CAST",
+        targetName = "CAST"),
 )
 
 
-/** duckdb->doris lookup: 258 keys (DuckDB-side names) over 258 entries. */
+/** duckdb->doris lookup: 259 keys (DuckDB-side names) over 259 entries. */
 internal val DUCKDB_TO_DORIS_HAZARDS: Map<String, FunctionHazard> = buildMap {
     put("ABS", DUCKDB_TO_DORIS_HAZARD_ENTRIES[16])
     put("ACOS", DUCKDB_TO_DORIS_HAZARD_ENTRIES[21])
@@ -3635,6 +3649,7 @@ internal val DUCKDB_TO_DORIS_HAZARDS: Map<String, FunctionHazard> = buildMap {
     put("BOOL_AND", DUCKDB_TO_DORIS_HAZARD_ENTRIES[81])
     put("BOOL_OR", DUCKDB_TO_DORIS_HAZARD_ENTRIES[82])
     put("CARDINALITY", DUCKDB_TO_DORIS_HAZARD_ENTRIES[106])
+    put("CAST", DUCKDB_TO_DORIS_HAZARD_ENTRIES[258])
     put("CBRT", DUCKDB_TO_DORIS_HAZARD_ENTRIES[34])
     put("CEIL", DUCKDB_TO_DORIS_HAZARD_ENTRIES[46])
     put("CENTURY", DUCKDB_TO_DORIS_HAZARD_ENTRIES[141])
@@ -3867,7 +3882,7 @@ internal val DUCKDB_TO_DORIS_HAZARDS: Map<String, FunctionHazard> = buildMap {
     put("YEARWEEK", DUCKDB_TO_DORIS_HAZARD_ENTRIES[132])
 }
 
-/** doris->duckdb lookup: 248 keys (Doris-side names) over 258 entries. */
+/** doris->duckdb lookup: 249 keys (Doris-side names) over 259 entries. */
 internal val DORIS_TO_DUCKDB_HAZARDS: Map<String, FunctionHazard> = buildMap {
     put("ABS", DORIS_TO_DUCKDB_HAZARD_ENTRIES[16])
     put("ACOS", DORIS_TO_DUCKDB_HAZARD_ENTRIES[21])
@@ -3909,6 +3924,7 @@ internal val DORIS_TO_DUCKDB_HAZARDS: Map<String, FunctionHazard> = buildMap {
     put("BOOL_AND", DORIS_TO_DUCKDB_HAZARD_ENTRIES[81])
     put("BOOL_OR", DORIS_TO_DUCKDB_HAZARD_ENTRIES[82])
     put("CARDINALITY", DORIS_TO_DUCKDB_HAZARD_ENTRIES[106])
+    put("CAST", DORIS_TO_DUCKDB_HAZARD_ENTRIES[258])
     put("CBRT", DORIS_TO_DUCKDB_HAZARD_ENTRIES[34])
     put("CEIL", DORIS_TO_DUCKDB_HAZARD_ENTRIES[46])
     put("CENTURY", DORIS_TO_DUCKDB_HAZARD_ENTRIES[141])

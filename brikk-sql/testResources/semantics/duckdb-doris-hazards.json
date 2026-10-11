@@ -2702,6 +2702,20 @@
         "aggregate"
       ],
       "provenance": "cross-engine aggregate probe 2026-07-13: DuckDB 1.5.4 / ClickHouse 26.5.1.1 (chdb) / Trino 481 / Doris (FE pr62767-local, BE 4.1.2); docs/research/probe-runs/aggregates-round.*"
+    },
+    {
+      "duckdb": "CAST",
+      "doris": "CAST",
+      "verdict": "conditionally-equivalent",
+      "hazard": "Live-probed DuckDB 1.5.6 / Doris 4.1.4.1: NULL, signed integer widening/identity, in-range integer text and ordinary valid DATE text agree. Equivalence requires compatible source/target types, representable values and matching conversion rules; a bare column's type/domain is unknown. Fractional DECIMAL/DOUBLE to integer diverges: DuckDB rounds (3.5 -> 4, -1.7 -> -2), Doris truncates (3, -1). Integer text also differs: '1.5' -> DuckDB 2 vs Doris 1 in non-strict mode/error in strict mode; '1e2' -> DuckDB 100 vs Doris NULL/error. Invalid input, overflow, NaN/Infinity and invalid dates throw in DuckDB CAST but return NULL in Doris when enable_strict_cast=false; enable_strict_cast=true restores errors, not rounding/parser parity. Other type families are not blanket-equivalent: BOOLEAN to VARCHAR is 'true' vs '1'; DATE to BIGINT errors in DuckDB but yields YYYYMMDD in Doris. Temporal range/precision/timezone, string formatting and complex-type conversions require separate review. TRY_CAST is not an alias of this evidence. Certification records a conditional warning, not type/value proof or a rewrite.",
+      "areas": [
+        "numeric",
+        "null",
+        "string",
+        "datetime",
+        "type"
+      ],
+      "provenance": "REPORT-duckdb-doris-cast-coverage-2026-10-10.md#cast"
     }
   ]
 }
