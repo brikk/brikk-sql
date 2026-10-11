@@ -4,6 +4,7 @@ import com.intellij.notification.Notification
 import com.intellij.notification.Notifications
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
+import com.intellij.psi.PsiManager
 import com.intellij.sql.psi.SqlLanguage
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -20,9 +21,9 @@ class TestToggleSettings(project: Project) : ToggleSettings(project, SqlLanguage
 
 class PlatformHelpersTest : BasePlatformTestCase() {
     fun testToggleReparsesOnlyFilesOfItsLanguage() {
-        val sql = myFixture.configureByText("toggle-${UUID.randomUUID()}.sql", "SELECT 1")
-        val text = myFixture.addFileToProject("toggle-${UUID.randomUUID()}.txt", "plain")
+        val files = listOf("sql", "txt").map { myFixture.addFileToProject("toggle-${UUID.randomUUID()}.$it", "SELECT 1").virtualFile }
         val settings = TestToggleSettings(project).apply { initializeComponent() }
+        val (sql, text) = files.map { checkNotNull(PsiManager.getInstance(project).findFile(it)) }
 
         settings.enabled = true
         settings.enabled = true
