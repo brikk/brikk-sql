@@ -99,6 +99,39 @@ val DUCKDB_SETTINGS: DuckdbCapture<DuckdbSettingRow> = DuckdbCapture(
     )
 }
 
+/** One `duckdb_extensions()` row, without the installation-dependent columns. */
+data class DuckdbExtensionRow(
+    val name: String,
+    val staticallyLinked: Boolean,
+    val aliases: List<String> = emptyList(),
+    val description: String? = null,
+)
+
+val DUCKDB_EXTENSIONS: DuckdbCapture<DuckdbExtensionRow> = DuckdbCapture(
+    name = "extensions",
+    sql = """
+        SELECT extension_name, (install_mode = 'STATICALLY_LINKED')::VARCHAR AS statically_linked,
+               to_json(aliases)::VARCHAR AS aliases, description
+        FROM duckdb_extensions()
+        ORDER BY ALL
+    """.trimIndent(),
+    columns = listOf("extension_name", "statically_linked", "aliases", "description"),
+) { row ->
+    DuckdbExtensionRow(
+        name = row.required(0),
+        staticallyLinked = row.required(1).toBooleanStrict(),
+        aliases = row.jsonList(2).map { checkNotNull(it) { "null alias in $row" } },
+        description = row[3],
+    )
+}
+
+/**
+ * A `duckdb_functions()` row that appeared after `LOAD [extension]` on a fresh engine. The
+ * vendored `duckdb-extension-functions-<version>.tsv` holds `extension` followed by the
+ * [DUCKDB_FUNCTIONS] columns.
+ */
+data class DuckdbExtensionFunctionRow(val extension: String, val function: DuckdbFunctionRow)
+
 private fun List<String?>.required(index: Int): String = checkNotNull(this[index]) { "column $index is null in $this" }
 
 private fun List<String?>.jsonList(index: Int): List<String?> =

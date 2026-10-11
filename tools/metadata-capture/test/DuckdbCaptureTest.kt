@@ -1,3 +1,4 @@
+import dev.brikk.house.sql.metadata.DUCKDB_EXTENSIONS
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
 import dev.brikk.house.sql.metadata.DUCKDB_KEYWORDS
 import dev.brikk.house.sql.metadata.DUCKDB_SETTINGS
@@ -5,6 +6,7 @@ import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DuckdbCapture
 import dev.brikk.house.sql.metadata.DuckdbDump
+import dev.brikk.house.sql.metadata.DuckdbExtensionFunctionRow
 import dev.brikk.house.sql.metadata.toSnapshot
 import java.sql.DriverManager
 import kotlin.io.path.Path
@@ -19,7 +21,7 @@ class DuckdbCaptureTest {
 
     private val vendorData = Path("../../vendor/data")
 
-    private val captures = listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS, DUCKDB_SETTINGS)
+    private val captures = listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS, DUCKDB_SETTINGS, DUCKDB_EXTENSIONS)
 
     private fun <T> DuckdbCapture<T>.vendored(version: String): List<T>? =
         vendorData.resolve("duckdb-$name-$version.tsv").takeIf { it.exists() }?.let { readDump(it).rows.map(::decode) }
@@ -29,6 +31,10 @@ class DuckdbCaptureTest {
         functions = checkNotNull(DUCKDB_FUNCTIONS.vendored(version)),
         keywords = DUCKDB_KEYWORDS.vendored(version),
         settings = DUCKDB_SETTINGS.vendored(version),
+        extensions = DUCKDB_EXTENSIONS.vendored(version),
+        extensionFunctions = vendorData.resolve("duckdb-extension-functions-$version.tsv").takeIf { it.exists() }
+            ?.let { file -> readDump(file).rows.map { DuckdbExtensionFunctionRow(checkNotNull(it[0]), DUCKDB_FUNCTIONS.decode(it.drop(1))) } }
+            .orEmpty(),
     )
 
     @Test
@@ -42,6 +48,8 @@ class DuckdbCaptureTest {
             assertEquals(vendored.keywords?.keywords, bundled.keywords?.keywords, bundled.engineVersion)
             assertEquals(vendored.pragmas, bundled.pragmas, bundled.engineVersion)
             assertEquals(vendored.settings, bundled.settings, bundled.engineVersion)
+            assertEquals(vendored.extensions, bundled.extensions, bundled.engineVersion)
+            assertEquals(vendored.extensionFunctions, bundled.extensionFunctions, bundled.engineVersion)
         }
     }
 

@@ -145,6 +145,9 @@ data class FunctionOverload(
  * engine exposes none for this function (all Trino/DuckDB defs currently; Doris defs
  * whose class carries no ComputeNullable marker). Null and an all-defaults profile mean
  * the same thing semantically — generators emit null to keep the catalogs lean.
+ *
+ * [extension] names the extension that registers the function; set only on
+ * [MetadataSnapshot.extensionFunctions], never on a base-catalog def.
  */
 @Serializable
 data class FunctionDef(
@@ -155,6 +158,7 @@ data class FunctionDef(
     @SerialName("native_kind") val nativeKind: String? = null,
     @SerialName("since_version") val sinceVersion: String? = null,
     val profile: SemanticProfile? = null,
+    val extension: String? = null,
 )
 
 /**

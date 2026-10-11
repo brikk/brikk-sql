@@ -11,6 +11,8 @@ class DuckdbDump(
     val functions: List<DuckdbFunctionRow>,
     val keywords: List<DuckdbKeywordRow>? = null,
     val settings: List<DuckdbSettingRow>? = null,
+    val extensions: List<DuckdbExtensionRow>? = null,
+    val extensionFunctions: List<DuckdbExtensionFunctionRow> = emptyList(),
 )
 
 /**
@@ -27,21 +29,28 @@ class DuckdbDump(
  * Fails on a function type it does not know, so a new engine kind is mapped deliberately.
  *
  * [MetadataSnapshot.pragmas] are the `pragma` rows, one [PragmaDef] per name with the same
- * overload shape, linked to a `pragma_<name>` table function when one exists. A keyword
- * category it does not know reads as [KeywordCategory.UNKNOWN].
+ * overload shape, linked to a `pragma_<name>` table function when one exists. Extension rows
+ * map the same way per extension, into [MetadataSnapshot.extensionFunctions] and pragmas
+ * carrying their extension. A keyword category it does not know reads as
+ * [KeywordCategory.UNKNOWN].
  */
 fun DuckdbDump.toSnapshot(): MetadataSnapshot {
+    val byExtension = extensionFunctions.groupBy({ it.extension }, { it.function }).toSortedMap()
     val functionCatalog = FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS)
     return MetadataSnapshot(
         engineVersion,
         functionCatalog,
         keywords = keywords?.let { rows -> KeywordCatalog(rows.map { KeywordDef(it.name, keywordCategory(it.category)) }) },
-        pragmas = pragmaDefs(functions, functionCatalog),
+        pragmas = (pragmaDefs(functions, functionCatalog) +
+            byExtension.flatMap { (extension, rows) -> pragmaDefs(rows, functionCatalog, extension) })
+            .sortedWith(compareBy({ it.name }, { it.extension })),
         settings = settings?.map { SettingDef(it.name, it.inputType, it.scope, it.aliases, it.description) },
+        extensions = extensions?.map { ExtensionDef(it.name, it.staticallyLinked, it.aliases, it.description) },
+        extensionFunctions = byExtension.flatMap { (extension, rows) -> functionDefs(rows).map { it.copy(extension = extension) } },
     )
 }
 
-private fun pragmaDefs(rows: List<DuckdbFunctionRow>, functions: FunctionCatalog): List<PragmaDef> =
+private fun pragmaDefs(rows: List<DuckdbFunctionRow>, functions: FunctionCatalog, extension: String? = null): List<PragmaDef> =
     rows.filter { it.type == PRAGMA }
         .groupBy { it.name }
         .map { (name, group) ->
@@ -49,9 +58,9 @@ private fun pragmaDefs(rows: List<DuckdbFunctionRow>, functions: FunctionCatalog
                 name = name,
                 overloads = group.overloads(),
                 tableFunction = "pragma_$name".takeIf(functions::isTableFunction),
+                extension = extension,
             )
         }
-        .sortedBy { it.name }
 
 private fun keywordCategory(category: String): KeywordCategory = when (category) {
     "reserved" -> KeywordCategory.RESERVED

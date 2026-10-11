@@ -1,12 +1,19 @@
 package dev.brikk.house.sql.metadata
 
-/** What metadata knows about one engine release; a null part is unknown, not empty. */
+/**
+ * What metadata knows about one engine release; a null part is unknown, not empty.
+ * [extensionFunctions] are functions that loadable extensions add on top of [functions]
+ * (each with [FunctionDef.extension]); they stay out of [functions], so its lookups answer
+ * for the base engine only.
+ */
 class MetadataSnapshot(
     val engineVersion: String,
     val functions: FunctionCatalog,
     val keywords: KeywordCatalog? = null,
     val pragmas: List<PragmaDef>? = null,
     val settings: List<SettingDef>? = null,
+    val extensions: List<ExtensionDef>? = null,
+    val extensionFunctions: List<FunctionDef> = emptyList(),
 )
 
 /** Every bundled snapshot of one dialect, oldest first. */

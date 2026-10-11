@@ -95,6 +95,20 @@ def setting_row(r: dict[str, str | None]) -> tuple[str, int]:
     return literal, 6 + len(aliases)
 
 
+def extension_row(r: dict[str, str | None]) -> tuple[str, int]:
+    aliases = json_list(r["aliases"])
+    literal = (
+        f"DuckdbExtensionRow({kstr(r['extension_name'])}, {r['statically_linked']}, "
+        f"{klist(aliases)}, {knullable(r['description'])})"
+    )
+    return literal, 5 + len(aliases)
+
+
+def extension_function_row(r: dict[str, str | None]) -> tuple[str, int]:
+    function, cost = function_row(r)
+    return f"DuckdbExtensionFunctionRow({kstr(r['extension'])}, {function})", cost + 2
+
+
 def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tuple[str, list[str]]:
     """A `chunk() + chunk() ...` expression plus the private chunk functions it calls."""
     chunks: list[list[str]] = [[]]
@@ -114,24 +128,27 @@ def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tu
     return " + ".join(f"{name}{i}()" for i in range(len(chunks))), functions
 
 
-# capture name -> (row type, row renderer); captures without a vendored file stay null.
+# capture file name -> (DuckdbDump parameter, row type, row renderer); a capture without a
+# vendored file keeps the parameter's default (unknown).
 CAPTURES = {
-    "functions": ("DuckdbFunctionRow", function_row),
-    "keywords": ("DuckdbKeywordRow", keyword_row),
-    "settings": ("DuckdbSettingRow", setting_row),
+    "functions": ("functions", "DuckdbFunctionRow", function_row),
+    "keywords": ("keywords", "DuckdbKeywordRow", keyword_row),
+    "settings": ("settings", "DuckdbSettingRow", setting_row),
+    "extensions": ("extensions", "DuckdbExtensionRow", extension_row),
+    "extension-functions": ("extensionFunctions", "DuckdbExtensionFunctionRow", extension_function_row),
 }
 
 
 def generate(version: str) -> str:
     ident = version.replace(".", "_")
     arguments, chunk_functions, counts = [], [], []
-    for capture, (row_type, render) in CAPTURES.items():
+    for capture, (parameter, row_type, render) in CAPTURES.items():
         path = DATA / f"duckdb-{capture}-{version}.tsv"
         if not path.exists():
             continue
         rows = read_dump(path)
-        expression, functions = chunked(capture, row_type, [render(r) for r in rows])
-        arguments.append(f"    {capture} = {expression},")
+        expression, functions = chunked(parameter, row_type, [render(r) for r in rows])
+        arguments.append(f"    {parameter} = {expression},")
         chunk_functions.extend(functions)
         counts.append(f"{len(rows)} {capture}")
     lines = [

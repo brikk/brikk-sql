@@ -273,6 +273,8 @@ engine on its classpath and writes one file per capture, named by the engine's
 | `duckdb-functions-<version>.tsv` | `duckdb_functions()`: every row, including pragma and operator rows, with return and parameter types, parameter names, varargs, alias, stability, description and examples |
 | `duckdb-keywords-<version>.tsv` | `duckdb_keywords()`: name and category (reserved, unreserved, type_function, column_name) |
 | `duckdb-settings-<version>.tsv` | `duckdb_settings()`: name, input type, scope, aliases and description; not the current value, which depends on the connection |
+| `duckdb-extensions-<version>.tsv` | `duckdb_extensions()`: name, whether statically linked, aliases and description; not the installation-dependent columns |
+| `duckdb-extension-functions-<version>.tsv` | for each extension in `CAPTURED_EXTENSIONS` (`tools/metadata-capture/src/Duckdb.kt`; today the DuckDB plugin's seven: fts, httpfs, icu, inet, postgres_scanner, spatial, sqlite_scanner), the `duckdb_functions()` rows `INSTALL`+`LOAD` adds on a fresh engine, prefixed by an `extension` column. Written by `./kotlin run -m metadata-capture -- duckdb-extension-functions`, which needs the DuckDB extension repository (network); generation never does. Statically linked `icu` and function-less `httpfs` add no rows |
 
 The queries, the row types and the row → metadata mapping are defined once, in Kotlin
 (`brikk-sql-metadata/.../DuckdbCapture.kt`, `DuckdbDump.kt`); a live harvest in the IDE
@@ -286,7 +288,7 @@ data drop. Format: a header of column names, then tab-separated rows; `\N` is NU
 | Version | **1.5.6**, source ID `069cc9f9b5` (`org.duckdb:duckdb_jdbc:1.5.6.0`, the same engine as the native verifier) |
 | Captured | 2026-10-11 |
 | License | MIT (extracted registry data; see ATTRIBUTIONS.md) |
-| Refresh | bump the `duckdb_jdbc` coordinate in `tools/metadata-capture/module.yaml`, run the capture, then `python3 tools/generate_duckdb_functions.py` |
+| Refresh | bump the `duckdb_jdbc` coordinate in `tools/metadata-capture/module.yaml`, run the `duckdb` and `duckdb-extension-functions` captures, then `python3 tools/generate_duckdb_functions.py` |
 
 `duckdb_functions()` has **no null-handling column** (`has_side_effects` and `stability`
 are the only behavioral flags), so `FunctionDef.profile` stays null for every DuckDB def.
