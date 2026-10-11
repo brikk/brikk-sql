@@ -43,6 +43,11 @@ class TokenizerConfig(
     // Keep the published constructor/default bridge intact while adding escape policy.
     private var numericPolicy = NumericPolicy()
     private var commentPolicy = CommentPolicy()
+    private var bytePolicy = false
+    val byteStringsAreBytes: Boolean get() = bytePolicy
+
+    fun withByteStringPolicy(byteStringsAreBytes: Boolean): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences).also { it.bytePolicy = byteStringsAreBytes }
     val dashCommentRequiresBoundary: Boolean get() = commentPolicy.dashBoundary
     val commentsTerminateAtNewlineOnly: Boolean get() = commentPolicy.newlineOnly
 
@@ -131,7 +136,7 @@ class TokenizerConfig(
         numbersCanHaveDecimals = numbersCanHaveDecimals,
         identifiersCanStartWithDigit = identifiersCanStartWithDigit,
         unescapedSequences = sequences,
-    ).also { it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy }
+    ).also { it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy }
 
     companion object {
         /** The base "sqlglot" dialect configuration. */

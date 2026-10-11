@@ -5,6 +5,7 @@ import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.eliminateDistinctOn
 import dev.brikk.house.sql.generator.unqualifyUnnest
@@ -64,6 +65,22 @@ open class BigqueryGenerator(
     override val dialectUnnestColumnOnly: Boolean get() = true
 
     override val dialect: Dialect get() = Dialects.BIGQUERY
+
+    override fun bytestringSql(expression: ByteString): String {
+        if (expression.args["is_bytes"] != true) return super.bytestringSql(expression)
+        if (expression.name.any { it.code > 255 }) throw UnsupportedError("ByteString contains non-byte characters")
+        val text = expression.name.map {
+            when {
+                it == '\'' -> "\\'"
+                escapedSequences[it.toString()] != null -> escapedSequences.getValue(it.toString())
+                it.code !in 32..126 || it == '\\' -> "\\x" + it.code.toString(16).padStart(2, '0')
+                else -> it.toString()
+            }
+        }.joinToString("")
+        return "b'$text'"
+    }
+    override fun parsejsonSql(expression: ParseJSON): String = if (expression.args["is_literal"] == true)
+        "JSON ${sql(expression, "this")}" else super.parsejsonSql(expression)
 
     // sqlglot: BigQuery.ARRAY_AGG_INCLUDES_NULLS = False
     override val dialectArrayAggIncludesNulls: Boolean get() = false

@@ -1,27 +1,11 @@
 {
-    "sqlglot_version": "v30.18.0-43-g3ca82489",
+    "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
     "cases": [
         {
             "id": "assertion:v1:sha256:22edfdd1dcc2e9e3e58e39959e4fdef5941ae19f91154a13fcdddc198df75738:1",
             "sql": "SELECT $🦆$foo$🦆$",
             "reason": "Python positions use code points; brikk positions index Kotlin strings in UTF-16",
             "signature": "ast-mismatch:v1:sha256:e5c1fa98e2c1967fc13c6b9057ed56eb929750d961450cddc989bf98d286f88b"
-        },
-        {
-            "id": "assertion:v1:sha256:c20be9c9910cc4543716176c18a3d3fbb15e9668ea025921f243d76ea8d5462f:1",
-            "sql": "[x.STRING_SPLIT(' ')[i] FOR x IN ['1', '2', 3] IF x.CONTAINS('1')]",
-            "signature": "ast-mismatch:v1:sha256:e9128f3ec8d870e270456534e54a161d82fecdb0f828142e9dd6f854f7c78015",
-            "reason": "DDB-07 / SQLGlot #8557 old-pin drift: a comprehension declaration is an Identifier, not a source Column; absent position is now null rather than false. Exact declaration kinds/spelling match frozen a00dc2e. Qualification and native DuckDB row tests independently protect local binding and query boundaries. Exact assertion/signature reviewed; remove on coherent fixture refresh.",
-            "issue": "DDB-07 / sqlglot#8557",
-            "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:de3b2f931b12878f39a8c9f3a7ffa787957e716002ae086f9e245c01deb82a1e:1",
-            "sql": "SELECT [4, 5, 6] AS l, [x FOR x, i IN l IF i = 2] AS filtered",
-            "signature": "ast-mismatch:v1:sha256:c8e9d971cf895462c61473558cecbc113bd1dd175d01fd5cacb447a2f8a63af3",
-            "reason": "DDB-07 / SQLGlot #8557 old-pin drift: item/index declarations are Identifiers, not source Columns, matching frozen a00dc2e. Local filter/index variables no longer enter source-column qualification or alias expansion. Native row and Engine preparation contracts pass. Exact assertion/signature reviewed; remove on coherent fixture refresh.",
-            "issue": "DDB-07 / sqlglot#8557",
-            "status": "oracle-pin-drift"
         }
     ]
 }

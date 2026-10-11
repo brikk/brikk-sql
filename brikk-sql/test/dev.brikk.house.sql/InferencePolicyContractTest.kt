@@ -15,6 +15,13 @@ import kotlin.test.assertFailsWith
 /** Explicit policy tests: no assertion that a future upstream-shaped overload infers. */
 class InferencePolicyContractTest {
     @Test
+    fun optionalSchemaLineageRetainsBestEffortUnnestDependenciesNotStrictColumnProof() {
+        val sql = "WITH _data AS (SELECT [STRUCT(1 AS a,2 AS b)] AS col) SELECT b FROM _data CROSS JOIN UNNEST(_data.col)"
+        val node = dev.brikk.house.sql.optimizer.lineage("b", sql)
+        assertEquals("_0.b", node.downstream.single().name)
+        assertEquals("_data.col", node.downstream.single().downstream.single().name)
+    }
+    @Test
     fun upstreamResolverConstructorDoesNotInferButExplicitLegacyConstructionStillCan() {
         val dialect = Dialects.POSTGRES
         val scope = buildScope(dialect.parseOne("SELECT amount FROM mystery AS m"))!!

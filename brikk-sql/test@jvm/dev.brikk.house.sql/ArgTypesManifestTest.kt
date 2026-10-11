@@ -63,12 +63,6 @@ class ArgTypesManifestTest {
         // allowlisted NATIVE (brikk-original) classes — no gaps, no strays. The Python
         // parity check above is untouched: every manifest class is still verified.
         val native = ExpressionRegistry.entries.filterKeys { it in NATIVE_EXPRESSION_CLASSES }
-        // Exact target-only contract until metadata/fixtures refresh together.
-        // Not a native class or a blanket registry-size waiver; stale on refresh.
-        check("WeightString" !in classes) { "Remove the WeightString catch-up contract after fixture refresh" }
-        val weight = ExpressionRegistry.entries.getValue("WeightString")
-        assertEquals("sqlglot.expressions.string", weight.module)
-        assertEquals(listOf("this" to true, "to" to false), weight.factory().argTypes.entries.map { it.key to it.value })
         assertEquals(
             NATIVE_EXPRESSION_CLASSES,
             native.keys,
@@ -81,10 +75,10 @@ class ArgTypesManifestTest {
             if (name in classes.keys) fail("$name: native class collides with a Python manifest class")
         }
         assertEquals(
-            classes.size + native.size + 1,
+            classes.size + native.size,
             ExpressionRegistry.entries.size,
             "registry size != manifest class count + native allowlist; strays: " +
-                (ExpressionRegistry.entries.keys - classes.keys - NATIVE_EXPRESSION_CLASSES - "WeightString"),
+                (ExpressionRegistry.entries.keys - classes.keys - NATIVE_EXPRESSION_CLASSES),
         )
     }
 }

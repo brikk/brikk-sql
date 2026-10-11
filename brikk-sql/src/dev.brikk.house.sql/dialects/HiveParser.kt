@@ -172,6 +172,23 @@ open class HiveParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.HIVE
+    open val normalizeDecimalLiterals: Boolean get() = true
+    open val decimalLiteralsAllowNegativeScale: Boolean get() = false
+
+    override fun buildCast(strict: Boolean, this_: Expression?, to: Expression?, format: Expression?,
+        safe: Boolean?, action: Expression?, default: Expression?): Expression? {
+        if (prevToken.text.uppercase() != "BD" || this_ == null) return super.buildCast(strict, this_, to, format, safe, action, default)
+        var number = java.math.BigDecimal(this_.name)
+        if (normalizeDecimalLiterals) number = number.stripTrailingZeros()
+        var precision = number.precision()
+        var scale = number.scale()
+        if (scale < 0 && !decimalLiteralsAllowNegativeScale) { precision -= scale; scale = 0 }
+        val target = dev.brikk.house.sql.ast.DataType(args("this" to dev.brikk.house.sql.ast.DType.DECIMAL,
+            "expressions" to listOf(maxOf(precision, scale), scale).map {
+                dev.brikk.house.sql.ast.DataTypeParam(args("this" to Literal.number(it)))
+            }))
+        return super.buildCast(strict, if (scale < 0) this_ else Literal.string(this_.name), target, format, safe, action, default)
+    }
 
     // sqlglot: HiveParser.LOG_DEFAULTS_TO_LN = True
     override val logDefaultsToLn: Boolean get() = true

@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "",
   "identity": [
     {
@@ -168,6 +168,16 @@
       "pretty": false
     },
     {
+      "sql": "SELECT 1 operator",
+      "expected": "SELECT 1 AS operator",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT 1 OPERATOR(+) 2 operator",
+      "expected": "SELECT 1 OPERATOR(+) 2 AS operator",
+      "pretty": false
+    },
+    {
       "sql": "SELECT interval '00:00:01'::interval AS foo",
       "expected": "SELECT CAST(INTERVAL '00:00:01' AS INTERVAL) AS foo",
       "pretty": false
@@ -175,6 +185,11 @@
     {
       "sql": "SELECT ROW_NUMBER() OVER(PARTITION BY event_time + interval '00:00:01'::interval) AS foo FROM t",
       "expected": "SELECT ROW_NUMBER() OVER (PARTITION BY event_time + CAST(INTERVAL '00:00:01' AS INTERVAL)) AS foo FROM t",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT AGG(m), AGG(m) AS x, AGG(t.m) FROM t",
+      "expected": null,
       "pretty": false
     },
     {
@@ -2158,6 +2173,32 @@
       }
     },
     {
+      "sql": "SELECT * FROM a UNION SELECT * FROM b OFFSET 1",
+      "read": {},
+      "write": {
+        "": "SELECT * FROM a UNION SELECT * FROM b OFFSET 1",
+        "clickhouse": "SELECT * FROM (SELECT * FROM a UNION DISTINCT SELECT * FROM b) AS _l_0 OFFSET 1",
+        "tsql": "SELECT * FROM (SELECT * FROM a UNION SELECT * FROM b) AS _l_0 ORDER BY (SELECT NULL) OFFSET 1 ROWS"
+      }
+    },
+    {
+      "sql": "SELECT * FROM a UNION SELECT * FROM b ORDER BY x LIMIT 1 OFFSET 1",
+      "read": {},
+      "write": {
+        "": "SELECT * FROM a UNION SELECT * FROM b ORDER BY x LIMIT 1 OFFSET 1",
+        "clickhouse": "SELECT * FROM (SELECT * FROM a UNION DISTINCT SELECT * FROM b) AS _l_0 ORDER BY x NULLS FIRST LIMIT 1 OFFSET 1",
+        "tsql": "SELECT * FROM a UNION SELECT * FROM b ORDER BY x OFFSET 1 ROWS FETCH FIRST 1 ROWS ONLY"
+      }
+    },
+    {
+      "sql": "SELECT a FROM x UNION SELECT a FROM y FETCH FIRST 2 ROWS ONLY",
+      "read": {},
+      "write": {
+        "clickhouse": "SELECT * FROM (SELECT a FROM x UNION DISTINCT SELECT a FROM y) AS _l_0 LIMIT 2",
+        "tsql": "SELECT * FROM (SELECT a FROM x UNION SELECT a FROM y) AS _l_0 ORDER BY (SELECT NULL) OFFSET 0 ROWS FETCH FIRST 2 ROWS ONLY"
+      }
+    },
+    {
       "sql": "SELECT * FROM a UNION SELECT * FROM b ORDER BY x LIMIT 1",
       "read": {},
       "write": {
@@ -2882,17 +2923,6 @@
       }
     },
     {
-      "sql": "WITH t AS (SELECT 1 AS all) SELECT 1 FROM t",
-      "read": {
-        "databricks": "WITH t AS (SELECT 1 AS all) SELECT 1 FROM t LIMIT all",
-        "duckdb": "WITH t AS (SELECT 1 AS all) SELECT 1 FROM t LIMIT all",
-        "presto": "WITH t AS (SELECT 1 AS all) SELECT 1 FROM t LIMIT all",
-        "postgres": "WITH t AS (SELECT 1 AS all) SELECT 1 FROM t LIMIT all",
-        "spark": "WITH t AS (SELECT 1 AS all) SELECT 1 FROM t LIMIT all"
-      },
-      "write": {}
-    },
-    {
       "sql": "SELECT * FROM data LIMIT 10, 20",
       "read": {},
       "write": {
@@ -3305,7 +3335,7 @@
         "presto": "SELECT COUNT_IF(col % 2 = 0) FROM foo",
         "snowflake": "SELECT COUNT_IF(col % 2 = 0) FROM foo",
         "sqlite": "SELECT SUM(IIF(col % 2 = 0, 1, 0)) FROM foo",
-        "tsql": "SELECT COUNT_IF(col % 2 = 0) FROM foo",
+        "tsql": "SELECT COUNT(IIF(col % 2 = 0, 1, NULL)) FROM foo",
         "postgres": "SELECT SUM(CASE WHEN col % 2 = 0 THEN 1 ELSE 0 END) FROM foo",
         "redshift": "SELECT SUM(CASE WHEN col % 2 = 0 THEN 1 ELSE 0 END) FROM foo"
       }
@@ -3322,7 +3352,7 @@
         "databricks": "SELECT COUNT_IF(col % 2 = 0) FILTER(WHERE col < 1000) FROM foo",
         "presto": "SELECT COUNT_IF(col % 2 = 0) FILTER(WHERE col < 1000) FROM foo",
         "sqlite": "SELECT SUM(IIF(col % 2 = 0, 1, 0)) FILTER(WHERE col < 1000) FROM foo",
-        "tsql": "SELECT COUNT_IF(col % 2 = 0) FILTER(WHERE col < 1000) FROM foo"
+        "tsql": "SELECT COUNT(IIF(col < 1000 AND col % 2 = 0, 1, NULL)) FROM foo"
       }
     },
     {
@@ -3758,6 +3788,23 @@
       },
       "write": {
         "clickhouse": "SELECT 1 AS \"x`\""
+      }
+    },
+    {
+      "sql": "SELECT SUM(x) FILTER(WHERE c = 'US'), COUNT(*) FILTER(WHERE c > 1), COUNT(DISTINCT x) FILTER(WHERE c > 1) FROM t",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT SUM(IF(c = 'US', x, NULL)), COUNTIF(c > 1), COUNT(DISTINCT IF(c > 1, x, NULL)) FROM t",
+        "snowflake": "SELECT SUM(IFF(c = 'US', x, NULL)), COUNT_IF(c > 1), COUNT(DISTINCT IFF(c > 1, x, NULL)) FROM t",
+        "tsql": "SELECT SUM(IIF(c = 'US', x, NULL)), COUNT(IIF(c > 1, 1, NULL)), COUNT_BIG(DISTINCT IIF(c > 1, x, NULL)) FROM t"
+      }
+    },
+    {
+      "sql": "SELECT ARRAY_AGG(x ORDER BY y NULLS FIRST) FILTER(WHERE c > 1) FROM t",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT ARRAY_AGG(IF(c > 1, x, NULL) IGNORE NULLS ORDER BY y) FROM t",
+        "snowflake": "SELECT ARRAY_AGG(IFF(c > 1, x, NULL)) WITHIN GROUP (ORDER BY y NULLS FIRST) FROM t"
       }
     },
     {
@@ -4648,8 +4695,8 @@
     }
   ],
   "stats": {
-    "identity_count": 99,
-    "transpile_count": 282,
-    "skipped_dynamic": 38
+    "identity_count": 102,
+    "transpile_count": 286,
+    "skipped_dynamic": 44
   }
 }

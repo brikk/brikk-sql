@@ -1,116 +1,88 @@
 {
     "cases": [
         {
-            "id": "assertion:v1:sha256:c8e3333158e99c5680a27c9aa9cec045d10fd34352a986ad695130e7a8c799cd:1",
+            "id": "assertion:v1:sha256:6c272145cb4abce9c0dd335b6b40442d306e2a8a51ab876d6fc2e996d23370d8:1",
             "key": "qualify_columns::SELECT x.b FROM x JOIN y USING (b) JOIN z USING (b)",
             "signature": "sql-mismatch:v1:sha256:08c84ff8bfd76c189be1685e2ff8c130d0712ff7506715963f9eeb6664b8e8b2",
             "reason": "CORE-04 extension #43: subsequent USING comparisons consume the prior logical merged key, not an arbitrary original source field. Full exact diff reviewed: the second ON uses COALESCE(x.b,y.b). Native chained joins are verified; retaining merged expressions also preserves outer-join/coercion semantics. Intentional native-first divergence, not a blanket old-pin waiver.",
-            "issue": "CORE-04",
-            "status": "intentional-divergence"
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:5a00df2974dd211de26c6450295b20182f9db39e26d4cfc075ada2c10c630db8:1",
+            "id": "assertion:v1:sha256:981cae3475c3de5dec970933cedddaa9c43b33747025ccec46eda5d67f6f6341:1",
             "key": "qualify_columns::SELECT b FROM x JOIN y USING (b) JOIN z USING (b)",
             "signature": "sql-mismatch:v1:sha256:d7011a40ddd932cddb813fec4f657e902521e79b041961b6c2599e00e8a903a0",
             "reason": "CORE-04 extension #43: preserve the stage-by-stage merged expression in both the second ON and output key. Full diff reviewed: nested COALESCE(COALESCE(x.b,y.b),z.b), not a flattened source list. Native chains pass independently; logical type/coercion stages must not be discarded for parity.",
-            "issue": "CORE-04",
-            "status": "intentional-divergence"
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:a260330f91e6ca6b788ea64c3e077af25ef6d4a460d8bcb416a6d014ec56b36c:1",
+            "id": "assertion:v1:sha256:a30b189032664399a0a1b4167fde87a7683c419900e20053d120bfee33e384cf:1",
             "key": "qualify_columns::SELECT * FROM x JOIN y USING(b)",
-            "signature": "sql-mismatch:v1:sha256:aa7aabf8b048f515b61691150e60e4cbbe980ac49842f4d71491f3aa6e52767d",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: base/default USING_LIST places b before x.a. Exact reviewed output matches frozen a00dc2e; native PostgreSQL/Trino/StarRocks headers prove the policy. Remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
+            "signature": "sql-mismatch:v1:sha256:68f6691d6caf8a65d86b41c5aadd609b957040dce2688f3e42b533affdf413a0",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:b96846a34bee2b4b39105507ef2533292a0345aab029621daaaed1044ed5f264:1",
+            "id": "assertion:v1:sha256:0da20e31bc43a8259d05afdbaf2a6274c463142858d4a4f149493db9de86c14c:1",
+            "key": "qualify_columns::SELECT * FROM w, x JOIN y USING (b)",
+            "signature": "sql-mismatch:v1:sha256:c3d9d3855792bbb176f145d234e6ec2cb5f346e55285724fe6077bafb9e0ba7c",
+            "reason": "CORE-04 extension #43: reviewed comma-group star keeps native USING and star syntax instead of flattening separate key families. Native DuckDB original/generated labels/types/rows pass; unknown or grouped stars must not fabricate duplicate or wrongly-owned keys.",
+            "issue": "CORE-04", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:7660e0c9c00f2aa200b9018476edc6ef68f179069222e567dc8d2b0693e5c6bf:1",
             "key": "qualify_columns::SELECT * FROM x LEFT JOIN y USING(b)",
-            "signature": "sql-mismatch:v1:sha256:35696358f5b431d5a9fad3d6562a362ad31b76b4db51da79cde047c44a8366dd",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: default USING_LIST moves b first for LEFT as well as INNER joins, matching frozen a00dc2e and native source headers. DuckDB keeps its separate IN_PLACE policy. Exact diff reviewed; remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
+            "signature": "sql-mismatch:v1:sha256:9086e478ad35edc050a2651385906d3b6d510e0ebac91efe37d5dff3a05f2d2a",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:d46e027d06659b8e7881e1da19c15871f8c9ca019528ac9be1f55b262fd2eb85:1",
+            "id": "assertion:v1:sha256:f7781abcaf6dddc256570292aeebaec7cfa75918e515c136f5bc8c81cf1b0750:1",
             "key": "qualify_columns::WITH t1 AS (SELECT 'x' AS id, DATE '2024-01-01' AS foo, 000 AS value), t2 AS (SELECT 'x' AS id, DATE '2024-02-02' AS foo, 123 AS value), t3 AS (SELECT 'x' AS id, DATE '2024-02-02' AS foo, 456 AS value) SELECT * FROM t1 FULL OUTER JOIN t2 USING(id, foo) FULL OUTER JOIN t3 USING(id, foo)",
             "signature": "sql-mismatch:v1:sha256:5ec153059a8e52713108edbead6a58860b8505233ea70e4d15ae645ef85e0ae1",
             "reason": "CORE-04 extension #43: reviewed full CTE/projection/ON diff; only output id/foo COALESCE is nested to retain the logical prior join result. All non-key projections and predicates remain present. Native FULL chains verify rows and types; intentional stage-preserving rendering.",
-            "issue": "CORE-04",
-            "status": "intentional-divergence"
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:4973fb0ca5a10d33dbb598af06b4f4c3dabc18e9920f1cb6548b672ed668e4b1:1",
+            "id": "assertion:v1:sha256:78af35f5c679ced61ed036c49dd4d926b03e6d5e86a048d480efc9657bc944ba:1",
             "key": "qualify_columns::WITH t1 AS (SELECT 'x' AS id, CAST('2024-01-01' AS DATE) AS foo, 000 AS value), t2 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 123 AS value), t3 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 456 AS value) SELECT * FROM t1 FULL OUTER JOIN t2 USING (id, foo, value) FULL OUTER JOIN t3 USING (id, foo, value)",
             "signature": "sql-mismatch:v1:sha256:af21bb31bedb2e5bdf1658b15e56d15bf4ab4baf0d2f50d7c1754281e7e8c66f",
             "reason": "CORE-04 extension #43: full reviewed diff nests each id/foo/value merged projection; predicates still compare the prior FULL join's logical keys. No source or key is dropped. Preserve coercion/merge stages rather than flattening for oracle text parity; native FULL row/type regressions pass.",
-            "issue": "CORE-04",
-            "status": "intentional-divergence"
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:09d5ac05f7d08a95b5037fa451e65138014a61a8593ee8963a113f7d88925fea:1",
+            "id": "assertion:v1:sha256:a9b92c191d1bd95ab4597928ff1253f84f4279e006f14be446cfe865582cadc2:1",
             "key": "qualify_columns::WITH t1 AS (SELECT 'x' AS id, CAST('2024-01-01' AS DATE) AS foo, 000 AS value), t2 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 123 AS value), t3 AS (SELECT 'x' AS id, CAST('2024-02-02' AS DATE) AS foo, 456 AS value), t4 AS (SELECT 'x' AS id, CAST('2024-03-03' AS DATE) AS foo, 789 AS value) SELECT * FROM t1 FULL OUTER JOIN t2 USING (id, foo) FULL OUTER JOIN t3 USING (id, foo) FULL OUTER JOIN t4 USING (id, foo)",
             "signature": "sql-mismatch:v1:sha256:830ed819a9d570dffa7c384d4efca97313606710d6bd4382ba229f5e8fc869c9",
             "reason": "CORE-04 extension #43: full reviewed diff preserves nested id/foo expressions through the third/fourth FULL joins and final projections. All four value columns remain in order. Intentional logical-stage rendering, independently tested with multi-join native rows/types, not failure-count approval.",
-            "issue": "CORE-04",
-            "status": "intentional-divergence"
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:426838bff9bd8bb523461906f1e4045c192143b0de9fe240c2aac46ca8ab0409:1",
+            "id": "assertion:v1:sha256:c9737b60dfff399c2282ea42af0837943c3787ac38f1b3d7c938c54d0a9e41fb:1",
             "key": "qualify_columns::SELECT * FROM x NATURAL JOIN y",
-            "signature": "sql-mismatch:v1:sha256:aa7aabf8b048f515b61691150e60e4cbbe980ac49842f4d71491f3aa6e52767d",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: resolved NATURAL common keys use the same default USING_LIST ordering, matching a00dc2e. Exact diff reviewed; PostgreSQL/MySQL/DuckDB NATURAL behavior has native evidence. Remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
+            "signature": "sql-mismatch:v1:sha256:68f6691d6caf8a65d86b41c5aadd609b957040dce2688f3e42b533affdf413a0",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:ffa7a3f31584aab42133a50085c5a256502523093ef4fc52ff405ede7b76ea0c:1",
+            "id": "assertion:v1:sha256:6d2b1d20bba97fdb5371c030b68e53e7271ab06d2799b209aaed2b1aabf8bc9d:1",
             "key": "qualify_columns::SELECT b FROM x NATURAL JOIN y NATURAL JOIN z",
             "signature": "sql-mismatch:v1:sha256:60ff87307010da51dc79a44d9629002543d3f78efc30b5cc1718fb8bc07fe8b7",
             "reason": "CORE-04 extension #43: full diff reviewed; output b retains nested prior merged value while both existing NATURAL-derived ON predicates remain unchanged. Keeps logical type/coercion stages; intentional native-first expression form.",
-            "issue": "CORE-04",
-            "status": "intentional-divergence"
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:f096b9b1d321376c186db0aa3db4e80e12a01c02a17c4abed6626a28f20f17a0:1",
-            "key": "qualify_columns::SELECT * FROM ((SELECT * FROM x) INNER JOIN y ON a = c)",
-            "signature": "sql-mismatch:v1:sha256:b6723496af3a311867c2a7c8f38860052b201ae358ddc0b8e88f27870e3f8e77",
-            "reason": "CORE-04 / SQLGlot #8529 old-pin drift: derived-source columns precede y's columns because the derived source occurs first in FROM. Exact full diff matches a00dc2e and preserves every column/predicate. Native nested-source headers/rows pass. Remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8529",
-            "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:6197a78c346c10c82c664a7b1f1410b6c21873b975154497d1f813c6121ad73a:1",
-            "key": "qualify_columns::SELECT * FROM x SEMI JOIN y USING (b)",
-            "signature": "sql-mismatch:v1:sha256:c4e84f7cda48d672b2db2c371475df1193ed4999353fec7c1227d9796e1a34be",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: default USING_LIST moves the left-only SEMI key b first. RHS projections remain excluded; matches a00dc2e's default policy. DuckDB SEMI native IN_PLACE order/rows are verified separately. Exact diff reviewed; remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:2e3e720248b52ffa2467ff6cf9d93d325ba861309cbea019d15b5c898b023171:1",
-            "key": "qualify_columns::SELECT * FROM x ANTI JOIN y USING (b)",
-            "signature": "sql-mismatch:v1:sha256:f2398e213715b5efd7b9bfc1bad688ca817dc179a33c62646443c3c0ada63a96",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: default USING_LIST moves the left-only ANTI key b first without exposing RHS columns; matches frozen a00dc2e. DuckDB's separate native IN_PLACE policy passes row/type tests. Exact diff reviewed; remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:ff7418fb360b5ca9c6c43bc32ca28e924223c0f0a8e9707382f78305708dbc11:1",
+            "id": "assertion:v1:sha256:197b99c609f34f86ae372a753138a0eac2b1c25b42e9a050192f18f9f8be0c70:1",
             "key": "qualify_columns::SELECT * FROM x SEMI JOIN y USING (b) JOIN y USING (b)",
-            "signature": "sql-mismatch:v1:sha256:230ce5a1c0ff16c4dd93d9ac6ec00bd79e64ff43948185ea2a6a639dcee6eda6",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: final default-policy merged b precedes x.a; the SEMI RHS remains excluded and the later y_2 source is retained. Exact full diff reviewed and matches target ordering. Remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
+            "signature": "sql-mismatch:v1:sha256:d25ded1ba03abad510886c57036c7e61d8dc513be2d2c10a9561266cdefa426d",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:ea105c09ccd8dce74c2d3a6146aa0a05ac87ccead4e72e2d39bf1e78a4a3b84b:1",
+            "id": "assertion:v1:sha256:0cdd4c6776e17f6b4fbe5d126d66fe85e2e18084f288669852e697ce2b623615:1",
             "key": "qualify_columns::SELECT * FROM x ANTI JOIN y USING (b) JOIN y USING (b)",
-            "signature": "sql-mismatch:v1:sha256:d46393f07cf64f0ede7b4b89f19a158b09c8e50e2ba7e0ccada131b5bc6d8a50",
-            "reason": "CORE-04 / SQLGlot #8536 old-pin drift: final default-policy merged b moves first while ANTI RHS columns stay excluded; y_2 and all predicates remain. Exact full diff matches target ordering. Remove on coherent fixture refresh.",
-            "issue": "CORE-04 / sqlglot#8536",
-            "status": "oracle-pin-drift"
+            "signature": "sql-mismatch:v1:sha256:c0c40440c73084d12cc5a4f660ac9b9e97a568777f8ffb1519f552322389c6bc",
+            "reason": "CORE-04 extension #43: reviewed DuckDB native logical-key rendering retains the left key and its type for INNER/LEFT/NATURAL stages, instead of unconditional COALESCE widening. Native DuckDB labels/types/rows cover this policy and chained SEMI/ANTI cases; intentional native-first divergence.",
+            "issue": "CORE-04", "status": "intentional-divergence"
         }
     ]
 }

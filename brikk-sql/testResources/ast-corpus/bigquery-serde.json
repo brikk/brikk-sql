@@ -1,8 +1,8 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
  "fixture": "dialect-corpus/bigquery.json",
  "dialect": "bigquery",
- "case_count": 360,
+ "case_count": 368,
  "skipped": [],
  "cases": [
   {
@@ -908,7 +908,7 @@
      "a": true,
      "c": "sqlglot.expressions.math.Exp",
      "m": {
-      "name": "EXP",
+      "bigquery_name": "EXP",
       "line": 1,
       "col": 10,
       "start": 7,
@@ -945,7 +945,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ArrayConcatAgg",
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -999,7 +999,7 @@
      "k": "this",
      "c": "sqlglot.expressions.array.ArraySize",
      "m": {
-      "name": "ARRAY_LENGTH",
+      "bigquery_name": "ARRAY_LENGTH",
       "line": 1,
       "col": 40,
       "start": 28,
@@ -1067,7 +1067,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ArrayConcatAgg",
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -1135,7 +1135,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ArrayConcatAgg",
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -1184,7 +1184,7 @@
      "k": "this",
      "c": "sqlglot.expressions.array.ArraySize",
      "m": {
-      "name": "ARRAY_LENGTH",
+      "bigquery_name": "ARRAY_LENGTH",
       "line": 1,
       "col": 40,
       "start": 28,
@@ -1231,7 +1231,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ArrayConcatAgg",
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -1273,7 +1273,7 @@
     {
      "c": "sqlglot.expressions.temporal.StrToTime",
      "m": {
-      "name": "PARSE_TIMESTAMP",
+      "bigquery_name": "PARSE_TIMESTAMP",
       "line": 1,
       "col": 15,
       "start": 0,
@@ -1351,7 +1351,7 @@
      "a": true,
      "c": "sqlglot.expressions.array.ArrayConcat",
      "m": {
-      "name": "ARRAY_CONCAT",
+      "bigquery_name": "ARRAY_CONCAT",
       "line": 1,
       "col": 19,
       "start": 7,
@@ -1383,6 +1383,11 @@
     {
      "i": 3,
      "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 2,
+     "k": "value_constructor",
      "v": false
     },
     {
@@ -1431,7 +1436,7 @@
      "k": "this",
      "c": "sqlglot.expressions.functions.ReadCSV",
      "m": {
-      "name": "READ_CSV",
+      "bigquery_name": "READ_CSV",
       "line": 1,
       "col": 22,
       "start": 14,
@@ -1994,7 +1999,7 @@
      "a": true,
      "c": "sqlglot.expressions.string.String",
      "m": {
-      "name": "STRING",
+      "bigquery_name": "STRING",
       "line": 1,
       "col": 13,
       "start": 7,
@@ -2094,7 +2099,7 @@
      "a": true,
      "c": "sqlglot.expressions.string.String",
      "m": {
-      "name": "STRING",
+      "bigquery_name": "STRING",
       "line": 1,
       "col": 13,
       "start": 7,
@@ -3443,7 +3448,7 @@
     {
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -3563,7 +3568,7 @@
     {
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 6,
       "start": 0,
@@ -4346,7 +4351,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -4419,7 +4424,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -4534,7 +4539,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -4655,7 +4660,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -4702,7 +4707,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -4865,7 +4870,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -5017,7 +5022,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ArrayAgg",
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -5309,7 +5314,7 @@
     {
      "c": "sqlglot.expressions.temporal.TsOrDsToTime",
      "m": {
-      "name": "TIME",
+      "bigquery_name": "TIME",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -5346,7 +5351,7 @@
     {
      "c": "sqlglot.expressions.temporal.Time",
      "m": {
-      "name": "TIME",
+      "bigquery_name": "TIME",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -5627,7 +5632,7 @@
      "a": true,
      "c": "sqlglot.expressions.temporal.StrToTime",
      "m": {
-      "name": "PARSE_TIMESTAMP",
+      "bigquery_name": "PARSE_TIMESTAMP",
       "line": 1,
       "col": 22,
       "start": 7,
@@ -5721,7 +5726,7 @@
      "a": true,
      "c": "sqlglot.expressions.aggregate.AnyValue",
      "m": {
-      "name": "ANY_VALUE",
+      "bigquery_name": "ANY_VALUE",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -5836,7 +5841,7 @@
      "a": true,
      "c": "sqlglot.expressions.aggregate.AnyValue",
      "m": {
-      "name": "ANY_VALUE",
+      "bigquery_name": "ANY_VALUE",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -6481,7 +6486,7 @@
     {
      "c": "sqlglot.expressions.temporal.DateFromParts",
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -6560,7 +6565,7 @@
     {
      "c": "sqlglot.expressions.temporal.Date",
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -7943,7 +7948,7 @@
     {
      "c": "sqlglot.expressions.temporal.DateTrunc",
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -7955,7 +7960,7 @@
      "k": "unit",
      "c": "sqlglot.expressions.functions.WeekStart",
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 20,
       "start": 16,
@@ -8007,7 +8012,7 @@
     {
      "c": "sqlglot.expressions.temporal.DateTrunc",
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -8352,7 +8357,7 @@
      "a": true,
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 22,
       "start": 16,
@@ -9744,7 +9749,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.UnixToTime",
      "m": {
-      "name": "TIMESTAMP_SECONDS",
+      "bigquery_name": "TIMESTAMP_SECONDS",
       "line": 1,
       "col": 24,
       "start": 7,
@@ -9813,7 +9818,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.UnixToTime",
      "m": {
-      "name": "TIMESTAMP_MILLIS",
+      "bigquery_name": "TIMESTAMP_MILLIS",
       "line": 1,
       "col": 23,
       "start": 7,
@@ -9958,7 +9963,7 @@
     {
      "c": "sqlglot.expressions.math.Log",
      "m": {
-      "name": "LOG",
+      "bigquery_name": "LOG",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -10037,7 +10042,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.Count",
      "m": {
-      "name": "COUNT",
+      "bigquery_name": "COUNT",
       "line": 1,
       "col": 12,
       "start": 7,
@@ -10105,7 +10110,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.LastValue",
      "m": {
-      "name": "LAST_VALUE",
+      "bigquery_name": "LAST_VALUE",
       "line": 1,
       "col": 17,
       "start": 7,
@@ -10940,7 +10945,7 @@
      "a": true,
      "c": "sqlglot.expressions.aggregate.Max",
      "m": {
-      "name": "MAX",
+      "bigquery_name": "MAX",
       "line": 1,
       "col": 40,
       "start": 37,
@@ -11045,7 +11050,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.TimeToStr",
      "m": {
-      "name": "FORMAT_TIMESTAMP",
+      "bigquery_name": "FORMAT_TIMESTAMP",
       "line": 1,
       "col": 23,
       "start": 7,
@@ -11062,7 +11067,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.CurrentTimestamp",
      "m": {
-      "name": "CURRENT_TIMESTAMP",
+      "bigquery_name": "CURRENT_TIMESTAMP",
       "line": 1,
       "col": 50,
       "start": 33,
@@ -11232,7 +11237,7 @@
      "a": true,
      "c": "sqlglot.expressions.aggregate.Sum",
      "m": {
-      "name": "SUM",
+      "bigquery_name": "SUM",
       "line": 1,
       "col": 45,
       "start": 42,
@@ -11914,6 +11919,11 @@
     },
     {
      "i": 13,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 13,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -11928,7 +11938,7 @@
      "c": "sqlglot.expressions.core.Boolean"
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "this",
      "v": false
     },
@@ -11943,64 +11953,64 @@
      "c": "sqlglot.expressions.dml.Whens"
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.dml.When"
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "matched",
      "v": false
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "source",
      "v": false
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "then",
      "c": "sqlglot.expressions.dml.Insert"
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 54,
+     "i": 55,
      "k": "this",
      "v": "ROW"
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "expression",
      "v": false
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.dml.When"
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "matched",
      "v": false
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "source",
      "v": true
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "then",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 60,
+     "i": 61,
      "k": "this",
      "v": "DELETE"
     }
@@ -12787,7 +12797,7 @@
     {
      "c": "sqlglot.expressions.temporal.Date",
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -13800,7 +13810,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.LastValue",
      "m": {
-      "name": "LAST_VALUE",
+      "bigquery_name": "LAST_VALUE",
       "line": 1,
       "col": 34,
       "start": 24,
@@ -14067,7 +14077,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.LastValue",
      "m": {
-      "name": "LAST_VALUE",
+      "bigquery_name": "LAST_VALUE",
       "line": 1,
       "col": 17,
       "start": 7,
@@ -14575,7 +14585,7 @@
   },
   {
    "sql": "SELECT b\"\\x0a$'x'00\"",
-   "generated": "SELECT b'\\x0a$\\'x\\'00'",
+   "generated": "SELECT b'\\n$\\'x\\'00'",
    "dump": [
     {
      "c": "sqlglot.expressions.query.Select"
@@ -14595,7 +14605,7 @@
     {
      "i": 1,
      "k": "this",
-     "v": "\\x0a$'x'00"
+     "v": "\n$'x'00"
     },
     {
      "i": 1,
@@ -14619,7 +14629,7 @@
       "c"
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 2,
       "col": 9,
       "start": 4,
@@ -16051,7 +16061,7 @@
      "a": true,
      "c": "sqlglot.expressions.array.ArrayContains",
      "m": {
-      "name": "array_contains",
+      "bigquery_name": "array_contains",
       "line": 1,
       "col": 21,
       "start": 7,
@@ -16131,6 +16141,11 @@
     },
     {
      "i": 2,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 2,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -16146,12 +16161,12 @@
      }
     },
     {
-     "i": 13,
+     "i": 14,
      "k": "this",
      "v": "1"
     },
     {
-     "i": 13,
+     "i": 14,
      "k": "is_string",
      "v": false
     }
@@ -16170,7 +16185,7 @@
      "a": true,
      "c": "sqlglot.expressions.string.Split",
      "m": {
-      "name": "SPLIT",
+      "bigquery_name": "SPLIT",
       "line": 1,
       "col": 12,
       "start": 7,
@@ -17107,7 +17122,7 @@
   },
   {
    "sql": "SELECT JSON '\"foo\"' AS json_data",
-   "generated": "SELECT PARSE_JSON('\"foo\"') AS json_data",
+   "generated": "SELECT JSON '\"foo\"' AS json_data",
    "dump": [
     {
      "c": "sqlglot.expressions.query.Select"
@@ -17145,6 +17160,11 @@
      "v": true
     },
     {
+     "i": 2,
+     "k": "is_literal",
+     "v": true
+    },
+    {
      "i": 1,
      "k": "alias",
      "c": "sqlglot.expressions.core.Identifier",
@@ -17156,12 +17176,12 @@
      }
     },
     {
-     "i": 6,
+     "i": 7,
      "k": "this",
      "v": "json_data"
     },
     {
-     "i": 6,
+     "i": 7,
      "k": "quoted",
      "v": false
     }
@@ -17330,7 +17350,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.Sum",
      "m": {
-      "name": "SUM",
+      "bigquery_name": "SUM",
       "line": 1,
       "col": 50,
       "start": 47,
@@ -17395,7 +17415,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.Count",
      "m": {
-      "name": "COUNT",
+      "bigquery_name": "COUNT",
       "line": 1,
       "col": 62,
       "start": 57,
@@ -18210,6 +18230,11 @@
     },
     {
      "i": 0,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 0,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -18319,6 +18344,438 @@
    ]
   },
   {
+   "sql": "SELECT [(SELECT 1), 2]",
+   "generated": "SELECT [(SELECT 1), 2]",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Array"
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.query.Subquery"
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 3,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 17,
+      "start": 16,
+      "end": 16
+     }
+    },
+    {
+     "i": 4,
+     "k": "this",
+     "v": "1"
+    },
+    {
+     "i": 4,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 21,
+      "start": 20,
+      "end": 20
+     }
+    },
+    {
+     "i": 7,
+     "k": "this",
+     "v": "2"
+    },
+    {
+     "i": 7,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "struct_name_inheritance",
+     "v": true
+    }
+   ]
+  },
+  {
+   "sql": "SELECT [1, (SELECT 2)]",
+   "generated": "SELECT [1, (SELECT 2)]",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Array"
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 9,
+      "start": 8,
+      "end": 8
+     }
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "v": "1"
+    },
+    {
+     "i": 2,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.query.Subquery"
+    },
+    {
+     "i": 5,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 6,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 20,
+      "start": 19,
+      "end": 19
+     }
+    },
+    {
+     "i": 7,
+     "k": "this",
+     "v": "2"
+    },
+    {
+     "i": 7,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "struct_name_inheritance",
+     "v": true
+    }
+   ]
+  },
+  {
+   "sql": "SELECT [STRUCT((SELECT 1) AS a), STRUCT(2 AS a)]",
+   "generated": "SELECT [STRUCT((SELECT 1) AS a), STRUCT(2 AS a)]",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Array"
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Struct",
+     "m": {
+      "bigquery_name": "STRUCT",
+      "line": 1,
+      "col": 14,
+      "start": 8,
+      "end": 13
+     }
+    },
+    {
+     "i": 2,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.PropertyEQ"
+    },
+    {
+     "i": 3,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 30,
+      "start": 29,
+      "end": 29
+     }
+    },
+    {
+     "i": 4,
+     "k": "this",
+     "v": "a"
+    },
+    {
+     "i": 4,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 3,
+     "k": "expression",
+     "c": "sqlglot.expressions.query.Subquery"
+    },
+    {
+     "i": 7,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 8,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 24,
+      "start": 23,
+      "end": 23
+     }
+    },
+    {
+     "i": 9,
+     "k": "this",
+     "v": "1"
+    },
+    {
+     "i": 9,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Struct",
+     "m": {
+      "bigquery_name": "STRUCT",
+      "line": 1,
+      "col": 39,
+      "start": 33,
+      "end": 38
+     }
+    },
+    {
+     "i": 12,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.PropertyEQ"
+    },
+    {
+     "i": 13,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 46,
+      "start": 45,
+      "end": 45
+     }
+    },
+    {
+     "i": 14,
+     "k": "this",
+     "v": "a"
+    },
+    {
+     "i": 14,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 13,
+     "k": "expression",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 41,
+      "start": 40,
+      "end": 40
+     }
+    },
+    {
+     "i": 17,
+     "k": "this",
+     "v": "2"
+    },
+    {
+     "i": 17,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "struct_name_inheritance",
+     "v": true
+    }
+   ]
+  },
+  {
+   "sql": "SELECT [COALESCE((SELECT 1), 0), 2]",
+   "generated": "SELECT [COALESCE((SELECT 1), 0), 2]",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Array"
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.functions.Coalesce",
+     "m": {
+      "bigquery_name": "COALESCE",
+      "line": 1,
+      "col": 16,
+      "start": 8,
+      "end": 15
+     }
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Subquery"
+    },
+    {
+     "i": 3,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 4,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 26,
+      "start": 25,
+      "end": 25
+     }
+    },
+    {
+     "i": 5,
+     "k": "this",
+     "v": "1"
+    },
+    {
+     "i": 5,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 2,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 30,
+      "start": 29,
+      "end": 29
+     }
+    },
+    {
+     "i": 8,
+     "k": "this",
+     "v": "0"
+    },
+    {
+     "i": 8,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 34,
+      "start": 33,
+      "end": 33
+     }
+    },
+    {
+     "i": 11,
+     "k": "this",
+     "v": "2"
+    },
+    {
+     "i": 11,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "struct_name_inheritance",
+     "v": true
+    }
+   ]
+  },
+  {
    "sql": "SELECT * FROM a-b c",
    "generated": "SELECT * FROM a-b AS c",
    "dump": [
@@ -18403,7 +18860,7 @@
     {
      "c": "sqlglot.expressions.string.Contains",
      "m": {
-      "name": "CONTAINS_SUBSTR",
+      "bigquery_name": "CONTAINS_SUBSTR",
       "line": 1,
       "col": 15,
       "start": 0,
@@ -18930,7 +19387,7 @@
     {
      "c": "sqlglot.expressions.array.ArrayFirst",
      "m": {
-      "name": "ARRAY_FIRST",
+      "bigquery_name": "ARRAY_FIRST",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -18988,6 +19445,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -19000,7 +19462,7 @@
     {
      "c": "sqlglot.expressions.array.ArrayLast",
      "m": {
-      "name": "ARRAY_LAST",
+      "bigquery_name": "ARRAY_LAST",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -19058,6 +19520,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -19070,7 +19537,7 @@
     {
      "c": "sqlglot.expressions.json.JSONType",
      "m": {
-      "name": "JSON_TYPE",
+      "bigquery_name": "JSON_TYPE",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -19082,7 +19549,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -19125,7 +19592,7 @@
      "a": true,
      "c": "sqlglot.expressions.temporal.ParseDatetime",
      "m": {
-      "name": "PARSE_DATETIME",
+      "bigquery_name": "PARSE_DATETIME",
       "line": 1,
       "col": 21,
       "start": 7,
@@ -19192,7 +19659,7 @@
     {
      "c": "sqlglot.expressions.temporal.TimeToStr",
      "m": {
-      "name": "FORMAT_TIME",
+      "bigquery_name": "FORMAT_TIME",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -19286,7 +19753,7 @@
     {
      "c": "sqlglot.expressions.temporal.ParseTime",
      "m": {
-      "name": "PARSE_TIME",
+      "bigquery_name": "PARSE_TIME",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -19338,7 +19805,7 @@
     {
      "c": "sqlglot.expressions.string.ByteLength",
      "m": {
-      "name": "BYTE_LENGTH",
+      "bigquery_name": "BYTE_LENGTH",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -19375,7 +19842,7 @@
     {
      "c": "sqlglot.expressions.string.ByteLength",
      "m": {
-      "name": "BYTE_LENGTH",
+      "bigquery_name": "BYTE_LENGTH",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -19412,7 +19879,7 @@
     {
      "c": "sqlglot.expressions.string.CodePointsToString",
      "m": {
-      "name": "CODE_POINTS_TO_STRING",
+      "bigquery_name": "CODE_POINTS_TO_STRING",
       "line": 1,
       "col": 21,
       "start": 0,
@@ -19470,6 +19937,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -19482,7 +19954,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ApproxTopK",
      "m": {
-      "name": "APPROX_TOP_COUNT",
+      "bigquery_name": "APPROX_TOP_COUNT",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -19631,12 +20103,12 @@
   },
   {
    "sql": "SAFE_CONVERT_BYTES_TO_STRING(b'\u00c2')",
-   "generated": "SAFE_CONVERT_BYTES_TO_STRING(b'\u00c2')",
+   "generated": "SAFE_CONVERT_BYTES_TO_STRING(b'\\xc3\\x82')",
    "dump": [
     {
      "c": "sqlglot.expressions.string.SafeConvertBytesToString",
      "m": {
-      "name": "SAFE_CONVERT_BYTES_TO_STRING",
+      "bigquery_name": "SAFE_CONVERT_BYTES_TO_STRING",
       "line": 1,
       "col": 28,
       "start": 0,
@@ -19657,7 +20129,7 @@
     {
      "i": 1,
      "k": "this",
-     "v": "\u00c2"
+     "v": "\u00c3\u0082"
     },
     {
      "i": 1,
@@ -19673,7 +20145,7 @@
     {
      "c": "sqlglot.expressions.string.Unhex",
      "m": {
-      "name": "FROM_HEX",
+      "bigquery_name": "FROM_HEX",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -19710,7 +20182,7 @@
     {
      "c": "sqlglot.expressions.string.ToCodePoints",
      "m": {
-      "name": "TO_CODE_POINTS",
+      "bigquery_name": "TO_CODE_POINTS",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -19747,7 +20219,7 @@
     {
      "c": "sqlglot.expressions.string.CodePointsToBytes",
      "m": {
-      "name": "CODE_POINTS_TO_BYTES",
+      "bigquery_name": "CODE_POINTS_TO_BYTES",
       "line": 1,
       "col": 20,
       "start": 0,
@@ -19805,6 +20277,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -19817,7 +20294,7 @@
     {
      "c": "sqlglot.expressions.string.ParseBignumeric",
      "m": {
-      "name": "PARSE_BIGNUMERIC",
+      "bigquery_name": "PARSE_BIGNUMERIC",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -19854,7 +20331,7 @@
     {
      "c": "sqlglot.expressions.string.ParseNumeric",
      "m": {
-      "name": "PARSE_NUMERIC",
+      "bigquery_name": "PARSE_NUMERIC",
       "line": 1,
       "col": 13,
       "start": 0,
@@ -19891,7 +20368,7 @@
     {
      "c": "sqlglot.expressions.json.JSONBool",
      "m": {
-      "name": "BOOL",
+      "bigquery_name": "BOOL",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -19903,7 +20380,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 15,
       "start": 5,
@@ -19940,7 +20417,7 @@
     {
      "c": "sqlglot.expressions.functions.Float64",
      "m": {
-      "name": "FLOAT64",
+      "bigquery_name": "FLOAT64",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -19952,7 +20429,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 18,
       "start": 8,
@@ -19989,7 +20466,7 @@
     {
      "c": "sqlglot.expressions.functions.Float64",
      "m": {
-      "name": "FLOAT64",
+      "bigquery_name": "FLOAT64",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -20001,7 +20478,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 18,
       "start": 8,
@@ -20074,7 +20551,7 @@
     {
      "c": "sqlglot.expressions.functions.Float64",
      "m": {
-      "name": "FLOAT64",
+      "bigquery_name": "FLOAT64",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -20086,7 +20563,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 18,
       "start": 8,
@@ -20159,7 +20636,7 @@
     {
      "c": "sqlglot.expressions.string.Normalize",
      "m": {
-      "name": "NORMALIZE_AND_CASEFOLD",
+      "bigquery_name": "NORMALIZE_AND_CASEFOLD",
       "line": 1,
       "col": 22,
       "start": 0,
@@ -20201,7 +20678,7 @@
     {
      "c": "sqlglot.expressions.string.Normalize",
      "m": {
-      "name": "NORMALIZE_AND_CASEFOLD",
+      "bigquery_name": "NORMALIZE_AND_CASEFOLD",
       "line": 1,
       "col": 22,
       "start": 0,
@@ -20269,7 +20746,7 @@
     {
      "c": "sqlglot.expressions.string.ByteLength",
      "m": {
-      "name": "OCTET_LENGTH",
+      "bigquery_name": "OCTET_LENGTH",
       "line": 1,
       "col": 12,
       "start": 0,
@@ -20306,7 +20783,7 @@
     {
      "c": "sqlglot.expressions.string.ByteLength",
      "m": {
-      "name": "OCTET_LENGTH",
+      "bigquery_name": "OCTET_LENGTH",
       "line": 1,
       "col": 12,
       "start": 0,
@@ -20343,7 +20820,7 @@
     {
      "c": "sqlglot.expressions.json.JSONArrayAppend",
      "m": {
-      "name": "JSON_ARRAY_APPEND",
+      "bigquery_name": "JSON_ARRAY_APPEND",
       "line": 1,
       "col": 17,
       "start": 0,
@@ -20355,7 +20832,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 28,
       "start": 18,
@@ -20457,6 +20934,11 @@
     },
     {
      "i": 8,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 8,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -20467,22 +20949,22 @@
      "c": "sqlglot.expressions.core.Kwarg"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 17,
+     "i": 18,
      "k": "this",
      "v": "append_each_element"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "expression",
      "c": "sqlglot.expressions.core.Boolean"
     },
     {
-     "i": 19,
+     "i": 20,
      "k": "this",
      "v": false
     }
@@ -20495,7 +20977,7 @@
     {
      "c": "sqlglot.expressions.json.JSONArrayInsert",
      "m": {
-      "name": "JSON_ARRAY_INSERT",
+      "bigquery_name": "JSON_ARRAY_INSERT",
       "line": 1,
       "col": 17,
       "start": 0,
@@ -20507,7 +20989,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 28,
       "start": 18,
@@ -20609,6 +21091,11 @@
     },
     {
      "i": 8,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 8,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -20619,22 +21106,22 @@
      "c": "sqlglot.expressions.core.Kwarg"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 17,
+     "i": 18,
      "k": "this",
      "v": "insert_each_element"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "expression",
      "c": "sqlglot.expressions.core.Boolean"
     },
     {
-     "i": 19,
+     "i": 20,
      "k": "this",
      "v": false
     }
@@ -20647,7 +21134,7 @@
     {
      "c": "sqlglot.expressions.json.JSONKeysAtDepth",
      "m": {
-      "name": "JSON_KEYS",
+      "bigquery_name": "JSON_KEYS",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -20659,7 +21146,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -20696,7 +21183,7 @@
     {
      "c": "sqlglot.expressions.json.JSONKeysAtDepth",
      "m": {
-      "name": "JSON_KEYS",
+      "bigquery_name": "JSON_KEYS",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -20708,7 +21195,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -20766,7 +21253,7 @@
     {
      "c": "sqlglot.expressions.json.JSONKeysAtDepth",
      "m": {
-      "name": "JSON_KEYS",
+      "bigquery_name": "JSON_KEYS",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -20778,7 +21265,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -20872,7 +21359,7 @@
     {
      "c": "sqlglot.expressions.json.JSONSet",
      "m": {
-      "name": "JSON_SET",
+      "bigquery_name": "JSON_SET",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -20884,7 +21371,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 19,
       "start": 9,
@@ -20991,7 +21478,7 @@
     {
      "c": "sqlglot.expressions.json.JSONStripNulls",
      "m": {
-      "name": "JSON_STRIP_NULLS",
+      "bigquery_name": "JSON_STRIP_NULLS",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -21003,7 +21490,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 27,
       "start": 17,
@@ -21040,7 +21527,7 @@
     {
      "c": "sqlglot.expressions.json.JSONStripNulls",
      "m": {
-      "name": "JSON_STRIP_NULLS",
+      "bigquery_name": "JSON_STRIP_NULLS",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -21052,7 +21539,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 27,
       "start": 17,
@@ -21114,7 +21601,7 @@
     {
      "c": "sqlglot.expressions.json.JSONStripNulls",
      "m": {
-      "name": "JSON_STRIP_NULLS",
+      "bigquery_name": "JSON_STRIP_NULLS",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -21126,7 +21613,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 27,
       "start": 17,
@@ -21213,7 +21700,7 @@
     {
      "c": "sqlglot.expressions.query.JSONValueArray",
      "m": {
-      "name": "JSON_EXTRACT_STRING_ARRAY",
+      "bigquery_name": "JSON_EXTRACT_STRING_ARRAY",
       "line": 1,
       "col": 25,
       "start": 0,
@@ -21225,7 +21712,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 36,
       "start": 26,
@@ -21284,7 +21771,7 @@
     {
      "c": "sqlglot.expressions.json.JSONFormat",
      "m": {
-      "name": "TO_JSON",
+      "bigquery_name": "TO_JSON",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -21296,7 +21783,7 @@
      "k": "this",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 14,
       "start": 8,
@@ -21429,6 +21916,11 @@
     },
     {
      "i": 13,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 13,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -21446,7 +21938,7 @@
     {
      "c": "sqlglot.expressions.json.JSONFormat",
      "m": {
-      "name": "TO_JSON",
+      "bigquery_name": "TO_JSON",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -21513,7 +22005,7 @@
     {
      "c": "sqlglot.expressions.functions.RangeBucket",
      "m": {
-      "name": "RANGE_BUCKET",
+      "bigquery_name": "RANGE_BUCKET",
       "line": 1,
       "col": 12,
       "start": 0,
@@ -21654,6 +22146,11 @@
     {
      "i": 17,
      "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 4,
+     "k": "value_constructor",
      "v": false
     },
     {
@@ -23154,6 +23651,11 @@
      "i": 39,
      "k": "is_string",
      "v": true
+    },
+    {
+     "i": 38,
+     "k": "value_constructor",
+     "v": false
     },
     {
      "i": 38,
@@ -24699,6 +25201,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -24708,18 +25215,18 @@
      "c": "sqlglot.expressions.query.Order"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered"
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "c": "sqlglot.expressions.core.Column"
     },
     {
-     "i": 38,
+     "i": 39,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "m": {
@@ -24730,17 +25237,17 @@
      }
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "nulls_first",
      "v": true
     }
@@ -25009,6 +25516,11 @@
     },
     {
      "i": 37,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 37,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -25018,28 +25530,28 @@
      "c": "sqlglot.expressions.core.Kwarg"
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "v": "value_columns"
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "expression",
      "c": "sqlglot.expressions.array.Array"
     },
     {
-     "i": 45,
+     "i": 46,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.Tuple"
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -25051,17 +25563,17 @@
      }
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "this",
      "v": "c"
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -25073,23 +25585,23 @@
      }
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "this",
      "v": "bar"
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 45,
+     "i": 46,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.Tuple"
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -25101,17 +25613,17 @@
      }
     },
     {
-     "i": 54,
+     "i": 55,
      "k": "this",
      "v": "d"
     },
     {
-     "i": 54,
+     "i": 55,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -25123,23 +25635,23 @@
      }
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "this",
      "v": "baz"
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 45,
+     "i": 46,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.Tuple"
     },
     {
-     "i": 60,
+     "i": 61,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -25151,17 +25663,17 @@
      }
     },
     {
-     "i": 61,
+     "i": 62,
      "k": "this",
      "v": "e"
     },
     {
-     "i": 61,
+     "i": 62,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 60,
+     "i": 61,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -25173,17 +25685,22 @@
      }
     },
     {
-     "i": 64,
+     "i": 65,
      "k": "this",
      "v": "bla"
     },
     {
-     "i": 64,
+     "i": 65,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 45,
+     "i": 46,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 46,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -25193,22 +25710,22 @@
      "c": "sqlglot.expressions.core.Kwarg"
     },
     {
-     "i": 68,
+     "i": 70,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 69,
+     "i": 71,
      "k": "this",
      "v": "bucket_width"
     },
     {
-     "i": 68,
+     "i": 70,
      "k": "expression",
      "c": "sqlglot.expressions.datatypes.Interval"
     },
     {
-     "i": 71,
+     "i": 73,
      "k": "this",
      "c": "sqlglot.expressions.core.Literal",
      "m": {
@@ -25219,22 +25736,22 @@
      }
     },
     {
-     "i": 72,
+     "i": 74,
      "k": "this",
      "v": "1"
     },
     {
-     "i": 72,
+     "i": 74,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 71,
+     "i": 73,
      "k": "unit",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 75,
+     "i": 77,
      "k": "this",
      "v": "DAY"
     }
@@ -25459,6 +25976,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -25468,22 +25990,22 @@
      "c": "sqlglot.expressions.core.Kwarg"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "v": "ignore_null_values"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expression",
      "c": "sqlglot.expressions.core.Boolean"
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "v": false
     },
@@ -25493,18 +26015,18 @@
      "c": "sqlglot.expressions.query.Order"
     },
     {
-     "i": 41,
+     "i": 42,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered"
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "this",
      "c": "sqlglot.expressions.core.Column"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "m": {
@@ -25515,17 +26037,17 @@
      }
     },
     {
-     "i": 44,
+     "i": 45,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 44,
+     "i": 45,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "nulls_first",
      "v": true
     }
@@ -25941,6 +26463,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -25950,17 +26477,17 @@
      "c": "sqlglot.expressions.core.Kwarg"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "this",
      "c": "sqlglot.expressions.core.Var"
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "v": "origin"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expression",
      "c": "sqlglot.expressions.functions.Cast",
      "t": [
@@ -25981,7 +26508,7 @@
      ]
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "c": "sqlglot.expressions.core.Literal",
      "m": {
@@ -25992,28 +26519,28 @@
      }
     },
     {
-     "i": 40,
+     "i": 41,
      "k": "this",
      "v": "2023-11-01 09:30:01"
     },
     {
-     "i": 40,
+     "i": 41,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "to",
      "c": "sqlglot.expressions.datatypes.DataType"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "c": "DataType.Type",
      "v": "TIMESTAMP"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "nested",
      "v": false
     },
@@ -26023,18 +26550,18 @@
      "c": "sqlglot.expressions.query.Order"
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered"
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "this",
      "c": "sqlglot.expressions.core.Column"
     },
     {
-     "i": 48,
+     "i": 49,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "m": {
@@ -26045,17 +26572,17 @@
      }
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "nulls_first",
      "v": true
     }
@@ -26280,6 +26807,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -26289,18 +26821,18 @@
      "c": "sqlglot.expressions.query.Order"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered"
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "c": "sqlglot.expressions.core.Column"
     },
     {
-     "i": 38,
+     "i": 39,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "m": {
@@ -26311,17 +26843,17 @@
      }
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "nulls_first",
      "v": true
     }
@@ -26699,7 +27231,7 @@
      "a": true,
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 3,
       "col": 25,
       "start": 56,
@@ -26993,6 +27525,11 @@
      "i": 68,
      "k": "is_string",
      "v": true
+    },
+    {
+     "i": 67,
+     "k": "value_constructor",
+     "v": false
     },
     {
      "i": 67,
@@ -28433,7 +28970,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 120,
       "start": 114,
@@ -28524,7 +29061,7 @@
      "a": true,
      "c": "sqlglot.expressions.math.Cosh",
      "m": {
-      "name": "COSH",
+      "bigquery_name": "COSH",
       "line": 1,
       "col": 11,
       "start": 7,
@@ -31045,7 +31582,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 98,
       "start": 92,
@@ -31260,7 +31797,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 59,
       "start": 53,
@@ -31477,7 +32014,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 88,
       "start": 82,
@@ -31766,7 +32303,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 98,
       "start": 92,
@@ -32344,7 +32881,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 101,
       "start": 95,
@@ -32561,7 +33098,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 101,
       "start": 95,
@@ -32786,7 +33323,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 94,
       "start": 88,
@@ -33020,7 +33557,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.functions.AIEmbed",
      "m": {
-      "name": "EMBED",
+      "bigquery_name": "EMBED",
       "line": 1,
       "col": 15,
       "start": 10,
@@ -33090,7 +33627,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.functions.AISimilarity",
      "m": {
-      "name": "SIMILARITY",
+      "bigquery_name": "SIMILARITY",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -33182,7 +33719,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.functions.AIGenerate",
      "m": {
-      "name": "GENERATE",
+      "bigquery_name": "GENERATE",
       "line": 1,
       "col": 18,
       "start": 10,
@@ -33209,6 +33746,280 @@
     {
      "i": 6,
      "k": "is_string",
+     "v": true
+    }
+   ]
+  },
+  {
+   "sql": "SELECT AI.GENERATE('Write a haiku', endpoint => 'gemini-2.5-flash', model_params => JSON '{\"generationConfig\": {\"temperature\": 0}}')",
+   "generated": "SELECT AI.GENERATE('Write a haiku', endpoint => 'gemini-2.5-flash', model_params => JSON '{\"generationConfig\": {\"temperature\": 0}}')",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Dot"
+    },
+    {
+     "i": 1,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 9,
+      "start": 7,
+      "end": 8
+     }
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "v": "AI"
+    },
+    {
+     "i": 2,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expression",
+     "c": "sqlglot.expressions.functions.AIGenerate",
+     "m": {
+      "bigquery_name": "GENERATE",
+      "line": 1,
+      "col": 18,
+      "start": 10,
+      "end": 17
+     }
+    },
+    {
+     "i": 5,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 34,
+      "start": 19,
+      "end": 33
+     }
+    },
+    {
+     "i": 6,
+     "k": "this",
+     "v": "Write a haiku"
+    },
+    {
+     "i": 6,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 5,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Kwarg"
+    },
+    {
+     "i": 9,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Var"
+    },
+    {
+     "i": 10,
+     "k": "this",
+     "v": "endpoint"
+    },
+    {
+     "i": 9,
+     "k": "expression",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 66,
+      "start": 48,
+      "end": 65
+     }
+    },
+    {
+     "i": 12,
+     "k": "this",
+     "v": "gemini-2.5-flash"
+    },
+    {
+     "i": 12,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 5,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Kwarg"
+    },
+    {
+     "i": 15,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Var"
+    },
+    {
+     "i": 16,
+     "k": "this",
+     "v": "model_params"
+    },
+    {
+     "i": 15,
+     "k": "expression",
+     "c": "sqlglot.expressions.json.ParseJSON"
+    },
+    {
+     "i": 18,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 131,
+      "start": 89,
+      "end": 130
+     }
+    },
+    {
+     "i": 19,
+     "k": "this",
+     "v": "{\"generationConfig\": {\"temperature\": 0}}"
+    },
+    {
+     "i": 19,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 18,
+     "k": "is_literal",
+     "v": true
+    }
+   ]
+  },
+  {
+   "sql": "SELECT PARSE_JSON(json_string) FROM t",
+   "generated": "SELECT PARSE_JSON(json_string) FROM t",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.json.ParseJSON",
+     "m": {
+      "bigquery_name": "PARSE_JSON",
+      "line": 1,
+      "col": 17,
+      "start": 7,
+      "end": 16
+     }
+    },
+    {
+     "i": 1,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Column"
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 29,
+      "start": 18,
+      "end": 28
+     }
+    },
+    {
+     "i": 3,
+     "k": "this",
+     "v": "json_string"
+    },
+    {
+     "i": 3,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 0,
+     "k": "from_",
+     "c": "sqlglot.expressions.query.From"
+    },
+    {
+     "i": 6,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Table"
+    },
+    {
+     "i": 7,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 37,
+      "start": 36,
+      "end": 36
+     }
+    },
+    {
+     "i": 8,
+     "k": "this",
+     "v": "t"
+    },
+    {
+     "i": 8,
+     "k": "quoted",
+     "v": false
+    }
+   ]
+  },
+  {
+   "sql": "SELECT JSON '''{}'''",
+   "generated": "SELECT JSON '{}'",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.json.ParseJSON"
+    },
+    {
+     "i": 1,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 20,
+      "start": 12,
+      "end": 19
+     }
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "v": "{}"
+    },
+    {
+     "i": 2,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 1,
+     "k": "is_literal",
      "v": true
     }
    ]
@@ -33544,6 +34355,11 @@
     },
     {
      "i": 14,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 14,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -33569,12 +34385,12 @@
      }
     },
     {
-     "i": 24,
+     "i": 25,
      "k": "this",
      "v": "json_data"
     },
     {
-     "i": 24,
+     "i": 25,
      "k": "quoted",
      "v": false
     }
@@ -33860,7 +34676,7 @@
   },
   {
    "sql": "SELECT JSON_OBJECT(['a', 'b'], [JSON '10', JSON '\"foo\"']) AS json_data",
-   "generated": "SELECT JSON_OBJECT('a', PARSE_JSON('10'), 'b', PARSE_JSON('\"foo\"')) AS json_data",
+   "generated": "SELECT JSON_OBJECT('a', JSON '10', 'b', JSON '\"foo\"') AS json_data",
    "dump": [
     {
      "c": "sqlglot.expressions.query.Select"
@@ -33930,13 +34746,18 @@
      "v": true
     },
     {
+     "i": 7,
+     "k": "is_literal",
+     "v": true
+    },
+    {
      "i": 2,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.JSONKeyValue"
     },
     {
-     "i": 11,
+     "i": 12,
      "k": "this",
      "c": "sqlglot.expressions.core.Literal",
      "m": {
@@ -33947,22 +34768,22 @@
      }
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "this",
      "v": "b"
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 11,
+     "i": 12,
      "k": "expression",
      "c": "sqlglot.expressions.json.ParseJSON"
     },
     {
-     "i": 15,
+     "i": 16,
      "k": "this",
      "c": "sqlglot.expressions.core.Literal",
      "m": {
@@ -33973,13 +34794,18 @@
      }
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "v": "\"foo\""
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 16,
+     "k": "is_literal",
      "v": true
     },
     {
@@ -34004,12 +34830,12 @@
      }
     },
     {
-     "i": 21,
+     "i": 23,
      "k": "this",
      "v": "json_data"
     },
     {
-     "i": 21,
+     "i": 23,
      "k": "quoted",
      "v": false
     }
@@ -34065,7 +34891,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 38,
       "start": 32,
@@ -34200,7 +35026,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 72,
       "start": 66,
@@ -34386,7 +35212,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.json.JSONFormat",
      "m": {
-      "name": "TO_JSON",
+      "bigquery_name": "TO_JSON",
       "line": 1,
       "col": 39,
       "start": 32,
@@ -34451,7 +35277,7 @@
      "k": "expression",
      "c": "sqlglot.expressions.json.JSONFormat",
      "m": {
-      "name": "TO_JSON",
+      "bigquery_name": "TO_JSON",
       "line": 1,
       "col": 52,
       "start": 45,
@@ -34509,6 +35335,11 @@
     },
     {
      "i": 17,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 17,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -34539,12 +35370,12 @@
      }
     },
     {
-     "i": 28,
+     "i": 29,
      "k": "this",
      "v": "json_data"
     },
     {
-     "i": 28,
+     "i": 29,
      "k": "quoted",
      "v": false
     }
@@ -34563,7 +35394,7 @@
      "a": true,
      "c": "sqlglot.expressions.core.Mod",
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 10,
       "start": 7,
@@ -34632,7 +35463,7 @@
     {
      "c": "sqlglot.expressions.core.Mod",
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -34822,6 +35653,11 @@
     },
     {
      "i": 3,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 3,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -34831,47 +35667,47 @@
      "c": "sqlglot.expressions.datatypes.DataType"
     },
     {
-     "i": 8,
+     "i": 9,
      "k": "this",
      "c": "DataType.Type",
      "v": "STRUCT"
     },
     {
-     "i": 8,
+     "i": 9,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.datatypes.DataType"
     },
     {
-     "i": 10,
+     "i": 11,
      "k": "this",
      "c": "DataType.Type",
      "v": "ARRAY"
     },
     {
-     "i": 10,
+     "i": 11,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.datatypes.DataType"
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "this",
      "c": "DataType.Type",
      "v": "TEXT"
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "nested",
      "v": false
     },
     {
-     "i": 10,
+     "i": 11,
      "k": "nested",
      "v": true
     },
     {
-     "i": 8,
+     "i": 9,
      "k": "nested",
      "v": true
     }
@@ -35542,7 +36378,7 @@
     {
      "c": "sqlglot.expressions.string.RegexpExtract",
      "m": {
-      "name": "REGEXP_EXTRACT",
+      "bigquery_name": "REGEXP_EXTRACT",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -35610,7 +36446,7 @@
     {
      "c": "sqlglot.expressions.string.RegexpExtract",
      "m": {
-      "name": "REGEXP_EXTRACT",
+      "bigquery_name": "REGEXP_EXTRACT",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -35735,7 +36571,7 @@
     {
      "c": "sqlglot.expressions.string.RegexpExtract",
      "m": {
-      "name": "REGEXP_EXTRACT",
+      "bigquery_name": "REGEXP_EXTRACT",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -35813,7 +36649,7 @@
     {
      "c": "sqlglot.expressions.string.RegexpExtract",
      "m": {
-      "name": "REGEXP_SUBSTR",
+      "bigquery_name": "REGEXP_SUBSTR",
       "line": 1,
       "col": 13,
       "start": 0,
@@ -36138,7 +36974,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.Date",
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 61,
       "start": 57,
@@ -36626,7 +37462,7 @@
      "k": "this",
      "c": "sqlglot.expressions.string.Length",
      "m": {
-      "name": "LENGTH",
+      "bigquery_name": "LENGTH",
       "line": 1,
       "col": 35,
       "start": 29,
@@ -37114,7 +37950,7 @@
      "a": true,
      "c": "sqlglot.expressions.aggregate.GroupConcat",
      "m": {
-      "name": "GROUP_CONCAT",
+      "bigquery_name": "GROUP_CONCAT",
       "line": 1,
       "col": 22,
       "start": 10,
@@ -38767,6 +39603,103 @@
    ]
   },
   {
+   "sql": "SELECT [STRUCT((SELECT 1) AS a)]",
+   "generated": "SELECT [STRUCT((SELECT 1) AS a)]",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Array"
+    },
+    {
+     "i": 1,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.array.Struct",
+     "m": {
+      "bigquery_name": "STRUCT",
+      "line": 1,
+      "col": 14,
+      "start": 8,
+      "end": 13
+     }
+    },
+    {
+     "i": 2,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.PropertyEQ"
+    },
+    {
+     "i": 3,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "m": {
+      "line": 1,
+      "col": 30,
+      "start": 29,
+      "end": 29
+     }
+    },
+    {
+     "i": 4,
+     "k": "this",
+     "v": "a"
+    },
+    {
+     "i": 4,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 3,
+     "k": "expression",
+     "c": "sqlglot.expressions.query.Subquery"
+    },
+    {
+     "i": 7,
+     "k": "this",
+     "c": "sqlglot.expressions.query.Select"
+    },
+    {
+     "i": 8,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "m": {
+      "line": 1,
+      "col": 24,
+      "start": 23,
+      "end": 23
+     }
+    },
+    {
+     "i": 9,
+     "k": "this",
+     "v": "1"
+    },
+    {
+     "i": 9,
+     "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "struct_name_inheritance",
+     "v": true
+    }
+   ]
+  },
+  {
    "sql": "JSON_ARRAY()",
    "generated": "JSON_ARRAY()",
    "dump": [
@@ -38821,6 +39754,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -38839,7 +39777,7 @@
      "a": true,
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 17,
       "start": 11,
@@ -39025,6 +39963,11 @@
     },
     {
      "i": 4,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 4,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -39035,7 +39978,7 @@
      "c": "sqlglot.expressions.array.Array"
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -39047,17 +39990,17 @@
      }
     },
     {
-     "i": 13,
+     "i": 14,
      "k": "this",
      "v": "20"
     },
     {
-     "i": 13,
+     "i": 14,
      "k": "is_string",
      "v": false
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -39069,17 +40012,22 @@
      }
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "v": "30"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "is_string",
      "v": false
     },
     {
-     "i": 12,
+     "i": 13,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 13,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -39373,7 +40321,7 @@
      "a": true,
      "c": "sqlglot.expressions.aggregate.Max",
      "m": {
-      "name": "MAX",
+      "bigquery_name": "MAX",
       "line": 1,
       "col": 35,
       "start": 32,
@@ -39958,7 +40906,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.CurrentTimestamp",
      "m": {
-      "name": "CURRENT_TIMESTAMP",
+      "bigquery_name": "CURRENT_TIMESTAMP",
       "line": 1,
       "col": 46,
       "start": 29,
@@ -40015,7 +40963,7 @@
     {
      "c": "sqlglot.expressions.temporal.DateTrunc",
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -40027,7 +40975,7 @@
      "k": "unit",
      "c": "sqlglot.expressions.functions.WeekStart",
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 21,
       "start": 17,
@@ -40079,7 +41027,7 @@
     {
      "c": "sqlglot.expressions.temporal.LastDay",
      "m": {
-      "name": "LAST_DAY",
+      "bigquery_name": "LAST_DAY",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -40149,7 +41097,7 @@
      "k": "unit",
      "c": "sqlglot.expressions.functions.WeekStart",
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 45,
       "start": 41,
@@ -40175,7 +41123,7 @@
     {
      "c": "sqlglot.expressions.temporal.DateDiff",
      "m": {
-      "name": "DATE_DIFF",
+      "bigquery_name": "DATE_DIFF",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -40229,7 +41177,7 @@
      "k": "unit",
      "c": "sqlglot.expressions.functions.WeekStart",
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 42,
       "start": 38,
@@ -40260,7 +41208,7 @@
     {
      "c": "sqlglot.expressions.temporal.DatetimeDiff",
      "m": {
-      "name": "DATETIME_DIFF",
+      "bigquery_name": "DATETIME_DIFF",
       "line": 1,
       "col": 13,
       "start": 0,
@@ -40314,7 +41262,7 @@
      "k": "unit",
      "c": "sqlglot.expressions.functions.WeekStart",
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 46,
       "start": 42,
@@ -40350,7 +41298,7 @@
      "k": "this",
      "c": "sqlglot.expressions.functions.WeekStart",
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 12,
       "start": 8,
@@ -40434,7 +41382,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -40502,7 +41450,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -40577,7 +41525,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -40647,7 +41595,7 @@
     {
      "c": "sqlglot.expressions.functions.LaxBool",
      "m": {
-      "name": "LAX_BOOL",
+      "bigquery_name": "LAX_BOOL",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -40659,7 +41607,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 19,
       "start": 9,
@@ -40696,7 +41644,7 @@
     {
      "c": "sqlglot.expressions.functions.LaxFloat64",
      "m": {
-      "name": "LAX_FLOAT64",
+      "bigquery_name": "LAX_FLOAT64",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -40708,7 +41656,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 22,
       "start": 12,
@@ -40745,7 +41693,7 @@
     {
      "c": "sqlglot.expressions.functions.LaxInt64",
      "m": {
-      "name": "LAX_INT64",
+      "bigquery_name": "LAX_INT64",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -40757,7 +41705,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -40794,7 +41742,7 @@
     {
      "c": "sqlglot.expressions.functions.LaxString",
      "m": {
-      "name": "LAX_STRING",
+      "bigquery_name": "LAX_STRING",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -40806,7 +41754,7 @@
      "k": "this",
      "c": "sqlglot.expressions.json.ParseJSON",
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 21,
       "start": 11,
@@ -40843,7 +41791,7 @@
     {
      "c": "sqlglot.expressions.math.SafeNegate",
      "m": {
-      "name": "SAFE_NEGATE",
+      "bigquery_name": "SAFE_NEGATE",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -41107,7 +42055,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -41170,7 +42118,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -41232,7 +42180,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -41364,7 +42312,7 @@
     {
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -41439,7 +42387,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -41507,7 +42455,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -41575,7 +42523,7 @@
      "k": "this",
      "c": "sqlglot.expressions.aggregate.ApproxQuantiles",
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -42319,6 +43267,11 @@
     },
     {
      "i": 29,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 29,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -42334,12 +43287,12 @@
      }
     },
     {
-     "i": 40,
+     "i": 41,
      "k": "this",
      "v": "array_col"
     },
     {
-     "i": 40,
+     "i": 41,
      "k": "quoted",
      "v": false
     },
@@ -42349,7 +43302,7 @@
      "c": "sqlglot.expressions.query.TableAlias"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "m": {
@@ -42360,12 +43313,12 @@
      }
     },
     {
-     "i": 44,
+     "i": 45,
      "k": "this",
      "v": "foo"
     },
     {
-     "i": 44,
+     "i": 45,
      "k": "quoted",
      "v": false
     }
@@ -42484,7 +43437,7 @@
     {
      "c": "sqlglot.expressions.temporal.Timestamp",
      "m": {
-      "name": "TIMESTAMP",
+      "bigquery_name": "TIMESTAMP",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -42936,7 +43889,7 @@
     {
      "c": "sqlglot.expressions.temporal.DateTrunc",
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -43262,7 +44215,7 @@
      "k": "params_struct",
      "c": "sqlglot.expressions.array.Struct",
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 117,
       "start": 111,
@@ -43400,7 +44353,7 @@
      "k": "this",
      "c": "sqlglot.expressions.string.Substring",
      "m": {
-      "name": "SUBSTR",
+      "bigquery_name": "SUBSTR",
       "line": 1,
       "col": 11,
       "start": 5,
@@ -43489,7 +44442,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.Timestamp",
      "m": {
-      "name": "TIMESTAMP",
+      "bigquery_name": "TIMESTAMP",
       "line": 1,
       "col": 14,
       "start": 5,
@@ -43567,7 +44520,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.StrToDate",
      "m": {
-      "name": "PARSE_DATE",
+      "bigquery_name": "PARSE_DATE",
       "line": 1,
       "col": 15,
       "start": 5,
@@ -43639,7 +44592,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.ParseDatetime",
      "m": {
-      "name": "PARSE_DATETIME",
+      "bigquery_name": "PARSE_DATETIME",
       "line": 1,
       "col": 19,
       "start": 5,
@@ -43711,7 +44664,7 @@
      "k": "this",
      "c": "sqlglot.expressions.temporal.StrToTime",
      "m": {
-      "name": "PARSE_TIMESTAMP",
+      "bigquery_name": "PARSE_TIMESTAMP",
       "line": 1,
       "col": 20,
       "start": 5,
@@ -43783,7 +44736,7 @@
      "k": "this",
      "c": "sqlglot.expressions.functions.Host",
      "m": {
-      "name": "HOST",
+      "bigquery_name": "HOST",
       "line": 1,
       "col": 8,
       "start": 4,
@@ -43825,7 +44778,7 @@
      "k": "this",
      "c": "sqlglot.expressions.functions.RegDomain",
      "m": {
-      "name": "REG_DOMAIN",
+      "bigquery_name": "REG_DOMAIN",
       "line": 1,
       "col": 14,
       "start": 4,
@@ -43868,7 +44821,7 @@
      "a": true,
      "c": "sqlglot.expressions.json.JSONExtract",
      "m": {
-      "name": "JSON_EXTRACT",
+      "bigquery_name": "JSON_EXTRACT",
       "line": 1,
       "col": 58,
       "start": 46,
@@ -44187,6 +45140,11 @@
     },
     {
      "i": 18,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 18,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -44345,6 +45303,11 @@
      "i": 20,
      "k": "is_string",
      "v": true
+    },
+    {
+     "i": 19,
+     "k": "value_constructor",
+     "v": false
     },
     {
      "i": 19,
@@ -44509,6 +45472,11 @@
     },
     {
      "i": 19,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 19,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -44531,7 +45499,7 @@
     {
      "c": "sqlglot.expressions.core.Mod",
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -44599,7 +45567,7 @@
     {
      "c": "sqlglot.expressions.core.Mod",
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -44662,7 +45630,7 @@
     {
      "c": "sqlglot.expressions.core.Mod",
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -44720,7 +45688,7 @@
     {
      "c": "sqlglot.expressions.core.Mod",
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,

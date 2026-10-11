@@ -524,7 +524,7 @@ open class Generator(
 
     // sqlglot: Generator.WITH_SEPARATED_COMMENTS
     protected open fun isWithSeparatedComments(expression: Expression?): Boolean = when (expression) {
-        is Command, is Create, is Describe, is Delete, is Drop, is From, is Insert, is Join,
+        is Command, is Create, is Describe, is Delete, is Drop, is From, is Insert, is MultitableInserts, is Join,
         is Order, is Group, is Having, is Select, is SetOperation, is Update, is Where, is With,
         -> true
         else -> false
@@ -1368,7 +1368,9 @@ open class Generator(
             if (cteRecursiveKeywordRequired && expression.args["recursive"] == true) "RECURSIVE " else ""
         var search = sql(expression, "search")
         if (search.isNotEmpty()) search = " $search"
-        val ctes = if (sqlText.isNotEmpty()) "WITH $recursive$sqlText$search" else ""
+        var cycle = sql(expression, "cycle")
+        if (cycle.isNotEmpty()) cycle = " $cycle"
+        val ctes = if (sqlText.isNotEmpty()) "WITH $recursive$sqlText$search$cycle" else ""
         return if (udfs.isNotEmpty() && ctes.isNotEmpty()) "$udfs $ctes" else "$udfs$ctes"
     }
 
@@ -2088,12 +2090,14 @@ open class Generator(
         val kind = sql(expression, "kind")
         val thisSql = sql(expression, "this")
         val setSql = sql(expression, "expression")
+        val to = sql(expression, "to").let { if (it.isEmpty()) "" else " TO $it" }
+        val default = sql(expression, "default").let { if (it.isEmpty()) "" else " DEFAULT $it" }
         var using = sql(expression, "using")
         if (using.isNotEmpty()) using = " USING $using"
 
         val kindSql = if (kind == "CYCLE") kind else "SEARCH $kind FIRST BY"
 
-        return "$kindSql $thisSql SET $setSql$using"
+        return "$kindSql $thisSql SET $setSql$to$default$using"
     }
 
     // sqlglot: Generator.onconflict_sql
@@ -2560,6 +2564,11 @@ open class Generator(
 
     // sqlglot: Generator.lateral_sql
     open fun lateralSql(expression: Lateral): String {
+        val unnest = expression.thisArg as? Unnest
+        val offset = unnest?.args?.get("offset") as? Identifier
+        val aliasNode = expression.args["alias"] as? TableAlias
+        if (unnestWithOrdinality && offset != null && aliasNode != null && unnest.args["alias"] == null &&
+            (aliasNode.columns.lastOrNull() as? Expression)?.name != offset.name) aliasNode.append("columns", offset.copy())
         val thisSql = sql(expression, "this")
 
         if (expression.args["view"] == true) {
@@ -2754,7 +2763,8 @@ open class Generator(
         val this_ = expression.args["this"]
         if (this_ !is Column || this_.table.isNotEmpty()) return null
 
-        val ancestor = expression.findAncestor(Select::class, Window::class)
+        val order = expression.parent as? Order ?: return null
+        val ancestor = order.parent
         if (ancestor !is Select) return null
 
         val columnName = this_.name
@@ -5108,6 +5118,22 @@ open class Generator(
     open fun parsejsonSql(expression: ParseJSON): String =
         func(parseJsonName ?: return sql(expression.thisArg), expression.thisArg, expression.expressionArg)
 
+    open val supportsFromFirstInsert: Boolean get() = false
+
+    open fun multitableinsertsSql(expression: MultitableInserts): String {
+        val kind = sql(expression, "kind")
+        if (kind.isEmpty()) {
+            if (!supportsFromFirstInsert) unsupported("FROM-first multi-table INSERT is not supported in this dialect")
+            if (supportsFromFirstInsert && expression.expressionsArg.filterIsInstance<Insert>().any {
+                    val query = it.args["expression"] as? Select
+                    query?.args?.get("qualify") != null && query.args["from_"] == null
+                }) throw UnsupportedError("Cannot lower QUALIFY across a FROM-first INSERT's implicit shared source")
+            val inserts = expression.expressionsArg.joinToString(sep()) { sql(it) }
+            return prependCtes(expression, "FROM ${sql(expression, "source")}${seg(inserts)}")
+        }
+        return prependCtes(expression, "INSERT $kind${seg(expressions(expression, sep = " "))}${seg(sql(expression, "source"))}")
+    }
+
     // sqlglot: Generator.rand_sql
     open fun randSql(expression: Rand): String {
         val lower = sql(expression, "lower")
@@ -5463,7 +5489,10 @@ open class Generator(
         // sqlglot: PRESERVE_ORIGINAL_NAMES (ClickHouse) — regenerate with the exact
         // name the function was parsed with
         val name = if (dialectPreserveOriginalNames) {
-            (node.metaOrNull?.get("name") as? String) ?: expression.sqlName()
+            (node.metaOrNull?.get("${dialect.name}_name") as? String)
+                ?: (node.metaOrNull?.get("name") as? String).takeIf {
+                    sourceDialect == null || sourceDialect.equals(dialect.name, ignoreCase = true)
+                } ?: expression.sqlName()
         } else {
             expression.sqlName()
         }

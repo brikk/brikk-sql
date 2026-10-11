@@ -46,7 +46,7 @@ BRIKK_NATIVE_TOKEN_TYPES = ["BITMAP", "HLL", "QUANTILE_STATE", "AGG_STATE"]
 def sqlglot_version() -> str:
     try:
         return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags"],
+            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
             capture_output=True,
             text=True,
             check=True,
@@ -298,6 +298,7 @@ def gen_tables(dialect_name: str, version: str) -> tuple[str, str]:
         # sqlglot: tokens.Tokenizer._init_core has_bit_strings/has_hex_strings
         lines.append(f"    const val HAS_BIT_STRINGS: Boolean = {str(bool(t.BIT_STRINGS)).lower()}")
         lines.append(f"    const val HAS_HEX_STRINGS: Boolean = {str(bool(t.HEX_STRINGS)).lower()}")
+        lines.append(f"    const val BYTE_STRINGS_ARE_BYTES: Boolean = {str(d.BYTE_STRING_IS_BYTES_TYPE).lower()}")
         lines.append("")
         dialect_py = f"dialects.{type(d).__name__}"
         lines.append(f"    // sqlglot: {dialect_py} dialect-level flags (passed via Tokenizer._init_core)")
@@ -358,7 +359,7 @@ def gen_tables(dialect_name: str, version: str) -> tuple[str, str]:
         lines.append("    ).withCommentPolicy(")
         lines.append("        dashCommentRequiresBoundary = DASH_COMMENT_REQUIRES_BOUNDARY,")
         lines.append("        commentsTerminateAtNewlineOnly = COMMENTS_TERMINATE_AT_NEWLINE_ONLY,")
-        lines.append("    )")
+        lines.append("    ).withByteStringPolicy(BYTE_STRINGS_ARE_BYTES)")
 
     lines.append("}")
     return obj_name, "\n".join(lines) + "\n"

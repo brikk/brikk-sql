@@ -555,7 +555,9 @@ open class MysqlGenerator(
             "PROJECTIONS" -> target = if (target.isNotEmpty()) " ON TABLE$target" else ""
         }
 
-        val db = prefixedSql("FROM", expression, "db")
+        val db = if (expression.name == "CREATE TABLE" && sql(expression, "db").isNotEmpty()) {
+            target = " ${sql(expression, "db")}.${sql(expression, "target")}"; ""
+        } else prefixedSql("FROM", expression, "db")
 
         val like = prefixedSql("LIKE", expression, "like")
         val where = sql(expression, "where")

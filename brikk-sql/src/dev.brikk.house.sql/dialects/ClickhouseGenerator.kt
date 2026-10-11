@@ -99,6 +99,21 @@ open class ClickhouseGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.CLICKHOUSE
+    override fun selectSql(expression: Select): String {
+        val fetch = expression.args["limit"] as? Fetch
+        if (fetch != null && expression.args["order"] == null) {
+            expression.set("limit", Limit(args("expression" to (fetch.args["count"] ?: Literal.number(1)))))
+        }
+        return super.selectSql(expression)
+    }
+    open fun containsSql(expression: Contains): String {
+        fun operand(value: Expression?): Expression? = if (sourceDialect == null &&
+            expression.metaOrNull?.get("bigquery_name") != null && value is Lower) {
+            value.copy().also { it.meta["clickhouse_name"] = "LOWER" }
+        } else value
+        return sql(GT(args("this" to StrPosition(args("this" to operand(expression.thisArg as? Expression),
+            "substr" to operand(expression.expressionArg as? Expression))), "expression" to Literal.number(0))))
+    }
 
     // ------------------------------------------------------------------
     // Flags (sqlglot: ClickHouseGenerator class attributes)
@@ -1094,11 +1109,13 @@ open class ClickhouseGenerator(
             //     is byte-level and errors on multibyte). Faithful CH keeps byte `translate`.
             reg(Lower::class) { e ->
                 if (ch().isCrossDialectFrom("clickhouse")) func("lowerUTF8", e.thisArg)
-                else func("lower", e.thisArg)
+                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", "name") } == true)
+                    functionFallbackSql(e as Func) else func("lower", e.thisArg)
             }
             reg(Upper::class) { e ->
                 if (ch().isCrossDialectFrom("clickhouse")) func("upperUTF8", e.thisArg)
-                else func("upper", e.thisArg)
+                else if (e.metaOrNull?.keys?.any { it in setOf("clickhouse_name", "bigquery_name", "name") } == true)
+                    functionFallbackSql(e as Func) else func("upper", e.thisArg)
             }
             // week() semantics are SOURCE-SPECIFIC (not uniformly cross-dialect): DuckDB
             // week is ISO-8601 -> toISOWeek, but MySQL-family (Doris/MySQL) week defaults to
@@ -1132,6 +1149,9 @@ open class ClickhouseGenerator(
             // parses to the WeekOfYear node, so this only fires cross-dialect (Trino->CH).
             reg(WeekOfYear::class) { e -> func("toISOWeek", e.thisArg) }
             reg(YearOfWeekIso::class) { e -> func("toISOYear", e.thisArg) }
+            reg(VariancePop::class) { e -> func("varPop", e.thisArg) }
+            reg(Contains::class) { e -> ch().containsSql(e as Contains) }
+            reg(IsInf::class) { e -> func("isInfinite", e.thisArg) }
             // BUGS-clickhouse-generator-mappings row 9 (P2): the emitted DAY_OF_WEEK does
             // not exist in ClickHouse. toDayOfWeek is the valid name. SAFE for CH->CH:
             // ClickHouse `dayofweek` == `toDayOfWeek` (both ISO Mon=1..Sun=7, verified 7==7),

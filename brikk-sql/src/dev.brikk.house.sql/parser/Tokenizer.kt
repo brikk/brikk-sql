@@ -534,6 +534,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 config.stringEscapes
             },
             rawString = tokenType == TokenType.RAW_STRING || tokenType == TokenType.HEREDOC_STRING,
+            bytesLiteral = tokenType == TokenType.BYTE_STRING && config.byteStringsAreBytes,
         )
 
         if (base != 0 && text.isNotEmpty()) {
@@ -662,6 +663,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         escapes: Set<Char>? = null,
         rawString: Boolean = false,
         raiseUnmatched: Boolean = true,
+        bytesLiteral: Boolean = false,
     ): String {
         var text = StringBuilder()
         val delimSize = delimiter.length
@@ -702,7 +704,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 end = current >= size
                 char = sql[endIdx]
                 peek = if (end) NONE else sql[current]
-                return sql.substring(pos, endIdx)
+                return byteChunk(sql.substring(pos, endIdx), bytesLiteral)
             }
         }
 
@@ -730,7 +732,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 val next = peek
                 advance()
                 advance()
-                text.append(next)
+                text.append(byteChunk(next.toString(), bytesLiteral))
                 continue
             }
 
@@ -776,12 +778,16 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
 
                 val cur = current - 1
                 advance(alnum = true)
-                text.append(sql, cur, current - 1)
+                if (bytesLiteral && sql[cur].isHighSurrogate() && char.isLowSurrogate()) advance()
+                text.append(byteChunk(sql.substring(cur, current - 1), bytesLiteral))
             }
         }
 
         return text.toString()
     }
+
+    private fun byteChunk(text: String, bytes: Boolean): String = if (bytes && text.any { it.code >= 128 })
+        text.encodeToByteArray(throwOnInvalidSequence = true).joinToString("") { (it.toInt() and 0xFF).toChar().toString() } else text
 
     private companion object {
         /** Stand-in for Python's empty-string "no char" sentinel. */

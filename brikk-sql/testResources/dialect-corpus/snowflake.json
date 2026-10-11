@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "snowflake",
   "identity": [
     {
@@ -644,6 +644,11 @@
     },
     {
       "sql": "STRTOK_TO_ARRAY('a.b.c', '.')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT value FROM t, LATERAL SPLIT_TO_TABLE(t.a, '.')",
       "expected": null,
       "pretty": false
     },
@@ -2321,9 +2326,8 @@
     },
     {
       "sql": "PUT file:///dir/tmp.csv @%table",
-      "expected": null,
-      "pretty": false,
-      "check_command_warning": true
+      "expected": "PUT 'file:///dir/tmp.csv' @%table",
+      "pretty": false
     },
     {
       "sql": "SELECT * FROM (SELECT a FROM @foo)",
@@ -2872,6 +2876,21 @@
       "pretty": false
     },
     {
+      "sql": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2 (+)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 (+) = t2.c2",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2(+)",
+      "expected": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2 (+)",
+      "pretty": false
+    },
+    {
       "sql": "DESCRIBE SEMANTIC VIEW TPCDS_SEMANTIC_VIEW_SM",
       "expected": null,
       "pretty": false
@@ -3395,18 +3414,6 @@
       "sql": "PUT 'file:///dir/tmp.csv' @s1/test",
       "expected": null,
       "pretty": false
-    },
-    {
-      "sql": "PUT file:///dir/tmp.csv @%table",
-      "expected": null,
-      "pretty": false,
-      "check_command_warning": true
-    },
-    {
-      "sql": "PUT file:///dir/tmp.csv @s1/test PARALLEL=1 AUTO_COMPRESS=FALSE source_compression=gzip OVERWRITE=TRUE",
-      "expected": null,
-      "pretty": false,
-      "check_command_warning": true
     },
     {
       "sql": "GET @\"my_DB\".\"schEMA1\".\"MYstage\" 'file:///dir/tmp.csv'",
@@ -4061,6 +4068,31 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE foo DROP COLUMN col1, col2",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "LS @~",
+      "expected": "LIST @~",
+      "pretty": false
+    },
+    {
+      "sql": "ls @named_stage",
+      "expected": "LIST @named_stage",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT list, ls FROM list",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT x AS list, y AS ls FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "TO_DATE('12345')",
       "expected": null,
       "pretty": false
@@ -4108,6 +4140,16 @@
     {
       "sql": "CREATE FUNCTION a(x DOUBLE) RETURNS DOUBLE LANGUAGE SQL CALLED ON NULL INPUT AS ' x * 2 '",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "PUT file:///dir/tmp.csv @%table",
+      "expected": "PUT 'file:///dir/tmp.csv' @%table",
+      "pretty": false
+    },
+    {
+      "sql": "PUT file:///dir/tmp.csv @s1/test PARALLEL=1 AUTO_COMPRESS=FALSE source_compression=gzip OVERWRITE=TRUE",
+      "expected": "PUT 'file:///dir/tmp.csv' @s1/test PARALLEL=1 AUTO_COMPRESS=FALSE source_compression=gzip OVERWRITE=TRUE",
       "pretty": false
     },
     {
@@ -4182,6 +4224,11 @@
     },
     {
       "sql": "SELECT SEARCH_IP(col, '192.168.0.0')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT value FROM TABLE(SPLIT_TO_TABLE('a.b.c', '.'))",
       "expected": null,
       "pretty": false
     },
@@ -4572,6 +4619,24 @@
         "duckdb": {
           "error": "UnsupportedError"
         }
+      }
+    },
+    {
+      "sql": "TRY_TO_NUMBER(x)",
+      "read": {},
+      "write": {
+        "bigquery": "SAFE_CAST(x AS FLOAT64)",
+        "presto": "TRY_CAST(x AS DOUBLE)",
+        "tsql": "TRY_CAST(x AS FLOAT)"
+      }
+    },
+    {
+      "sql": "TO_NUMBER(x)",
+      "read": {},
+      "write": {
+        "bigquery": "CAST(x AS FLOAT64)",
+        "presto": "CAST(x AS DOUBLE)",
+        "tsql": "CAST(x AS FLOAT)"
       }
     },
     {
@@ -7430,7 +7495,7 @@
         "snowflake": "TRUNC(3.14159)",
         "oracle": "TRUNC(3.14159)",
         "postgres": "TRUNC(3.14159)",
-        "mysql": "TRUNCATE(3.14159)",
+        "mysql": "TRUNCATE(3.14159, 0)",
         "tsql": "ROUND(3.14159, 0, 1)"
       }
     },
@@ -7732,6 +7797,16 @@
       "write": {}
     },
     {
+      "sql": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2 (+)",
+      "read": {
+        "oracle": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2 (+)"
+      },
+      "write": {
+        "oracle": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2 (+)",
+        "redshift": "SELECT t1.c1, t2.c2 FROM t1, t2 WHERE t1.c1 = t2.c2 (+)"
+      }
+    },
+    {
       "sql": "SELECT \"c0\", \"c1\" FROM (VALUES (1, 2), (3, 4)) AS \"t0\"(\"c0\", \"c1\")",
       "read": {
         "spark": "SELECT `c0`, `c1` FROM (VALUES (1, 2), (3, 4)) AS `t0`(`c0`, `c1`)"
@@ -7961,7 +8036,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT REGEXP_COUNT('Hello World', 'L', 1, 'im')",
-        "duckdb": "SELECT CASE WHEN '(?im)' || 'L' = '' THEN 0 ELSE LENGTH(REGEXP_EXTRACT_ALL(SUBSTRING('Hello World', 1), '(?im)' || 'L')) END"
+        "duckdb": "SELECT CASE WHEN 'L' = '' THEN 0 ELSE LENGTH(REGEXP_EXTRACT_ALL(SUBSTRING('Hello World', 1), '(?im)' || 'L')) END"
       }
     },
     {
@@ -8001,7 +8076,7 @@
       "read": {},
       "write": {
         "snowflake": "SELECT REGEXP_INSTR(subject, pattern, 1, 1, 0, 'im')",
-        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 1 IS NULL OR 1 IS NULL OR 0 IS NULL OR 'im' IS NULL THEN NULL WHEN '(?im)' || pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, '(?im)' || pattern)[1:1], x -> LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)[1:1 - 1], x -> LENGTH(x))), 0) + 0 END"
+        "duckdb": "SELECT CASE WHEN subject IS NULL OR pattern IS NULL OR 1 IS NULL OR 1 IS NULL OR 0 IS NULL OR 'im' IS NULL THEN NULL WHEN pattern = '' THEN 0 WHEN LENGTH(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)) < 1 THEN 0 ELSE 1 + COALESCE(LIST_SUM(LIST_TRANSFORM(STRING_SPLIT_REGEX(subject, '(?im)' || pattern)[1:1], x -> LENGTH(x))), 0) + COALESCE(LIST_SUM(LIST_TRANSFORM(REGEXP_EXTRACT_ALL(subject, '(?im)' || pattern)[1:1 - 1], x -> LENGTH(x))), 0) + 0 END"
       }
     },
     {
@@ -8775,8 +8850,8 @@
     }
   ],
   "stats": {
-    "identity_count": 847,
-    "transpile_count": 530,
-    "skipped_dynamic": 33
+    "identity_count": 857,
+    "transpile_count": 533,
+    "skipped_dynamic": 38
   }
 }

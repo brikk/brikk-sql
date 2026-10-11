@@ -1,8 +1,8 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
  "fixture": "dialect-corpus/bigquery.json",
  "dialect": "bigquery",
- "case_count": 286,
+ "case_count": 287,
  "skipped": [
   {
    "sql": "SELECT 'foo' 'bar'",
@@ -153,6 +153,22 @@
    "error": "TypeError: Object of type DataType is not JSON serializable"
   },
   {
+   "sql": "SELECT [(SELECT 1), 2]",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
+   "sql": "SELECT [1, (SELECT 2)]",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
+   "sql": "SELECT [STRUCT((SELECT 1) AS a), STRUCT(2 AS a)]",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
+   "sql": "SELECT [COALESCE((SELECT 1), 0), 2]",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
    "sql": "SELECT PARSE_DATETIME('%a %b %e %I:%M:%S %Y', 'Thu Dec 25 07:30:00 2008')",
    "error": "TypeError: Object of type DataType is not JSON serializable"
   },
@@ -186,6 +202,14 @@
   },
   {
    "sql": "SELECT * FROM AI.GENERATE_TABLE(MODEL `mydataset.gemini_model`, (SELECT 'Q' AS prompt), STRUCT('name STRING' AS output_schema))",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
+   "sql": "SELECT PARSE_JSON(json_string) FROM t",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
+   "sql": "SELECT JSON '''{}'''",
    "error": "TypeError: Object of type DataType is not JSON serializable"
   },
   {
@@ -286,6 +310,10 @@
   },
   {
    "sql": "SELECT 1 AS x UNION ALL STRICT CORRESPONDING BY (foo, bar) SELECT 2 AS x",
+   "error": "TypeError: Object of type DataType is not JSON serializable"
+  },
+  {
+   "sql": "SELECT [STRUCT((SELECT 1) AS a)]",
    "error": "TypeError: Object of type DataType is not JSON serializable"
   },
   {
@@ -1718,7 +1746,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -1838,7 +1866,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_LENGTH",
+      "bigquery_name": "ARRAY_LENGTH",
       "line": 1,
       "col": 40,
       "start": 28,
@@ -1951,7 +1979,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -2075,7 +2103,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -2179,7 +2207,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_LENGTH",
+      "bigquery_name": "ARRAY_LENGTH",
       "line": 1,
       "col": 40,
       "start": 28,
@@ -2259,7 +2287,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_CONCAT_AGG",
+      "bigquery_name": "ARRAY_CONCAT_AGG",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -2334,7 +2362,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_TIMESTAMP",
+      "bigquery_name": "PARSE_TIMESTAMP",
       "line": 1,
       "col": 15,
       "start": 0,
@@ -2538,7 +2566,7 @@
       }
      ],
      "m": {
-      "name": "READ_CSV",
+      "bigquery_name": "READ_CSV",
       "line": 1,
       "col": 22,
       "start": 14,
@@ -5679,7 +5707,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -5889,7 +5917,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 6,
       "start": 0,
@@ -7312,7 +7340,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -7452,7 +7480,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -7678,7 +7706,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -7921,7 +7949,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -8012,7 +8040,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -8341,7 +8369,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -8659,7 +8687,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -9239,7 +9267,7 @@
       }
      ],
      "m": {
-      "name": "TIME",
+      "bigquery_name": "TIME",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -9299,7 +9327,7 @@
       }
      ],
      "m": {
-      "name": "TIME",
+      "bigquery_name": "TIME",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -9771,7 +9799,7 @@
       }
      ],
      "m": {
-      "name": "ANY_VALUE",
+      "bigquery_name": "ANY_VALUE",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -9996,7 +10024,7 @@
       }
      ],
      "m": {
-      "name": "ANY_VALUE",
+      "bigquery_name": "ANY_VALUE",
       "line": 1,
       "col": 16,
       "start": 7,
@@ -10907,7 +10935,7 @@
       }
      ],
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -11033,7 +11061,7 @@
       }
      ],
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -13315,7 +13343,7 @@
       }
      ],
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -13338,7 +13366,7 @@
       }
      ],
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 20,
       "start": 16,
@@ -13434,7 +13462,7 @@
       }
      ],
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -15615,7 +15643,7 @@
       }
      ],
      "m": {
-      "name": "LOG",
+      "bigquery_name": "LOG",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -15803,7 +15831,7 @@
       }
      ],
      "m": {
-      "name": "LAST_VALUE",
+      "bigquery_name": "LAST_VALUE",
       "line": 1,
       "col": 17,
       "start": 7,
@@ -16656,7 +16684,7 @@
       }
      ],
      "m": {
-      "name": "MAX",
+      "bigquery_name": "MAX",
       "line": 1,
       "col": 40,
       "start": 37,
@@ -17024,7 +17052,7 @@
       }
      ],
      "m": {
-      "name": "SUM",
+      "bigquery_name": "SUM",
       "line": 1,
       "col": 45,
       "start": 42,
@@ -17956,6 +17984,11 @@
     },
     {
      "i": 13,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 13,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -17981,7 +18014,7 @@
      ]
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "this",
      "v": false
     },
@@ -18007,7 +18040,7 @@
      ]
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.dml.When",
@@ -18024,17 +18057,17 @@
      ]
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "matched",
      "v": false
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "source",
      "v": false
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "then",
      "c": "sqlglot.expressions.dml.Insert",
      "t": [
@@ -18050,7 +18083,7 @@
      ]
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -18066,17 +18099,17 @@
      ]
     },
     {
-     "i": 54,
+     "i": 55,
      "k": "this",
      "v": "ROW"
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "expression",
      "v": false
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.dml.When",
@@ -18093,17 +18126,17 @@
      ]
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "matched",
      "v": false
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "source",
      "v": true
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "then",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -18119,7 +18152,7 @@
      ]
     },
     {
-     "i": 60,
+     "i": 61,
      "k": "this",
      "v": "DELETE"
     }
@@ -19641,7 +19674,7 @@
       }
      ],
      "m": {
-      "name": "DATE",
+      "bigquery_name": "DATE",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -21508,7 +21541,7 @@
       }
      ],
      "m": {
-      "name": "LAST_VALUE",
+      "bigquery_name": "LAST_VALUE",
       "line": 1,
       "col": 34,
       "start": 24,
@@ -21997,7 +22030,7 @@
       }
      ],
      "m": {
-      "name": "LAST_VALUE",
+      "bigquery_name": "LAST_VALUE",
       "line": 1,
       "col": 17,
       "start": 7,
@@ -22504,7 +22537,7 @@
       "c"
      ],
      "m": {
-      "name": "ARRAY_AGG",
+      "bigquery_name": "ARRAY_AGG",
       "line": 2,
       "col": 9,
       "start": 4,
@@ -24310,7 +24343,7 @@
       }
      ],
      "m": {
-      "name": "SPLIT",
+      "bigquery_name": "SPLIT",
       "line": 1,
       "col": 12,
       "start": 7,
@@ -25940,7 +25973,7 @@
       }
      ],
      "m": {
-      "name": "SUM",
+      "bigquery_name": "SUM",
       "line": 1,
       "col": 50,
       "start": 47,
@@ -26060,7 +26093,7 @@
       }
      ],
      "m": {
-      "name": "COUNT",
+      "bigquery_name": "COUNT",
       "line": 1,
       "col": 62,
       "start": 57,
@@ -27302,6 +27335,11 @@
     },
     {
      "i": 0,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 0,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -27480,7 +27518,7 @@
       }
      ],
      "m": {
-      "name": "CONTAINS_SUBSTR",
+      "bigquery_name": "CONTAINS_SUBSTR",
       "line": 1,
       "col": 15,
       "start": 0,
@@ -28520,7 +28558,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_FIRST",
+      "bigquery_name": "ARRAY_FIRST",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -28630,6 +28668,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -28653,7 +28696,7 @@
       }
      ],
      "m": {
-      "name": "ARRAY_LAST",
+      "bigquery_name": "ARRAY_LAST",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -28763,6 +28806,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -28786,7 +28834,7 @@
       }
      ],
      "m": {
-      "name": "JSON_TYPE",
+      "bigquery_name": "JSON_TYPE",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -28809,7 +28857,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -28869,7 +28917,7 @@
       }
      ],
      "m": {
-      "name": "FORMAT_TIME",
+      "bigquery_name": "FORMAT_TIME",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -29011,7 +29059,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_TIME",
+      "bigquery_name": "PARSE_TIME",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -29100,7 +29148,7 @@
       }
      ],
      "m": {
-      "name": "BYTE_LENGTH",
+      "bigquery_name": "BYTE_LENGTH",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -29160,7 +29208,7 @@
       }
      ],
      "m": {
-      "name": "BYTE_LENGTH",
+      "bigquery_name": "BYTE_LENGTH",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -29219,7 +29267,7 @@
       }
      ],
      "m": {
-      "name": "CODE_POINTS_TO_STRING",
+      "bigquery_name": "CODE_POINTS_TO_STRING",
       "line": 1,
       "col": 21,
       "start": 0,
@@ -29329,6 +29377,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -29398,7 +29451,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_TOP_COUNT",
+      "bigquery_name": "APPROX_TOP_COUNT",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -29638,7 +29691,7 @@
   },
   {
    "sql": "SAFE_CONVERT_BYTES_TO_STRING(b'\u00c2')",
-   "generated": "SAFE_CONVERT_BYTES_TO_STRING(b'\u00c2')",
+   "generated": "SAFE_CONVERT_BYTES_TO_STRING(b'\\xc3\\x82')",
    "dump": [
     {
      "c": "sqlglot.expressions.string.SafeConvertBytesToString",
@@ -29654,7 +29707,7 @@
       }
      ],
      "m": {
-      "name": "SAFE_CONVERT_BYTES_TO_STRING",
+      "bigquery_name": "SAFE_CONVERT_BYTES_TO_STRING",
       "line": 1,
       "col": 28,
       "start": 0,
@@ -29686,7 +29739,7 @@
     {
      "i": 1,
      "k": "this",
-     "v": "\u00c2"
+     "v": "\u00c3\u0082"
     },
     {
      "i": 1,
@@ -29713,7 +29766,7 @@
       }
      ],
      "m": {
-      "name": "FROM_HEX",
+      "bigquery_name": "FROM_HEX",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -29795,7 +29848,7 @@
       }
      ],
      "m": {
-      "name": "TO_CODE_POINTS",
+      "bigquery_name": "TO_CODE_POINTS",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -29855,7 +29908,7 @@
       }
      ],
      "m": {
-      "name": "CODE_POINTS_TO_BYTES",
+      "bigquery_name": "CODE_POINTS_TO_BYTES",
       "line": 1,
       "col": 20,
       "start": 0,
@@ -29965,6 +30018,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -29988,7 +30046,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_BIGNUMERIC",
+      "bigquery_name": "PARSE_BIGNUMERIC",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -30048,7 +30106,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_NUMERIC",
+      "bigquery_name": "PARSE_NUMERIC",
       "line": 1,
       "col": 13,
       "start": 0,
@@ -30108,7 +30166,7 @@
       }
      ],
      "m": {
-      "name": "BOOL",
+      "bigquery_name": "BOOL",
       "line": 1,
       "col": 4,
       "start": 0,
@@ -30131,7 +30189,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 15,
       "start": 5,
@@ -30191,7 +30249,7 @@
       }
      ],
      "m": {
-      "name": "FLOAT64",
+      "bigquery_name": "FLOAT64",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -30214,7 +30272,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 18,
       "start": 8,
@@ -30274,7 +30332,7 @@
       }
      ],
      "m": {
-      "name": "FLOAT64",
+      "bigquery_name": "FLOAT64",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -30297,7 +30355,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 18,
       "start": 8,
@@ -30427,7 +30485,7 @@
       }
      ],
      "m": {
-      "name": "FLOAT64",
+      "bigquery_name": "FLOAT64",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -30450,7 +30508,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 18,
       "start": 8,
@@ -30580,7 +30638,7 @@
       }
      ],
      "m": {
-      "name": "NORMALIZE_AND_CASEFOLD",
+      "bigquery_name": "NORMALIZE_AND_CASEFOLD",
       "line": 1,
       "col": 22,
       "start": 0,
@@ -30645,7 +30703,7 @@
       }
      ],
      "m": {
-      "name": "NORMALIZE_AND_CASEFOLD",
+      "bigquery_name": "NORMALIZE_AND_CASEFOLD",
       "line": 1,
       "col": 22,
       "start": 0,
@@ -30758,7 +30816,7 @@
       }
      ],
      "m": {
-      "name": "OCTET_LENGTH",
+      "bigquery_name": "OCTET_LENGTH",
       "line": 1,
       "col": 12,
       "start": 0,
@@ -30818,7 +30876,7 @@
       }
      ],
      "m": {
-      "name": "OCTET_LENGTH",
+      "bigquery_name": "OCTET_LENGTH",
       "line": 1,
       "col": 12,
       "start": 0,
@@ -30877,7 +30935,7 @@
       }
      ],
      "m": {
-      "name": "JSON_ARRAY_APPEND",
+      "bigquery_name": "JSON_ARRAY_APPEND",
       "line": 1,
       "col": 17,
       "start": 0,
@@ -30900,7 +30958,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 28,
       "start": 18,
@@ -31078,6 +31136,11 @@
     },
     {
      "i": 8,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 8,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -31099,7 +31162,7 @@
      ]
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -31115,12 +31178,12 @@
      ]
     },
     {
-     "i": 17,
+     "i": 18,
      "k": "this",
      "v": "append_each_element"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "expression",
      "c": "sqlglot.expressions.core.Boolean",
      "t": [
@@ -31136,7 +31199,7 @@
      ]
     },
     {
-     "i": 19,
+     "i": 20,
      "k": "this",
      "v": false
     }
@@ -31160,7 +31223,7 @@
       }
      ],
      "m": {
-      "name": "JSON_ARRAY_INSERT",
+      "bigquery_name": "JSON_ARRAY_INSERT",
       "line": 1,
       "col": 17,
       "start": 0,
@@ -31183,7 +31246,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 28,
       "start": 18,
@@ -31361,6 +31424,11 @@
     },
     {
      "i": 8,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 8,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -31382,7 +31450,7 @@
      ]
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -31398,12 +31466,12 @@
      ]
     },
     {
-     "i": 17,
+     "i": 18,
      "k": "this",
      "v": "insert_each_element"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "expression",
      "c": "sqlglot.expressions.core.Boolean",
      "t": [
@@ -31419,7 +31487,7 @@
      ]
     },
     {
-     "i": 19,
+     "i": 20,
      "k": "this",
      "v": false
     }
@@ -31465,7 +31533,7 @@
       }
      ],
      "m": {
-      "name": "JSON_KEYS",
+      "bigquery_name": "JSON_KEYS",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -31488,7 +31556,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -31570,7 +31638,7 @@
       }
      ],
      "m": {
-      "name": "JSON_KEYS",
+      "bigquery_name": "JSON_KEYS",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -31593,7 +31661,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -31708,7 +31776,7 @@
       }
      ],
      "m": {
-      "name": "JSON_KEYS",
+      "bigquery_name": "JSON_KEYS",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -31731,7 +31799,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -31894,7 +31962,7 @@
       }
      ],
      "m": {
-      "name": "JSON_SET",
+      "bigquery_name": "JSON_SET",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -31917,7 +31985,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 19,
       "start": 9,
@@ -32104,7 +32172,7 @@
       }
      ],
      "m": {
-      "name": "JSON_STRIP_NULLS",
+      "bigquery_name": "JSON_STRIP_NULLS",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -32127,7 +32195,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 27,
       "start": 17,
@@ -32187,7 +32255,7 @@
       }
      ],
      "m": {
-      "name": "JSON_STRIP_NULLS",
+      "bigquery_name": "JSON_STRIP_NULLS",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -32210,7 +32278,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 27,
       "start": 17,
@@ -32328,7 +32396,7 @@
       }
      ],
      "m": {
-      "name": "JSON_STRIP_NULLS",
+      "bigquery_name": "JSON_STRIP_NULLS",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -32351,7 +32419,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 27,
       "start": 17,
@@ -32549,7 +32617,7 @@
       }
      ],
      "m": {
-      "name": "JSON_EXTRACT_STRING_ARRAY",
+      "bigquery_name": "JSON_EXTRACT_STRING_ARRAY",
       "line": 1,
       "col": 25,
       "start": 0,
@@ -32572,7 +32640,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 36,
       "start": 26,
@@ -32687,7 +32755,7 @@
       }
      ],
      "m": {
-      "name": "TO_JSON",
+      "bigquery_name": "TO_JSON",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -32830,7 +32898,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 14,
       "start": 8,
@@ -33088,6 +33156,11 @@
     },
     {
      "i": 13,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 13,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -33116,7 +33189,7 @@
       }
      ],
      "m": {
-      "name": "TO_JSON",
+      "bigquery_name": "TO_JSON",
       "line": 1,
       "col": 7,
       "start": 0,
@@ -33239,7 +33312,7 @@
       }
      ],
      "m": {
-      "name": "RANGE_BUCKET",
+      "bigquery_name": "RANGE_BUCKET",
       "line": 1,
       "col": 12,
       "start": 0,
@@ -33480,6 +33553,11 @@
     {
      "i": 17,
      "k": "is_string",
+     "v": false
+    },
+    {
+     "i": 4,
+     "k": "value_constructor",
      "v": false
     },
     {
@@ -35642,6 +35720,11 @@
     },
     {
      "i": 38,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 38,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -36965,6 +37048,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -36985,7 +37073,7 @@
      ]
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered",
@@ -37002,7 +37090,7 @@
      ]
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "c": "sqlglot.expressions.core.Column",
      "t": [
@@ -37018,7 +37106,7 @@
      ]
     },
     {
-     "i": 38,
+     "i": 39,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "t": [
@@ -37040,17 +37128,17 @@
      }
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "nulls_first",
      "v": true
     }
@@ -37591,6 +37679,11 @@
     },
     {
      "i": 37,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 37,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -37611,7 +37704,7 @@
      ]
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -37627,12 +37720,12 @@
      ]
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "v": "value_columns"
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "expression",
      "c": "sqlglot.expressions.array.Array",
      "t": [
@@ -37648,7 +37741,7 @@
      ]
     },
     {
-     "i": 45,
+     "i": 46,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.Tuple",
@@ -37665,7 +37758,7 @@
      ]
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -37689,17 +37782,17 @@
      }
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "this",
      "v": "c"
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -37723,17 +37816,17 @@
      }
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "this",
      "v": "bar"
     },
     {
-     "i": 50,
+     "i": 51,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 45,
+     "i": 46,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.Tuple",
@@ -37750,7 +37843,7 @@
      ]
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -37774,17 +37867,17 @@
      }
     },
     {
-     "i": 54,
+     "i": 55,
      "k": "this",
      "v": "d"
     },
     {
-     "i": 54,
+     "i": 55,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 53,
+     "i": 54,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -37808,17 +37901,17 @@
      }
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "this",
      "v": "baz"
     },
     {
-     "i": 57,
+     "i": 58,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 45,
+     "i": 46,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.query.Tuple",
@@ -37835,7 +37928,7 @@
      ]
     },
     {
-     "i": 60,
+     "i": 61,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -37859,17 +37952,17 @@
      }
     },
     {
-     "i": 61,
+     "i": 62,
      "k": "this",
      "v": "e"
     },
     {
-     "i": 61,
+     "i": 62,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 60,
+     "i": 61,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -37893,17 +37986,22 @@
      }
     },
     {
-     "i": 64,
+     "i": 65,
      "k": "this",
      "v": "bla"
     },
     {
-     "i": 64,
+     "i": 65,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 45,
+     "i": 46,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 46,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -37924,7 +38022,7 @@
      ]
     },
     {
-     "i": 68,
+     "i": 70,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -37940,12 +38038,12 @@
      ]
     },
     {
-     "i": 69,
+     "i": 71,
      "k": "this",
      "v": "bucket_width"
     },
     {
-     "i": 68,
+     "i": 70,
      "k": "expression",
      "c": "sqlglot.expressions.datatypes.Interval",
      "t": [
@@ -37961,7 +38059,7 @@
      ]
     },
     {
-     "i": 71,
+     "i": 73,
      "k": "this",
      "c": "sqlglot.expressions.core.Literal",
      "t": [
@@ -37984,17 +38082,17 @@
      }
     },
     {
-     "i": 72,
+     "i": 74,
      "k": "this",
      "v": "1"
     },
     {
-     "i": 72,
+     "i": 74,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 71,
+     "i": 73,
      "k": "unit",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -38010,7 +38108,7 @@
      ]
     },
     {
-     "i": 75,
+     "i": 77,
      "k": "this",
      "v": "DAY"
     }
@@ -38470,6 +38568,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -38490,7 +38593,7 @@
      ]
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -38506,12 +38609,12 @@
      ]
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "v": "ignore_null_values"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expression",
      "c": "sqlglot.expressions.core.Boolean",
      "t": [
@@ -38527,7 +38630,7 @@
      ]
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "v": false
     },
@@ -38548,7 +38651,7 @@
      ]
     },
     {
-     "i": 41,
+     "i": 42,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered",
@@ -38565,7 +38668,7 @@
      ]
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "this",
      "c": "sqlglot.expressions.core.Column",
      "t": [
@@ -38581,7 +38684,7 @@
      ]
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "t": [
@@ -38603,17 +38706,17 @@
      }
     },
     {
-     "i": 44,
+     "i": 45,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 44,
+     "i": 45,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 42,
+     "i": 43,
      "k": "nulls_first",
      "v": true
     }
@@ -39475,6 +39578,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -39495,7 +39603,7 @@
      ]
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "this",
      "c": "sqlglot.expressions.core.Var",
      "t": [
@@ -39511,12 +39619,12 @@
      ]
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "v": "origin"
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expression",
      "c": "sqlglot.expressions.functions.Cast",
      "t": [
@@ -39537,7 +39645,7 @@
      ]
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "c": "sqlglot.expressions.core.Literal",
      "t": [
@@ -39560,28 +39668,28 @@
      }
     },
     {
-     "i": 40,
+     "i": 41,
      "k": "this",
      "v": "2023-11-01 09:30:01"
     },
     {
-     "i": 40,
+     "i": 41,
      "k": "is_string",
      "v": true
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "to",
      "c": "sqlglot.expressions.datatypes.DataType"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "this",
      "c": "DataType.Type",
      "v": "TIMESTAMP"
     },
     {
-     "i": 43,
+     "i": 44,
      "k": "nested",
      "v": false
     },
@@ -39602,7 +39710,7 @@
      ]
     },
     {
-     "i": 46,
+     "i": 47,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered",
@@ -39619,7 +39727,7 @@
      ]
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "this",
      "c": "sqlglot.expressions.core.Column",
      "t": [
@@ -39635,7 +39743,7 @@
      ]
     },
     {
-     "i": 48,
+     "i": 49,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "t": [
@@ -39657,17 +39765,17 @@
      }
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 49,
+     "i": 50,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 47,
+     "i": 48,
      "k": "nulls_first",
      "v": true
     }
@@ -40127,6 +40235,11 @@
     },
     {
      "i": 27,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 27,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -40147,7 +40260,7 @@
      ]
     },
     {
-     "i": 36,
+     "i": 37,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Ordered",
@@ -40164,7 +40277,7 @@
      ]
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "this",
      "c": "sqlglot.expressions.core.Column",
      "t": [
@@ -40180,7 +40293,7 @@
      ]
     },
     {
-     "i": 38,
+     "i": 39,
      "k": "this",
      "c": "sqlglot.expressions.core.Identifier",
      "t": [
@@ -40202,17 +40315,17 @@
      }
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "this",
      "v": "time"
     },
     {
-     "i": 39,
+     "i": 40,
      "k": "quoted",
      "v": false
     },
     {
-     "i": 37,
+     "i": 38,
      "k": "nulls_first",
      "v": true
     }
@@ -40932,7 +41045,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 3,
       "col": 25,
       "start": 56,
@@ -41487,6 +41600,11 @@
      "i": 68,
      "k": "is_string",
      "v": true
+    },
+    {
+     "i": 67,
+     "k": "value_constructor",
+     "v": false
     },
     {
      "i": 67,
@@ -44159,7 +44277,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 120,
       "start": 114,
@@ -48906,7 +49024,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 98,
       "start": 92,
@@ -49353,7 +49471,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 59,
       "start": 53,
@@ -49850,7 +49968,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 88,
       "start": 82,
@@ -50399,7 +50517,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 98,
       "start": 92,
@@ -51598,7 +51716,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 101,
       "start": 95,
@@ -52046,7 +52164,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 101,
       "start": 95,
@@ -52458,7 +52576,7 @@
       }
      ],
      "m": {
-      "name": "EMBED",
+      "bigquery_name": "EMBED",
       "line": 1,
       "col": 15,
       "start": 10,
@@ -52584,7 +52702,7 @@
       }
      ],
      "m": {
-      "name": "SIMILARITY",
+      "bigquery_name": "SIMILARITY",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -52744,7 +52862,7 @@
       }
      ],
      "m": {
-      "name": "GENERATE",
+      "bigquery_name": "GENERATE",
       "line": 1,
       "col": 18,
       "start": 10,
@@ -52788,6 +52906,295 @@
    ]
   },
   {
+   "sql": "SELECT AI.GENERATE('Write a haiku', endpoint => 'gemini-2.5-flash', model_params => JSON '{\"generationConfig\": {\"temperature\": 0}}')",
+   "generated": "SELECT AI.GENERATE('Write a haiku', endpoint => 'gemini-2.5-flash', model_params => JSON '{\"generationConfig\": {\"temperature\": 0}}')",
+   "dump": [
+    {
+     "c": "sqlglot.expressions.query.Select",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ]
+    },
+    {
+     "i": 0,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Dot",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ]
+    },
+    {
+     "i": 1,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Identifier",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ],
+     "m": {
+      "line": 1,
+      "col": 9,
+      "start": 7,
+      "end": 8
+     }
+    },
+    {
+     "i": 2,
+     "k": "this",
+     "v": "AI"
+    },
+    {
+     "i": 2,
+     "k": "quoted",
+     "v": false
+    },
+    {
+     "i": 1,
+     "k": "expression",
+     "c": "sqlglot.expressions.functions.AIGenerate",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ],
+     "m": {
+      "bigquery_name": "GENERATE",
+      "line": 1,
+      "col": 18,
+      "start": 10,
+      "end": 17
+     }
+    },
+    {
+     "i": 5,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Literal",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "VARCHAR"
+      }
+     ],
+     "m": {
+      "line": 1,
+      "col": 34,
+      "start": 19,
+      "end": 33,
+      "nonnull": true
+     }
+    },
+    {
+     "i": 6,
+     "k": "this",
+     "v": "Write a haiku"
+    },
+    {
+     "i": 6,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 5,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Kwarg",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ]
+    },
+    {
+     "i": 9,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Var",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ]
+    },
+    {
+     "i": 10,
+     "k": "this",
+     "v": "endpoint"
+    },
+    {
+     "i": 9,
+     "k": "expression",
+     "c": "sqlglot.expressions.core.Literal",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "VARCHAR"
+      }
+     ],
+     "m": {
+      "line": 1,
+      "col": 66,
+      "start": 48,
+      "end": 65,
+      "nonnull": true
+     }
+    },
+    {
+     "i": 12,
+     "k": "this",
+     "v": "gemini-2.5-flash"
+    },
+    {
+     "i": 12,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 5,
+     "k": "expressions",
+     "a": true,
+     "c": "sqlglot.expressions.core.Kwarg",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ]
+    },
+    {
+     "i": 15,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Var",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "UNKNOWN"
+      }
+     ]
+    },
+    {
+     "i": 16,
+     "k": "this",
+     "v": "model_params"
+    },
+    {
+     "i": 15,
+     "k": "expression",
+     "c": "sqlglot.expressions.json.ParseJSON",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "JSON"
+      }
+     ]
+    },
+    {
+     "i": 18,
+     "k": "this",
+     "c": "sqlglot.expressions.core.Literal",
+     "t": [
+      {
+       "c": "sqlglot.expressions.datatypes.DataType"
+      },
+      {
+       "i": 0,
+       "k": "this",
+       "c": "DataType.Type",
+       "v": "VARCHAR"
+      }
+     ],
+     "m": {
+      "line": 1,
+      "col": 131,
+      "start": 89,
+      "end": 130,
+      "nonnull": true
+     }
+    },
+    {
+     "i": 19,
+     "k": "this",
+     "v": "{\"generationConfig\": {\"temperature\": 0}}"
+    },
+    {
+     "i": 19,
+     "k": "is_string",
+     "v": true
+    },
+    {
+     "i": 18,
+     "k": "is_literal",
+     "v": true
+    }
+   ]
+  },
+  {
    "sql": "MOD((a + 1), b)",
    "generated": "MOD(a + 1, b)",
    "dump": [
@@ -52805,7 +53212,7 @@
       }
      ],
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -53699,7 +54106,7 @@
       }
      ],
      "m": {
-      "name": "REGEXP_EXTRACT",
+      "bigquery_name": "REGEXP_EXTRACT",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -53812,7 +54219,7 @@
       }
      ],
      "m": {
-      "name": "REGEXP_EXTRACT",
+      "bigquery_name": "REGEXP_EXTRACT",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -54020,7 +54427,7 @@
       }
      ],
      "m": {
-      "name": "REGEXP_EXTRACT",
+      "bigquery_name": "REGEXP_EXTRACT",
       "line": 1,
       "col": 14,
       "start": 0,
@@ -54156,7 +54563,7 @@
       }
      ],
      "m": {
-      "name": "REGEXP_SUBSTR",
+      "bigquery_name": "REGEXP_SUBSTR",
       "line": 1,
       "col": 13,
       "start": 0,
@@ -54696,7 +55103,7 @@
       }
      ],
      "m": {
-      "name": "LENGTH",
+      "bigquery_name": "LENGTH",
       "line": 1,
       "col": 35,
       "start": 29,
@@ -55616,7 +56023,7 @@
       }
      ],
      "m": {
-      "name": "GROUP_CONCAT",
+      "bigquery_name": "GROUP_CONCAT",
       "line": 1,
       "col": 22,
       "start": 10,
@@ -56247,6 +56654,11 @@
     },
     {
      "i": 1,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 1,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -56390,7 +56802,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 17,
       "start": 11,
@@ -56719,6 +57131,11 @@
     },
     {
      "i": 4,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 4,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -56757,7 +57174,7 @@
      ]
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -56781,17 +57198,17 @@
      }
     },
     {
-     "i": 13,
+     "i": 14,
      "k": "this",
      "v": "20"
     },
     {
-     "i": 13,
+     "i": 14,
      "k": "is_string",
      "v": false
     },
     {
-     "i": 12,
+     "i": 13,
      "k": "expressions",
      "a": true,
      "c": "sqlglot.expressions.core.Literal",
@@ -56815,17 +57232,22 @@
      }
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "this",
      "v": "30"
     },
     {
-     "i": 16,
+     "i": 17,
      "k": "is_string",
      "v": false
     },
     {
-     "i": 12,
+     "i": 13,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 13,
      "k": "struct_name_inheritance",
      "v": true
     }
@@ -57308,7 +57730,7 @@
       }
      ],
      "m": {
-      "name": "MAX",
+      "bigquery_name": "MAX",
       "line": 1,
       "col": 35,
       "start": 32,
@@ -58281,7 +58703,7 @@
       }
      ],
      "m": {
-      "name": "CURRENT_TIMESTAMP",
+      "bigquery_name": "CURRENT_TIMESTAMP",
       "line": 1,
       "col": 46,
       "start": 29,
@@ -58383,7 +58805,7 @@
       }
      ],
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -58406,7 +58828,7 @@
       }
      ],
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 21,
       "start": 17,
@@ -58502,7 +58924,7 @@
       }
      ],
      "m": {
-      "name": "LAST_DAY",
+      "bigquery_name": "LAST_DAY",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -58595,7 +59017,7 @@
       }
      ],
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 45,
       "start": 41,
@@ -58643,7 +59065,7 @@
       }
      ],
      "m": {
-      "name": "DATE_DIFF",
+      "bigquery_name": "DATE_DIFF",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -58732,7 +59154,7 @@
       }
      ],
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 42,
       "start": 38,
@@ -58785,7 +59207,7 @@
       }
      ],
      "m": {
-      "name": "DATETIME_DIFF",
+      "bigquery_name": "DATETIME_DIFF",
       "line": 1,
       "col": 13,
       "start": 0,
@@ -58874,7 +59296,7 @@
       }
      ],
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 46,
       "start": 42,
@@ -58943,7 +59365,7 @@
       }
      ],
      "m": {
-      "name": "WEEK",
+      "bigquery_name": "WEEK",
       "line": 1,
       "col": 12,
       "start": 8,
@@ -59061,7 +59483,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -59185,7 +59607,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -59327,7 +59749,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -59453,7 +59875,7 @@
       }
      ],
      "m": {
-      "name": "LAX_BOOL",
+      "bigquery_name": "LAX_BOOL",
       "line": 1,
       "col": 8,
       "start": 0,
@@ -59476,7 +59898,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 19,
       "start": 9,
@@ -59536,7 +59958,7 @@
       }
      ],
      "m": {
-      "name": "LAX_FLOAT64",
+      "bigquery_name": "LAX_FLOAT64",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -59559,7 +59981,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 22,
       "start": 12,
@@ -59619,7 +60041,7 @@
       }
      ],
      "m": {
-      "name": "LAX_INT64",
+      "bigquery_name": "LAX_INT64",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -59642,7 +60064,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 20,
       "start": 10,
@@ -59702,7 +60124,7 @@
       }
      ],
      "m": {
-      "name": "LAX_STRING",
+      "bigquery_name": "LAX_STRING",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -59725,7 +60147,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_JSON",
+      "bigquery_name": "PARSE_JSON",
       "line": 1,
       "col": 21,
       "start": 11,
@@ -59785,7 +60207,7 @@
       }
      ],
      "m": {
-      "name": "SAFE_NEGATE",
+      "bigquery_name": "SAFE_NEGATE",
       "line": 1,
       "col": 11,
       "start": 0,
@@ -60302,7 +60724,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -60427,7 +60849,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -60562,7 +60984,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -60776,7 +61198,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -60918,7 +61340,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -61042,7 +61464,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -61166,7 +61588,7 @@
       }
      ],
      "m": {
-      "name": "APPROX_QUANTILES",
+      "bigquery_name": "APPROX_QUANTILES",
       "line": 1,
       "col": 16,
       "start": 0,
@@ -62252,7 +62674,7 @@
       }
      ],
      "m": {
-      "name": "TIMESTAMP",
+      "bigquery_name": "TIMESTAMP",
       "line": 1,
       "col": 9,
       "start": 0,
@@ -63078,7 +63500,7 @@
       }
      ],
      "m": {
-      "name": "DATE_TRUNC",
+      "bigquery_name": "DATE_TRUNC",
       "line": 1,
       "col": 10,
       "start": 0,
@@ -63688,7 +64110,7 @@
       }
      ],
      "m": {
-      "name": "STRUCT",
+      "bigquery_name": "STRUCT",
       "line": 1,
       "col": 117,
       "start": 111,
@@ -63927,7 +64349,7 @@
       }
      ],
      "m": {
-      "name": "SUBSTR",
+      "bigquery_name": "SUBSTR",
       "line": 1,
       "col": 11,
       "start": 5,
@@ -64088,7 +64510,7 @@
       }
      ],
      "m": {
-      "name": "TIMESTAMP",
+      "bigquery_name": "TIMESTAMP",
       "line": 1,
       "col": 14,
       "start": 5,
@@ -64232,7 +64654,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_DATE",
+      "bigquery_name": "PARSE_DATE",
       "line": 1,
       "col": 15,
       "start": 5,
@@ -64366,7 +64788,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_DATETIME",
+      "bigquery_name": "PARSE_DATETIME",
       "line": 1,
       "col": 19,
       "start": 5,
@@ -64500,7 +64922,7 @@
       }
      ],
      "m": {
-      "name": "PARSE_TIMESTAMP",
+      "bigquery_name": "PARSE_TIMESTAMP",
       "line": 1,
       "col": 20,
       "start": 5,
@@ -64634,7 +65056,7 @@
       }
      ],
      "m": {
-      "name": "HOST",
+      "bigquery_name": "HOST",
       "line": 1,
       "col": 8,
       "start": 4,
@@ -64710,7 +65132,7 @@
       }
      ],
      "m": {
-      "name": "REG_DOMAIN",
+      "bigquery_name": "REG_DOMAIN",
       "line": 1,
       "col": 14,
       "start": 4,
@@ -65033,6 +65455,11 @@
     },
     {
      "i": 18,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 18,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -65331,6 +65758,11 @@
      "i": 20,
      "k": "is_string",
      "v": true
+    },
+    {
+     "i": 19,
+     "k": "value_constructor",
+     "v": false
     },
     {
      "i": 19,
@@ -65635,6 +66067,11 @@
     },
     {
      "i": 19,
+     "k": "value_constructor",
+     "v": false
+    },
+    {
+     "i": 19,
      "k": "struct_name_inheritance",
      "v": true
     },
@@ -65668,7 +66105,7 @@
       }
      ],
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -65791,7 +66228,7 @@
       }
      ],
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -65899,7 +66336,7 @@
       }
      ],
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,
@@ -65993,7 +66430,7 @@
       }
      ],
      "m": {
-      "name": "MOD",
+      "bigquery_name": "MOD",
       "line": 1,
       "col": 3,
       "start": 0,

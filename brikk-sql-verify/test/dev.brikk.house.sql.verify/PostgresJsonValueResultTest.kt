@@ -21,6 +21,7 @@ class PostgresJsonValueResultTest {
             "JSON_VALUE('{\"a\":[1,2,3]}', 'lax $.a[*] ? (@ > 2)' RETURNING BIGINT)" to "3",
             "JSON_VALUE('{}', '$.a' RETURNING BIGINT DEFAULT 7 ON EMPTY DEFAULT 9 ON ERROR)" to "7",
             "JSON_VALUE('{\"a\":\"bad\"}', '$.a' RETURNING BIGINT DEFAULT 7 ON EMPTY DEFAULT 9 ON ERROR)" to "9",
+            "JSON_VALUE('{\"a\":\"bad\"}', '$.a' RETURNING BIGINT NULL ON EMPTY NULL ON ERROR)" to "<NULL>",
             "JSON_VALUE('null', '$' RETURNING BIGINT)" to "<NULL>",
             "JSON_VALUE(NULL::JSONB, '$' RETURNING BIGINT)" to "<NULL>",
             "JSON_VALUE('\"123.45\"', '$' RETURNING DECIMAL(5, 2))" to "123.45",

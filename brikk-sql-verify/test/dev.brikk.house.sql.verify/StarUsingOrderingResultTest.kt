@@ -34,7 +34,7 @@ class StarUsingOrderingResultTest {
                 statement.execute("CREATE TABLE c(c_id INT, k BIGINT)")
                 statement.execute("INSERT INTO a VALUES (10, 1, 'a1'), (11, 3, 'a3')")
                 statement.execute("INSERT INTO b VALUES (1, 20, 'b1'), (2, 21, 'b2')")
-                statement.execute("INSERT INTO c VALUES (30, 2), (31, 4)")
+                statement.execute("INSERT INTO c VALUES (30, 2), (31, 4), (32, 3), (33, 1)")
             }
             val schema = mapOf("a" to linkedMapOf("a_id" to "INT", "k" to "INT", "a_value" to "TEXT"),
                 "b" to linkedMapOf("k" to "BIGINT", "b_id" to "INT", "b_value" to "TEXT"),
@@ -46,6 +46,8 @@ class StarUsingOrderingResultTest {
                 "SELECT a.*, b.* FROM a FULL JOIN b USING (k)", "SELECT *, * FROM a LEFT JOIN b USING (k)",
                 "SELECT * FROM a FULL JOIN b USING (k) FULL JOIN c USING (k)",
                 "SELECT * FROM a JOIN b USING (k) CROSS JOIN c", "SELECT 0 AS before, *, 1 AS after FROM a LEFT JOIN b USING (k)",
+                "SELECT * FROM a SEMI JOIN b USING (k) JOIN c USING (k)",
+                "SELECT * FROM a ANTI JOIN b USING (k) JOIN c USING (k)",
                 "SELECT * FROM a, b JOIN c USING (k)",
                 "SELECT * FROM a JOIN b USING (k), c JOIN (SELECT 2::BIGINT AS k, 40 AS d_id) AS d USING (k)",
                 "SELECT * FROM (SELECT a_id FROM a) AS s CROSS JOIN b", "SELECT * FROM UNNEST([1, 2]) AS u(v) CROSS JOIN a",

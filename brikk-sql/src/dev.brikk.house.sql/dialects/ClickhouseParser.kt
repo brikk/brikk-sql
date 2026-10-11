@@ -42,6 +42,10 @@ import dev.brikk.house.sql.ast.DateDiff
 import dev.brikk.house.sql.ast.DateSub
 import dev.brikk.house.sql.ast.DateTrunc
 import dev.brikk.house.sql.ast.DayOfWeekIso
+import dev.brikk.house.sql.ast.BitwiseAndAgg
+import dev.brikk.house.sql.ast.BitwiseOrAgg
+import dev.brikk.house.sql.ast.BitwiseXorAgg
+import dev.brikk.house.sql.ast.IsInf
 import dev.brikk.house.sql.ast.WeekOfYear
 import dev.brikk.house.sql.ast.YearOfWeekIso
 import dev.brikk.house.sql.ast.DefinerProperty
@@ -334,6 +338,10 @@ open class ClickhouseParser(
         get() = ClickhouseParserTables.FUNCTIONS + calendarFunctions
 
     private val calendarFunctions = mapOf(
+        "GROUPBITAND" to fromArgList(listOf("this"), false) { BitwiseAndAgg(it) },
+        "GROUPBITOR" to fromArgList(listOf("this"), false) { BitwiseOrAgg(it) },
+        "GROUPBITXOR" to fromArgList(listOf("this"), false) { BitwiseXorAgg(it) },
+        "ISINFINITE" to fromArgList(listOf("this"), false) { IsInf(it) },
         "TODAYOFWEEK" to withoutCalendarOptions("toDayOfWeek") { DayOfWeekIso(it) },
         "TOISOWEEK" to withoutCalendarOptions("toISOWeek") { WeekOfYear(it) },
         "TOISOYEAR" to withoutCalendarOptions("toISOYear") { YearOfWeekIso(it) },
@@ -650,12 +658,13 @@ open class ClickhouseParser(
 
     // sqlglot: ClickHouseParser._parse_global_in
     open fun parseGlobalIn(this_: Expression?): Expression? {
+        val start = index - 1
         val isNegated = match(TokenType.NOT)
         var inExpr: Expression? = null
         if (match(TokenType.IN)) {
             inExpr = parseIn(this_)
             inExpr.set("is_global", true)
-        }
+        } else { retreat(start); return null }
         return if (isNegated) expression(Not(args("this" to inExpr))) else inExpr
     }
 

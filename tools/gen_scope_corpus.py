@@ -158,7 +158,7 @@ def main() -> None:
             queries.append(sql)
 
     version = subprocess.run(
-        ["git", "describe", "--tags", "--always"],
+        ["git", "describe", "--tags", "--always", "--abbrev=9"],
         cwd=SQLGLOT,
         capture_output=True,
         text=True,

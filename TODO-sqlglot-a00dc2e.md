@@ -3,8 +3,9 @@
 - **Target:** `a00dc2e5c489214bea53bacbbeba8713f21ebce1` (2026-10-09 upstream main;
   latest tagged release in this range is `v30.22.0`). This target is frozen; later
   upstream changes belong in a subsequent tracker.
-- **Current shipped oracle pin:** `v30.18.0-43-g3ca82489`, commit
-  `3ca824895ef423f7895fb13d72357548c0f1f367`.
+- **Current branch oracle pin:** `v30.22.0-5-ga00dc2e5c`, commit
+  `a00dc2e5c489214bea53bacbbeba8713f21ebce1`. Refreshed coherently in the
+  integration batch; this worktree has not been published or merged to main.
 - **Work:** branch/worktree `sqlglot-catchup`; development version `0.19.0-SNAPSHOT`.
 - **Scope:** our supported dialects and semantic-analysis surface. Query-plan
   optimizer passes, executor changes and unsupported dialects are not new features
@@ -215,7 +216,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
 
 ## Integration and oracle refresh
 
-- [ ] Audit dependencies exposed by these ports (AST fields, tokenizer tables,
+- [x] Audit dependencies exposed by these ports (AST fields, tokenizer tables,
   typing metadata, alias/scope changes) at the frozen target; keep the scope boundary.
   Ensure generated tokenizer tooling emits numeric escape/byte/unknown-escape policy
   before retiring StringEscapeProfiles overlays; retain TokenizerConfig's old ABI.
@@ -230,13 +231,16 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   typing helpers are explicit and tested (unknown upstream helpers still refuse).
   Qualification fixture generation handles target no-inference signatures and
   per-case schemas; old fixtures keep their old policy until coherent regeneration.
-- [ ] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
+- [x] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
   Bump `FixturePinSyncTest.SQLGLOT_PIN` only with a coherent fixture refresh;
   leave the shipped pin unchanged while individual ports are under review.
-- [ ] Review actual ledger differences by assertion ID/signature, retain curated
+- [x] Review actual ledger differences by assertion ID/signature, retain curated
   reasons, remove only fixed/stale actionable entries, and preserve intentional ones.
 - [ ] Run build, full Kotlin tests, offline release tests, Engine compatibility gates,
   and native DuckDB/Doris/Trino probes as applicable.
+  Build, 1,281 Kotlin tests, 38 compatibility/editor methods, two generator tests
+  and 16 release tests pass. Native DuckDB/PostgreSQL/MySQL/Trino and chDB calendar
+  tests run; embedded PG fidelity now uses 18.4.0. Native Doris follow-up remains.
 - [ ] Verify the peer compiler/runtime against an explicitly authorized candidate
   release before final integration; SQL-side tests do not replace Kotlin plugin tests.
 - [ ] Commit/publish only when requested. Do not alter `main` or peer source during
@@ -335,3 +339,15 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   and 16 offline release tests pass. Native DuckDB typing corroborates new numeric,
   timezone and DATE_TRUNC helpers. The shipped pin and generated fixtures are still
   unchanged; coherent generation and exact ledger reconciliation are next.
+- Coherent target integration: 104 oracle fixtures and all generated AST/tokenizer/
+  typing/function tables now use `v30.22.0-5-ga00dc2e5c`. ABI-preserving sidecar
+  policies are generated; overlays, sparse Array false defaults and temporary
+  WeightString/Alter validation contracts are retired. Newly surfaced dependencies
+  are ported with hand-owned/native regressions (extension #50). Forty-two temporary
+  pin-drift rows are removed. Six existing merged-key reasons/signatures remain
+  unchanged with new descriptor IDs; twelve qualification and seventeen PostgreSQL
+  type rows are intentional native safeguards, plus optional-schema lineage.
+  Six obsolete PG-14 grammar rejects are removed after real PG-18 verification.
+  Existing corpus deferrals remain explicit inventories, not parity claims. No
+  failures are approved by counts. Native Doris and authorized downstream candidate
+  verification are the remaining integration work; no release has been published.

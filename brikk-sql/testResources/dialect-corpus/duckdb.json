@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "duckdb",
   "identity": [
     {
@@ -1118,6 +1118,11 @@
       "pretty": false
     },
     {
+      "sql": "SELECT a, COUNT(*) OVER w AS c FROM tbl WHERE a > 0 GROUP BY a HAVING COUNT(*) > 0 WINDOW w AS (ORDER BY a) QUALIFY c > 0 USING SAMPLE SYSTEM (50 PERCENT) ORDER BY a LIMIT 3 OFFSET 1",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "ARRAY(SELECT id FROM t)",
       "expected": null,
       "pretty": false
@@ -1125,6 +1130,21 @@
     {
       "sql": "ARRAY((SELECT id FROM t))",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "[(SELECT id FROM t), 2]",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT [{'a': (SELECT 1)}]",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LIST_VALUE((SELECT 1))",
+      "expected": "SELECT [(SELECT 1)]",
       "pretty": false
     },
     {
@@ -1488,6 +1508,11 @@
       "pretty": false
     },
     {
+      "sql": "FROM (FROM t1 SELECT foo1 UNION ALL SELECT foo2 FROM t2)",
+      "expected": "SELECT * FROM (SELECT foo1 FROM t1 UNION ALL SELECT foo2 FROM t2)",
+      "pretty": false
+    },
+    {
       "sql": "WITH t1 AS (FROM (FROM t2 SELECT foo1, foo2)) FROM t1",
       "expected": "WITH t1 AS (SELECT * FROM (SELECT foo1, foo2 FROM t2)) SELECT * FROM t1",
       "pretty": false
@@ -1802,6 +1827,16 @@
     },
     {
       "sql": "CREATE MACRO tbl (a) AS TABLE (SELECT a AS x), (a, b) AS TABLE (SELECT a AS x, b AS y)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CONCAT_WS('-', 'a', 'b')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT CONCAT_WS('-', ['a', NULL, 'b'])",
       "expected": null,
       "pretty": false
     },
@@ -2646,6 +2681,20 @@
       "write": {
         "duckdb": "SELECT CAST('12.3456' AS DECIMAL(10, 2))"
       }
+    },
+    {
+      "sql": "SELECT TRY_CAST('12.3456' AS DECIMAL(38, 0))",
+      "read": {
+        "snowflake": "SELECT TRY_TO_NUMBER('12.3456')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT TRY_CAST('12.3456' AS DECIMAL(10, 2))",
+      "read": {
+        "snowflake": "SELECT TRY_TO_DECIMAL('12.3456', 10, 2)"
+      },
+      "write": {}
     },
     {
       "sql": "VAR_POP(x)",
@@ -3970,11 +4019,51 @@
         "duckdb": "SELECT some_arr[1] AS first FROM blah",
         "presto": "SELECT some_arr[1] AS first FROM blah"
       }
+    },
+    {
+      "sql": "SELECT [(SELECT 1)]",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT [(SELECT 1)]",
+        "duckdb": "SELECT [(SELECT 1)]"
+      }
+    },
+    {
+      "sql": "SELECT [COALESCE((SELECT 1), 0)]",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT [COALESCE((SELECT 1), 0)]",
+        "duckdb": "SELECT [COALESCE((SELECT 1), 0)]"
+      }
+    },
+    {
+      "sql": "SELECT ARRAY_LENGTH([(SELECT 1 FROM (SELECT 1) AS t WHERE FALSE)])",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT ARRAY_LENGTH([(SELECT 1 FROM (SELECT 1) AS t WHERE FALSE)])",
+        "duckdb": "SELECT ARRAY_LENGTH([(SELECT 1 FROM (SELECT 1) AS t WHERE FALSE)])"
+      }
+    },
+    {
+      "sql": "SELECT ARRAY(SELECT 1 FROM (SELECT 1) AS t WHERE FALSE)",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT ARRAY(SELECT 1 FROM (SELECT 1) AS t WHERE FALSE)",
+        "duckdb": "SELECT ARRAY(SELECT 1 FROM (SELECT 1) AS t WHERE FALSE)"
+      }
+    },
+    {
+      "sql": "SELECT ARRAY((SELECT 1 FROM (SELECT 1) AS t WHERE FALSE))",
+      "read": {},
+      "write": {
+        "bigquery": "SELECT ARRAY((SELECT 1 FROM (SELECT 1) AS t WHERE FALSE))",
+        "duckdb": "SELECT ARRAY((SELECT 1 FROM (SELECT 1) AS t WHERE FALSE))"
+      }
     }
   ],
   "stats": {
-    "identity_count": 386,
-    "transpile_count": 237,
-    "skipped_dynamic": 10
+    "identity_count": 393,
+    "transpile_count": 244,
+    "skipped_dynamic": 17
   }
 }

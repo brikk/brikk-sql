@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
  "dialect": "clickhouse",
  "case_count": 982,
  "skipped": [
@@ -16619,7 +16619,7 @@
     },
     {
      "type": "STRING",
-     "text": "\\\"hi",
+     "text": "\"hi",
      "line": 1,
      "col": 13,
      "start": 7,

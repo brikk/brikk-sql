@@ -696,6 +696,7 @@ private fun expandOrderByAndDistinctOn(scope: Scope, resolver: Resolver) {
     if (expression !is Selectable) {
         return
     }
+    val uniqueAliases = expression.selects.groupingBy { it.aliasOrName }.eachCount().filterValues { it == 1 }.keys
 
     for (modifierKey in listOf("order", "distinct")) {
         var modifier = expression.args[modifierKey] as? Expression
@@ -717,6 +718,7 @@ private fun expandOrderByAndDistinctOn(scope: Scope, resolver: Resolver) {
             modifierExpressions,
             resolver.dialect,
             alias = true,
+            aliasNames = uniqueAliases,
         )
         for ((original, expandedNode) in modifierExpressions.zip(expanded)) {
             for (agg in original.walk().filter { it is AggFunc }) {
@@ -733,17 +735,11 @@ private fun expandOrderByAndDistinctOn(scope: Scope, resolver: Resolver) {
         if (expression.args["group"] != null) {
             val selectsMap = LinkedHashMap<Expression, Expression>()
             for (s in expression.selects) {
-                selectsMap[s.thisArg as? Expression ?: s] = column(s.aliasOrName)
+                if (s.aliasOrName in uniqueAliases) selectsMap[s.thisArg as? Expression ?: s] = column(s.aliasOrName)
             }
 
             for (node in modifierExpressions) {
-                node.replace(
-                    if (node.isInt) {
-                        toIdentifier(selectByPos(expression, node as Literal).alias)!!
-                    } else {
-                        selectsMap[node] ?: node
-                    }
-                )
+                if (!node.isInt) node.replace(selectsMap[node] ?: node)
             }
         }
     }
@@ -755,6 +751,7 @@ private fun expandPositionalReferences(
     expressions: Iterable<Expression>,
     dialect: Dialect,
     alias: Boolean = false,
+    aliasNames: Set<String>? = null,
 ): List<Expression> {
     val newNodes = mutableListOf<Expression>()
     var ambiguousProjections: Set<String>? = null
@@ -770,7 +767,8 @@ private fun expandPositionalReferences(
             val select = selectByPos(expression, node)
 
             if (alias) {
-                newNodes.add(column((select.args["alias"] as Expression).copy()))
+                newNodes.add(if (aliasNames == null || select.alias in aliasNames)
+                    column((select.args["alias"] as Expression).copy()) else node)
             } else {
                 val selectExpr = select.thisArg as Expression
 

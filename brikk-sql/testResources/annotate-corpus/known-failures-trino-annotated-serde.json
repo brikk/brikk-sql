@@ -1,41 +1,6 @@
 {
     "cases": [
         {
-            "id": "assertion:v1:sha256:85b0937951091fca0bdfe776fbcdf3bb829e10c0e57eb1fcd172707eac450152:1",
-            "sql": "JSON_VALUE(jl.extra_attributes, 'lax $.amount_source' RETURNING VARCHAR)",
-            "signature": "type-mismatch:v1:sha256:9b9e1cf2ef5bd532e1c9eaa4f8f8d121e755f58c0cb233051e39e343e0087ab5",
-            "reason": "PG-01 shared #8579 fix: reviewed RETURNING subtree becomes DataType(VARCHAR), not an UNKNOWN-typed schema column. Matches target and avoids false dependency/ownership evidence. Remove on coherent refresh.",
-            "issue": "PG-01 / sqlglot#8579", "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:c18d1c4b5cb5e49c7b28e5e3b57e7170f2b2a178e5f576abbb32629d35cd66f1:1",
-            "sql": "SELECT TIMESTAMP '2012-10-31 01:00 -2'",
-            "signature": "type-mismatch:v1:sha256:fcad6798e88cab003b61a572e341263431949ef2781546eb7b55c28fb2fe667f",
-            "reason": "TRINO-01 #8564: reviewed annotated CAST/type contains precision 0 and its typed parameter subtree. Matches target/native Trino; remove on refresh.",
-            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:b095bc84a87a3ff4ce4214799bd0363f1d109c9e2f5de0f6d5639e983a972d99:1",
-            "sql": "SELECT TIMESTAMP '2012-10-31 01:00 +2'",
-            "signature": "type-mismatch:v1:sha256:eb5baaa3d5188c950561d45f313dec6c067a14148a898f53aa3fdca9237aa8c4",
-            "reason": "TRINO-01 #8564: reviewed annotated CAST/type contains precision 0 and its typed parameter subtree. Matches target/native Trino; remove on refresh.",
-            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:5b81de207355b0fe50eb2b67cd9f98b3e86cd6b4789e130507ec1658d2e78800:1",
-            "sql": "SELECT TIME '01:02:03.456 -08:00'",
-            "signature": "type-mismatch:v1:sha256:15722c36cb32e52690126c64b2e3a758dd679c7a675dc0592c6d863bf962f235",
-            "reason": "TRINO-01 #8564: reviewed annotated CAST/type contains TIMETZ precision 3 and typed parameter subtree. Matches target/native Trino; remove on refresh.",
-            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:1dd706c087ce5b170bedd703bfb30d662f48d73e25d1f6ab074f58b1169c946f:1",
-            "sql": "SELECT TIME '01:02:03.456'",
-            "signature": "type-mismatch:v1:sha256:08f9191e51fd889bd2d7ab02760cab969eff25cdf3d1b1f8ca4bca16114f4fbb",
-            "reason": "TRINO-01 #8564: reviewed annotated CAST/type contains TIME precision 3 and typed parameter subtree. Matches target/native Trino; remove on refresh.",
-            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
-        },
-        {
             "id": "assertion:v1:sha256:7bc2afdb7af1bc134d11701578b7109847a46d86936fb3bc4b60af1eb533af37:1",
             "sql": "ALTER TABLE people SET PROPERTIES x = 'y'",
             "reason": "type-mismatch at #0 (Command): expected t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType. actual t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType.",

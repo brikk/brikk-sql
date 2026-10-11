@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.inheritStructFieldNames
 import dev.brikk.house.sql.optimizer.annotateTypes
@@ -127,7 +128,12 @@ open class DuckdbGenerator(
         } else super.literalSql(expression)
 
     override fun bytestringSql(expression: ByteString): String =
-        if (expression.args["is_bytes"] != true && '\u0000' in expression.name) {
+        if (expression.args["is_bytes"] == true) {
+            if (expression.name.any { it.code > 255 }) throw UnsupportedError("ByteString contains non-byte characters")
+            val text = expression.name.map { if (it.code in 32..126 && it != '\\') it.toString()
+                else "\\x" + it.code.toString(16).padStart(2, '0') }.joinToString("")
+            sql(Cast(args("this" to Literal.string(text), "to" to DataType.build(DType.BINARY))))
+        } else if ('\u0000' in expression.name) {
             nulTextSql(expression.name) { segment ->
                 super.bytestringSql((expression.copy() as ByteString).also { it.set("this", segment) })
             }

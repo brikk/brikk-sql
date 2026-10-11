@@ -679,7 +679,7 @@ object DuckdbParserTables {
         put("LIST_SORT", fromArgList(listOf("this", "asc", "nulls_first"), false) { SortArray(it) })
         put("LIST_TRANSFORM", fromArgList(listOf("this", "expression"), false) { Transform(it) })
         put("LIST_VALUE") { a -> ArrayNode(args("expressions" to a)).also {
-            if (a.singleOrNull() is dev.brikk.house.sql.ast.Query) it.set("value_constructor", true)
+            it.set("value_constructor", a.singleOrNull() is dev.brikk.house.sql.ast.Query)
         } }
         put(
             "MAKE_DATE",

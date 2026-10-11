@@ -166,11 +166,10 @@ private fun coerceDateLiteral(l: Expression, unit: Expression?): DType {
 
 // sqlglot: annotate_types._coerce_date
 private fun coerceDate(l: Expression, unit: Expression?): Any {
-    if (!isDateUnit(unit)) {
+    if (l.isType(DType.DATE) && !isDateUnit(unit)) {
         return DType.DATETIME
     }
-    val type = l.type as? DataType
-    return type?.thisArg ?: DType.UNKNOWN
+    return l.type ?: DType.UNKNOWN
 }
 
 // sqlglot: annotate_types.BinaryCoercionFunc
@@ -383,6 +382,17 @@ class TypeAnnotator(
                 val expression = source.expression
 
                 if (expression is UDTF) {
+                    if (expression is Lateral && expression.thisArg is Unnest) {
+                        val unnest = expression.thisArg as Unnest
+                        val fields = LinkedHashMap<String, Any>()
+                        for ((name, input) in expression.aliasColumnNames.zip(unnest.expressionsArg.filterIsInstance<Expression>())) {
+                            val element = (input.type as? DataType)?.takeIf { it.isType(DType.ARRAY) }?.expressionsArg?.firstOrNull() as? DataType
+                            if (element != null && !element.isType(DType.STRUCT)) fields[name] = element
+                        }
+                        (unnest.args["offset"] as? Identifier)?.let { fields[it.name] = DType.BIGINT }
+                        scopeSourceSelects[key] = fields
+                        return fields
+                    }
                     var values: List<Expression> = emptyList()
 
                     if (expression is Lateral) {

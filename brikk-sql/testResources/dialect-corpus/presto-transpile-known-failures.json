@@ -1,18 +1,3 @@
 {
-    "cases": [
-        {
-            "id": "assertion:v1:sha256:588d0112229ba95a6e1864da0b9f30684f69426b885e8030ebc483d9411ba95a:1",
-            "case": "write|presto|CAST(x AS TIME(5) WITH TIME ZONE)",
-            "signature": "sql-mismatch:v1:sha256:6b21cc62bd42a24c6b5dec4e2416bc9bbe00fbe094aed021b49feb97a329adcf",
-            "reason": "TRINO-01 #8564: reviewed output removes unsupported Presto TIME precision 5; explicit loss diagnostic is tested. Matches frozen target; remove on refresh. Trino is not used as a native Presto result oracle.",
-            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
-        },
-        {
-            "id": "assertion:v1:sha256:704c7bd5de923a175d4a83e909d94278a25fd25f7c2e08305e00eba49bf53898:1",
-            "case": "write|presto|CAST(x AS TIMESTAMP(9) WITH TIME ZONE)",
-            "signature": "sql-mismatch:v1:sha256:c65b758c2f4a0a56e18b8d3738b769283b2a0c8e5c30473d63cfbf66847ef233",
-            "reason": "TRINO-01 #8564: reviewed output removes unsupported Presto TIMESTAMP precision 9; explicit loss diagnostic is tested. Matches frozen target; remove on refresh. Trino is not used as a native Presto result oracle.",
-            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
-        }
-    ]
+    "cases": []
 }

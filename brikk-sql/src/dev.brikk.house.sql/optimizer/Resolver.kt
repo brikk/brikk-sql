@@ -67,14 +67,14 @@ class Resolver(
     fun getTable(column: Any): Identifier? {
         val columnName = if (column is String) column else (column as Column).name
 
-        var tableName: String? = getTableNameFromSources(columnName)
+        val joinContext = if (column is Column) getColumnJoinContext(column) else null
+        var tableName: String? = if (joinContext?.isSemiOrAntiJoin == true) null else getTableNameFromSources(columnName)
 
         if (tableName.isNullOrEmpty() && column is Column) {
             // Fall-back case: If we couldn't find the `table_name` from ALL of the
             // sources, attempt to disambiguate the column based on other characteristics,
             // e.g. if this column is in a join condition, we may be able to disambiguate
             // based on the source order.
-            val joinContext = getColumnJoinContext(column)
             if (joinContext != null) {
                 // Catch OptimizeError if the column is still ambiguous and try to resolve
                 // with schema inference below
@@ -335,7 +335,8 @@ class Resolver(
 
         val joinAncestor = column.findAncestor(Join::class, Select::class)
 
-        if (joinAncestor is Join && joinAncestor.aliasOrName in scope.selectedSources) {
+        if (joinAncestor is Join && (joinAncestor.aliasOrName in scope.selectedSources ||
+            joinAncestor.aliasOrName in scope.semiOrAntiJoinTables)) {
             // Ensure that the found ancestor is a join that contains an actual source,
             // e.g in Clickhouse `b` is an array expression in `a ARRAY JOIN b`
             return joinAncestor

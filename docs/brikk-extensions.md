@@ -1641,6 +1641,74 @@ This typing is intentional native evidence, not Python's generic UNKNOWN default
 Two exact companion Trino parser/type old-pin discrepancies replace a bogus
 RETURNING column node with VARCHAR DataType and await coherent refresh.
 
+## 50. Coherent a00dc2e integration and surfaced dependencies
+
+The branch now coherently uses `v30.22.0-5-ga00dc2e5c` / full frozen target
+`a00dc2e5c489214bea53bacbbeba8713f21ebce1`: generated node/arg-type/tokenizer/typing/
+function tables and 104 oracle fixtures were regenerated together. Generator stamps
+use a deterministic nine-character git description. Numeric, byte-literal, unknown-
+escape, surrogate and comment policies are emitted through ABI-preserving config
+methods. StringEscapeProfiles retains stable aliases/helpers but no longer overlays
+policies. Array value-constructor false defaults, With.cycle and Alter.actions
+optionality are coherent; temporary WeightString and Alter validation allowances
+are retired. Existing published inference/parser/tokenizer entry points remain.
+
+The refreshed corpus exposed dependencies that older fixtures did not exercise:
+dialect-scoped function names (#8512, including legacy native dump compatibility),
+singular/countless FETCH/OFFSET ROW (#8429), boolean update assignments (#8428),
+atomic EXISTS keyword matching, keyword-named/dotted ALTER fields, SEARCH+CYCLE
+and its defaults (#8574), duplicate-alias ordinals (#8436), SEMI/ANTI condition
+ownership (#8383/#8430), qualified index drops (#8526), and lateral ordinality
+(#8463). NULL-order alias substitution now stops at the query's own ORDER boundary
+(#8514), avoiding aggregate recursion and outer/set-operation alias capture.
+Native DuckDB rows and PostgreSQL/Trino rows/types corroborate these fixes.
+
+Typed JSON intent (#8413), Hive/Spark FROM-first insert parsing/rendering and CTE/
+lateral retention (#8527/#8535), numeric typing (#8547) and decimal literal evidence
+are reconciled. FROM-first inserts with implicit shared sources refuse unsafe
+QUALIFY lowering, and unsupported targets report that feature explicitly. This is
+parser/generator support, not a new multi-table query-plan/executor feature or live
+Spark/Hive execution claim. Native source-aware ClickHouse mappings remain protected.
+
+Byte literals (#8479) store actual bytes as Latin-1 characters; source Unicode is
+encoded as UTF-8 without moving UTF-16 source ranges. BigQuery rendering escapes
+non-ASCII bytes, DuckDB uses BLOB hex escapes, and PostgreSQL uses DECODE(hex).
+Portable outputs preserve arbitrary/non-UTF8, NUL and backslash bytes in actual
+DuckDB/PostgreSQL tests. This is not live BigQuery grammar proof; non-byte AST
+payloads refuse rather than invent encoding. TokenizerConfig constructors remain
+unchanged; keyword/escape/comment copies retain byte policy.
+
+The embedded PostgreSQL fidelity oracle now uses 18.4.0 on its three supported
+platforms, so it can verify JSON_VALUE instead of mislabeling PG-14 rejection as a
+generator bug. Specific post-parse SQL/JSON states 22034/22035 are semantic errors;
+the verifier still distinguishes syntax rejection and host unavailability. Six
+obsolete PG-14 grammar ledger rows now genuinely pass and are removed.
+
+Forty-two temporary pin-drift rows are removed. Six existing merged-key curated
+reasons and discrepancy signatures are preserved verbatim; only their descriptor
+IDs changed with target fixture policy/schema data. Five DuckDB left-key/type and
+one comma-group qualification signatures retain native safeguards. Sixteen
+PostgreSQL JSON_VALUE and one ordinality annotation signatures change only type
+payloads: native explicit/default return evidence and BIGINT ordinality replace
+Python UNKNOWN, without inventing field types/nullability. Optional-schema lineage
+keeps its legacy best-effort dependency graph, not strict column proof. The old
+unresolved-USING assertion now matches its refreshed fixture; native safeguards
+and hand-owned regressions remain. Full expected/actual mismatch artifacts are
+written for review; terminal controls are escaped only in reporting, not signatures.
+
+Coverage inventory: 3,152 named transpile assertions retain 3,133 display labels and
+19 collision labels, with stable IDs. The pre-existing deferral policy remains
+explicit: 2,478 named identity assertions, 43 non-pipe base identities and 1,482
+base transpile directions have no direct assertion consumer; parser/generator
+overlap is not claimed as full parity. Excluded dialects and dynamic extraction
+limitations remain independently inventoried. None of these counts approves a
+failure signature. New hand-owned TargetBehavior/TargetByte/TargetTyping tests,
+native result tests and all existing compatibility/corpus gates pass.
+
+This is verified branch integration, not publication, merge or downstream compiler
+verification. Native Doris follow-up and an explicitly authorized candidate check
+remain tracked separately.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

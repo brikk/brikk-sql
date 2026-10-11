@@ -275,9 +275,9 @@ open class MysqlParser(
     // sqlglot: MySQLParser._parse_alter_table_rename
     override fun parseAlterTableRename(): Expression? {
         if (matchTexts(setOf("INDEX", "KEY"))) {
-            val old = parseField(anyToken = true)
+            val old = parseIdVar(anyToken = true)
             matchTextSeq("TO")
-            val new = parseField(anyToken = true)
+            val new = parseIdVar(anyToken = true)
             return expression(RenameIndex(args("this" to old, "to" to new)))
         }
         return super.parseAlterTableRename()

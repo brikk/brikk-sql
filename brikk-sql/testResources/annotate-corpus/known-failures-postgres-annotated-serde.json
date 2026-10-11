@@ -1,20 +1,123 @@
 {
     "cases": [
         {
-            "id": "assertion:v1:sha256:00876f959bdbbe5c8a2e47d373b87e0a1e024f1b650a5471541ffbed00eff462:1",
-            "sql": "SELECT e'\\xDEADBEEF'",
-            "signature": "type-mismatch:v1:sha256:a312dd20e233ce85c21936578813b03bff32063914d3a87b73f5958df1a579b4",
-            "reason": "DDB-01 / SQLGlot #8484 old-pin drift in AST payload, not type evidence: numeric decoding now stores ÞADBEEF instead of literal backslash syntax. Matches frozen a00dc2e's invalid-byte fallback; native PostgreSQL rejects the original invalid UTF-8. The gate's type-mismatch label includes payload differences (both t fields remain null). Exact assertion/signature reviewed; remove on coherent target fixture refresh.",
-            "issue": "DDB-01 / sqlglot#8484",
-            "status": "oracle-pin-drift"
+            "id": "assertion:v1:sha256:685e0de1067a98237658b09b1ce67fb31970392cc9f74d06a6d559de8b899fec:1",
+            "sql": "SELECT JSON_VALUE(j, '$.a' RETURNING BIGINT) FROM t",
+            "signature": "type-mismatch:v1:sha256:9bd36d7359fba81f84ec177d025966f9309df34a8602c5485481bad1c579767d",
+            "reason": "Extension #49: exact reviewed diff changes only the JSON_VALUE type payload from UNKNOWN to declared BIGINT. Native PostgreSQL 18.4 return-type and Engine evidence tests pass; document/path/clauses and nullability are unchanged.",
+            "issue": "PG-01", "status": "intentional-divergence"
         },
         {
-            "id": "assertion:v1:sha256:79c24491f5699ed785b7f36b05af78e6fe80daaa3552f498f6777db87f516b22:1",
-            "sql": "SELECT CAST(e'\\176' AS BYTEA)",
-            "signature": "type-mismatch:v1:sha256:59cdd8ddd75feb62cf656f01ababe5b525c8d61d6e708b13b6fa69bf74064d27",
-            "reason": "DDB-01 / SQLGlot #8484 old-pin drift in AST payload, not type evidence: octal decoding stores ~ instead of literal backslash-176. Matches frozen a00dc2e and live PostgreSQL 18.4. The gate's type-mismatch label includes payload differences (both t fields remain null). Exact assertion/signature reviewed; remove on coherent target fixture refresh.",
-            "issue": "DDB-01 / sqlglot#8484",
-            "status": "oracle-pin-drift"
+            "id": "assertion:v1:sha256:752de89384ff6a6376d02cd0330b8d28e5822dc7008d6300b9cd2ef7976a2563:1",
+            "sql": "SELECT JSON_VALUE('\"2020-01-01T01:02:03\"', '$' RETURNING TIMESTAMP WITH TIME ZONE)",
+            "signature": "type-mismatch:v1:sha256:1e081c6991cfd08fc46d252f5834cd1ab5351e362c1e119644ac82d8a9ae4f97",
+            "reason": "Extension #49: only the declared TIMESTAMPTZ type payload differs from Python UNKNOWN. Native PostgreSQL timestamp conversion passes; raw path, clauses and nullability remain intact.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:0ffa374dcff55badc2182f852e2c301ed6ec183087070a4e12fac30037e09c66:1",
+            "sql": "SELECT JSON_VALUE('42', '$' RETURNING BIGINT)",
+            "signature": "type-mismatch:v1:sha256:81d03ebaa983435cc2b386b38895cd7cbb537435a0409f5324b181dfdcbd2703",
+            "reason": "Extension #49: exact diff contains only declared BIGINT type evidence instead of UNKNOWN. Native PostgreSQL values/PG_TYPEOF and Engine contracts verify it without non-nullness guesses.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:0b0ce5e1f672412e5bf0bc84a56ff3d18ad4b66a555e885ebd483e246c378e30:1",
+            "sql": "SELECT JSON_VALUE(j, p) FROM (VALUES (CAST('{\"a\":42}' AS JSONB), CAST('$.a' AS JSONPATH))) AS t(j, p)",
+            "signature": "type-mismatch:v1:sha256:22552c0fad425a09dc54f572d784994a098e46218f470f03d335e272b671b85f",
+            "reason": "Extension #49: reviewed default TEXT return evidence replaces UNKNOWN; dynamic JSONPATH remains an expression, not invented field ownership. Native PostgreSQL dynamic-path results pass; only type payload differs.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:e647b5a1ad583b3b4f8754b6336ca54c57311309c809b1f7ffea051b37188904:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":42}', '$' || '.a')",
+            "signature": "type-mismatch:v1:sha256:be3d5a8c1b76a35fa1d6405da651cb35fe250f16e9bda8b2f1f34205c7fffde2",
+            "reason": "Extension #49: exact diff changes only default TEXT type payload, not the concatenated path. Native PostgreSQL concatenated-path value/type checks pass.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:0ef073045f9e4c037c0f754f678e59e6c3b07d956c4ed057843d2cda58df4c99:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":42}', CASE WHEN TRUE THEN '$.a' ELSE '$.b' END)",
+            "signature": "type-mismatch:v1:sha256:210f7b06c3a4bdcef2743a88a65beb5fc79aaef9f9643b61afded19c1ad5c17b",
+            "reason": "Extension #49: default TEXT evidence changes only the type payload; CASE path and branches remain identical. Native PostgreSQL CASE-path results pass, without path-value type guesses.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:2d5bf433ce87d92cdf971527ac7167d7ba4d01b9b8ec44fd361ded49a32b627e:1",
+            "sql": "SELECT r.v, r.idx FROM t CROSS JOIN LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+            "signature": "type-mismatch:v1:sha256:b9ae562b0f23036c28c47c828dd967ddff51488a7f1363a2640175be69bcac60",
+            "reason": "Native ordinality evidence: exact reviewed diff replaces only idx's UNKNOWN type with BIGINT. PostgreSQL PG_TYPEOF(r.idx) is bigint and original/generated rows agree. Array element types remain UNKNOWN when unavailable; no nullability is invented.",
+            "issue": "Target ordinality dependency", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:8d96874ac23e60450e906bdd9b497028c546d7fc2ecadba94145371830e0fbc5:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":42}', '$.a')",
+            "signature": "type-mismatch:v1:sha256:74737e936e3787b8b28f990ee72dc426c0c062cdec56cb2180fc956b094d4c76",
+            "reason": "Extension #49: only default TEXT type evidence differs from Python UNKNOWN. Native PostgreSQL values/types confirm the documented default; paths and nullability stay unchanged.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:b0f59df82376963277eff713c3651e993008556317f9d3a0eeb85d0ebb127503:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":{\"b\":42}}', '$.a.b' RETURNING BIGINT)",
+            "signature": "type-mismatch:v1:sha256:616e714fef46f737ac84a7c9a1c5ffb3f6170e2ae273e6bf07cfc6759021b8ba",
+            "reason": "Extension #49: only explicit BIGINT return type differs. Native PostgreSQL nested-path value/type matches, without inferring arbitrary path field schemas.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:62474562010cba6d2d5c497d56f6387fb5f5039924537a16cf5976a3e3c904b9:1",
+            "sql": "SELECT JSON_VALUE('{\"my key\":42}', '$.\"my key\"' RETURNING BIGINT)",
+            "signature": "type-mismatch:v1:sha256:1dba3c390205fb22823c82a6c159e1964fc2f2a51ad564c6bf8a5129ee04628e",
+            "reason": "Extension #49: only declared BIGINT type payload differs; quoted path spelling remains identical. Native PostgreSQL quoted-key results/types pass.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:f0afe066a40db40620a66dddc2d322b0fdecb4e8c48c21a6c3e9e470ce0f3ad7:1",
+            "sql": "SELECT JSON_VALUE('[1,2]', 'strict $[1]' RETURNING BIGINT)",
+            "signature": "type-mismatch:v1:sha256:f85dedfcd40be88bf9ecd98840d6f806de82e4fe570ef2ef7ed8de4c8d090e52",
+            "reason": "Extension #49: exact diff contains only declared BIGINT type evidence. Native PostgreSQL strict indexed path behavior passes; no structural path rewrite is accepted.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:18ee8e41a22ea48165c5d7cba6d9a6bc97d071dcf70888a23674bb1e48cec5d1:1",
+            "sql": "SELECT JSON_VALUE('[1,2]', 'strict $[*]' DEFAULT 9 ON ERROR)",
+            "signature": "type-mismatch:v1:sha256:b5f107a4fe9ce9b7168fb850cc6fc8437c536e19497a70570b4a045ec931c3a6",
+            "reason": "Extension #49: only default TEXT return type differs, while multi-item/error/default clauses remain exact. Native PostgreSQL DEFAULT ON ERROR result passes; nullable evidence remains conservative.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:49bc81f8d35b8870c7e56e6d319d61e0c1f96fb00f53df54d03369256f0f31e1:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":[1,2,3]}', 'lax $.a[*] ? (@ > 2)' RETURNING BIGINT)",
+            "signature": "type-mismatch:v1:sha256:12df1fb879e1d57f866e01053b2dfcfb9cbf447d4dcfaab9d871cf189fddd483",
+            "reason": "Extension #49: only declared BIGINT type differs; lax/filter JSONPATH stays literal and unchanged. Native PostgreSQL filtered-path value/type checks pass.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:0b052674b8bdb9a495b010022b04b313bafa2ae211b515476fef31a16fb7aa32:1",
+            "sql": "SELECT JSON_VALUE('{}', '$.a' RETURNING BIGINT DEFAULT 7 ON EMPTY DEFAULT 9 ON ERROR)",
+            "signature": "type-mismatch:v1:sha256:da87c31a31b16a063d0c61750ea4c9dea5775a01ac92833c9b47a6a5491041c8",
+            "reason": "Extension #49: only BIGINT type payload differs; both defaults and their condition ordering stay identical. Native PostgreSQL empty/error defaults and types pass.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:c42a28e26bb2d14dcf08a9a2bf4a0bdc10988cb33a9c62c54435005a3875b074:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":\"bad\"}', '$.a' RETURNING BIGINT NULL ON EMPTY NULL ON ERROR)",
+            "signature": "type-mismatch:v1:sha256:59a66567cc66604299a9830d6394a59b69e40dc0f7e278742120888797821ec3",
+            "reason": "Extension #49: only declared BIGINT type payload differs. NULL/error handling remains native; actual PostgreSQL conversion/default/null tests pass without fabricating non-nullness.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:9829a1141e40c09b9f91653d0c263f1bfbc0991ac6896f0ce4f43a38d52c4a45:1",
+            "sql": "SELECT JSON_VALUE('{\"a\":42}', '$.a' RETURNING BIGINT ERROR ON EMPTY ERROR ON ERROR)",
+            "signature": "type-mismatch:v1:sha256:292cdd7c453de7a14a25cf21a84990782ffffc5eea0614c5d1d27bb658277d7f",
+            "reason": "Extension #49: exact diff is only explicit BIGINT type evidence. Native PostgreSQL values and specific ERROR SQLSTATE checks pass; error clauses are not rewritten away.",
+            "issue": "PG-01", "status": "intentional-divergence"
+        },
+        {
+            "id": "assertion:v1:sha256:83dbb67c4e5229a20ded16a5edf0a884c8c303baf904f3138e22372afb44dd43:1",
+            "sql": "SELECT JSON_VALUE('\"123.45\"', '$' RETURNING DECIMAL(5, 2))",
+            "signature": "type-mismatch:v1:sha256:f5f2b1421e3f1c09e9966cfa80d2b4345f480a7b4367b6dfb8a6a17f52d61c23",
+            "reason": "Extension #49: only declared DECIMAL(5,2) type payload differs, including its original parameters. Native PostgreSQL scalar decimal conversion/type tests pass; precision is not inferred from the path value.",
+            "issue": "PG-01", "status": "intentional-divergence"
         }
     ]
 }

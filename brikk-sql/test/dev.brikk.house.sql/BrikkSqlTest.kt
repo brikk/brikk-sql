@@ -7,6 +7,6 @@ class BrikkSqlTest {
     @Test
     fun moduleIsWired() {
         assertEquals("brikk-sql", BrikkSql.NAME)
-        assertEquals("v30.18.0-43-g3ca82489", BrikkSql.SQLGLOT_PIN)
+        assertEquals("v30.22.0-5-ga00dc2e5c", BrikkSql.SQLGLOT_PIN)
     }
 }

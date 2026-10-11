@@ -646,7 +646,7 @@ class With(initArgs: Args = emptyMap()) : Expression(initArgs) {
     companion object {
         private val ARG_TYPES = argTypesOf(
             // sqlglot: `expressions` now optional; `udfs` added to With.arg_types.
-            "expressions" to false, "recursive" to false, "search" to false, "udfs" to false,
+            "expressions" to false, "recursive" to false, "search" to false, "cycle" to false, "udfs" to false,
         )
     }
 }

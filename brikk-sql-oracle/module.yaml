@@ -30,9 +30,9 @@ dependencies:
   # runtime scope; Amper's compile classpath doesn't need them, but the runtime resolver
   # must include the one for this host (linux-amd64). Declared explicitly so it is present
   # regardless of transitive runtime-scope handling.
-  - io.zonky.test.postgres:embedded-postgres-binaries-linux-amd64:14.22.0
-  - io.zonky.test.postgres:embedded-postgres-binaries-linux-arm64v8:14.22.0
-  - io.zonky.test.postgres:embedded-postgres-binaries-darwin-arm64v8:14.22.0
+  - io.zonky.test.postgres:embedded-postgres-binaries-linux-amd64:18.4.0
+  - io.zonky.test.postgres:embedded-postgres-binaries-linux-arm64v8:18.4.0
+  - io.zonky.test.postgres:embedded-postgres-binaries-darwin-arm64v8:18.4.0
 
 test-dependencies:
   # The verify gate re-generates every corpus SQL through brikk's own parser+generator:
