@@ -3,6 +3,7 @@ package dev.brikk.house.sql.parser
 import dev.brikk.house.sql.ast.column
 
 import dev.brikk.house.sql.ast.Add
+import dev.brikk.house.sql.ast.WeightString
 import dev.brikk.house.sql.ast.AddConstraint
 import dev.brikk.house.sql.ast.AddPartition
 import dev.brikk.house.sql.ast.AggFunc
@@ -3044,11 +3045,14 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_derived_table_values
-    protected fun parseDerivedTableValues(): Expression? {
+    protected fun parseDerivedTableValues(): Expression? = parseDerivedTableValues(allowValueSynonym = false)
+
+    protected fun parseDerivedTableValues(allowValueSynonym: kotlin.Boolean): Expression? {
         val isDerived = matchPair(TokenType.L_PAREN, TokenType.VALUES)
         if (!isDerived &&
             // ClickHouse's `FORMAT Values` is equivalent to `VALUES`
-            !matchTextSeq("VALUES") && !matchTextSeq("FORMAT", "VALUES")
+            !matchTextSeq("VALUES") && !matchTextSeq("FORMAT", "VALUES") &&
+                !(allowValueSynonym && matchTextSeq("VALUE"))
         ) {
             return null
         }
@@ -6006,7 +6010,7 @@ open class Parser(
                     "partition" to (if (match(TokenType.PARTITION_BY)) parsePartitionedBy() else false),
                     "settings" to (if (matchTextSeq("SETTINGS")) parseSettingsProperty() else false),
                     "default" to matchTextSeq("DEFAULT", "VALUES"),
-                    "expression" to (setValues ?: parseDerivedTableValues() ?: parseDdlSelect()),
+                    "expression" to (setValues ?: parseDerivedTableValues(allowValueSynonym = true) ?: parseDdlSelect()),
                     "conflict" to parseOnConflict(),
                     "returning" to (returning ?: parseReturning()),
                     "overwrite" to overwrite,
@@ -9576,13 +9580,7 @@ open class Parser(
             }
         } else if (to == null) {
             raiseError("Expected TYPE after CAST")
-        } else if (to.thisArg == DType.CHAR &&
-            // sqlglot #8007: CHARACTER SET token OR two-token sequence.
-            (match(TokenType.CHARACTER_SET) || matchTextSeq("CHARACTER", "SET"))
-        ) {
-            // sqlglot: `to = exp.DType.CHARACTER_SET.into_expr(kind=self._parse_var_or_string())`
-            to = DataType(args("this" to DType.CHARACTER_SET, "kind" to parseVarOrString()))
-        }
+        } else to = parseCharCharset(to)
 
         return buildCast(
             strict = strict,
@@ -9631,12 +9629,28 @@ open class Parser(
         val to: Expression? = if (match(TokenType.USING)) {
             DataType(args("this" to DType.CHARACTER_SET, "kind" to parseCharsetName()))
         } else if (match(TokenType.COMMA)) {
-            parseTypes()
+            parseCharCharset(parseTypes())
         } else {
             null
         }
 
         return buildCast(strict = strict, this_ = this_, to = to, safe = safe)
+    }
+
+    fun parseCharCharset(to: Expression?): Expression? {
+        if (to is DataType && to.thisArg == DType.CHAR &&
+            (match(TokenType.CHARACTER_SET) || matchTextSeq("CHARACTER", "SET"))) {
+            to.set("this", DType.CHARACTER_SET)
+            to.set("kind", parseVarOrString())
+        }
+        return to
+    }
+
+    fun parseWeightString(): Expression {
+        val name = tokens.getOrNull(index - 2)?.text ?: "WEIGHT_STRING"
+        val values = parseCsv { parseAssignment() }
+        if (values.size != 1) return expression(Anonymous(args("this" to name, "expressions" to values)))
+        return expression(WeightString(args("this" to values[0], "to" to if (match(TokenType.ALIAS)) parseTypes() else null)))
     }
 
     // sqlglot: Parser._parse_extract

@@ -262,10 +262,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             if (scanString(word)) return
             if (scanComment(word)) return
             if (prevSpace || singleToken || cEmpty) {
-                advance(matchSize - 1)
                 val upper = word.uppercase()
-                add(config.keywords.getValue(upper), text = upper)
-                return
+                val type = config.keywords[upper]
+                if (type != null) {
+                    advance(matchSize - 1)
+                    add(type, text = upper)
+                    return
+                }
             }
         }
 
@@ -281,6 +284,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     // sqlglot: TokenizerCore._scan_comment
     private fun scanComment(commentStart: String): Boolean {
         if (!config.comments.containsKey(commentStart)) return false
+        if (commentStart == "--" && config.dashCommentRequiresBoundary) {
+            val boundary = sql.getOrNull(current + 1)
+            if (boundary != null && !boundary.isWhitespace() && boundary.code >= 32 && boundary.code != 127) return false
+        }
 
         val commentStartLine = line
         val commentStartSize = commentStart.length
@@ -318,7 +325,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             comments.add(if (sliceEnd < commentStartSize) "" else t.substring(commentStartSize, sliceEnd))
             advance(commentEndSize - 1)
         } else {
-            while (!end && peek != '\n' && peek != '\r') {
+            while (!end && peek != '\n' && (config.commentsTerminateAtNewlineOnly || peek != '\r')) {
                 advance(alnum = true)
             }
             comments.add(text.substring(commentStartSize))

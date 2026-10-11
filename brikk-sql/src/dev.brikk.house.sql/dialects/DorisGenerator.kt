@@ -967,6 +967,7 @@ open class DorisGenerator(
                 UniqueKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 PartitionedByProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 BuildProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
+                Property::class to GeneratorTables.PropLocation.POST_WITH,
                 // brikk-native (docs/brikk-extensions.md #19): Doris DDL clauses sqlglot lacks
                 // (RollupProperty is UNSUPPORTED in the base table; StarRocks lifts it the same way).
                 AggregateKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,

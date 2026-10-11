@@ -184,7 +184,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Canonical, PostgreSQL and DuckDB source aggregate nodes render to the real
   ClickHouse catalog names, including window use; source ASTs remain unchanged.
   No live ClickHouse execution is claimed by this mapping gate.
-- [ ] **MYSQL-01 — Parser/tokenizer:** native tokenizer rules/escapes (`db3931c8ba`,
+- [x] **MYSQL-01 — Parser/tokenizer:** native tokenizer rules/escapes (`db3931c8ba`,
   #8465; `15a77f1d89`, #8471), INSERT VALUE (`4b01d2ba95`, #8437), table options
   (`47b94d424a`, #8503), DROP KEY/CHECK/SIGNED (`51587ffdec`, #8515), option placement
   (`97a2fa2ed6`, #8553), ASCII/UNICODE (`921445341b`, #8561), WEIGHT_STRING AS
@@ -196,7 +196,14 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   actions (#8539), options/actions in any order (#8565), bare MySQL DROP (#8432),
   keyword-column typing and partition option separation. Live MySQL/PostgreSQL
   schemas match original SQL; unsupported tails stay whole Commands. Six exact
-  options-vs-actions pin-drift rows await refresh. MySQL-specific items still open.
+  options-vs-actions pin-drift rows await refresh. MySQL-specific items complete:
+  comment boundary/newline policies preserve constructor ABI and derivative policies;
+  native escapes include NUL/SUB and preserve pattern escapes. INSERT VALUE is scoped
+  to INSERT sources. Charset aliases/ASCII/UNICODE, SIGNED, DROP KEY/CHECK, table/index
+  options, WEIGHT_STRING AS, charset cast lengths, IF and DATE_ADD/SUB are verified.
+  Native MySQL schemas/rows/HEX values pass; three additional exact pin-drift rows
+  await refresh. WeightString has an exact target-only metadata contract (not a native
+  allowlist entry) until its generated manifest refresh. No publication requested.
 - [ ] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
   (`a00dc2e5c4`, #8579); path/scalar/default/error/null behavior and target grammar.
 
@@ -210,6 +217,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   only with the corresponding target behavioral fixtures.
   Refresh Alter.actions optionality and remove its narrow parser validation overlay
   only with target AST metadata and corresponding options-only ALTER fixtures.
+  Include WeightString in the generated manifest and remove its stale-detecting
+  target-only contract; emit comment policies before retiring escape/comment overlays.
 - [ ] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
   Bump `FixturePinSyncTest.SQLGLOT_PIN` only with a coherent fixture refresh;
   leave the shipped pin unchanged while individual ports are under review.
@@ -303,3 +312,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   pass with calendar chDB and Trino gates enabled (eleven other optional skips).
 - MySQL prerequisite sub-batch: build, 1,251 Kotlin tests and 16 offline release
   tests pass with MySQL/PostgreSQL/Trino/calendar probes enabled (four optional skips).
+- MySQL-specific batch: build, 1,258 Kotlin tests and 16 offline release tests pass
+  with MySQL/PostgreSQL/Trino/calendar gates enabled (four optional skips). Shared
+  editor ranges and constructor contracts pass. Three exact additional old-pin rows
+  are reviewed; no pre-existing reasons/signatures or shipped fixture stamps changed.

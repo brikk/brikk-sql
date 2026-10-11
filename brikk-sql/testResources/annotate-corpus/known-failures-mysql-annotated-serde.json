@@ -1,6 +1,13 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:777e2f9b50e0f7420f275110c951e2da2f4b8d73ccc6be8225e69ee076b8f223:1",
+            "sql": "SELECT CAST(COALESCE(`id`, 'NULL') AS CHAR CHARACTER SET binary)",
+            "signature": "type-mismatch:v1:sha256:b4afdef4bf3593c43f8f830fc602c9e73953d6354d7076361dc867d4333d48d9",
+            "reason": "MYSQL-01 #8559: reviewed preserved type/CAST subtree retains nested=false and original parameters while assigning charset. Matches a00dc2e; native cast lengths pass. Remove on refresh.",
+            "issue": "MYSQL-01 / sqlglot#8559", "status": "oracle-pin-drift"
+        },
+        {
             "id": "assertion:v1:sha256:48d5f843c7cc4913e36742d3cf5c5e0af085716e5240ae7a6bc0649c5fd1974b:1",
             "sql": "ALTER TABLE t AUTO_INCREMENT=3000000000",
             "signature": "type-mismatch:v1:sha256:8fa7ff840563fc548af60a04cdc94dd124af87e27759676fec66caf0c4bbb3b1",

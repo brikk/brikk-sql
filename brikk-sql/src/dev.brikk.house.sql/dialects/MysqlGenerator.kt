@@ -84,6 +84,8 @@ open class MysqlGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.MYSQL
+    override fun ifSql(expression: If): String = func("IF", expression.thisArg, expression.args["true"],
+        expression.args["false"] ?: Null())
     override val alterPartitionOptions: Set<KClass<out Expression>>
         get() = setOf(PartitionByListProperty::class, PartitionByRangeProperty::class)
 
@@ -130,7 +132,8 @@ open class MysqlGenerator(
     // sqlglot: STRING_ESCAPES contains "\\" -> STRINGS_SUPPORT_ESCAPED_SEQUENCES
     override val dialectStringsSupportEscapedSequences: Boolean get() = true
     // sqlglot: Dialect.ESCAPED_SEQUENCES ({v: k for UNESCAPED_SEQUENCES})
-    override val escapedSequences: Map<String, String> get() = ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String>
+        get() = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
     // sqlglot: Generator._escaped_quote_end (STRING_ESCAPES[0] == "'")
     override val escapedQuoteEnd: String get() = "''"
     // sqlglot: MySQL HEX_STRINGS = [("x'", "'"), ...]
@@ -809,6 +812,7 @@ open class MysqlGenerator(
                 PartitionedByProperty::class to GeneratorTables.PropLocation.UNSUPPORTED,
                 PartitionByRangeProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 PartitionByListProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
+                Property::class to GeneratorTables.PropLocation.POST_SCHEMA,
             )
 
         // sqlglot: MySQLGenerator.TRANSFORMS (dispatch-map overlay; multi-line entries are
@@ -833,14 +837,12 @@ open class MysqlGenerator(
                 func("DATEDIFF", e.thisArg, e.args["expression"])
             }
             reg(DateAdd::class) { e ->
-                mg().removeTsOrDsToDate(e, "this")
                 mg().dateAddSql("ADD", e)
             }
             reg(DateStrToDate::class) { e ->
                 sql(Cast(args("this" to e.thisArg, "to" to DataType(args("this" to DType.DATE)))))
             }
             reg(DateSub::class) { e ->
-                mg().removeTsOrDsToDate(e, "this")
                 mg().dateAddSql("SUB", e)
             }
             reg(DateTrunc::class) { e -> mg().dateTruncSql(e as DateTrunc) }

@@ -1,6 +1,13 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:7b937aadddf613748be79814dcc04c87eadb8ed8a10398c7cd9373f5a0746b05:1",
+            "case": "write|mysql|SELECT '\\0'",
+            "signature": "sql-mismatch:v1:sha256:59eb2e7e103e06352e70ff610aae161f75cb886c1cdcfe224336d2f24df90fb7",
+            "reason": "MYSQL-01 #8471: exact output uses MySQL backslash-zero instead of an embedded NUL SQL character; decoded value is preserved. Matches frozen target and live MySQL HEX results. Remove on coherent refresh.",
+            "issue": "MYSQL-01 / sqlglot#8471", "status": "oracle-pin-drift"
+        },
+        {
             "id": "assertion:v1:sha256:06c130f68e85ad5d0d80a1d0bf43d69a52641295a43fb50bcd63d3a7f1cf0bd2:1",
             "case": "write|clickhouse, version=23.8|toMonday(x)",
             "reason": "expected `dateTrunc('week', x)` actual `dateTrunc('WEEK', x)`",

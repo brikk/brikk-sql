@@ -756,6 +756,15 @@ class If(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
     }
 }
 
+/** sqlglot #8544; hand-owned until the coherent generated AST refresh. */
+class WeightString(initArgs: Args = emptyMap()) : Expression(initArgs), Func {
+    override val argTypes get() = ARG_TYPES
+    override val sqlNamesOverride get() = listOf("WEIGHT_STRING")
+    companion object {
+        private val ARG_TYPES = argTypesOf("this" to true, "to" to false)
+    }
+}
+
 // sqlglot: functions.Exists(Expression, SubqueryPredicate)
 class Exists(initArgs: Args = emptyMap()) : Expression(initArgs), SubqueryPredicate {
     override val argTypes get() = ARG_TYPES

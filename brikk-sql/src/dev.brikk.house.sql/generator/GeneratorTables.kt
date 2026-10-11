@@ -384,6 +384,7 @@ object GeneratorTables {
         reg(Try::class) { e -> trySql(e as Try) }
         reg(Case::class) { e -> caseSql(e as Case) }
         reg(If::class) { e -> ifSql(e as If) }
+        reg(WeightString::class) { e -> weightstringSql(e as WeightString) }
         reg(Interval::class) { e -> intervalSql(e as Interval) }
         reg(IntervalSpan::class) { e -> "${sql(e, "this")} TO ${sql(e, "expression")}" }
         reg(Anonymous::class) { e -> anonymousSql(e as Anonymous) }

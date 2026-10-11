@@ -2,6 +2,13 @@
     "sqlglot_version": "v30.18.0-43-g3ca82489",
     "cases": [
         {
+            "id": "assertion:v1:sha256:3ecf7163e4bc5a5ec7f5944dd172de9f5183e4cc69bfb3eea6ae23f2cc7119f5:1",
+            "sql": "SELECT CAST(COALESCE(`id`, 'NULL') AS CHAR CHARACTER SET binary)",
+            "signature": "ast-mismatch:v1:sha256:a53d18d4841a41a6aac87d5767e9476728a7a9195b99013f30c8953069868cbd",
+            "reason": "MYSQL-01 #8559: reviewed preserved DataType keeps nested=false when converted to CHARACTER_SET, instead of rebuilding and losing length/metadata. Matches a00dc2e; native cast length results pass. Remove on refresh.",
+            "issue": "MYSQL-01 / sqlglot#8559", "status": "oracle-pin-drift"
+        },
+        {
             "id": "assertion:v1:sha256:3447270e8d73a1d5a95e55db6425321d0e4ca51ef9ad6d982cbcfad18bd0108a:1",
             "sql": "ALTER TABLE t AUTO_INCREMENT=3000000000",
             "signature": "ast-mismatch:v1:sha256:cf0f77f048c8f30f8bde9838495969144c57c58db008b98c1dac9c8f9f2c8f55",

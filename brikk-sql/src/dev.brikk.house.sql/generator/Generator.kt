@@ -1475,7 +1475,8 @@ open class Generator(
         if (typeValue == DType.USERDEFINED && isTruthyArg(expression.args["kind"])) {
             typeSql = sql(expression, "kind")
         } else if (typeValue == DType.CHARACTER_SET) {
-            return "CHAR CHARACTER SET ${sql(expression, "kind")}"
+            val char = if (interior.isEmpty()) "CHAR" else "CHAR($interior)"
+            return "$char CHARACTER SET ${sql(expression, "kind")}"
         } else {
             // sqlglot: `self.TYPE_MAPPING.get(type_value, type_value.value)`
             typeSql = if (typeValue is DType) (typeMapping[typeValue] ?: typeValue.value) else sql(typeValue)
@@ -3538,6 +3539,11 @@ open class Generator(
     // sqlglot: Generator.if_sql
     open fun ifSql(expression: If): String =
         caseSql(Case(args("ifs" to listOf(expression), "default" to expression.args["false"])))
+
+    open fun weightstringSql(expression: WeightString): String {
+        val to = sql(expression, "to")
+        return func("WEIGHT_STRING", sql(expression, "this") + if (to.isEmpty()) "" else " AS $to")
+    }
 
     // sqlglot: Generator.matchagainst_sql (base: MATCH_AGAINST_TABLE_PREFIX=null)
     open fun matchagainstSql(expression: MatchAgainst): String {

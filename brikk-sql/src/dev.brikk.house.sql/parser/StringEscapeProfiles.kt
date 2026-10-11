@@ -4,6 +4,15 @@ import dev.brikk.house.sql.parser.TokenizerConfig.NumericEscape
 
 /** Hand-owned target policies until the coherent generated-table refresh (#8470 / #8484). */
 object StringEscapeProfiles {
+    private val MYSQL_SEQUENCES = mapOf("\\0" to "\u0000", "\\Z" to "\u001a", "\\%" to "\\%",
+        "\\_" to "\\_", "\\a" to "a", "\\f" to "f", "\\v" to "v")
+    val MYSQL: TokenizerConfig = MysqlTokenizerTables.CONFIG.withStringEscapes(dropUnknownEscapes = true,
+        unescapedSequences = MysqlTokenizerTables.UNESCAPED_SEQUENCES + MYSQL_SEQUENCES)
+        .withCommentPolicy(dashCommentRequiresBoundary = true, commentsTerminateAtNewlineOnly = true)
+    val DORIS: TokenizerConfig = DorisTokenizerTables.CONFIG.withStringEscapes(dropUnknownEscapes = true,
+        unescapedSequences = DorisTokenizerTables.UNESCAPED_SEQUENCES + MYSQL_SEQUENCES)
+    val STARROCKS: TokenizerConfig = StarrocksTokenizerTables.CONFIG.withStringEscapes(dropUnknownEscapes = true,
+        unescapedSequences = StarrocksTokenizerTables.UNESCAPED_SEQUENCES + MYSQL_SEQUENCES)
     val DUCKDB: TokenizerConfig = DuckdbTokenizerTables.CONFIG.withStringEscapes(
         numericEscapes = mapOf('x' to NumericEscape(16, 1, 2, 0xFF), '0' to NumericEscape(8, 1, 3, 0x1FF)),
         numericEscapesAreBytes = true, dropUnknownEscapes = true,
@@ -22,7 +31,7 @@ object StringEscapeProfiles {
         unescapedSequences = ClickhouseTokenizerTables.UNESCAPED_SEQUENCES + mapOf(
             "\\e" to "\u001B", "\\N" to "", "\\/" to "/", "\\\"" to "\"", "\\=" to "=", "\\`" to "`",
         ) + (1..31).associate { "\\${it.toChar()}" to it.toChar().toString() },
-    )
+    ).withCommentPolicy(commentsTerminateAtNewlineOnly = true)
 
     // sqlglot: _Dialect.ESCAPED_SEQUENCES. Do not generate escapes which just drop a backslash.
     fun escapedSequences(config: TokenizerConfig): Map<String, String> = buildMap {

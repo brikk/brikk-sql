@@ -384,6 +384,7 @@ open class StarrocksGenerator(
                 UniqueKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 RollupProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 PartitionedByProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
+                Property::class to GeneratorTables.PropLocation.POST_WITH,
             )
 
         // sqlglot: StarRocksGenerator.TRANSFORMS (dispatch-map overlay over MysqlGenerator's;

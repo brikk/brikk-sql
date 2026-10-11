@@ -1592,6 +1592,35 @@ at a00dc2e. Alter.actions optionality temporarily has a narrow parser validation
 overlay until its generated metadata/fixtures refresh together. Public parseDrop
 and its default bridge remain intact; new explicit-kind parsing is additive.
 
+## 48. MySQL native lexical, DDL and expression catch-up
+
+MYSQL-01 ports #8465/#8471/#8437/#8503/#8515/#8553/#8561/#8544/#8559/#8409/#8417.
+MySQL -- comments require whitespace/control/EOF and line comments stop at LF only;
+ClickHouse also keeps CR inside comments. Doris/StarRocks retain their different
+dash/CR policies. TokenizerConfig adds copy-preserving sidecar policies without
+changing published constructors/default bridges. Native MySQL escape decoding and
+generation preserve NUL, SUB, unknown escapes and pattern backslashes under default
+SQL mode; NO_BACKSLASH_ESCAPES/ANSI_QUOTES session modes are not newly claimed.
+
+INSERT VALUE is accepted only in INSERT sources, not by renaming VALUE identifiers.
+Charset aliases/ASCII(latin1)/UNICODE(ucs2), SIGNED defaults, DROP KEY/CHECK and
+comma-optional table properties retain their scopes. Key options stay on PRIMARY
+KEY, while MySQL generic table options are emitted without WITH; Doris/StarRocks
+generic properties retain PROPERTIES wrappers. WEIGHT_STRING has canonical this/to
+arguments for its AS form; undocumented extra arguments retain their native name.
+CHAR charset casts preserve their length and type metadata. Native IF retains its
+required three arguments; source CASE stays CASE. DATE_ADD/SUB keep explicit DATE
+conversions so time-of-day is not silently restored.
+
+Focused tests cover parser/serde, context/range checks and derivative rendering.
+Live MySQL 8.4.10 compares original/generated HEX values, conditions, date results,
+weight bytes, cast truncation and SHOW CREATE/inserted rows. Three exact additional
+old-pin discrepancies (preserved charset metadata and escaped NUL rendering) match
+a00dc2e and await refresh. WeightString's exact temporary metadata contract fails
+as stale when the target manifest includes it. Generated metadata/fixtures remain
+coherent at the old shipped pin until integration. No new live derivative SQL-mode
+or WEIGHT_STRING cross-engine equivalence is claimed.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

@@ -55,7 +55,7 @@ class StarrocksDialect : Dialect() {
     companion object {
         // sqlglot #8412: StarRocks has no INSERT IGNORE/index hint grammar; IGNORE
         // must reach the window NULL-modifier parser as a contextual identifier.
-        val TOKENIZER_CONFIG: TokenizerConfig = StarrocksTokenizerTables.CONFIG
+        val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.STARROCKS
             .withKeywords(mapOf("IGNORE" to TokenType.VAR))
     }
 }

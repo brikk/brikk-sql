@@ -749,6 +749,7 @@ object BaseParserTables {
     // sqlglot: Parser.FUNCTION_PARSERS (OPENJSON not ported yet — no base-corpus
     // coverage).
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> = buildMap {
+        put("WEIGHT_STRING") { p -> p.parseWeightString() }
         put("CONVERT") { parser -> parser.parseConvert(parser.strictCast) }
         put("STRING_AGG") { parser -> parser.parseStringAgg() }
         put("TRY_CONVERT") { parser -> parser.parseConvert(false, safe = true) }

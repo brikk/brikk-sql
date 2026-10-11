@@ -61,7 +61,7 @@ class DorisDialect : Dialect() {
          * - `REFRESH` statement token; `BUILD` / `CANCEL` / `PAUSE` / `RECOVER` / `RESUME` as
          *   COMMAND so their statements degrade to Command rather than a parse error.
          */
-        val TOKENIZER_CONFIG: TokenizerConfig = DorisTokenizerTables.CONFIG.withKeywords(
+        val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DORIS.withKeywords(
             mapOf(
                 "LARGEINT" to TokenType.INT128,
                 "IPV4" to TokenType.IPV4,
