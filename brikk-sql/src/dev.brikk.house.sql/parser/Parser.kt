@@ -4094,20 +4094,22 @@ open class Parser(
                 val literal = primary.name
                 val this_ = parseColumnOps(primary)
 
-                val literalParser = typeLiteralParsers[dataType.thisArg as? DType]
-                if (literalParser != null) return literalParser(this, this_, dataType)
-
                 // sqlglot: ZONE_AWARE_TIMESTAMP_CONSTRUCTOR (parser.py TIME_ZONE_RE)
                 // Promotes TIMESTAMP→TIMESTAMPTZ and TIME→TIMETZ when the literal carries a zone.
                 var toType = dataType
                 if (zoneAwareTimestampConstructor && TIME_ZONE_RE.containsMatchIn(literal)) {
                     when (dataType.thisArg) {
                         DType.TIMESTAMP ->
-                            toType = expression(DataType(args("this" to DType.TIMESTAMPTZ)))
+                            toType = expression(DataType(args("this" to DType.TIMESTAMPTZ,
+                                "expressions" to dataType.expressionsArg.takeIf { it.isNotEmpty() })))
                         DType.TIME ->
-                            toType = expression(DataType(args("this" to DType.TIMETZ)))
+                            toType = expression(DataType(args("this" to DType.TIMETZ,
+                                "expressions" to dataType.expressionsArg.takeIf { it.isNotEmpty() })))
                     }
                 }
+
+                val literalParser = typeLiteralParsers[toType.thisArg as? DType]
+                if (literalParser != null) return literalParser(this, this_, toType)
 
                 return expression(Cast(args("this" to this_, "to" to toType)))
             }

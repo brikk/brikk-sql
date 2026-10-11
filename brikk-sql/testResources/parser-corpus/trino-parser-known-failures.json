@@ -2,6 +2,34 @@
     "sqlglot_version": "v30.18.0-43-g3ca82489",
     "cases": [
         {
+            "id": "assertion:v1:sha256:81031bc851b5f7831fbadaf9d9eb8cfb0d2db7be5d1afae3378ebce9d44ebdc3:1",
+            "sql": "SELECT TIMESTAMP '2012-10-31 01:00 -2'",
+            "signature": "ast-mismatch:v1:sha256:05128348816f0df2975b21c339de2978e55b57699b571835bbd6fb206e8f7129",
+            "reason": "TRINO-01 #8564: reviewed AST adds TIMESTAMPTZ precision 0, matching frozen target. Native Trino type/value checks pass. Remove on coherent refresh.",
+            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:1498495e359fd25e5c4b25e5261e20df44942c358a1bc1fec0392987f294ef19:1",
+            "sql": "SELECT TIMESTAMP '2012-10-31 01:00 +2'",
+            "signature": "ast-mismatch:v1:sha256:4e3a26ddaad0563420ae5db36727306676b72fc12964ed44ab6ba322620e0fbf",
+            "reason": "TRINO-01 #8564: reviewed AST adds TIMESTAMPTZ precision 0, matching frozen target. Native Trino type/value checks pass. Remove on coherent refresh.",
+            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:5048ba04f7fca8960f26657fe69899606d5313af4ad969f3999b81b456ba2ddf:1",
+            "sql": "SELECT TIME '01:02:03.456 -08:00'",
+            "signature": "ast-mismatch:v1:sha256:19cd14c817a8f1efd12fc08fe6d304eac29737b7c9abb8344bf28daa3c57306b",
+            "reason": "TRINO-01 #8564: reviewed AST adds TIMETZ precision 3, matching frozen target and native Trino type/value checks. Remove on coherent refresh.",
+            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:7cc65ca464101b06e5e3d3fedb2843c9475b38678ee34c0a83d5ac9465b28999:1",
+            "sql": "SELECT TIME '01:02:03.456'",
+            "signature": "ast-mismatch:v1:sha256:2823bbf4df04075f2dc8ee8b6a9aec24ee67406c498c47584027790877ae9af9",
+            "reason": "TRINO-01 #8564: reviewed AST adds TIME precision 3, matching frozen target and native Trino type/value checks. Remove on coherent refresh.",
+            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
+        },
+        {
             "id": "assertion:v1:sha256:58bb8d32daa12e185066d46c462c0838120fcaf4d20cb1491d65127ce0955671:1",
             "sql": "ALTER TABLE people SET PROPERTIES x = 'y'",
             "reason": "ast-mismatch at #0: expected Command",

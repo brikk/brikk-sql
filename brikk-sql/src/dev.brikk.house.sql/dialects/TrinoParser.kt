@@ -5,6 +5,9 @@ import dev.brikk.house.sql.ast.AtLocal
 import dev.brikk.house.sql.ast.Block
 import dev.brikk.house.sql.ast.CaseStatement
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Cast
+import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.DataTypeParam
 import dev.brikk.house.sql.ast.CurrentCatalog
 import dev.brikk.house.sql.ast.CurrentVersion
 import dev.brikk.house.sql.ast.EQ
@@ -42,6 +45,8 @@ import dev.brikk.house.sql.parser.buildLogarithm
 import dev.brikk.house.sql.parser.fromArgList
 import dev.brikk.house.sql.parser.toJsonPath
 
+private val FRACTIONAL_SECONDS_RE = Regex(":\\d+\\.(\\d+)")
+
 /**
  * Port of sqlglot's TrinoParser (reference/sqlglot/sqlglot/parsers/trino.py).
  * Table merges live in [TrinoParserTables]; overridden _parse_* methods below.
@@ -57,6 +62,18 @@ open class TrinoParser(
 
     // sqlglot: Trino.SUPPORTS_USER_DEFINED_TYPES = False
     override val supportsUserDefinedTypes: Boolean get() = false
+
+    override val typeLiteralParsers: Map<DType, (Parser, Expression?, Expression) -> Expression?>
+        get() = super.typeLiteralParsers + temporalLiteralParsers
+
+    private val temporalLiteralParsers = listOf(DType.TIMESTAMP, DType.TIMESTAMPTZ, DType.TIME, DType.TIMETZ)
+        .associateWith { { _: Parser, literal: Expression?, dataType: Expression ->
+            if (dataType.expressionsArg.isEmpty()) {
+                val precision = FRACTIONAL_SECONDS_RE.find(literal?.name.orEmpty())?.groupValues?.get(1)?.length ?: 0
+                dataType.set("expressions", listOf(DataTypeParam(args("this" to Literal.number(precision)))))
+            }
+            expression(Cast(args("this" to literal, "to" to dataType)))
+        } }
 
     // sqlglot: TrinoParser.NO_PAREN_FUNCTIONS
     override val noParenFunctions: Map<TokenType, () -> Expression>

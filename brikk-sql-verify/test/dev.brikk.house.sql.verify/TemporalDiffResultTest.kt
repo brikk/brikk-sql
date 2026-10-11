@@ -8,13 +8,18 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TemporalDiffResultTest {
-    private fun check(expression: String, expected: Long, timezone: String = "UTC") {
+    private fun check(expression: String, expected: Long, timezone: String = "UTC", prestoLossWarnings: Int = 0) {
         val fragment = SqlFragment("SELECT $expression", "bigquery")
         for (target in listOf("presto", "trino")) {
             val result = fragment.transpileTo(target)
-            assertTrue(result.unsupportedMessages.isEmpty(), result.unsupportedMessages.toString())
+            assertEquals(if (target == "presto") List(prestoLossWarnings) {
+                "Presto only supports millisecond precision for temporal types"
+            } else emptyList(), result.unsupportedMessages)
             assertFalse(result.sql.contains("WEEK_START"), result.sql)
             assertTrue(SqlVerifiers.forEngine("trino")!!.verify(result.sql).accepted, result.sql)
+            // Trino is not a native Presto result oracle. A diagnosed precision
+            // reduction must not be executed as if it preserved BigQuery values.
+            if (target == "presto" && prestoLossWarnings > 0) continue
             val container = System.getenv("BRIKK_TRINO_CONTAINER") ?: continue
             val process = ProcessBuilder("docker", "exec", container, "trino", "--execute", result.sql,
                 "--output-format", "TSV", "--timezone", timezone).redirectErrorStream(true).start()
@@ -38,12 +43,12 @@ class TemporalDiffResultTest {
         for ((end, start, expected) in listOf(Triple(120, 0, 2L), Triple(0, 120, -2L), Triple(119, 60, 0L), Triple(60, 119, 0L))) {
             check("TIMESTAMP_DIFF(TIMESTAMP_SECONDS($end), TIMESTAMP_SECONDS($start), MINUTE)", expected)
         }
-        check("TIMESTAMP_DIFF('2021-02-01 00:01:00', '2021-02-01 00:00:59', MINUTE)", 0)
+        check("TIMESTAMP_DIFF('2021-02-01 00:01:00', '2021-02-01 00:00:59', MINUTE)", 0, prestoLossWarnings = 2)
         for (timezone in listOf("UTC", "America/New_York")) {
-            check("TIMESTAMP_DIFF(TIMESTAMP_SECONDS(0), '1970-01-01 00:00:00', HOUR)", 0, timezone)
+            check("TIMESTAMP_DIFF(TIMESTAMP_SECONDS(0), '1970-01-01 00:00:00', HOUR)", 0, timezone, prestoLossWarnings = 1)
             check("TIMESTAMP_DIFF(TIMESTAMP_SECONDS(1710129600), TIMESTAMP_SECONDS(1710046800), DAY)", 0, timezone)
             check("TIMESTAMP_DIFF(TIMESTAMP_SECONDS(1710046800), TIMESTAMP_SECONDS(1710129600), DAY)", 0, timezone)
-            check("TIMESTAMP_DIFF('2024-03-10 00:00:00 UTC', '2024-03-09 00:00:00 UTC', DAY)", 1, timezone)
+            check("TIMESTAMP_DIFF('2024-03-10 00:00:00 UTC', '2024-03-09 00:00:00 UTC', DAY)", 1, timezone, prestoLossWarnings = 2)
         }
     }
 
@@ -51,9 +56,9 @@ class TemporalDiffResultTest {
     fun calendarDifferencesCountBoundariesRatherThanElapsedUnits() {
         check("DATETIME_DIFF(DATETIME '2021-02-01 00:00:00', DATETIME '2021-01-31 00:00:00', MONTH)", 1)
         check("DATETIME_DIFF(DATETIME '2021-01-31 00:00:00', DATETIME '2021-02-01 00:00:00', MONTH)", -1)
-        check("DATETIME_DIFF('2021-02-01 00:01:00', '2021-02-01 00:00:59', MINUTE)", 1)
-        check("DATETIME_DIFF('2021-02-01 00:01:00', '2021-02-01 00:00:59.999999', MINUTE)", 1)
-        check("DATETIME_DIFF(DATETIME '2021-02-01 00:01:00', DATETIME '2021-02-01 00:00:59.999999', MINUTE)", 1)
+        check("DATETIME_DIFF('2021-02-01 00:01:00', '2021-02-01 00:00:59', MINUTE)", 1, prestoLossWarnings = 2)
+        check("DATETIME_DIFF('2021-02-01 00:01:00', '2021-02-01 00:00:59.999999', MINUTE)", 1, prestoLossWarnings = 2)
+        check("DATETIME_DIFF(DATETIME '2021-02-01 00:01:00', DATETIME '2021-02-01 00:00:59.999999', MINUTE)", 1, prestoLossWarnings = 1)
         check("DATETIME_DIFF(DATETIME '2017-10-15 00:00:00', DATETIME '2017-10-14 00:00:00', WEEK)", 1)
         check("DATE_DIFF('2024-01-07', '2024-01-06', WEEK)", 1)
         check("DATE_DIFF(DATE '2024-01-08', DATE '2024-01-07', ISOWEEK)", 1)

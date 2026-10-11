@@ -166,8 +166,13 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Live StarRocks and emitted DuckDB results agree for FLOOR/CEIL, exact boundaries,
   minute/hour/day/month/year periods and NULL inputs. Native parser/serde round-trips
   are covered; unknown boundary names refuse instead of silently becoming FLOOR.
-- [ ] **TRINO-01 — Temporal precision:** timestamp/time literal precision
+- [x] **TRINO-01 — Temporal precision:** timestamp/time literal precision
   (`e1e0d2e52f`, #8538; all-temporal follow-up `862fd55467`, #8564).
+  Zone promotion precedes temporal literal hooks; all literal precisions 0..12 and
+  explicit cast parameters survive parse/serde/typing/rendering. Presto removes
+  unsupported parameters and reports precision loss; Trino retains them. Native
+  Trino 483 values/types, NULLs and precision-sensitive DATE_ADD pass. Twelve exact
+  reviewed pin-drift rows await coherent refresh; existing ledger reasons unchanged.
 - [ ] **CH-01 — Calendar functions:** ISO calendar directions (`0ceaf1319e`, #8494),
   toDayOfMonth/toDayOfYear (`61fc386dc7`, #8473), with week/year boundary tests.
 - [x] **CH-02 — Bitwise aggregates:** groupBitAnd/Or/Xor mapping
@@ -281,3 +286,5 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   isolated container without host ports/volumes, removed after verification.
   Final offline rerun: 1,212 pass, fifteen optional gates skip; non-projected
   SEMI/ANTI join predicates retain their real source types under the visibility fix.
+- Tenth batch (TRINO-01): build, 1,237 Kotlin tests and 16 offline release tests
+  pass with Trino gates enabled (eleven optional skips). Shipped pin unchanged.

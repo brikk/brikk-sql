@@ -1,3 +1,18 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:1ddf25918035bf560ea9b8360d6b3600986e1a673b1f1cd12697303940db7966:1",
+            "case": "write|trino|SELECT TIME '01:02:03.456 -08:00'",
+            "signature": "sql-mismatch:v1:sha256:e8c0998002bb7264297d02b98f701e2785198f80e0f6578600c9722cabd94421",
+            "reason": "TRINO-01 #8564: exact reviewed output adds TIME(3) WITH TIME ZONE. Matches frozen target/native Trino; remove on refresh.",
+            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:fc98a01cfcc57a9182c77208dc42a4c18ff3446590efb50e50e07752bf8f96bf:1",
+            "case": "write|trino|SELECT TIMESTAMP '2012-10-31 01:00:00 +02:00'",
+            "signature": "sql-mismatch:v1:sha256:f97b94cbabd30aeb4c5d99b7ea118e65c14492c5177e9858d36d309db2ca0191",
+            "reason": "TRINO-01 #8564: exact reviewed output adds TIMESTAMP(0) WITH TIME ZONE. Matches frozen target/native Trino; remove on refresh.",
+            "issue": "TRINO-01 / sqlglot#8564", "status": "oracle-pin-drift"
+        }
+    ]
 }

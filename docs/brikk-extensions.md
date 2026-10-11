@@ -1551,6 +1551,21 @@ strict two-step validation and nonmutation of the original SqlFragment AST.
 All existing exact corpus gates pass: no ledger waivers or fixture/pin changes
 were needed for this batch.
 
+## 45. Trino temporal precision versus Presto limitations
+
+SQLGlot #8538/#8564 preserve the exact fractional precision of Trino TIME/TIMESTAMP
+literals, including zero and trailing zeros, with or without zones. Zone promotion
+runs before type-literal hooks; explicit cast precision remains explicit. We also
+retain a declared typed-literal precision when promoting its zone rather than
+dropping it. Parse/serde/type/render tests cover 0..12; native Trino 483 TYPEOF,
+VARCHAR values, NULL casts and precision-sensitive DATE_ADD match the original.
+The shared Presto generator removes temporal parameters and diagnoses anything
+other than its implicit/explicit millisecond precision. This can expose earlier
+precision-loss assumptions: temporal-difference tests now assert exact diagnostics
+and do not execute lossy Presto output in Trino as if Trino were a native Presto
+result oracle. No live Presto proof is claimed. Twelve reviewed exact old-pin
+parser/type/transpile discrepancies match a00dc2e and await coherent refresh.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
