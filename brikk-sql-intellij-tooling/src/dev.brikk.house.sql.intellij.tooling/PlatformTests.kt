@@ -16,8 +16,6 @@ import org.jetbrains.amper.plugins.Input
 import org.jetbrains.amper.plugins.Output
 import org.jetbrains.amper.plugins.TaskAction
 
-// Bundled plugins whose classes the tests use; later IDEs split some into separate plugins.
-private val runtimePlugins = listOf("DatabaseTools", "grid-core-plugin", "platform-execution-serviceView-plugin")
 private val testFramework = listOf("test-framework", "test-framework-core", "test-framework-common", "test-framework-team-city")
 
 /**
@@ -77,9 +75,45 @@ private fun buildNumber(sdk: Path): String =
         ?.groupValues?.get(1) ?: error("Missing IDE build number in $sdk")
 
 private fun sdkJars(sdk: Path): List<Path> =
-    (listOf("lib", "lib/modules") + runtimePlugins.flatMap { listOf("plugins/$it/lib", "plugins/$it/lib/modules") })
-        .map(sdk::resolve).filter(Files::isDirectory)
-        .flatMap { dir -> Files.list(dir).use { files -> files.filter { it.toString().endsWith(".jar") }.sorted().toList() } }
+    (listOf(sdk.resolve("lib"), sdk.resolve("lib/modules")) + pluginClosure(sdk, "com.intellij.database").flatMap { listOf(it, it.resolve("modules")) })
+        .filter(Files::isDirectory).flatMap(::jarsIn)
+
+private fun jarsIn(dir: Path): List<Path> = Files.list(dir).use { files -> files.filter { it.toString().endsWith(".jar") }.sorted().toList() }
+
+/**
+ * Library directories of the bundled plugins that plugin [root] references, transitively, from any
+ * descriptor's dependencies, optional modules included. Releases move platform modules into plugins,
+ * so this is not a fixed list. Only plugins the IDE actually loads use their classes.
+ */
+private fun pluginClosure(sdk: Path, root: String): List<Path> {
+    val libs = Files.list(sdk.resolve("plugins")).use { dirs -> dirs.map { it.resolve("lib") }.filter(Files::isDirectory).sorted().toList() }
+    fun moduleJars(lib: Path) = lib.resolve("modules").takeIf(Files::isDirectory)?.let(::jarsIn).orEmpty()
+    val moduleOwner = libs.flatMap { lib -> moduleJars(lib).map { it.fileName.toString().removeSuffix(".jar") to lib } }.toMap()
+    val pluginOwner = libs.flatMap { lib ->
+        jarsIn(lib).mapNotNull { jar -> descriptorTexts(jar, mainOnly = true).firstNotNullOfOrNull(pluginId::find)?.let { it.groupValues[1] to lib } }
+    }.toMap()
+    val found = linkedSetOf<Path>()
+    val pending = ArrayDeque(listOfNotNull(pluginOwner[root]))
+    while (pending.isNotEmpty()) {
+        val lib = pending.removeFirst()
+        if (!found.add(lib)) continue
+        (jarsIn(lib) + moduleJars(lib))
+            .flatMap { descriptorTexts(it, mainOnly = false) }
+            .flatMap { text -> dependencies.findAll(text).flatMap { reference.findAll(it.groupValues[1]) } }
+            .mapNotNullTo(pending) { (if (it.groupValues[1] == "module name") moduleOwner else pluginOwner)[it.groupValues[2]] }
+    }
+    return found.toList()
+}
+
+private val pluginId = Regex("<id>([^<]+)</id>")
+private val dependencies = Regex("<dependencies>(.*?)</dependencies>", RegexOption.DOT_MATCHES_ALL)
+private val reference = Regex("<(module name|plugin id)=\"([^\"]+)\"")
+
+private fun descriptorTexts(jar: Path, mainOnly: Boolean): List<String> = ZipFile(jar.toFile()).use { zip ->
+    zip.entries().asSequence()
+        .filter { it.name == "META-INF/plugin.xml" || !mainOnly && '/' !in it.name && it.name.endsWith(".xml") }
+        .map { zip.getInputStream(it).bufferedReader().use { reader -> reader.readText() } }.toList()
+}
 
 private fun frameworkJars(outputDir: Path, build: String): List<Path> = testFramework.map { name ->
     val jar = outputDir.resolve("$name-$build.jar")
@@ -103,8 +137,10 @@ private fun frameworkJars(outputDir: Path, build: String): List<Path> = testFram
 
 private fun java(classpath: List<Path>, main: String, args: List<String>, log: Path,
                  executable: Path = Path.of(System.getProperty("java.home"), "bin", "java"), jvmArgs: List<String> = emptyList()) {
-    val process = ProcessBuilder(listOf(executable.toString(), "-Xmx2g") + jvmArgs +
-        listOf("-cp", classpath.joinToString(File.pathSeparator), main) + args)
+    // An argument file, because a plugin classpath can exceed the OS argument limit.
+    val classpathFile = log.resolveSibling("${log.fileName}.classpath")
+    Files.writeString(classpathFile, "-cp \"" + classpath.joinToString(File.pathSeparator).replace("\\", "\\\\") + "\"")
+    val process = ProcessBuilder(listOf(executable.toString(), "-Xmx2g") + jvmArgs + listOf("@$classpathFile", main) + args)
         .redirectErrorStream(true).redirectOutput(log.toFile()).start()
     if (!process.waitFor(15, TimeUnit.MINUTES)) {
         process.destroyForcibly()
