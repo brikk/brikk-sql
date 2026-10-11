@@ -60,6 +60,8 @@ https://github.com/apache/doris-website, both Apache License 2.0:
   (`docs/sql-manual/sql-functions/`, `versioned_docs/version-*/sql-manual/sql-functions/`)
   by `tools/extract_doris_since_versions.py`; joined onto `FunctionDef.sinceVersion`. See
   vendor/README.md for the extraction method and its honesty caveats.
+- `vendor/data/doris-keywords-4.1.4.tsv` and `GeneratedKeywords.kt` — keyword spellings,
+  token symbols and reservation read from the vendored 4.1.4 parser's grammar.
 
 ## Apache StarRocks
 
@@ -83,14 +85,16 @@ See vendor/README.md for provenance and the refresh procedure.
 `brikk-sql-metadata/.../GeneratedTrinoFunctionCatalog.kt` contain the built-in function
 registry (names, signatures, kinds) extracted from [Trino](https://github.com/trinodb/trino)
 version 483 via its own `SHOW FUNCTIONS` statement (see vendor/README.md for the generation
-method). Trino is licensed under the Apache License 2.0. No Trino code is included — only
-registry data produced by running the engine.
+method). `vendor/data/trino-keywords-483.tsv` and `GeneratedKeywords.kt` hold the keyword
+spellings and reservation read from the trino-grammar 483 lexer and parser. Trino is
+licensed under the Apache License 2.0. No Trino code is included — only registry and
+grammar data.
 
 ## DuckDB
 
 The vendored `vendor/data/duckdb-*-<version>.tsv` captures and the generated
 `brikk-sql-metadata/.../GeneratedDuckdb_<version>.kt` contain registry data (functions,
-signatures, kinds) extracted from [DuckDB](https://github.com/duckdb/duckdb) v1.5.6 via its
+signatures, kinds, keywords) extracted from [DuckDB](https://github.com/duckdb/duckdb) v1.5.6 via its
 own system table functions (see vendor/README.md). No DuckDB code is included — only registry data produced by running
 the engine. DuckDB is licensed under the MIT License:
 
@@ -121,7 +125,8 @@ SOFTWARE.
 `vendor/data/clickhouse-functions-26.5.1.1.tsv` and the generated
 `brikk-sql-metadata/.../GeneratedClickhouseFunctionCatalog.kt` contain ClickHouse
 26.5.1.1 function names, aggregate kinds, and evidence-backed aliases extracted from
-`system.functions`. No ClickHouse source code is included in the catalog artifact.
+`system.functions`; `vendor/data/clickhouse-keywords-26.5.1.1.tsv` and
+`GeneratedKeywords.kt` hold its `system.keywords`. No ClickHouse source code is included in the catalog artifact.
 ClickHouse is licensed under the Apache License 2.0; see vendor/README.md for provenance.
 
 ## polyglot (DataFusion fixture corpus)

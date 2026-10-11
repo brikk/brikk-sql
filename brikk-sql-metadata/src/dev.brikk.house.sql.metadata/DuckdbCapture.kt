@@ -63,6 +63,15 @@ val DUCKDB_FUNCTIONS: DuckdbCapture<DuckdbFunctionRow> = DuckdbCapture(
     )
 }
 
+/** One `duckdb_keywords()` row; [category] is `reserved`, `unreserved`, `type_function` or `column_name`. */
+data class DuckdbKeywordRow(val name: String, val category: String)
+
+val DUCKDB_KEYWORDS: DuckdbCapture<DuckdbKeywordRow> = DuckdbCapture(
+    name = "keywords",
+    sql = "SELECT keyword_name, keyword_category FROM duckdb_keywords() ORDER BY ALL",
+    columns = listOf("keyword_name", "keyword_category"),
+) { row -> DuckdbKeywordRow(row.required(0), row.required(1)) }
+
 private fun List<String?>.required(index: Int): String = checkNotNull(this[index]) { "column $index is null in $this" }
 
 private fun List<String?>.jsonList(index: Int): List<String?> =

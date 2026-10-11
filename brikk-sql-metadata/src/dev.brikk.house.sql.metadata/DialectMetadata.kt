@@ -1,9 +1,10 @@
 package dev.brikk.house.sql.metadata
 
-/** What metadata knows about one engine release. */
+/** What metadata knows about one engine release; a null part is unknown, not empty. */
 class MetadataSnapshot(
     val engineVersion: String,
     val functions: FunctionCatalog,
+    val keywords: KeywordCatalog? = null,
 )
 
 /** Every bundled snapshot of one dialect, oldest first. */

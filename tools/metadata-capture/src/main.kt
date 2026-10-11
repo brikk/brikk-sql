@@ -4,6 +4,8 @@ import kotlin.system.exitProcess
 
 private val CAPTURES: Map<String, (vendorData: java.nio.file.Path) -> Unit> = mapOf(
     "duckdb" to ::captureDuckdb,
+    "trino-keywords" to ::captureTrinoKeywords,
+    "doris-keywords" to ::captureDorisKeywords,
 )
 
 fun main(args: Array<String>) {

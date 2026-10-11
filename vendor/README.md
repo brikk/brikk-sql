@@ -271,6 +271,7 @@ engine on its classpath and writes one file per capture, named by the engine's
 | File | Query |
 |---|---|
 | `duckdb-functions-<version>.tsv` | `duckdb_functions()`: every row, including pragma and operator rows, with return and parameter types, parameter names, varargs, alias, stability, description and examples |
+| `duckdb-keywords-<version>.tsv` | `duckdb_keywords()`: name and category (reserved, unreserved, type_function, column_name) |
 
 The queries, the row types and the row → metadata mapping are defined once, in Kotlin
 (`brikk-sql-metadata/.../DuckdbCapture.kt`, `DuckdbDump.kt`); a live harvest in the IDE
@@ -293,6 +294,25 @@ which the earlier Python-module generator picked up. Compared with 1.5.5, the 1.
 registry no longer exposes `icu_collate_fy`, `icu_collate_lij`, `icu_collate_nso`,
 `icu_collate_st`, or `icu_collate_tn`. Historical cross-engine hazard evidence retains
 the engine versions actually probed.
+
+## `data/<dialect>-keywords-<version>.tsv` — Trino, Doris and ClickHouse keywords
+
+Columns `word`, `category` (a `KeywordCategory` name) and `token` (the grammar token
+symbol, `\N` when not from a grammar), in the dump format above.
+`tools/generate_keywords.py` renders them into `GeneratedKeywords.kt`.
+
+| File | Source | Refresh |
+|---|---|---|
+| `trino-keywords-483.tsv` | trino-grammar 483: lexer tokens with a one-word literal; UNRESERVED when the parser's `nonReserved` rule can start with the token, else RESERVED. The capture checks the reserved set equals `io.trino.sql.ReservedIdentifiers` (313 keywords, 83 reserved) | bump `io.trino:trino-parser` in `tools/metadata-capture/module.yaml`, `./kotlin run -m metadata-capture -- trino-keywords` |
+| `doris-keywords-4.1.4.tsv` | the same reading of `vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar` | `./kotlin run -m metadata-capture -- doris-keywords` after refreshing the jar |
+| `clickhouse-keywords-26.5.1.1.tsv` | ClickHouse 26.5.1.1 `system.keywords` via `chdb` 4.2.1 with `chdb-core` 26.5.0 (`SELECT version()` = `26.5.1.1`), captured 2026-10-11. The table has no reservation column, so every category is UNKNOWN; many entries are phrases (`ADD COLUMN`) | see below |
+
+```bash
+python3 -c "import chdb; open('vendor/data/clickhouse-keywords-<ver>.tsv','w').write(str(chdb.query(
+  \"SELECT keyword AS word, 'UNKNOWN' AS category, NULL AS token FROM system.keywords ORDER BY keyword FORMAT TSVWithNames\")))"
+```
+
+Pin `chdb-core` explicitly: `chdb` 4.2.1 alone resolves a newer engine.
 
 ## `data/trino-functions-483.tsv`
 

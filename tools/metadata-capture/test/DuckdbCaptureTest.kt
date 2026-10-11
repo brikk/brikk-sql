@@ -1,10 +1,13 @@
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
+import dev.brikk.house.sql.metadata.DUCKDB_KEYWORDS
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
+import dev.brikk.house.sql.metadata.DuckdbCapture
 import dev.brikk.house.sql.metadata.DuckdbDump
 import dev.brikk.house.sql.metadata.toSnapshot
 import java.sql.DriverManager
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.test.Test
@@ -15,9 +18,15 @@ class DuckdbCaptureTest {
 
     private val vendorData = Path("../../vendor/data")
 
+    private val captures = listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS)
+
+    private fun <T> DuckdbCapture<T>.vendored(version: String): List<T>? =
+        vendorData.resolve("duckdb-$name-$version.tsv").takeIf { it.exists() }?.let { readDump(it).rows.map(::decode) }
+
     private fun vendoredDump(version: String) = DuckdbDump(
         engineVersion = version,
-        functions = readDump(vendorData.resolve("duckdb-functions-$version.tsv")).rows.map(DUCKDB_FUNCTIONS::decode),
+        functions = checkNotNull(DUCKDB_FUNCTIONS.vendored(version)),
+        keywords = DUCKDB_KEYWORDS.vendored(version),
     )
 
     @Test
@@ -28,6 +37,7 @@ class DuckdbCaptureTest {
         for (bundled in DUCKDB_METADATA.snapshots) {
             val vendored = vendoredDump(bundled.engineVersion).toSnapshot()
             assertEquals(vendored.functions.functions, bundled.functions.functions, bundled.engineVersion)
+            assertEquals(vendored.keywords?.keywords, bundled.keywords?.keywords, bundled.engineVersion)
         }
     }
 
@@ -35,7 +45,9 @@ class DuckdbCaptureTest {
     fun liveJdbcEngineEqualsTheVendoredDump() {
         DriverManager.getConnection("jdbc:duckdb:").use { connection ->
             val version = connection.engineVersion()
-            assertEquals(readDump(vendorData.resolve("duckdb-functions-$version.tsv")).rows, DUCKDB_FUNCTIONS.dump(connection).rows)
+            for (capture in captures) {
+                assertEquals(readDump(vendorData.resolve("duckdb-${capture.name}-$version.tsv")).rows, capture.dump(connection).rows, capture.name)
+            }
         }
     }
 

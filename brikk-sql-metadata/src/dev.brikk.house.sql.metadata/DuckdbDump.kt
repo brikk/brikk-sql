@@ -2,12 +2,14 @@ package dev.brikk.house.sql.metadata
 
 /**
  * The rows one DuckDB engine reports about itself, as captured by [DUCKDB_FUNCTIONS] and its
- * siblings. Bundled releases are generated from the vendored dumps; a live harvest builds one
- * from the user's engine. Either way the same functions below turn rows into metadata.
+ * siblings; null when not captured. Bundled releases are generated from the vendored dumps; a
+ * live harvest builds one from the user's engine. Either way [toSnapshot] turns rows into
+ * metadata.
  */
 class DuckdbDump(
     val engineVersion: String,
     val functions: List<DuckdbFunctionRow>,
+    val keywords: List<DuckdbKeywordRow>? = null,
 )
 
 /**
@@ -22,11 +24,21 @@ class DuckdbDump(
  *  - [FunctionOverload.argNames] are the row's parameter names (null when it lists none).
  *
  * Fails on a function type it does not know, so a new engine kind is mapped deliberately.
+ * A keyword category it does not know reads as [KeywordCategory.UNKNOWN].
  */
 fun DuckdbDump.toSnapshot(): MetadataSnapshot = MetadataSnapshot(
     engineVersion,
     FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS),
+    keywords = keywords?.let { rows -> KeywordCatalog(rows.map { KeywordDef(it.name, keywordCategory(it.category)) }) },
 )
+
+private fun keywordCategory(category: String): KeywordCategory = when (category) {
+    "reserved" -> KeywordCategory.RESERVED
+    "unreserved" -> KeywordCategory.UNRESERVED
+    "type_function" -> KeywordCategory.TYPE_FUNCTION
+    "column_name" -> KeywordCategory.COLUMN_NAME
+    else -> KeywordCategory.UNKNOWN
+}
 
 private fun functionDefs(rows: List<DuckdbFunctionRow>): List<FunctionDef> =
     rows.filter { it.type != PRAGMA && IDENTIFIER.matches(it.name) }
