@@ -36,7 +36,17 @@ class ParseErrorInfo(
     val highlight: String?,
     val endContext: String?,
     val intoExpression: String? = null,
-)
+) {
+    /**
+     * brikk-native: UTF-16 offsets of the offending token in the parsed SQL, [end] exclusive.
+     * Null when the error carries no token position. Unlike [line]/[col] (sqlglot: the token's
+     * end), these need no conversion to address the source.
+     */
+    var start: Int? = null
+        internal set
+    var end: Int? = null
+        internal set
+}
 
 // sqlglot: errors.ParseError
 class ParseError(

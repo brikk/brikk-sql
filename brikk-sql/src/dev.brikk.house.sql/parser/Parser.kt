@@ -1112,7 +1112,7 @@ open class Parser(
             token.exists -> token
             currToken.exists -> currToken
             prevToken.exists -> prevToken
-            else -> Token.string("")
+            else -> null
         }
         val error = parseError(message, errorToken)
 
@@ -1122,7 +1122,8 @@ open class Parser(
         return null
     }
 
-    private fun parseError(message: String, errorToken: Token): ParseError {
+    private fun parseError(message: String, token: Token?): ParseError {
+        val errorToken = token ?: Token.string("")
         val highlighted = highlightSql(
             sql = sql,
             positions = listOf(errorToken.start to errorToken.end),
@@ -1139,7 +1140,12 @@ open class Parser(
             startContext = highlighted.startContext,
             highlight = highlighted.highlight,
             endContext = highlighted.endContext,
-        )
+        ).also { error ->
+            if (token != null) error.errors.single().apply {
+                start = token.start
+                end = token.end + 1
+            }
+        }
     }
 
     private fun validateNesting(rawTokens: List<Token>) {
