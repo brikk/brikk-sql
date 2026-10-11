@@ -88,10 +88,10 @@ registry data produced by running the engine.
 
 ## DuckDB
 
-The generated `brikk-sql-metadata/.../GeneratedDuckdbFunctionCatalog.kt` contains the
-built-in function registry (names, signatures, kinds) extracted from
-[DuckDB](https://github.com/duckdb/duckdb) v1.5.6 via its own `duckdb_functions()` view
-(see vendor/README.md). No DuckDB code is included — only registry data produced by running
+The vendored `vendor/data/duckdb-*-<version>.tsv` captures and the generated
+`brikk-sql-metadata/.../GeneratedDuckdb_<version>.kt` contain registry data (functions,
+signatures, kinds) extracted from [DuckDB](https://github.com/duckdb/duckdb) v1.5.6 via its
+own system table functions (see vendor/README.md). No DuckDB code is included — only registry data produced by running
 the engine. DuckDB is licensed under the MIT License:
 
 ```

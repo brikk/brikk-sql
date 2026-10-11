@@ -6,6 +6,7 @@ modules:
   - brikk-sql-metadata
   - brikk-sql-oracle
   - brikk-sql-verify
+  - tools/metadata-capture
 
 plugins:
   - ./brikk-sql-intellij-tooling

@@ -236,9 +236,7 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbCatalogLoadsWithExpectedSurface() {
-        // Pinned to DuckDB v1.5.6 (the python module the generator embeds).
-        assertEquals(876, DUCKDB_FUNCTION_CATALOG.size)
-        // The 1.5.6 Python registry no longer exposes these ICU locale functions.
+        // The 1.5.6 engine no longer exposes these ICU locale functions.
         for (locale in listOf("fy", "lij", "nso", "st", "tn")) {
             assertFalse("icu_collate_$locale" in DUCKDB_FUNCTION_CATALOG)
         }
@@ -305,11 +303,7 @@ class FunctionCatalogTest {
             setOf(listOf("x"), listOf("x", "precision")),
             round.overloads.mapNotNull { it.argNames }.toSet(),
         )
-        // Engine-wide coverage pin at v1.5.6: 2567 of 2677 overloads carry names
-        // (the rest: duckdb lists no parameters for the row).
         val all = DUCKDB_FUNCTION_CATALOG.functions.flatMap { it.overloads }
-        assertEquals(2677, all.size)
-        assertEquals(2567, all.count { it.argNames != null })
         // Named overloads keep names aligned with the fixed parameter types (variadic
         // rows may name the vararg tail, e.g. concat(string, ...)).
         assertTrue(

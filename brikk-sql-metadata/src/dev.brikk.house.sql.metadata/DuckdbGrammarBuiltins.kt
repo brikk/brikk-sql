@@ -4,8 +4,8 @@ package dev.brikk.house.sql.metadata
  * HANDWRITTEN (not generated): engine-GRAMMAR knowledge for DuckDB — names the
  * (Postgres-derived) parser accepts as function-shaped calls that duckdb_functions()
  * does NOT list (they become dedicated expression nodes at parse time, so they never
- * enter the registry that generates GeneratedDuckdbFunctionCatalog.kt).
- * tools/generate_duckdb_functions.py wires this set into the generated FunctionCatalog
+ * enter the registry captured in vendor/data/duckdb-functions-<version>.tsv).
+ * DuckdbDump.functionCatalog() wires this set into every DuckDB FunctionCatalog
  * constructor (grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS).
  *
  * Verified against the pinned engine (v1.5.6, python duckdb module): each name below

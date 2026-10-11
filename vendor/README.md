@@ -260,28 +260,39 @@ translated tree reads as unmatched, e.g. `NTH_VALUE` at the pinned SHA).
 | Coverage | 650 of 728 defs matched; 1 documented only in the live/unreleased tree (`undocumented_in_release`, no shipped version yet); 77 unmatched anywhere (mostly internal/legacy/undocumented functions — MySQL interval-literal helpers, internal aggregate-rewrite targets, debug/admin functions) |
 | Refresh | `git clone --depth 1 https://github.com/apache/doris-website <path>` then `python3 tools/extract_doris_since_versions.py <path>` then `python3 tools/generate_doris_functions.py` |
 
-## DuckDB function registry (extracted data, not a binary)
+## `data/duckdb-*-<version>.tsv` — DuckDB engine captures
 
-The DuckDB catalog (`brikk-sql-metadata/.../GeneratedDuckdbFunctionCatalog.kt`) is generated
-by `tools/generate_duckdb_functions.py` from the embedded engine itself: the python `duckdb`
-module's `duckdb_functions()` view — the engine's own resolved registry, with per-overload
-signatures, varargs, and parameter names (`parameters` → `FunctionOverload.argNames`,
-verbatim — the only engine catalog that exposes names) included for free. `duckdb_functions()`
-has **no null-handling column** (checked v1.5.6: `has_side_effects` and `stability` are the
-only behavioral flags), so `FunctionDef.profile` stays null for every DuckDB def. Pinned to
-the python module version at generation time (currently **v1.5.6**, source ID
-`069cc9f9b5`, refreshed 2026-10-04). The generator requires its explicit
-`DUCKDB_VERSION` pin and refuses module/engine disagreement. The native verifier
-uses the matching `org.duckdb:duckdb_jdbc:1.5.6.0`. Refresh: update that dependency
-and the generator pin, install the pinned Python version in an isolated environment, and rerun
-`tools/generate_duckdb_functions.py`. DuckDB is MIT licensed (see ATTRIBUTIONS.md).
+DuckDB describes itself through system table functions. The JDBC capture tool
+(`tools/metadata-capture`, run with `./kotlin run -m metadata-capture -- duckdb` from the
+project root) runs the capture queries against the in-process `org.duckdb:duckdb_jdbc`
+engine on its classpath and writes one file per capture, named by the engine's
+`library_version`:
 
-The current catalog contains **876 definitions / 2,677 overloads**, with parameter
-names on 2,567 overloads. Compared with the 1.5.5 catalog, the 1.5.6 registry no
-longer exposes `icu_collate_fy`, `icu_collate_lij`, `icu_collate_nso`,
-`icu_collate_st`, or `icu_collate_tn`; all other modeled signatures are unchanged.
-The live JDBC version/source-ID regression also checks these removals. Historical
-cross-engine hazard evidence retains the engine versions actually probed.
+| File | Query |
+|---|---|
+| `duckdb-functions-<version>.tsv` | `duckdb_functions()`: every row, including pragma and operator rows, with return and parameter types, parameter names, varargs, alias, stability, description and examples |
+
+The queries, the row types and the row → metadata mapping are defined once, in Kotlin
+(`brikk-sql-metadata/.../DuckdbCapture.kt`, `DuckdbDump.kt`); a live harvest in the IDE
+plugins uses the same definitions. `tools/generate_duckdb_functions.py` only renders the
+rows of every vendored version into `GeneratedDuckdb_<version>.kt`, so a new release is a
+data drop. Format: a header of column names, then tab-separated rows; `\N` is NULL and
+`\\`, `\t`, `\n`, `\r` escape values; list columns are JSON arrays.
+
+| | |
+|---|---|
+| Version | **1.5.6**, source ID `069cc9f9b5` (`org.duckdb:duckdb_jdbc:1.5.6.0`, the same engine as the native verifier) |
+| Captured | 2026-10-11 |
+| License | MIT (extracted registry data; see ATTRIBUTIONS.md) |
+| Refresh | bump the `duckdb_jdbc` coordinate in `tools/metadata-capture/module.yaml`, run the capture, then `python3 tools/generate_duckdb_functions.py` |
+
+`duckdb_functions()` has **no null-handling column** (`has_side_effects` and `stability`
+are the only behavioral flags), so `FunctionDef.profile` stays null for every DuckDB def.
+The JDBC capture has no Python-client functions (`pandas_scan`, `python_map_function`),
+which the earlier Python-module generator picked up. Compared with 1.5.5, the 1.5.6
+registry no longer exposes `icu_collate_fy`, `icu_collate_lij`, `icu_collate_nso`,
+`icu_collate_st`, or `icu_collate_tn`. Historical cross-engine hazard evidence retains
+the engine versions actually probed.
 
 ## `data/trino-functions-483.tsv`
 

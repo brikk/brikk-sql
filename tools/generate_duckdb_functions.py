@@ -1,61 +1,39 @@
 #!/usr/bin/env python3
-"""Generates the DuckDB built-in function catalog for brikk-sql-metadata.
+"""Generates the bundled DuckDB dumps for brikk-sql-metadata from the vendored captures.
 
-Source of truth: the EMBEDDED DuckDB engine itself, via the python `duckdb` module —
-`duckdb_functions()` is the engine's own resolved registry (names, kinds, per-overload
-parameter/return types, varargs), so signatures come for free. PIN: the python module
-version is embedded in the generated header; regenerate after bumping the module to
-track a new engine version.
+Source of truth: vendor/data/duckdb-<capture>-<version>.tsv, written by the JDBC capture
+tool (`./kotlin run -m metadata-capture -- duckdb`) from the engine's own system table
+functions. The capture queries, the row types and the row -> metadata mapping are defined
+once, in Kotlin, in brikk-sql-metadata/.../DuckdbCapture.kt and DuckdbDump.kt; a live
+harvest uses the same definitions. This script only reads the dump file format and renders
+each row as a Kotlin literal, so it makes no modeling decisions of its own.
 
-Modeling decisions (documented in the generated header too):
-  - kinds: scalar->SCALAR, aggregate->AGGREGATE, table->TABLE_VALUED,
-    macro->SCALAR + nativeKind="macro", table_macro->TABLE_VALUED + nativeKind="table_macro",
-    pragma->SKIPPED (PRAGMA statements surfaced as functions, not callable in queries).
-  - one FunctionDef per (name, kind): 13 names (range, generate_series, repeat, ...)
-    are registered under two kinds and get one def per kind.
-  - operator rows (`%`, `||`, `~~`, ...) are skipped: they are grammar-level operators,
-    not identifier-callable functions.
-  - aliases are NOT folded: duckdb lists every alias (see alias_of) as a full row set of
-    its own, so each name gets its own def; FunctionDef.aliases stays empty.
-  - NULL types (macro params/returns, table-function returns) are emitted as "ANY".
-  - variadic = (varargs IS NOT NULL); the vararg element type itself is not captured by
-    the overload model — argTypes list only the fixed parameters.
-  - argNames: duckdb_functions().parameters gives per-overload parameter names, captured
-    verbatim into FunctionOverload.argNames (names differ across overloads of the same
-    function — round(x) vs round(x, precision) — hence the per-overload home; generic
-    col0/col1 names and lambda shapes like `lambda(x)` are kept as-is). Rows without
-    names yield argNames=null.
-  - FunctionDef.profile stays null: duckdb_functions() exposes NO null-propagation
-    column (v1.5.6 columns checked: has_side_effects and stability are the only
-    behavioral flags, neither describes NULL handling) — honest UNKNOWN.
+One generated file per captured version (GeneratedDuckdb_<version>.kt, `internal val
+DUCKDB_<version>_DUMP`) plus GeneratedDuckdbDumps.kt listing them all: a new engine release
+is a data drop (capture, then re-run this script).
+
+Dump format: a header of column names, then tab-separated rows; `\\N` is NULL and `\\\\`,
+`\\t`, `\\n`, `\\r` escape values. List columns hold JSON arrays.
 
 Usage: python3 tools/generate_duckdb_functions.py
 """
 
 from __future__ import annotations
 
+import json
 import pathlib
 import re
-import sys
-
-import duckdb
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUT = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedDuckdbFunctionCatalog.kt"
-DUCKDB_VERSION = "1.5.6"
+DATA = ROOT / "vendor" / "data"
+OUT_DIR = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata"
 
-IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+DUMP_NAME = re.compile(r"^duckdb-functions-(\d+\.\d+\.\d+)\.tsv$")
+ESCAPES = {"\\": "\\", "t": "\t", "n": "\n", "r": "\r"}
 
-# duckdb function_type -> (FunctionKind, nativeKind-or-None); pragma is skipped.
-KIND_MAP = {
-    "scalar": ("SCALAR", None),
-    "aggregate": ("AGGREGATE", None),
-    "table": ("TABLE_VALUED", None),
-    "macro": ("SCALAR", "macro"),
-    "table_macro": ("TABLE_VALUED", "table_macro"),
-}
-
-KIND_ORDER = ["SCALAR", "AGGREGATE", "WINDOW", "TABLE_VALUED", "TABLE_GENERATING"]
+# Literal slots (strings + constructor calls) per chunk function, keeping each generated
+# method far below the JVM's 64KB method-size limit.
+CHUNK_BUDGET = 2500
 
 
 def kstr(s: str) -> str:
@@ -63,139 +41,110 @@ def kstr(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("$", "\\$") + '"'
 
 
-def main() -> None:
-    if duckdb.__version__ != DUCKDB_VERSION:
-        sys.exit(f"error: install duckdb=={DUCKDB_VERSION}; found {duckdb.__version__}")
-    con = duckdb.connect()
-    version_row = con.sql("SELECT library_version, source_id FROM pragma_version()").fetchone()
-    assert version_row is not None
-    (lib_version, source_id) = version_row
-    if f"v{duckdb.__version__}" != lib_version:
-        sys.exit(f"error: python module {duckdb.__version__} != engine {lib_version}")
+def knullable(s: str | None) -> str:
+    return "null" if s is None else kstr(s)
 
-    rows = con.sql(
-        """
-        SELECT function_name, function_type, return_type, parameter_types, varargs, parameters
-        FROM duckdb_functions()
-        ORDER BY function_name, function_type
-        """
-    ).fetchall()
 
-    # (name, kind) -> set of (argTypes tuple, returnType, variadic); natives tracks the
-    # engine-native function_type strings feeding each group (a few names, e.g.
-    # current_database, are registered as BOTH scalar and macro — nativeKind is only set
-    # when every engine row in the group is a macro/table_macro). arg_names maps each
-    # deduped overload to its parameter names (verified: no two engine rows share an
-    # overload key with different names — enforced below so a future engine bump can't
-    # silently mis-attach names).
-    defs: dict[tuple[str, str], set[tuple[tuple[str, ...], str, bool]]] = {}
-    natives: dict[tuple[str, str], set[str | None]] = {}
-    arg_names: dict[tuple[str, str, tuple[str, ...], str, bool], tuple[str, ...] | None] = {}
-    skipped_pragma = 0
-    skipped_ops = 0
-    named_overloads = 0
-    for name, ftype, ret, param_types, varargs, parameters in rows:
-        if ftype == "pragma":
-            skipped_pragma += 1
-            continue
-        if not IDENT.match(name):
-            skipped_ops += 1
-            continue
-        kind, native = KIND_MAP[ftype]
-        arg_types = tuple((t or "ANY") for t in (param_types or []))
-        overload = (arg_types, ret or "ANY", varargs is not None)
-        names = tuple(parameters) if parameters else None
-        key = (name, kind, *overload)
-        if key in arg_names and arg_names[key] != names:
-            sys.exit(f"error: conflicting parameter names for {key}: "
-                     f"{arg_names[key]} vs {names} — pick a rule before regenerating")
-        arg_names[key] = names
-        defs.setdefault((name, kind), set()).add(overload)
-        natives.setdefault((name, kind), set()).add(native)
+def klist(values: list[str | None]) -> str:
+    return "listOf(" + ", ".join(knullable(v) for v in values) + ")" if values else "emptyList()"
 
-    total_overloads = sum(len(v) for v in defs.values())
-    by_kind: dict[str, int] = {k: 0 for k in KIND_ORDER}
-    for (_, kind) in defs:
-        by_kind[kind] += 1
 
-    lines = [
-        "// GENERATED FILE — DO NOT EDIT.",
-        f"// Generated by tools/generate_duckdb_functions.py from the embedded DuckDB engine",
-        f"// {lib_version} ({source_id}) via the python duckdb module (pinned {duckdb.__version__}):",
-        "// duckdb_functions() — the engine's own resolved registry, signatures included.",
-        "// DuckDB is MIT licensed. See ATTRIBUTIONS.md and vendor/README.md.",
-        "//",
-        "// Modeling notes:",
-        "//  - kinds normalized to FunctionKind; engine-native 'macro'/'table_macro' preserved",
-        "//    in FunctionDef.nativeKind (normalized to SCALAR/TABLE_VALUED).",
-        "//  - function_type='pragma' rows are skipped (PRAGMA surface, not query-callable).",
-        "//  - operator rows (%, ||, ~~, ...) are skipped (grammar-level, not identifiers).",
-        "//    Function-SHAPED grammar-level names (COALESCE, GROUPING, ...) are carried by",
-        "//    the handwritten DuckdbGrammarBuiltins.kt and wired in via grammarBuiltins below.",
-        "//  - a name registered under two engine kinds (range, generate_series, ...) yields",
-        "//    one def per kind.",
-        "//  - NULL parameter/return types (macros, table functions) are emitted as \"ANY\".",
-        "//  - variadic=true mirrors duckdb's varargs; argTypes list only the fixed parameters.",
-        "package dev.brikk.house.sql.metadata",
-        "",
-        f"/** DuckDB {lib_version} built-in functions: {len(defs)} definitions, {total_overloads} overloads. */",
-    ]
+def unescape(value: str) -> str | None:
+    if value == "\\N":
+        return None
+    out, chars = [], iter(value)
+    for c in chars:
+        out.append(ESCAPES[next(chars)] if c == "\\" else c)
+    return "".join(out)
 
-    # One block per FunctionDef: (lines, constructor-count). Emitted as chunked private
-    # functions — a single top-level initializer would exceed the JVM's 64KB method limit.
-    blocks: list[tuple[list[str], int]] = []
-    for kind in KIND_ORDER:
-        entries = sorted((k, v) for k, v in defs.items() if k[1] == kind)
-        if not entries:
-            continue
-        first_of_kind = True
-        for (name, _), overloads in entries:
-            block: list[str] = []
-            if first_of_kind:
-                block.append(f"    // {kind.lower()} ({len(entries)})")
-                first_of_kind = False
-            group_natives = natives[(name, kind)]
-            native = next(iter(group_natives)) if group_natives in ({"macro"}, {"table_macro"}) else None
-            block.append(f'    FunctionDef("{name}", FunctionKind.{kind}, overloads = listOf(')
-            for arg_types, ret, variadic in sorted(overloads):
-                args = ", ".join(kstr(t) for t in arg_types)
-                suffix = ", variadic = true" if variadic else ""
-                names = arg_names[(name, kind, arg_types, ret, variadic)]
-                if names:
-                    named_overloads += 1
-                    suffix += ", argNames = listOf(" + ", ".join(kstr(n) for n in names) + ")"
-                block.append(f'        FunctionOverload(listOf({args}), {kstr(ret)}{suffix}),')
-            block.append(f'    ), nativeKind = "{native}"),' if native else "    )),")
-            blocks.append((block, 1 + len(overloads)))
 
-    CHUNK_BUDGET = 400  # constructors per chunk function (JVM method-size headroom)
+def read_dump(path: pathlib.Path) -> list[dict[str, str | None]]:
+    header, *lines = path.read_text().split("\n")[:-1]
+    columns = header.split("\t")
+    rows = []
+    for line in lines:
+        values = [unescape(v) for v in line.split("\t")]
+        assert len(values) == len(columns), f"{path}: {values}"
+        rows.append(dict(zip(columns, values)))
+    return rows
+
+
+def json_list(value: str | None) -> list[str | None]:
+    return json.loads(value) if value is not None else []
+
+
+def function_row(r: dict[str, str | None]) -> tuple[str, int]:
+    types, params = json_list(r["parameter_types"]), json_list(r["parameters"])
+    literal = (
+        f"DuckdbFunctionRow({kstr(r['function_name'])}, {kstr(r['function_type'])}, "
+        f"{knullable(r['return_type'])}, {klist(types)}, {klist(params)}, {knullable(r['varargs'])})"
+    )
+    return literal, 4 + len(types) + len(params)
+
+
+def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tuple[str, list[str]]:
+    """A `chunk() + chunk() ...` expression plus the private chunk functions it calls."""
     chunks: list[list[str]] = [[]]
     budget = 0
-    for block, cost in blocks:
+    for literal, cost in literals:
         if budget + cost > CHUNK_BUDGET and chunks[-1]:
             chunks.append([])
             budget = 0
-        chunks[-1].extend(block)
+        chunks[-1].append(literal)
         budget += cost
-
-    lines.append("val DUCKDB_FUNCTION_CATALOG: FunctionCatalog = FunctionCatalog(")
-    lines.append("    " + " + ".join(f"chunk{i}()" for i in range(len(chunks))) + ",")
-    # Grammar-level function-shaped names (parser special forms absent from
-    # duckdb_functions()) live in the handwritten, engine-verified DuckdbGrammarBuiltins.kt.
-    lines.append("    grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS,")
-    lines.append(")")
+    functions = []
     for i, chunk in enumerate(chunks):
-        lines.append("")
-        lines.append(f"private fun chunk{i}(): List<FunctionDef> = listOf(")
-        lines.extend(chunk)
-        lines.append(")")
-    OUT.write_text("\n".join(lines) + "\n")
-    print(
-        f"wrote {len(defs)} defs / {total_overloads} overloads from DuckDB {lib_version} -> {OUT}\n"
-        f"  per kind: {[f'{k}={v}' for k, v in by_kind.items() if v]}\n"
-        f"  argNames on {named_overloads}/{total_overloads} overloads (rest: engine lists no parameters)\n"
-        f"  skipped: {skipped_pragma} pragma rows, {skipped_ops} operator rows"
+        functions.append("")
+        functions.append(f"private fun {name}{i}(): List<{element_type}> = listOf(")
+        functions.extend(f"    {literal}," for literal in chunk)
+        functions.append(")")
+    return " + ".join(f"{name}{i}()" for i in range(len(chunks))), functions
+
+
+def generate(version: str) -> str:
+    ident = version.replace(".", "_")
+    functions = read_dump(DATA / f"duckdb-functions-{version}.tsv")
+    expression, chunk_functions = chunked("functions", "DuckdbFunctionRow", [function_row(r) for r in functions])
+    lines = [
+        "// GENERATED FILE — DO NOT EDIT.",
+        "// Generated by tools/generate_duckdb_functions.py from the DuckDB JDBC capture",
+        f"// vendor/data/duckdb-functions-{version}.tsv. Rows are verbatim; DuckdbDump.kt maps them.",
+        "// DuckDB is MIT licensed. See ATTRIBUTIONS.md and vendor/README.md.",
+        "package dev.brikk.house.sql.metadata",
+        "",
+        f"/** DuckDB {version}: {len(functions)} duckdb_functions() rows. */",
+        f"internal val DUCKDB_{ident}_DUMP: DuckdbDump = DuckdbDump(",
+        f"    engineVersion = {kstr(version)},",
+        f"    functions = {expression},",
+        ")",
+        *chunk_functions,
+    ]
+    out = OUT_DIR / f"GeneratedDuckdb_{ident}.kt"
+    out.write_text("\n".join(lines) + "\n")
+    print(f"wrote {len(functions)} function rows from DuckDB {version} -> {out}")
+    return f"DUCKDB_{ident}_DUMP"
+
+
+def version_key(version: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in version.split("."))
+
+
+def main() -> None:
+    versions = sorted(
+        (m.group(1) for p in DATA.iterdir() if (m := DUMP_NAME.match(p.name))),
+        key=version_key,
     )
+    dumps = [generate(v) for v in versions]
+    index = OUT_DIR / "GeneratedDuckdbDumps.kt"
+    index.write_text("\n".join([
+        "// GENERATED FILE — DO NOT EDIT.",
+        "// Generated by tools/generate_duckdb_functions.py: every vendored DuckDB capture, oldest first.",
+        "package dev.brikk.house.sql.metadata",
+        "",
+        f"internal val DUCKDB_DUMPS: List<DuckdbDump> = listOf({', '.join(dumps)})",
+        "",
+    ]))
+    print(f"wrote {len(dumps)} dump(s) -> {index}")
 
 
 if __name__ == "__main__":
