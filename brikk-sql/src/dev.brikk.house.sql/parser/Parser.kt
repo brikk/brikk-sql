@@ -1132,20 +1132,21 @@ open class Parser(
         val formattedMessage =
             "$message. Line ${errorToken.line}, Col: ${errorToken.col}.\n  ${highlighted.formattedSql}"
 
-        return ParseError.new(
+        return ParseError(
             formattedMessage,
-            description = message,
-            line = errorToken.line,
-            col = errorToken.col,
-            startContext = highlighted.startContext,
-            highlight = highlighted.highlight,
-            endContext = highlighted.endContext,
-        ).also { error ->
-            if (token != null) error.errors.single().apply {
-                start = token.start
-                end = token.end + 1
-            }
-        }
+            listOf(
+                ParseErrorInfo(
+                    description = message,
+                    line = errorToken.line,
+                    col = errorToken.col,
+                    startContext = highlighted.startContext,
+                    highlight = highlighted.highlight,
+                    endContext = highlighted.endContext,
+                    start = token?.start,
+                    end = token?.let { it.end + 1 },
+                )
+            ),
+        )
     }
 
     private fun validateNesting(rawTokens: List<Token>) {

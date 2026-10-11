@@ -27,6 +27,10 @@ enum class ErrorLevel {
 /**
  * sqlglot: errors.ParseError.errors items (Python uses plain dicts; a typed class is the
  * Kotlin analog). All fields nullable, mirroring the dict values.
+ *
+ * brikk-native: [start]/[end] are UTF-16 offsets of the offending token in the parsed SQL,
+ * [end] exclusive, or null when the error carries no token position. Unlike [line]/[col]
+ * (sqlglot: the token's end), they need no conversion to address the source.
  */
 class ParseErrorInfo(
     val description: String?,
@@ -36,17 +40,9 @@ class ParseErrorInfo(
     val highlight: String?,
     val endContext: String?,
     val intoExpression: String? = null,
-) {
-    /**
-     * brikk-native: UTF-16 offsets of the offending token in the parsed SQL, [end] exclusive.
-     * Null when the error carries no token position. Unlike [line]/[col] (sqlglot: the token's
-     * end), these need no conversion to address the source.
-     */
-    var start: Int? = null
-        internal set
-    var end: Int? = null
-        internal set
-}
+    val start: Int? = null,
+    val end: Int? = null,
+)
 
 // sqlglot: errors.ParseError
 class ParseError(
