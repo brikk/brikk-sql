@@ -2,6 +2,7 @@ package dev.brikk.house.sql.metadata
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -28,6 +29,8 @@ class KeywordCatalogTest {
         val duckdb = keywords(DUCKDB_METADATA)
 
         assertEquals(KeywordCategory.RESERVED, duckdb["select"]?.category)
+        assertTrue(duckdb.isReserved("SELECT"))
+        assertFalse(duckdb.isReserved("ABORT"))
         assertEquals(KeywordCategory.UNRESERVED, duckdb["abort"]?.category)
         assertEquals(KeywordCategory.TYPE_FUNCTION, duckdb["left"]?.category)
         assertEquals(KeywordCategory.COLUMN_NAME, duckdb["between"]?.category)
