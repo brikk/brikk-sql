@@ -114,6 +114,10 @@ data class SemanticProfile(
  * order; null when the engine does not expose names (Doris SIGNATURES, Trino SHOW
  * FUNCTIONS, and some DuckDB rows). Names are verbatim from the engine — DuckDB includes
  * generic ones (col0, col1) and lambda shapes (`lambda(x)`).
+ *
+ * [positionalCount], when set, says only the first that many arguments are positional; the
+ * rest are optional named parameters (DuckDB `read_csv('f.csv', header := true)`). Null when
+ * every argument is positional or the engine does not say.
  */
 @Serializable
 data class FunctionOverload(
@@ -121,6 +125,7 @@ data class FunctionOverload(
     @SerialName("return_type") val returnType: String,
     val variadic: Boolean = false,
     @SerialName("arg_names") val argNames: List<String>? = null,
+    @SerialName("positional_count") val positionalCount: Int? = null,
 )
 
 /**

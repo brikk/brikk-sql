@@ -25,6 +25,9 @@ class DuckdbDump(
  *  - NULL parameter and return types read as "ANY"; `variadic` mirrors `varargs`, and
  *    [FunctionOverload.argTypes] lists only the fixed parameters.
  *  - [FunctionOverload.argNames] are the row's parameter names (null when it lists none).
+ *  - a `table` function lists its positional arguments as `col0`, `col1`, ... and then its
+ *    named parameters, so [FunctionOverload.positionalCount] counts the leading `colN` names
+ *    when named parameters follow.
  *
  * Fails on a function type it does not know, so a new engine kind is mapped deliberately.
  *
@@ -106,6 +109,9 @@ private fun DuckdbFunctionRow.overload() = FunctionOverload(
     returnType = returnType ?: ANY,
     variadic = varargs != null,
     argNames = parameters.ifEmpty { null },
+    positionalCount = parameters.takeIf { type == "table" }
+        ?.takeWhile(POSITIONAL_NAME::matches)?.size
+        ?.takeIf { it < parameters.size },
 )
 
 private val OVERLOAD_ORDER: Comparator<FunctionOverload> =
@@ -118,4 +124,5 @@ private fun compareLists(a: List<String>, b: List<String>): Int =
 
 private const val PRAGMA = "pragma"
 private const val ANY = "ANY"
+private val POSITIONAL_NAME = Regex("col[0-9]+")
 private val IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
