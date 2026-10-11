@@ -4025,8 +4025,11 @@ open class Generator(
         var onCluster = sql(expression, "cluster")
         if (onCluster.isNotEmpty()) onCluster = " $onCluster"
         val only = if (expression.args["only"] == true) " ONLY" else ""
-        var options = expressions(expression, key = "options")
-        if (options.isNotEmpty()) options = ", $options"
+        val allOptions = (expression.args["options"] as? List<*>)?.filterIsInstance<Expression>().orEmpty()
+        var options = allOptions.filter { it::class !in alterPartitionOptions }.joinToString(", ") { sql(it) }
+        if (options.isNotEmpty() && actionsSql.isNotEmpty()) options = ", $options"
+        var partitions = allOptions.filter { it::class in alterPartitionOptions }.joinToString(" ") { sql(it) }
+        if (partitions.isNotEmpty() && (actionsSql.isNotEmpty() || options.isNotEmpty())) partitions = " $partitions"
         val kind = sql(expression, "kind")
         val notValid = if (expression.args["not_valid"] == true) " NOT VALID" else ""
         val check = if (expression.args["check"] == true) " WITH CHECK" else ""
@@ -4035,8 +4038,10 @@ open class Generator(
         var thisSql = sql(expression, "this")
         if (thisSql.isNotEmpty()) thisSql = " $thisSql"
 
-        return "ALTER $iceberg$kind$exists$only$thisSql$onCluster$check${sep()}$actionsSql$notValid$options$cascade"
+        return "ALTER $iceberg$kind$exists$only$thisSql$onCluster$check${sep()}$actionsSql$notValid$options$partitions$cascade"
     }
+
+    open val alterPartitionOptions: Set<KClass<out Expression>> get() = emptySet()
 
     // sqlglot: Generator.add_column_sql
     open fun addColumnSql(expression: Expression): String {

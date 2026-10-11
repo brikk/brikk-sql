@@ -84,6 +84,8 @@ open class MysqlGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.MYSQL
+    override val alterPartitionOptions: Set<KClass<out Expression>>
+        get() = setOf(PartitionByListProperty::class, PartitionByRangeProperty::class)
 
     // ------------------------------------------------------------------
     // Flags (sqlglot: MySQLGenerator class attributes)

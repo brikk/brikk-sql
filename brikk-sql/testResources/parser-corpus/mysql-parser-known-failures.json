@@ -1,4 +1,26 @@
 {
     "sqlglot_version": "v30.18.0-43-g3ca82489",
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:3447270e8d73a1d5a95e55db6425321d0e4ca51ef9ad6d982cbcfad18bd0108a:1",
+            "sql": "ALTER TABLE t AUTO_INCREMENT=3000000000",
+            "signature": "ast-mismatch:v1:sha256:cf0f77f048c8f30f8bde9838495969144c57c58db008b98c1dac9c8f9f2c8f55",
+            "reason": "MYSQL-01 dependency #8539: reviewed full option-only ALTER moves AUTO_INCREMENT from actions to options without changing its value. Matches frozen target/native MySQL. Remove on coherent refresh.",
+            "issue": "MYSQL-01 / sqlglot#8539", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:d30707539746746c709c10b92ad9fd66f61535bae7138ea47fde6b9401fc5319:1",
+            "sql": "ALTER TABLE t COMMENT='hi'",
+            "signature": "ast-mismatch:v1:sha256:20a889cd028de1d79e5bf0927cbcb0adcd7aba001885660e0df247e587b1f192",
+            "reason": "MYSQL-01 dependency #8539: reviewed COMMENT moves from actions to options; value and rendering unchanged. Matches frozen target/native MySQL. Remove on coherent refresh.",
+            "issue": "MYSQL-01 / sqlglot#8539", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:1a77c5e2ea9d01bc814c0f1bc22819df320b2cf032af347aa9be52d03f8583a5:1",
+            "sql": "ALTER TABLE t COMMENT 'hi'",
+            "signature": "ast-mismatch:v1:sha256:20a889cd028de1d79e5bf0927cbcb0adcd7aba001885660e0df247e587b1f192",
+            "reason": "MYSQL-01 dependency #8539: reviewed COMMENT moves from actions to options; value and rendering unchanged. Matches frozen target/native MySQL. Remove on coherent refresh.",
+            "issue": "MYSQL-01 / sqlglot#8539", "status": "oracle-pin-drift"
+        }
+    ]
 }

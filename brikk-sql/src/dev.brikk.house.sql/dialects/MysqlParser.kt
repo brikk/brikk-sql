@@ -310,6 +310,11 @@ open class MysqlParser(
         return super.parseColumnConstraint()
     }
 
+    override val alterTableMixedActions: Boolean get() = true
+    override val alterTableRequiresAction: Boolean get() = false
+    override val alterDropRequiresColumn: Boolean get() = false
+    override val addConstraintKeywords: Set<String> get() = setOf("FULLTEXT", "SPATIAL")
+
     // sqlglot: MySQLParser._parse_alter_drop_action
     override fun parseAlterDropAction(): Expression? {
         if (matchPair(TokenType.DROP, TokenType.PRIMARY_KEY)) {
@@ -1116,8 +1121,7 @@ object MysqlParserTables {
     val ALTER_PARSERS_EXTRA: Map<String, (Parser) -> kotlin.Any?> = mapOf(
         "CHANGE" to { p -> (p as MysqlParser).parseAlterTableModify(rename = true) },
         "MODIFY" to { p -> (p as MysqlParser).parseAlterTableModify() },
-        "AUTO_INCREMENT" to { p -> p.parsePropertyAssignment({ a -> AutoIncrementProperty(a) }) },
-        "COMMENT" to { p -> p.parsePropertyAssignment({ a -> SchemaCommentProperty(a) }) },
+        "FORCE" to { p -> p.expression(dev.brikk.house.sql.ast.ForceProperty()) },
     )
 
     // sqlglot: MySQLParser.ALTER_ALTER_PARSERS (extra entries over the base map)

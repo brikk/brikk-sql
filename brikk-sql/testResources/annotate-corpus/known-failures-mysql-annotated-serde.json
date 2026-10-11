@@ -1,3 +1,25 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:48d5f843c7cc4913e36742d3cf5c5e0af085716e5240ae7a6bc0649c5fd1974b:1",
+            "sql": "ALTER TABLE t AUTO_INCREMENT=3000000000",
+            "signature": "type-mismatch:v1:sha256:8fa7ff840563fc548af60a04cdc94dd124af87e27759676fec66caf0c4bbb3b1",
+            "reason": "MYSQL-01 dependency #8539: reviewed typed subtree retains AUTO_INCREMENT/value annotations under options instead of actions; serialized node order changes accordingly. Matches target/native MySQL; remove on refresh.",
+            "issue": "MYSQL-01 / sqlglot#8539", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:d323199e296225fd6aa917a8e79ebf1dcfdc18b0d1dd495383e1d051e25e5523:1",
+            "sql": "ALTER TABLE t COMMENT='hi'",
+            "signature": "type-mismatch:v1:sha256:093cde16e5f72dbefed1a71c886dac54d9f23e083ef0bd345bc228b0186f88fb",
+            "reason": "MYSQL-01 dependency #8539: reviewed COMMENT/value typed subtree moves under options instead of actions; no annotations dropped. Matches target/native MySQL; remove on refresh.",
+            "issue": "MYSQL-01 / sqlglot#8539", "status": "oracle-pin-drift"
+        },
+        {
+            "id": "assertion:v1:sha256:77e7d5e8165f54d559f693e2f398bf58bcdfe6616d5d654712c347b5bea2001f:1",
+            "sql": "ALTER TABLE t COMMENT 'hi'",
+            "signature": "type-mismatch:v1:sha256:093cde16e5f72dbefed1a71c886dac54d9f23e083ef0bd345bc228b0186f88fb",
+            "reason": "MYSQL-01 dependency #8539: reviewed COMMENT/value typed subtree moves under options instead of actions; no annotations dropped. Matches target/native MySQL; remove on refresh.",
+            "issue": "MYSQL-01 / sqlglot#8539", "status": "oracle-pin-drift"
+        }
+    ]
 }

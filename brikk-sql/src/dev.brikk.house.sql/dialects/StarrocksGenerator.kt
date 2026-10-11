@@ -51,6 +51,8 @@ open class StarrocksGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
+    override val alterPartitionOptions: Set<KClass<out Expression>>
+        get() = super.alterPartitionOptions + setOf(DistributedByProperty::class, PartitionedByProperty::class)
     override val castToIntRounds: Boolean get() = false
 
     // sqlglot: StarRocksGenerator.ignorenulls_sql (#8412), after the first argument.

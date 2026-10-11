@@ -232,6 +232,8 @@ open class PostgresParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.POSTGRES
+    override val alterTableMixedActions: Boolean get() = true
+    override val alterColumnTypeRequiresKeyword: Boolean get() = true
     override val normalizeNotNull: Boolean get() = false
 
     // sqlglot: PostgresParser.SUPPORTS_OMITTED_INTERVAL_SPAN_UNIT = True

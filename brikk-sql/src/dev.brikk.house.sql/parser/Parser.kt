@@ -456,6 +456,11 @@ open class Parser(
     // sqlglot: Parser.ALTER_TABLE_PARTITIONS (base: false — ALTER ... PARTITION(...) is
     // parsed as a table partition when true)
     open val alterTablePartitions: kotlin.Boolean get() = false
+    open val alterTableMixedActions: kotlin.Boolean get() = false
+    open val alterTableRequiresAction: kotlin.Boolean get() = true
+    open val alterDropRequiresColumn: kotlin.Boolean get() = true
+    open val alterColumnTypeRequiresKeyword: kotlin.Boolean get() = false
+    open val addConstraintKeywords: Set<String> get() = emptySet()
 
     // sqlglot: Dialect.ALTER_TABLE_SUPPORTS_CASCADE (base: false — trailing CASCADE on
     // ALTER TABLE ... is consumed into Alter.cascade when true)
@@ -1164,6 +1169,10 @@ open class Parser(
         if (errorLevel != ErrorLevel.IGNORE) {
             for ((key, required) in expression.argTypes) {
                 if (!required) continue
+                // Target Alter.actions is optional; keep the generated manifest
+                // at the shipped pin until coherent fixture regeneration.
+                if (expression is Alter && key == "actions" && !alterTableRequiresAction &&
+                    !(expression.args["options"] as? List<*>).isNullOrEmpty()) continue
                 val v = expression.args[key]
                 if (v == null || (v is List<*> && v.isEmpty())) {
                     raiseError("Required keyword: '$key' missing for ${expression::class.simpleName}")
@@ -5365,11 +5374,17 @@ open class Parser(
 
     // sqlglot: Parser._parse_drop_column
     protected fun parseDropColumn(): Expression? {
-        val drop = if (match(TokenType.DROP)) parseDrop() else null
-        if (drop != null && drop !is Command) {
-            drop.set("kind", drop.args["kind"] ?: "COLUMN")
+        if (!match(TokenType.DROP)) return null
+        var kind: String? = null
+        if (!alterDropRequiresColumn) {
+            val start = index
+            parseExists()
+            if (currToken.tokenType !in setOf(TokenType.COLUMN, TokenType.CONSTRAINT) &&
+                matchSet(idVarTokens) && (!currToken.exists || currToken.tokenType == TokenType.COMMA ||
+                    matchTexts(setOf("CASCADE", "RESTRICT"), advance = false))) kind = "COLUMN"
+            retreat(start)
         }
-        return drop
+        return parseDropWithKind(kind = kind)
     }
 
     // sqlglot: Parser._parse_alter_drop_action
@@ -5388,7 +5403,7 @@ open class Parser(
     fun parseAlterTableAdd(): List<Expression> {
         fun parseAddAlteration(): Expression? {
             matchTextSeq("ADD")
-            if (matchSet(addConstraintTokens, advance = false)) {
+            if (matchSet(addConstraintTokens, advance = false) || matchTexts(addConstraintKeywords, advance = false)) {
                 return expression(
                     AddConstraint(args("expressions" to parseCsv { parseConstraint() }))
                 )
@@ -5470,7 +5485,7 @@ open class Parser(
         }
 
         matchTextSeq("SET", "DATA")
-        matchTextSeq("TYPE")
+        if (!matchTextSeq("TYPE") && alterColumnTypeRequiresKeyword) return null
         return expression(
             alterColumn(
                 "this" to column,
@@ -5633,31 +5648,41 @@ open class Parser(
         val check = matchTextSeq("WITH", "CHECK")
         val cluster = if (match(TokenType.ON)) parseOnProperty() else null
 
-        if (nextToken.exists) advance()
-
-        val parser = if (prevToken.exists) alterParsers[prevToken.text.uppercase()] else null
-        if (parser != null) {
-            val actions: List<Expression> = when (val parsed = parser(this)) {
+        val parser = if (matchTexts(alterParsers.keys)) alterParsers[prevToken.text.uppercase()] else null
+        val options = mutableListOf<Expression>()
+        if (parser == null && alterToken.tokenType == TokenType.TABLE && !alterTableRequiresAction) {
+            options.addAll(tryParse({ parseProperties() })?.expressionsArg?.filterIsInstance<Expression>().orEmpty())
+        }
+        val actions = mutableListOf<Expression>()
+        if (parser != null) actions.addAll(when (val parsed = parser(this)) {
                 is Expression -> listOf(parsed)
                 is kotlin.collections.List<*> -> parsed.filterIsInstance<Expression>()
                 else -> emptyList()
+            })
+        if (actions.isNotEmpty() || options.isNotEmpty()) {
+            while (alterTableMixedActions && (match(TokenType.COMMA) || prevToken.tokenType == TokenType.COMMA)) {
+                if (!matchTexts(propertyParsers.keys, advance = false) && matchTexts(alterParsers.keys)) {
+                    val nextParser = alterParsers.getValue(prevToken.text.uppercase())
+                    val parsed = tryParse({ nextParser(this) })
+                    val nextActions = when (parsed) {
+                        is Expression -> listOf(parsed)
+                        is List<*> -> parsed.filterIsInstance<Expression>()
+                        else -> emptyList()
+                    }
+                    if (nextActions.isEmpty() || nextActions.any { it is Command }) return parseAsCommand(start)
+                    actions.addAll(nextActions)
+                } else {
+                    val properties = tryParse({ parseProperties() }) ?: break
+                    options.addAll(properties.expressionsArg.filterIsInstance<Expression>())
+                }
             }
             val notValid = matchTextSeq("NOT", "VALID")
-            val options = mutableListOf<Expression>()
-            while (true) {
-                val prop = parseProperty()
-                when (prop) {
-                    is Expression -> options.add(prop)
-                    is kotlin.collections.List<*> -> options.addAll(prop.filterIsInstance<Expression>())
-                    else -> break
-                }
-                if (!match(TokenType.COMMA)) break
-            }
+            options.addAll(tryParse({ parseProperties() })?.expressionsArg?.filterIsInstance<Expression>().orEmpty())
 
             // sqlglot: cascade = ALTER_TABLE_SUPPORTS_CASCADE and self._match_text_seq("CASCADE")
             val cascade = alterTableSupportsCascade && matchTextSeq("CASCADE")
 
-            if (!currToken.exists && actions.isNotEmpty()) {
+            if (!currToken.exists) {
                 return expression(
                     Alter(
                         args(
@@ -6304,13 +6329,15 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_drop
-    fun parseDrop(exists: kotlin.Boolean = false): Expression {
+    fun parseDrop(exists: kotlin.Boolean = false): Expression = parseDropWithKind(exists = exists)
+
+    fun parseDropWithKind(kind: String? = null, exists: kotlin.Boolean = false): Expression {
         val start = prevToken
         val temporary = match(TokenType.TEMPORARY)
         val materialized = matchTextSeq("MATERIALIZED")
         val iceberg = matchTextSeq("ICEBERG")
 
-        val kind = if (matchSet(creatables)) prevToken.text.uppercase() else null
+        val kind = kind ?: if (matchSet(creatables)) prevToken.text.uppercase() else null
         if (kind == null || (iceberg && kind != "TABLE")) {
             return parseAsCommand(start)
         }
@@ -7107,6 +7134,7 @@ open class Parser(
                 is Expression -> properties.add(prop)
                 is kotlin.collections.List<*> -> properties.addAll(prop.filterIsInstance<Expression>())
             }
+            match(TokenType.COMMA, expression = properties.lastOrNull())
         }
 
         if (properties.isNotEmpty()) {

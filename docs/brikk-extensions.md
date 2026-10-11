@@ -1579,6 +1579,19 @@ is unchanged (it is not a claim of ClickHouse's exact unsigned native widths).
 Enable live regressions with BRIKK_CHDB_TEST_PYTHON pointing to a Python containing
 chdb. No ledger or shipped fixture changes were needed.
 
+## 47. Shared ALTER dependencies for MySQL catch-up
+
+The #8419/#8539/#8565 prerequisites model mixed operations, options-only ALTERs
+and alternating actions/options; MySQL bare DROP and PostgreSQL TYPE requirements
+remain dialect-controlled. Options that require whitespace before partition clauses
+are separated from comma-separated options. Unknown trailing syntax retains the
+whole Command rather than silently truncating actions. Native MySQL 8.4.10 SHOW
+CREATE and PostgreSQL 18.4 column/type comparisons match original SQL. Six exact
+reviewed old-pin AST/type discrepancies move options from actions to options as
+at a00dc2e. Alter.actions optionality temporarily has a narrow parser validation
+overlay until its generated metadata/fixtures refresh together. Public parseDrop
+and its default bridge remain intact; new explicit-kind parsing is additive.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

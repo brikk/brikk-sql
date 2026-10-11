@@ -192,6 +192,11 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Audit common ALTER parsing dependencies as a separate sub-batch; do not expand scope
   to unsupported dialects. Native IF/DATE_ADD/DATE_SUB round-trip changes
   (`1a782c55a8`, #8409; `1d0e3f3486`, #8417) also need reconciliation.
+  Common ALTER prerequisite sub-batch verified: mixed operations (#8419), optional
+  actions (#8539), options/actions in any order (#8565), bare MySQL DROP (#8432),
+  keyword-column typing and partition option separation. Live MySQL/PostgreSQL
+  schemas match original SQL; unsupported tails stay whole Commands. Six exact
+  options-vs-actions pin-drift rows await refresh. MySQL-specific items still open.
 - [ ] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
   (`a00dc2e5c4`, #8579); path/scalar/default/error/null behavior and target grammar.
 
@@ -203,6 +208,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   before retiring StringEscapeProfiles overlays; retain TokenizerConfig's old ABI.
   Regenerate Array.argTypes with value_constructor and expand sparse false defaults
   only with the corresponding target behavioral fixtures.
+  Refresh Alter.actions optionality and remove its narrow parser validation overlay
+  only with target AST metadata and corresponding options-only ALTER fixtures.
 - [ ] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
   Bump `FixturePinSyncTest.SQLGLOT_PIN` only with a coherent fixture refresh;
   leave the shipped pin unchanged while individual ports are under review.
@@ -294,3 +301,5 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   pass with Trino gates enabled (eleven optional skips). Shipped pin unchanged.
 - Eleventh batch (CH-01): build, 1,240 Kotlin tests and 16 offline release tests
   pass with calendar chDB and Trino gates enabled (eleven other optional skips).
+- MySQL prerequisite sub-batch: build, 1,251 Kotlin tests and 16 offline release
+  tests pass with MySQL/PostgreSQL/Trino/calendar probes enabled (four optional skips).
