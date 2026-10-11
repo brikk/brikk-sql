@@ -27,15 +27,15 @@ coordinates. They emit Java 21-compatible bytecode. Verification modules require
 JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest core/metadata release: **`0.19.0`**. Verify/oracle remain at **`0.18.1`**;
-they were not republished by the scoped IDE release. SQL IntelliJ support is
-**`0.1.0`**. Current core development snapshot: **`0.19.0-SNAPSHOT`**.
+Latest core, metadata, verify and oracle release: **`0.19.0`**. SQL IntelliJ
+support is independently versioned at **`0.1.0`**. Current core development
+snapshot: **`0.19.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
     implementation("dev.brikk.house:brikk-sql-jvm:0.19.0")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.18.1")
+    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.19.0")
 }
 ```
 
@@ -75,6 +75,8 @@ See the [CAST research report](docs/research/REPORT-duckdb-doris-cast-coverage-2
 ranges and zero-argument `rows()` relation slots. The independently published
 IntelliJ support 0.1.0 uses platform types and callbacks, with no engine dependency.
 See [the release record](docs/intellij-support-0.1.0.md).
+The matching verify/oracle artifacts followed in a
+[separate scoped release](docs/verify-oracle-0.19.0.md).
 
 ## Build and test
 

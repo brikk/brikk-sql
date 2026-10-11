@@ -4,6 +4,10 @@ Published through the scoped workflow on 2026-10-11 UTC, from `a7af8fd` after
 the initial implementation commit `d073725`. All three artifacts are available
 directly from Maven Central. Verify/oracle were not part of this release.
 
+Follow-up: verify and oracle were subsequently published as 0.19.0 on the same
+UTC date. See [their release record](verify-oracle-0.19.0.md); all four SQL modules
+are now aligned at 0.19.0.
+
 | Artifact under dev.brikk.house | Version | SHA-256 of Central JAR |
 | --- | --- | --- |
 | brikk-sql-intellij-support | 0.1.0 | `21798b0c699dda59786d939ca51369c4417d1b724a524d823018fda9eb5ec833` |
