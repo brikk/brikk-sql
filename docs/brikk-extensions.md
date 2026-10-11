@@ -1712,16 +1712,23 @@ candidate evidence follows below.
 
 ### Final native and downstream candidate validation
 
-`DorisCatchupResultTest` runs the shared MySQL-family escape/comment, IF/CASE,
-DATE_ADD/SUB and generic-property paths against an actual cached Doris engine.
-The image `apache/doris:all-in-one-4.1.3`, ID `4f8ae854f4d2...`, reports
-`doris-4.1.3-rc02-7126cf65d96` in SHOW FRONTENDS/BACKENDS; VERSION() is only the
-MySQL wire-compatibility value `5.7.99`. Both native and generated statements agree
-on HEX values, dates, rows and SHOW CREATE output. MySQL's singular INSERT VALUE
-normalizes to VALUES before Doris execution; Doris itself rejects singular VALUE.
-Enable this optional gate with `BRIKK_DORIS_TEST_CONTAINER`. This is not live
-4.1.4.1-specific feature proof, a production-database probe or a new Doris SQL-mode
-equivalence claim.
+`DorisCatchupResultTest` now runs on official pinned **Doris 4.1.4.1** FE/BE images,
+both reporting `doris-4.1.4.1-rc02-5dbec55b399`. The earlier 4.1.3 all-in-one run
+was a historical shared-behavior baseline, not the current native validation target.
+VERSION() gives only MySQL wire compatibility; actual FE/BE versions are checked.
+Native/generated HEX values, comment boundaries, IF/CASE, DATE_ADD/SUB, properties,
+SHOW CREATE and inserted rows agree. MySQL's singular INSERT VALUE normalizes to
+VALUES before Doris execution; Doris itself rejects singular VALUE.
+
+Current native checks also cover all nine nullable Boolean OR combinations and
+the hotfix's 100,000-row JSON Boolean null-payload/OR/CASE regression under both
+short-circuit execution modes, with independent exact counts. VARIANT/NULL inputs
+and timezone-aware COALESCE compare native/generated values. All 81 Doris-selected
+methods pass (six execute the live catch-up engine); all 92 historical behavior
+vectors reproduce exactly. The hotfix changes no grammar, so the vendored 4.1.4
+parser is retained. Enable the live gate with `BRIKK_DORIS_TEST_CONTAINER`; see
+[native evidence](doris-native-catchup-verification.md) for digests and runtime
+limits. This is not a production-database, performance or broader SQL-mode proof.
 
 The exact private core/metadata JARs from `dd1ea09` pass 163 peer compiler/runtime/
 schema/tooling tests, CLI plugin assembly, a real compiler-plugin smoke build and

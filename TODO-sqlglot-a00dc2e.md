@@ -205,7 +205,9 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Native MySQL schemas/rows/HEX values pass; three additional exact pin-drift rows
   were removed at refresh. WeightString is now in the generated manifest; its temporary
   target-only contract is retired. Native Doris shared lexical/IF/date/property probes
-  also pass on the cached 4.1.3 engine (not live 4.1.4.1 proof). No publication requested.
+  now pass on live Doris 4.1.4.1, with version, nullable-Boolean hotfix and VARIANT/
+  TIMESTAMPTZ checks. See [native evidence](docs/doris-native-catchup-verification.md).
+  No publication requested.
 - [x] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
   (`a00dc2e5c4`, #8579); path/scalar/default/error/null behavior and target grammar.
   PostgreSQL retains raw native literal/dynamic/CASE/concatenated JSONPATH expressions.
@@ -243,6 +245,8 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   three candidate-gate safety tests and 16 release tests pass. Native DuckDB/Doris/
   PostgreSQL/MySQL/Trino and chDB calendar tests run; embedded PG fidelity uses 18.4.0.
   Four optional tests skip (Java chDB and three StarRocks tests proved in prior rounds).
+  The subsequent native-refresh round below upgrades Doris execution to 4.1.4.1;
+  core/metadata JAR hashes are unchanged, preserving the earlier engine/peer evidence.
 - [x] Verify the peer compiler/runtime against an explicitly authorized private
   candidate before final integration; SQL-side tests do not replace Kotlin plugin tests.
   Exact core/metadata JARs from `dd1ea09` pass 163 peer tests, relocated CLI/IDE plugin
@@ -369,3 +373,20 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   CI for `dd1ea09` passed; no publication, main merge or peer-source edit occurred.
   The four isolated task containers were removed after verification; candidate
   scratch inputs, artifacts and logs remain retained. Pausing after this round.
+- Doris current-release follow-up (2026-10-11): 4.1.3 was a convenient cached image,
+  not a claim that 4.1.4 lacked significant changes. Official pinned FE/BE images
+  now execute `doris-4.1.4.1-rc02-5dbec55b399`. All 81 Doris-selected methods pass,
+  including six live catch-up methods and the 100,000-row nullable JSON Boolean
+  OR/CASE crash regression with short-circuit execution both enabled and disabled.
+  All 92 historical behavior vectors reproduce exactly (88 values/four expected
+  errors); unrerun historical datasets keep their original engine provenance.
+  The six-commit hotfix comparison changes no grammar, so the existing exact 4.1.4
+  parser remains current. Core/metadata candidate bytes and peer source are unchanged.
+  CI for `e036d1d` passed. Remaining coverage/risk limits are documented explicitly,
+  not concealed by passing test counts.
+  Build and the 38 contracts pass; the full sweep passes 1,267 methods with 24
+  optional skips (only Doris/Python chDB are enabled this time). Earlier broader
+  native and 163-test peer evidence applies to unchanged core/metadata bytes.
+  Sixteen release, two generator and three candidate safety tests pass.
+  The two isolated Doris containers and internal network were removed; logs and
+  version/matrix evidence are retained. No publication, main or peer-source changes.

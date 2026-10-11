@@ -80,3 +80,30 @@ reports `doris-4.1.3-rc02-7126cf65d96`, not 4.1.4.1. See extension #50 for scope
 The full native-run log is `/tmp/opencode/sqlglot-catchup-final-native-all-2.log`.
 The four isolated Doris/PostgreSQL/MySQL/Trino containers created for this task
 were removed after verification; scratch candidate evidence remains retained.
+
+## Safety assessment and coverage limits
+
+This is a well-tested release candidate for the scoped catch-up, not proof of
+arbitrary SQL equivalence. Confidence is strongest for the hand-owned behaviors:
+partial/empty catalogs, all three legacy inference policies and the new disabled
+overloads, strict two-step Engine preparation, scope/alias/slot ownership, ordered
+star fields, conservative types/nullability, source ranges and AST nonmutation.
+JVM descriptors, Kotlin default bridges and tokenizer constructors have explicit
+ABI assertions; actual peer compiler/runtime and relocated-plugin tests provide
+an independent consumer check.
+
+Native results, headers/types, NULLs, boundary values and specific error states
+back the affected dialect ports. Coherent fixture regeneration was byte-identical;
+ledger discrepancies were reviewed by exact assertion/signature, not approved by
+failure counts. The newer [Doris native gate](doris-native-catchup-verification.md)
+adds current-engine and hotfix-specific execution evidence.
+
+The highest residual risk is interaction among shared tokenizer/parser, scope,
+qualification and typing changes beyond the tested cases. No measured line/branch
+coverage percentage, exhaustive cross-dialect cross-product, broad fuzz campaign
+or performance benchmark is claimed. The existing corpus inventory explicitly
+defers 2,478 named identity assertions, 43 base identities and 1,482 base transpile
+directions from direct consumers; overlapping tests are not full parity proof.
+Optional native coverage and historical engine-probe versions also retain their
+stated limits. A canary/replay of representative consumer queries remains sensible
+before a production rollout; these results do not authorize publication or merge.
