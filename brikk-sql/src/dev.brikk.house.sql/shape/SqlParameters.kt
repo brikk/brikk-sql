@@ -16,3 +16,19 @@ fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccur
     if (statements.size != 1) throw ShapeError("Parameter discovery requires exactly one statement")
     return parameterOccurrences(statements.single(), tokens)
 }
+
+/**
+ * [sql] with every named placeholder ([ParamStyle.NAMED_COLON] in any spelling the dialect
+ * parses) replaced by the scalar `0` padded with spaces, so a native parser can check the
+ * statement before substitution. Offsets and length are unchanged. Refusals propagate as in
+ * [parseParameterOccurrences].
+ */
+fun maskNamedParameters(sql: String, dialect: String): String {
+    val masked = StringBuilder(sql)
+    for (parameter in parseParameterOccurrences(sql, dialect)) {
+        if (parameter.style != ParamStyle.NAMED_COLON) continue
+        val (start, end) = parameter.range
+        masked.setRange(start, end, "0".padEnd(end - start))
+    }
+    return masked.toString()
+}
