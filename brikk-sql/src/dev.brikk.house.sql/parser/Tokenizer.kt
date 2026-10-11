@@ -64,6 +64,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return tokens
     }
 
+    /** Editor recovery stops at the failing lexical construct, never inside its tail. */
+    fun tokenizeForEditor(sql: String): EditorTokens = try {
+        EditorTokens(tokenize(sql).toList())
+    } catch (e: TokenError) {
+        EditorTokens(tokens.toList(), start.coerceIn(0, sql.length), e.message ?: "Incomplete SQL token")
+    }
+
     // sqlglot: TokenizerCore._scan
     private fun scan(checkSemicolon: Boolean = false) {
         val identifiers = config.identifiers

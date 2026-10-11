@@ -1,5 +1,10 @@
 modules:
   - brikk-sql
+  - brikk-sql-intellij-support
+  - brikk-sql-intellij-tooling
   - brikk-sql-metadata
   - brikk-sql-oracle
   - brikk-sql-verify
+
+plugins:
+  - ./brikk-sql-intellij-tooling

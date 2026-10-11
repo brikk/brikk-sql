@@ -14,6 +14,7 @@ on:
     branches-ignore:
       - main
       - 'release/**'
+      - 'publish/intellij-support-0.1.0'
   pull_request:
   workflow_call:
   workflow_dispatch:
@@ -57,7 +58,7 @@ jobs:
       - name: Test release configuration (offline)
         env:
           TEST_KOTLIN_RELEASE_MODEL: '1'
-        run: python3 -m unittest discover -s tools -p 'test_release_config.py'
+        run: python3 -m unittest discover -s tools -p 'test_*release*.py'
 
       - name: Test
         run: ./kotlin test
@@ -66,6 +67,9 @@ jobs:
       # without credentials, signing, or uploading anything to a remote repository.
       - name: Verify Maven publications locally
         run: ./kotlin publish mavenLocal
+
+      - name: Audit the SQL IntelliJ support publication
+        run: python3 tools/verify_intellij_publication.py 0.1.0-SNAPSHOT
 
       # On a red gate, build/ledger-actual contains the review artifacts needed to update
       # committed *-known-failures.json ledgers (see TODO-BUGS-*.md).

@@ -1,0 +1,20 @@
+product: jvm/lib
+
+description: Cooperative SQL execution and editor snapshot support for IntelliJ database dialect plugins.
+
+apply:
+  - ../publish.module-template.yaml
+
+plugins:
+  brikk-sql-intellij-tooling: enabled
+
+settings:
+  jvm:
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -classpath=build/intellij-sql-api/intellij-sql-api.jar
+  publishing:
+    artifactId: brikk-sql-intellij-support
+    version: 0.1.0-SNAPSHOT
