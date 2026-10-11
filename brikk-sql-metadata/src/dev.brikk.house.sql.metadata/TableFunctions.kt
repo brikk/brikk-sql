@@ -40,7 +40,8 @@ sealed interface OutputSchema {
 /**
  * Call-site knowledge of a table function taking `"key" = "value"` properties (Doris
  * `s3("uri" = "...", "format" = "csv")`). [queryable] is false for registered table functions
- * that cannot be used as a FROM relation (stream-load and ingest functions).
+ * that cannot be used as a FROM relation (stream-load and ingest functions). Look entries up
+ * with [MetadataSnapshot.tableFunction], which follows the dialect's name policy.
  */
 @Serializable
 data class TableFunctionInfo(

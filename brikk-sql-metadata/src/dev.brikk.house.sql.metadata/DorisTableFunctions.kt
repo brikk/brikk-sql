@@ -6,14 +6,18 @@ package dev.brikk.house.sql.metadata
  *
  * Sources, checked 2026-10-11:
  *  - doris-intellij-plugin `src/main/kotlin/dev/sort/doris/sql/DorisTableFunctions.kt` and
- *    `RESEARCH-tvf-completion.md` at 2913ad276d49c46fabe178ebb8155e3b4286c866 (Doris 4.x
- *    documentation and FE classes): every entry except those below.
+ *    `RESEARCH-tvf-completion.md` at 2913ad276d49c46fabe178ebb8155e3b4286c866: every entry
+ *    except those below. The research read the apache/doris-website master docs
+ *    (`docs/sql-manual/sql-functions/table-valued-functions/`) on 2026-07-07 without
+ *    recording a commit; master was then at 0a22aeec9089be5a925327faa68dc339dc50a542.
  *  - apache/doris tag 4.1.4 (ad35a140c7fd), fe/fe-core: `VectorSearchTableValuedFunction`
  *    (vector_search), `ParquetMetadataTableValuedFunction` (parquet_*), `FileTableValuedFunction`
  *    (file), and `BuiltinTableValuedFunctions` / `TableValuedFunctionIf` for which names exist.
  *
- * `iceberg_meta` (documented for earlier 4.x releases) and `binlog` are not registered at
- * 4.1.4, so they are not listed; iceberg_meta's schemas are in the plugin file above.
+ * `iceberg_meta` (documented for earlier 4.x releases) is not registered at 4.1.4, so it is
+ * not listed; its schemas are in the plugin file above. `binlog` is not registered at 4.1.4
+ * either, but DORIS_FUNCTION_CATALOG (an older registry pin) lists it, so it is marked not
+ * queryable for consumers to suppress.
  * Column types use plain spellings: text for strings and nested types.
  */
 
@@ -227,4 +231,5 @@ internal val DORIS_TABLE_FUNCTIONS: List<TableFunctionInfo> = listOf(
     TableFunctionInfo("group_commit", queryable = false),
     TableFunctionInfo("http_stream", queryable = false),
     TableFunctionInfo("cdc_stream", queryable = false),
+    TableFunctionInfo("binlog", queryable = false),
 )

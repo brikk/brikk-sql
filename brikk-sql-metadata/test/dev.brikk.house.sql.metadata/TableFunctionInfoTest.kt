@@ -54,6 +54,7 @@ class TableFunctionInfoTest {
     @Test
     fun ingestFunctionsAreNotQueryable() {
         assertFalse(doris.tableFunction("group_commit")!!.queryable)
+        assertFalse(doris.tableFunction("binlog")!!.queryable)
         assertTrue(doris.tableFunction("numbers")!!.queryable)
     }
 
