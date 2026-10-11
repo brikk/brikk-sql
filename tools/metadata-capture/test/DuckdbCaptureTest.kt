@@ -8,6 +8,7 @@ import dev.brikk.house.sql.metadata.DuckdbCapture
 import dev.brikk.house.sql.metadata.DuckdbDump
 import dev.brikk.house.sql.metadata.DuckdbExtensionFunctionRow
 import dev.brikk.house.sql.metadata.toSnapshot
+import dev.brikk.house.sql.metadata.userFunctions
 import java.sql.DriverManager
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -60,6 +61,25 @@ class DuckdbCaptureTest {
             for (capture in captures) {
                 assertEquals(readDump(vendorData.resolve("duckdb-${capture.name}-$version.tsv")).rows, capture.dump(connection).rows, capture.name)
             }
+        }
+    }
+
+    @Test
+    fun liveSessionMacrosKeepTheirOwnerThroughTheCapture() {
+        DriverManager.getConnection("jdbc:duckdb:").use { connection ->
+            connection.createStatement().use {
+                it.execute(
+                    "CREATE SCHEMA a; CREATE SCHEMA b; CREATE MACRO a.review_fn(x) AS x + 1; " +
+                        "CREATE MACRO b.review_fn(x, y) AS x + y; CREATE TEMP MACRO t_fn(x) AS x;",
+                )
+            }
+            val dump = DuckdbDump("live", DUCKDB_FUNCTIONS.dump(connection).rows.map(DUCKDB_FUNCTIONS::decode))
+
+            assertEquals(
+                setOf("memory.a.review_fn(1)", "memory.b.review_fn(2)", "temp.main.t_fn(1)"),
+                dump.userFunctions().map { "${it.database}.${it.schema}.${it.def.name}(${it.def.overloads.single().argTypes.size})" }.toSet(),
+            )
+            assertFalse("review_fn" in dump.toSnapshot().functions)
         }
     }
 

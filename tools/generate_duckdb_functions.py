@@ -77,9 +77,10 @@ def function_row(r: dict[str, str | None]) -> tuple[str, int]:
     types, params = json_list(r["parameter_types"]), json_list(r["parameters"])
     literal = (
         f"DuckdbFunctionRow({kstr(r['function_name'])}, {kstr(r['function_type'])}, "
-        f"{knullable(r['return_type'])}, {klist(types)}, {klist(params)}, {knullable(r['varargs'])})"
+        f"{knullable(r['return_type'])}, {klist(types)}, {klist(params)}, {knullable(r['varargs'])}, "
+        f"{kstr(r['database_name'])}, {kstr(r['schema_name'])}, {r['internal']})"
     )
-    return literal, 4 + len(types) + len(params)
+    return literal, 7 + len(types) + len(params)
 
 
 def keyword_row(r: dict[str, str | None]) -> tuple[str, int]:

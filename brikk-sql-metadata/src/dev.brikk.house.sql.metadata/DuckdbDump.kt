@@ -16,8 +16,8 @@ class DuckdbDump(
 )
 
 /**
- * This release's metadata. [MetadataSnapshot.functions] holds the registered functions, one
- * [FunctionDef] per (name, normalized kind):
+ * This release's built-in metadata. [MetadataSnapshot.functions] holds the internal (built-in)
+ * functions, one [FunctionDef] per (name, normalized kind); see [userFunctions] for the rest:
  *  - `macro`/`table_macro` normalize to SCALAR/TABLE_VALUED and keep [FunctionDef.nativeKind]
  *    when every row of the def is that macro kind (a scalar+macro name stays a plain SCALAR).
  *  - `pragma` rows are not functions; operator rows (`%`, `||`, `~~`) are grammar, not names.
@@ -38,13 +38,14 @@ class DuckdbDump(
  * [KeywordCategory.UNKNOWN].
  */
 fun DuckdbDump.toSnapshot(): MetadataSnapshot {
+    val builtIn = functions.filter { it.internal }
     val byExtension = extensionFunctions.groupBy({ it.extension }, { it.function }).toSortedMap()
-    val functionCatalog = FunctionCatalog(functionDefs(functions), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS)
+    val functionCatalog = FunctionCatalog(functionDefs(builtIn), grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS)
     return MetadataSnapshot(
         engineVersion,
         functionCatalog,
         keywords = keywords?.let { rows -> KeywordCatalog(rows.map { KeywordDef(it.name, keywordCategory(it.category)) }) },
-        pragmas = (pragmaDefs(functions, functionCatalog) +
+        pragmas = (pragmaDefs(builtIn, functionCatalog) +
             byExtension.flatMap { (extension, rows) -> pragmaDefs(rows, functionCatalog, extension) })
             .sortedWith(compareBy({ it.name }, { it.extension })),
         settings = settings?.map { SettingDef(it.name, it.inputType, it.scope, it.aliases, it.description) },
@@ -53,6 +54,21 @@ fun DuckdbDump.toSnapshot(): MetadataSnapshot {
         grammarForms = DUCKDB_GRAMMAR_FORMS,
     )
 }
+
+/**
+ * A function the session defined (a macro, for example), with where it lives: two schemas may
+ * each define the same name, and temporary macros live in database `temp`.
+ */
+data class DuckdbUserFunction(val database: String, val schema: String, val def: FunctionDef)
+
+/**
+ * The non-internal functions, one [DuckdbUserFunction] per (database, schema, name, kind),
+ * mapped like [toSnapshot]'s functions. They are session facts, so [toSnapshot] leaves them out.
+ */
+fun DuckdbDump.userFunctions(): List<DuckdbUserFunction> =
+    functions.filterNot { it.internal }
+        .groupBy { it.database to it.schema }
+        .flatMap { (owner, rows) -> functionDefs(rows).map { DuckdbUserFunction(owner.first, owner.second, it) } }
 
 private fun pragmaDefs(rows: List<DuckdbFunctionRow>, functions: FunctionCatalog, extension: String? = null): List<PragmaDef> =
     rows.filter { it.type == PRAGMA }

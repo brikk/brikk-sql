@@ -17,6 +17,29 @@ class DuckdbDumpTest {
     }
 
     @Test
+    fun sessionFunctionsKeepTheirSchemaAndStayOutOfTheSnapshot() {
+        val dump = DuckdbDump(
+            "1.5.6",
+            listOf(
+                DuckdbFunctionRow("abs", "scalar", "INTEGER", listOf("INTEGER")),
+                DuckdbFunctionRow("review_fn", "macro", null, listOf(null), listOf("x"), database = "memory", schema = "a", internal = false),
+                DuckdbFunctionRow("review_fn", "macro", null, listOf(null, null), listOf("x", "y"), database = "memory", schema = "b", internal = false),
+                DuckdbFunctionRow("t_fn", "macro", null, listOf(null), listOf("x"), database = "temp", internal = false),
+            ),
+        )
+
+        assertEquals(listOf("abs"), dump.toSnapshot().functions.functions.map { it.name })
+        assertEquals(
+            listOf(
+                Triple("memory", "a", listOf("x")),
+                Triple("memory", "b", listOf("x", "y")),
+                Triple("temp", "main", listOf("x")),
+            ),
+            dump.userFunctions().map { Triple(it.database, it.schema, it.def.overloads.single().argNames) },
+        )
+    }
+
+    @Test
     fun anUnknownFunctionTypeFailsNamingTheTypeAndFunction() {
         val failure = assertFailsWith<IllegalArgumentException> {
             catalogOf(DuckdbFunctionRow("f", "window_macro"))

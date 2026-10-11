@@ -26,7 +26,10 @@ class DuckdbCapture<out T>(
 /**
  * One `duckdb_functions()` row: one overload of one function under one engine function type
  * (`scalar`, `aggregate`, `window`, `table`, `macro`, `table_macro`, `pragma`). Null list
- * elements are the engine's NULL types (macro parameters, for example).
+ * elements are the engine's NULL types (macro parameters, for example). [database] and
+ * [schema] say where the function lives and [internal] whether the engine built it in; the
+ * defaults describe a built-in. User-defined functions are not internal, and temporary
+ * macros live in database `temp`.
  */
 data class DuckdbFunctionRow(
     val name: String,
@@ -35,6 +38,9 @@ data class DuckdbFunctionRow(
     val parameterTypes: List<String?> = emptyList(),
     val parameters: List<String> = emptyList(),
     val varargs: String? = null,
+    val database: String = "system",
+    val schema: String = "main",
+    val internal: Boolean = true,
 )
 
 val DUCKDB_FUNCTIONS: DuckdbCapture<DuckdbFunctionRow> = DuckdbCapture(
@@ -43,14 +49,15 @@ val DUCKDB_FUNCTIONS: DuckdbCapture<DuckdbFunctionRow> = DuckdbCapture(
         SELECT function_name, function_type, return_type,
                to_json(parameter_types)::VARCHAR AS parameter_types,
                to_json(parameters)::VARCHAR AS parameters,
-               varargs, alias_of, stability, description,
+               varargs, database_name, schema_name, internal::VARCHAR AS internal,
+               alias_of, stability, description,
                to_json(examples)::VARCHAR AS examples
         FROM duckdb_functions()
         ORDER BY ALL
     """.trimIndent(),
     columns = listOf(
-        "function_name", "function_type", "return_type", "parameter_types", "parameters",
-        "varargs", "alias_of", "stability", "description", "examples",
+        "function_name", "function_type", "return_type", "parameter_types", "parameters", "varargs",
+        "database_name", "schema_name", "internal", "alias_of", "stability", "description", "examples",
     ),
 ) { row ->
     DuckdbFunctionRow(
@@ -60,6 +67,9 @@ val DUCKDB_FUNCTIONS: DuckdbCapture<DuckdbFunctionRow> = DuckdbCapture(
         parameterTypes = row.jsonList(3),
         parameters = row.jsonList(4).map { checkNotNull(it) { "null parameter name in $row" } },
         varargs = row[5],
+        database = row.required(6),
+        schema = row.required(7),
+        internal = row.required(8).toBooleanStrict(),
     )
 }
 

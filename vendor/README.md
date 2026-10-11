@@ -270,7 +270,7 @@ engine on its classpath and writes one file per capture, named by the engine's
 
 | File | Query |
 |---|---|
-| `duckdb-functions-<version>.tsv` | `duckdb_functions()`: every row, including pragma and operator rows, with return and parameter types, parameter names, varargs, alias, stability, description and examples |
+| `duckdb-functions-<version>.tsv` | `duckdb_functions()`: every row, including pragma and operator rows, with return and parameter types, parameter names, varargs, database, schema, internal flag, alias, stability, description and examples |
 | `duckdb-keywords-<version>.tsv` | `duckdb_keywords()`: name and category (reserved, unreserved, type_function, column_name) |
 | `duckdb-settings-<version>.tsv` | `duckdb_settings()`: name, input type, scope, aliases and description; not the current value, which depends on the connection |
 | `duckdb-extensions-<version>.tsv` | `duckdb_extensions()`: name, whether statically linked, aliases and description; not the installation-dependent columns |
