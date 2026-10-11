@@ -204,8 +204,14 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   Native MySQL schemas/rows/HEX values pass; three additional exact pin-drift rows
   await refresh. WeightString has an exact target-only metadata contract (not a native
   allowlist entry) until its generated manifest refresh. No publication requested.
-- [ ] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
+- [x] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
   (`a00dc2e5c4`, #8579); path/scalar/default/error/null behavior and target grammar.
+  PostgreSQL retains raw native literal/dynamic/CASE/concatenated JSONPATH expressions.
+  RETURNING parses full types, including lengths/precision/zones (also corrected in
+  MySQL/Trino). Native PostgreSQL 18.4 values/types, defaults, NULLs and explicit
+  SQLSTATE errors pass. Native return evidence supplies declared/TEXT shape types
+  without path type/nullability guesses. Two exact Trino old-pin type-parser rows
+  await refresh; source ASTs and existing published signatures remain intact.
 
 ## Integration and oracle refresh
 
@@ -316,3 +322,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   with MySQL/PostgreSQL/Trino/calendar gates enabled (four optional skips). Shared
   editor ranges and constructor contracts pass. Three exact additional old-pin rows
   are reviewed; no pre-existing reasons/signatures or shipped fixture stamps changed.
+- PG-01 batch: build, 1,263 Kotlin tests, 37 compatibility/editor contract methods
+  and 16 offline release tests pass, with native PostgreSQL/MySQL/Trino/calendar
+  gates enabled (four optional skips). All requested dialect boxes are implemented;
+  generated dependency audit, coherent fixtures and downstream verification remain.

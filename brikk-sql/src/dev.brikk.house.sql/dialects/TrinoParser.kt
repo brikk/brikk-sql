@@ -481,7 +481,7 @@ open class TrinoParser(
         val path = parseBitwise()
 
         // sqlglot: `self._match(TokenType.RETURNING) and self._parse_type()`
-        val returning: kotlin.Any? = if (match(TokenType.RETURNING)) parseType() else false
+        val returning: kotlin.Any? = if (match(TokenType.RETURNING)) parseTypes() else false
 
         return expression(
             JSONValue(

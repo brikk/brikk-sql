@@ -2,6 +2,13 @@
     "sqlglot_version": "v30.18.0-43-g3ca82489",
     "cases": [
         {
+            "id": "assertion:v1:sha256:83aa436c12a8c32c138223e6c00b137ea272ecd9c7aaf975216f1c10cf598ebb:1",
+            "sql": "JSON_VALUE(jl.extra_attributes, 'lax $.amount_source' RETURNING VARCHAR)",
+            "signature": "ast-mismatch:v1:sha256:f753ae86c6acd1241dbc3f51d0524f36d8b619b0a379d799db3c502f9b721830",
+            "reason": "PG-01 shared #8579 fix: JSON_VALUE RETURNING uses parseTypes, producing DataType(VARCHAR) instead of a column reference. Exact reviewed AST matches frozen target; PostgreSQL native returning/default checks pass. Remove on refresh.",
+            "issue": "PG-01 / sqlglot#8579", "status": "oracle-pin-drift"
+        },
+        {
             "id": "assertion:v1:sha256:81031bc851b5f7831fbadaf9d9eb8cfb0d2db7be5d1afae3378ebce9d44ebdc3:1",
             "sql": "SELECT TIMESTAMP '2012-10-31 01:00 -2'",
             "signature": "ast-mismatch:v1:sha256:05128348816f0df2975b21c339de2978e55b57699b571835bbd6fb206e8f7129",

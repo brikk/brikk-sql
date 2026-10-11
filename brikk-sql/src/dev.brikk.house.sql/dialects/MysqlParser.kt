@@ -794,7 +794,7 @@ open class MysqlParser(
         match(TokenType.COMMA)
         val path = parseBitwise()
 
-        val returning = if (match(TokenType.RETURNING)) parseType() else null
+        val returning = if (match(TokenType.RETURNING)) parseTypes() else null
 
         return expression(
             JSONValue(

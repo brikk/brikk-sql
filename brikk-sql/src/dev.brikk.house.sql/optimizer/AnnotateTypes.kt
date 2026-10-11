@@ -16,6 +16,7 @@ import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GeneratedTypingMetadata
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
+import dev.brikk.house.sql.ast.JSONValue
 import dev.brikk.house.sql.ast.Lateral
 import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.Not
@@ -583,6 +584,13 @@ class TypeAnnotator(
 
             if (scope != null && expr is Column && expr.text("table").isNotEmpty()) {
                 annotateColumn(expr, scope)
+                continue
+            }
+
+            // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
+            // evidence, or its documented TEXT default (not a fabricated path type).
+            if (expr is JSONValue && dialect.name == "postgres") {
+                setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
                 continue
             }
 

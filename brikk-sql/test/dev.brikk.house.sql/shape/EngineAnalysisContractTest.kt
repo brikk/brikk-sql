@@ -354,4 +354,18 @@ class EngineAnalysisContractTest {
         }
         assertEquals(original, fragment.ast)
     }
+
+    @Test
+    fun postgresJsonValueReturningEvidenceDoesNotInventPathFieldsOrNullability() {
+        val fragment = SqlFragment("SELECT JSON_VALUE(j, p RETURNING BIGINT DEFAULT 7 ON EMPTY NULL ON ERROR) AS value FROM t", "postgres")
+        val original = fragment.ast.copy()
+        val inputs = ShapeCatalog(mapOf("t" to Shape.of("j" to "JSONB", "p" to "JSONPATH")))
+        for (catalog in listOf(ShapeCatalog.EMPTY, inputs)) {
+            assertColumns(listOf(ColumnShape("value", "BIGINT")), fragment.outputShape(catalog), "explicit JSON_VALUE return/$catalog")
+            validateLikeEngine(fragment.sql, "postgres", catalog)
+        }
+        assertColumns(listOf(ColumnShape("value", "TEXT")),
+            SqlFragment("SELECT JSON_VALUE(j, '$.a') AS value FROM t", "postgres").outputShape(), "documented TEXT default")
+        assertEquals(original, fragment.ast)
+    }
 }

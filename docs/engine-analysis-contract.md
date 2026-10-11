@@ -77,9 +77,10 @@ bridges and argument-mask positions remain available for compiled consumers.
 ./kotlin test
 ```
 
-The gate now has **26 test methods**, including the tokenizer constructor ABI check,
+The gate now has **37 test methods** after merging main's editor contracts, including the tokenizer constructor ABI check,
 DuckDB comprehension and USING-star safeguards, and correlated UNNEST projection/
-UNKNOWN evidence through two-step Engine preparation. Most cases run under PostgreSQL,
+UNKNOWN evidence through two-step Engine preparation, and PostgreSQL JSON_VALUE
+declared/default return evidence without fabricated nullability. Most cases run under PostgreSQL,
 DuckDB and Doris. These are hand-owned assertions, not current-output snapshots.
 
 Mutation checks were performed and then reverted:

@@ -280,6 +280,32 @@ open class PostgresParser(
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = PostgresParserTables.FUNCTION_PARSERS
 
+    fun parseJsonValueRaw(): Expression {
+        val document = parseBitwise()
+        match(TokenType.COMMA)
+        val path = parseBitwise()
+        val returning: kotlin.Any? = if (match(TokenType.RETURNING)) parseTypes() else false
+        fun handling(kind: String): kotlin.Any? {
+            for (value in listOf("ERROR", "NULL", "TRUE", "FALSE", "EMPTY")) {
+                if (matchTextSeq(value, "ON", kind)) return "$value ON $kind"
+            }
+            val start = index
+            if (match(TokenType.DEFAULT)) {
+                val value = parseBitwise()
+                if (matchTextSeq("ON", kind)) return value
+                retreat(start)
+            }
+            return null
+        }
+        val empty = handling("EMPTY")
+        val error = handling("ERROR")
+        val nullHandling = handling("NULL")
+        val condition = if (empty == null && error == null && nullHandling == null) null else
+            expression(dev.brikk.house.sql.ast.OnCondition(args("empty" to empty, "error" to error, "null" to nullHandling)))
+        return expression(dev.brikk.house.sql.ast.JSONValue(args("this" to document, "path" to path,
+            "returning" to returning, "on_condition" to condition)))
+    }
+
     override val bitwise: Map<TokenType, NodeFactory> get() = PostgresParserTables.BITWISE
 
     override val exponent: Map<TokenType, NodeFactory> get() = PostgresParserTables.EXPONENT
@@ -598,6 +624,7 @@ object PostgresParserTables {
                 )
             },
             "JSONB_EXISTS" to { p -> (p as PostgresParser).parseJsonbExists() },
+            "JSON_VALUE" to { p -> (p as PostgresParser).parseJsonValueRaw() },
         )
 
     // sqlglot: PostgresParser.BITWISE

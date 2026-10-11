@@ -1,6 +1,13 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:85b0937951091fca0bdfe776fbcdf3bb829e10c0e57eb1fcd172707eac450152:1",
+            "sql": "JSON_VALUE(jl.extra_attributes, 'lax $.amount_source' RETURNING VARCHAR)",
+            "signature": "type-mismatch:v1:sha256:9b9e1cf2ef5bd532e1c9eaa4f8f8d121e755f58c0cb233051e39e343e0087ab5",
+            "reason": "PG-01 shared #8579 fix: reviewed RETURNING subtree becomes DataType(VARCHAR), not an UNKNOWN-typed schema column. Matches target and avoids false dependency/ownership evidence. Remove on coherent refresh.",
+            "issue": "PG-01 / sqlglot#8579", "status": "oracle-pin-drift"
+        },
+        {
             "id": "assertion:v1:sha256:c18d1c4b5cb5e49c7b28e5e3b57e7170f2b2a178e5f576abbb32629d35cd66f1:1",
             "sql": "SELECT TIMESTAMP '2012-10-31 01:00 -2'",
             "signature": "type-mismatch:v1:sha256:fcad6798e88cab003b61a572e341263431949ef2781546eb7b55c28fb2fe667f",

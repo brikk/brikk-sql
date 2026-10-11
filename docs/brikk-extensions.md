@@ -1621,6 +1621,26 @@ as stale when the target manifest includes it. Generated metadata/fixtures remai
 coherent at the old shipped pin until integration. No new live derivative SQL-mode
 or WEIGHT_STRING cross-engine equivalence is claimed.
 
+## 49. PostgreSQL native JSON_VALUE paths and return evidence
+
+The frozen target's #8579 parser fix retains PostgreSQL JSONPATH as native literal
+or dynamic expressions, rather than interpreting it through our structured path
+subset. Strict/lax filters, quoted keys, concatenations and CASE paths survive.
+RETURNING parses complete DataTypes, including decimal parameters and timestamp
+zones; companion MySQL/Trino parsing uses the same type entry point. Defaults and
+error clauses remain native SQL, not approximate scalar-extraction rewrites.
+
+Live PostgreSQL 18.4 tests compare original/generated values and PG_TYPEOF, including
+NULL/empty paths, scalar casts, explicit defaults and dynamic JSONPATH columns.
+ERROR ON EMPTY/ERROR paths retain native SQLSTATE 22035/22034/22P02; tests require
+the original and generated expressions to raise the same specific state. Return
+type evidence is hand-owned: PostgreSQL's explicit RETURNING type, or documented
+TEXT default, supplies analysis types without claiming the path's value type or
+nonnullness. An Engine contract protects two-step preparation and original ASTs.
+This typing is intentional native evidence, not Python's generic UNKNOWN default.
+Two exact companion Trino parser/type old-pin discrepancies replace a bogus
+RETURNING column node with VARCHAR DataType and await coherent refresh.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
