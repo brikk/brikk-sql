@@ -1,3 +1,4 @@
+import dev.brikk.house.sql.metadata.DUCKDB_DUMPS
 import dev.brikk.house.sql.metadata.DUCKDB_EXTENSIONS
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
 import dev.brikk.house.sql.metadata.DUCKDB_KEYWORDS
@@ -39,18 +40,43 @@ class DuckdbCaptureTest {
     )
 
     @Test
-    fun bundledSnapshotsEqualTheVendoredDumps() {
+    fun bundledRowsEqualTheVendoredDumpRows() {
         val versions = vendorData.listDirectoryEntries("duckdb-functions-*.tsv")
             .map { it.name.removePrefix("duckdb-functions-").removeSuffix(".tsv") }
-        assertEquals(versions.toSet(), DUCKDB_METADATA.snapshots.map { it.engineVersion }.toSet())
-        for (bundled in DUCKDB_METADATA.snapshots) {
-            val vendored = vendoredDump(bundled.engineVersion).toSnapshot()
-            assertEquals(vendored.functions.functions, bundled.functions.functions, bundled.engineVersion)
-            assertEquals(vendored.keywords?.keywords, bundled.keywords?.keywords, bundled.engineVersion)
-            assertEquals(vendored.pragmas, bundled.pragmas, bundled.engineVersion)
+        assertEquals(versions.toSet(), DUCKDB_DUMPS.map { it.engineVersion }.toSet())
+        for (bundled in DUCKDB_DUMPS) {
+            val vendored = vendoredDump(bundled.engineVersion)
+            assertEquals(vendored.functions, bundled.functions, bundled.engineVersion)
+            assertEquals(vendored.keywords, bundled.keywords, bundled.engineVersion)
             assertEquals(vendored.settings, bundled.settings, bundled.engineVersion)
             assertEquals(vendored.extensions, bundled.extensions, bundled.engineVersion)
             assertEquals(vendored.extensionFunctions, bundled.extensionFunctions, bundled.engineVersion)
+        }
+    }
+
+    @Test
+    fun theBundledSnapshotsAreMappedFromTheBundledRows() {
+        assertEquals(DUCKDB_DUMPS.map { it.engineVersion }, DUCKDB_METADATA.snapshots.map { it.engineVersion })
+        for ((dump, snapshot) in DUCKDB_DUMPS.zip(DUCKDB_METADATA.snapshots)) {
+            assertEquals(dump.toSnapshot().functions.functions, snapshot.functions.functions, dump.engineVersion)
+        }
+    }
+
+    /** toSnapshot keeps the first row's parameter names for a deduplicated overload; prove no dump needs that rule. */
+    @Test
+    fun noVendoredOverloadHasConflictingParameterNames() {
+        val normalizedType = mapOf("macro" to "scalar", "table_macro" to "table")
+        for (dump in DUCKDB_DUMPS) {
+            val rows = dump.functions + dump.extensionFunctions.map { it.function }
+            val conflicts = rows
+                .groupBy { row ->
+                    listOf(
+                        row.database, row.schema, row.name, normalizedType[row.type] ?: row.type,
+                        row.parameterTypes.map { it ?: "ANY" }, row.returnType ?: "ANY", row.varargs != null,
+                    )
+                }
+                .filterValues { group -> group.map { it.parameters }.distinct().size > 1 }
+            assertEquals(emptyMap(), conflicts, dump.engineVersion)
         }
     }
 

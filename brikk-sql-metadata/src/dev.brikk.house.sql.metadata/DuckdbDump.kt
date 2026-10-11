@@ -24,7 +24,10 @@ class DuckdbDump(
  *  - aliases are not folded: DuckDB lists every alias as a full row set of its own.
  *  - NULL parameter and return types read as "ANY"; `variadic` mirrors `varargs`, and
  *    [FunctionOverload.argTypes] lists only the fixed parameters.
- *  - [FunctionOverload.argNames] are the row's parameter names (null when it lists none).
+ *  - rows of one def with the same argument types, return type and variadic flag are one
+ *    overload; its [FunctionOverload.argNames] are the first such row's parameter names (null
+ *    when it lists none), in the capture's sorted row order. No vendored dump has rows that
+ *    disagree on them.
  *  - a `table` function lists its positional arguments as `col0`, `col1`, ... and then its
  *    named parameters, so [FunctionOverload.positionalCount] counts the leading `colN` names
  *    when named parameters follow.
