@@ -61,7 +61,7 @@ private val MetadataSnapshot.version: Version
         "snapshot version '$engineVersion' is not a release version"
     }.number
 
-private class Version(val parts: List<Int>) : Comparable<Version> {
+internal class Version(val parts: List<Int>) : Comparable<Version> {
     val majorMinor: Pair<Int, Int> get() = part(0) to part(1)
 
     private fun part(index: Int) = parts.getOrElse(index) { 0 }
@@ -71,11 +71,11 @@ private class Version(val parts: List<Int>) : Comparable<Version> {
             .firstNotNullOfOrNull { i -> part(i).compareTo(other.part(i)).takeIf { it != 0 } } ?: 0
 }
 
-private class ParsedVersion(val number: Version, val prerelease: Boolean)
+internal class ParsedVersion(val number: Version, val prerelease: Boolean)
 
 private val VERSION = Regex("""(\d+(?:\.\d+)*)(-)?""")
 
-private fun parseVersion(raw: String): ParsedVersion? = VERSION.find(raw)?.let { match ->
+internal fun parseVersion(raw: String): ParsedVersion? = VERSION.find(raw)?.let { match ->
     val parts = match.groupValues[1].split('.').map { it.toIntOrNull() ?: return null }
     ParsedVersion(Version(parts), prerelease = match.groups[2] != null)
 }

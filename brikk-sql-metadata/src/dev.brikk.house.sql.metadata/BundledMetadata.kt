@@ -10,7 +10,7 @@ val DUCKDB_FUNCTION_CATALOG: FunctionCatalog = DUCKDB_METADATA.default.functions
 val TRINO_METADATA: DialectMetadata =
     single("trino", MetadataSnapshot("483", TRINO_FUNCTION_CATALOG, TRINO_483_KEYWORDS, grammarForms = TRINO_GRAMMAR_FORMS))
 
-/** One combined snapshot; [FunctionDef.sinceVersion] carries Doris's documentation tiers. */
+/** One combined snapshot; [FunctionDef.firstDocumentedIn] carries Doris's documentation tiers. */
 val DORIS_METADATA: DialectMetadata = single(
     "doris",
     MetadataSnapshot(

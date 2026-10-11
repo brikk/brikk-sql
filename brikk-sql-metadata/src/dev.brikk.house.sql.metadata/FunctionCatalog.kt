@@ -143,15 +143,16 @@ data class FunctionOverload(
  * normalize to SCALAR/TABLE_VALUED but keep their native kind here). Null when the
  * engine kind maps directly.
  *
- * [sinceVersion] is intended as "the first engine version that ships the function" (for
- * version-gated completion in external tooling), but for Doris it is honestly only "the
- * first apache/doris-website version tier that DOCUMENTS the function" — no engine or
- * docs source carries a true introduced-in fact (see
- * tools/extract_doris_since_versions.py and vendor/README.md for the extraction method
- * and its limitations). Null when doris-website has no matching doc at the pinned clone
- * (undocumented/legacy function) or when its only doc lives in the unreleased/dev tree
- * (not yet in a shipped version). Always null for DuckDB/Trino: neither exposes any
- * version-introduced metadata the generators can read.
+ * [sinceVersion] is a PROVEN fact: the first engine version that ships the function (for
+ * example a registry's introduced-in column). Only proven facts may exclude a def from a
+ * version (see [FunctionCatalog.availableIn]). Null for every bundled dialect today: no
+ * engine source the generators read carries one.
+ *
+ * [firstDocumentedIn] is evidence of a weaker kind: the first documentation tier that
+ * describes the function (Doris: the oldest apache/doris-website version tier, coarse
+ * values such as "3.x"; see tools/extract_doris_since_versions.py and vendor/README.md).
+ * Documentation lags releases, so it never excludes a def. Null when the docs at the
+ * pinned clone have no matching page or only the unreleased tree documents it.
  *
  * [profile] carries per-engine semantic facts (see [SemanticProfile]); null when the
  * engine exposes none for this function (all Trino/DuckDB defs currently; Doris defs
@@ -171,6 +172,7 @@ data class FunctionDef(
     @SerialName("since_version") val sinceVersion: String? = null,
     val profile: SemanticProfile? = null,
     val extension: String? = null,
+    @SerialName("first_documented_in") val firstDocumentedIn: String? = null,
 )
 
 /**
@@ -248,6 +250,16 @@ class FunctionCatalog(
      */
     fun isKnown(name: String): Boolean =
         contains(name) || name.uppercase() in grammarBuiltins
+
+    /**
+     * The defs a server at [version] can have: every def except those whose proven
+     * [FunctionDef.sinceVersion] is newer. [FunctionDef.firstDocumentedIn] never excludes.
+     * An unparsable [version] or since-version keeps the def.
+     */
+    fun availableIn(version: String): List<FunctionDef> {
+        val server = parseVersion(version)?.number ?: return functions
+        return functions.filter { def -> def.sinceVersion?.let(::parseVersion)?.let { it.number <= server } ?: true }
+    }
 
     /** True when [name] is a registered table-valued / table-generating function. */
     fun isTableFunction(name: String): Boolean =

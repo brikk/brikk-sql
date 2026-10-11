@@ -175,7 +175,7 @@ The catalog now has 731 definitions, 829 names including aliases, and 1436 overl
 It combines the documented master snapshot with these release-branch additions;
 it does not claim to be the exact registry of one release. Existing EMBED JSON
 overloads remain present. VECTOR_SEARCH has no static scalar signature and keeps
-empty overloads. The supplement does not alter `sinceVersion`, which still means
+empty overloads. The supplement does not alter `firstDocumentedIn`, which means
 first documented in the independently pinned website snapshot.
 
 Regenerate from a checkout at the release commit:
@@ -226,7 +226,8 @@ PropagateNullable, 149 AlwaysNullable, 116 AlwaysNotNullable, 68 custom, 53 none
 
 ### `data/doris-since-versions.json` — Doris function "since" versions
 
-`FunctionDef.sinceVersion` (serialized `"since_version"`) is populated from
+`FunctionDef.firstDocumentedIn` (serialized `"first_documented_in"`; `sinceVersion` is
+reserved for proven introduction facts and stays null) is populated from
 `vendor/data/doris-since-versions.json`, produced by
 `tools/extract_doris_since_versions.py` against a local `git clone --depth 1
 https://github.com/apache/doris-website` (gitignored under `reference/`, not vendored —

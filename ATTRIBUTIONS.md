@@ -58,7 +58,7 @@ https://github.com/apache/doris-website, both Apache License 2.0:
 - `vendor/data/doris-since-versions.json` — per-function "first documented in" version,
   extracted from `apache/doris-website`'s function docs
   (`docs/sql-manual/sql-functions/`, `versioned_docs/version-*/sql-manual/sql-functions/`)
-  by `tools/extract_doris_since_versions.py`; joined onto `FunctionDef.sinceVersion`. See
+  by `tools/extract_doris_since_versions.py`; joined onto `FunctionDef.firstDocumentedIn`. See
   vendor/README.md for the extraction method and its honesty caveats.
 - `vendor/data/doris-keywords-4.1.4.tsv` and `GeneratedKeywords.kt` — keyword spellings,
   token symbols and reservation read from the vendored 4.1.4 parser's grammar.
