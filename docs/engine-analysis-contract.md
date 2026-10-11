@@ -52,6 +52,17 @@ nullability proof.
 
 ## Policy and migration requirements
 
+### Open traits do not certify executable RENAME expansion
+
+Engine carries its Partial/closed distinction separately from SQL-side Shape.
+Trait-minimum columns can support analysis and disposable strict-validation
+preparation, but they are not the complete runtime field list. In particular,
+star RENAME cannot safely become an explicit projection from just those minima.
+The schema-less executable Presto/Trino path, including Engine's source-preserving
+runtime route, refuses an unexpanded rename with `UnsupportedError`. Complete
+caller-supplied layouts can still be expanded in place; minimum analysis evidence
+must not be treated as an execution or closedness proof (extension #51).
+
 `InferencePolicyContractTest` exercises both `qualify()` and `qualifyColumns()`:
 
 - `inferSchema=true`: keep the explicit legacy ownership fallback.

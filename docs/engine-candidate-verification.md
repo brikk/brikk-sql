@@ -89,6 +89,18 @@ were removed after verification; scratch candidate evidence remains retained.
 
 ## Safety assessment and coverage limits
 
+Post-merge RENAME follow-up: extension #51 changes the core JAR to
+`da94d2ce739b52474a3a99ceb2d476e604e03267892fc740e5fa2501fa9f8ce7`;
+metadata remains `6f4a506a68d16c79bb7d7de42122aa3d72eb50d3ffcc427f8804287467e29541`.
+The original 163-test run above belongs to its original candidate, not this new
+hash. The new guard passes the complete SQL-side suite and the 38 existing
+contracts, plus a targeted old-binary consumer probe: the retained precompiled
+peer runtime (`e985884a1010f1d1d8407da712e8217c65f5c16426946885445f9640b1fc2c06`)
+refuses `Rel<HasId>`'s schema-less Presto/Trino rename without emitting SQL, while
+explicit SELECT still renders and authored source remains unchanged. The probe
+and log are `/tmp/opencode/TrinoRenameRuntimeProbe.java` and
+`/tmp/opencode/trino-pipe-rename-peer-runtime.log`; no peer-source edits occurred.
+
 This is a well-tested release candidate for the scoped catch-up, not proof of
 arbitrary SQL equivalence. Confidence is strongest for the hand-owned behaviors:
 partial/empty catalogs, all three legacy inference policies and the new disabled
