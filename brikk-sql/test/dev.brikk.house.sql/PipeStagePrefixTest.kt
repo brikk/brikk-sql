@@ -44,6 +44,19 @@ class PipeStagePrefixTest {
     }
 
     @Test
+    fun aTopLevelSemicolonEndsTheProgram() {
+        val sql = "FROM t |> WHERE a; SELECT 99 |> WHERE b"
+        val first = PipeStageCut.Prefix("FROM t |> WHERE a", 1, 2)
+        assertCut(first, sql, sql.indexOf("WHERE a"))
+        assertCut(first, sql, sql.indexOf(';') + 1)
+        assertCut(PipeStageCut.Unavailable, sql, sql.indexOf("99"))
+        assertCut(PipeStageCut.Unavailable, sql, sql.length)
+
+        val nested = "FROM t |> JOIN (FROM u |> WHERE b) USING (id); SELECT 1"
+        assertCut(PipeStageCut.Prefix("FROM t |> JOIN (FROM u |> WHERE b) USING (id)", 1, 2), nested, nested.indexOf("USING"))
+    }
+
+    @Test
     fun programsWithoutTwoStagesAndOffsetsOutsideStagesAreUnavailable() {
         assertCut(PipeStageCut.Unavailable, "FROM t", 2)
         assertCut(PipeStageCut.Unavailable, "SELECT '|>' FROM t", 2)

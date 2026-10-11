@@ -154,11 +154,19 @@ object PipeStageSplitter {
      * position in `0..sql.length`. Stage ranges are half-open: a stage owns everything from its
      * first token up to the next stage's first token, and the last stage owns the rest of [sql].
      * A bracketed pipeline owns the positions from just before its `(` through just before its `)`.
+     * A top-level `;` ends the program; positions after it are [PipeStageCut.Unavailable].
      */
     fun topLevelPrefixAt(sql: String, offset: Int, dialect: String = ""): PipeStageCut {
         if (offset !in 0..sql.length) return PipeStageCut.Unavailable
         val split = try {
-            split(sql, dialect)
+            val whole = split(sql, dialect)
+            when (val terminator = whole.topLevelTerminator()) {
+                null -> whole
+                else -> {
+                    if (offset > terminator.end + 1) return PipeStageCut.Unavailable
+                    split(sql.substring(0, terminator.start), dialect)
+                }
+            }
         } catch (_: TokenError) {
             return PipeStageCut.Unavailable
         }
@@ -167,6 +175,17 @@ object PipeStageSplitter {
         val stage = stages.indexOfLast { offset >= it.start }
         if (stages.size < 2 || stage < 0) return PipeStageCut.Unavailable
         return PipeStageCut.Prefix(sql.substring(0, stages[stage].endInclusive + 1), stage, stages.size)
+    }
+
+    private fun PipeSplitResult.topLevelTerminator(): Token? {
+        var depth = 0
+        for (token in tokens) when (token.tokenType) {
+            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> depth++
+            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> depth--
+            TokenType.SEMICOLON -> if (depth == 0) return token
+            else -> {}
+        }
+        return null
     }
 
     private class Bracket(val start: Int) {
