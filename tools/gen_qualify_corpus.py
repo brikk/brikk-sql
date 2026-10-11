@@ -31,6 +31,7 @@ Re-run whenever reference/sqlglot is updated or fixtures change.
 from __future__ import annotations
 
 import json
+import inspect
 import pathlib
 import subprocess
 import sys
@@ -123,7 +124,7 @@ def run_qualify_columns(sql, dialect, flags, schema):
     expression = parse_one(sql, read=dialect)
     expression = qualify_mod.qualify(
         expression,
-        infer_schema=True,
+        **({"infer_schema": True} if "infer_schema" in inspect.signature(qualify_mod.qualify).parameters else {}),
         validate_qualify_columns=flags.get("validate_qualify_columns", True),
         identify=False,
         schema=schema,
@@ -163,6 +164,9 @@ def build_pair_corpus(fixture_name, runner, schema=None, visible=None):
             )
 
         case = {"sql": sql, "expected": expected}
+        local_schema = json.loads(meta["schema"]) if "schema" in meta else schema
+        if "schema" in meta:
+            case["schema"] = local_schema
         if meta.get("title"):
             case["title"] = meta["title"]
         if dialect:
@@ -175,9 +179,9 @@ def build_pair_corpus(fixture_name, runner, schema=None, visible=None):
             case["dialect_supported"] = False
 
         oracle_schema = (
-            MappingSchema(schema, {k: set(v) for k, v in visible.items()})
+            MappingSchema(local_schema, {k: set(v) for k, v in visible.items()})
             if visible is not None
-            else schema
+            else local_schema
         )
         try:
             actual = runner(sql, dialect, flags, oracle_schema)
@@ -212,17 +216,20 @@ def build_invalid_corpus():
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     version = sqlglot_version()
+    infer_schema = "infer_schema" in inspect.signature(qualify_mod.qualify).parameters
 
     corpora = {
         "qualify_columns": {
             "fixture": "qualify_columns",
             "schema": SCHEMA,
+            "infer_schema": infer_schema,
             "cases": build_pair_corpus("qualify_columns", run_qualify_columns, schema=SCHEMA),
         },
         "qualify_columns__with_invisible": {
             "fixture": "qualify_columns__with_invisible",
             "schema": SCHEMA,
             "visible": VISIBLE,
+            "infer_schema": infer_schema,
             "cases": build_pair_corpus(
                 "qualify_columns__with_invisible",
                 run_qualify_columns,

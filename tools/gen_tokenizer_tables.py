@@ -154,7 +154,9 @@ def gen_tables(dialect_name: str, version: str) -> tuple[str, str]:
     _assert_single_chars(label, "_STRING_ESCAPES", t._STRING_ESCAPES)
     _assert_single_chars(label, "_BYTE_STRING_ESCAPES", t._BYTE_STRING_ESCAPES)
     _assert_single_chars(label, "_IDENTIFIER_ESCAPES", t._IDENTIFIER_ESCAPES)
-    _assert_single_chars(label, "_ESCAPE_FOLLOW_CHARS", t._ESCAPE_FOLLOW_CHARS)
+    # Kept as an empty compatibility field after upstream removed this policy.
+    escape_follow_chars = getattr(t, "_ESCAPE_FOLLOW_CHARS", set())
+    _assert_single_chars(label, "_ESCAPE_FOLLOW_CHARS", escape_follow_chars)
     _assert_single_chars(label, "VAR_SINGLE_TOKENS", t.VAR_SINGLE_TOKENS)
 
     lines = [HEADER.format(version=version)]
@@ -238,7 +240,7 @@ def gen_tables(dialect_name: str, version: str) -> tuple[str, str]:
     char_set(
         "ESCAPE_FOLLOW_CHARS",
         f"{py_name}._ESCAPE_FOLLOW_CHARS (computed)",
-        t._ESCAPE_FOLLOW_CHARS,
+        escape_follow_chars,
     )
     char_set("VAR_SINGLE_TOKENS", f"{py_name}.VAR_SINGLE_TOKENS", t.VAR_SINGLE_TOKENS)
 
@@ -265,6 +267,15 @@ def gen_tables(dialect_name: str, version: str) -> tuple[str, str]:
 
     lines.append(f"    // sqlglot: {py_name} flags")
     lines.append(f"    const val NESTED_COMMENTS: Boolean = {str(t.NESTED_COMMENTS).lower()}")
+    for name in ("DROP_UNKNOWN_ESCAPES", "NUMERIC_ESCAPES_ARE_BYTES", "DASH_COMMENT_REQUIRES_BOUNDARY", "COMMENTS_TERMINATE_AT_NEWLINE_ONLY"):
+        lines.append(f"    const val {name}: Boolean = {str(getattr(t, name)).lower()}")
+    lines.append(f"    const val LONE_SURROGATE_REPLACEMENT: String = {kstr(t.LONE_SURROGATE_REPLACEMENT)}")
+    lines.append("    val NUMERIC_ESCAPES: Map<Char, TokenizerConfig.NumericEscape> = " + ("mapOf(" if t.NUMERIC_ESCAPES else "emptyMap()"))
+    for prefix, numeric in t.NUMERIC_ESCAPES.items():
+        _assert_single_chars(label, "NUMERIC_ESCAPES", [prefix])
+        lines.append(f"        {kchar(prefix)} to TokenizerConfig.NumericEscape({', '.join(map(str, numeric))}),")
+    if t.NUMERIC_ESCAPES:
+        lines.append("    )")
     lines.append(f"    const val HINT_START: String = {kstr(t.HINT_START)}")
     lines.append(
         "    const val HEREDOC_TAG_IS_IDENTIFIER: Boolean = "
@@ -339,6 +350,14 @@ def gen_tables(dialect_name: str, version: str) -> tuple[str, str]:
         lines.append("        numbersCanHaveDecimals = NUMBERS_CAN_HAVE_DECIMALS,")
         lines.append("        identifiersCanStartWithDigit = IDENTIFIERS_CAN_START_WITH_DIGIT,")
         lines.append("        unescapedSequences = UNESCAPED_SEQUENCES,")
+        lines.append("    ).withStringEscapes(")
+        lines.append("        numericEscapes = NUMERIC_ESCAPES,")
+        lines.append("        dropUnknownEscapes = DROP_UNKNOWN_ESCAPES,")
+        lines.append("        numericEscapesAreBytes = NUMERIC_ESCAPES_ARE_BYTES,")
+        lines.append("        loneSurrogateReplacement = LONE_SURROGATE_REPLACEMENT,")
+        lines.append("    ).withCommentPolicy(")
+        lines.append("        dashCommentRequiresBoundary = DASH_COMMENT_REQUIRES_BOUNDARY,")
+        lines.append("        commentsTerminateAtNewlineOnly = COMMENTS_TERMINATE_AT_NEWLINE_ONLY,")
         lines.append("    )")
 
     lines.append("}")

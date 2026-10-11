@@ -691,6 +691,39 @@ class TypeAnnotator(
     /** Dispatches a generated [AnnotatorRef] to its hand-ported implementation. */
     private fun runAnnotator(ref: AnnotatorRef, e: Expression) {
         when (ref) {
+            is AnnotatorRef.NumericArg -> {
+                val operand = e.thisArg as Expression
+                setType(e, if (operand.isType(DType.UNKNOWN) || operand.type?.thisArg in DataType.NUMERIC_TYPES)
+                    operand.type else DType.INT)
+            }
+            is AnnotatorRef.IntAsDouble -> annotateIntAsDouble(e)
+            is AnnotatorRef.MathPostgres -> {
+                if ((e.thisArg as Expression).isType(DType.FLOAT)) setType(e, DType.DOUBLE)
+                else annotateIntAsDouble(e)
+            }
+            is AnnotatorRef.FloorCeilDuckdb -> {
+                if ((e.thisArg as Expression).isType(DType.DECIMAL)) setType(e, DType.UNKNOWN)
+                else annotateIntAsDouble(e)
+            }
+            is AnnotatorRef.FloorCeilHive -> {
+                val operand = e.thisArg as Expression
+                setType(e, if (e.args["decimals"] != null || operand.isType(DType.DECIMAL, DType.UNKNOWN) ||
+                    (operand.unnest() as? Literal)?.isNumber == true) DType.UNKNOWN else DType.BIGINT)
+            }
+            is AnnotatorRef.AtTimeZoneDuckdb -> {
+                val operand = e.thisArg as Expression
+                setType(e, when {
+                    operand.isType(DType.DATE, DType.TIMESTAMP, DType.TIMESTAMPNTZ, DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS) -> DType.TIMESTAMPTZ
+                    operand.isType(DType.TIMESTAMPTZ) -> DType.TIMESTAMP
+                    operand.isType(DType.TIMETZ) -> DType.TIMETZ
+                    else -> DType.UNKNOWN
+                })
+            }
+            is AnnotatorRef.DateTruncDuckdb -> {
+                val operand = e.thisArg as Expression
+                setType(e, if (operand.isType(DType.DATE, DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS))
+                    DType.TIMESTAMP else operand.type)
+            }
             is AnnotatorRef.BinaryAnn -> annotateBinary(e)
             is AnnotatorRef.UnaryAnn -> annotateUnary(e)
             is AnnotatorRef.ByArgs ->
@@ -807,6 +840,12 @@ class TypeAnnotator(
             is AnnotatorRef.Compress -> annotateCompress(e)
             is AnnotatorRef.SetType -> setType(e, ref.dtype)
         }
+    }
+
+    private fun annotateIntAsDouble(e: Expression) {
+        val operand = e.thisArg as Expression
+        setType(e, if (operand.type?.thisArg in DataType.INTEGER_TYPES || operand.type?.thisArg in DataType.TEXT_TYPES)
+            DType.DOUBLE else operand.type)
     }
 
     // sqlglot: typing/mysql.py _annotate_bit_func (BIT_AND/BIT_OR/... family).

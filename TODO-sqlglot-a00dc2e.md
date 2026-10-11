@@ -225,6 +225,11 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   only with target AST metadata and corresponding options-only ALTER fixtures.
   Include WeightString in the generated manifest and remove its stale-detecting
   target-only contract; emit comment policies before retiring escape/comment overlays.
+  Generator prerequisites are verified: numeric/byte/unknown/surrogate and comment
+  policies are emitted through ABI-preserving config methods; new numeric/temporal
+  typing helpers are explicit and tested (unknown upstream helpers still refuse).
+  Qualification fixture generation handles target no-inference signatures and
+  per-case schemas; old fixtures keep their old policy until coherent regeneration.
 - [ ] Regenerate AST/tokenizer/typing and behavioral fixtures in a controlled batch.
   Bump `FixturePinSyncTest.SQLGLOT_PIN` only with a coherent fixture refresh;
   leave the shipped pin unchanged while individual ports are under review.
@@ -326,3 +331,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   and 16 offline release tests pass, with native PostgreSQL/MySQL/Trino/calendar
   gates enabled (four optional skips). All requested dialect boxes are implemented;
   generated dependency audit, coherent fixtures and downstream verification remain.
+- Integration prerequisite batch: build, 1,266 Kotlin tests, two generator tests
+  and 16 offline release tests pass. Native DuckDB typing corroborates new numeric,
+  timezone and DATE_TRUNC helpers. The shipped pin and generated fixtures are still
+  unchanged; coherent generation and exact ledger reconciliation are next.
