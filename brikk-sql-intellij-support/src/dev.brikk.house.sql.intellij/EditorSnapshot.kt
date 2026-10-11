@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
 import java.util.concurrent.CancellationException
+import org.jetbrains.annotations.ApiStatus
 
 /** Exact document identity/revision. A later edit-and-revert also invalidates work. */
 public class EditorSnapshot private constructor(public val document: Document, public val text: String, public val revision: Long) {
@@ -25,6 +26,7 @@ public class EditorSnapshot private constructor(public val document: Document, p
          * document was edited since this call, even back to the same text, and otherwise captures
          * the saved revision. Edit tracking ends with [parent].
          */
+        @ApiStatus.Experimental
         public fun captureAfterSave(document: Document, parent: Disposable): () -> EditorSnapshot {
             var edited = false
             document.addDocumentListener(object : DocumentListener {

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij
 
+import com.intellij.configurationStore.ComponentSerializationUtil
 import com.intellij.notification.Notification
 import com.intellij.notification.Notifications
 import com.intellij.openapi.project.Project
@@ -10,6 +11,7 @@ import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.components.JBCheckBox
 import com.intellij.util.ui.UIUtil
+import com.intellij.util.xmlb.XmlSerializer
 import java.util.UUID
 
 class TestToggleSettings(project: Project) : ToggleSettings(project, SqlLanguage.INSTANCE) {
@@ -33,6 +35,13 @@ class PlatformHelpersTest : BasePlatformTestCase() {
         assertTrue(settings.enabled)
         assertFalse("The SQL file must be reparsed", sql.isValid)
         assertTrue("Other languages keep their PSI", text.isValid)
+    }
+
+    fun testStateKeepsThePersistedEnabledOption() {
+        assertEquals(ToggleSettings.Options::class.java, ComponentSerializationUtil.getStateClass<Any>(TestToggleSettings::class.java))
+        val element = XmlSerializer.serialize(ToggleSettings.Options(enabled = true))
+        assertEquals("true", element.getChildren("option").single { it.getAttributeValue("name") == "enabled" }.getAttributeValue("value"))
+        assertTrue(XmlSerializer.deserialize(element, ToggleSettings.Options::class.java).enabled)
     }
 
     fun testLoadedStateRefreshesOnlyAfterInitialization() {
