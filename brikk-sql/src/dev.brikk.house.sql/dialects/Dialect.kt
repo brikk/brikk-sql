@@ -14,6 +14,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.Token
+import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -143,6 +144,23 @@ open class Dialect {
 
     // sqlglot: Dialect.tokenizer_class (tables only; the scanner is shared)
     open val tokenizerConfig: TokenizerConfig get() = TokenizerConfig.BASE
+
+    /**
+     * brikk-native: the words the tokenizer treats as keywords, for editor display, including each
+     * word of multi-word keywords such as `ORDER BY`. This is the tokenizer's vocabulary, not the
+     * engine's reserved-word list.
+     */
+    val editorKeywords: Set<String> by lazy {
+        tokenizerConfig.keywords
+            .filter { (word, type) -> type != TokenType.VAR && KEYWORD_PHRASE.matches(word) }
+            .keys.flatMap { it.split(' ') }.toSet()
+    }
+
+    /** brikk-native: the keyword spellings the parser reads as data types, e.g. `DOUBLE PRECISION`. */
+    val typeNames: Set<String> by lazy {
+        val types = parser().typeTokens
+        tokenizerConfig.keywords.filter { (word, type) -> type in types && KEYWORD_PHRASE.matches(word) }.keys
+    }
 
     // sqlglot: Dialect.TIME_MAPPING (dialect format specifier -> python strftime)
     open val timeMapping: Map<String, String> get() = emptyMap()
@@ -280,6 +298,8 @@ open class Dialect {
         return expression
     }
 }
+
+private val KEYWORD_PHRASE = Regex("[A-Za-z][A-Za-z0-9_]*( [A-Za-z][A-Za-z0-9_]*)*")
 
 /**
  * Thrown by every public entry point ([Dialects.forName], [transpile], [Expression.sql],

@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.dialects.Dialects
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -224,4 +225,40 @@ object PipeStageSplitter {
     }
 
     private val SET_OPS = setOf(TokenType.UNION, TokenType.INTERSECT, TokenType.EXCEPT)
+}
+
+/**
+ * brikk-native: the phrases that can start a pipe stage after `|>` in [dialect], from the
+ * parser's own tables: transform operators (`WHERE`, `ORDER BY`, ...), joins (`JOIN`,
+ * `side [OUTER] JOIN`, kind and method joins) and set operations (`ALL`/`DISTINCT`, and bare
+ * where the dialect has a default). Words the dialect does not tokenize as keywords are omitted.
+ */
+fun pipeStageKeywords(dialect: String): List<String> {
+    val source = Dialects.forName(dialect)
+    val parser = source.parser()
+    val words = buildMap {
+        for ((word, type) in source.tokenizerConfig.keywords) if (' ' !in word) putIfAbsent(type, word)
+    }
+    val joins = words[TokenType.JOIN]?.let { join ->
+        buildList {
+            add(join)
+            val outer = words[TokenType.OUTER]?.takeIf { TokenType.OUTER in parser.joinKinds }
+            for (side in parser.joinSides.mapNotNull(words::get)) {
+                add("$side $join")
+                if (outer != null) add("$side $outer $join")
+            }
+            for (prefix in (parser.joinKinds - TokenType.OUTER + parser.joinMethods).mapNotNull(words::get)) {
+                add(if (prefix.endsWith(join)) prefix else "$prefix $join")
+            }
+        }
+    }.orEmpty()
+    val setOperations = parser.setOperations.flatMap { type ->
+        val operation = words[type] ?: return@flatMap emptyList()
+        listOfNotNull(
+            operation.takeIf { parser.setOpDistinctByDefault(type) != null },
+            words[TokenType.ALL]?.let { "$operation $it" },
+            words[TokenType.DISTINCT]?.let { "$operation $it" },
+        )
+    }
+    return parser.pipeStageTransformOperators.toList() + joins + setOperations
 }

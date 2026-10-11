@@ -10616,6 +10616,8 @@ open class Parser(
             "WHERE", "WINDOW",
         )
 
+    internal val pipeStageTransformOperators: Set<String> get() = pipeSyntaxTransformOperators
+
     // sqlglot: Parser._parse_pipe_syntax_query (brikk: builds PipeQuery instead of desugaring;
     // head normalization — Subquery/FROM-less -> SELECT * FROM (...) — happens in desugarPipes)
     fun parsePipeSyntaxQuery(query: Expression): Expression? {
