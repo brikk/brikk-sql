@@ -1,6 +1,6 @@
 package dev.brikk.house.sql.shape
 
-import dev.brikk.house.sql.ast.Select
+import dev.brikk.house.sql.ast.Query
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.ParseError
@@ -29,27 +29,27 @@ sealed interface PipeLowering {
 
 /**
  * brikk-native: lowers [text], which must hold exactly one statement, to executable [dialect]
- * SQL with every pipe desugared, refusing whatever cannot run as standard SQL. [allowFirstStage]
+ * SQL with every pipe desugared, refusing whatever cannot run as standard SQL. Text whose
+ * statement boundaries are unknown is refused, never [PipeLowering.NotPipe]. [allowFirstStage]
  * also lowers a plain query, such as the bare first stage of a pipe program (`FROM t`).
  */
 fun lowerForExecution(text: String, dialect: String, allowFirstStage: Boolean = false): PipeLowering {
     val statements = SqlScriptSnapshot.parse(text, dialect).statements
-    if (statements.none { it.hasPipe } && !allowFirstStage) return PipeLowering.NotPipe
     statements.firstNotNullOfOrNull { statement ->
         statement.boundaryError?.let { PipeLowering.Refused(SyntacticRange(statement.start, statement.end), it) }
     }?.let { return it }
+    if (statements.none { it.hasPipe } && !allowFirstStage) return PipeLowering.NotPipe
     if (statements.count { it.hasSql } != 1) return PipeLowering.Refused(null, "Select exactly one statement to execute")
     return try {
         val fragment = SqlFragment(text, dialect)
-        if (!fragment.containsPipe && !(allowFirstStage && fragment.ast is Select)) {
+        if (!fragment.containsPipe && !(allowFirstStage && fragment.ast is Query)) {
             return PipeLowering.Refused(null, "The statement is not a pipe query")
         }
         val result = fragment.toExecutable(dialect, pretty = true)
-        when {
-            result.isRawPassthroughStatement -> PipeLowering.Refused(null, "Lowering returned raw SQL")
-            Dialects.forName(dialect).tokenize(result.sql).any { it.tokenType == TokenType.PIPE_GT } ->
-                PipeLowering.Refused(null, "Lowering left pipe syntax in the output")
-            else -> PipeLowering.Ok(result)
+        if (Dialects.forName(dialect).tokenize(result.sql).any { it.tokenType == TokenType.PIPE_GT }) {
+            PipeLowering.Refused(null, "Lowering left pipe syntax in the output")
+        } else {
+            PipeLowering.Ok(result)
         }
     } catch (e: RuntimeException) {
         when (e) {
