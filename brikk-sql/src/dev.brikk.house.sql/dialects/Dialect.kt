@@ -145,13 +145,11 @@ open class Dialect {
     // sqlglot: Dialect.tokenizer_class (tables only; the scanner is shared)
     open val tokenizerConfig: TokenizerConfig get() = TokenizerConfig.BASE
 
-    /**
-     * brikk-native: the single words the tokenizer treats as keywords, for editor display. A
-     * multi-word keyword such as `ORDER BY` contributes nothing; its words appear only when each
-     * is a keyword on its own. This is the tokenizer's vocabulary, not the engine's reserved words.
-     */
+    /** brikk-native: every word of the tokenizer's keywords (`ORDER BY` gives `ORDER` and `BY`), for editor display. */
     val editorKeywords: Set<String> by lazy {
-        tokenizerConfig.keywords.filter { (word, type) -> type != TokenType.VAR && KEYWORD_WORD.matches(word) }.keys
+        tokenizerConfig.keywords
+            .filter { (word, type) -> type != TokenType.VAR && KEYWORD_PHRASE.matches(word) }
+            .keys.flatMap { it.split(' ') }.toSet()
     }
 
     /** brikk-native: the keyword spellings the parser reads as data types, e.g. `DOUBLE PRECISION`. */
@@ -297,8 +295,7 @@ open class Dialect {
     }
 }
 
-private val KEYWORD_WORD = Regex("[A-Za-z][A-Za-z0-9_]*")
-private val KEYWORD_PHRASE = Regex("$KEYWORD_WORD( $KEYWORD_WORD)*")
+private val KEYWORD_PHRASE = Regex("[A-Za-z][A-Za-z0-9_]*( [A-Za-z][A-Za-z0-9_]*)*")
 
 /**
  * Thrown by every public entry point ([Dialects.forName], [transpile], [Expression.sql],

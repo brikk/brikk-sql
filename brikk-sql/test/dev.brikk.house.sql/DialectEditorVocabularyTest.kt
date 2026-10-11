@@ -12,12 +12,11 @@ class DialectEditorVocabularyTest {
     private val word = Regex("[A-Za-z][A-Za-z0-9_]*")
 
     @Test
-    fun editorKeywordsAreSingleWordKeywords() {
+    fun editorKeywordsAreTheWordsOfAllKeywordsIncludingMultiWordOnes() {
         for (dialect in dialects) {
             val keywords = dialect.editorKeywords
-            assertTrue(keywords.all { word.matches(it) && it in dialect.tokenizerConfig.keywords }, "${dialect.name}: $keywords")
-            assertTrue(keywords.containsAll(listOf("SELECT", "FROM", "WHERE", "JOIN")), dialect.name)
-            assertTrue(keywords.none { it in setOf("SETS", "VARYING", "SECURITY") }, "${dialect.name}: $keywords")
+            assertTrue(keywords.all(word::matches), "${dialect.name}: $keywords")
+            assertTrue(keywords.containsAll(listOf("SELECT", "FROM", "WHERE", "JOIN", "ORDER", "GROUP", "BY")), dialect.name)
         }
         assertTrue("POSITIONAL" in Dialects.DUCKDB.editorKeywords)
         assertFalse("POSITIONAL" in Dialects.TRINO.editorKeywords)
