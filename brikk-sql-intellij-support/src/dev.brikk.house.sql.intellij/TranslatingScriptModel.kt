@@ -125,7 +125,7 @@ public class TranslatingScriptModel<E>(
         (baseParameters + plans.values.flatMap { it.parameters }).distinctBy { it.name() to it.range() })
     override fun externals(): JBIterable<out ExternalIt<E>> = delegate.externals()
     override fun getVirtualFile(): VirtualFile? = delegate.virtualFile
-    override fun getTextRange(): TextRange = delegate.textRange
+    override fun getTextRange(): TextRange? = delegate.textRange
     override fun getLanguage(): Language = delegate.language
     override fun <EE : Any?> rawTransform(transform: com.intellij.util.Function<in SyntaxTraverser<E>, out SyntaxTraverser<EE>>): ScriptModel<EE> =
         TranslatingScriptModel(delegate.rawTransform(transform), editor, adapter)
