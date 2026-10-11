@@ -19,6 +19,23 @@ It registers no extensions itself and has no SQL engine or Kotlin IDE dependency
   validation. Refuse expected failures with `SqlExecutionRefusal`; propagate cancellation.
 - `RenderedSql`: exact SQL/input pair and optional source-map callback. An authored
   map is available only if parameter expansion did not change the original input.
+- `SqlColumnCompletion.create`: consistent column lookup presentation with type,
+  three-state nullability, source alias and origin label. Same-named columns from
+  different aliases retain distinct lookup identities. Consumers provide copied
+  facts, so the helper acquires no Kotlin IDE or engine dependency.
+
+Rich column examples, using a nullable Kotlin Boolean for nullability:
+
+```kotlin
+SqlColumnCompletion.create("payload", "String", true, "src")
+// payload    brikk column (src)    String?
+SqlColumnCompletion.create("code", "String", false, "r", "relation contract")
+// code       relation contract (r)    String
+```
+
+A null type name displays `unknown type`; unknown nullability displays
+`(nullability unknown)`. Presentation does not infer native SQL types or replace
+the consumer's scope analysis. The default lookup priority is 120.
 
 Example consumer registration:
 
