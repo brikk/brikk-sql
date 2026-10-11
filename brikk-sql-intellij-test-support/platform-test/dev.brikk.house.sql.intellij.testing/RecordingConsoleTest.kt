@@ -3,6 +3,8 @@ package dev.brikk.house.sql.intellij.testing
 import com.intellij.database.console.JdbcConsoleProvider
 import com.intellij.database.console.session.DatabaseSession
 import com.intellij.database.dataSource.LocalDataSourceManager
+import com.intellij.database.datagrid.DataAuditor
+import com.intellij.database.datagrid.DataProducer
 import com.intellij.database.datagrid.DataRequest
 import com.intellij.database.datagrid.GridDataRequest
 import com.intellij.database.run.ConsoleDataRequest
@@ -10,6 +12,7 @@ import com.intellij.database.settings.DatabaseSettings
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 
 class RecordingConsoleTest : BasePlatformTestCase() {
     private fun recording(sql: String) =
@@ -42,6 +45,44 @@ class RecordingConsoleTest : BasePlatformTestCase() {
             recording.onSubmit = { throw canceled }
             assertSame(canceled, runCatching { recording.executeScript() }.exceptionOrNull())
             assertSame(recording.requests.single(), recording.console.session.state.work.single().request)
+        }
+    }
+
+    fun testSessionAccessHookObservesAndCanRefuseAccess() {
+        recording("SELECT 1").use { recording ->
+            val session = recording.console.session
+            // The IDE also reads the session from background threads.
+            val testThread = Thread.currentThread()
+            val calls = CopyOnWriteArrayList<String>()
+            recording.beforeSessionCall = { if (Thread.currentThread() === testThread) calls += it }
+            session.state
+            assertEquals(session, session)
+            assertEquals(listOf("getState", "equals"), calls)
+
+            val refused = ProcessCanceledException()
+            recording.beforeSessionCall = { if (Thread.currentThread() === testThread) throw refused }
+            assertSame(refused, runCatching { session.state }.exceptionOrNull())
+        }
+    }
+
+    fun testAuditorHookRunsAtRegistrationOfAnAuditorThatSeesSubmissions() {
+        recording("SELECT 1").use { recording ->
+            val registered = CopyOnWriteArrayList<DataAuditor>()
+            val audited = CopyOnWriteArrayList<DataRequest>()
+            recording.onAuditorAdded = { registered += it }
+            val auditor = object : DataAuditor {
+                override fun jobSubmitted(request: DataRequest, producer: DataProducer) {
+                    audited += request
+                }
+            }
+            recording.console.session.messageBus.addAuditor(auditor)
+            assertSame(auditor, registered.single())
+            recording.executeScript()
+            assertEquals(recording.requests, audited)
+
+            val canceled = ProcessCanceledException()
+            recording.onAuditorAdded = { throw canceled }
+            assertSame(canceled, runCatching { recording.console.session.messageBus.addAuditor(object : DataAuditor {}) }.exceptionOrNull())
         }
     }
 

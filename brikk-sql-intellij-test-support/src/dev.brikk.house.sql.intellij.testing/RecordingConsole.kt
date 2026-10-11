@@ -46,6 +46,12 @@ public class RecordingConsole(
     /** Runs after a submission is recorded. Throw from it to fail or cancel that submission. */
     public var onSubmit: (DataRequest) -> Unit = {}
 
+    /** Runs after an auditor is registered on a session's bus. Throw from it to fail or cancel the registration. */
+    public var onAuditorAdded: (DataAuditor) -> Unit = {}
+
+    /** Runs with the method name before every call into a session. Throw from it to refuse that access. */
+    public var beforeSessionCall: (String) -> Unit = {}
+
     public var console: JdbcConsole = try {
         open(newDataSource())
     } catch (failure: Throwable) {
@@ -62,6 +68,8 @@ public class RecordingConsole(
 
     override fun close() {
         onSubmit = {}
+        onAuditorAdded = {}
+        beforeSessionCall = {}
         try {
             dispose(console)
         } finally {
@@ -130,6 +138,7 @@ public class RecordingConsole(
             override fun addConsumer(consumer: DataConsumer) {}
             override fun addAuditor(auditor: DataAuditor) {
                 auditors += auditor
+                onAuditorAdded(auditor)
             }
         }
 
@@ -147,7 +156,7 @@ public class RecordingConsole(
         }
 
         @Suppress("UNCHECKED_CAST")
-        val session: DatabaseSession = recording("Recording session") { method, args ->
+        val session: DatabaseSession = recording("Recording session", { beforeSessionCall(it) }) { method, args ->
             when (method.name) {
                 "getTitle", "getDisplayName" -> "Recording session"
                 "getConnectionPoint", "getTarget" -> target
@@ -186,8 +195,13 @@ private object RecordedStatus : DatabaseSession.State.WorkStatus {
     override val errorNavigator: DataRequest.CoupledWithEditor.ErrorNavigator? get() = null
 }
 
-private inline fun <reified T : Any> recording(description: String, crossinline answer: (Method, Array<out Any?>) -> Any?): T =
+private inline fun <reified T : Any> recording(
+    description: String,
+    crossinline beforeCall: (String) -> Unit = {},
+    crossinline answer: (Method, Array<out Any?>) -> Any?,
+): T =
     Proxy.newProxyInstance(T::class.java.classLoader, arrayOf(T::class.java), InvocationHandler { proxy, method, args ->
+        beforeCall(method.name)
         val arguments = args.orEmpty()
         when (method.name) {
             "equals" -> proxy === arguments[0]

@@ -18,6 +18,10 @@ RecordingConsole(project, file, "my-driver-id").use { recording ->
 - `requests`: every request submitted through any of the fixture's sessions, in order.
   An empty list means nothing was sent.
 - `onSubmit`: runs after a request is recorded; throw from it to fail or cancel a submission.
+- `onAuditorAdded`: runs when an auditor registers on a session bus, for example to edit or
+  cancel at tracking time.
+- `beforeSessionCall`: runs with the method name before every session call, including
+  `equals`/`hashCode`; use it to prove a guard refuses before session access, or to refuse access.
 - `replaceSession()` / `replaceDataSource()`: dispose the console and attach a new one to
   the same file, as a session or data source switch does. Change the URL through
   `console.dataSource.url`; detach clients through `console.session.detach(console)`.
