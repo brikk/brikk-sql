@@ -90,17 +90,25 @@ class RecordingConsoleTest : BasePlatformTestCase() {
         val recording = recording("SELECT 1")
         val dataSources = recording.use {
             val first = recording.console
+            recording.executeScript()
+
             val second = recording.replaceSession()
             assertFalse(first.isValid)
             assertNotSame(first.session, second.session)
             assertSame(first.dataSource, second.dataSource)
             assertSame(second, JdbcConsoleProvider.getValidConsole(project, myFixture.file.virtualFile))
+            recording.executeScript()
 
             val third = recording.replaceDataSource()
             assertNotSame(second.dataSource, third.dataSource)
             assertSame(third, JdbcConsoleProvider.getValidConsole(project, myFixture.file.virtualFile))
             recording.executeScript()
-            assertSame(third, recording.requests.single().owner)
+
+            val consoles = listOf(first, second, third)
+            assertEquals(consoles, recording.requests.map { it.owner })
+            for ((console, request) in consoles.zip(recording.requests)) {
+                assertEquals(listOf(request), console.session.state.work.map { it.request })
+            }
             listOf(first.dataSource, third.dataSource)
         }
         assertDoesntContain(LocalDataSourceManager.getInstance(project).dataSources, dataSources)
