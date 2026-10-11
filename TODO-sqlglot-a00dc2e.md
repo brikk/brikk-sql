@@ -173,8 +173,12 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   unsupported parameters and reports precision loss; Trino retains them. Native
   Trino 483 values/types, NULLs and precision-sensitive DATE_ADD pass. Twelve exact
   reviewed pin-drift rows await coherent refresh; existing ledger reasons unchanged.
-- [ ] **CH-01 — Calendar functions:** ISO calendar directions (`0ceaf1319e`, #8494),
+- [x] **CH-01 — Calendar functions:** ISO calendar directions (`0ceaf1319e`, #8494),
   toDayOfMonth/toDayOfYear (`61fc386dc7`, #8473), with week/year boundary tests.
+  One-argument ISO calls parse canonically; ISO year generation and companion DuckDB
+  EXTRACT(ISOYEAR) rendering are wired. Extra mode/timezone args remain Anonymous
+  native calls. Existing month/year-day generator mappings are verified equivalent.
+  chDB 26.5.1.1 and DuckDB boundary/leap/NULL results pass; no new ledger rows.
 - [x] **CH-02 — Bitwise aggregates:** groupBitAnd/Or/Xor mapping
   (`025a2f46f9`, #8556); retain operand/aggregate kinds and typing.
   Canonical, PostgreSQL and DuckDB source aggregate nodes render to the real
@@ -288,3 +292,5 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   SEMI/ANTI join predicates retain their real source types under the visibility fix.
 - Tenth batch (TRINO-01): build, 1,237 Kotlin tests and 16 offline release tests
   pass with Trino gates enabled (eleven optional skips). Shipped pin unchanged.
+- Eleventh batch (CH-01): build, 1,240 Kotlin tests and 16 offline release tests
+  pass with calendar chDB and Trino gates enabled (eleven other optional skips).

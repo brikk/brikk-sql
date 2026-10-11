@@ -1566,6 +1566,19 @@ and do not execute lossy Presto output in Trino as if Trino were a native Presto
 result oracle. No live Presto proof is claimed. Twelve reviewed exact old-pin
 parser/type/transpile discrepancies match a00dc2e and await coherent refresh.
 
+## 46. ClickHouse ISO calendar mappings without option loss
+
+SQLGlot #8494 maps one-argument toDayOfWeek/toISOWeek/toISOYear to their canonical
+ISO nodes and back. Extra mode/timezone arguments remain native Anonymous calls,
+since canonical nodes cannot represent them. ISO-year generation now uses toISOYear;
+the companion DuckDB rendering uses EXTRACT(ISOYEAR). Existing toDayOfMonth/toDayOfYear
+mappings already implemented #8473 and now have focused equivalence regressions.
+Live chDB 26.5.1.1 results agree with DuckDB at ISO week/year, leap-day and NULL
+boundaries; timezone/mode calls retain their native results. Canonical typing metadata
+is unchanged (it is not a claim of ClickHouse's exact unsigned native widths).
+Enable live regressions with BRIKK_CHDB_TEST_PYTHON pointing to a Python containing
+chdb. No ledger or shipped fixture changes were needed.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

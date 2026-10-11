@@ -3326,6 +3326,7 @@ open class DuckdbGenerator(
             reg(UnixToTimeStr::class) { e -> "CAST(TO_TIMESTAMP(${sql(e, "this")}) AS TEXT)" }
             reg(VariancePop::class) { e -> dg().renameFuncSql("VAR_POP", e) }
             reg(WeekOfYear::class) { e -> dg().renameFuncSql("WEEKOFYEAR", e) }
+            reg(YearOfWeekIso::class) { e -> sql(Extract(args("this" to Var(args("this" to "ISOYEAR")), "expression" to e.thisArg))) }
             reg(JSONObjectAgg::class) { e -> dg().renameFuncSql("JSON_GROUP_OBJECT", e) }
             reg(JSONBObjectAgg::class) { e -> dg().renameFuncSql("JSON_GROUP_OBJECT", e) }
             reg(DateBin::class) { e -> dg().renameFuncSql("TIME_BUCKET", e) }

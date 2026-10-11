@@ -41,6 +41,9 @@ import dev.brikk.house.sql.ast.DateAdd
 import dev.brikk.house.sql.ast.DateDiff
 import dev.brikk.house.sql.ast.DateSub
 import dev.brikk.house.sql.ast.DateTrunc
+import dev.brikk.house.sql.ast.DayOfWeekIso
+import dev.brikk.house.sql.ast.WeekOfYear
+import dev.brikk.house.sql.ast.YearOfWeekIso
 import dev.brikk.house.sql.ast.DefinerProperty
 import dev.brikk.house.sql.ast.Detach
 import dev.brikk.house.sql.ast.Dot
@@ -328,7 +331,18 @@ open class ClickhouseParser(
     // Table overrides (sqlglot: ClickHouseParser class-level dict/set merges)
 
     override val functions: Map<String, (List<Expression?>) -> Expression>
-        get() = ClickhouseParserTables.FUNCTIONS
+        get() = ClickhouseParserTables.FUNCTIONS + calendarFunctions
+
+    private val calendarFunctions = mapOf(
+        "TODAYOFWEEK" to withoutCalendarOptions("toDayOfWeek") { DayOfWeekIso(it) },
+        "TOISOWEEK" to withoutCalendarOptions("toISOWeek") { WeekOfYear(it) },
+        "TOISOYEAR" to withoutCalendarOptions("toISOYear") { YearOfWeekIso(it) },
+    )
+
+    private fun withoutCalendarOptions(name: String, factory: (Args) -> Expression): (List<Expression?>) -> Expression = { values ->
+        if (values.size == 1) factory(args("this" to values[0]))
+        else Anonymous(args("this" to name, "expressions" to values))
+    }
 
     override val funcTokens: Set<TokenType> get() = ClickhouseParserTables.FUNC_TOKENS
 

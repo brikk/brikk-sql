@@ -1131,6 +1131,7 @@ open class ClickhouseGenerator(
             // is ISO -> toISOWeek (result-identical). SAFE for CH->CH: ClickHouse never
             // parses to the WeekOfYear node, so this only fires cross-dialect (Trino->CH).
             reg(WeekOfYear::class) { e -> func("toISOWeek", e.thisArg) }
+            reg(YearOfWeekIso::class) { e -> func("toISOYear", e.thisArg) }
             // BUGS-clickhouse-generator-mappings row 9 (P2): the emitted DAY_OF_WEEK does
             // not exist in ClickHouse. toDayOfWeek is the valid name. SAFE for CH->CH:
             // ClickHouse `dayofweek` == `toDayOfWeek` (both ISO Mon=1..Sun=7, verified 7==7),
