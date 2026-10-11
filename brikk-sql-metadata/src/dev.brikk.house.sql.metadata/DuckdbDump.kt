@@ -46,6 +46,7 @@ private data class DuckdbKind(val kind: FunctionKind, val native: String? = null
 private fun duckdbKind(row: DuckdbFunctionRow): DuckdbKind = when (row.type) {
     "scalar" -> DuckdbKind(FunctionKind.SCALAR)
     "aggregate" -> DuckdbKind(FunctionKind.AGGREGATE)
+    "window" -> DuckdbKind(FunctionKind.WINDOW)
     "table" -> DuckdbKind(FunctionKind.TABLE_VALUED)
     "macro" -> DuckdbKind(FunctionKind.SCALAR, "macro")
     "table_macro" -> DuckdbKind(FunctionKind.TABLE_VALUED, "table_macro")
