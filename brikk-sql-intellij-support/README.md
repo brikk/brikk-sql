@@ -80,8 +80,8 @@ Kotlin stdlib, which IntelliJ consumers should exclude in favor of the platform 
 
 ```sh
 ./kotlin publish mavenLocal -m brikk-sql-intellij-support
-python3 tools/publish_intellij_support.py 0.1.0 --local
-python3 tools/publish_intellij_support.py 0.1.0
+python3 tools/publish_intellij_support.py 0.1.2 --local
+python3 tools/publish_intellij_support.py 0.1.2
 ```
 
 The last command requires the existing Central/signing environment. It publishes

@@ -17,4 +17,4 @@ settings:
       - -classpath=build/intellij-sql-api/intellij-sql-api.jar
   publishing:
     artifactId: brikk-sql-intellij-support
-    version: 0.1.0-SNAPSHOT
+    version: 0.1.2-SNAPSHOT

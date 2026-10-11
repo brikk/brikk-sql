@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 from release_config import validate_version, release_template
 
@@ -38,9 +39,9 @@ def main():
         else:
             template.write_text(release_template(args.core_version or "0.20.0-SNAPSHOT", f"./{backup.name}")
                                if args.core_version else f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    mavenCentral: {{ enabled: true, publishingMode: auto }}\n    signArtifacts: true\n')
-        old_version = "    version: 0.1.0-SNAPSHOT"
-        if originals[support].count(old_version) != 1: raise SystemExit("Unexpected support development version")
-        support.write_text(originals[support].replace(old_version, f"    version: {args.version}"))
+        released, count = re.subn(r"^    version: \S+-SNAPSHOT$", f"    version: {args.version}", originals[support], flags=re.M)
+        if count != 1: raise SystemExit("Unexpected support development version")
+        support.write_text(released)
         if args.local:
             command = ["./kotlin", "publish", "mavenLocal"] + [v for m in modules for v in ("-m", m)]
         else:

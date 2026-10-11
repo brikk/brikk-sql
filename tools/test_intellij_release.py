@@ -19,7 +19,7 @@ class ScopedReleaseTest(unittest.TestCase):
         for name in ['publish_intellij_support.py', 'release_config.py']:
             shutil.copy2(ROOT / 'tools' / name, self.root / 'tools' / name)
         self.template = 'settings:\n  publishing:\n    version: 0.19.0-SNAPSHOT\n'
-        self.module = 'product: jvm/lib\nsettings:\n  publishing:\n    version: 0.1.0-SNAPSHOT\n'
+        self.module = 'product: jvm/lib\nsettings:\n  publishing:\n    version: 0.1.2-SNAPSHOT\n'
         (self.root / 'publish.module-template.yaml').write_text(self.template)
         (self.root / 'brikk-sql-intellij-support/module.yaml').write_text(self.module)
         wrapper = self.root / 'kotlin'

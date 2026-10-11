@@ -69,7 +69,7 @@ jobs:
         run: ./kotlin publish mavenLocal
 
       - name: Audit the SQL IntelliJ support publication
-        run: python3 tools/verify_intellij_publication.py 0.1.0-SNAPSHOT
+        run: python3 tools/verify_intellij_publication.py 0.1.2-SNAPSHOT
 
       # On a red gate, build/ledger-actual contains the review artifacts needed to update
       # committed *-known-failures.json ledgers (see TODO-BUGS-*.md).
