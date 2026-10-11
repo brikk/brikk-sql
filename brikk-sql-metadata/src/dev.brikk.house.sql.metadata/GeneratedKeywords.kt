@@ -4,9 +4,9 @@
 package dev.brikk.house.sql.metadata
 
 /** clickhouse-keywords-26.5.1.1.tsv: 630 keywords. */
-internal val CLICKHOUSE_26_5_1_1_KEYWORDS: KeywordCatalog = KeywordCatalog(clickhouseKeywords0() + clickhouseKeywords1())
+internal val CLICKHOUSE_26_5_1_1_KEYWORDS: KeywordCatalog = KeywordCatalog(clickhouse26_5_1_1Keywords0() + clickhouse26_5_1_1Keywords1())
 
-private fun clickhouseKeywords0(): List<KeywordDef> = listOf(
+private fun clickhouse26_5_1_1Keywords0(): List<KeywordDef> = listOf(
     KeywordDef("ABI", KeywordCategory.UNKNOWN, null),
     KeywordDef("ADD", KeywordCategory.UNKNOWN, null),
     KeywordDef("ADD COLUMN", KeywordCategory.UNKNOWN, null),
@@ -634,7 +634,7 @@ private fun clickhouseKeywords0(): List<KeywordDef> = listOf(
     KeywordDef("YY", KeywordCategory.UNKNOWN, null),
 )
 
-private fun clickhouseKeywords1(): List<KeywordDef> = listOf(
+private fun clickhouse26_5_1_1Keywords1(): List<KeywordDef> = listOf(
     KeywordDef("YYYY", KeywordCategory.UNKNOWN, null),
     KeywordDef("ZKPATH", KeywordCategory.UNKNOWN, null),
     KeywordDef("bagexpansion", KeywordCategory.UNKNOWN, null),
@@ -643,9 +643,9 @@ private fun clickhouseKeywords1(): List<KeywordDef> = listOf(
 )
 
 /** doris-keywords-4.1.4.tsv: 564 keywords. */
-internal val DORIS_4_1_4_KEYWORDS: KeywordCatalog = KeywordCatalog(dorisKeywords0())
+internal val DORIS_4_1_4_KEYWORDS: KeywordCatalog = KeywordCatalog(doris4_1_4Keywords0())
 
-private fun dorisKeywords0(): List<KeywordDef> = listOf(
+private fun doris4_1_4Keywords0(): List<KeywordDef> = listOf(
     KeywordDef("ACCOUNT_LOCK", KeywordCategory.RESERVED, "ACCOUNT_LOCK"),
     KeywordDef("ACCOUNT_UNLOCK", KeywordCategory.RESERVED, "ACCOUNT_UNLOCK"),
     KeywordDef("ACTIONS", KeywordCategory.UNRESERVED, "ACTIONS"),
@@ -1213,9 +1213,9 @@ private fun dorisKeywords0(): List<KeywordDef> = listOf(
 )
 
 /** trino-keywords-483.tsv: 313 keywords. */
-internal val TRINO_483_KEYWORDS: KeywordCatalog = KeywordCatalog(trinoKeywords0())
+internal val TRINO_483_KEYWORDS: KeywordCatalog = KeywordCatalog(trino483Keywords0())
 
-private fun trinoKeywords0(): List<KeywordDef> = listOf(
+private fun trino483Keywords0(): List<KeywordDef> = listOf(
     KeywordDef("ABSENT", KeywordCategory.UNRESERVED, "ABSENT"),
     KeywordDef("ADD", KeywordCategory.UNRESERVED, "ADD"),
     KeywordDef("ADMIN", KeywordCategory.UNRESERVED, "ADMIN"),
