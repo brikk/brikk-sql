@@ -3,6 +3,7 @@ package dev.brikk.house.sql.verify
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
+import java.util.concurrent.CancellationException
 
 /**
  * The corpus-gate oracle: verifies SQL against the real DuckDB parser via an embedded in-memory
@@ -45,6 +46,8 @@ public class DuckdbVerifier internal constructor(
     override fun verify(sql: String): VerifyResult {
         val serialized = try {
             connection.serializeSql(sql)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             // The parse channel itself failed, so no grammar verdict was obtained.
             return unavailable(e)
@@ -69,6 +72,8 @@ public class DuckdbVerifier internal constructor(
         VerifyResult.Accepted
     } catch (e: SQLException) {
         classifyDuckdbPrepareFailure(e.message?.trim().orEmpty())
+    } catch (e: CancellationException) {
+        throw e
     } catch (e: Exception) {
         unavailable(e)
     }
