@@ -323,8 +323,10 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         }
         if (upper != "AS" || castDepths.lastOrNull() != parenDepth) return false
         castDepths.removeLast()
-        val target = bufferWord(base, offsetAfterWhitespace(base, base.tokenEnd)).uppercase()
-        if (target.firstOrNull()?.isLetter() != true || target in mask.keptTargets) return false
+        val at = offsetAfterWhitespace(base, base.tokenEnd)
+        val quoted = base.bufferSequence.getOrNull(at)?.let { it in mask.quotes } == true
+        val target = bufferWord(base, at).uppercase()
+        if (!quoted && target.firstOrNull()?.isLetter() != true || target in mask.keptTargets) return false
         when (mask.extent) {
             CastTargetMask.Extent.ToCloseParen -> maskToCloseParen(base)
             CastTargetMask.Extent.TargetType -> maskCastType(base)
@@ -387,12 +389,14 @@ public data class CastTargetMask(
     /** Upper-case first target words the grammar accepts; their casts stay unmasked. */
     val keptTargets: Set<String> = emptySet(),
     val extent: Extent = Extent.ToCloseParen,
+    /** Characters that open a quoted target such as `"INTEGER"`; any other target must be a letter-led word. */
+    val quotes: String = "\"`",
 ) {
     public enum class Extent {
         /** From `AS` up to the call's closing parenthesis. */
         ToCloseParen,
 
-        /** `AS`, the target word, then a balanced `<...>` and `(...)` if they follow. */
+        /** `AS`, the target word or quoted name, then a balanced `<...>` and `(...)` if they follow. */
         TargetType,
     }
 }

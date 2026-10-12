@@ -57,6 +57,21 @@ class MaskedSpanRecolorAnnotatorTest : FixtureTestCase() {
         assertEquals(colorOf(SqlTokens.SQL_KEYWORD_TOKEN), colors["INT"])
     }
 
+    fun testUnterminatedQuotesTypedInASpanTakeTheirKindsColors() {
+        configureFixture("SELECT * EXCLUDE (a, <caret>")
+        myFixture.type("'secr")
+        assertEquals(colorOf(SqlTokens.SQL_STRING_TOKEN), forced()["'secr"])
+        configureFixture("SELECT * EXCLUDE (a, <caret>")
+        myFixture.type("\"secr")
+        assertEquals(colorOf(SqlTokens.SQL_IDENT_DELIMITED), forced()["\"secr"])
+    }
+
+    private fun forced(): Map<String, TextAttributesKey?> {
+        val text = myFixture.editor.document.text
+        return myFixture.doHighlighting(HighlightSeverity.INFORMATION).filter { it.forcedTextAttributesKey != null }
+            .associate { text.substring(it.startOffset, it.endOffset) to it.forcedTextAttributesKey }
+    }
+
     fun testGenuineTokensAreLeftAlone() {
         val colors = recolored("SELECT 'a', E'b\\n', \"c d\", \$\$e\$\$ FROM t -- note\n/* block */")
         assertEquals("only the platform's reference colors", setOf("\"c d\"", "t"), colors.keys)

@@ -48,6 +48,11 @@ class MaskingSqlLexerTest : FixtureTestCase() {
             "(" to null, "a" to null, ")" to null, "AS DECIMAL(10, 2)" to SqlTokens.SQL_BLOCK_COMMENT, ")" to null)
     }
 
+    fun testAQuotedTryCastTargetIsMaskedUpToTheCallsParenthesis() {
+        assertTokens("SELECT TRY_CAST(1 AS \"INTEGER\");", "TRY_CAST" to null, "(" to null, "1" to null,
+            "AS \"INTEGER\"" to SqlTokens.SQL_BLOCK_COMMENT, ")" to null, ";" to null)
+    }
+
     fun testAnUnclosedTryCastDoesNotMaskTheNextStatementsCast() {
         assertTokens("SELECT TRY_CAST(a; SELECT CAST(b AS INT)", "TRY_CAST" to null, ";" to null, "CAST" to null, "(" to null,
             "b" to null, "AS" to null, "INT" to null)
@@ -163,6 +168,10 @@ class CastTargetMaskTest : FixtureTestCase() {
         assertEquals(listOf("SELECT", "TRY_CAST", "(", "x", "AS", ";", "SELECT", "1"), semicolon)
         val paren = nonBlank("SELECT CAST(x AS) FROM t").map { it.first }
         assertEquals(listOf("SELECT", "CAST", "(", "x", "AS", ")", "FROM", "t"), paren)
+    }
+
+    fun testAQuotedTargetIsMasked() {
+        assertContainsElements(nonBlank("SELECT CAST(x AS \"INTEGER\"), 1").map { it.first }, "AS \"INTEGER\"", ")", ",")
     }
 
     fun testAnUnclosedTypeArgumentStopsAtTheStatementEnd() {

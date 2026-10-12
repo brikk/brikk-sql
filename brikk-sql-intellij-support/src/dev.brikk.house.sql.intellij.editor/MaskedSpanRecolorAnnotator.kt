@@ -60,7 +60,18 @@ public abstract class MaskedSpanRecolorAnnotator(
             recolor(holder, span.fileRange(token.start, token.end + 1), attributes(highlighter, platformType(token)))
             covered = token.end + 1
         }
-        comments(span, covered, lexed.failureOffset ?: text.length, highlighter, holder)
+        val failure = lexed.failureOffset ?: text.length
+        comments(span, covered, failure, highlighter, holder)
+        unclosedType(text, failure)?.let { recolor(holder, span.fileRange(failure, text.length), attributes(highlighter, it)) }
+    }
+
+    /** The kind of an unterminated quoted string or identifier the text ends with from [offset], as while it is typed. */
+    private fun unclosedType(text: String, offset: Int): IElementType? = when {
+        offset >= text.length -> null
+        text[offset] in config.identifiers -> SqlTokens.SQL_IDENT_DELIMITED
+        config.quotes.keys.any { text.startsWith(it, offset) } || config.formatStrings.keys.any { text.startsWith(it, offset, ignoreCase = true) } ->
+            SqlTokens.SQL_STRING_TOKEN
+        else -> null
     }
 
     private fun isSpan(comment: Boolean, type: IElementType, text: String): Boolean = when {
