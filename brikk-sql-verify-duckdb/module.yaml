@@ -22,6 +22,5 @@ settings:
     release: 21
   kotlin:
     version: 2.4.10
-    serialization: json
     freeCompilerArgs:
       - -Xexplicit-api=strict

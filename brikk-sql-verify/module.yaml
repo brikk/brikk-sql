@@ -39,9 +39,13 @@ settings:
         brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar
   kotlin:
     version: 2.4.10
-    serialization: json
   internal:
     # excludeDependencies does not propagate through module dependencies, so the ShardingSphere
     # Groovy exclusion is repeated here (see brikk-sql-verify-shardingsphere).
     excludeDependencies:
       - org.apache.groovy:groovy
+
+test-settings:
+  kotlin:
+    # Only the gate tests read JSON; the published aggregate carries no serialization dependency.
+    serialization: json

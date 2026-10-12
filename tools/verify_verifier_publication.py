@@ -11,8 +11,6 @@ GROUP = 'dev.brikk.house'
 PACKAGE = 'dev/brikk/house/sql/verify/'
 JAVA_21 = 65
 STDLIB = ('org.jetbrains.kotlin', 'kotlin-stdlib')
-SERIALIZATION = [('org.jetbrains.kotlinx', 'kotlinx-serialization-core-jvm'),
-                 ('org.jetbrains.kotlinx', 'kotlinx-serialization-json-jvm')]
 API = (GROUP, 'brikk-sql-verify-api')
 ENGINES = ['brikk-sql-verify-trino', 'brikk-sql-verify-duckdb', 'brikk-sql-verify-doris',
            'brikk-sql-verify-shardingsphere']
@@ -24,10 +22,10 @@ SHARDINGSPHERE = [('org.apache.shardingsphere', f'shardingsphere-{name}') for na
 ARTIFACTS = {
     'brikk-sql-verify-api': [(GROUP, 'brikk-sql-jvm'), STDLIB],
     'brikk-sql-verify-trino': [API, ('io.trino', 'trino-parser'), STDLIB],
-    'brikk-sql-verify-duckdb': [API, ('org.duckdb', 'duckdb_jdbc'), STDLIB, *SERIALIZATION],
+    'brikk-sql-verify-duckdb': [API, ('org.duckdb', 'duckdb_jdbc'), STDLIB],
     'brikk-sql-verify-doris': [API, ('org.antlr', 'antlr4-runtime'), STDLIB],
     'brikk-sql-verify-shardingsphere': [API, *SHARDINGSPHERE, STDLIB],
-    'brikk-sql-verify': [API, *[(GROUP, engine) for engine in ENGINES], STDLIB, *SERIALIZATION],
+    'brikk-sql-verify': [API, *[(GROUP, engine) for engine in ENGINES], STDLIB],
 }
 NS = {'m': 'http://maven.apache.org/POM/4.0.0'}
 

@@ -40,8 +40,6 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
             connection = null
             open.closeQuietly()
             return VerifyResult.Unavailable("DuckDB verification is unavailable: the connection failed (${e.reason()}).")
-        } catch (e: IllegalArgumentException) {
-            return VerifyResult.Unverified("DuckDB returned an unreadable parse result: ${e.message}")
         }
         return when (serialized) {
             SerializedSql.Parsed -> VerifyResult.Accepted
@@ -83,8 +81,6 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
                 }
             } catch (e: SQLException) {
                 e.reason()
-            } catch (e: IllegalArgumentException) {
-                e.message ?: e::class.java.simpleName
             }
             if (problem != null) return unavailable("json_serialize_sql is not usable on this driver ($problem)")
             usable = true
