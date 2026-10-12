@@ -100,7 +100,8 @@ no-arg subclasses:
   (`completableFunctions`). Insertion follows the invocation syntax, never arity: a call
   inserts `()` with the caret inside, or after it when the only overload takes no
   arguments; an existing `(` is reused; a grammar bare form (`CURRENT_TIMESTAMP`) and a
-  special form (`CAST`) insert only the name.
+  special form (`CAST`) insert only the name. Keywords from the snapshot's
+  `KeywordCatalog`, all or only reserved ones (`KeywordScope`).
 - `SqlCompletionConfidence` (`order="first"`): skips the autopopup after a digit-led prefix
   when the digit gate is on.
 

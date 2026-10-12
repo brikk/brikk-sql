@@ -19,16 +19,18 @@ import com.intellij.util.ProcessingContext
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
+import dev.brikk.house.sql.metadata.KeywordCategory
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Completes the profile's functions from metadata.
+ * Completes the profile's functions and keywords from metadata.
  * Register it for the dialect's language with a no-arg subclass.
  */
 @ApiStatus.Experimental
 public abstract class SqlCompletionContributor(profile: SqlCompletionProfile) : CompletionContributor() {
     init {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), FunctionProvider(profile))
+        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), KeywordProvider(profile))
     }
 }
 
@@ -57,6 +59,20 @@ private class FunctionProvider(profile: SqlCompletionProfile) : ProfileProvider(
         }
         profile.functions(file).forEach { sink.addElement(styles.function(it, serverOnly = false)) }
         profile.serverOnlyFunctions(file).forEach { sink.addElement(styles.function(it, serverOnly = true)) }
+    }
+}
+
+private class KeywordProvider(profile: SqlCompletionProfile) : ProfileProvider(profile) {
+    override fun complete(parameters: CompletionParameters, result: CompletionResultSet) {
+        val scope = profile.keywords
+        if (scope == KeywordScope.NONE) return
+        val keywords = profile.snapshot(parameters.originalFile).keywords?.keywords ?: return
+        val style = profile.styles[SqlLookupKind.KEYWORD]
+        val sink = result.caseInsensitive()
+        for (keyword in keywords) {
+            if (scope == KeywordScope.RESERVED && keyword.category != KeywordCategory.RESERVED) continue
+            sink.addElement(style.lookup(keyword, keyword.word, style.typeText))
+        }
     }
 }
 

@@ -34,7 +34,13 @@ public interface SqlCompletionProfile {
     public val styles: SqlLookupStyles get() = SqlLookupStyles.DEFAULT
 
     public val functionGates: SqlFunctionGates get() = SqlFunctionGates.OFF
+
+    public val keywords: KeywordScope get() = KeywordScope.ALL
 }
+
+/** Which keywords completion offers. */
+@ApiStatus.Experimental
+public enum class KeywordScope { NONE, RESERVED, ALL }
 
 /**
  * When function completion withholds functions. [digitPrefix] withholds them after a

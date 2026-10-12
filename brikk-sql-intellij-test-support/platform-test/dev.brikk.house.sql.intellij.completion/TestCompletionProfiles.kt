@@ -25,6 +25,7 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
     override val language: Language = SqlLanguage.INSTANCE
     override var styles = SqlLookupStyles.DEFAULT
     override var functionGates = SqlFunctionGates.OFF
+    override var keywords = KeywordScope.NONE
     var serverOnly: List<FunctionPresentation> = emptyList()
 
     override fun serverOnlyFunctions(file: PsiFile) = serverOnly
@@ -32,6 +33,7 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
     fun reset() {
         styles = SqlLookupStyles.DEFAULT
         functionGates = SqlFunctionGates.OFF
+        keywords = KeywordScope.NONE
         serverOnly = emptyList()
     }
 }
