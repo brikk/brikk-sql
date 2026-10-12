@@ -16,7 +16,8 @@ line-based extraction — NOT a Java parser. Anything it cannot confidently pars
 recorded verbatim per class under "unparsed" (never guessed, never dropped), and parse
 coverage is reported.
 
-Grammar handled (surveyed over the full functions/ tree, pin v0.8.2-31011-gd8fd23f7f38):
+Grammar handled (surveyed over the full functions/ tree at v0.8.2-31011-gd8fd23f7f38; at the
+4.1.4 pin 8 signatures across 5 classes stay unparsed):
   entry    := 'FunctionSignature.ret(' type ')' tail
             | 'FunctionSignature.retArgType(' int ')' tail
   tail     := '.args(' type* ')' | '.varArgs(' type+ ')'

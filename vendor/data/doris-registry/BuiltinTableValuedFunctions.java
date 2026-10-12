@@ -18,7 +18,6 @@
 package org.apache.doris.catalog;
 
 import org.apache.doris.nereids.trees.expressions.functions.table.Backends;
-import org.apache.doris.nereids.trees.expressions.functions.table.Binlog;
 import org.apache.doris.nereids.trees.expressions.functions.table.Catalogs;
 import org.apache.doris.nereids.trees.expressions.functions.table.CdcStream;
 import org.apache.doris.nereids.trees.expressions.functions.table.File;
@@ -42,6 +41,7 @@ import org.apache.doris.nereids.trees.expressions.functions.table.Partitions;
 import org.apache.doris.nereids.trees.expressions.functions.table.Query;
 import org.apache.doris.nereids.trees.expressions.functions.table.S3;
 import org.apache.doris.nereids.trees.expressions.functions.table.Tasks;
+import org.apache.doris.nereids.trees.expressions.functions.table.VectorSearch;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableList;
 public class BuiltinTableValuedFunctions implements FunctionHelper {
     public final ImmutableList<TableValuedFunc> tableValuedFunctions = ImmutableList.of(
             tableValued(Backends.class, "backends"),
-            tableValued(Binlog.class, "binlog"),
             tableValued(Catalogs.class, "catalogs"),
             tableValued(Frontends.class, "frontends"),
             tableValued(FrontendsDisks.class, "frontends_disks"),
@@ -77,7 +76,8 @@ public class BuiltinTableValuedFunctions implements FunctionHelper {
             tableValued(ParquetFileMetadata.class, "parquet_file_metadata"),
             tableValued(ParquetKvMetadata.class, "parquet_kv_metadata"),
             tableValued(ParquetBloomProbe.class, "parquet_bloom_probe"),
-            tableValued(CdcStream.class, "cdc_stream")
+            tableValued(CdcStream.class, "cdc_stream"),
+            tableValued(VectorSearch.class, "vector_search")
     );
 
     public static final BuiltinTableValuedFunctions INSTANCE = new BuiltinTableValuedFunctions();
