@@ -20,7 +20,8 @@ private val testFramework = listOf("test-framework", "test-framework-core", "tes
 
 /**
  * Compiles [testSources] against the 261 API and runs their JUnit tests in a real IDE.
- * BRIKK_INTELLIJ_RUNTIME_SDK runs the same classes on a newer installation.
+ * BRIKK_INTELLIJ_RUNTIME_SDK runs the same classes on a newer installation; BRIKK_INTELLIJ_TESTS
+ * (comma-separated class names, simple or qualified) runs only those classes.
  */
 @TaskAction(executionAvoidance = ExecutionAvoidance.Disabled)
 fun testIntellijPlatform(
@@ -46,13 +47,15 @@ fun testIntellijPlatform(
         listOf("-no-stdlib", "-no-reflect", "-jvm-target", "21", "-classpath", compileClasspath.joinToString(File.pathSeparator),
             "-d", classes.toString()) + sources.map(Path::toString),
         run.resolve("compile.log"))
+    val only = System.getenv("BRIKK_INTELLIJ_TESTS")?.split(',')?.map(String::trim)?.filter(String::isNotEmpty)
     val tests = Files.walk(classes).use { paths ->
         paths.map { classes.relativize(it).toString() }
             .filter { it.endsWith("Test.class") && '$' !in it }
             .map { it.removeSuffix(".class").replace(File.separatorChar, '.') }
+            .filter { test -> only == null || only.any { test == it || test.endsWith(".$it") } }
             .sorted().toList()
     }
-    check(tests.isNotEmpty()) { "No platform tests in $testSources" }
+    check(tests.isNotEmpty()) { "No platform tests in $testSources" + only?.let { " matching $it" }.orEmpty() }
     val runtimeClasspath = sdkJars(runtimeSdk) + frameworkJars(outputDir, runtimeBuild) + junit + libraries.resolvedFiles + listOf(classes)
     val opens = Regex("\"(--add-opens=[^\"]+)\"").findAll(Files.readString(runtimeSdk.resolve("product-info.json")))
         .map { it.groupValues[1] }.distinct().toList()

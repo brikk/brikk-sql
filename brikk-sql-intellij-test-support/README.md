@@ -67,3 +67,5 @@ mapping is cleared when that disposable ends.
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run
 in a real IDE: `./kotlin check intellijPlatform -m brikk-sql-intellij-support`.
+`BRIKK_INTELLIJ_TESTS=SomeTest,OtherTest` runs only those classes; `BRIKK_INTELLIJ_RUNTIME_SDK`
+runs them on another installation.
