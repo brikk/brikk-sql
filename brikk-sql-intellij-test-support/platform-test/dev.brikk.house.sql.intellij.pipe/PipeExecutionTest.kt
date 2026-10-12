@@ -19,6 +19,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.ui.UiInterceptors
 import dev.brikk.house.sql.intellij.CooperativeExecuteAction
+import dev.brikk.house.sql.intellij.SqlExecutionRefusal
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import dev.brikk.house.sql.parser.ColumnUnit
 import java.util.UUID
@@ -115,6 +116,28 @@ class PipeExecutionTest : BasePlatformTestCase() {
                 val line = lines.indexOfFirst { "offline_rows" in it }
                 val column = lines[line].indexOf("offline_rows") + firstColumn
                 assertEquals("offline_rows", statement.sourceMap!!(line + 1, column)!!.substring(statement.source))
+            }
+        }
+    }
+
+    fun testSourceMapIsUnavailableAfterParameterExpansion() {
+        for (parameterized in listOf(false, true)) {
+            var observed = false
+            val dialect = object : PipeDialect by TestPipeDialect("trino", FirstStageRule.AnyQuery) {
+                override val submitListener = object : PipeSubmitListener {
+                    override fun beforeSubmit(run: PipeRun) {
+                        observed = true
+                        val map = run.statements.single()!!.sourceMap
+                        if (parameterized) assertNull(map) else assertNotNull(map)
+                        throw SqlExecutionRefusal("Source-map inspection only")
+                    }
+                }
+            }
+            Run(dialect, if (parameterized) "FROM offline_rows |> WHERE id = :id" else "FROM offline_rows |> SELECT id").use { run ->
+                ShowSqlParametersPanelAction.getStorage(run.recording.console).putValue("id", "17")
+                run.execute()
+                assertTrue(observed)
+                assertEmpty(run.recording.requests)
             }
         }
     }

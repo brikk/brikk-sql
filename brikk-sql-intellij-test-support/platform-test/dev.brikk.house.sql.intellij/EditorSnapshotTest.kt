@@ -64,4 +64,17 @@ class EditorSnapshotTest : BasePlatformTestCase() {
             assertThrows(SqlExecutionRefusal::class.java) { pin() }
         }
     }
+
+    fun testOptionalRecoveryDoesNotSwallowCancellationOrErrors() {
+        for (failure in listOf(ProcessCanceledException(), java.util.concurrent.CancellationException(), AssertionError("fatal"), LinkageError("linkage"))) {
+            try {
+                recoverEditorOperation<Unit> { throw failure }
+                fail("Expected propagation of $failure")
+            } catch (actual: Throwable) {
+                assertSame(failure, actual)
+            }
+        }
+        val ordinary = IllegalStateException("recoverable")
+        assertSame(ordinary, recoverEditorOperation<Unit> { throw ordinary }.exceptionOrNull())
+    }
 }
