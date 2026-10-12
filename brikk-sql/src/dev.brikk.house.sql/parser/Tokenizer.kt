@@ -24,6 +24,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
+    private var textEnds: Boolean = true
     private var checkCanceled: () -> Unit = {}
     private var cancelBudget: Int = CANCEL_INTERVAL
     private var breaksScanned: Int = 0
@@ -90,6 +91,15 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val previous = this.checkCanceled
         this.checkCanceled = checkCanceled
         return try { tokenizeForEditor(sql) } finally { this.checkCanceled = previous }
+    }
+
+    /**
+     * [tokenizeForEditor] of [sql] as the start of a longer text: the end of [sql] is not a line end,
+     * so no rule decides from it what the rest of the text could change (docs/brikk-extensions.md #55).
+     */
+    fun tokenizeForEditorPrefix(sql: String, checkCanceled: () -> Unit): EditorTokens {
+        textEnds = false
+        return try { tokenizeForEditor(sql, checkCanceled) } finally { textEnds = true }
     }
 
     /** Editor recovery stops at the failing lexical construct, never inside its tail. */
@@ -257,7 +267,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return offset
     }
 
-    private fun isLineEnd(offset: Int): Boolean = offset >= size || isLineBreak(sql[offset])
+    /** Whether a line ends at [offset]; the end of a prefix is not known to be one. */
+    private fun isLineEnd(offset: Int): Boolean = if (offset >= size) textEnds else isLineBreak(sql[offset])
 
     private fun isEmptyLine(offset: Int): Boolean = offset < size && isLineBreak(sql[offset])
 

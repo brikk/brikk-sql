@@ -81,6 +81,16 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
         assertEquals(starts, tokens.filter { it.state == 0 }.map { it.start })
     }
 
+    /** Core is read a window at a time; wherever a window ends, the statements are those of the whole text. */
+    fun testWindowEndsAreNotTheEndOfTheText() {
+        for (padding in 4040..4110) {
+            val text = "SELECT '" + "x".repeat(padding) + "';\nINSERT INTO t FORMAT TSV ;  b\n\nSELECT 2;\nINSERT INTO t FORMAT TSV\na;\nb\n ;\nSELECT 3;"
+            val tokens = bounded().lexAll(text)
+            assertEquals("$padding", SqlScriptSnapshot.parse(text, "clickhouse").statements.map { it.start }, tokens.filter { it.state == 0 }.map { it.start })
+            assertEquals("$padding", listOf(";  b", "a;\nb"), tokens.raw().map { text.of(it) })
+        }
+    }
+
     fun testRestartsAtStatementStartsMatchAFullLex() {
         for (case in CHOUSE_BOUNDARY_CORPUS) assertRestartsMatchFullLex(::bounded, case.sql)
     }

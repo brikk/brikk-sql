@@ -6,10 +6,10 @@ import dev.brikk.house.sql.parser.SqlStatementRange
 
 /**
  * The [dialect]'s statement ranges of `[origin, end)` of [text], with absolute offsets, read lazily
- * a window at a time: a lookup reads only up to the statement it asks for. A range that ends
- * before its window's end ends at a `;` all of whose preceding tokens lie in the window, so the
- * whole text has the same range; core starts every statement afresh, so ranges read from a
- * statement start are those of the whole text. Safe for concurrent use.
+ * a window at a time: a lookup reads only up to the statement it asks for. A window short of the
+ * end is read with `SqlScriptSnapshot.parsePrefix`, which keeps only ranges the rest of the text
+ * cannot change; core starts every statement afresh, so ranges read from a statement start are
+ * those of the whole text. Safe for concurrent use.
  */
 internal class CoreStatements(private val text: CharSequence, private val end: Int, private val dialect: String, val origin: Int = 0) {
     private val ranges = ArrayList<SqlStatementRange>()
@@ -29,8 +29,10 @@ internal class CoreStatements(private val text: CharSequence, private val end: I
         while (true) {
             val to = if (end - readTo <= window) end else readTo + window
             val from = readTo
-            val complete = SqlScriptSnapshot.parse(text.subSequence(from, to).toString(), dialect, ProgressManager::checkCanceled).statements
-                .filter { from + it.end < to || to == end }
+            val slice = text.subSequence(from, to).toString()
+            // A window short of the end proves only what the text after it cannot change.
+            val complete = if (to == end) SqlScriptSnapshot.parse(slice, dialect, ProgressManager::checkCanceled).statements
+            else SqlScriptSnapshot.parsePrefix(slice, dialect, ProgressManager::checkCanceled)
             if (complete.isNotEmpty()) {
                 complete.mapTo(ranges) { it.copy(start = from + it.start, end = from + it.end, terminator = it.terminator?.let { t -> from + t }, dataEnd = it.dataEnd?.let { d -> from + d }) }
                 readTo = ranges.last().end

@@ -1894,6 +1894,10 @@ line with nothing else on it is the terminator of a statement without data. So
 `INSERT ... FORMAT JSONEachRow\n{"id":1};\nSELECT 2;` is one statement, as the platform editor and
 clickhouse-client read it; a blank line or a `;` line separates the next one.
 
+`SqlScriptSnapshot.parsePrefix` reads a window of a longer text (`Tokenizer.tokenizeForEditorPrefix`):
+the window's end is not taken as a line end or the text's end, and the statement reaching it is
+left out, so every range it returns is the whole text's.
+
 Evidence (ClickHouse 26.7.1, `clickhouse local`, and JDBC 0.9.8, which an IDE console executes
 through one statement text at a time): TSV and CSV store a data line's trailing `;` (`a;` stays
 `a;`); JSONEachRow accepts a trailing `;` but rejects SQL text after it in the same payload; JDBC

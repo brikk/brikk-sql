@@ -31,10 +31,22 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
          */
         fun parse(text: String, dialect: String): SqlScriptSnapshot = parse(text, dialect) {}
 
+        /**
+         * The statements of [text] that no continuation of it can change, for reading a long text a
+         * window at a time: the text's end is not taken as the end of a line or of the text, and the
+         * statement reaching it is left out. Every other range is that of any text starting with
+         * [text].
+         */
+        fun parsePrefix(text: String, dialect: String, checkCanceled: () -> Unit): List<SqlStatementRange> =
+            parse(text, dialect, checkCanceled, prefix = true).statements.filter { it.end < text.length }
+
         /** [parse] that calls [checkCanceled] periodically; whatever it throws propagates unchanged. */
-        fun parse(text: String, dialect: String, checkCanceled: () -> Unit): SqlScriptSnapshot {
+        fun parse(text: String, dialect: String, checkCanceled: () -> Unit): SqlScriptSnapshot = parse(text, dialect, checkCanceled, prefix = false)
+
+        private fun parse(text: String, dialect: String, checkCanceled: () -> Unit, prefix: Boolean): SqlScriptSnapshot {
             val source = Dialects.forName(dialect)
-            val lexed = Tokenizer(source.tokenizerConfig).tokenizeForEditor(text, checkCanceled)
+            val tokenizer = Tokenizer(source.tokenizerConfig)
+            val lexed = if (prefix) tokenizer.tokenizeForEditorPrefix(text, checkCanceled) else tokenizer.tokenizeForEditor(text, checkCanceled)
             val tokens = lexed.tokens
             val ranges = ArrayList<SqlStatementRange>()
             var start = 0
