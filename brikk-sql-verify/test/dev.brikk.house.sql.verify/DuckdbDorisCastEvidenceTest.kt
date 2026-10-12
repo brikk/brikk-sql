@@ -8,6 +8,7 @@ import java.sql.DriverManager
 import java.sql.SQLException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -35,7 +36,7 @@ class DuckdbDorisCastEvidenceTest {
                 }
                 assertEquals(expected, outcome, "$id: $sql")
                 val report = SqlFragment(sql, "duckdb").certify("doris")
-                assertTrue(doris.verify(report.result.sql).accepted, "$id: ${report.result.sql}")
+                assertIs<VerifyResult.Accepted>(doris.verify(report.result.sql), "$id: ${report.result.sql}")
                 assertTrue(report.findings.none { it.kind == FindingKind.SEMANTIC_COVERAGE_UNKNOWN }, "$id: ${report.findings}")
                 val hazard = report.findings.single { it.kind == FindingKind.SEMANTIC_HAZARD && it.subject == "CAST" }
                 assertEquals(Severity.WARNING, hazard.severity, id)

@@ -1,0 +1,41 @@
+# Advisory grammar verifiers for postgres, mysql, hive and clickhouse over Apache ShardingSphere's
+# pure-JVM SQL parser. Its own artifact because the parser set is large and the advisory contract
+# differs from the engine-exact verifiers.
+product: jvm/lib
+
+# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+description: Advisory SQL grammar verifiers (ShardingSphere parser for PostgreSQL, MySQL, Hive, ClickHouse) for brikk-sql.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  - ../brikk-sql-verify-api: exported
+  # ShardingSphere 5.5.2's grammars were generated with ANTLR 4.10.1; next to trino-parser or
+  # Doris they run on antlr4-runtime 4.13.2, and the first parse logs a cosmetic "Tool version
+  # ... does not match runtime" warning. The grammars parse correctly under 4.13.2.
+  - org.apache.shardingsphere:shardingsphere-parser-sql-engine:5.5.2
+  - org.apache.shardingsphere:shardingsphere-parser-sql-postgresql:5.5.2
+  - org.apache.shardingsphere:shardingsphere-parser-sql-mysql:5.5.2
+  - org.apache.shardingsphere:shardingsphere-parser-sql-hive:5.5.2
+  - org.apache.shardingsphere:shardingsphere-parser-sql-clickhouse:5.5.2
+  # Needed for Hive's database-type SPI to load (without it the Hive parser can't resolve).
+  - org.apache.shardingsphere:shardingsphere-infra-database-hive:5.5.2
+
+settings:
+  publishing:
+    # Published coordinate: dev.brikk.house:brikk-sql-verify-shardingsphere.
+    artifactId: brikk-sql-verify-shardingsphere
+  jvm:
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict
+  internal:
+    # ShardingSphere pulls org.apache.groovy:groovy (~7.2 MB) solely for its inline
+    # sharding-expression engine (InlineExpressionParser), which the SQL grammar/parse path
+    # never touches. (settings.internal.excludeDependencies: temporary Toolchain mechanism for
+    # transitive exclusions, "<group>:<artifact>"; it does not propagate to dependents.)
+    excludeDependencies:
+      - org.apache.groovy:groovy

@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertIs
 
 class TrinoPipeRenameResultTest {
     private val complete = ShapeCatalog(tables = mapOf("t" to
@@ -37,7 +37,7 @@ class TrinoPipeRenameResultTest {
     fun nativeTrinoGrammarRejectsThePreviouslyUnflaggedOutputAndGenerationNowRefuses() {
         val old = "WITH __tmp1 AS (SELECT * FROM t), " +
             "__tmp2 AS (SELECT * RENAME (id AS x) FROM __tmp1) SELECT * FROM __tmp2"
-        assertFalse(TrinoVerifier().verify(old).accepted, old)
+        assertFalse(TrinoVerifier().verify(old) is VerifyResult.Accepted, old)
         assertFailsWith<UnsupportedError> { SqlFragment("FROM t |> RENAME id AS x", "trino").toExecutable("trino") }
     }
 
@@ -53,7 +53,7 @@ class TrinoPipeRenameResultTest {
                         val fragment = SqlFragment("FROM t |> RENAME $rename", target)
                         val original = fragment.ast.copy()
                         val sql = fragment.toStandardSql(target, complete, expandStars = true)
-                        assertTrue(verifier.verify(sql).accepted, sql)
+                        assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
                         assertEquals(names, result(statement, reference).first.map { it.first })
                         assertEquals(result(statement, reference), result(statement, sql), sql)
                         assertEquals(original, fragment.ast)

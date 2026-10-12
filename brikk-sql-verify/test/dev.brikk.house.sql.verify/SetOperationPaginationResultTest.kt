@@ -8,6 +8,7 @@ import dev.brikk.house.sql.shape.SqlFragment
 import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class SetOperationPaginationResultTest {
@@ -52,7 +53,7 @@ class SetOperationPaginationResultTest {
         assertEquals(listOf(1, 5), rows(output), output)
         for (dialect in listOf("duckdb", "doris", "trino")) {
             val sql = tree.sql(dialect)
-            assertTrue(SqlVerifiers.forEngine(dialect)!!.verify(sql).accepted, sql)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine(dialect)!!.verify(sql), sql)
         }
         val nested = Dialects.DUCKDB.parseOne("SELECT 1 AS x UNION ALL SELECT 2 AS x ORDER BY x LIMIT 1")
         val union = Union(args("this" to nested, "expression" to Dialects.DUCKDB.parseOne("SELECT 3 AS x"), "distinct" to false))

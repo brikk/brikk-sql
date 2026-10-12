@@ -91,12 +91,35 @@ class ReleaseLauncherTest(unittest.TestCase):
         self.assert_restored()
         self.assertEqual(self.original, (self.root / "observed-base.yaml").read_text())
         self.assertIn('version: "0.16.1"', (self.root / "observed.yaml").read_text())
+        self.assertEqual(["task"] + [f":{module}:publishToMavenCentral" for module in (
+            "brikk-sql", "brikk-sql-metadata",
+            "brikk-sql-verify-api", "brikk-sql-verify-trino", "brikk-sql-verify-duckdb", "brikk-sql-verify-doris",
+            "brikk-sql-verify-shardingsphere", "brikk-sql-verify",
+            "brikk-sql-oracle",
+        )], (self.root / "observed-args.txt").read_text().splitlines())
+
+    def test_default_release_covers_every_published_sql_module(self):
+        published = {
+            module.parent.name for module in ROOT.glob("brikk-sql*/module.yaml")
+            if "publish.module-template.yaml" in module.read_text()
+        }
+        published -= {"brikk-sql-intellij-support", "brikk-sql-intellij-test-support"}
+        result = self.run_release()
+        self.assertEqual(0, result.returncode, result.stderr)
+        released = {
+            task.removeprefix(":").removesuffix(":publishToMavenCentral")
+            for task in (self.root / "observed-args.txt").read_text().splitlines()[1:]
+        }
+        self.assertEqual(published, released)
+
+    def test_one_engine_verifier_can_be_released_alone(self):
+        result = self.run_release("0.20.0", modules=("brikk-sql-verify-api", "brikk-sql-verify-duckdb"))
+        self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual([
-            "task", ":brikk-sql:publishToMavenCentral",
-            ":brikk-sql-metadata:publishToMavenCentral",
-            ":brikk-sql-verify:publishToMavenCentral",
-            ":brikk-sql-oracle:publishToMavenCentral",
+            "task", ":brikk-sql-verify-api:publishToMavenCentral",
+            ":brikk-sql-verify-duckdb:publishToMavenCentral",
         ], (self.root / "observed-args.txt").read_text().splitlines())
+        self.assert_restored()
 
     def test_failed_publication_restores_original(self):
         result = self.run_release(exit_code=17)
@@ -116,7 +139,8 @@ class ReleaseLauncherTest(unittest.TestCase):
     def test_invalid_and_duplicate_modules_never_invoke_toolchain(self):
         for modules in (
             ("brikk-sql-intellij-support",), ("brikk-sql-intellij-tooling",),
-            ("brikk-sql-verify; echo bad",), ("",),
+            ("brikk-sql-verify; echo bad",), ("",), ("brikk-sql brikk-sql-metadata",),
+            ("brikk-sql-verify-postgres",),
             ("brikk-sql-verify", "brikk-sql-verify"),
         ):
             with self.subTest(modules=modules):

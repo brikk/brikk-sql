@@ -3,7 +3,7 @@ package dev.brikk.house.sql.verify
 import dev.brikk.house.sql.shape.SqlFragment
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -29,9 +29,9 @@ class ErrorSourceMappingTest {
 
         val verifier = SqlVerifiers.forEngine("doris")!!
         val vr = verifier.verify(result.sql)
-        assertFalse(vr.accepted, "expected Doris FE to reject: ${result.sql}")
-        val line = assertNotNull(vr.line, "Doris FE reports an error line")
-        val col = assertNotNull(vr.col, "Doris FE reports an error column")
+        val error = assertIs<VerifyResult.Rejected>(vr, "expected Doris FE to reject: ${result.sql}").error
+        val line = assertNotNull(error.line, "Doris FE reports an error line")
+        val col = assertNotNull(error.column, "Doris FE reports an error column")
 
         // The verifier position points into the OUTPUT sql; map it back to the source.
         // This error sits PAST the last positioned token (end-of-statement), so it needs
@@ -63,7 +63,7 @@ class ErrorSourceMappingTest {
         val map = assertNotNull(result.sourceMap)
 
         val verifier = SqlVerifiers.forEngine("doris")!!
-        assertTrue(verifier.verify(result.sql).accepted, "sanity: output is valid doris")
+        assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), "sanity: output is valid doris")
 
         val barOut = result.sql.indexOf("bar")
         val pos = assertNotNull(map.sourcePosition(barOut))

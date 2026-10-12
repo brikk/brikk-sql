@@ -4,6 +4,7 @@ import dev.brikk.house.sql.shape.SqlFragment
 import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /** Executes the portable SQL subset in memory, not against a live Doris server. */
@@ -27,7 +28,7 @@ class DorisFullOuterJoinTest {
                     val result = fragment.toExecutable("doris", pretty = pretty, trackSourceMap = true)
                     assertEquals(emptyList(), result.unsupportedMessages)
                     val verified = SqlVerifiers.forEngine("doris")!!.verify(result.sql)
-                    assertTrue(verified.accepted, "Doris parser rejected ${result.sql}: ${verified.error}")
+                    assertIs<VerifyResult.Accepted>(verified, "Doris parser rejected ${result.sql}: $verified")
                     // Execute the generated SQL unchanged. Grammar acceptance alone missed this bug.
                     val actual = statement.executeQuery(result.sql).use { rows ->
                         buildList {

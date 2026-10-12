@@ -58,7 +58,7 @@ import org.postgresql.util.PSQLException
  * is `@Synchronized` (single shared JDBC connection, like [DuckdbVerifier]). Call [close] to
  * stop the embedded server; the JVM shutdown reclaims it otherwise. If embedded Postgres cannot
  * be extracted, loaded, started, or connected on this host, [verify] does not throw: it returns
- * `verified=false` with a warning. That is deliberately distinct from parser rejection.
+ * [VerifyResult.Unavailable]. That is deliberately distinct from parser rejection.
  */
 class PostgresVerifier internal constructor(
     private val startEmbedded: () -> EmbeddedPostgres,
@@ -106,10 +106,8 @@ class PostgresVerifier internal constructor(
             "(${error::class.simpleName}: ${error.message ?: "no detail"})."
     }
 
-    private fun unavailableResult(): VerifyResult = VerifyResult(
-        accepted = false,
-        verified = false,
-        warning = unavailableReason ?: if (closed) {
+    private fun unavailableResult(): VerifyResult = VerifyResult.Unavailable(
+        unavailableReason ?: if (closed) {
             "PostgreSQL verification was not performed: verifier is closed."
         } else {
             "PostgreSQL verification was not performed: embedded Postgres is unavailable."
@@ -121,24 +119,18 @@ class PostgresVerifier internal constructor(
      * `SELECT <expr>` and verified as a statement. Positions on line 1 are shifted back past
      * the `SELECT ` prefix (best-effort).
      */
-    override fun verifyExpression(sql: String): VerifyResult {
-        val result = verify("SELECT $sql")
-        val col = result.col
-        if (result.accepted || result.line != 1 || col == null) return result
-        return result.copy(col = (col - WRAPPER_PREFIX).coerceAtLeast(1))
-    }
+    override fun verifyExpression(sql: String): VerifyResult = verify("$WRAPPER_PREFIX$sql").withoutPrefix(WRAPPER_PREFIX)
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
         val statements = try {
             Parser.parseJdbcSql(sql, true, false, true, false, false)
         } catch (e: SQLException) {
-            return VerifyResult(accepted = false, error = e.message?.trim())
+            return VerifyResult.Rejected(VerifyError(e.message?.trim() ?: "unparseable JDBC SQL"))
         }
         if (statements.size != 1) {
-            return VerifyResult(
-                accepted = false,
-                error = "PostgreSQL verification requires exactly one SQL statement; found ${statements.size}.",
+            return VerifyResult.Rejected(
+                VerifyError("PostgreSQL verification requires exactly one SQL statement; found ${statements.size}."),
             )
         }
         val conn = connectionOrNull() ?: return unavailableResult()
@@ -157,7 +149,7 @@ class PostgresVerifier internal constructor(
         }
         // Prepared successfully: grammar (and analysis) accepted it. Clean up.
         runCatching { conn.createStatement().use { it.execute("DEALLOCATE $name") } }
-        return VerifyResult(accepted = true)
+        return VerifyResult.Accepted
     }
 
     /**
@@ -169,11 +161,11 @@ class PostgresVerifier internal constructor(
         conn.autoCommit = false
         try {
             conn.createStatement().use { it.execute(sql) }
-            return VerifyResult(accepted = true)
+            return VerifyResult.Accepted
         } catch (e: PSQLException) {
             // Statements that can't run inside a transaction block PARSED fine; PG only
             // objected to the transaction context (25001) — count as accepted.
-            if (e.sqlState == ACTIVE_SQL_TRANSACTION) return VerifyResult(accepted = true)
+            if (e.sqlState == ACTIVE_SQL_TRANSACTION) return VerifyResult.Accepted
             return classify(sql, e)
         } finally {
             runCatching { conn.rollback() }
@@ -193,34 +185,16 @@ class PostgresVerifier internal constructor(
             return unavailableResult()
         }
         if (state?.startsWith("54") == true || state != null && state in SEMANTIC_ACCEPT) {
-            return VerifyResult(accepted = true)
+            return VerifyResult.Accepted
         }
 
         val server = e.serverErrorMessage
-        // ServerErrorMessage.position is a 1-based char offset into the submitted SQL text.
+        // ServerErrorMessage.position is a 1-based character (code point) offset into the SQL.
         val position = server?.position?.takeIf { it > 0 }
-        val (line, col) = position?.let { lineColOf(sql, it - 1) } ?: (null to null)
-        val message = (server?.message ?: e.message)?.trim()
-        return VerifyResult(
-            accepted = false,
-            error = listOfNotNull(state, message).joinToString(": "),
-            line = line,
-            col = col,
+        val message = listOfNotNull(state, (server?.message ?: e.message)?.trim()).joinToString(": ")
+        return VerifyResult.Rejected(
+            position?.let { VerifyError.atCodePoint(sql, message, it - 1) } ?: VerifyError(message),
         )
-    }
-
-    /** Converts a 0-based char offset into 1-based (line, col). */
-    private fun lineColOf(sql: String, offset: Int): Pair<Int?, Int?> {
-        if (offset < 0 || offset > sql.length) return null to null
-        var line = 1
-        var lineStart = 0
-        for (i in 0 until minOf(offset, sql.length)) {
-            if (sql[i] == '\n') {
-                line += 1
-                lineStart = i + 1
-            }
-        }
-        return line to (offset - lineStart + 1)
     }
 
     @Synchronized
@@ -240,7 +214,7 @@ class PostgresVerifier internal constructor(
     }
 
     private companion object {
-        const val WRAPPER_PREFIX = "SELECT ".length
+        const val WRAPPER_PREFIX = "SELECT "
 
         const val SYNTAX_ERROR = "42601"
         const val ACTIVE_SQL_TRANSACTION = "25001"

@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class BigqueryUnnestResultTest {
@@ -111,7 +112,7 @@ class BigqueryUnnestResultTest {
             val generator = Dialects.forName(target).generator(sourceDialect = "bigquery")
             val generated = generator.generate(tree)
             assertTrue(generator.unsupportedMessages.isEmpty(), generator.unsupportedMessages.toString())
-            assertTrue(SqlVerifiers.forEngine("trino")!!.verify(generated).accepted, generated)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(generated), generated)
             assertEquals(columns, Dialects.forName(target).parseOne(generated).selects.map(Expression::aliasOrName), generated)
             assertEquals(struct, generated.contains("TRANSFORM("), generated)
             assertEquals(offset, generated.contains("WITH ORDINALITY"), generated)
@@ -159,7 +160,7 @@ class BigqueryUnnestResultTest {
         val whole = Dialects.TRINO.generate(Dialects.BIGQUERY.parseOne(
             "SELECT x FROM UNNEST([STRUCT(1 AS a)]) AS x"), sourceDialect = "bigquery")
         assertTrue(whole.startsWith("SELECT x FROM UNNEST(TRANSFORM("), whole)
-        assertTrue(SqlVerifiers.forEngine("trino")!!.verify(whole).accepted, whole)
+        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(whole), whole)
         check("SELECT x.a, x.b, p FROM UNNEST([STRUCT(1 AS a, 'z' AS b), STRUCT(2 AS a, 'y' AS b)]) AS x WITH OFFSET AS p",
             listOf("a", "b", "p"), listOf("{\"a\":1,\"b\":\"z\",\"p\":0}", "{\"a\":2,\"b\":\"y\",\"p\":1}"),
             struct = true, offset = true)
@@ -211,7 +212,7 @@ class BigqueryUnnestResultTest {
         val generated = Dialects.TRINO.generate(tree, sourceDialect = "bigquery")
         assertTrue(generated.startsWith("SELECT u.x.a FROM"), generated)
         assertTrue(generated.contains(" AS u(x)"), generated)
-        assertTrue(SqlVerifiers.forEngine("trino")!!.verify(generated).accepted, generated)
+        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(generated), generated)
     }
 
     @Test
@@ -223,6 +224,6 @@ class BigqueryUnnestResultTest {
         assertFalse(generated.contains("TRANSFORM("), generated)
         assertFalse(generated.contains(" - 1"), generated)
         assertTrue(generator.unsupportedMessages.isEmpty())
-        assertTrue(SqlVerifiers.forEngine("trino")!!.verify(generated).accepted, generated)
+        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(generated), generated)
     }
 }

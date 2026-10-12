@@ -10,6 +10,7 @@ import java.sql.SQLException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class IntegerDivisionResultTest {
@@ -115,9 +116,9 @@ class IntegerDivisionResultTest {
         for (source in listOf("SELECT x DIV y FROM t", "SELECT -7 DIV 2", "SELECT NULL DIV 2")) {
             val output = SqlFragment(source, "hive").transpileTo("trino")
             assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
-            assertTrue(SqlVerifiers.forEngine("trino")!!.verify(output.sql).accepted, output.sql)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(output.sql), output.sql)
         }
         val mysql = Dialects.BIGQUERY.parseOne("SELECT DIV(10, DIV(4, 2))")
-        assertTrue(SqlVerifiers.forEngine("doris")!!.verify(mysql.sql("doris")).accepted)
+        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("doris")!!.verify(mysql.sql("doris")))
     }
 }

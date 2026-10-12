@@ -1,0 +1,26 @@
+# DuckDB native-grammar verifiers over DuckDB's own parser: the harness oracle for corpus gates and
+# ParseOnlyDuckdbVerifier for editors, which only parses and runs on a caller-supplied driver.
+product: jvm/lib
+
+# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+description: DuckDB native-grammar SQL verifiers (embedded DuckDB parser, parse-only editor variant) for brikk-sql.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  - ../brikk-sql-verify-api: exported
+  # Embedded DuckDB, pinned to engine 1.5.6 (jdbc artifact 1.5.6.0) to match the generated
+  # DuckDB function catalog. Editors that pass the user's own driver exclude it.
+  - org.duckdb:duckdb_jdbc:1.5.6.0
+
+settings:
+  publishing:
+    # Published coordinate: dev.brikk.house:brikk-sql-verify-duckdb.
+    artifactId: brikk-sql-verify-duckdb
+  jvm:
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict

@@ -10,9 +10,10 @@ import dev.brikk.house.sql.shape.SqlFragment
 import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
-import kotlin.test.assertTrue
 
 /** Execute unchanged Doris output in DuckDB against independent, stage-separated references. */
 class DorisQualifySemanticsTest {
@@ -57,8 +58,8 @@ class DorisQualifySemanticsTest {
                     assertEquals(emptyList(), result.unsupportedMessages, source)
                     assertSame(result.sql, assertNotNull(result.sourceMap).output)
                     val verified = verifier.verify(result.sql)
-                    assertTrue(verified.verified && !verified.advisory, "Native grammar required: $verified")
-                    assertTrue(verified.accepted, "${result.sql}: ${verified.error}")
+                    assertFalse(verifier.advisory, "Native grammar required: $verified")
+                    assertIs<VerifyResult.Accepted>(verified, "${result.sql}: $verified")
                     val resolved = qualify(
                         parseOne(result.sql, "doris"), dialect = Dialects.DORIS,
                         schema = mapOf("t" to tableColumns), inferSchema = false, validateQualifyColumns = true,
