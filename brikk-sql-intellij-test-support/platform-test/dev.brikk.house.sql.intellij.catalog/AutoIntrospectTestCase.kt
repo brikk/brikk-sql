@@ -94,6 +94,7 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
     protected lateinit var hive: PgDatabase
     protected lateinit var memory: PgDatabase
     protected lateinit var orders: PgLocalTable
+    protected lateinit var quoted: PgDatabase
 
     override fun setUp() {
         super.setUp()
@@ -111,7 +112,7 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         hive = databases.createOrGet("hive")
         memory = databases.createOrGet("memory")
         orders = databases.createOrGet("loaded").schemas.createOrGet("web").tables.createOrGet("orders")
-        databases.createOrGet("q\"t")
+        quoted = databases.createOrGet("q\"t")
         source = GatedDataSource().apply {
             name = "auto-introspect ${UUID.randomUUID()}"
             databaseDriver = checkNotNull(DatabaseDriverManager.getInstance().getDriver("postgresql"))

@@ -4,6 +4,7 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.database.dataSource.DataSourceStorage
 import com.intellij.database.dataSource.DataSourceSyncManager
 import com.intellij.database.dataSource.LocalDataSource
+import com.intellij.database.introspection.IntrospectionTask
 import com.intellij.database.introspection.prepareOneElementRefreshTask
 import com.intellij.database.model.basic.BasicElement
 import com.intellij.database.psi.DbPsiFacade
@@ -28,6 +29,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import org.jetbrains.annotations.ApiStatus
 
@@ -64,6 +66,11 @@ public class AutoIntrospectEngine(
         return claimed
     }
 
+    /** Forgets an in-flight claim that never ran. */
+    internal fun release(key: Key) {
+        states.remove(key, State.InFlight)
+    }
+
     public fun finish(key: Key, succeeded: Boolean) {
         states[key] = if (succeeded) State.Done else State.Failed(timeSource.markNow() + retryDelay)
     }
@@ -90,70 +97,144 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
 
     public val engine: AutoIntrospectEngine by lazy { createEngine() }
 
-    private class Pending(val file: VirtualFile, val namespace: String)
+    private val dataSources by lazy { profile.dataSources }
+    private val pathResolver by lazy { profile.pathResolver }
 
-    private val pending = LinkedHashMap<Any, Pending>()
+    private class Request(
+        val key: AutoIntrospectEngine.Key,
+        val dataSource: LocalDataSource,
+        val task: IntrospectionTask,
+        val file: VirtualFile,
+    )
+
+    /** Running and queued requests, oldest first; a request's banner shows while it is here. */
+    private val banners = LinkedHashSet<Request>()
+    private val workers = HashMap<String, Worker>()
 
     /**
      * Introspects the namespace [path] names in [file] (as typed, absolute or relative to the console's
-     * namespace) when it is listed but childless. True when a refresh started.
+     * namespace) when it is listed but childless. True when a refresh was queued.
      */
     public fun requestPath(file: PsiFile, path: List<String>): Boolean {
-        val profile = profile
         if (!profile.autoIntrospect) return false
         return recoverEditorOperation {
-            val dataSource = profile.dataSources.resolve(file).dataSource ?: return@recoverEditorOperation false
+            val dataSource = dataSources.resolve(file).dataSource ?: return@recoverEditorOperation false
             val model = DbPsiFacade.getInstance(project).findDataSource(dataSource.uniqueId)?.model ?: return@recoverEditorOperation false
-            val current = if (profile.usesCurrentNamespace) profile.dataSources.consoleNamespace(file) else emptyList()
-            val resolver = profile.pathResolver
-            val target = resolver.resolve(model.modelRoots.toList(), path, current) ?: return@recoverEditorOperation false
-            resolver.isChildless(target.node) && request(file, dataSource, target)
-        }.getOrDefault(false)
+            val current = if (profile.usesCurrentNamespace) dataSources.consoleNamespace(file) else emptyList()
+            val target = pathResolver.resolve(model.modelRoots.toList(), path, current) ?: return@recoverEditorOperation false
+            pathResolver.isChildless(target.node) && request(file, dataSource, target)
+        }.getOrElse { e ->
+            LOG.warn("Auto-introspection of $path failed", e)
+            false
+        }
     }
 
-    /** Introspects [target] of [dataSource] for [file], unless it is claimed. True when a refresh started. */
+    /**
+     * Introspects [target] of [dataSource] for [file], unless it is claimed. True when a refresh was
+     * queued. Each data source refreshes one target at a time, in request order.
+     */
     public fun request(file: PsiFile, dataSource: LocalDataSource, target: NamespaceTarget): Boolean {
         if (!profile.autoIntrospect) return false
         val element = target.node as? BasicElement ?: return false
         val task = prepareOneElementRefreshTask(dataSource.uniqueId, element) ?: return false
         val key = AutoIntrospectEngine.Key(dataSource.uniqueId, target.path)
         if (!engine.claim(key)) return false
-        val host = file.originalFile.viewProvider.virtualFile
-        val id = Any()
-        synchronized(pending) { pending[id] = Pending(host, target.path.joinToString(".")) }
-        EditorNotifications.getInstance(project).updateNotifications(host)
-        val job = scope.launch {
-            var succeeded = false
-            try {
-                dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, target.path))
-                storageOf(dataSource)?.updateDataSource(dataSource)
-                val context = LoaderContext.selectTask(project, dataSource, task)
-                // Queued, not stopping a running refresh: a second namespace typed meanwhile must not cancel the first.
-                DataSourceSyncManager.getInstance().tryPerformSync(context, stopRunning = false, merge = false)
-                succeeded = context.errorHandler?.hasErrors() != true
-                if (succeeded) highlightAgain(host)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                LOG.warn("Introspecting ${key.path} of ${dataSource.name} failed", e)
-            } finally {
-                engine.finish(key, succeeded)
-            }
+        val request = Request(key, dataSource, task, file.originalFile.viewProvider.virtualFile)
+        synchronized(banners) { banners += request }
+        val worker = synchronized(workers) { workers.getOrPut(dataSource.uniqueId, ::Worker) }
+        if (!worker.offer(request)) {
+            synchronized(banners) { banners -= request }
+            engine.release(key)
+            return false
         }
-        job.invokeOnCompletion {
-            synchronized(pending) { pending.remove(id) }
-            if (!project.isDisposed) EditorNotifications.getInstance(project).updateNotifications(host)
-        }
+        EditorNotifications.getInstance(project).updateNotifications(request.file)
         return true
     }
 
-    /** The namespace of [file]'s newest running request, if any. */
-    public fun pending(file: VirtualFile): String? = synchronized(pending) { pending.values.lastOrNull { it.file == file }?.namespace }
+    /** The namespace of [file]'s newest request, if any. */
+    public fun pending(file: VirtualFile): String? =
+        synchronized(banners) { banners.lastOrNull { it.file == file }?.key?.path?.joinToString(".") }
 
     /** Hides [file]'s banner; the refreshes go on. */
     public fun dismiss(file: VirtualFile) {
-        synchronized(pending) { pending.values.removeAll { it.file == file } }
+        synchronized(banners) { banners.removeAll { it.file == file } }
         EditorNotifications.getInstance(project).updateNotifications(file)
+    }
+
+    /**
+     * Refreshes one data source's requests one after another. The platform's own queue may drop a
+     * waiting refresh when another arrives, and the scope's read-modify-write must not interleave.
+     */
+    private inner class Worker {
+        private val queue = ArrayDeque<Request>()
+        private var job: Job? = null
+
+        fun offer(request: Request): Boolean = synchronized(this) {
+            if (queue.size >= MAX_QUEUED) return false
+            queue.addLast(request)
+            if (job == null) {
+                val started = scope.launch { drain() }
+                job = started
+                started.invokeOnCompletion { abandon(started) }
+            }
+            true
+        }
+
+        private suspend fun drain() {
+            while (true) {
+                val next = synchronized(this) { queue.removeFirstOrNull() ?: null.also { job = null } } ?: return
+                refresh(next)
+            }
+        }
+
+        /** Releases what a cancelled or failed worker left queued. */
+        private fun abandon(ended: Job) {
+            val left = synchronized(this) {
+                if (job !== ended) return
+                job = null
+                queue.toList().also { queue.clear() }
+            }
+            left.forEach { finish(it, loaded = false) }
+        }
+    }
+
+    private suspend fun refresh(request: Request) {
+        var loaded = false
+        try {
+            val dataSource = request.dataSource
+            dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
+            storageOf(dataSource)?.updateDataSource(dataSource)
+            loaded = sync(request) && readAction { isLoaded(request) }
+        } finally {
+            finish(request, loaded)
+        }
+        if (loaded) highlightAgain(request.file)
+    }
+
+    /** Whether the sync ran without errors; a data source that is loading does not sync and gives no result. */
+    private suspend fun sync(request: Request): Boolean = try {
+        val context = LoaderContext.selectTask(project, request.dataSource, request.task)
+        // Not stopping a running refresh: refreshes started elsewhere are not ours to cancel.
+        val result = DataSourceSyncManager.getInstance().tryPerformSync(context, stopRunning = false, merge = false)
+        result != null && context.errorHandler?.hasErrors() != true
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        LOG.warn("Introspecting ${request.key.path} of ${request.dataSource.name} failed", e)
+        false
+    }
+
+    /** Whether the target now has children: a refresh that loaded nothing may run again. */
+    private fun isLoaded(request: Request): Boolean {
+        val model = DbPsiFacade.getInstance(project).findDataSource(request.key.dataSourceId)?.model ?: return false
+        val node = pathResolver.resolve(model.modelRoots.toList(), request.key.path)?.node ?: return false
+        return !pathResolver.isChildless(node)
+    }
+
+    private fun finish(request: Request, loaded: Boolean) {
+        engine.finish(request.key, loaded)
+        synchronized(banners) { banners -= request }
+        if (!project.isDisposed) EditorNotifications.getInstance(project).updateNotifications(request.file)
     }
 
     private fun storageOf(dataSource: LocalDataSource): DataSourceStorage? =
@@ -168,6 +249,9 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
 
     private companion object {
         val LOG = logger<AutoIntrospectService>()
+
+        /** Requests a data source may have waiting; more are refused, not queued. */
+        const val MAX_QUEUED = 32
     }
 }
 

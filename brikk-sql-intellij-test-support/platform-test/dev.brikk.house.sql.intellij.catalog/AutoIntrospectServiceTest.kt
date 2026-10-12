@@ -23,6 +23,7 @@ import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.registerOrReplaceServiceInstance
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
@@ -98,8 +99,9 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertTrue(service.requestPath(myFixture.file, listOf("memory")))
         assertEquals("memory", pending())
         older.finish { hive.schemas.createOrGet("web") }
-        val newer = nextRefresh()
+        awaitState(listOf("hive"), AutoIntrospectEngine.State.Done)
         assertEquals("memory", pending())
+        val newer = nextRefresh()
         newer.finish { memory.schemas.createOrGet("tiny") }
         awaitIdle()
         assertNull(pending())
@@ -137,6 +139,58 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         awaitIdle()
     }
 
+    /** Requests made while one runs all load, none dropped by the platform's queue. */
+    fun testEveryQueuedRequestLoads() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        val first = nextRefresh()
+        assertTrue(service.requestPath(myFixture.file, listOf("memory")))
+        assertTrue(service.requestPath(myFixture.file, listOf("q\"t")))
+        first.finish { hive.schemas.createOrGet("web") }
+        nextRefresh().finish { memory.schemas.createOrGet("tiny") }
+        nextRefresh().finish { quoted.schemas.createOrGet("s") }
+        awaitIdle()
+        for (catalog in listOf("hive", "memory", "q\"t")) awaitState(listOf(catalog), AutoIntrospectEngine.State.Done)
+    }
+
+    /** Two requests at once each add their namespace; neither update of the scope is lost. */
+    fun testSimultaneousRequestsKeepEveryNamespaceInTheScope() {
+        source.gate = CountDownLatch(2)
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        assertTrue(service.requestPath(myFixture.file, listOf("q\"t")))
+        nextRefresh().finish { hive.schemas.createOrGet("web") }
+        nextRefresh().finish { quoted.schemas.createOrGet("s") }
+        awaitIdle()
+        source.gate = null
+        assertTrue(selects(listOf("hive")))
+        assertTrue(selects(listOf("q\"t")))
+    }
+
+    /** A refresh that leaves the namespace childless, or never reaches the database, did not load it. */
+    fun testARefreshThatLoadsNothingMayRunAgain() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        nextRefresh().finish()
+        awaitState(listOf("hive"), AutoIntrospectEngine.State.Failed::class.java)
+        assertFalse(service.requestPath(myFixture.file, listOf("hive")))
+        time += 1.minutes
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        nextRefresh().finish { hive.schemas.createOrGet("web") }
+        awaitState(listOf("hive"), AutoIntrospectEngine.State.Done)
+    }
+
+    /** Requests the service can no longer run, queued or made after its scope ended, are released. */
+    fun testCancelledRequestsAreReleased() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        val running = nextRefresh()
+        assertTrue(service.requestPath(myFixture.file, listOf("memory")))
+        serviceScope.cancel()
+        running.finish()
+        service.requestPath(myFixture.file, listOf("q\"t"))
+        PlatformTestUtil.waitWithEventsDispatching("the requests are released", {
+            listOf("hive", "memory", "q\"t").none { service.engine.state(key(listOf(it))) == AutoIntrospectEngine.State.InFlight }
+        }, 10)
+        assertNull(pending())
+    }
+
     fun testDismissHidesTheBanner() {
         assertTrue(service.requestPath(myFixture.file, listOf("hive")))
         val refresh = nextRefresh()
@@ -146,4 +200,12 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         refresh.finish()
         awaitIdle()
     }
+
+    private fun key(path: List<String>) = AutoIntrospectEngine.Key(source.uniqueId, path)
+
+    private fun awaitState(path: List<String>, state: AutoIntrospectEngine.State) =
+        PlatformTestUtil.waitWithEventsDispatching("$path is $state", { service.engine.state(key(path)) == state }, 10)
+
+    private fun awaitState(path: List<String>, state: Class<out AutoIntrospectEngine.State>) =
+        PlatformTestUtil.waitWithEventsDispatching("$path is ${state.simpleName}", { state.isInstance(service.engine.state(key(path))) }, 10)
 }
