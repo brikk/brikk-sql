@@ -201,7 +201,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
 
     /**
      * Follows `SETTINGS name = value, ...` after a format name; true once a value ends the clause,
-     * that is, when no `,` follows it. A value may be signed or a bracketed literal.
+     * that is, when no `,` follows it past whitespace, blank lines and comments. A value may be
+     * signed or a bracketed literal.
      */
     private fun settingsEnd(state: InsertDataState, type: TokenType): Boolean {
         if (!state.settingValue) {
@@ -213,9 +214,26 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             type == TokenType.DASH || type == TokenType.PLUS -> return false
         }
         state.settingValue = false
-        var next = current
-        while (next < size && sql[next].isWhitespace()) next++
+        // At the end of a prefix, the rest of the text decides: wait.
+        val next = skipTrivia(current) ?: return false
         return next >= size || sql[next] != ','
+    }
+
+    /**
+     * The offset of the first character from [from] that is no whitespace or comment, or the text's
+     * end; null when the end of a prefix (or a comment it leaves open) comes first.
+     */
+    private fun skipTrivia(from: Int): Int? {
+        var at = from
+        while (true) {
+            while (at < size && sql[at].isWhitespace()) at++
+            if (at >= size) return if (textEnds) size else null
+            val comment = config.comments.entries.filter { sql.startsWith(it.key, at) }.maxByOrNull { it.key.length } ?: return at
+            val close = comment.value
+            val closed = if (close == null) sql.indexOfAny(charArrayOf('\n', '\r'), at) else sql.indexOf(close, at + comment.key.length).let { if (it < 0) it else it + close.length }
+            if (closed < 0) return if (textEnds) size else null
+            at = closed
+        }
     }
 
     private fun wordAt(offset: Int, word: String): Boolean =

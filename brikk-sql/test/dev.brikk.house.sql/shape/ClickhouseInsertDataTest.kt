@@ -85,6 +85,15 @@ class ClickhouseInsertDataTest {
         assertEquals(listOf("a;b"), data("INSERT INTO t SELECT s FROM input('s String') WHERE s != 'FORMAT' FORMAT TSV\na;b\n\nSELECT 2;"))
     }
 
+    @Test fun settingsAfterTheFormatMayHoldCommentsAndBlankLines() {
+        for (settings in listOf("max_threads = 1 /* c */,\n\ninput_format_skip_unknown_fields = 1", "max_threads = 1 -- c\n, b = 2",
+            "max_threads = 1\n\n, input_format_skip_unknown_fields = 1", "a = /* c */ 1 # c\n, b = 2")) {
+            val sql = "INSERT INTO t FORMAT TSV SETTINGS $settings\na;b\n\nSELECT 2;"
+            assertEquals(listOf("a;b"), data(sql), sql)
+            assertEquals(2, statements(sql).size, sql)
+        }
+    }
+
     @Test fun aBlankLineRightAfterTheFormatEndsTheStatementWithoutData() {
         val sql = "INSERT INTO t FORMAT TSV\n\nSELECT 2;"
         assertEquals(listOf("INSERT INTO t FORMAT TSV", "SELECT 2;"), statements(sql))

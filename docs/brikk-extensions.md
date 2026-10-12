@@ -1879,7 +1879,9 @@ statement nor make its boundary an error. The rule applies to a depth-0 `FORMAT 
 statement that begins with `INSERT` and has no `INFILE` or `VALUES` before it, nor a `SELECT` or
 `WITH` unless the query reads its rows through the `input(...)` table function (as
 `ParserInsertQuery` decides). A `SETTINGS` clause on the format name's line comes before the data
-(`allow_settings_after_format_in_insert`); on a later line it is data. `FORMAT Values` stays SQL, as
+(`allow_settings_after_format_in_insert`); on a later line it is data. The clause ends at a value
+that no `,` follows past whitespace, blank lines and comments; a window that ends before that is
+decided leaves the statement open. `FORMAT Values` stays SQL, as
 ClickHouse reads its rows with the Values parser up to the terminating `;`.
 
 Framing never alters stored data. Data starts after the spaces that follow the header and,
