@@ -68,6 +68,18 @@ class SqlScriptParametersTest {
     }
 
     @Test
+    fun variantSubColumnTypesAreSyntax() {
+        assertEquals(listOf("p"), names("SELECT CAST(v AS VARIANT<'a':INT, 'b':STRING>), :p"))
+    }
+
+    @Test
+    fun slicesAfterCompletedOperandsAreSyntax() {
+        assertEquals(listOf("p"), names("SELECT arr[CASE WHEN TRUE THEN 1 ELSE 2 END:n], arr[NULL:m], arr[TRUE:k], :p"))
+        assertEquals(listOf("a"), names("SELECT arr[:a:b]"))
+        assertEquals(listOf("date"), names("SELECT arr[:date:n]"))
+    }
+
+    @Test
     fun sliceColonsAreSyntax() {
         assertEquals(
             listOf("i", "j", "m", "lo", "s"),

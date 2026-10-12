@@ -61,9 +61,11 @@ data class SqlScriptParameters(
          * excluded as far as tokens prove it:
          * - map/struct literal keys: the first colon of each `{...}` entry separates key and
          *   value, so `MAP{'k':v}` has no bind but `{'k': :p}` does;
-         * - field types: every colon inside `STRUCT<`, `ARRAY<` or `MAP<` type brackets, nested;
-         * - slices: the first colon of a subscript after a complete operand, so `arr[1:n]` has no
-         *   bind but `arr[:i]` and `arr[1 + :i]` do.
+         * - field types: every colon inside `STRUCT<`, `ARRAY<`, `MAP<` or `VARIANT<` type brackets,
+         *   nested;
+         * - slices: the first colon of a subscript after a complete operand (a name, literal,
+         *   closing bracket, `END` of a CASE, or a bind), so `arr[1:n]` has no bind but `arr[:i]`
+         *   and `arr[1 + :i]` do.
          *
          * Tokens cannot prove everything: a column named STRUCT, ARRAY or MAP compared with `<`
          * reads as a type, and a keyword-named column before a slice colon (`arr[date:n]`)
@@ -110,13 +112,15 @@ data class SqlScriptParameters(
         private fun colonBinds(text: String, tokens: List<Token>, checkCanceled: () -> Unit): List<ParameterOccurrence> {
             val open = OpenBrackets()
             val binds = ArrayList<ParameterOccurrence>()
+            var bindNameEnd = -1
+            fun endsOperand(previous: Token?) = previous != null && (previous.tokenType in OPERAND_ENDS || previous.end == bindNameEnd)
             for ((index, token) in tokens.withIndex()) {
                 if (index and 1023 == 1023) checkCanceled()
                 val previous = tokens.getOrNull(index - 1)
                 when (token.tokenType) {
                     TokenType.SEMICOLON -> open.clear()
                     TokenType.L_PAREN -> open.push(Bracket.PAREN)
-                    TokenType.L_BRACKET -> open.push(if (previous.endsOperand()) Bracket.SUBSCRIPT else Bracket.ARRAY)
+                    TokenType.L_BRACKET -> open.push(if (endsOperand(previous)) Bracket.SUBSCRIPT else Bracket.ARRAY)
                     TokenType.L_BRACE -> open.push(Bracket.MAP)
                     TokenType.LT -> if (open.innermost?.kind == Bracket.TYPE || previous?.text?.uppercase() in TYPE_CONSTRUCTORS) {
                         open.push(Bracket.TYPE)
@@ -132,15 +136,18 @@ data class SqlScriptParameters(
                             open.inType -> true
                             innermost == null || innermost.colonSeen -> false
                             innermost.kind == Bracket.MAP -> true
-                            innermost.kind == Bracket.SUBSCRIPT -> previous.endsOperand()
+                            innermost.kind == Bracket.SUBSCRIPT -> endsOperand(previous)
                             else -> false
                         }
                         if (syntax) innermost?.colonSeen = true
                         val name = tokens.getOrNull(index + 1)
                         if (!syntax && name != null && name.start == token.end + 1 && text.getOrNull(token.start - 1) != ':') {
                             val spelled = text.substring(name.start, name.end + 1)
-                            if (PARAMETER_NAME.matches(spelled)) binds += ParameterOccurrence(spelled, ParamStyle.NAMED_COLON,
-                                SyntacticRange(token.start, name.end + 1), SyntacticRange(name.start, name.end + 1))
+                            if (PARAMETER_NAME.matches(spelled)) {
+                                binds += ParameterOccurrence(spelled, ParamStyle.NAMED_COLON,
+                                    SyntacticRange(token.start, name.end + 1), SyntacticRange(name.start, name.end + 1))
+                                bindNameEnd = name.end
+                            }
                         }
                     }
                     else -> {}
@@ -149,14 +156,13 @@ data class SqlScriptParameters(
             return binds
         }
 
-        private fun Token?.endsOperand(): Boolean = this != null && tokenType in OPERAND_ENDS
-
         private val PARAMETER_NAME = Regex("[A-Za-z_][A-Za-z0-9_]*")
-        private val TYPE_CONSTRUCTORS = setOf("STRUCT", "ARRAY", "MAP")
+        private val TYPE_CONSTRUCTORS = setOf("STRUCT", "ARRAY", "MAP", "VARIANT")
         private val OPERAND_ENDS = setOf(
             TokenType.VAR, TokenType.IDENTIFIER, TokenType.NUMBER, TokenType.STRING, TokenType.NATIONAL_STRING,
             TokenType.RAW_STRING, TokenType.HEREDOC_STRING, TokenType.BIT_STRING, TokenType.HEX_STRING,
             TokenType.BYTE_STRING, TokenType.UNICODE_STRING, TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE,
+            TokenType.END, TokenType.NULL, TokenType.TRUE, TokenType.FALSE,
         )
     }
 }
