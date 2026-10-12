@@ -375,8 +375,9 @@ one in a transaction a statement began in auto-commit mode, which the platform d
 `ExecutionObserver` treats a session as in a transaction from a detected begin until a detected end, a
 commit or rollback through the IDE, or a new connection (`ExecutionObserverProfile.transactionStatements`,
 default `StatementRules.TRANSACTIONS`: `BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`;
-`ROLLBACK ... TO`, `COMMIT PREPARED` and `ROLLBACK PREPARED` keep it, `PREPARE TRANSACTION` ends it, and an
-end `AND CHAIN` begins the next; Trino's profile uses
+`ROLLBACK ... TO`, `COMMIT PREPARED` and `ROLLBACK PREPARED` keep it, PostgreSQL's two-phase
+`PREPARE TRANSACTION 'gid'` ends it (not a statement prepared under the name `transaction`, as DuckDB's
+`PREPARE transaction AS ...`), and an end `AND CHAIN` begins the next; Trino's profile uses
 `StatementRules.TRINO_TRANSACTIONS`, without `BEGIN` and `END`, which only delimit its routine bodies).
 Only statements that succeed count: a failed begin begins nothing, a failed end ends nothing, and a
 failed script whose statements include a begin leaves the session in a transaction, since its begin may

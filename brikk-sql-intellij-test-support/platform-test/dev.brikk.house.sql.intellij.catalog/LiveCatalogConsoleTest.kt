@@ -266,6 +266,17 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
     }
 
+    /** DuckDB prepares a statement named `transaction`; PostgreSQL's two-phase form needs a literal id, so the transaction stays open. */
+    @Test
+    fun aStatementPreparedAsTransactionDoesNotEndTheTransaction() {
+        val a = console("a")
+        a.run("BEGIN TRANSACTION")
+        a.run("PREPARE TRANSACTION AS SELECT 1")
+        assertEquals(RefreshOutcome.SessionInTransaction, refreshFrom(a.file))
+        a.run("ROLLBACK")
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
+    }
+
     /** The script stops at its failing statement, so its COMMIT never runs; the ROLLBACK proves the transaction is open. */
     @Test
     fun aScriptFailingBeforeItsCommitLeavesTheTransactionOpen() {
