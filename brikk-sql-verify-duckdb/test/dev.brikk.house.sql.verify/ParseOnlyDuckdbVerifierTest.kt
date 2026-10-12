@@ -13,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import org.duckdb.DuckDBDriver
@@ -60,6 +61,26 @@ internal class ParseOnlyDuckdbVerifierTest {
                 val result = assertIs<VerifyResult.Unverified>(verifier.verify(sql), sql)
                 assertContains(result.reason, "not implemented")
             }
+        }
+    }
+
+    @Test
+    fun failureReasonsDoNotQuoteTheWrapperQuery() {
+        ParseOnlyDuckdbVerifier().use { verifier ->
+            val reason = assertIs<VerifyResult.Unverified>(verifier.verify("SELECT 'a\u0000b'")).reason
+            assertFalse("json_serialize_sql" in reason, reason)
+        }
+    }
+
+    @Test
+    fun aDeadConnectionIsUnavailableAndReopenedOnTheNextCall() {
+        val driver = RecordingDriver()
+        ParseOnlyDuckdbVerifier(driver).use { verifier ->
+            assertIs<VerifyResult.Accepted>(verifier.verify("SELECT 1"))
+            driver.connections.single().close()
+            assertContains(assertIs<VerifyResult.Unavailable>(verifier.verify("SELECT 2")).reason, "connection")
+            assertIs<VerifyResult.Accepted>(verifier.verify("SELECT 3"))
+            assertEquals(2, driver.connections.size)
         }
     }
 

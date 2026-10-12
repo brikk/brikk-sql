@@ -16,7 +16,9 @@ import org.duckdb.DuckDBDriver
  * It runs on [driver], so an editor can verify with the user's own DuckDB version. The connection
  * is an in-memory database with external access, extension installation and autoloading off, and
  * its configuration locked. A driver that cannot open it makes the verifier
- * [VerifyResult.Unavailable] for good. Error positions are converted from DuckDB's code points.
+ * [VerifyResult.Unavailable] for good; a connection that dies is dropped, that call is
+ * [VerifyResult.Unavailable], and the next call reopens it. Error positions are converted from
+ * DuckDB's code points.
  *
  * Calls are synchronized over one lazily opened connection; [close] releases it.
  */
@@ -29,10 +31,15 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
     @Synchronized
     override fun verify(sql: String): VerifyResult {
         val open = connection ?: connect() ?: return VerifyResult.Unavailable(unavailableReason ?: CLOSED)
+        // The SQL travels as a string literal, which ends at a NUL.
+        if ('\u0000' in sql) return VerifyResult.Unverified("DuckDB cannot parse-check SQL that contains a NUL character.")
         val serialized = try {
             open.serializeSql(sql)
         } catch (e: SQLException) {
-            return VerifyResult.Unverified("DuckDB could not parse-check this statement: ${e.message?.trim()}")
+            if (open.isUsable()) return VerifyResult.Unverified("DuckDB could not parse-check this statement: ${e.reason()}")
+            connection = null
+            open.closeQuietly()
+            return VerifyResult.Unavailable("DuckDB verification is unavailable: the connection failed (${e.reason()}).")
         } catch (e: IllegalArgumentException) {
             return VerifyResult.Unverified("DuckDB returned an unreadable parse result: ${e.message}")
         }
@@ -62,7 +69,7 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
             driver.connect(URL, restrictedSettings())
                 ?: return unavailable("the driver does not accept $URL")
         } catch (e: SQLException) {
-            return unavailable("the driver could not open an in-memory database (${e.message?.trim()})")
+            return unavailable("the driver could not open an in-memory database (${e.reason()})")
         } catch (e: LinkageError) {
             // A user's driver jar may fail to load its native library or classes.
             return unavailable("the driver could not be loaded (${e::class.java.simpleName}: ${e.message})")
@@ -75,7 +82,7 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
                     is SerializedSql.Failed -> probe.message ?: probe.document
                 }
             } catch (e: SQLException) {
-                e.message ?: e::class.java.simpleName
+                e.reason()
             } catch (e: IllegalArgumentException) {
                 e.message ?: e::class.java.simpleName
             }
@@ -84,15 +91,27 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
             connection = opened
             return opened
         } finally {
-            if (!usable) {
-                try {
-                    opened.close()
-                } catch (_: SQLException) {
-                    // The connection is being discarded; its close failure changes nothing.
-                }
-            }
+            if (!usable) opened.closeQuietly()
         }
     }
+
+    private fun Connection.isUsable(): Boolean = try {
+        !isClosed && isValid(0)
+    } catch (_: SQLException) {
+        false
+    }
+
+    private fun Connection.closeQuietly() {
+        try {
+            close()
+        } catch (_: SQLException) {
+            // The connection is being discarded; its close failure changes nothing.
+        }
+    }
+
+    /** DuckDB appends the failing query from `LINE 1:` on; that is the wrapper, not the user's SQL. */
+    private fun SQLException.reason(): String =
+        message?.substringBefore("\nLINE ")?.trim()?.ifEmpty { null } ?: this::class.java.simpleName
 
     private fun unavailable(detail: String): Connection? {
         unavailableReason = "DuckDB verification is unavailable: $detail."
