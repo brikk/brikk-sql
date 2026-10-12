@@ -228,6 +228,25 @@ takes the dbms the platform passes):
   to `maxDepth` names, so a dialect may address tables below its namespaces. Names match exactly,
   else ignoring case; an unresolved path gives null. `isChildless(node)`: listed but not introspected.
 
+- `CatalogProfile`: a dialect's catalog facts. Minimum: `dbms`, `productLabel`, `quoteChars`,
+  `levels`. Defaults: `usesCurrentNamespace = false`, `maxDeepenDepth = levels.size`,
+  `autoIntrospect = false` (a dialect turns it on), `dataSources` (a `DialectDataSourceResolver`;
+  override with a stored instance for its options), `childrenOf`. `pathResolver` builds the
+  `NamespacePathResolver`. `CatalogScopes.select(levels, path)` selects exactly one namespace (its
+  direct children load, not its subtree); `widen` adds it to a scope.
+- `AutoIntrospectService(project, scope)`: register one project service subclass per plugin with
+  its `profile`. `requestPath(file, path)` resolves a typed path (absolute or relative to the
+  console's namespace) on the file's data source and, when the model lists it without children,
+  adds exactly that namespace to the introspection scope, saves the data source and refreshes only
+  that element; `request(file, dataSource, target)` does the same for a resolved target. Requests are
+  keyed by data source and absolute path in an `AutoIntrospectEngine`: claimed while in flight and
+  after success, claimable again a minute (`createEngine`) after a failure. Refreshes queue rather
+  than stop one another. When one ends, its banner goes (a newer request's banner stays) and after
+  success the file is highlighted again.
+- `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
+  `editorNotificationProvider`; it shows "<product>: introspecting '<namespace>'…" with Dismiss while
+  the file's newest request runs.
+
 Internal API used, by class (the platform offers no public alternative):
 
 | API | Used by | Why | Marketplace |
