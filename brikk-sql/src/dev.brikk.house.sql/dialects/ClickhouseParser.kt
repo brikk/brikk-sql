@@ -21,6 +21,7 @@ import dev.brikk.house.sql.ast.ArrayReverse
 import dev.brikk.house.sql.ast.ArraySlice
 import dev.brikk.house.sql.ast.ArraySum
 import dev.brikk.house.sql.ast.AssumeColumnConstraint
+import dev.brikk.house.sql.ast.AuthoredSyntax
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.CheckColumnConstraint
@@ -606,7 +607,14 @@ open class ClickhouseParser(
             this_ = Var(args("this" to this_.name))
         }
 
-        return expression(Placeholder(args("this" to this_, "kind" to kind)))
+        val placeholder = expression(Placeholder(args("this" to this_, "kind" to kind)))
+        // brikk extension #53: server query parameters keep their authored spelling.
+        val open = tokens.getOrNull(startIndex - 1)
+        val close = prevToken
+        if (open?.tokenType == TokenType.L_BRACE && close.end < sql.length && sql[open.start] == '{') {
+            placeholder.authoredSyntax = AuthoredSyntax(sql.substring(open.start, close.end + 1), placeholder.copy())
+        }
+        return placeholder
     }
 
     // sqlglot: ClickHouseParser._parse_bracket

@@ -10,7 +10,8 @@ import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
 
 /**
- * Exact authored parameter ranges without rendering or lowering. Parse/token/shape refusals
+ * Exact authored parameter ranges without rendering or lowering; [ParameterOccurrence.style]
+ * tells IDE `:name` binds from typed server parameters. Parse/token/shape refusals
  * propagate: callers must not treat an unparseable input as proof of no parameters.
  * IDE-configured textual substitutions remain a separate platform concern.
  */
@@ -27,7 +28,8 @@ fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccur
  * [sql] with every named placeholder ([ParamStyle.NAMED_COLON] in any spelling the dialect
  * parses) replaced by the scalar `0` padded with spaces, so a native parser can check the
  * statement before substitution. Offsets, length and line breaks are unchanged, so native
- * error positions address [sql] too. Refusals propagate as in [parseParameterOccurrences].
+ * error positions address [sql] too. Typed server parameters ([ParamStyle.NAMED_TYPED]) stay.
+ * Refusals propagate as in [parseParameterOccurrences].
  */
 fun maskNamedParameters(sql: String, dialect: String): String {
     val masked = StringBuilder(sql)
@@ -70,10 +72,14 @@ data class SqlScriptParameters(
          * Tokens cannot prove everything: a column named STRUCT, ARRAY or MAP compared with `<`
          * reads as a type, and a keyword-named column before a slice colon (`arr[date:n]`)
          * does not end an operand. A statement terminator closes every open bracket.
+         *
+         * Where the dialect has typed server parameters (ClickHouse), each `{name:Type}` is
+         * reported as [ParamStyle.NAMED_TYPED] over its whole braces, for callers to skip.
          */
         fun parse(text: String, dialect: String, checkCanceled: () -> Unit = {}): SqlScriptParameters {
             val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text, checkCanceled)
-            return SqlScriptParameters(text, dialect, colonBinds(text, lexed.tokens, checkCanceled), lexed.failureOffset, lexed.error)
+            val typed = Dialects.forName(dialect).typedQueryParameters
+            return SqlScriptParameters(text, dialect, colonBinds(text, lexed.tokens, typed, checkCanceled), lexed.failureOffset, lexed.error)
         }
 
         private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE }
@@ -109,19 +115,42 @@ data class SqlScriptParameters(
             }
         }
 
-        private fun colonBinds(text: String, tokens: List<Token>, checkCanceled: () -> Unit): List<ParameterOccurrence> {
+        // `{` name `:` type `}`, where the type holds no brace or statement terminator.
+        private fun typedParameter(text: String, tokens: List<Token>, open: Int): Pair<ParameterOccurrence, Int>? {
+            val name = tokens.getOrNull(open + 1) ?: return null
+            if (tokens.getOrNull(open + 2)?.tokenType != TokenType.COLON) return null
+            val spelled = when {
+                name.tokenType == TokenType.IDENTIFIER -> name.text
+                else -> text.substring(name.start, name.end + 1).takeIf { PARAMETER_NAME.matches(it) } ?: return null
+            }
+            var close = open + 3
+            while (close < tokens.size && tokens[close].tokenType !in TYPED_PARAMETER_STOPS) close++
+            if (close == open + 3 || tokens.getOrNull(close)?.tokenType != TokenType.R_BRACE) return null
+            return ParameterOccurrence(spelled, ParamStyle.NAMED_TYPED, SyntacticRange(tokens[open].start, tokens[close].end + 1),
+                SyntacticRange(name.start, name.end + 1)) to close
+        }
+
+        private fun colonBinds(text: String, tokens: List<Token>, typed: Boolean, checkCanceled: () -> Unit): List<ParameterOccurrence> {
             val open = OpenBrackets()
             val binds = ArrayList<ParameterOccurrence>()
             var bindNameEnd = -1
+            var skipThrough = -1
             fun endsOperand(previous: Token?) = previous != null && (previous.tokenType in OPERAND_ENDS || previous.end == bindNameEnd)
             for ((index, token) in tokens.withIndex()) {
                 if (index and 1023 == 1023) checkCanceled()
+                if (index <= skipThrough) continue
                 val previous = tokens.getOrNull(index - 1)
                 when (token.tokenType) {
                     TokenType.SEMICOLON -> open.clear()
                     TokenType.L_PAREN -> open.push(Bracket.PAREN)
                     TokenType.L_BRACKET -> open.push(if (endsOperand(previous)) Bracket.SUBSCRIPT else Bracket.ARRAY)
-                    TokenType.L_BRACE -> open.push(Bracket.MAP)
+                    TokenType.L_BRACE -> {
+                        val parameter = if (typed) typedParameter(text, tokens, index) else null
+                        if (parameter != null) {
+                            binds += parameter.first
+                            skipThrough = parameter.second
+                        } else open.push(Bracket.MAP)
+                    }
                     TokenType.LT -> if (open.innermost?.kind == Bracket.TYPE || previous?.text?.uppercase() in TYPE_CONSTRUCTORS) {
                         open.push(Bracket.TYPE)
                     }
@@ -164,6 +193,7 @@ data class SqlScriptParameters(
         }
 
         private val PARAMETER_NAME = Regex("[A-Za-z_][A-Za-z0-9_]*")
+        private val TYPED_PARAMETER_STOPS = setOf(TokenType.L_BRACE, TokenType.R_BRACE, TokenType.SEMICOLON)
         private val TYPE_CONSTRUCTORS = setOf("STRUCT", "ARRAY", "MAP", "VARIANT")
         private val OPERAND_ENDS = setOf(
             TokenType.VAR, TokenType.IDENTIFIER, TokenType.NUMBER, TokenType.STRING, TokenType.NATIONAL_STRING,

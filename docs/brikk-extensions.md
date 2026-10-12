@@ -1805,6 +1805,16 @@ backslash-LF continuation. `TokenCorpusDifferentialTest` accepts sqlglot mismatc
 named `DorisNativeLexing` exceptions; `DorisScannerCorpusTest` replays the Doris plugin's
 scanner corpus against native results, naming its conventions and remaining disagreements.
 
+## 53. ClickHouse typed query parameters stay as written
+
+ClickHouse `{name:Type}` is a server query parameter, unlike an IDE `:name` bind. Parameter
+discovery (`parseParameterOccurrences`, `SqlScriptParameters`, `SqlFragment.scalarParams`)
+reports it as `ParamStyle.NAMED_TYPED`; `maskNamedParameters` and IDE prompting, which take
+only `NAMED_COLON`, leave it alone. `Dialect.typedQueryParameters` marks ClickHouse, the only
+core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the ClickHouse
+generator instead reuses the authored text while the parsed placeholder is unchanged, so
+lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

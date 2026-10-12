@@ -152,6 +152,9 @@ open class Dialect {
      */
     open val semicolonsInBrackets: Boolean get() = true
 
+    /** brikk-native: whether `{name:Type}` is a server query parameter (ClickHouse). */
+    open val typedQueryParameters: Boolean get() = false
+
     /** brikk-native: every word of the tokenizer's keywords (`ORDER BY` gives `ORDER` and `BY`), for editor display. */
     val editorKeywords: Set<String> by lazy {
         tokenizerConfig.keywords

@@ -81,6 +81,9 @@ abstract class Expression(initArgs: Args = emptyMap()) {
     // Opt-in, parser-proved whole-syntax provenance; never serialized as SQLGlot metadata.
     internal var syntaxOrigin: dev.brikk.house.sql.parser.SyntaxOrigin? = null
 
+    // Authored text a generator may reuse while the node still equals its parsed shape; never serialized.
+    internal var authoredSyntax: AuthoredSyntax? = null
+
     // sqlglot: Expression.meta
     val meta: MutableMap<String, kotlin.Any?>
         get() = metaOrNull ?: LinkedHashMap<String, kotlin.Any?>().also { metaOrNull = it }
@@ -405,6 +408,7 @@ abstract class Expression(initArgs: Args = emptyMap()) {
             node.typeSlot?.let { copy.typeSlot = it.copy() }
             node.metaOrNull?.let { copy.metaOrNull = LinkedHashMap(it) }
             copy.syntaxOrigin = node.syntaxOrigin
+            copy.authoredSyntax = node.authoredSyntax
 
             for ((k, vs) in node.args) {
                 if (vs is Expression) {
@@ -638,3 +642,8 @@ abstract class Connector(initArgs: Args = emptyMap()) : Binary(initArgs)
 // sqlglot: core.Unary(Expression, Condition). Open + concrete like Python's Unary
 // (instantiable, though never instantiated directly by the parser).
 open class Unary(initArgs: Args = emptyMap()) : Expression(initArgs), Condition
+
+/** The exact source text of a node, valid only while the node still equals [shape]. */
+internal class AuthoredSyntax(val text: String, val shape: Expression) {
+    fun textFor(node: Expression): String? = text.takeIf { node == shape }
+}

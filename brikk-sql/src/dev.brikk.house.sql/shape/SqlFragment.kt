@@ -249,6 +249,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         for (node in ast.walk(bfs = false)) {
             val key = when {
                 node is Parameter -> Key(ParamStyle.NAMED_AT, node.name.ifEmpty { null })
+                node is Placeholder && node.args["kind"] != null -> Key(ParamStyle.NAMED_TYPED, node.text("this"))
                 node is Placeholder && node.text("this").isNotEmpty() ->
                     Key(ParamStyle.NAMED_COLON, node.text("this"))
                 node is Placeholder -> Key(ParamStyle.POSITIONAL, null)
@@ -730,6 +731,12 @@ enum class ParamStyle {
 
     /** `?` — anonymous [Placeholder]. */
     POSITIONAL,
+
+    /**
+     * `{name:Type}` — a ClickHouse server query parameter ([Placeholder] with a kind). The
+     * server binds it, so IDE prompting and masking skip it and generation keeps it as written.
+     */
+    NAMED_TYPED,
 }
 
 /**
