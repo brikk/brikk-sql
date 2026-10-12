@@ -1808,6 +1808,9 @@ lexes `$$a;b$$` as one token. `TokenCorpusDifferentialTest` replays the sqlglot 
 corpus against the layered config; a mismatch passes only under a named `DorisNativeLexing`
 exception, each of which must still diverge from the generated tables on its probe. Gates
 are unchanged: doris 42/1, doris-transpile 12/0, duckdb 393/0, trino 121/0, postgres 462/17.
+`DorisScannerCorpusTest` replays the Doris plugin's 160-input scanner corpus against native
+statement ranges and binds; its accepted conventions and remaining disagreements are named
+in the test.
 
 ## Upstream sync protocol
 
