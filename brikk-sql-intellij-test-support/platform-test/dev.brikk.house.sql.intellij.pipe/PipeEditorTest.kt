@@ -133,12 +133,32 @@ class PipeEditorTest : BasePlatformTestCase() {
         assertTrue(items.toString(), items.none { it.startsWith("_col_") })
     }
 
+    private fun coloredStagePhrases() = myFixture.doHighlighting()
+        .filter { it.forcedTextAttributesKey == DefaultLanguageHighlighterColors.KEYWORD }
+        .map { myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset)) }
+
     fun testStagePhrasesAreColoredAfterEveryPipe() {
         configure("FROM t |> WHERE a IN (FROM u |> LIMIT 1) |> ORDER BY a")
-        val colored = myFixture.doHighlighting()
-            .filter { it.forcedTextAttributesKey == DefaultLanguageHighlighterColors.KEYWORD }
-            .map { myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset)) }
-        assertSameElements(colored, "WHERE", "LIMIT", "ORDER BY")
+        assertSameElements(coloredStagePhrases(), "WHERE", "LIMIT", "ORDER BY")
+    }
+
+    fun testStagesBeforeIncompleteInputStayColored() {
+        configure("FROM t |> EXTEND 1 AS x |> SELECT 'unfinished")
+        assertSameElements(coloredStagePhrases(), "EXTEND", "SELECT")
+        configure("FROM t |> WHERE a IN (1, 2 |> ORDER BY a")
+        assertSameElements(coloredStagePhrases(), "WHERE", "ORDER BY")
+    }
+
+    fun testStagesCompleteWhileLaterInputIsIncomplete() {
+        configure("FROM t |> EXTEND 1 AS x |> <caret> |> SELECT 'unfinished")
+        myFixture.completeBasic()
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+    }
+
+    fun testNothingCompletesInsideAnUnterminatedString() {
+        configure("FROM t |> SELECT input_col |> WHERE x = 'in <caret>")
+        myFixture.completeBasic()
+        assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "input_col")
     }
 
     fun testPreviewIsOfferedWhereTheProfileEnablesIt() {

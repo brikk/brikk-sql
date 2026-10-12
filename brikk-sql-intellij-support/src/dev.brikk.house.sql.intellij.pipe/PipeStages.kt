@@ -13,12 +13,12 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.parser.ParseError
-import dev.brikk.house.sql.parser.PipeStageSplitter
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
+import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.parser.TokenizerConfigs
 import dev.brikk.house.sql.parser.pipeStageKeywords
 import dev.brikk.house.sql.shape.ShapeCatalog
 import dev.brikk.house.sql.shape.ShapeError
@@ -96,11 +96,10 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
 
     /** The innermost bracketed or top-level pipeline at the end of [text], if a `|>` starts its current stage. */
     private fun currentStage(text: String): Stage? {
-        val tokens = try {
-            PipeStageSplitter.split(text, dialect.dialect).tokens
-        } catch (_: TokenError) {
-            return null
-        }
+        val lexed = Tokenizer(TokenizerConfigs.forName(dialect.dialect)).tokenizeForEditor(text)
+        // The text ends at the caret, so a lexical failure means the caret is inside an unterminated construct.
+        if (lexed.failureOffset != null) return null
+        val tokens = lexed.tokens
         val pipelines = ArrayDeque(listOf(Pipeline(0)))
         for (token in tokens) when (token.tokenType) {
             TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> pipelines.addLast(Pipeline(token.end + 1))
@@ -126,7 +125,7 @@ private class PhrasePrefixMatcher(prefix: String) : PrefixMatcher(prefix) {
     override fun cloneWithPrefix(prefix: String): PrefixMatcher = PhrasePrefixMatcher(prefix)
 }
 
-/** Colors the stage phrase after every `|>` as a keyword. Register it for the dialect's language with a no-arg subclass. */
+/** Colors the stage phrase after every `|>` as a keyword, also in a statement still being typed. Register it for the dialect's language with a no-arg subclass. */
 @ApiStatus.Experimental
 public abstract class PipeStageKeywordAnnotator(private val dialect: PipeDialect) : Annotator {
     private val phrases by lazy {
@@ -137,12 +136,11 @@ public abstract class PipeStageKeywordAnnotator(private val dialect: PipeDialect
         val file = element as? PsiFile ?: return
         if (!dialect.isEditingEnabled(file)) return
         val source = dialect.pipeText(file)
-        for (statement in dialect.scriptRanges(source.text).filter { it.hasPipe && it.boundaryError == null }) {
-            val tokens = try {
-                Dialects.forName(dialect.dialect).tokenize(source.text.substring(statement.start, statement.end))
-            } catch (_: TokenError) {
-                continue
-            }
+        // Coloring tolerates incomplete input: a statement still being typed keeps the phrases
+        // proven before its first lexical problem. Only execution refuses unknown boundaries.
+        for (statement in dialect.scriptRanges(source.text).filter { it.hasPipe }) {
+            val tokens = Tokenizer(TokenizerConfigs.forName(dialect.dialect))
+                .tokenizeForEditor(source.text.substring(statement.start, statement.end)).tokens
             for ((index, token) in tokens.withIndex()) {
                 if (token.tokenType != TokenType.PIPE_GT) continue
                 val stage = tokens.subList(index + 1, tokens.size)
