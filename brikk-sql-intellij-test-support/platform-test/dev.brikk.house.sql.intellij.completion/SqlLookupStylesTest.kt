@@ -80,23 +80,44 @@ class SqlLookupStylesTest : CompletionTestCase() {
         val extension = DUCKDB_EXTENSION_ENTRY
         val server = FunctionPresentation("server_only_fn", false, FunctionKind.AGGREGATE, null, null, null, 0, null, setOf(InvocationSyntax.CALL))
         duckdbProfile.serverOnly = listOf(server)
+        duckdbProfile.styles = SqlLookupStyles.DEFAULT.with(
+            FUNCTION to SqlLookupStyle(AllIcons.Nodes.Function, "scalar"),
+            AGGREGATE to SqlLookupStyle(AllIcons.Nodes.Method, "aggregate"),
+            EXTENSION_FUNCTION to SqlLookupStyle(AllIcons.Nodes.Plugin, "needs %s"),
+            SERVER_FUNCTION to SqlLookupStyle(AllIcons.Nodes.Plugin, "on server"),
+        )
         configure("SELECT ${extension.name}<caret>", DuckdbCompletion::class.java)
         val extensionItem = render(complete().single { it.`object` == extension })
-        assertEquals("requires ${extension.extension}", extensionItem.typeText)
-        assertEquals(DatabaseIcons.Function, extensionItem.icon)
+        assertEquals("needs ${extension.extension}", extensionItem.typeText)
+        assertEquals(AllIcons.Nodes.Function, extensionItem.icon)
         configure("SELECT server_only<caret>", DuckdbCompletion::class.java)
         val serverItem = render(complete().single { it.`object` == server })
-        assertEquals("server", serverItem.typeText)
-        assertEquals(DatabaseIcons.Aggregate, serverItem.icon)
+        assertEquals("on server", serverItem.typeText)
+        assertEquals(AllIcons.Nodes.Method, serverItem.icon)
     }
 
     fun testAPlainItemTakesTheRowsPresentation() {
-        val item = SqlLookupStyles.DEFAULT[CATALOG].lookup("Warehouse")
+        val style = SqlLookupStyle(AllIcons.Nodes.Folder, "warehouse", bold = true, priority = 3.0, case = LookupCase.LOWER)
+        val item = SqlLookupStyles.DEFAULT.with(CATALOG to style)[CATALOG].lookup("Warehouse")
         val presentation = render(item)
-        assertEquals(DatabaseIcons.Database, presentation.icon)
-        assertEquals("catalog", presentation.typeText)
-        assertEquals(96.0, priority(item))
-        assertEquals("Warehouse", item.lookupString)
+        assertEquals(AllIcons.Nodes.Folder, presentation.icon)
+        assertEquals("warehouse", presentation.typeText)
+        assertTrue(presentation.isItemTextBold)
+        assertEquals(3.0, priority(item))
+        assertEquals("warehouse", item.lookupString)
+    }
+
+    fun testANativeKindTakesTheRowTheProfileMapsItTo() {
+        val native = dev.brikk.house.sql.metadata.DUCKDB_METADATA.default.completableFunctions()
+            .first { it.nativeKind != null && it.kind == FunctionKind.SCALAR && it.extension == null }
+        duckdbProfile.styles = SqlLookupStyles.DEFAULT.with(MACRO to SqlLookupStyle(typeText = "mapped"), FUNCTION to SqlLookupStyle(typeText = "plain"))
+        fun typeText(): String? {
+            configure("SELECT ${native.name}<caret>", DuckdbCompletion::class.java)
+            return render(complete().single { it.`object` == native }).typeText
+        }
+        assertEquals("plain", typeText())
+        duckdbProfile.nativeKinds = mapOf(native.nativeKind!! to MACRO)
+        assertEquals("mapped", typeText())
     }
 
     private companion object {

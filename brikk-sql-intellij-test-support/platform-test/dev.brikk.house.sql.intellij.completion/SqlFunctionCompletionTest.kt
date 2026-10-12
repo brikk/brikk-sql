@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.codeInsight.lookup.Lookup
+import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.testFramework.DumbModeTestUtils
 import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
@@ -124,5 +125,14 @@ class SqlFunctionCompletionTest : CompletionTestCase() {
         var offered = emptyList<String>()
         DumbModeTestUtils.runInDumbModeSynchronously(project) { offered = functionItems().map { it.name } }
         assertContainsElements(offered, "abs")
+    }
+
+    fun testAFileOfAnotherLanguageGetsNothing() {
+        myFixture.configureByText("plain-${java.util.UUID.randomUUID()}.txt", "SELECT ab<caret>")
+        register(DuckdbCompletion::class.java, LoadingOrder.FIRST)
+        duckdbProfile.keywords = KeywordScope.ALL
+        val items = complete()
+        assertEmpty(items.filter { it.`object` is FunctionPresentation })
+        assertDoesntContain(items.map { it.lookupString }, "ABORT", "abort")
     }
 }

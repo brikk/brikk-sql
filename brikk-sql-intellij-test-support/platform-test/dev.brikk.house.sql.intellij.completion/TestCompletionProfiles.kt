@@ -39,6 +39,7 @@ fun CodeInsightTestFixture.configureDialect(dialect: String, text: String) {
 class TestCompletionProfile(override val metadata: DialectMetadata) : SqlCompletionProfile {
     override val language: Language = SqlLanguage.INSTANCE
     override var styles = SqlLookupStyles.DEFAULT
+    override var nativeKinds = emptyMap<String, SqlLookupKind>()
     override var functionGates = SqlFunctionGates.OFF
     override var keywords = KeywordScope.NONE
     override var propertyQuote = '\''
@@ -50,6 +51,7 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
 
     fun reset() {
         styles = SqlLookupStyles.DEFAULT
+        nativeKinds = emptyMap()
         functionGates = SqlFunctionGates.OFF
         keywords = KeywordScope.NONE
         propertyQuote = '\''

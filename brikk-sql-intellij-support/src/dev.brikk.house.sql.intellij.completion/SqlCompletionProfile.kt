@@ -33,6 +33,9 @@ public interface SqlCompletionProfile {
 
     public val styles: SqlLookupStyles get() = SqlLookupStyles.DEFAULT
 
+    /** Lookup kinds for engine-native function kinds ([FunctionPresentation.nativeKind]) that the normalized kind does not tell apart. */
+    public val nativeKinds: Map<String, SqlLookupKind> get() = emptyMap()
+
     public val functionGates: SqlFunctionGates get() = SqlFunctionGates.OFF
 
     public val keywords: KeywordScope get() = KeywordScope.ALL

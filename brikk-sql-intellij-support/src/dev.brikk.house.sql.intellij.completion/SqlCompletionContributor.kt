@@ -77,15 +77,14 @@ private class FunctionProvider(profile: SqlCompletionProfile) : ProfileProvider(
         if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return
         val qualifier = PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)
             ?.qualifierExpression?.text
-        val styles = profile.styles
         val sink = if (profile.snapshot(file).functions.caseSensitive) result else result.caseInsensitive()
         val rule = gates.qualifier
         if (qualifier != null && rule !is QualifierRule.Unrestricted) {
-            if (rule is QualifierRule.Namespaced) rule.functions(qualifier, file).forEach { sink.addElement(styles.function(it, serverOnly = false)) }
+            if (rule is QualifierRule.Namespaced) rule.functions(qualifier, file).forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
             return
         }
-        profile.functions(file).forEach { sink.addElement(styles.function(it, serverOnly = false)) }
-        profile.serverOnlyFunctions(file).forEach { sink.addElement(styles.function(it, serverOnly = true)) }
+        profile.functions(file).forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
+        profile.serverOnlyFunctions(file).forEach { sink.addElement(profile.lookup(it, serverOnly = true)) }
     }
 }
 
@@ -103,7 +102,7 @@ private class TableFunctionArgumentProvider(profile: SqlCompletionProfile) : Pro
         val key = binary?.lOperand?.takeIf { left ->
             offset > left.textRange.endOffset &&
                 '=' in binary.text.substring(0, (offset - binary.textRange.startOffset).coerceIn(0, binary.textLength))
-        }?.text?.trim('\'', '"', '`')
+        }?.text?.trim(*QUOTES)
         val (kind, candidates) = if (key == null) {
             SqlLookupKind.TABLE_FUNCTION_PROPERTY to function.properties.map { it.name }
         } else {
@@ -128,7 +127,7 @@ private class QuotingInsertHandler(private val quote: Char) : InsertHandler<Look
     }
 }
 
-private const val QUOTES = "'\"`"
+private val QUOTES = charArrayOf('\'', '"', '`')
 
 /** The innermost call of a known table function whose parentheses hold [offset], walking up from [position]. */
 internal fun SqlCompletionProfile.tableFunctionCallAt(file: PsiFile, position: PsiElement, offset: Int): Pair<SqlFunctionCallExpression, TableFunctionInfo>? {
@@ -146,11 +145,12 @@ internal fun SqlCompletionProfile.tableFunctionCallAt(file: PsiFile, position: P
     return null
 }
 
-private fun SqlLookupStyles.function(entry: FunctionPresentation, serverOnly: Boolean): LookupElement {
-    val style = this[entry.lookupKind]
+private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly: Boolean): LookupElement {
+    val style = styles[lookupKind(entry)]
+    val extension = entry.extension
     val typeText = when {
-        serverOnly -> this[SqlLookupKind.SERVER_FUNCTION].typeText
-        entry.extension != null -> this[SqlLookupKind.EXTENSION_FUNCTION].typeText(entry.extension.orEmpty())
+        serverOnly -> styles[SqlLookupKind.SERVER_FUNCTION].typeText
+        extension != null -> styles[SqlLookupKind.EXTENSION_FUNCTION].typeText(extension)
         style.showsReturnType && entry.returnType != null -> entry.returnType
         else -> style.typeText
     }
@@ -159,13 +159,12 @@ private fun SqlLookupStyles.function(entry: FunctionPresentation, serverOnly: Bo
     return style.lookup(entry, entry.name, typeText, tailText, entry.insertHandler)
 }
 
-private val FunctionPresentation.lookupKind: SqlLookupKind
-    get() = when (kind) {
-        FunctionKind.TABLE_VALUED, FunctionKind.TABLE_GENERATING ->
-            if (nativeKind == "table_macro") SqlLookupKind.TABLE_MACRO else SqlLookupKind.TABLE_FUNCTION
+private fun SqlCompletionProfile.lookupKind(entry: FunctionPresentation): SqlLookupKind =
+    entry.nativeKind?.let(nativeKinds::get) ?: when (entry.kind) {
+        FunctionKind.TABLE_VALUED, FunctionKind.TABLE_GENERATING -> SqlLookupKind.TABLE_FUNCTION
         FunctionKind.AGGREGATE -> SqlLookupKind.AGGREGATE
         FunctionKind.WINDOW -> SqlLookupKind.WINDOW
-        FunctionKind.SCALAR -> if (nativeKind == "macro") SqlLookupKind.MACRO else SqlLookupKind.FUNCTION
+        FunctionKind.SCALAR -> SqlLookupKind.FUNCTION
     }
 
 /** Names written with parentheses, as a call or a special form, get them; a bare-only name stays bare. */

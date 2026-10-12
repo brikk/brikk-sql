@@ -123,7 +123,8 @@ no-arg subclasses:
 
 `SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
 signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
-a dialect replaces rows with `with`. `SqlFunctionGates` are off by default: the qualifier
+a dialect replaces rows with `with`. `nativeKinds` maps engine-native function kinds
+(`FunctionPresentation.nativeKind`, such as DuckDB macros) to their own rows. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
 the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
 
