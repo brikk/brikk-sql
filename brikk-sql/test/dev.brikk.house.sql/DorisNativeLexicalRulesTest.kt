@@ -86,6 +86,28 @@ class DorisNativeLexicalRulesTest {
         assertEquals(listOf("SELECT", "2"), doris("SELECT /* a /* b */ c */ 2").map { it.text })
     }
 
+    // Each expectation is the native DorisLexer's comment boundary (doris-fe-sql-parser 4.1.4).
+    @Test
+    fun commentBoundariesFollowTheNativeLexer() {
+        val editor = Tokenizer(DorisDialect.TOKENIZER_CONFIG)
+        for ((sql, tokens) in listOf(
+            "SELECT 1 /*/*/ + 2" to listOf("SELECT", "1", "+", "2"),
+            "SELECT 1 /*/*/ 2" to listOf("SELECT", "1", "2"),
+            "SELECT 1 /* a /*/ b */ c" to listOf("SELECT", "1", "b", "*", "/", "c"),
+            "SELECT /*/ x */ 1" to listOf("SELECT", "1"),
+        )) {
+            assertEquals(tokens, doris(sql).map { it.text }, sql)
+            assertEquals(tokens, editor.tokenizeForEditor(sql).tokens.map { it.text }, sql)
+        }
+        for ((sql, tokens) in listOf(
+            "SELECT /* /* /* /* a */ b */ c */ d" to listOf("SELECT", "d"),
+            "SELECT 1 /* a /*/* b */ c */ d" to listOf("SELECT", "1", "d"),
+        )) {
+            assertEquals(tokens, doris(sql).map { it.text }, sql)
+            assertEquals(sql.indexOf("/*"), editor.tokenizeForEditor(sql).failureOffset, sql)
+        }
+    }
+
     @Test
     fun hintsNestBlockComments() {
         val tokens = doris("SELECT /*+ SET_VAR(a=1) /* ; :inner */ more */ :p")

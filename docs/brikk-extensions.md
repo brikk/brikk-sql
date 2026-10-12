@@ -1790,12 +1790,13 @@ the original peer checkout stays clean. Logs are retained under
 - Untagged `$$...$$` is one raw HEREDOC_STRING (embedded `;`, `:name`, `|>` and quotes
   stay inside). A longer `$`-spelled identifier wins the match (`$$a$$b`); tagged forms
   and an unclosed `$$abc` stay identifiers, as natively.
-- Block comments nest, also inside `/*+` hints. When nesting cannot close, the native
-  lexer closes at the last `*/`; the tokenizer does too.
+- Block comments nest, also inside `/*+` hints, and end where the native lazy recursive rule
+  does, including `/*/` overlaps and nesting that cannot close (verified against the native
+  lexer for every `/*`-prefixed string over `/`, `*`, `a` up to 13 characters).
 - Backslash + LF continues a `--` comment; backslash + CRLF does not (`SIMPLE_COMMENT`).
 - `#` and `{# #}` are not comments: `#` is HASH, `{` / `}` are braces.
 - Editor tokenization (`tokenizeForEditor`, so `SqlScriptSnapshot`) treats an unclosed
-  `$$` and the unbalanced-nesting fallback as lexical failures: they usually mean
+  `$$` and a comment no depth count closes at the native end as lexical failures: they usually mean
   unfinished input, and must not expose an executable suffix.
 - `Dialect.semicolonsInBrackets` is false for Doris: `SqlScriptSnapshot` makes a statement with
   `;` inside brackets a boundary error. Other dialects keep it (PostgreSQL rule actions).

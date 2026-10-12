@@ -388,28 +388,68 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return true
     }
 
-    // Native BRACKETED_COMMENT is the longest viable match: it closes at depth zero, else the
-    // native lexer treats inner openers as text and closes at the last terminator. Editor
-    // tokenization refuses that fallback, which usually means an unfinished comment.
+    // Native BRACKETED_COMMENT (`'/*' (BRACKETED_COMMENT | .)*? '*/'`) ends where its preferred
+    // reading completes: at each offset close, else open a nested comment, else take one char.
+    // When the plain depth count cannot close, that is a backtracking search. Editor tokenization
+    // accepts the result only if a depth count (with or without `/*/` opening) closes there too.
     private fun scanNestedBlockComment(commentStartSize: Int, commentStartLine: Int) {
+        val contentStart = start + 2
+        val close = countedClose(contentStart, openOverlapping = true).takeIf { it >= 0 }
+            ?: nativeCommentClose(contentStart).takeIf {
+                it >= 0 && (!editorMode || countedClose(contentStart, openOverlapping = false) == it)
+            }
+            ?: throw TokenError("Missing */ from $commentStartLine:$start")
+        advanceTo(close + 2)
+        comments.add(sql.substring(start + commentStartSize, close))
+    }
+
+    // The offset of the closing `*/` by depth count, or -1.
+    private fun countedClose(contentStart: Int, openOverlapping: Boolean): Int {
         var depth = 1
-        var index = start + commentStartSize
-        var lastClose = -1
+        var index = contentStart
         while (index < size) {
             when {
-                sql.startsWith("*/", index) -> {
-                    lastClose = index
-                    if (--depth == 0) break
-                    index += 2
-                }
-                sql.startsWith("/*", index) -> { depth++; index += 2 }
+                sql.startsWith("*/", index) -> if (--depth == 0) return index else index += 2
+                sql.startsWith("/*", index) && (openOverlapping || sql.getOrNull(index + 2) != '/') -> { depth++; index += 2 }
                 else -> index++
             }
         }
-        val close = if (depth == 0) index else lastClose.takeUnless { editorMode } ?: -1
-        if (close < 0) throw TokenError("Missing */ from $commentStartLine:$start")
-        advanceTo(close + 2)
-        comments.add(sql.substring(start + commentStartSize, close))
+        return -1
+    }
+
+    private class CommentFrame(val offset: Int, val depth: Int) {
+        var alternative = 0
+    }
+
+    // The first completion in the native lexer's preference order, or -1. Depths beyond the
+    // closers still ahead cannot complete; failed states are not revisited.
+    private fun nativeCommentClose(contentStart: Int): Int {
+        val closersFrom = IntArray(size + 1)
+        for (index in size - 2 downTo 0) closersFrom[index] = closersFrom[index + 1] + if (sql.startsWith("*/", index)) 1 else 0
+        val failed = HashSet<Long>()
+        val frames = ArrayList<CommentFrame>()
+        fun key(offset: Int, depth: Int) = offset.toLong() shl 32 or depth.toLong()
+        fun visit(offset: Int, depth: Int) {
+            if (depth <= closersFrom[offset] && key(offset, depth) !in failed) frames += CommentFrame(offset, depth)
+        }
+        visit(contentStart, 1)
+        while (frames.isNotEmpty()) {
+            val frame = frames.last()
+            val offset = frame.offset
+            when (frame.alternative++) {
+                0 -> if (sql.startsWith("*/", offset)) {
+                    if (frame.depth == 1) return offset
+                    visit(offset + 2, frame.depth - 1)
+                }
+                1 -> if (sql.startsWith("/*", offset)) visit(offset + 2, frame.depth + 1)
+                2 -> if (offset < size) visit(offset + 1, frame.depth)
+                else -> {
+                    failed += key(offset, frame.depth)
+                    frames.removeAt(frames.lastIndex)
+                }
+            }
+        }
+        return -1
     }
 
     // Native Doris DOLLAR_QUOTED_STRING; a longer `$`-identifier match wins, ties go to the string.
