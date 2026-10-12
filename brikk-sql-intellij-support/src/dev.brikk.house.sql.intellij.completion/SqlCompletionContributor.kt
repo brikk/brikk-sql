@@ -226,20 +226,47 @@ private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly:
     return style.lookup(entry, entry.name, typeText, tailText, wrapper?.let { Wrapped(it, insertHandler) } ?: insertHandler)
 }
 
-/** Writes [wrapper] and `(` before the name and `)` after its call, as Trino's `TABLE(sequence(...))`; an existing `(` keeps [call] alone. */
+/**
+ * Writes [wrapper] and `(` before the name and `)` after its call, as Trino's `TABLE(sequence(...))`.
+ * An existing call keeps its arguments, with the caret inside; one whose `)` cannot be found keeps
+ * only [call]'s insertion.
+ */
 private class Wrapped(private val wrapper: String, private val call: InsertHandler<LookupElement>?) : InsertHandler<LookupElement> {
     override fun handleInsert(context: InsertionContext, item: LookupElement) {
         val document = context.document
+        val start = context.startOffset
         val tail = context.tailOffset
-        if (tail < document.textLength && document.charsSequence[tail] == '(') {
-            call?.handleInsert(context, item)
-            return
+        val text = document.charsSequence
+        if (tail < text.length && text[tail] == '(') {
+            val close = closingParen(text, tail)
+            if (close == null) {
+                call?.handleInsert(context, item)
+                return
+            }
+            document.insertString(close + 1, ")")
+        } else {
+            document.insertString(tail, "())")
         }
-        val name = document.charsSequence.subSequence(context.startOffset, tail).toString()
-        document.replaceString(context.startOffset, tail, "$wrapper($name())")
+        document.insertString(start, "$wrapper(")
         if (context.completionChar == '(') context.setAddCompletionChar(false)
-        context.editor.caretModel.moveToOffset(context.startOffset + wrapper.length + 1 + name.length + 1)
+        context.editor.caretModel.moveToOffset(tail + wrapper.length + 2)
     }
+}
+
+/** The `)` closing the `(` at [open], skipping quoted text; null when the text ends first. */
+private fun closingParen(text: CharSequence, open: Int): Int? {
+    var depth = 0
+    var quote: Char? = null
+    for (index in open until text.length) {
+        val char = text[index]
+        when {
+            quote != null -> if (char == quote) quote = null
+            char == '\'' || char == '"' || char == '`' -> quote = char
+            char == '(' -> depth++
+            char == ')' -> if (--depth == 0) return index
+        }
+    }
+    return null
 }
 
 private fun SqlCompletionProfile.lookupKind(entry: FunctionPresentation): SqlLookupKind =

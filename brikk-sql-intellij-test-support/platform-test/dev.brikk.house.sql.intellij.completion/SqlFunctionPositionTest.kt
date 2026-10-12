@@ -157,6 +157,12 @@ class SqlFunctionPositionTest : CompletionTestCase() {
         assertEquals("SELECT * FROM UNNEST(<caret>)", acceptTrinoTableFunction("SELECT * FROM unn<caret>", "unnest"))
     }
 
+    fun testTrinoWrapsAnExistingCallKeepingItsArguments() {
+        assertEquals("SELECT * FROM TABLE(sequence(<caret>1, 3))", acceptTrinoTableFunction("SELECT * FROM seq<caret>(1, 3)", "sequence"))
+        assertEquals("SELECT * FROM TABLE(sequence(<caret>)) x", acceptTrinoTableFunction("SELECT * FROM seq<caret>() x", "sequence"))
+        assertEquals("SELECT * FROM TABLE(sequence(<caret>')', (2)))", acceptTrinoTableFunction("SELECT * FROM seq<caret>(')', (2))", "sequence"))
+    }
+
     fun testDorisGeneratorsAreNotHiddenInExpressions() {
         fun kinds(text: String, name: String): Set<FunctionKind> {
             configure(text, DorisCompletion::class.java)
