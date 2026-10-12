@@ -171,7 +171,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> state.depth--
                 else -> {}
             }
-            val word = token.text.takeIf { type != TokenType.IDENTIFIER && it.firstOrNull()?.isLetter() == true }?.uppercase()
+            // Header words are keywords and names, never the contents of a string or quoted name.
+            val word = token.text.takeIf { type.isWordKind() && it.firstOrNull()?.isLetter() == true }?.uppercase()
             if (state.head == null) state.head = word ?: ""
             val previous = state.previous
             state.previous = word
@@ -265,6 +266,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         // The data ends the statement, at a `;` line or a blank line: the next one starts afresh.
         insertData.reset(tokens.size)
     }
+
+    private fun TokenType.isWordKind(): Boolean =
+        this != TokenType.IDENTIFIER && this != TokenType.STRING && !name.endsWith("_STRING")
 
     private fun isSpace(c: Char): Boolean = c == ' ' || c == '\t' || c == '\u000C'
 

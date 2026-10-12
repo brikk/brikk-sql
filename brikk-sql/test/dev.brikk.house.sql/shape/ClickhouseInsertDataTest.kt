@@ -76,6 +76,15 @@ class ClickhouseInsertDataTest {
         }
     }
 
+    /** Header words are keywords: string literals and quoted names never count. */
+    @Test fun stringsInTheHeaderAreNotKeywords() {
+        for (value in listOf("'VALUES'", "'SELECT'", "'INFILE'", "\"VALUES\"")) {
+            val sql = "INSERT INTO t SETTINGS insert_deduplication_token = $value FORMAT TSV\na;b\n\nSELECT 2;"
+            assertEquals(listOf("a;b"), data(sql), sql)
+        }
+        assertEquals(listOf("a;b"), data("INSERT INTO t SELECT s FROM input('s String') WHERE s != 'FORMAT' FORMAT TSV\na;b\n\nSELECT 2;"))
+    }
+
     @Test fun aBlankLineRightAfterTheFormatEndsTheStatementWithoutData() {
         val sql = "INSERT INTO t FORMAT TSV\n\nSELECT 2;"
         assertEquals(listOf("INSERT INTO t FORMAT TSV", "SELECT 2;"), statements(sql))

@@ -16,6 +16,7 @@ class SnapshotPrefixTest {
             "INSERT INTO t FORMAT TSV SETTINGS a = 1,\n\nb = 2\nx;\n\nINSERT INTO t SELECT s FROM input('s String') FORMAT TSV\n1\n;\nSELECT 4;",
             // A `;` ending the format's line, then spaces: the next character decides whether it is data.
             "INSERT INTO t FORMAT TSV ;  x\n\nSELECT 5;\nINSERT INTO t FORMAT TSV\na\n ; b\n;\nSELECT 6;",
+            "INSERT INTO t SETTINGS x = 'VALUES' FORMAT TSV\n\t;\t\nSELECT 3;",
         )
         for (text in texts) {
             val full = SqlScriptSnapshot.parse(text, "clickhouse").statements

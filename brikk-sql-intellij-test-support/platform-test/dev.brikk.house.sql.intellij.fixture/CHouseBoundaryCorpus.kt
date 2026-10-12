@@ -86,6 +86,8 @@ val CHOUSE_BOUNDARY_CORPUS: List<BoundaryCase> = listOf(
         listOf("INSERT INTO events SELECT s FROM input('s String') FORMAT TSV\na;b\n;", "SELECT 2;")),
     BoundaryCase("settings after the format",
         listOf("INSERT INTO events FORMAT JSONEachRow SETTINGS input_format_skip_unknown_fields = 1,\n\nmax_threads = 1\n{\"s\":\"a;\"}", "SELECT 2;"), "\n\n"),
+    BoundaryCase("a settings string naming a keyword",
+        listOf("INSERT INTO events SETTINGS insert_deduplication_token = 'VALUES' FORMAT TSV\na;b\n;", "SELECT 2;")),
     BoundaryCase("values followed by select", listOf("INSERT INTO events FORMAT Values (1, 'x;y');", "SELECT 2;")),
     BoundaryCase("settings and format", listOf("SELECT number FROM numbers(5) SETTINGS max_threads = 2 FORMAT JSONEachRow;", "SELECT 1 AS value FORMAT TSV;")),
     BoundaryCase("semicolons in trivia", listOf("SELECT 'a; b' /* ; SELECT 9 */ AS value -- ; SELECT 8\nFROM events;", "SELECT /* ; */ 2;")),
