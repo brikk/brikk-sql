@@ -45,6 +45,10 @@ open class TrinoGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.TRINO
+
+    // brikk extension #55: Trino 483 rejects these lowered forms, or reads ASOF as an alias.
+    override val executesPipeCall: Boolean get() = false
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN", "ASOF", "NATURAL")
     override val supportsTemporalPrecision: Boolean get() = true
 
     // sqlglot: TrinoGenerator.EXCEPT_INTERSECT_SUPPORT_ALL_CLAUSE = True

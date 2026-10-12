@@ -1,0 +1,2108 @@
+{
+  "source": "doris-intellij-plugin 61fce44 src/test/resources/parity/doris-scanners.json (inputs) and build/scanner-parity/disagreements.json (native results where they differed from core a84577b; elsewhere native equalled that core result)",
+  "nativeArtifact": "doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar",
+  "grammarRevision": "3226e0c28acf04db96878a6afc7013315defe75c",
+  "cases": [
+    {
+      "id": "empty",
+      "group": "trivia",
+      "input": "",
+      "native": {
+        "statements": [],
+        "parameters": []
+      }
+    },
+    {
+      "id": "whitespace",
+      "group": "trivia",
+      "input": " \r\n\t",
+      "native": {
+        "statements": [],
+        "parameters": []
+      }
+    },
+    {
+      "id": "semicolon",
+      "group": "trivia",
+      "input": ";",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 1, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "empty-statements",
+      "group": "trivia",
+      "input": " ; ;\r\n;; ",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 2, "hasSql": false, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 2, "end": 4, "hasSql": false, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 4, "end": 7, "hasSql": false, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 7, "end": 8, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "simple",
+      "group": "trivia",
+      "input": "SELECT :p",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "simple-terminated",
+      "group": "trivia",
+      "input": "SELECT :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 10, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "trailing-space",
+      "group": "trivia",
+      "input": "SELECT :p; ",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 10, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "trailing-crlf",
+      "group": "trivia",
+      "input": "SELECT :p;\r\n  ",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 10, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "leading-trivia",
+      "group": "trivia",
+      "input": "\r\n /* lead ; */ SELECT :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 26, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 23, "end": 25}
+        ]
+      }
+    },
+    {
+      "id": "multiple-binds",
+      "group": "trivia",
+      "input": "SELECT :first; SELECT :second;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 14, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 14, "end": 30, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "first", "start": 7, "end": 13},
+          {"name": "second", "start": 22, "end": 29}
+        ]
+      }
+    },
+    {
+      "id": "interspersed-empty",
+      "group": "trivia",
+      "input": ";SELECT :p;;SELECT :q; ;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 1, "hasSql": false, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 1, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 11, "end": 12, "hasSql": false, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 12, "end": 22, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 22, "end": 24, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 8, "end": 10},
+          {"name": "q", "start": 19, "end": 21}
+        ]
+      }
+    },
+    {
+      "id": "dash-only",
+      "group": "comments",
+      "input": "-- :hidden ; |>\r\n",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 17, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "block-only",
+      "group": "comments",
+      "input": "/* :hidden ; |> */",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "hash-only",
+      "group": "comments",
+      "input": "# :hidden ; |>\n",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 11, "end": 15, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "hidden", "start": 2, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "dash-binds",
+      "group": "comments",
+      "input": "SELECT :before -- :hidden ; |>\n, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 40, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 33, "end": 39}
+        ]
+      }
+    },
+    {
+      "id": "dash-no-space",
+      "group": "comments",
+      "input": "SELECT :before--comment; :hidden\n, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 42, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 35, "end": 41}
+        ]
+      }
+    },
+    {
+      "id": "dash-continuation",
+      "group": "comments",
+      "input": "SELECT :before -- continued\\\n; :hidden |>\n, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 51, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 44, "end": 50}
+        ]
+      }
+    },
+    {
+      "id": "dash-continuation-crlf",
+      "group": "comments",
+      "input": "SELECT :before -- continued\\\r\n; :hidden |>\r\n, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 31, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 31, "end": 53, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "hidden", "start": 32, "end": 39},
+          {"name": "after", "start": 46, "end": 52}
+        ]
+      }
+    },
+    {
+      "id": "hash-binds",
+      "group": "comments",
+      "input": "SELECT :before # :hidden ; |>\n, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 26, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 26, "end": 39, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "hidden", "start": 17, "end": 24},
+          {"name": "after", "start": 32, "end": 38}
+        ]
+      }
+    },
+    {
+      "id": "block-binds",
+      "group": "comments",
+      "input": "SELECT :before /* :hidden ; |> */ , :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 36, "end": 42}
+        ]
+      }
+    },
+    {
+      "id": "nested-block",
+      "group": "comments",
+      "input": "SELECT :before /* outer /* ; :inner |> */ ; :outer */ , :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 63, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 56, "end": 62}
+        ]
+      }
+    },
+    {
+      "id": "nested-block-only",
+      "group": "comments",
+      "input": "/* outer /* ; :inner */ ; :outer */",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 35, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "nested-three",
+      "group": "comments",
+      "input": "SELECT :before /* a /* b /* ; :hidden */ b */ a */ , :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 60, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 53, "end": 59}
+        ]
+      }
+    },
+    {
+      "id": "jinja-comment",
+      "group": "comments",
+      "input": "SELECT :before {# ; :hidden |> #}, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 19, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 19, "end": 42, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 35, "end": 41}
+        ]
+      }
+    },
+    {
+      "id": "hint",
+      "group": "hints",
+      "input": "SELECT /*+ SET_VAR(query_timeout=5) ; :hidden */ :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 56, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "after", "start": 49, "end": 55}
+        ]
+      }
+    },
+    {
+      "id": "hint-only",
+      "group": "hints",
+      "input": "/*+ SET_VAR(query_timeout=5) */",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 31, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "hint-pipe",
+      "group": "hints",
+      "input": "FROM t |> SELECT /*+ SET_VAR(query_timeout=5) ; */ :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 54, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 51, "end": 53}
+        ]
+      }
+    },
+    {
+      "id": "hint-nested",
+      "group": "hints",
+      "input": "SELECT /*+ outer /* ; :inner */ :outer */ :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 45, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 42, "end": 44}
+        ]
+      }
+    },
+    {
+      "id": "single-string",
+      "group": "quotes",
+      "input": "SELECT :before, '; :hidden |>', :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 39, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 32, "end": 38}
+        ]
+      }
+    },
+    {
+      "id": "single-doubled",
+      "group": "quotes",
+      "input": "SELECT :before, 'a''; :hidden |>b', :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 36, "end": 42}
+        ]
+      }
+    },
+    {
+      "id": "single-escaped",
+      "group": "quotes",
+      "input": "SELECT :before, 'a\\'; :hidden |>b', :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 36, "end": 42}
+        ]
+      }
+    },
+    {
+      "id": "single-backslash",
+      "group": "quotes",
+      "input": "SELECT 'a\\\\', :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 21, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "after", "start": 14, "end": 20}
+        ]
+      }
+    },
+    {
+      "id": "double-string",
+      "group": "quotes",
+      "input": "SELECT :before, \"; :hidden |>\", :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 39, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 32, "end": 38}
+        ]
+      }
+    },
+    {
+      "id": "double-doubled",
+      "group": "quotes",
+      "input": "SELECT :before, \"a;\"\" :hidden |>b\", :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 36, "end": 42}
+        ]
+      }
+    },
+    {
+      "id": "double-escaped",
+      "group": "quotes",
+      "input": "SELECT :before, \"a\\\"; :hidden |>b\", :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 36, "end": 42}
+        ]
+      }
+    },
+    {
+      "id": "backtick",
+      "group": "quotes",
+      "input": "SELECT :before, `a; :hidden |>b`, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 41, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 34, "end": 40}
+        ]
+      }
+    },
+    {
+      "id": "backtick-doubled",
+      "group": "quotes",
+      "input": "SELECT :before, `a``; :hidden |>b`, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 36, "end": 42}
+        ]
+      }
+    },
+    {
+      "id": "backtick-dollar-identifier",
+      "group": "quotes",
+      "input": "SELECT `$$identifier`, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 26, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 23, "end": 25}
+        ]
+      }
+    },
+    {
+      "id": "national-string",
+      "group": "quotes",
+      "input": "SELECT N'; :hidden |>', :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 27, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 24, "end": 26}
+        ]
+      }
+    },
+    {
+      "id": "dollar-string",
+      "group": "dollar",
+      "input": "SELECT :before, $$; :hidden |>$$, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 41, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 34, "end": 40}
+        ]
+      }
+    },
+    {
+      "id": "dollar-empty",
+      "group": "dollar",
+      "input": "SELECT $$$$, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 16, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 13, "end": 15}
+        ]
+      }
+    },
+    {
+      "id": "dollar-one-dollar",
+      "group": "dollar",
+      "input": "SELECT $$a$b; :hidden$$, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 28, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 25, "end": 27}
+        ]
+      }
+    },
+    {
+      "id": "dollar-crlf",
+      "group": "dollar",
+      "input": "SELECT $$a;\r\n:hidden |>\r\nb$$, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 33, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 30, "end": 32}
+        ]
+      }
+    },
+    {
+      "id": "dollar-tagged",
+      "group": "dollar",
+      "input": "SELECT $tag$a; :p$tag$;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 14, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 14, "end": 23, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "dollar-function",
+      "group": "dollar",
+      "input": "CREATE FUNCTION f() RETURNS STRING AS $$code; more code;$$;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 59, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "unterminated-single",
+      "group": "quotes",
+      "input": "SELECT :before, 'unfinished; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 55, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 29, "end": 36},
+          {"name": "after", "start": 48, "end": 54}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-double",
+      "group": "quotes",
+      "input": "SELECT :before, \"unfinished; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 55, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 29, "end": 36},
+          {"name": "after", "start": 48, "end": 54}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-backtick",
+      "group": "quotes",
+      "input": "SELECT :before, `unfinished; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 55, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 29, "end": 36},
+          {"name": "after", "start": 48, "end": 54}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-single-escape",
+      "group": "quotes",
+      "input": "SELECT :p, 'unfinished\\",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 23, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-double-escape",
+      "group": "quotes",
+      "input": "SELECT :p, \"unfinished\\",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 23, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-block",
+      "group": "comments",
+      "input": "SELECT :before /* unfinished; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 56, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 30, "end": 37},
+          {"name": "after", "start": 49, "end": 55}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-nested",
+      "group": "comments",
+      "input": "SELECT :before /* outer /* inner */ ; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 64, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 38, "end": 45},
+          {"name": "after", "start": 57, "end": 63}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-hint",
+      "group": "hints",
+      "input": "SELECT :before /*+ unfinished; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 57, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 31, "end": 38},
+          {"name": "after", "start": 50, "end": 56}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-dollar",
+      "group": "dollar",
+      "input": "SELECT :before, $$unfinished; :inside |>; SELECT :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 56, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "inside", "start": 30, "end": 37},
+          {"name": "after", "start": 49, "end": 55}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-dollar-opener",
+      "group": "dollar",
+      "input": "SELECT $$",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "unterminated-paren",
+      "group": "unbalanced",
+      "input": "SELECT f(:p; SELECT :q;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 12, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 12, "end": 23, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 9, "end": 11},
+          {"name": "q", "start": 20, "end": 22}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-bracket",
+      "group": "unbalanced",
+      "input": "SELECT arr[:p; SELECT :q;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 14, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 14, "end": 25, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 11, "end": 13},
+          {"name": "q", "start": 22, "end": 24}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-brace",
+      "group": "unbalanced",
+      "input": "SELECT {\"k\": :p; SELECT :q;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 16, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 16, "end": 27, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 13, "end": 15},
+          {"name": "q", "start": 24, "end": 26}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-struct",
+      "group": "unbalanced",
+      "input": "SELECT CAST(:p AS STRUCT<a:INT; SELECT :q;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 31, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 31, "end": 42, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 12, "end": 14},
+          {"name": "INT", "start": 26, "end": 30},
+          {"name": "q", "start": 39, "end": 41}
+        ]
+      }
+    },
+    {
+      "id": "unmatched-close",
+      "group": "unbalanced",
+      "input": "SELECT :p); SELECT :q;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 11, "end": 22, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9},
+          {"name": "q", "start": 19, "end": 21}
+        ]
+      }
+    },
+    {
+      "id": "map-double-key",
+      "group": "colon",
+      "input": "SELECT :before, MAP{\"k\": v}, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 36, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 29, "end": 35}
+        ]
+      }
+    },
+    {
+      "id": "map-bind-value",
+      "group": "colon",
+      "input": "SELECT :before, {\"k\": :p}, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 34, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "p", "start": 22, "end": 24},
+          {"name": "after", "start": 27, "end": 33}
+        ]
+      }
+    },
+    {
+      "id": "map-single-key",
+      "group": "colon",
+      "input": "SELECT MAP{'k':value}, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 26, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 23, "end": 25}
+        ]
+      }
+    },
+    {
+      "id": "map-keyword-value",
+      "group": "colon",
+      "input": "SELECT MAP{'k':date}, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 25, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 22, "end": 24}
+        ]
+      }
+    },
+    {
+      "id": "map-spaced-colon",
+      "group": "colon",
+      "input": "SELECT MAP{'k' : value}, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 28, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 25, "end": 27}
+        ]
+      }
+    },
+    {
+      "id": "map-expression-bind",
+      "group": "colon",
+      "input": "SELECT MAP{'k': IF(flag, :map_value, 0)}, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 45, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "map_value", "start": 25, "end": 35},
+          {"name": "p", "start": 42, "end": 44}
+        ]
+      }
+    },
+    {
+      "id": "map-two-values",
+      "group": "colon",
+      "input": "SELECT MAP{'k': :first, 'other': :second}, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 50, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "first", "start": 16, "end": 22},
+          {"name": "second", "start": 33, "end": 40},
+          {"name": "after", "start": 43, "end": 49}
+        ]
+      }
+    },
+    {
+      "id": "map-nested-array",
+      "group": "colon",
+      "input": "SELECT MAP{'k':arr[1:end_idx], 'q': :p}, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 48, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 36, "end": 38},
+          {"name": "after", "start": 41, "end": 47}
+        ]
+      }
+    },
+    {
+      "id": "struct-type",
+      "group": "colon",
+      "input": "SELECT CAST(:p AS STRUCT<a:INT>), :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 41, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 12, "end": 14},
+          {"name": "after", "start": 34, "end": 40}
+        ]
+      }
+    },
+    {
+      "id": "struct-spaced-type",
+      "group": "colon",
+      "input": "SELECT CAST(x AS STRUCT<name : INT>), :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 41, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 38, "end": 40}
+        ]
+      }
+    },
+    {
+      "id": "struct-nested-type",
+      "group": "native-struct-false-binds",
+      "input": "SELECT CAST(:p AS ARRAY<STRUCT<a:INT,b:MAP<STRING,INT>>>), :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 66, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 12, "end": 14},
+          {"name": "INT", "start": 32, "end": 36},
+          {"name": "MAP", "start": 38, "end": 42},
+          {"name": "after", "start": 59, "end": 65}
+        ]
+      }
+    },
+    {
+      "id": "array-numeric-slice",
+      "group": "colon",
+      "input": "SELECT :before, arr[1:2], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 33, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 26, "end": 32}
+        ]
+      }
+    },
+    {
+      "id": "array-named-end",
+      "group": "colon",
+      "input": "SELECT :before, arr[1:end_idx], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 39, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "before", "start": 7, "end": 14},
+          {"name": "after", "start": 32, "end": 38}
+        ]
+      }
+    },
+    {
+      "id": "array-bind-index",
+      "group": "colon",
+      "input": "SELECT arr[:idx], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 25, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "idx", "start": 11, "end": 15},
+          {"name": "after", "start": 18, "end": 24}
+        ]
+      }
+    },
+    {
+      "id": "array-bind-offset",
+      "group": "colon",
+      "input": "SELECT arr[1 + :offset], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 32, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "offset", "start": 15, "end": 22},
+          {"name": "after", "start": 25, "end": 31}
+        ]
+      }
+    },
+    {
+      "id": "array-bind-mask",
+      "group": "colon",
+      "input": "SELECT arr[1 & :mask], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 30, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "mask", "start": 15, "end": 20},
+          {"name": "after", "start": 23, "end": 29}
+        ]
+      }
+    },
+    {
+      "id": "array-between-bind",
+      "group": "colon",
+      "input": "SELECT arr[IF(x BETWEEN :lo AND 9, 1, 2)], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 50, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "lo", "start": 24, "end": 27},
+          {"name": "after", "start": 43, "end": 49}
+        ]
+      }
+    },
+    {
+      "id": "array-like-bind",
+      "group": "colon",
+      "input": "SELECT arr[IF(name LIKE :pattern, 1, 2)], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 49, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "pattern", "start": 24, "end": 32},
+          {"name": "after", "start": 42, "end": 48}
+        ]
+      }
+    },
+    {
+      "id": "array-case-bind",
+      "group": "colon",
+      "input": "SELECT arr[CASE :selector WHEN 1 THEN 2 ELSE 3 END], :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 60, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "selector", "start": 16, "end": 25},
+          {"name": "after", "start": 53, "end": 59}
+        ]
+      }
+    },
+    {
+      "id": "double-colon-cast",
+      "group": "colon",
+      "input": "SELECT :p::INT, :after;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 23, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9},
+          {"name": "after", "start": 16, "end": 22}
+        ]
+      }
+    },
+    {
+      "id": "double-colon-name",
+      "group": "colon",
+      "input": "SELECT value::type, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 23, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 20, "end": 22}
+        ]
+      }
+    },
+    {
+      "id": "compact-like",
+      "group": "colon",
+      "input": "SELECT name LIKE:compact, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 29, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "compact", "start": 16, "end": 24},
+          {"name": "p", "start": 26, "end": 28}
+        ]
+      }
+    },
+    {
+      "id": "bind-names",
+      "group": "colon",
+      "input": "SELECT :id, :date, :limit, :_name, :name1, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 46, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "id", "start": 7, "end": 10},
+          {"name": "date", "start": 12, "end": 17},
+          {"name": "limit", "start": 19, "end": 25},
+          {"name": "_name", "start": 27, "end": 33},
+          {"name": "name1", "start": 35, "end": 41},
+          {"name": "p", "start": 43, "end": 45}
+        ]
+      }
+    },
+    {
+      "id": "colon-nonbinds",
+      "group": "colon",
+      "input": "SELECT :1, :é, : name, ::name, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 34, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 31, "end": 33}
+        ]
+      }
+    },
+    {
+      "id": "unicode-crlf",
+      "group": "quotes",
+      "input": "SELECT '😀;', :first;\r\n SELECT `😀;`, :second;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 21, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 21, "end": 46, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "first", "start": 14, "end": 20},
+          {"name": "second", "start": 38, "end": 45}
+        ]
+      }
+    },
+    {
+      "id": "unicode-binds",
+      "group": "colon",
+      "input": "SELECT '😀', :first, '𐐀', :second;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 35, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "first", "start": 13, "end": 19},
+          {"name": "second", "start": 27, "end": 34}
+        ]
+      }
+    },
+    {
+      "id": "pipe-from",
+      "group": "pipe",
+      "input": "FROM t |> WHERE id = :id |> SELECT id;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 38, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "id", "start": 21, "end": 24}
+        ]
+      }
+    },
+    {
+      "id": "pipe-select",
+      "group": "pipe",
+      "input": "SELECT :p AS id |> WHERE id > :min |> LIMIT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 46, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9},
+          {"name": "min", "start": 30, "end": 34}
+        ]
+      }
+    },
+    {
+      "id": "pipe-malformed-shift",
+      "group": "pipe",
+      "input": "FROM t |>>",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 10, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "pipe-double-bar",
+      "group": "pipe",
+      "input": "FROM t ||> EXTEND :p AS x;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 26, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 18, "end": 20}
+        ]
+      }
+    },
+    {
+      "id": "pipe-spaced",
+      "group": "pipe",
+      "input": "SELECT :p | > 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 16, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "pipe-comment-gap",
+      "group": "pipe",
+      "input": "SELECT :p |/* comment */> 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 28, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 7, "end": 9}
+        ]
+      }
+    },
+    {
+      "id": "pipe-quotes",
+      "group": "pipe",
+      "input": "SELECT '|>', \"|>\", `|>`, :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 28, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 25, "end": 27}
+        ]
+      }
+    },
+    {
+      "id": "pipe-nested",
+      "group": "pipe",
+      "input": "SELECT id FROM (FROM t |> WHERE id = :p) s;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 43, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 37, "end": 39}
+        ]
+      }
+    },
+    {
+      "id": "existing-parameters-fragment",
+      "group": "colon",
+      "input": "arr[1:end_idx], arr[:idx], arr[1 + :offset], arr[1 & :mask], arr[IF(x BETWEEN :lo AND 9, 1, 2)], arr[IF(name LIKE :pattern, 1, 2)], arr[CASE :selector WHEN 1 THEN 2 ELSE 3 END], MAP{'k':date}, MAP{'k' : value}, MAP{'k': IF(flag, :map_value, 0)}, CAST(x AS STRUCT<name : INT>), name LIKE:compact",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 294, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "idx", "start": 20, "end": 24},
+          {"name": "offset", "start": 35, "end": 42},
+          {"name": "mask", "start": 53, "end": 58},
+          {"name": "lo", "start": 78, "end": 81},
+          {"name": "pattern", "start": 114, "end": 122},
+          {"name": "selector", "start": 141, "end": 150},
+          {"name": "map_value", "start": 229, "end": 239},
+          {"name": "compact", "start": 286, "end": 294}
+        ]
+      }
+    },
+    {
+      "id": "existing-chunks-lines",
+      "group": "pipe",
+      "input": "SELECT 1;\nFROM t\n|> LIMIT 1;\nSELECT 2",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 28, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 28, "end": 37, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-single-semicolon",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = 'a;b' |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 47, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 47, "end": 57, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-single-doubled",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = 'a'';b' |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 49, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 49, "end": 59, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-single-escaped",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = 'a\\';b' |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 49, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 49, "end": 59, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-single-backslash",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = 'a\\\\' |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 47, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 47, "end": 57, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-double-doubled",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = \"a;\"\"b\" |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 49, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 49, "end": 59, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-double-escaped",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = \"a\\\";b\" |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 49, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 49, "end": 59, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-backticks",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM `ta;ble` |> SELECT `co``;lumn`;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 46, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 46, "end": 56, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-backtick-dollar",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> SELECT `$$identifier`;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 42, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 42, "end": 52, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-dash-semicolon",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * -- ;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 57, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 57, "end": 67, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-dash-no-space",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * --comment;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 63, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 63, "end": 73, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-dash-continuation",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * -- continued\\\n; still comment\n|> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 70, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 70, "end": 80, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-block-semicolon",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * /* ; */ |> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 60, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 60, "end": 70, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-nested-block",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * /* outer /* ; */ ; outer */ |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 68, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 68, "end": 78, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-hint",
+      "group": "hints",
+      "input": "SELECT 0;\nFROM t |> SELECT /*+ SET_VAR(query_timeout=5) ; */ * |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 74, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 74, "end": 84, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-dollar-function",
+      "group": "dollar",
+      "input": "SELECT 0;\nCREATE FUNCTION f() RETURNS STRING AS $$code; more code;$$;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 69, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 69, "end": 79, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-job",
+      "group": "quotes",
+      "input": "SELECT 0;\nCREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO t SELECT 'a;b';\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 86, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 86, "end": 96, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-single",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> SELECT * ' unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 76, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-double",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> SELECT * \" unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 76, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-backtick",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> SELECT * ` unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 76, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-block",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * /* unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 77, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-hint",
+      "group": "hints",
+      "input": "SELECT 0;\nFROM t |> SELECT * /*+ unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 78, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-nested",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * /* outer /* inner */ unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 95, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unterminated-dollar",
+      "group": "dollar",
+      "input": "SELECT 0;\nFROM t |> SELECT * $$ unfinished;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 77, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unclosed-dollar-tail",
+      "group": "dollar",
+      "input": "SELECT $$unfinished;\nFROM secret |> SELECT *;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 45, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-caret-forward",
+      "group": "pipe",
+      "input": "FROM t |> LIMIT 1;SELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 18, "end": 27, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-caret-reverse",
+      "group": "pipe",
+      "input": "SELECT 2;FROM t |> LIMIT 1;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 27, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-utf16",
+      "group": "quotes",
+      "input": "SELECT '😀;';\r\n  FROM t\n|> WHERE s = '😀;\nvalue';SELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 13, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 13, "end": 49, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 49, "end": 58, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-unbalanced-transactions",
+      "group": "unbalanced",
+      "input": "BEGIN;FROM t |> SELECT * EXCEPT(x;SELECT 2;COMMIT;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 6, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 6, "end": 34, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 34, "end": 43, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 43, "end": 50, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-array-slice-pipe",
+      "group": "colon",
+      "input": "FROM t |> SELECT arr[1:end_idx] AS sliced",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 41, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-array-binds-pipe",
+      "group": "colon",
+      "input": "FROM offline_rows |> SELECT arr[1:end_idx] AS sliced, arr[1 + :offset] AS item",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 78, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "offset", "start": 62, "end": 69}
+        ]
+      }
+    },
+    {
+      "id": "existing-bind-date",
+      "group": "colon",
+      "input": "FROM t |> WHERE id = :date |> SELECT id",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 39, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "date", "start": 21, "end": 26}
+        ]
+      }
+    },
+    {
+      "id": "existing-bind-limit",
+      "group": "colon",
+      "input": "FROM t |> WHERE id = :limit |> SELECT id",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 40, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "limit", "start": 21, "end": 27}
+        ]
+      }
+    },
+    {
+      "id": "existing-pipe-trailing-trivia",
+      "group": "trivia",
+      "input": "FROM t |> WHERE s = 'a; |> b' |> LIMIT 1;; -- trailing |>\n/* comment ; */",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 41, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 41, "end": 42, "hasSql": false, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 42, "end": 73, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-trailing-comment",
+      "group": "comments",
+      "input": "-- |>\nSELECT '|>'; FROM t |> LIMIT 1; /* trailing |> */",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 18, "end": 37, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 37, "end": 55, "hasSql": false, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-dash",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * -- ;\n|> WHERE tenant_id = 7;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 57, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 57, "end": 67, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-single",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = 'a;b' |> SELECT s;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 48, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 48, "end": 58, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-single-escape",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = 'a\\';b' |> SELECT s;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 50, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 50, "end": 60, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-double",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = \"a;\"\"b\" |> SELECT s;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 50, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 50, "end": 60, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-backticks",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM `ta;ble` |> SELECT `co``;lumn`;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 46, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 46, "end": 56, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-block",
+      "group": "comments",
+      "input": "SELECT 0;\nFROM t |> SELECT * /* ; */ |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 48, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 48, "end": 58, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-unicode",
+      "group": "quotes",
+      "input": "SELECT 0;\nFROM t |> WHERE s = '😀;\nvalue' |> LIMIT 5;\nSELECT 2;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 53, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 53, "end": 63, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-boundary-wide",
+      "group": "pipe",
+      "input": "SELECT 0;\nSELECT {projections} FROM t |> LIMIT 1;\nSELECT 2;",
+      "projectionCount": 600,
+      "native": {
+        "statements": [
+          {"start": 0, "end": 9, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 9, "end": 7618, "hasSql": true, "hasPipeOperator": true, "boundaryError": false},
+          {"start": 7618, "end": 7628, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-eof-no-terminator",
+      "group": "pipe",
+      "input": "FROM t |> LIMIT 1",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 17, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-eof-space",
+      "group": "trivia",
+      "input": "FROM t |> LIMIT 1; ",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-eof-newline",
+      "group": "trivia",
+      "input": "FROM t |> LIMIT 1;\n",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-eof-crlf",
+      "group": "trivia",
+      "input": "FROM t |> LIMIT 1;\r\n  ",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "unterminated-block-only",
+      "group": "comments",
+      "input": "/* ; :p |>",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 10, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "p", "start": 5, "end": 7}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-hint-only",
+      "group": "hints",
+      "input": "/*+ ; :p |>",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "p", "start": 6, "end": 8}
+        ]
+      }
+    },
+    {
+      "id": "unterminated-nested-only",
+      "group": "comments",
+      "input": "/* outer /* inner */ ; :p |>",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 28, "hasSql": false, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": [
+          {"name": "p", "start": 23, "end": 25}
+        ]
+      }
+    },
+    {
+      "id": "existing-safety-single",
+      "group": "pipe",
+      "input": "SELECT '|>'",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-double",
+      "group": "pipe",
+      "input": "SELECT \"|>\"",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-backtick",
+      "group": "pipe",
+      "input": "SELECT `|>`",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 11, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-dollar",
+      "group": "dollar",
+      "input": "SELECT $$|>$$",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 13, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-dash",
+      "group": "comments",
+      "input": "SELECT FROM -- |>\n",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-block",
+      "group": "comments",
+      "input": "SELECT /* |> */ FROM",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 20, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-spaced",
+      "group": "pipe",
+      "input": "SELECT 1 | > 2",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 14, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-gap",
+      "group": "pipe",
+      "input": "SELECT 1 |/* comment */> 2",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 26, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-unclosed-single",
+      "group": "quotes",
+      "input": "SELECT 'unclosed |> fake",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 24, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-unclosed-dollar",
+      "group": "dollar",
+      "input": "SELECT $$unclosed; FROM t |> LIMIT 1",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 36, "hasSql": true, "hasPipeOperator": false, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-from",
+      "group": "pipe",
+      "input": "FROM t |> LIMIT 1",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 17, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-shift",
+      "group": "pipe",
+      "input": "FROM t |>>",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 10, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-pipe-single",
+      "group": "quotes",
+      "input": "FROM t |> SELECT '",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 18, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-pipe-block",
+      "group": "comments",
+      "input": "FROM t |> SELECT * /* unfinished |>",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 35, "hasSql": true, "hasPipeOperator": true, "boundaryError": true}
+        ],
+        "parameters": []
+      }
+    },
+    {
+      "id": "existing-safety-unicode",
+      "group": "pipe",
+      "input": "SELECT '😀'; FROM t |> LIMIT 1",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 12, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 12, "end": 30, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": []
+      }
+    }
+  ]
+}

@@ -19,6 +19,9 @@ open class ClickhouseDialect : Dialect() {
 
     override val name: String get() = "clickhouse"
 
+    // sqlglot: ClickHouseParser._parse_query_parameter
+    override val typedQueryParameters: Boolean get() = true
+
     // sqlglot: ClickHouse.FORCE_EARLY_ALIAS_REF_EXPANSION
     override val forceEarlyAliasRefExpansion: Boolean get() = true
 

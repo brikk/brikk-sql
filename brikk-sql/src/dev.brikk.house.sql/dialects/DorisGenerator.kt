@@ -58,6 +58,10 @@ open class DorisGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    // brikk extension #55: the Doris 4.1.4 grammar rejects these lowered forms.
+    override val executesPipeCall: Boolean get() = false
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN", "NATURAL")
+
     // ------------------------------------------------------------------
     // Flags (sqlglot: DorisGenerator class attributes)
     // ------------------------------------------------------------------

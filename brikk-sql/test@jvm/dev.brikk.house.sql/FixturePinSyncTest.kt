@@ -25,7 +25,7 @@ import kotlinx.serialization.json.jsonObject
  *  - the oracle corpora (`ast-corpus`, dialect fixtures, lineage/qualify/scope corpora)
  *    must carry a stamp at all — a missing stamp is itself a failure;
  *  - brikk-side files (`*known-failures*.json` ledgers, brikk-native DataFusion fixtures,
- *    `semantics/` probe data) are not oracle-derived and are exempt from the "must be
+ *    `semantics/` probe data, `scanner-corpus/` native results) are not oracle-derived and are exempt from the "must be
  *    stamped" rule, but if they do carry a stamp it must still match.
  */
 class FixturePinSyncTest {
@@ -36,6 +36,7 @@ class FixturePinSyncTest {
         !rel.contains("known-failures") &&
             rel != "corpus-policy.json" && // Brikk-owned execution policy, not an upstream oracle fixture
             !rel.startsWith("semantics/") &&
+            !rel.startsWith("scanner-corpus/") && // native Doris scanner results, no sqlglot oracle
             !rel.contains("datafusion") && // brikk-native dialect: Polyglot/SLT provenance, no sqlglot oracle
             rel.endsWith(".json")
 

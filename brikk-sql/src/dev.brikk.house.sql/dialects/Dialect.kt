@@ -145,6 +145,16 @@ open class Dialect {
     // sqlglot: Dialect.tokenizer_class (tables only; the scanner is shared)
     open val tokenizerConfig: TokenizerConfig get() = TokenizerConfig.BASE
 
+    /**
+     * brikk-native: whether a statement separator may sit inside brackets (PostgreSQL rule
+     * actions do). When false, [dev.brikk.house.sql.parser.SqlScriptSnapshot] makes such a
+     * statement a boundary error rather than guessing where it ends.
+     */
+    open val semicolonsInBrackets: Boolean get() = true
+
+    /** brikk-native: whether `{name:Type}` is a server query parameter (ClickHouse). */
+    open val typedQueryParameters: Boolean get() = false
+
     /** brikk-native: every word of the tokenizer's keywords (`ORDER BY` gives `ORDER` and `BY`), for editor display. */
     val editorKeywords: Set<String> by lazy {
         tokenizerConfig.keywords

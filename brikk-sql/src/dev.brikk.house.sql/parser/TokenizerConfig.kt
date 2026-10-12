@@ -59,6 +59,35 @@ class TokenizerConfig(
     ): TokenizerConfig = copyWith(emptyMap(), unescapedSequences).also {
         it.commentPolicy = CommentPolicy(dashCommentRequiresBoundary, commentsTerminateAtNewlineOnly)
     }
+    private var lexicalPolicy = LexicalPolicy()
+    val nestedBlockComments: Boolean get() = lexicalPolicy.nestedBlockComments
+    val dashCommentLineContinuation: Boolean get() = lexicalPolicy.dashCommentLineContinuation
+    val untaggedDollarStrings: Boolean get() = lexicalPolicy.untaggedDollarStrings
+
+    private data class LexicalPolicy(
+        val nestedBlockComments: Boolean = false,
+        val dashCommentLineContinuation: Boolean = false,
+        val untaggedDollarStrings: Boolean = false,
+    )
+
+    /**
+     * brikk extension #53 (docs/brikk-extensions.md): native lexer rules sqlglot's tables lack.
+     * [nestedBlockComments]: block comments nest, also inside optimizer hints, ending where the
+     * native lexer ends them; editor tokenization refuses one that no depth count closes there.
+     * [dashCommentLineContinuation]: backslash + LF (not CRLF) continues a `--` comment.
+     * [untaggedDollarStrings]: `$$...$$` is a raw HEREDOC_STRING unless a `$`-spelled
+     * identifier is the longer match. An unclosed one stays an identifier, except in editor
+     * tokenization, where it is a lexical failure.
+     */
+    fun withLexicalRules(
+        comments: Map<String, String?> = this.comments,
+        nestedBlockComments: Boolean = this.nestedBlockComments,
+        dashCommentLineContinuation: Boolean = this.dashCommentLineContinuation,
+        untaggedDollarStrings: Boolean = this.untaggedDollarStrings,
+    ): TokenizerConfig = copyWith(emptyMap(), unescapedSequences, comments).also {
+        it.lexicalPolicy = LexicalPolicy(nestedBlockComments, dashCommentLineContinuation, untaggedDollarStrings)
+    }
+
     val numericEscapes: Map<Char, NumericEscape> get() = numericPolicy.escapes
     val dropUnknownEscapes: Boolean get() = numericPolicy.dropUnknown
     val numericEscapesAreBytes: Boolean get() = numericPolicy.bytes
@@ -109,7 +138,11 @@ class TokenizerConfig(
      */
     fun withKeywords(extra: Map<String, TokenType>): TokenizerConfig = copyWith(extra, unescapedSequences)
 
-    private fun copyWith(extra: Map<String, TokenType>, sequences: Map<String, String>): TokenizerConfig = TokenizerConfig(
+    private fun copyWith(
+        extra: Map<String, TokenType>,
+        sequences: Map<String, String>,
+        comments: Map<String, String?> = this.comments,
+    ): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
         keywords = keywords + extra,
         quotes = quotes,
@@ -136,7 +169,10 @@ class TokenizerConfig(
         numbersCanHaveDecimals = numbersCanHaveDecimals,
         identifiersCanStartWithDigit = identifiersCanStartWithDigit,
         unescapedSequences = sequences,
-    ).also { it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy }
+    ).also {
+        it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy
+        it.lexicalPolicy = lexicalPolicy
+    }
 
     companion object {
         /** The base "sqlglot" dialect configuration. */

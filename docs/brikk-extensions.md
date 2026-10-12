@@ -1835,6 +1835,61 @@ refuses unknown-layout DROP/SET and unsupported pivots while native Doris SET st
 renders; its original checkout remains clean. Only the task's isolated containers
 and internal network are removed after verification.
 
+## 53. Doris native lexical rules
+
+**NOT sqlglot parity.** `DorisDialect.LEXICAL_CONFIG` layers native DorisLexer.g4 rules
+(apache/doris `3226e0c`) over the generated tables via `TokenizerConfig.withLexicalRules`;
+`DorisTokenizerTables.kt` and its generator are unchanged.
+
+- Untagged `$$...$$` is one raw HEREDOC_STRING; a longer `$`-spelled identifier wins
+  (`$$a$$b`); tagged forms and an unclosed `$$abc` stay identifiers.
+- Block comments nest, also in `/*+` hints, and end where the native lazy recursive rule
+  does, `/*/` overlaps and unclosable nesting included (checked against the native lexer for
+  every `/*`-prefixed string over `/`, `*`, `a` up to 13 characters).
+- Backslash + LF continues a `--` comment; backslash + CRLF does not.
+- `#` and `{# #}` are not comments.
+- Editor tokenization (so `SqlScriptSnapshot`) refuses an unclosed `$$` and a comment that no
+  depth count closes at the native end: both usually mean unfinished input.
+- `Dialect.semicolonsInBrackets` is false for Doris, so a snapshot statement with `;` inside
+  brackets is a boundary error (PostgreSQL rule actions keep the default).
+
+Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`) over raw JDBC rejects `#` and
+`{# #}` comments (`mismatched input '#'`) and accepts nested comments, nested hints and
+backslash-LF continuation. `TokenCorpusDifferentialTest` accepts sqlglot mismatches only under
+named `DorisNativeLexing` exceptions; `DorisScannerCorpusTest` replays the Doris plugin's
+scanner corpus against native results, naming its conventions and remaining disagreements.
+
+## 54. ClickHouse typed query parameters stay as written
+
+ClickHouse `{name:Type}` is a server query parameter, unlike an IDE `:name` bind. Parameter
+discovery (`parseParameterOccurrences`, `SqlScriptParameters`, `SqlFragment.scalarParams`)
+reports it as `ParamStyle.NAMED_TYPED`; `maskNamedParameters` and IDE prompting, which take
+only `NAMED_COLON`, leave it alone. `Dialect.typedQueryParameters` marks ClickHouse, the only
+core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the ClickHouse
+generator instead reuses the authored text while the parsed placeholder is unchanged, so
+lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
+
+## 55. Executable refusal for pipe stages the target rejects
+
+Executable lowering (`toExecutable`, `toStandardSql`, source-preserving lowering and so
+`lowerForExecution`) refuses with `UnsupportedError`, using #52's executable-purpose state,
+where it used to return SQL the target engine rejects:
+
+| Target | Refused | Engine evidence |
+|---|---|---|
+| Trino | pipe CALL, STRAIGHT_JOIN, ASOF JOIN, NATURAL JOIN | Trino 483: syntax errors; `t ASOF` reads as an alias; "Natural join not supported" |
+| DuckDB | STRAIGHT_JOIN | DuckDB 1.5.6: syntax error |
+| Doris | pipe CALL, STRAIGHT_JOIN, NATURAL JOIN | Doris 4.1.4 FE parser: mismatched input |
+| ClickHouse | pipe CALL, star RENAME, STRAIGHT_JOIN | ClickHouse 26.7: `f((SELECT …))`, `* RENAME` and STRAIGHT_JOIN syntax errors |
+| Presto | STRAIGHT_JOIN | Presto `SqlBase.g4` `relation` has only CROSS, typed and NATURAL joins |
+
+Pipe CALL becomes a table function taking `(query)`, which these targets lack. ClickHouse
+star RENAME follows #51: a complete caller-supplied layout (`toStandardSql` with
+`expandStars`) still expands it to explicit ordered projections, which ClickHouse runs.
+`transpileTo` previews keep their earlier output and carry the same message as an
+unsupported finding. DuckDB CALL, ASOF, NATURAL and RENAME,
+Doris ASOF and ClickHouse ASOF still lower. `PipeEngineRejectionTest` covers each case.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

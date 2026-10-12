@@ -99,6 +99,21 @@ open class ClickhouseGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.CLICKHOUSE
+
+    // brikk extension #55: ClickHouse table functions take no `(query)` argument, and
+    // ClickHouse 26.7 rejects STRAIGHT_JOIN.
+    override val executesPipeCall: Boolean get() = false
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
+
+    // brikk extension #55: ClickHouse has star EXCEPT/REPLACE but no RENAME. As for
+    // Presto/Trino, executable generation needs it expanded from a complete layout.
+    override fun starSql(expression: Star): String {
+        if (!(expression.args["rename"] as? List<*>).isNullOrEmpty()) {
+            unexecutable("ClickHouse star RENAME requires a complete column layout " +
+                "expanded to an explicit projection before generation")
+        }
+        return super.starSql(expression)
+    }
     override fun selectSql(expression: Select): String {
         val fetch = expression.args["limit"] as? Fetch
         if (fetch != null && expression.args["order"] == null) {
@@ -558,9 +573,9 @@ open class ClickhouseGenerator(
         )
     }
 
-    // sqlglot: ClickHouseGenerator.placeholder_sql
+    // sqlglot: ClickHouseGenerator.placeholder_sql; brikk extension #54 reuses the authored text.
     override fun placeholderSql(expression: Placeholder): String =
-        "{${expression.name}: ${sql(expression, "kind")}}"
+        expression.authoredSyntax?.textFor(expression) ?: "{${expression.name}: ${sql(expression, "kind")}}"
 
     // sqlglot: ClickHouseGenerator.oncluster_sql
     override fun onclusterSql(expression: OnCluster): String =

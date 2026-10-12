@@ -24,6 +24,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
+    private var checkCanceled: () -> Unit = {}
+    private var cancelBudget: Int = CANCEL_INTERVAL
+    private var breaksScanned: Int = 0
+    private var lastBreak: Int = -1
 
     // sqlglot: TokenizerCore.reset
     private fun reset() {
@@ -39,6 +43,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         end = false
         peek = NONE
         prevTokenLine = -1
+        cancelBudget = CANCEL_INTERVAL
+        breaksScanned = 0
+        lastBreak = -1
     }
 
     /**
@@ -46,7 +53,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
      *
      * sqlglot: TokenizerCore.tokenize
      */
-    fun tokenize(sql: String): List<Token> {
+    fun tokenize(sql: String): List<Token> = try {
+        scanAll(sql)
+    } catch (e: Canceled) {
+        throw e.signal
+    }
+
+    private fun scanAll(sql: String): List<Token> {
         reset()
         this.sql = sql
         this.size = sql.length
@@ -54,6 +67,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         try {
             scan()
         } catch (e: TokenError) {
+            throw e
+        } catch (e: Canceled) {
             throw e
         } catch (e: Exception) {
             val ctxStart = maxOf(current - 50, 0)
@@ -65,14 +80,26 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return tokens
     }
 
+    /**
+     * [tokenizeForEditor] that calls [checkCanceled] periodically; whatever it throws (for
+     * example an IDE cancellation) propagates unchanged.
+     */
+    fun tokenizeForEditor(sql: String, checkCanceled: () -> Unit): EditorTokens {
+        val previous = this.checkCanceled
+        this.checkCanceled = checkCanceled
+        return try { tokenizeForEditor(sql) } finally { this.checkCanceled = previous }
+    }
+
     /** Editor recovery stops at the failing lexical construct, never inside its tail. */
     fun tokenizeForEditor(sql: String): EditorTokens {
         val previous = editorMode
         editorMode = true
         return try {
-            EditorTokens(tokenize(sql).toList())
+            EditorTokens(scanAll(sql).toList())
         } catch (e: TokenError) {
             EditorTokens(tokens.toList(), start.coerceIn(0, sql.length), e.message ?: "Incomplete SQL token")
+        } catch (e: Canceled) {
+            throw e.signal
         } finally { editorMode = previous }
     }
 
@@ -83,8 +110,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         while (size != 0 && !end) {
             var cur = current
 
-            // Skip spaces here rather than iteratively calling advance() for performance reasons
-            while (cur < size) {
+            // Skip spaces here rather than iteratively calling advance() for performance reasons;
+            // a long run is skipped in chunks, so cancellation is checked inside it.
+            while (cur < size && cur - current < CANCEL_INTERVAL) {
                 val c = sql[cur]
                 if (c == ' ' || c == '\t') cur++ else break
             }
@@ -98,6 +126,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 when {
                     char in DIGIT_CHARS -> scanNumber()
                     identifiers.containsKey(char) -> scanIdentifier(identifiers.getValue(char))
+                    config.untaggedDollarStrings && char == '$' && peek == '$' -> if (!scanDollarString()) scanKeywords()
                     else -> scanKeywords()
                 }
             }
@@ -120,7 +149,16 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     }
 
     // sqlglot: TokenizerCore._advance
+    // Calls the cancellation hook after every CANCEL_INTERVAL scanned characters.
+    private fun progress(scannedChars: Int) {
+        cancelBudget -= scannedChars
+        if (cancelBudget > 0) return
+        cancelBudget = CANCEL_INTERVAL
+        try { checkCanceled() } catch (e: Throwable) { throw Canceled(e) }
+    }
+
     private fun advance(i: Int = 1, alnum: Boolean = false) {
+        val before = current
         val c = char
 
         if (c == '\n' || c == '\r') {
@@ -145,7 +183,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             var e2 = end
             var p2 = peek
 
-            while (p2.isLetterOrDigit()) {
+            while (p2.isLetterOrDigit() && cur - before < CANCEL_INTERVAL) {
                 c2 += 1
                 cur += 1
                 e2 = cur >= size
@@ -158,6 +196,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             peek = p2
             char = sql[cur - 1]
         }
+        if (current > before) progress(current - before)
     }
 
     // sqlglot: TokenizerCore._text
@@ -183,7 +222,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlinesInToken++
         }
         val lineStart = line - newlinesInToken
-        val colStart = start - maxOf(sql.lastIndexOf('\n', start - 1), sql.lastIndexOf('\r', start - 1))
+        val colStart = start - lineBreakBefore(start)
 
         tokens.add(
             Token(
@@ -214,6 +253,18 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             val commandText = sql.substring(commandStart, current).trim()
             if (commandText.isNotEmpty()) add(TokenType.STRING, commandText)
         }
+    }
+
+    // The last CR or LF before [offset]; token starts only move forward, so the scan is amortized.
+    private fun lineBreakBefore(offset: Int): Int {
+        if (offset < breaksScanned) return maxOf(sql.lastIndexOf('\n', offset - 1), sql.lastIndexOf('\r', offset - 1))
+        progress(offset - breaksScanned)
+        while (breaksScanned < offset) {
+            val c = sql[breaksScanned]
+            if (c == '\n' || c == '\r') lastBreak = breaksScanned
+            breaksScanned++
+        }
+        return lastBreak
     }
 
     // sqlglot: TokenizerCore._scan_keywords
@@ -293,7 +344,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val commentStartSize = commentStart.length
         val commentEnd = config.comments[commentStart]
 
-        if (commentEnd != null) {
+        if (commentEnd == "*/" && config.nestedBlockComments) {
+            scanNestedBlockComment(commentStartSize, commentStartLine)
+        } else if (commentEnd != null) {
             // Skip the comment's start delimiter
             advance(commentStartSize)
 
@@ -325,7 +378,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             comments.add(if (sliceEnd < commentStartSize) "" else t.substring(commentStartSize, sliceEnd))
             advance(commentEndSize - 1)
         } else {
-            while (!end && peek != '\n' && (config.commentsTerminateAtNewlineOnly || peek != '\r')) {
+            while (!end && (config.commentsTerminateAtNewlineOnly || peek != '\r')) {
+                if (peek == '\n' && !(char == '\\' && config.dashCommentLineContinuation && commentStart == "--")) break
                 advance(alnum = true)
             }
             comments.add(text.substring(commentStartSize))
@@ -349,6 +403,121 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
 
         return true
+    }
+
+    // Native BRACKETED_COMMENT (`'/*' (BRACKETED_COMMENT | .)*? '*/'`) ends where its preferred
+    // reading completes: at each offset close, else open a nested comment, else take one char.
+    // When the plain depth count cannot close, that is a backtracking search. Editor tokenization
+    // then requires a depth count that does not open at `/*/` to close at the same place.
+    private fun scanNestedBlockComment(commentStartSize: Int, commentStartLine: Int) {
+        val contentStart = start + 2
+        val close = countedClose(contentStart, openOverlapping = true).takeIf { it >= 0 }
+            ?: recoveredClose(contentStart).takeIf { it >= 0 }
+            ?: throw TokenError("Missing */ from $commentStartLine:$start")
+        advanceTo(close + 2)
+        comments.add(sql.substring(start + commentStartSize, close))
+    }
+
+    private fun recoveredClose(contentStart: Int): Int {
+        if (!editorMode) return nativeCommentClose(contentStart)
+        val counted = countedClose(contentStart, openOverlapping = false)
+        return if (counted >= 0 && nativeCommentClose(contentStart) == counted) counted else -1
+    }
+
+    // The offset of the closing `*/` by depth count, or -1.
+    private fun countedClose(contentStart: Int, openOverlapping: Boolean): Int {
+        var depth = 1
+        var index = contentStart
+        while (index < size) {
+            progress(1)
+            when {
+                sql.startsWith("*/", index) -> if (--depth == 0) return index else index += 2
+                sql.startsWith("/*", index) && (openOverlapping || sql.getOrNull(index + 2) != '/') -> { depth++; index += 2 }
+                else -> index++
+            }
+        }
+        return -1
+    }
+
+    private class CommentFrame(val delimiter: Int, val depth: Int) {
+        var alternative = 0
+    }
+
+    // The first completion in the native lexer's preference order, or -1. The search only
+    // branches at `/*` and `*/`, so its states are (delimiter, depth); depths beyond the closers
+    // still ahead cannot complete, and failed states are not revisited.
+    private fun nativeCommentClose(contentStart: Int): Int {
+        val delimiters = delimitersFrom(contentStart)
+        val count = delimiters.size
+        val closersFrom = IntArray(count + 1)
+        for (k in count - 1 downTo 0) closersFrom[k] = closersFrom[k + 1] + if (sql[delimiters[k]] == '*') 1 else 0
+        fun nextDelimiter(offset: Int, from: Int): Int {
+            var k = from
+            while (k < count && delimiters[k] < offset) k++
+            return k
+        }
+        val failed = HashSet<Long>()
+        val frames = ArrayList<CommentFrame>()
+        fun key(delimiter: Int, depth: Int) = delimiter.toLong() shl 32 or depth.toLong()
+        fun visit(delimiter: Int, depth: Int) {
+            if (delimiter < count && depth <= closersFrom[delimiter] && key(delimiter, depth) !in failed) {
+                frames += CommentFrame(delimiter, depth)
+            }
+        }
+        visit(0, 1)
+        while (frames.isNotEmpty()) {
+            progress(1)
+            val frame = frames.last()
+            val offset = delimiters[frame.delimiter]
+            val closing = sql[offset] == '*'
+            when (frame.alternative++) {
+                0 -> if (closing) {
+                    if (frame.depth == 1) return offset
+                    visit(nextDelimiter(offset + 2, frame.delimiter), frame.depth - 1)
+                }
+                1 -> if (!closing) visit(nextDelimiter(offset + 2, frame.delimiter), frame.depth + 1)
+                2 -> visit(nextDelimiter(offset + 1, frame.delimiter), frame.depth)
+                else -> {
+                    failed += key(frame.delimiter, frame.depth)
+                    frames.removeAt(frames.lastIndex)
+                }
+            }
+        }
+        return -1
+    }
+
+    // Offsets of every `/*` and `*/` at or after [from], overlaps included.
+    private fun delimitersFrom(from: Int): IntArray {
+        var offsets = IntArray(16)
+        var count = 0
+        for (index in from until size - 1) {
+            progress(1)
+            val pair = sql[index] == '/' && sql[index + 1] == '*' || sql[index] == '*' && sql[index + 1] == '/'
+            if (!pair) continue
+            if (count == offsets.size) offsets = offsets.copyOf(count * 2)
+            offsets[count++] = index
+        }
+        return offsets.copyOf(count)
+    }
+
+    // Native Doris DOLLAR_QUOTED_STRING; a longer `$`-identifier match wins, ties go to the string.
+    private fun scanDollarString(): Boolean {
+        val close = sql.indexOf("$$", start + 2)
+        if (close == -1) {
+            if (editorMode) throw TokenError("Missing $$ from $line:$start")
+            return false
+        }
+        val identifierEnd = (start until size).firstOrNull { !isDollarIdentifierChar(sql[it]) } ?: size
+        if (identifierEnd > close + 2) return false
+        advanceTo(close + 2)
+        add(TokenType.HEREDOC_STRING, sql.substring(start + 2, close))
+        return true
+    }
+
+    private fun isDollarIdentifierChar(c: Char): Boolean = c == '$' || c == '_' || c.isLetterOrDigit() || c.code > 0x7F
+
+    private fun advanceTo(exclusiveEnd: Int) {
+        while (current < exclusiveEnd) advance()
     }
 
     // sqlglot: TokenizerCore._scan_number
@@ -686,11 +855,12 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 // no backslash in the string that would need escape processing
                 (
                     !(unescapedSequences.isNotEmpty() || '\\' in esc) ||
-                        sql.indexOf('\\', pos).let { it == -1 || it >= endIdx }
+                        !hasBackslash(pos, endIdx)
                     )
             ) {
                 var newlines = 0
                 for (i in pos until endIdx) {
+                    progress(1)
                     if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlines++
                 }
                 if (newlines > 0) {
@@ -786,10 +956,22 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return text.toString()
     }
 
+    private fun hasBackslash(from: Int, until: Int): Boolean {
+        for (index in from until until) {
+            progress(1)
+            if (sql[index] == '\\') return true
+        }
+        return false
+    }
+
     private fun byteChunk(text: String, bytes: Boolean): String = if (bytes && text.any { it.code >= 128 })
         text.encodeToByteArray(throwOnInvalidSequence = true).joinToString("") { (it.toInt() and 0xFF).toChar().toString() } else text
 
+    private class Canceled(val signal: Throwable) : RuntimeException(signal)
+
     private companion object {
+        const val CANCEL_INTERVAL = 1 shl 16
+
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'
 

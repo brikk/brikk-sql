@@ -91,4 +91,15 @@ class EditorContractTest {
         for (sql in listOf("DELIMITER //; SELECT 1 |> LIMIT 1", "CREATE PROCEDURE p() BEGIN SELECT 1; END; SELECT 1 |> LIMIT 1"))
             assertNotNull(SqlScriptSnapshot.parse(sql, "mysql").statements.single().boundaryError)
     }
+
+    @Test fun dorisSemicolonInsideBracketsIsABoundaryError() {
+        val sql = "SELECT f(1; 2); SELECT 3"
+        val doris = SqlScriptSnapshot.parse(sql, "doris").statements.single()
+        assertEquals(0 to sql.length, doris.start to doris.end)
+        assertNotNull(doris.boundaryError)
+        val rule = "CREATE RULE r AS ON INSERT TO t DO ALSO (INSERT INTO a VALUES (1); INSERT INTO b VALUES (2)); SELECT 1"
+        val postgres = SqlScriptSnapshot.parse(rule, "postgres").statements
+        assertEquals(2, postgres.size)
+        assertTrue(postgres.all { it.boundaryError == null })
+    }
 }

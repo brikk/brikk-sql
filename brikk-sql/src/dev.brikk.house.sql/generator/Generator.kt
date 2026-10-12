@@ -281,13 +281,35 @@ open class Generator(
         get() = dev.brikk.house.sql.dialects.Dialects.BASE
 
     // brikk-native: previews may show flagged loss, but executable lowering must
-    // not silently remove a row/column-changing query operator. Additive state,
-    // not a constructor parameter: existing generator JVM signatures stay intact.
-    internal var refuseUnsupportedPivots: Boolean = false
+    // not silently remove a row/column-changing query operator, nor return syntax the
+    // target rejects (#55). Additive state, not a constructor parameter: existing
+    // generator JVM signatures stay intact.
+    internal var forExecution: Boolean = false
+
+    /** brikk-native (#55): whether a lowered pipe CALL (a table function taking `(query)`) runs. */
+    protected open val executesPipeCall: Boolean get() = true
+
+    /** brikk-native (#55): join words the target rejects or reads as something else. */
+    protected open val unexecutableJoinWords: Set<String> get() = emptySet()
+
+    private val targetName: String get() = dialect.name.ifBlank { "Target dialect" }
+
+    /** Executable generation refuses [message]; a preview keeps its output and carries it as a finding. */
+    internal fun unexecutable(message: String) {
+        if (forExecution) throw UnsupportedError(message)
+        unsupported(message)
+    }
+
+    /** Before pipe desugaring: refuses, or flags in a preview, a pipe stage this target cannot execute once lowered. */
+    internal fun checkLoweredPipeStages(tree: Expression) {
+        if (!executesPipeCall && tree.find(dev.brikk.house.sql.ast.PipeCall::class) != null) {
+            unexecutable("$targetName cannot execute a lowered pipe CALL: its table functions take no query argument")
+        }
+    }
 
     internal fun unsupportedPivotSql(): String {
-        if (refuseUnsupportedPivots) {
-            throw UnsupportedError("${dialect.name.ifBlank { "Target dialect" }} cannot faithfully lower PIVOT/UNPIVOT for execution")
+        if (forExecution) {
+            throw UnsupportedError("$targetName cannot faithfully lower PIVOT/UNPIVOT for execution")
         }
         unsupported("PIVOT unsupported")
         return ""
@@ -2505,6 +2527,9 @@ open class Generator(
 
     // sqlglot: Generator.join_sql
     open fun joinSql(expression: Join): String {
+        listOf(expression.method, expression.side, expression.kind).map { it.uppercase() }
+            .firstOrNull { it in unexecutableJoinWords }
+            ?.let { unexecutable("$targetName cannot execute ${if (it.endsWith("_JOIN")) it else "$it JOIN"}") }
         val side = if (!semiAntiJoinWithSide && expression.kind in setOf("SEMI", "ANTI")) {
             ""
         } else {

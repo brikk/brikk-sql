@@ -64,6 +64,9 @@ open class DuckdbGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
 
+    // brikk extension #55: DuckDB 1.5.6 has no STRAIGHT_JOIN.
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
+
     // sqlglot: DuckDBGenerator.SELECT_KINDS = ()
     override val selectKinds: Set<String> get() = emptySet()
     override val historicalDataPostAlias: Boolean get() = true
