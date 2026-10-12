@@ -29,7 +29,11 @@ no internal-API annotation.
 - `SqlColumnCompletion.create`: consistent column lookup presentation with type,
   three-state nullability, source alias and origin label. Same-named columns from
   different aliases retain distinct lookup identities. Consumers provide copied
-  facts, so the helper acquires no Kotlin IDE or engine dependency.
+  facts, so the helper acquires no Kotlin IDE or engine dependency. Experimental additions
+  take `SqlColumnFacts`: `create(column, style)` with the style's icon and priority,
+  `decorate(candidate, column)` keeping the candidate's icon and insertion, `pipeInput` for
+  PIPE stage input columns, and `createOrDecorate`, which decorates other contributors'
+  items matched to a visible column and creates the columns no item matched.
 - `ToggleSettings` and `ToggleConfigurable`: a persisted project switch that reparses
   its language's files, and its settings page with a `-D<property>=false` veto.
 - `notifyEscaped`: plain-text notifications. `FileBanner` and `FileBannerProvider`:
