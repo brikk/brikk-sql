@@ -13,6 +13,8 @@ tasks:
       libraries:
         dependencies:
           - ../brikk-sql-intellij-test-support
+          # An embedded engine for the live catalog harvest tests.
+          - org.duckdb:duckdb_jdbc:1.5.6.0
       testSources: ${project.rootDir}/brikk-sql-intellij-test-support/platform-test
       toolchain:
         dependencies:

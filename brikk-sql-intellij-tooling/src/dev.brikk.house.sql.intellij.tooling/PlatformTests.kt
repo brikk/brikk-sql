@@ -38,7 +38,7 @@ fun testIntellijPlatform(
     val junit = toolchain.resolvedFiles.filter { jar ->
         listOf("junit-", "hamcrest-", "opentest4j-").any { jar.fileName.toString().startsWith(it) }
     }
-    listOf("classes", "config", "system").forEach { run.resolve(it).toFile().deleteRecursively() }
+    listOf("classes", "config", "system", "tmp").forEach { run.resolve(it).toFile().deleteRecursively() }
     val classes = run.resolve("classes")
     val sources = Files.walk(testSources).use { paths -> paths.filter { it.toString().endsWith(".kt") }.sorted().toList() }
     val compileClasspath = listOf(apiDir.resolve("intellij-sql-api.jar")) +
@@ -67,6 +67,8 @@ fun testIntellijPlatform(
         "-Dintellij.platform.runtime.repository.path=${runtimeSdk.resolve("modules/module-descriptors.dat")}",
         "-Didea.home.path=$runtimeSdk", "-Didea.plugins.path=${runtimeSdk.resolve("plugins")}",
         "-Didea.config.path=${run.resolve("config")}", "-Didea.system.path=${run.resolve("system")}",
+        // Test projects and scratch files go under the build directory, not the RAM-backed /tmp.
+        "-Djava.io.tmpdir=${Files.createDirectories(run.resolve("tmp"))}",
         "-Didea.load.plugins.id=com.intellij.database",
     ))
     val summary = Regex("OK \\(\\d+ tests?\\)").find(Files.readString(log))?.value ?: error("Missing JUnit summary in $log")

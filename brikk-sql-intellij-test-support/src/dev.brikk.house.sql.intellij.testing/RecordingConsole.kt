@@ -31,11 +31,19 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Every request becomes finished session work, as the IDE 263 gutter renderer expects.
  * Session methods the recording does not model fail the call and [close].
  */
-public class RecordingConsole(
+public class RecordingConsole private constructor(
     private val project: Project,
     private val file: VirtualFile,
     private val driverId: String,
+    shared: LocalDataSource?,
 ) : AutoCloseable {
+    /** A console on a new data source using [driverId], removed again by [close]. */
+    public constructor(project: Project, file: VirtualFile, driverId: String) : this(project, file, driverId, null)
+
+    /** A console on [dataSource], which stays when the fixture closes; another fixture may share it. */
+    public constructor(project: Project, file: VirtualFile, dataSource: LocalDataSource) :
+        this(project, file, dataSource.databaseDriver?.id ?: error("The data source has no driver"), dataSource)
+
     private val recorded = CopyOnWriteArrayList<DataRequest>()
     private val dataSources = CopyOnWriteArrayList<LocalDataSource>()
     private val unsupportedCalls = CopyOnWriteArrayList<String>()
@@ -53,7 +61,7 @@ public class RecordingConsole(
     public var beforeSessionCall: (String) -> Unit = {}
 
     public var console: JdbcConsole = try {
-        open(newDataSource())
+        open(shared ?: newDataSource())
     } catch (failure: Throwable) {
         releaseDataSources()
         throw failure

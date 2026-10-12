@@ -218,7 +218,7 @@ takes the dbms the platform passes):
   says which (`Console`, `FileMapping`, `OnlyDataSource`) or why none (`Ambiguous` with the
   candidates, `NotFound`). Injected files and completion copies resolve through their host; failed
   lookups give `NotFound`. `consoleNamespace(file)` is the valid console's current namespace,
-  outermost first.
+  outermost first; `consoleSession(file)` its session.
 
 - `NamespacePathResolver(levels, usesCurrentNamespace, maxDepth = levels.size, childrenOf)`:
   `resolve(roots, path, currentNamespace)` finds the model object a typed dotted path addresses and
@@ -254,6 +254,58 @@ takes the dbms the platform passes):
   file attached to another dbms's console is never introspected. Register a no-arg subclass as
   `<completion.contributor language="X" order="first" implementationClass="..."/>`.
 
+### Live function catalog
+
+What the connected server reports about its functions, harvested per data source and served to
+completion. A plugin implements one `LiveCatalogProfile` (minimum: `dbms`, `productLabel`, bundled
+`metadata`, `harvester`) and registers no-arg subclasses:
+
+- `LiveCatalogService(scope)` as an `applicationService` with its `profile`;
+- `HarvestConnectionInterceptor(serviceClass)` as `<database.connectionInterceptor>`;
+- `LiveCatalogCleanup(serviceClass)` as a `DataSourceStorage$Listener` in both `projectListeners` and
+  `applicationListeners`;
+- optionally `RefreshLiveCatalogAction(serviceClass)` as an action.
+
+The dialect's `LiveCatalogHarvester` holds its SQL and parsing: over a `CatalogRowSource` it returns a
+`Harvest` (the server's `LiveInventory` and the connection's `SessionFacts`), or null when what it read
+is incomplete. `LiveInventory.signatures` says whether overloads are the engine's own; a names-only
+inventory proves availability, not overloads. `JdbcCatalogRows` runs a harvester over plain JDBC.
+
+Selection (`LiveCatalogStore`), one ordered rule per data source and connection identity (by default a
+hash of dbms, URL and user; `profile.identity`): a complete harvest from the current identity taken this
+IDE session (`CatalogSource.Live`), else a complete harvest stored on disk under that identity
+(`Disk`), else the bundled snapshot for the server version (`Bundled`). Only complete harvests are
+stored, so a failed, timed-out or partial one never replaces a complete one. A changed identity selects
+nothing old, and storing deletes the data source's files of other identities. Session facts (temporary
+macros, extensions the session loaded) are kept per console session in memory, never persisted, and
+served only to that session under the identity they were read from. Only a harvest on the console's own
+connection updates them; any other harvest updates only the shared inventory. With `persistenceId`,
+harvests are written under `<system>/brikk-live-catalog/<persistenceId>/`, one file per data source and
+identity; files of deleted data sources are deleted (`LiveCatalogCleanup`), and files not written for
+`maxAge` (90 days) are swept at startup. `legacyFiles` reads an earlier data-source-keyed format, which
+is rewritten under the current identity on first use and then deleted.
+
+When harvests run (`HarvestTrigger`): `ONCE_PER_SESSION` (default: the first connection of an identity
+in an IDE session), `EVERY_CONSOLE_CONNECT` (every console connection, other connections only while no
+live harvest exists), `ON_REFRESH`. The interceptor skips the helper connections refreshes open, so a
+refresh harvests once. `refresh(project, dataSource)` harvests over a helper connection;
+`inventoryChanged(project, session, requestor)` harvests over the session's own connection on its
+engine's thread (after executed statements, see `ExecutionObserver`), else schedules a debounced
+refresh (`RefreshDebouncer`). Every harvest runs on a pooled thread under `deadline` (5 s, also each
+query's timeout); past it the harvest is cancelled and discarded, even if a driver call never returns.
+Cancelling the caller cancels the harvest. Refresh results go to `notificationGroupId` (`onRefreshed`).
+
+Completion: `service.completion(file)` returns a `LiveCompletion` for the file's data source and console
+session; a `SqlCompletionProfile` forwards its hooks to it (`snapshot`, `functions`,
+`serverOnlyFunctions`, `keywords` for `keywordCatalog`, `builtinFunctionFilter`). The bundled snapshot
+is the one for the harvested server version. `LiveMergePolicy`: `REPLACE` (live functions replace the
+bundled registry; live signatures win, names-only ones keep the bundled def; grammar-only entries and
+extension functions not loaded stay), `FILTER_AND_EXTEND` (bundled registry functions the server does
+not list go, unknown listed names are server-only, platform builtin items neither knows are hidden),
+`EXTEND` (bundled stay, unknown listed names are server-only). Session functions are always offered.
+`profile.baseline(snapshot)` is the list merged (default `completableFunctions()`); it must not call
+back into the completion profile's hooks.
+
 Internal API used, by class (the platform offers no public alternative):
 
 | API | Used by | Why | Marketplace |
@@ -273,6 +325,12 @@ classes that a release may change: `prepareOneElementRefreshTask(dataSourceId, e
 top-level function of `IntrospectionTasks.kt`, so no Java shim is needed), `LoaderContext.selectTask`
 (the class itself is not internal; only `selectSkip` is) and the suspending
 `DataSourceSyncManager.tryPerformSync`, the sync entry point that remains in 263.
+
+The live catalog kit uses `DatabaseConnectionInterceptor`, which is `@ApiStatus.Experimental` (the only
+seam that sees every new connection before it is handed over; the Kotlin compiler also emits delegating
+stubs for its deprecated `intercept`, which the plugin verifier reports), and tells consoles from
+other connections by their requestor: a console's engine implements `DataProducer`, and the requestor
+of an observed request (`DataRequest.Context.producer`) is the same object.
 
 ## SQL-domain APIs
 

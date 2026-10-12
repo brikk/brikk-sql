@@ -15,6 +15,9 @@ RecordingConsole(project, file, "my-driver-id").use { recording ->
 }
 ```
 
+`RecordingConsole(project, file, dataSource)` attaches to an existing data source instead, which stays
+when the fixture closes, so several consoles can share one data source.
+
 - `requests`: every request submitted through any of the fixture's sessions, in order.
   An empty list means nothing was sent.
 - `onSubmit`: runs after a request is recorded; throw from it to fail or cancel a submission.

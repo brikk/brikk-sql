@@ -2,6 +2,7 @@ package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
 import com.intellij.database.console.JdbcConsoleProvider
+import com.intellij.database.console.session.DatabaseSession
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.util.TreePatternNode
@@ -90,6 +91,11 @@ public class DialectDataSourceResolver(
         val console = JdbcConsoleProvider.getValidConsole(file.project, hostFile(file))?.takeIf { accepts(it.dataSource.dbms) }
         generateSequence(console?.currentNamespace) { it.parent }.mapNotNull { path -> path.name?.takeIf(String::isNotBlank) }.toList().asReversed()
     }.getOrDefault(emptyList())
+
+    /** The session of the file's valid console of the dbms, if any. */
+    public fun consoleSession(file: PsiFile): DatabaseSession? = recoverEditorOperation {
+        JdbcConsoleProvider.getValidConsole(file.project, hostFile(file))?.takeIf { accepts(it.dataSource.dbms) }?.session
+    }.getOrNull()
 
     private fun hostFile(file: PsiFile): VirtualFile =
         InjectedLanguageManager.getInstance(file.project).getTopLevelFile(file).originalFile.viewProvider.virtualFile
