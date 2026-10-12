@@ -81,6 +81,8 @@ class StatementHeadDetectorTest : TestCase() {
         assertEquals("a savepoint rollback keeps the transaction", listOf(null), begins("ROLLBACK TO SAVEPOINT s"))
         assertEquals("a chained end starts the next transaction", listOf(true, true, true), begins("COMMIT AND CHAIN; rollback work and chain; END AND CHAIN"))
         assertEquals(listOf(false), begins("COMMIT AND NO CHAIN"))
+        assertEquals("two-phase: preparing ends the session's transaction", listOf(false), begins("PREPARE TRANSACTION 'gid'"))
+        assertEquals("finishing a prepared one leaves the session's as it is", listOf(null, null), begins("COMMIT PREPARED 'gid'; ROLLBACK PREPARED 'gid'"))
     }
 
     /** Trino has no BEGIN or END statement: a routine body's END must not end a transaction. */

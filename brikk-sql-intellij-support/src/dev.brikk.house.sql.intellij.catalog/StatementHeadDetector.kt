@@ -156,12 +156,15 @@ public object StatementRules {
     /**
      * Transaction control most engines share: `BEGIN` and `START TRANSACTION` begin; `COMMIT`,
      * `ROLLBACK`, `ABORT` and `END` end; rolling back to a savepoint keeps the transaction, and an end
-     * `AND CHAIN` starts the next one at once.
+     * `AND CHAIN` starts the next one at once. PostgreSQL's `PREPARE TRANSACTION` ends the session's
+     * transaction; `COMMIT PREPARED` and `ROLLBACK PREPARED` finish a prepared one and leave the session's.
      */
     public val TRANSACTIONS: List<StatementRule> = listOf(
         StatementRule("BEGIN [TRANSACTION|WORK]", StatementEffect.Transaction(begins = true)),
         StatementRule("START TRANSACTION", StatementEffect.Transaction(begins = true)),
         StatementRule("ROLLBACK [TRANSACTION|WORK] TO", StatementEffect.Transaction(begins = null)),
+        StatementRule("PREPARE TRANSACTION", StatementEffect.Transaction(begins = false)),
+        StatementRule("COMMIT|ROLLBACK PREPARED", StatementEffect.Transaction(begins = null)),
         StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK] AND CHAIN", StatementEffect.Transaction(begins = true)),
         StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK]", StatementEffect.Transaction(begins = false)),
     )
