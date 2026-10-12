@@ -144,12 +144,15 @@ public abstract class OutOfScopeReferenceFilter(private val service: Class<out A
  * that namespace's children now through the plugin's [AutoIntrospectService.introspect], with its
  * banner, even where automatic introspection is off. Available when the profile's
  * [outOfScopeReferences][CatalogProfile.outOfScopeReferences] is on and the namespace is not being
- * introspected already. Register a no-arg subclass naming the plugin's service class as
- * `intentionAction` for the dialect's language.
+ * introspected already. Register a no-arg subclass naming the plugin's service class and product label
+ * (which names its family in the intention settings) as `intentionAction` for the dialect's language.
  */
 @ApiStatus.Experimental
-public abstract class IntrospectNamespaceIntention(private val service: Class<out AutoIntrospectService>) : PsiElementBaseIntentionAction() {
-    final override fun getFamilyName(): String = "Introspect namespace"
+public abstract class IntrospectNamespaceIntention(
+    private val service: Class<out AutoIntrospectService>,
+    private val productLabel: String,
+) : PsiElementBaseIntentionAction() {
+    final override fun getFamilyName(): String = "$productLabel: introspect namespace"
 
     final override fun startInWriteAction(): Boolean = false
 

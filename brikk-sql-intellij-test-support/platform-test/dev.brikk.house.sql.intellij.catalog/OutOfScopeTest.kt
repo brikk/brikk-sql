@@ -21,7 +21,7 @@ import java.util.UUID
 /** Unresolved references under the fixture model's childless catalogs `hive` and `memory`, from a PostgreSQL file attached to its console. */
 class OutOfScopeTest : AutoIntrospectTestCase() {
     class Filter : OutOfScopeReferenceFilter(Service::class.java)
-    class Intention : IntrospectNamespaceIntention(Service::class.java)
+    class Intention : IntrospectNamespaceIntention(Service::class.java, "Fixture")
 
     private lateinit var recording: RecordingConsole
 
@@ -133,6 +133,10 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         val reports = myFixture.doHighlighting(HighlightSeverity.ERROR).map { it.description }
         assertTrue(reports.toString(), "Server: no table orders" in reports)
         assertEquals("the unresolved report is hidden", listOf("Server: no table orders"), reports)
+    }
+
+    fun testTheIntentionsFamilyNamesItsPlugin() {
+        assertEquals("Fixture: introspect namespace", Intention().familyName)
     }
 
     fun testTheIntentionIntrospectsTheNamespace() {
