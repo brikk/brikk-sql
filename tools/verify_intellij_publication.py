@@ -50,8 +50,9 @@ if __name__ == '__main__':
     parser.add_argument('--core-version', default=development_version(template.read_text()))
     parser.add_argument('--repository', type=Path, default=Path.home() / '.m2/repository')
     args = parser.parse_args()
-    versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-intellij-support': args.version}
+    versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-metadata-jvm': args.core_version,
+                'brikk-sql-intellij-support': args.version}
     verify(args.repository, args.version, 'brikk-sql-intellij-support', 'dev/brikk/house/sql/intellij/',
-           [('dev.brikk.house', 'brikk-sql-jvm'), STDLIB], sources=True, versions=versions)
+           [('dev.brikk.house', 'brikk-sql-jvm'), ('dev.brikk.house', 'brikk-sql-metadata-jvm'), STDLIB], sources=True, versions=versions)
     verify(args.repository, args.version, 'brikk-sql-intellij-test-support', 'dev/brikk/house/sql/intellij/testing/',
            [('dev.brikk.house', 'brikk-sql-intellij-support'), STDLIB], sources=False, versions=versions)

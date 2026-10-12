@@ -15,7 +15,7 @@ settings:
     version: 2.4.10
     # This classpath replaces the toolchain's, so it repeats the module dependencies' outputs.
     freeCompilerArgs:
-      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/artifacts/CompiledJvmArtifact/brikk-sql-intellij-supportjvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output
+      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/artifacts/CompiledJvmArtifact/brikk-sql-intellij-supportjvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-metadatajvm/kotlin-output
       - -Xexplicit-api=strict
   publishing:
     artifactId: brikk-sql-intellij-test-support

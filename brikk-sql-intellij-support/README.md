@@ -2,7 +2,7 @@
 
 An embedded Apache-2.0 JVM library for SQL dialect plugins. The first consumer is
 SQL Dialect for Trino. Each consumer owns its copy through its plugin classloader.
-It registers no extensions itself. It depends on Brikk SQL core (with metadata), has no
+It registers no extensions itself. It depends on Brikk SQL core and metadata, has no
 Kotlin IDE dependency, uses no Brikk (Kotlin-embedded SQL) types, and uses internal
 Database Tools APIs only in packages listed here (none).
 
@@ -90,6 +90,26 @@ Foreign wrappers are traversed through platform `ActionWithDelegate`, never a ca
 to another plugin's private helper copy. Unloading beneath a peer detaches the
 wrapper but may retain its classloader until restart.
 
+## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
+
+A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; optional
+snapshot choice, function list, server-only functions, styles and gates) and registers
+no-arg subclasses:
+
+- `SqlCompletionContributor`: metadata functions, one item per name and kind
+  (`completableFunctions`). Insertion follows the invocation syntax, never arity: a call
+  inserts `()` with the caret inside, or after it when the only overload takes no
+  arguments; an existing `(` is reused; a grammar bare form (`CURRENT_TIMESTAMP`) and a
+  special form (`CAST`) insert only the name.
+- `SqlCompletionConfidence` (`order="first"`): skips the autopopup after a digit-led prefix
+  when the digit gate is on.
+
+`SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
+signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
+a dialect replaces rows with `with`. `SqlFunctionGates` are off by default: the qualifier
+rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
+the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
+
 ## SQL-domain APIs
 
 The accompanying core update adds `SqlScriptSnapshot.parse(text, dialect)` and
@@ -105,9 +125,9 @@ source-preserving renderer has no source map and cannot borrow another rendering
 
 Compile against IDEA 261, with Java 21 bytecode. Linux x64 builds provision a pinned,
 SHA-256-verified IDEA 2026.1.3 SDK, or accept `BRIKK_INTELLIJ_SDK` pointing to a 261
-installation. SDK bytes are compile inputs only. The published POM exposes core (which
-brings metadata) and Kotlin stdlib; IntelliJ consumers should exclude stdlib in favor of
-the platform copy.
+installation. SDK bytes are compile inputs only. The published POM exposes core,
+metadata and Kotlin stdlib; IntelliJ consumers should exclude stdlib in favor of the
+platform copy.
 
 ```sh
 ./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support --transitive
