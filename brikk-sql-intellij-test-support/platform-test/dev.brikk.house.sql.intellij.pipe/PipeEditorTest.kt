@@ -106,6 +106,29 @@ class PipeEditorTest : BasePlatformTestCase() {
         assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "outer_col")
     }
 
+    fun testExpressionParenthesesKeepTheStagesInputColumns() {
+        configure("FROM t |> SELECT a AS my_output |> WHERE coalesce(my_ou<caret>, 0)")
+        myFixture.completeBasic()
+        assertEquals("FROM t |> SELECT a AS my_output |> WHERE coalesce(my_output, 0)", myFixture.editor.document.text)
+    }
+
+    fun testExpressionParenthesesInANestedPipelineKeepItsOwnInputColumns() {
+        configure("FROM t |> SELECT a AS outer_col |> WHERE x IN (FROM u |> SELECT b AS inner_col |> WHERE coalesce(<caret>, 0))")
+        myFixture.completeBasic()
+        val items = myFixture.lookupElementStrings.orEmpty()
+        assertContainsElements(items, "inner_col")
+        assertDoesntContain(items, "outer_col")
+    }
+
+    fun testASubqueryInAStageSeparatesItsColumnsFromTheStages() {
+        configure("FROM t |> SELECT a AS outer_col |> WHERE (x IN (SELECT b FROM u) AND <caret>)")
+        myFixture.completeBasic()
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), "outer_col")
+        configure("FROM t |> SELECT a AS outer_col |> WHERE (x IN (SELECT coalesce(<caret>)))")
+        myFixture.completeBasic()
+        assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "outer_col")
+    }
+
     fun testStageHeadsHideOtherItemsByDefault() {
         configure("FROM t |> <caret>")
         myFixture.completeBasic()

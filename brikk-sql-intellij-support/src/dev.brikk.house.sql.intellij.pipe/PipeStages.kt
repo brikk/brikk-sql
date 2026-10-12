@@ -95,29 +95,32 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
     }
 
     /**
-     * The innermost bracketed or top-level pipeline at the end of [text], if a `|>` starts its
-     * current stage. The stage's typed text starts at its first token, so comments after `|>` stay.
+     * The current stage of the innermost pipeline at the end of [text], if a `|>` starts it. A
+     * pipeline is the top level or a bracket that holds a query or a `|>`; other brackets are
+     * expressions within the enclosing pipeline's stage. The stage's typed text starts at its
+     * first token, so comments after `|>` stay.
      */
     private fun currentStage(text: String): Stage? {
         val lexed = Tokenizer(TokenizerConfigs.forName(dialect.dialect)).tokenizeForEditor(text)
         // The text ends at the caret, so a lexical failure means the caret is inside an unterminated construct.
         if (lexed.failureOffset != null) return null
-        val tokens = lexed.tokens
-        val pipelines = ArrayDeque(listOf(Pipeline(0)))
-        for (token in tokens) {
-            pipelines.last().let { if (it.pipe != null && it.typedStart == null && token.tokenType != TokenType.PIPE_GT) it.typedStart = token.start }
+        val brackets = ArrayDeque(listOf(Bracket(0, pipeline = true)))
+        for (token in lexed.tokens) {
+            brackets.last().let { if (it.first) { it.first = false; if (token.tokenType in QUERY_HEADS) it.pipeline = true } }
+            brackets.last { it.pipeline }.let { if (it.pipe != null && it.typedStart == null && token.tokenType != TokenType.PIPE_GT) it.typedStart = token.start }
             when (token.tokenType) {
-                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> pipelines.addLast(Pipeline(token.end + 1))
-                TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> if (pipelines.size > 1) pipelines.removeLast()
-                TokenType.PIPE_GT -> pipelines.last().apply { pipe = token.start; typedStart = null }
+                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> brackets.addLast(Bracket(token.end + 1, pipeline = false))
+                TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> if (brackets.size > 1) brackets.removeLast()
+                TokenType.PIPE_GT -> brackets.last().apply { pipeline = true; pipe = token.start; typedStart = null }
                 else -> {}
             }
         }
-        val pipeline = pipelines.last()
+        val pipeline = brackets.last { it.pipeline }
         return pipeline.pipe?.let { Stage(pipeline.start, it, pipeline.typedStart ?: text.length) }
     }
 
-    private class Pipeline(val start: Int) {
+    private class Bracket(val start: Int, var pipeline: Boolean) {
+        var first = true
         var pipe: Int? = null
         var typedStart: Int? = null
     }
@@ -173,5 +176,6 @@ private fun List<Token>.leading(phrase: List<String>): List<Token>? {
     return null
 }
 
+private val QUERY_HEADS = setOf(TokenType.SELECT, TokenType.FROM, TokenType.WITH, TokenType.VALUES)
 private val GENERATED_NAME = Regex("_col_\\d+")
 private val WHITESPACE = Regex("\\s+")
