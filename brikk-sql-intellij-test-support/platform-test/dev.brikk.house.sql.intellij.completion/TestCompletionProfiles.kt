@@ -10,15 +10,30 @@ import com.intellij.lang.Language
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiFile
+import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.psi.SqlLanguage
+import com.intellij.testFramework.LightVirtualFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.testFramework.fixtures.CodeInsightTestFixture
 import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.TRINO_METADATA
 import java.util.UUID
+
+/**
+ * Opens [text] in a file of the SQL dialect [dialect]. The file carries its language itself:
+ * 263 no longer applies dialect mappings to light test files.
+ */
+fun CodeInsightTestFixture.configureDialect(dialect: String, text: String) {
+    val language = Language.findLanguageByID(dialect) as SqlLanguageDialect
+    configureFromExistingVirtualFile(LightVirtualFile("dialect-${UUID.randomUUID()}.sql", language, text.replace("<caret>", "")))
+    editor.caretModel.moveToOffset(text.indexOf("<caret>"))
+    check(file.language == language) { "${file.language} is not $dialect" }
+}
 
 /** A profile over real metadata whose settings each test chooses. */
 class TestCompletionProfile(override val metadata: DialectMetadata) : SqlCompletionProfile {
@@ -59,7 +74,7 @@ abstract class CompletionTestCase : BasePlatformTestCase() {
         val settings = CodeInsightSettings.getInstance()
         val autocomplete = settings.AUTOCOMPLETE_ON_CODE_COMPLETION
         settings.AUTOCOMPLETE_ON_CODE_COMPLETION = false
-        com.intellij.openapi.util.Disposer.register(testRootDisposable) { settings.AUTOCOMPLETE_ON_CODE_COMPLETION = autocomplete }
+        Disposer.register(testRootDisposable) { settings.AUTOCOMPLETE_ON_CODE_COMPLETION = autocomplete }
     }
 
     protected fun configure(text: String, contributor: Class<out CompletionContributor>) {

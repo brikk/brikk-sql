@@ -1,27 +1,18 @@
 package dev.brikk.house.sql.intellij.psi
 
 import com.intellij.database.Dbms
-import com.intellij.lang.Language
-import com.intellij.openapi.util.Disposer
 import com.intellij.psi.PsiElement
-import com.intellij.sql.dialects.SqlDialectMappings
-import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.psi.SqlWhereClause
 import com.intellij.sql.psi.impl.SqlResolveExtension
-import com.intellij.testFramework.IndexingTestUtil
+import dev.brikk.house.sql.intellij.completion.configureDialect
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
-import java.util.UUID
 import kotlin.reflect.KClass
 
 class SelectAliasResolveExtensionTest : BasePlatformTestCase() {
     /** Completion items in a PostgreSQL file, whose platform rules hide SELECT aliases from HAVING and WHERE. */
     private fun offered(text: String, extension: SqlResolveExtension?): List<String> {
         extension?.let { SqlResolveExtension.EP_NAME.point.registerExtension(it, testRootDisposable) }
-        val file = myFixture.configureByText("alias-${UUID.randomUUID()}.sql", text).virtualFile
-        val mappings = SqlDialectMappings.getInstance(project)
-        mappings.setMapping(file, Language.findLanguageByID("PostgreSQL") as SqlLanguageDialect)
-        Disposer.register(testRootDisposable) { mappings.setMapping(file, null) }
-        IndexingTestUtil.waitUntilIndexesAreReady(project)
+        myFixture.configureDialect("PostgreSQL", text)
         myFixture.completeBasic()
         return myFixture.lookupElementStrings.orEmpty()
     }

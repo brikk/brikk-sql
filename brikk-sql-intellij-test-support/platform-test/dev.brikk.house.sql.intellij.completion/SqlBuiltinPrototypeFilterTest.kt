@@ -4,14 +4,9 @@ import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.lang.Language
 import com.intellij.openapi.extensions.LoadingOrder
-import com.intellij.openapi.util.Disposer
 import com.intellij.sql.dialects.BuiltinFunction
-import com.intellij.sql.dialects.SqlDialectMappings
-import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.psi.SqlLanguage
-import java.util.UUID
 
 class DuckdbBuiltinFilter : SqlBuiltinPrototypeFilter(duckdbProfile)
 
@@ -27,11 +22,7 @@ class SqlBuiltinPrototypeFilterTest : CompletionTestCase() {
     /** Builtin items the PostgreSQL base dialect offers for `pg_sl`, and every item's name. */
     private fun offered(filter: ((String) -> Boolean)?): Pair<List<String>, List<String>> {
         duckdbProfile.builtinFilter = filter
-        val file = myFixture.configureByText("builtins-${UUID.randomUUID()}.sql", "SELECT pg_sl<caret>").virtualFile
-        val mappings = SqlDialectMappings.getInstance(project)
-        val postgres = Language.findLanguageByID("PostgreSQL") as SqlLanguageDialect
-        mappings.setMapping(file, postgres)
-        Disposer.register(testRootDisposable) { mappings.setMapping(file, null) }
+        myFixture.configureDialect("PostgreSQL", "SELECT pg_sl<caret>")
         register(DuckdbBuiltinFilter::class.java, LoadingOrder.FIRST, SqlLanguage.INSTANCE.id)
         register(SameNamedColumnCompletion::class.java, LoadingOrder.LAST, SqlLanguage.INSTANCE.id)
         val items = complete()
