@@ -13,6 +13,7 @@ object CatalogTestDbms {
     @JvmField val FACADE: Dbms = create("BRIKK_TEST_FACADE")
     @JvmField val CATALOG_FACADE: Dbms = create("BRIKK_TEST_CATALOG_FACADE")
     @JvmField val GATED: Dbms = create("BRIKK_TEST_GATED")
+    @JvmField val GATED_BASE: Dbms = create("BRIKK_TEST_GATED_BASE")
     @JvmField val AUDITED: Dbms = create("BRIKK_TEST_AUDITED")
     @JvmField val AUDITED_BASE: Dbms = create("BRIKK_TEST_AUDITED_BASE")
 

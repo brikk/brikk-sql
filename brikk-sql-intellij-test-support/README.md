@@ -65,9 +65,10 @@ mapping is cleared when that disposable ends.
 
 ## Catalog contracts
 
-`assertIntrospectorRoutesToGeneric(dbms)` fails unless the dbms's introspector factory is a
-`GenericJdbcIntrospectorGate` registered for that exact dbms and the platform refuses native
-introspection at server majors around PostgreSQL's threshold and Trino's (0 to 10000).
+`assertIntrospectorRoutesToGeneric(dbms)` fails unless an introspector is registered for the dbms
+itself (not inherited through a fallback), the dbms resolves to a `GenericJdbcIntrospectorGate`, and
+the platform refuses native introspection at server majors around PostgreSQL's threshold and Trino's
+(0 to 10000), through the data-source overload too where the IDE has it (262 on).
 
 `assertFallbackExtensionsAudited(dbms, allowed)` fails unless every dbms-keyed Database Tools
 extension the dbms inherits through its `extensionFallback` chain is registered for the dbms itself
