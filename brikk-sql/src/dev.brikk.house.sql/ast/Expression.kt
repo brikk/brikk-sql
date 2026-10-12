@@ -643,7 +643,17 @@ abstract class Connector(initArgs: Args = emptyMap()) : Binary(initArgs)
 // (instantiable, though never instantiated directly by the parser).
 open class Unary(initArgs: Args = emptyMap()) : Expression(initArgs), Condition
 
-/** The exact source text of a node, valid only while the node still equals [shape]. */
+/** The exact source text of a node, valid only while the node is exactly, case included, [shape]. */
 internal class AuthoredSyntax(val text: String, val shape: Expression) {
-    fun textFor(node: Expression): String? = text.takeIf { node == shape }
+    fun textFor(node: Expression): String? = text.takeIf { exactlyEqual(node, shape) }
+
+    // Unlike ==, which normalizes unquoted identifier case, every value must match as written.
+    private fun exactlyEqual(left: kotlin.Any?, right: kotlin.Any?): kotlin.Boolean = when {
+        left is Expression && right is Expression -> left::class == right::class &&
+            left.args.filterValues { it != null }.let { args ->
+                args.keys == right.args.filterValues { it != null }.keys && args.all { (key, value) -> exactlyEqual(value, right.args[key]) }
+            }
+        left is List<*> && right is List<*> -> left.size == right.size && left.indices.all { exactlyEqual(left[it], right[it]) }
+        else -> left == right
+    }
 }

@@ -3,6 +3,8 @@ package dev.brikk.house.sql.shape
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Placeholder
+import dev.brikk.house.sql.ast.Var
+import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.dialects.Dialects
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -90,6 +92,11 @@ class ClickhouseTypedParametersTest {
         val placeholder = assertIs<Placeholder>(tree.find(Placeholder::class))
         placeholder.set("kind", DataType.build(DType.TEXT))
         assertEquals("SELECT {a: Nullable(String)}", dialect.generate(tree))
+
+        val renamed = dialect.parseOne("SELECT {a:UInt32}")
+        assertEquals("SELECT {a:UInt32}", dialect.generate(renamed))
+        assertIs<Placeholder>(renamed.find(Placeholder::class)).set("this", Var(args("this" to "A")))
+        assertEquals("SELECT {A: UInt32}", dialect.generate(renamed))
     }
 
     @Test
