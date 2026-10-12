@@ -2,12 +2,12 @@ package dev.brikk.house.sql.intellij.parser
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.parser.GeneratedParserUtilBase
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.psi.tree.IElementType
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlTokens
-import dev.brikk.house.sql.parser.SqlScriptSnapshot
+import dev.brikk.house.sql.intellij.lexer.CoreStatements
 import dev.brikk.house.sql.parser.SqlStatementRange
-import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
@@ -16,14 +16,13 @@ import org.jetbrains.annotations.ApiStatus
 /**
  * Keeps a parser's top-level statements to the [coreDialect]'s script ranges where the grammar's
  * boundaries are clearly wrong, so a grammar that lacks a clause never splits a statement in two
- * and raw data never joins two. Hold one per parser instance: it caches what core read of the
- * text being parsed.
+ * and raw data never joins two. Hold one per parser instance. Core's ranges are read lazily,
+ * shared with the lexer's pass over the same text.
  */
 @ApiStatus.Experimental
 public class StatementBoundaryGate(private val coreDialect: String) {
     private var text: CharSequence? = null
-    private var ranges: List<SqlStatementRange> = emptyList()
-    private var tokens: List<Token>? = null
+    private var statements: CoreStatements? = null
 
     /**
      * Runs [parse] on the statement at [builder]. When the statement starts a core range without a
@@ -66,11 +65,12 @@ public class StatementBoundaryGate(private val coreDialect: String) {
 
     /** Whether core reads [range] as one construct across [offset]: inside brackets, or no core token starts there. */
     private fun continuesAt(source: CharSequence, range: SqlStatementRange, offset: Int): Boolean {
-        val all = tokens ?: Tokenizer(TokenizerConfigs.forName(coreDialect)).tokenizeForEditor(source.toString()).tokens.also { tokens = it }
+        val tokens = Tokenizer(TokenizerConfigs.forName(coreDialect))
+            .tokenizeForEditor(source.subSequence(range.start, range.end).toString(), ProgressManager::checkCanceled).tokens
+        val at = offset - range.start
         var depth = 0
-        for (token in all) {
-            if (token.start < range.start) continue
-            if (token.start >= offset) return depth > 0 || token.start > offset
+        for (token in tokens) {
+            if (token.start >= at) return depth > 0 || token.start > at
             when (token.tokenType) {
                 TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> depth++
                 TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> depth--
@@ -82,13 +82,9 @@ public class StatementBoundaryGate(private val coreDialect: String) {
 
     private fun rangeAt(builder: PsiBuilder): SqlStatementRange? {
         val source = builder.originalText
-        if (text !== source) {
-            text = source
-            ranges = SqlScriptSnapshot.parse(source.toString(), coreDialect).statements
-            tokens = null
-        }
-        val offset = builder.currentOffset
-        return ranges.binarySearch { if (it.end <= offset) -1 else if (it.start > offset) 1 else 0 }.let(ranges::getOrNull)
+        val known = statements?.takeIf { text === source }
+            ?: CoreStatements.of(source, source.length, coreDialect).also { text = source; statements = it }
+        return known.rangeAt(builder.currentOffset)
     }
 }
 

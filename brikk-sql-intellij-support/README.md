@@ -160,7 +160,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   cut before it, and the base restarts there, so it reads the `;` as a separator rather than data). States are 0 at statement starts and 1 elsewhere:
   non-negative, whatever the base reports, and the highlighter restarts and resynchronizes only at
   statement starts. Core ranges are read a window at a time, so relexing an edit costs about its
-  statement. `CHouseFamilyParserDefinition` lexes this way; a `MaskingSqlLexer` may be its base.
+  statement, and a pass from the start of a text shares them with `StatementBoundaryGate`'s parse of
+  the same text. `CHouseFamilyParserDefinition` lexes this way; a `MaskingSqlLexer` may be its base.
 - `LenientSqlParsing` (`parser`): `PsiBuilder` extensions that never consume, scanning the
   statement to its `;` within `MAX_LOOKAHEAD` tokens: `wordAt`, `containsAny`, `firstOf`,
   `wordThenWord` (next word), `wordThenToken` (exact next token) and the general
