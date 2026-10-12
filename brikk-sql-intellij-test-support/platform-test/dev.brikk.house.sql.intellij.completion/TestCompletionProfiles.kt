@@ -95,11 +95,11 @@ abstract class CompletionTestCase : BasePlatformTestCase() {
     protected fun functionItems(invocationCount: Int = 1): List<FunctionPresentation> =
         complete(invocationCount).mapNotNull { it.`object` as? FunctionPresentation }
 
-    /** Completes and accepts the item whose lookup object is [identity]. */
-    protected fun accept(identity: Any) {
+    /** Completes and accepts, with [char], the item whose lookup object is [identity]. */
+    protected fun accept(identity: Any, char: Char = Lookup.NORMAL_SELECT_CHAR) {
         val item = complete().singleOrNull { it.`object` == identity } ?: error("$identity not offered")
         myFixture.lookup.currentItem = item
-        myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR)
+        myFixture.finishLookup(char)
     }
 
     protected fun resultWithCaret(): String {

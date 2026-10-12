@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.completion
 
+import com.intellij.codeInsight.lookup.Lookup
 import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.FunctionKind
@@ -36,19 +37,22 @@ class SqlFunctionCompletionTest : CompletionTestCase() {
 
     private fun duckdbEntry(predicate: (FunctionPresentation) -> Boolean) = duckdb.first(predicate)
 
-    private fun insertion(entry: FunctionPresentation, before: String = "", after: String = ""): String {
-        configure("SELECT $before${entry.name}<caret>$after", DuckdbCompletion::class.java)
-        accept(entry)
+    private fun insertion(entry: FunctionPresentation, after: String = "", char: Char = Lookup.NORMAL_SELECT_CHAR): String {
+        configure("SELECT ${entry.name}<caret>$after", DuckdbCompletion::class.java)
+        accept(entry, char)
         return resultWithCaret()
     }
 
+    private val abs get() = duckdbEntry { it.name == "abs" && it.kind == FunctionKind.SCALAR }
+    private val niladic get() = duckdbEntry { it.syntaxes == setOf(CALL) && it.overloadCount == 1 && it.signature == "" }
+    private val bareOrCall get() = duckdbEntry { it.syntaxes == setOf(BARE, CALL) }
+    private val special get() = duckdbEntry { it.syntaxes == setOf(SPECIAL_FORM) }
+
     fun testACallWithArgumentsPutsTheCaretInsideNewParentheses() {
-        val abs = duckdbEntry { it.name == "abs" && it.kind == FunctionKind.SCALAR }
         assertEquals("SELECT abs(<caret>)", insertion(abs))
     }
 
     fun testAZeroArgumentRegisteredFunctionIsStillACall() {
-        val niladic = duckdbEntry { it.syntaxes == setOf(CALL) && it.overloadCount == 1 && it.signature == "" }
         assertEquals("SELECT ${niladic.name}()<caret>", insertion(niladic))
     }
 
@@ -58,18 +62,24 @@ class SqlFunctionCompletionTest : CompletionTestCase() {
     }
 
     fun testANameAcceptedBareAndCalledInsertsTheBareForm() {
-        val both = duckdbEntry { it.syntaxes == setOf(BARE, CALL) }
-        assertEquals("SELECT ${both.name}<caret>", insertion(both))
+        assertEquals("SELECT ${bareOrCall.name}<caret>", insertion(bareOrCall))
     }
 
     fun testASpecialFormInsertsOnlyTheName() {
-        val special = duckdbEntry { it.syntaxes == setOf(SPECIAL_FORM) }
         assertEquals("SELECT ${special.name}<caret>", insertion(special))
     }
 
-    fun testAnExistingParenthesisIsReused() {
-        val abs = duckdbEntry { it.name == "abs" && it.kind == FunctionKind.SCALAR }
+    fun testAnExistingParenthesisIsReusedWhateverTheForm() {
         assertEquals("SELECT abs(<caret>-1)", insertion(abs, after = "(-1)"))
+        assertEquals("SELECT ${niladic.name}(<caret>)", insertion(niladic, after = "()"))
+        assertEquals("SELECT ${bareOrCall.name}(<caret>)", insertion(bareOrCall, after = "()"))
+        assertEquals("SELECT ${special.name}(<caret>x)", insertion(special, after = "(x)"))
+    }
+
+    fun testTypingAParenthesisToAcceptInsertsOnePair() {
+        assertEquals("SELECT abs(<caret>)", insertion(abs, char = '('))
+        assertEquals("SELECT ${special.name}(<caret>)", insertion(special, char = '('))
+        assertEquals("SELECT abs(<caret>-1)", insertion(abs, after = "(-1)", char = '('))
     }
 
     fun testANameUnderTwoKindsIsOfferedOncePerKind() {

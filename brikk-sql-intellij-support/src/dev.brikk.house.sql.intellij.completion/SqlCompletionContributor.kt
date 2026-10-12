@@ -166,30 +166,33 @@ private val FunctionPresentation.lookupKind: SqlLookupKind
         FunctionKind.SCALAR -> if (nativeKind == "macro") SqlLookupKind.MACRO else SqlLookupKind.FUNCTION
     }
 
-/** Bare where the grammar accepts the bare name, a call where it accepts one, otherwise (a special form) only the name. */
+/** Names written with parentheses, as a call or a special form, get them; a bare-only name stays bare. */
 private val FunctionPresentation.insertHandler: InsertHandler<LookupElement>?
-    get() = when {
-        InvocationSyntax.BARE in syntaxes -> null
-        InvocationSyntax.CALL in syntaxes -> if (overloadCount == 1 && signature == "") CallParentheses.NO_ARGUMENTS else CallParentheses.ARGUMENTS
-        else -> null
+    get() = if (InvocationSyntax.CALL in syntaxes || InvocationSyntax.SPECIAL_FORM in syntaxes) {
+        Parentheses(insertsByDefault = InvocationSyntax.BARE !in syntaxes && InvocationSyntax.CALL in syntaxes, argumentless = overloadCount == 1 && signature == "")
+    } else {
+        null
     }
 
-/** Inserts `()` after the name, the caret inside unless the only overload takes no arguments; an existing `(` is reused. */
-private enum class CallParentheses(private val caretInside: Boolean) : InsertHandler<LookupElement> {
-    ARGUMENTS(true),
-    NO_ARGUMENTS(false),
-    ;
-
+/**
+ * An existing `(` after the name is reused, with the caret inside it. Otherwise `()` is inserted
+ * for a call that is not also accepted bare, or when `(` was typed to accept the item; the caret
+ * goes inside, or after `()` when the only overload takes no arguments.
+ */
+private class Parentheses(private val insertsByDefault: Boolean, private val argumentless: Boolean) : InsertHandler<LookupElement> {
     override fun handleInsert(context: InsertionContext, item: LookupElement) {
-        if (context.completionChar == '(') context.setAddCompletionChar(false)
-        val tail = context.tailOffset
         val document = context.document
-        val caret = if (tail < document.textLength && document.charsSequence[tail] == '(') {
-            tail + 1
-        } else {
-            document.insertString(tail, "()")
-            if (caretInside) tail + 1 else tail + 2
+        val tail = context.tailOffset
+        val typed = context.completionChar == '('
+        val caret = when {
+            tail < document.textLength && document.charsSequence[tail] == '(' -> tail + 1
+            typed || insertsByDefault -> {
+                document.insertString(tail, "()")
+                if (argumentless) tail + 2 else tail + 1
+            }
+            else -> return
         }
+        if (typed) context.setAddCompletionChar(false)
         context.editor.caretModel.moveToOffset(caret)
     }
 }

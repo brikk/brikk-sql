@@ -105,10 +105,12 @@ snapshot choice, function list, server-only functions, styles and gates) and reg
 no-arg subclasses:
 
 - `SqlCompletionContributor` (`order="first"`): metadata functions, one item per name and kind
-  (`completableFunctions`). Insertion follows the invocation syntax, never arity: a call
-  inserts `()` with the caret inside, or after it when the only overload takes no
-  arguments; an existing `(` is reused; a grammar bare form (`CURRENT_TIMESTAMP`) and a
-  special form (`CAST`) insert only the name. Keywords from the snapshot's
+  (`completableFunctions`). Whether parentheses are inserted comes from the invocation
+  syntax, not from the overloads: a call inserts `()`, while a grammar bare form
+  (`CURRENT_TIMESTAMP`, also when a call is accepted) and a special form (`CAST`) insert only
+  the name. A name written with parentheses reuses an existing `(`, with the caret inside,
+  and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
+  overloads: it goes after `()` when the only overload takes no arguments. Keywords from the snapshot's
   `KeywordCatalog`, all or only reserved ones (`KeywordScope`), except those a later
   contributor already offers. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
