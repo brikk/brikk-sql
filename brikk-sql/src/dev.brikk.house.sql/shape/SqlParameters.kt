@@ -142,11 +142,12 @@ data class SqlScriptParameters(
                         if (syntax) innermost?.colonSeen = true
                         val name = tokens.getOrNull(index + 1)
                         if (!syntax && name != null && name.start == token.end + 1 && text.getOrNull(token.start - 1) != ':') {
-                            val spelled = text.substring(name.start, name.end + 1)
-                            if (PARAMETER_NAME.matches(spelled)) {
+                            val spelled = boundName(text.substring(name.start, name.end + 1))
+                            if (spelled != null) {
+                                val nameEnd = name.start + spelled.length
                                 binds += ParameterOccurrence(spelled, ParamStyle.NAMED_COLON,
-                                    SyntacticRange(token.start, name.end + 1), SyntacticRange(name.start, name.end + 1))
-                                bindNameEnd = name.end
+                                    SyntacticRange(token.start, nameEnd), SyntacticRange(name.start, nameEnd))
+                                bindNameEnd = nameEnd - 1
                             }
                         }
                     }
@@ -154,6 +155,12 @@ data class SqlScriptParameters(
                 }
             }
             return binds
+        }
+
+        // A fused multiword keyword (`double precision`) binds only its first word.
+        private fun boundName(spelled: String): String? {
+            val word = PARAMETER_NAME.matchAt(spelled, 0)?.value ?: return null
+            return word.takeIf { it.length == spelled.length || spelled[it.length].isWhitespace() }
         }
 
         private val PARAMETER_NAME = Regex("[A-Za-z_][A-Za-z0-9_]*")

@@ -98,6 +98,15 @@ class SqlScriptParametersTest {
     }
 
     @Test
+    fun fusedMultiwordKeywordsBindTheirFirstWord() {
+        val sql = "SELECT :double precision, :Character\n  Varying, :p"
+        val binds = SqlScriptParameters.parse(sql, "doris").occurrences
+        assertEquals(listOf("double", "Character", "p"), binds.map { it.name })
+        assertEquals(listOf(":double", ":Character", ":p"), binds.map { sql.substring(it.range.start, it.range.end) })
+        assertEquals(listOf("double", "Character", "p"), binds.map { range -> range.nameRange!!.let { sql.substring(it.start, it.end) } })
+    }
+
+    @Test
     fun offsetsAreUtf16() {
         val sql = "SELECT '\ud83d\ude00', :first;\r\nSELECT `\ud83d\ude00;`, :second"
         val ranges = SqlScriptParameters.parse(sql, "doris").occurrences.map { sql.substring(it.range.start, it.range.end) }
