@@ -30,10 +30,11 @@ no internal-API annotation.
   three-state nullability, source alias and origin label. Same-named columns from
   different aliases retain distinct lookup identities. Consumers provide copied
   facts, so the helper acquires no Kotlin IDE or engine dependency. Experimental additions
-  take `SqlColumnFacts`: `create(column, style)` with the style's icon and priority,
+  take `SqlColumnFacts`, whose name and opaque `source` are a column's identity (the alias is
+  only shown): `create(column, style)` with the style's icon and priority,
   `decorate(candidate, column)` keeping the candidate's icon and insertion, `pipeInput` for
-  PIPE stage input columns, and `createOrDecorate`, which decorates other contributors'
-  items matched to a visible column and creates the columns no item matched.
+  PIPE stage input columns, and `createOrDecorate`, which decorates the first of other
+  contributors' items matched to each visible column and creates the columns no item matched.
 - `ToggleSettings` and `ToggleConfigurable`: a persisted project switch that reparses
   its language's files, and its settings page with a `-D<property>=false` veto.
 - `notifyEscaped`: plain-text notifications. `FileBanner` and `FileBannerProvider`:

@@ -13,7 +13,9 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * What a column completion item shows: its type, three-state [nullable] (null when it cannot
- * be proved), the alias of the relation supplying it and where the facts come from.
+ * be proved), the alias of the relation supplying it and where the facts come from. [source]
+ * identifies the supplying relation, opaquely and by equality; with [name] it is the column's
+ * identity for matching, deduplication and the lookup object. The alias is only shown.
  */
 @ApiStatus.Experimental
 public data class SqlColumnFacts(
@@ -22,6 +24,7 @@ public data class SqlColumnFacts(
     val nullable: Boolean?,
     val relationAlias: String? = null,
     val originLabel: String = "brikk column",
+    val source: Any? = null,
 ) {
     internal val typeText: String
         get() = (typeName ?: "unknown type") + when (nullable) {
@@ -31,13 +34,12 @@ public data class SqlColumnFacts(
         }
 
     internal val tailText: String
-        get() = "  $originLabel" + alias?.let { " ($it)" }.orEmpty()
+        get() = "  $originLabel" + relationAlias?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
 
-    // Different relations may supply the same column name; the alias keeps both lookup identities.
-    internal val identity: Pair<String, String> get() = name to alias.orEmpty()
-
-    private val alias: String? get() = relationAlias?.takeIf { it.isNotBlank() }
+    internal val identity: ColumnIdentity get() = ColumnIdentity(name, source)
 }
+
+internal data class ColumnIdentity(val name: String, val source: Any?)
 
 /** Shared column presentation. Consumers supply semantic facts; no Kotlin IDE types are required. */
 public object SqlColumnCompletion {
@@ -49,7 +51,11 @@ public object SqlColumnCompletion {
         relationAlias: String? = null,
         originLabel: String = "brikk column",
         priority: Double = 120.0,
-    ): LookupElement = create(SqlColumnFacts(name, typeName, nullable, relationAlias, originLabel), SqlLookupStyle(priority = priority))
+    ): LookupElement {
+        // Different relations may supply the same column name; here only the alias tells them apart.
+        val source = relationAlias?.takeIf { it.isNotBlank() }
+        return create(SqlColumnFacts(name, typeName, nullable, relationAlias, originLabel, source), SqlLookupStyle(priority = priority))
+    }
 
     /** A new item for [column]; the facts give its type and tail text, [style] the rest. */
     @ApiStatus.Experimental
@@ -68,20 +74,25 @@ public object SqlColumnCompletion {
             }
         }
 
-    /** A column of a PIPE stage's input; without a known [typeName] the style's type text shows. */
+    /**
+     * A column of a PIPE stage's input, from the relation [source] identifies (see
+     * [SqlColumnFacts.source]); without a known [typeName] the style's type text shows.
+     */
     @ApiStatus.Experimental
     public fun pipeInput(
         name: String,
         typeName: String? = null,
         style: SqlLookupStyle = SqlLookupStyles.DEFAULT[SqlLookupKind.PIPE_INPUT_COLUMN],
-    ): LookupElement = style.lookup(name, typeName ?: style.typeText)
+        source: Any? = null,
+    ): LookupElement = style.lookup(ColumnIdentity(name, source), name, typeName ?: style.typeText)
 
     /**
-     * Offers [columns], the columns visible at the caret, once each: other contributors' items that
-     * [match] maps to one of them are decorated, and the columns no item matched are created in
-     * [style]. [match] identifies a candidate by its semantic column and source, so same-named
-     * columns of different relations stay distinct. Call it from a contributor registered with
-     * `order="first"`, since it runs the remaining contributors.
+     * Offers [columns], the columns visible at the caret, once per identity: the first of other
+     * contributors' items that [match] maps to a visible column is decorated and further ones are
+     * dropped; the columns no item matched are created in [style]. [match] identifies a candidate
+     * by its semantic column and source, so same-named columns of different relations stay
+     * distinct. Call it from a contributor registered with `order="first"`, since it runs the
+     * remaining contributors.
      */
     @ApiStatus.Experimental
     public fun createOrDecorate(
@@ -91,17 +102,15 @@ public object SqlColumnCompletion {
         style: SqlLookupStyle = SqlLookupStyles.DEFAULT[SqlLookupKind.BRIKK_COLUMN],
         match: (LookupElement) -> SqlColumnFacts?,
     ) {
-        val visible = columns.toSet()
-        val decorated = HashSet<SqlColumnFacts>()
+        val visible = LinkedHashMap<ColumnIdentity, SqlColumnFacts>().apply { for (column in columns) putIfAbsent(column.identity, column) }
+        val offered = HashSet<ColumnIdentity>()
         result.runRemainingContributors(parameters) { completion ->
-            val column = match(completion.lookupElement)?.takeIf { it in visible }
-            if (column == null) {
-                result.passResult(completion)
-            } else {
-                decorated += column
-                result.passResult(completion.withLookupElement(decorate(completion.lookupElement, column)))
+            val column = match(completion.lookupElement)?.let { visible[it.identity] }
+            when {
+                column == null -> result.passResult(completion)
+                offered.add(column.identity) -> result.passResult(completion.withLookupElement(decorate(completion.lookupElement, column)))
             }
         }
-        for (column in visible) if (column !in decorated) result.addElement(create(column, style))
+        for ((identity, column) in visible) if (offered.add(identity)) result.addElement(create(column, style))
     }
 }

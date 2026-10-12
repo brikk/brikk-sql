@@ -31,15 +31,15 @@ class BrikkColumnDecoration : CompletionContributor() {
     override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         SqlColumnCompletion.createOrDecorate(parameters, result, brikkColumns) { candidate ->
             (candidate.`object` as? PlatformColumn)?.let { platform ->
-                brikkColumns.singleOrNull { it.name == platform.name && it.relationAlias == platform.source }
+                brikkColumns.firstOrNull { it.name == platform.name && it.source == platform.source }
             }
         }
     }
 }
 
 class SqlColumnCompletionTest : BasePlatformTestCase() {
-    private val idOfA = SqlColumnFacts("id", "Long", false, "a")
-    private val idOfB = SqlColumnFacts("id", "String", null, "b")
+    private val idOfA = SqlColumnFacts("id", "Long", false, "a", source = "a")
+    private val idOfB = SqlColumnFacts("id", "String", null, "b", source = "b")
 
     private fun complete(platform: List<PlatformColumn>, brikk: List<SqlColumnFacts>): List<LookupElement> {
         platformColumns = platform
@@ -91,5 +91,26 @@ class SqlColumnCompletionTest : BasePlatformTestCase() {
         val style = SqlLookupStyle(typeText = "input")
         assertEquals("input", render(SqlColumnCompletion.pipeInput("c", style = style)).typeText)
         assertEquals("BIGINT", render(SqlColumnCompletion.pipeInput("c", "BIGINT", style)).typeText)
+    }
+
+    fun testSeveralCandidatesForOneColumnYieldOneItem() {
+        val items = complete(listOf(PlatformColumn("id", "a"), PlatformColumn("id", "a")), listOf(idOfA))
+        assertEquals(1, items.count { it.lookupString == "id" })
+    }
+
+    fun testUnaliasedRelationsKeepTheirSameNamedColumnsApart() {
+        val first = SqlColumnFacts("id", "Long", false, source = "first relation")
+        val second = first.copy(source = "second relation")
+        assertEquals(2, complete(emptyList(), listOf(first, second)).count { it.lookupString == "id" })
+        val decorated = complete(listOf(PlatformColumn("id", "first relation"), PlatformColumn("id", "second relation")), listOf(first, second))
+        assertEquals(2, decorated.count { it.lookupString == "id" })
+    }
+
+    fun testPipeInputColumnsOfDifferentSourcesStayDistinct() {
+        val style = SqlLookupStyle()
+        val left = SqlColumnCompletion.pipeInput("id", style = style, source = "left")
+        val right = SqlColumnCompletion.pipeInput("id", style = style, source = "right")
+        assertFalse(left.`object` == right.`object`)
+        assertEquals(left.`object`, SqlColumnCompletion.pipeInput("id", style = style, source = "left").`object`)
     }
 }
