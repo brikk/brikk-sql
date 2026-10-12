@@ -40,6 +40,9 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     private var end = 0
     private var first = true
 
+    /** Whether the base lexer was restarted at the current statement's terminator. */
+    private var atTerminator = false
+
     /** Whether the current token was cut before the terminator, where the base lexer resumes. */
     private var cut = false
 
@@ -68,7 +71,7 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
         first = false
         if (cut) {
             cut = false
-            base.start(buffer, bound.terminator, bound.end, 0)
+            restartAtTerminator()
         } else {
             base.advance()
         }
@@ -88,6 +91,7 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     private fun enterStatement(offset: Int) {
         first = true
         cut = false
+        atTerminator = false
         if (offset >= bufferEnd) {
             type = null
             start = bufferEnd
@@ -102,6 +106,7 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
 
     private fun load() {
         val next = base.tokenType ?: return enterStatement(bound.end)
+        if (base.tokenStart == bound.terminator && !atTerminator) return restartAtTerminator().also { load() }
         type = next
         start = base.tokenStart
         end = base.tokenEnd
@@ -109,6 +114,12 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
             end = bound.terminator
             cut = true
         }
+    }
+
+    /** Lexes the terminator afresh, so the base reads it as the `;` it is, not as part of raw data. */
+    private fun restartAtTerminator() {
+        atTerminator = true
+        base.start(buffer, bound.terminator, bound.end, 0)
     }
 
     /**

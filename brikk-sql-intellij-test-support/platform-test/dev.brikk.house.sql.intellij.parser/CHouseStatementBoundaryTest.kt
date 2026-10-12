@@ -53,6 +53,24 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         }
     }
 
+    private fun errors(): List<String> =
+        PsiTreeUtil.findChildrenOfType(myFixture.file, PsiErrorElement::class.java).map { "${it.textOffset}: ${it.errorDescription}" }
+
+    /** Only the platform grammar's own gap for `FORMAT Values (...)` remains, where the stock dialect reports it too. */
+    fun testTheCorpusParsesWithoutErrors() {
+        for (case in CHOUSE_BOUNDARY_CORPUS) {
+            configureCHouse(case.sql)
+            val errors = errors()
+            if (case.name == "values followed by select") {
+                stockStatements(case.sql)
+                assertEquals(errors(), errors)
+                assertEquals(listOf("32: VALUES expected, got '('"), errors)
+            } else {
+                assertEquals(case.name, emptyList<String>(), errors)
+            }
+        }
+    }
+
     /** The platform ClickHouse dialect splits these; the family keeps each whole. */
     fun testTheStockDialectSplitsTheOwnersExport() {
         val split = CHOUSE_BOUNDARY_CORPUS.filter { case -> stockStatements(case.sql).map { it.textRange } != case.expectedRanges() }.map { it.name }

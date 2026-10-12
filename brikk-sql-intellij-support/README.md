@@ -157,7 +157,7 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   statement (ClickHouse inline `INSERT ... FORMAT` data ends where core frames it, as clickhouse-client
   and the platform editor do: at a blank line, a `;` alone on its line or ending the format's line,
   or a final `;`, never at a `;` or quote inside the data; a token covering the terminating `;` is
-  cut before it). States are 0 at statement starts and 1 elsewhere:
+  cut before it, and the base restarts there, so it reads the `;` as a separator rather than data). States are 0 at statement starts and 1 elsewhere:
   non-negative, whatever the base reports, and the highlighter restarts and resynchronizes only at
   statement starts. Core ranges are read a window at a time, so relexing an edit costs about its
   statement. `CHouseFamilyParserDefinition` lexes this way; a `MaskingSqlLexer` may be its base.
