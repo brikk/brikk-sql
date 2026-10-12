@@ -21,7 +21,8 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
     companion object {
         /**
          * Uses the dialect tokenizer, including its quote/comment rules. Compound Trino routines
-         * retain internal semicolons. Lexically incomplete or unbalanced input is never split into
+         * retain internal semicolons. ClickHouse inline INSERT data is framed as data, not SQL
+         * (docs/brikk-extensions.md #55). Lexically incomplete or unbalanced input is never split into
          * an apparently executable suffix. This proves boundaries, not SQL grammar validity.
          */
         fun parse(text: String, dialect: String): SqlScriptSnapshot = parse(text, dialect) {}
@@ -50,7 +51,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 if (index and 1023 == 1023) checkCanceled()
                 val kind = token.tokenType
                 val word = token.text.uppercase()
-                val visibleWord = kind != TokenType.IDENTIFIER && kind != TokenType.STRING &&
+                val visibleWord = kind != TokenType.IDENTIFIER && kind != TokenType.STRING && kind != TokenType.INSERT_DATA &&
                     !kind.name.endsWith("_STRING") && token.text.firstOrNull()?.isLetter() == true
                 if (head == null && visibleWord) head = word
                 val previousWord = tokens.getOrNull(index - 1)?.text?.uppercase()
@@ -96,6 +97,9 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 if (kind == TokenType.SEMICOLON && brackets.isEmpty() && blocks.isEmpty() && error == null) {
                     flush(token.end + 1)
                 } else if (kind != TokenType.SEMICOLON) hasSql = true
+                // Inline INSERT data that a blank line ends also ends its statement.
+                if (kind == TokenType.INSERT_DATA && tokens.getOrNull(index + 1)?.tokenType != TokenType.SEMICOLON &&
+                    brackets.isEmpty() && blocks.isEmpty() && error == null) flush(token.end + 1)
             }
             if (lexed.error != null) { error = lexed.error; hasSql = true }
             if (brackets.isNotEmpty() || blocks.isNotEmpty()) error = "Unterminated SQL construct; statement boundary is unknown"

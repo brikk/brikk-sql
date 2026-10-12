@@ -154,8 +154,10 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   at the end of the text ends before its first `;`, so later statements keep their tokens.
 - `StatementBoundedSqlLexer(baseFactory, coreDialect)` (`lexer`): lexes each statement of core's
   script ranges on its own with a fresh start of the base lexer, so no token runs past its
-  statement (ClickHouse `FORMAT JSONEachRow` data ends where core ends the statement; a token
-  covering the terminating `;` is cut before it). States are 0 at statement starts and 1 elsewhere:
+  statement (ClickHouse inline `INSERT ... FORMAT` data ends where core frames it, as clickhouse-client
+  and the platform editor do: at a blank line, a `;` alone on its line or ending the format's line,
+  or a final `;`, never at a `;` or quote inside the data; a token covering the terminating `;` is
+  cut before it). States are 0 at statement starts and 1 elsewhere:
   non-negative, whatever the base reports, and the highlighter restarts and resynchronizes only at
   statement starts. Core ranges are read a window at a time, so relexing an edit costs about its
   statement. `CHouseFamilyParserDefinition` lexes this way; a `MaskingSqlLexer` may be its base.

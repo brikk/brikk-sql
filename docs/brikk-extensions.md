@@ -1869,6 +1869,30 @@ core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the Cl
 generator instead reuses the authored text while the parsed placeholder is unchanged, so
 lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
 
+## 55. ClickHouse inline INSERT data
+
+**NOT sqlglot parity.** `ClickhouseDialect.TOKENIZER_CONFIG` turns on
+`TokenizerConfig.inlineInsertData`: in editor tokenization only (so `SqlScriptSnapshot` and
+parameter discovery, never the parser), the data after `INSERT ... FORMAT <name>` is one
+`INSERT_DATA` token instead of SQL tokens, so quotes, braces and `;` inside it neither end the
+statement nor make its boundary an error. The rule applies at depth 0 of a statement that begins
+with `INSERT` and has no `SELECT`, `WITH`, `INFILE` or `VALUES` before the format; `FORMAT Values`
+stays SQL, as ClickHouse reads its rows with the Values parser up to the terminating `;`.
+
+Framing follows the platform ClickHouse editor lexer (IntelliJ 261 `CHouseLexer`), which an
+IDE console splits by: data starts after the first line break after the format name, or after its
+spaces on the same line, and ends before a blank line, before a line holding only `;`, or, when
+it starts on the format name's line, before a `;` that ends that line. A blank line ends the
+statement without a `;`. At the end of the text a final `;` is the terminator rather than data
+(an IDE choice). A `;` right after the format name means there is no data.
+
+Evidence: clickhouse-client's multi-query splitting (`ClientBase.cpp`, master 2026-10) runs the
+Values parser to the trailing `;` for `FORMAT Values`, and otherwise ends generic-format data at
+the first blank line (`\n\n`) or the end of the input; a `;` inside data never ends it there. The
+platform editor additionally ends data at a `;` alone on its line or ending the format name's
+line, so this rule never joins what the client keeps apart; at those `;` it splits where the
+client would send the rest as data. Which `;` a given format's server-side reader accepts is not proven here.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

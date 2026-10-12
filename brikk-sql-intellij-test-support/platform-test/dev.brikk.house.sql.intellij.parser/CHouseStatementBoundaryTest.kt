@@ -24,7 +24,7 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         return statements.map { statement ->
             val start = sql.indexOf(statement, from)
             from = start + statement.length
-            TextRange(start, start + statement.removeSuffix(";").length)
+            TextRange(start, start + statement.removeSuffix(";").trimEnd().length)
         }
     }
 
@@ -57,7 +57,7 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
     fun testTheStockDialectSplitsTheOwnersExport() {
         val split = CHOUSE_BOUNDARY_CORPUS.filter { case -> stockStatements(case.sql).map { it.textRange } != case.expectedRanges() }.map { it.name }
         for (name in listOf("owner s3 export", "owner s3 export as a table function", "owner s3 export without settings",
-            "partitioned insert with comments", "partitioned file and remote functions", "json followed by select")) {
+            "partitioned insert with comments", "partitioned file and remote functions")) {
             assertTrue("$name in $split", name in split)
         }
         // The owner's export splits before its SELECT line.

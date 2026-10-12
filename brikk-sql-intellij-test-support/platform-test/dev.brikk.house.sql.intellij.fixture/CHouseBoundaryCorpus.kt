@@ -31,8 +31,8 @@ val OWNER_S3_EXPORT: String = listOf(
 /**
  * ClickHouse statements whose boundaries the stock grammar or lexer gets wrong, with their
  * neighbours: INSERT INTO [TABLE] FUNCTION with PARTITION BY (which the stock grammar lacks, so
- * a SELECT on a new line starts a statement), and raw FORMAT data (which the stock lexer ends only
- * at a blank line or a `;` alone on its line).
+ * a SELECT on a new line starts a statement), and raw FORMAT data, framed as clickhouse-client and
+ * the platform editor frame it (docs/brikk-extensions.md #55).
  */
 val CHOUSE_BOUNDARY_CORPUS: List<BoundaryCase> = listOf(
     BoundaryCase("owner s3 export", listOf(OWNER_S3_EXPORT)),
@@ -70,8 +70,13 @@ val CHOUSE_BOUNDARY_CORPUS: List<BoundaryCase> = listOf(
         ),
     ),
     BoundaryCase("json data tail", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2,\"label\":\"c\"};")),
-    BoundaryCase("json followed by select", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1};", "SELECT 2;")),
-    BoundaryCase("json on one line followed by select", listOf("INSERT INTO events FORMAT JSONEachRow {\"id\":1};", "SELECT 2;"), " "),
+    BoundaryCase("json then a semicolon line", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"q\":\"it's\"}\n;", "SELECT 2;")),
+    BoundaryCase("json then a blank line", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1}", "SELECT 2;"), "\n\n"),
+    // As clickhouse-client and the platform editor read it: a `;` ending a later data line is data.
+    BoundaryCase("json swallowing a select", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1};\nSELECT 2;")),
+    BoundaryCase("json on one line followed by select", listOf("INSERT INTO events FORMAT JSONEachRow {\"id\":1};", "SELECT 2;")),
+    BoundaryCase("tsv with semicolons and quotes", listOf("INSERT INTO events FORMAT TSV\na;b\tO'Brien\n;", "SELECT 2;")),
+    BoundaryCase("csv with quotes then a blank line", listOf("INSERT INTO events FORMAT CSV\n1,O'Brien\n2,\"x;y\"", "SELECT 2;"), "\n\n"),
     BoundaryCase("values followed by select", listOf("INSERT INTO events FORMAT Values (1, 'x;y');", "SELECT 2;")),
     BoundaryCase("settings and format", listOf("SELECT number FROM numbers(5) SETTINGS max_threads = 2 FORMAT JSONEachRow;", "SELECT 1 AS value FORMAT TSV;")),
     BoundaryCase("semicolons in trivia", listOf("SELECT 'a; b' /* ; SELECT 9 */ AS value -- ; SELECT 8\nFROM events;", "SELECT /* ; */ 2;")),

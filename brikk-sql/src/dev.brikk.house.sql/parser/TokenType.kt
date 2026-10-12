@@ -453,4 +453,6 @@ enum class TokenType {
     HLL,
     QUANTILE_STATE,
     AGG_STATE,
+    // brikk-native: ClickHouse inline INSERT data, editor tokenization only (TokenizerConfig.inlineInsertData).
+    INSERT_DATA,
 }

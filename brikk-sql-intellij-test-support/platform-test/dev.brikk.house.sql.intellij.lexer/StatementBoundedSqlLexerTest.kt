@@ -23,33 +23,34 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
     private fun List<LexedToken>.semicolons(text: String) = filter { text.of(it) == ";" }.map { it.start }
 
     fun testRawDataEndsWithItsStatement() {
-        val text = "INSERT INTO events FORMAT JSONEachRow\n{\"id\":1};\nSELECT 2;"
-        // The platform lexer reads the rest of the text as data.
-        assertEquals("{\"id\":1};\nSELECT 2;", text.of(CHouseLexer().lexAll(text).raw().single()))
+        // The platform lexer reads FORMAT after an INSERT's SELECT as the start of data, to the end of the text.
+        val text = "INSERT INTO t\nSELECT * FROM s\nFORMAT TSV\nSETTINGS max_threads = 1;\nSELECT 2;"
+        assertTrue(CHouseLexer().lexAll(text).raw().any { text.of(it).contains("SELECT 2") })
+        val tokens = bounded().lexAll(text)
+        assertTrue(tokens.raw().none { text.of(it).contains("SELECT 2") })
+        assertEquals(listOf(text.indexOf(";"), text.lastIndexOf(";")), tokens.semicolons(text))
+    }
+
+    fun testRawDataEndsBeforeTheFinalSemicolon() {
+        val text = "INSERT INTO events FORMAT JSONEachRow {\"id\":1};"
+        assertEquals("{\"id\":1};", text.of(CHouseLexer().lexAll(text).raw().single()))
         val tokens = bounded().lexAll(text)
         assertEquals("{\"id\":1}", text.of(tokens.raw().single()))
-        assertEquals(listOf(text.indexOf(";"), text.lastIndex), tokens.semicolons(text))
-        assertTrue(tokens.any { text.of(it) == "SELECT" })
+        assertEquals(listOf(text.lastIndex), tokens.semicolons(text))
     }
 
-    fun testRawDataOnOneLineEndsWithItsStatement() {
-        val text = "INSERT INTO events FORMAT JSONEachRow {\"id\":1}; SELECT 2;"
-        assertEquals("{\"id\":1}; SELECT 2;", text.of(CHouseLexer().lexAll(text).raw().single()))
-        assertEquals("{\"id\":1}", text.of(bounded().lexAll(text).raw().single()))
-    }
-
-    fun testRawDataKeepsSemicolonsInsideItsValues() {
-        val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == "json data tail" }
-        val tokens = bounded().lexAll(case.sql)
-        assertEquals("{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2,\"label\":\"c\"}", case.sql.of(tokens.raw().single()))
-        assertEquals(listOf(case.sql.lastIndex), tokens.semicolons(case.sql))
+    fun testRawDataKeepsSemicolonsAndQuotesInsideIt() {
+        for ((name, data) in listOf("json data tail" to "{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2,\"label\":\"c\"}",
+            "tsv with semicolons and quotes" to "a;b\tO'Brien", "csv with quotes then a blank line" to "1,O'Brien\n2,\"x;y\"")) {
+            val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == name }
+            assertEquals(name, data, case.sql.of(bounded().lexAll(case.sql).raw().single()))
+        }
     }
 
     fun testStatementsAfterRawDataParseOnTheirOwn() {
-        for (name in listOf("json followed by select", "json on one line followed by select", "values followed by select", "json data tail")) {
-            val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == name }
+        for (case in CHOUSE_BOUNDARY_CORPUS.filter { "FORMAT" in it.sql && "INSERT INTO events" in it.sql }) {
             configureCHouse(case.sql)
-            assertEquals(name, case.statements.map { it.removeSuffix(";") }, statements().map { it.text })
+            assertEquals(case.name, case.statements.map { it.removeSuffix(";").trimEnd() }, statements().map { it.text })
         }
     }
 

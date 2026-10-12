@@ -88,6 +88,18 @@ class TokenizerConfig(
         it.lexicalPolicy = LexicalPolicy(nestedBlockComments, dashCommentLineContinuation, untaggedDollarStrings)
     }
 
+    private var insertDataPolicy = false
+
+    /**
+     * brikk extension #55 (docs/brikk-extensions.md): in editor tokenization, the data of an
+     * `INSERT ... FORMAT <name>` (other than `Values`) is one [TokenType.INSERT_DATA] token,
+     * framed as ClickHouse clients frame it rather than read as SQL.
+     */
+    val inlineInsertData: Boolean get() = insertDataPolicy
+
+    fun withInlineInsertData(enabled: Boolean = true): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences).also { it.insertDataPolicy = enabled }
+
     val numericEscapes: Map<Char, NumericEscape> get() = numericPolicy.escapes
     val dropUnknownEscapes: Boolean get() = numericPolicy.dropUnknown
     val numericEscapesAreBytes: Boolean get() = numericPolicy.bytes
@@ -172,6 +184,7 @@ class TokenizerConfig(
     ).also {
         it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy
         it.lexicalPolicy = lexicalPolicy
+        it.insertDataPolicy = insertDataPolicy
     }
 
     companion object {

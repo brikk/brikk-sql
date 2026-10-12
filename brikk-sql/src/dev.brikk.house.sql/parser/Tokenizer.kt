@@ -28,6 +28,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var cancelBudget: Int = CANCEL_INTERVAL
     private var breaksScanned: Int = 0
     private var lastBreak: Int = -1
+    private val insertData = InsertDataState()
 
     // sqlglot: TokenizerCore.reset
     private fun reset() {
@@ -46,6 +47,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         cancelBudget = CANCEL_INTERVAL
         breaksScanned = 0
         lastBreak = -1
+        insertData.reset()
     }
 
     /**
@@ -129,6 +131,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                     config.untaggedDollarStrings && char == '$' && peek == '$' -> if (!scanDollarString()) scanKeywords()
                     else -> scanKeywords()
                 }
+                if (editorMode && config.inlineInsertData) scanInsertData()
             }
 
             if (checkSemicolon && peek == ';') break
@@ -137,6 +140,112 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         if (tokens.isNotEmpty() && comments.isNotEmpty()) {
             tokens.last().comments.addAll(comments)
             comments = mutableListOf()
+        }
+    }
+
+    /**
+     * brikk extension #55: follows each statement's tokens and, right after the format name of an
+     * `INSERT ... FORMAT <name>` that has no SELECT, WITH, INFILE or VALUES before it at depth 0
+     * (and whose format is not `Values`), reads its inline data as one INSERT_DATA token.
+     */
+    private fun scanInsertData() {
+        val state = insertData
+        while (state.observed < tokens.size) {
+            val token = tokens[state.observed++]
+            when (token.tokenType) {
+                TokenType.SEMICOLON -> if (state.depth == 0) { state.reset(state.observed); continue }
+                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> state.depth++
+                TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> state.depth--
+                else -> {}
+            }
+            val word = token.text.takeIf { token.tokenType != TokenType.IDENTIFIER && it.firstOrNull()?.isLetter() == true }?.uppercase()
+            if (state.head == null) state.head = word ?: ""
+            val afterFormat = state.afterFormat
+            state.afterFormat = false
+            if (state.head != "INSERT" || state.blocked || state.depth != 0) continue
+            when {
+                word in INSERT_WITHOUT_DATA -> state.blocked = true
+                afterFormat && (word != null || token.tokenType == TokenType.IDENTIFIER) -> {
+                    state.blocked = true
+                    if (state.observed == tokens.size) scanInsertDataAfter(current)
+                }
+                else -> state.afterFormat = word == "FORMAT"
+            }
+        }
+    }
+
+    /**
+     * Reads inline data from [from], framed as the platform ClickHouse editor lexer frames it: data
+     * starts after the first line break that follows the format name, or after its spaces on the
+     * same line, and ends before a blank line, before a line holding only `;`, or, when it starts
+     * on the format name's line, before a `;` that ends that line. At the end of the text a final
+     * `;` ends the statement. A `;` on the format name's line right after it means there is no data.
+     */
+    private fun scanInsertDataAfter(from: Int) {
+        var dataStart = from
+        while (dataStart < size && (sql[dataStart] == ' ' || sql[dataStart] == '\t')) dataStart++
+        var oneLine = true
+        if (dataStart < size && isLineBreak(sql[dataStart])) {
+            dataStart = lineEnd(dataStart)
+            oneLine = false
+        }
+        if (dataStart >= size || oneLine && sql[dataStart] == ';' || !oneLine && isLoneSemicolonAt(dataStart)) return
+        var dataEnd = dataStart
+        while (dataEnd < size) {
+            if (!isLineBreak(sql[dataEnd])) {
+                dataEnd++
+                continue
+            }
+            if (oneLine) {
+                oneLine = false
+                if (sql[dataEnd - 1] == ';') {
+                    dataEnd--
+                    break
+                }
+            }
+            val next = lineEnd(dataEnd)
+            if (next < size && (isLineBreak(sql[next]) || isLoneSemicolonAt(next))) break
+            dataEnd = next
+        }
+        if (dataEnd >= size) {
+            var last = size
+            while (last > dataStart && sql[last - 1].isWhitespace()) last--
+            if (last > dataStart && sql[last - 1] == ';') dataEnd = last - 1
+        }
+        if (dataEnd <= dataStart) return
+        while (current < dataStart) advance()
+        start = dataStart
+        while (current < dataEnd) advance()
+        add(TokenType.INSERT_DATA)
+        insertData.observed = tokens.size
+    }
+
+    private fun isLineBreak(c: Char): Boolean = c == '\n' || c == '\r'
+
+    /** The offset after the line break at [offset], CRLF and LFCR counting as one. */
+    private fun lineEnd(offset: Int): Int {
+        val next = offset + 1
+        return if (next < size && isLineBreak(sql[next]) && sql[next] != sql[offset]) next + 1 else next
+    }
+
+    /** Whether the line at [offset] holds only `;`. */
+    private fun isLoneSemicolonAt(offset: Int): Boolean =
+        sql[offset] == ';' && (offset + 1 >= size || isLineBreak(sql[offset + 1]))
+
+    /** Statement context for [scanInsertData]. */
+    private class InsertDataState {
+        var observed = 0
+        var depth = 0
+        var head: String? = null
+        var blocked = false
+        var afterFormat = false
+
+        fun reset(observed: Int = 0) {
+            this.observed = observed
+            depth = 0
+            head = null
+            blocked = false
+            afterFormat = false
         }
     }
 
@@ -971,6 +1080,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
 
     private companion object {
         const val CANCEL_INTERVAL = 1 shl 16
+        private val INSERT_WITHOUT_DATA = setOf("SELECT", "WITH", "INFILE", "VALUES")
 
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'
