@@ -69,9 +69,9 @@ data class SqlScriptParameters(
          * reads as a type, and a keyword-named column before a slice colon (`arr[date:n]`)
          * does not end an operand. A statement terminator closes every open bracket.
          */
-        fun parse(text: String, dialect: String): SqlScriptParameters {
-            val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text)
-            return SqlScriptParameters(text, dialect, colonBinds(text, lexed.tokens), lexed.failureOffset, lexed.error)
+        fun parse(text: String, dialect: String, checkCanceled: () -> Unit = {}): SqlScriptParameters {
+            val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text, checkCanceled)
+            return SqlScriptParameters(text, dialect, colonBinds(text, lexed.tokens, checkCanceled), lexed.failureOffset, lexed.error)
         }
 
         private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE }
@@ -80,32 +80,56 @@ data class SqlScriptParameters(
             var colonSeen = false
         }
 
-        private fun colonBinds(text: String, tokens: List<Token>): List<ParameterOccurrence> {
-            val open = ArrayList<Open>()
-            val binds = ArrayList<ParameterOccurrence>()
-            fun close(vararg kinds: Bracket) {
-                val index = open.indexOfLast { it.kind in kinds }
-                if (index >= 0) while (open.size > index) open.removeAt(open.lastIndex)
+        private class OpenBrackets {
+            private val stack = ArrayList<Open>()
+            private val counts = IntArray(Bracket.entries.size)
+
+            val innermost: Open? get() = stack.lastOrNull()
+            val inType: Boolean get() = counts[Bracket.TYPE.ordinal] > 0
+
+            fun push(kind: Bracket) {
+                stack += Open(kind)
+                counts[kind.ordinal]++
             }
+
+            // Pops through the innermost [kinds] bracket, if one is open; each bracket pops once.
+            fun close(vararg kinds: Bracket) {
+                if (kinds.none { counts[it.ordinal] > 0 }) return
+                do {
+                    val popped = stack.removeAt(stack.lastIndex)
+                    counts[popped.kind.ordinal]--
+                } while (popped.kind !in kinds)
+            }
+
+            fun clear() {
+                stack.clear()
+                counts.fill(0)
+            }
+        }
+
+        private fun colonBinds(text: String, tokens: List<Token>, checkCanceled: () -> Unit): List<ParameterOccurrence> {
+            val open = OpenBrackets()
+            val binds = ArrayList<ParameterOccurrence>()
             for ((index, token) in tokens.withIndex()) {
+                if (index and 1023 == 1023) checkCanceled()
                 val previous = tokens.getOrNull(index - 1)
                 when (token.tokenType) {
                     TokenType.SEMICOLON -> open.clear()
-                    TokenType.L_PAREN -> open.add(Open(Bracket.PAREN))
-                    TokenType.L_BRACKET -> open.add(Open(if (previous.endsOperand()) Bracket.SUBSCRIPT else Bracket.ARRAY))
-                    TokenType.L_BRACE -> open.add(Open(Bracket.MAP))
-                    TokenType.LT -> if (open.lastOrNull()?.kind == Bracket.TYPE || previous?.text?.uppercase() in TYPE_CONSTRUCTORS) {
-                        open.add(Open(Bracket.TYPE))
+                    TokenType.L_PAREN -> open.push(Bracket.PAREN)
+                    TokenType.L_BRACKET -> open.push(if (previous.endsOperand()) Bracket.SUBSCRIPT else Bracket.ARRAY)
+                    TokenType.L_BRACE -> open.push(Bracket.MAP)
+                    TokenType.LT -> if (open.innermost?.kind == Bracket.TYPE || previous?.text?.uppercase() in TYPE_CONSTRUCTORS) {
+                        open.push(Bracket.TYPE)
                     }
-                    TokenType.GT -> if (open.lastOrNull()?.kind == Bracket.TYPE) open.removeAt(open.lastIndex)
-                    TokenType.R_PAREN -> close(Bracket.PAREN)
-                    TokenType.R_BRACKET -> close(Bracket.ARRAY, Bracket.SUBSCRIPT)
-                    TokenType.R_BRACE -> close(Bracket.MAP)
-                    TokenType.COMMA -> open.lastOrNull()?.takeIf { it.kind == Bracket.MAP }?.colonSeen = false
+                    TokenType.GT -> if (open.innermost?.kind == Bracket.TYPE) open.close(Bracket.TYPE)
+                    TokenType.R_PAREN -> open.close(Bracket.PAREN)
+                    TokenType.R_BRACKET -> open.close(Bracket.ARRAY, Bracket.SUBSCRIPT)
+                    TokenType.R_BRACE -> open.close(Bracket.MAP)
+                    TokenType.COMMA -> open.innermost?.takeIf { it.kind == Bracket.MAP }?.colonSeen = false
                     TokenType.COLON -> {
-                        val innermost = open.lastOrNull()
+                        val innermost = open.innermost
                         val syntax = when {
-                            open.any { it.kind == Bracket.TYPE } -> true
+                            open.inType -> true
                             innermost == null || innermost.colonSeen -> false
                             innermost.kind == Bracket.MAP -> true
                             innermost.kind == Bracket.SUBSCRIPT -> previous.endsOperand()

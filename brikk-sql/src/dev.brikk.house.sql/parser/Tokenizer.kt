@@ -24,6 +24,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
+    private var checkCanceled: () -> Unit = {}
+    private var scanned: Int = 0
     private var breaksScanned: Int = 0
     private var lastBreak: Int = -1
 
@@ -41,6 +43,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         end = false
         peek = NONE
         prevTokenLine = -1
+        scanned = 0
         breaksScanned = 0
         lastBreak = -1
     }
@@ -59,6 +62,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             scan()
         } catch (e: TokenError) {
             throw e
+        } catch (e: Canceled) {
+            throw e.signal
         } catch (e: Exception) {
             val ctxStart = maxOf(current - 50, 0)
             val ctxEnd = minOf(current + 50, size - 1).coerceAtLeast(ctxStart)
@@ -67,6 +72,16 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
 
         return tokens
+    }
+
+    /**
+     * [tokenizeForEditor] that calls [checkCanceled] periodically; whatever it throws (for
+     * example an IDE cancellation) propagates unchanged.
+     */
+    fun tokenizeForEditor(sql: String, checkCanceled: () -> Unit): EditorTokens {
+        val previous = this.checkCanceled
+        this.checkCanceled = checkCanceled
+        return try { tokenizeForEditor(sql) } finally { this.checkCanceled = previous }
     }
 
     /** Editor recovery stops at the failing lexical construct, never inside its tail. */
@@ -85,6 +100,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val identifiers = config.identifiers
 
         while (size != 0 && !end) {
+            if (++scanned and CANCEL_CHECK_MASK == 0) {
+                try { checkCanceled() } catch (e: Throwable) { throw Canceled(e) }
+            }
             var cur = current
 
             // Skip spaces here rather than iteratively calling advance() for performance reasons
@@ -852,7 +870,11 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private fun byteChunk(text: String, bytes: Boolean): String = if (bytes && text.any { it.code >= 128 })
         text.encodeToByteArray(throwOnInvalidSequence = true).joinToString("") { (it.toInt() and 0xFF).toChar().toString() } else text
 
+    private class Canceled(val signal: Throwable) : RuntimeException(signal)
+
     private companion object {
+        const val CANCEL_CHECK_MASK = 1023
+
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'
 

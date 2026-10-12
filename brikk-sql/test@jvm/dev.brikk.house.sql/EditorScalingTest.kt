@@ -3,6 +3,7 @@ package dev.brikk.house.sql
 import dev.brikk.house.sql.dialects.DorisDialect
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.shape.SqlScriptParameters
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -42,4 +43,12 @@ class EditorScalingTest {
 
     @Test
     fun snapshotIsLinear() = assertLinear("snapshot", { script(it, "\n") }) { SqlScriptSnapshot.parse(it, "doris") }
+
+    @Test
+    fun editorParametersAreLinear() {
+        assertLinear("parameters", { script(it, "\n") }) { SqlScriptParameters.parse(it, "doris") }
+        assertLinear("deep parameters", { "SELECT " + "(".repeat(4_000 * it) + ":p ]".repeat(4_000 * it) }) {
+            SqlScriptParameters.parse(it, "doris")
+        }
+    }
 }

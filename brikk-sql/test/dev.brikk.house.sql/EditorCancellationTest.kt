@@ -1,0 +1,44 @@
+package dev.brikk.house.sql
+
+import dev.brikk.house.sql.dialects.DorisDialect
+import dev.brikk.house.sql.parser.SqlScriptSnapshot
+import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.shape.SqlScriptParameters
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
+
+class EditorCancellationTest {
+
+    private class Stop : RuntimeException()
+
+    private val script = (1..2_000).joinToString("\n") { "SELECT a$it, :p$it FROM t WHERE x = 'v';" }
+
+    private fun cancelsWith(run: (() -> Unit) -> Unit) {
+        val stop = Stop()
+        var calls = 0
+        run { calls++ }
+        assertTrue(calls > 0, "the hook is never called")
+        assertSame(stop, assertFailsWith<Stop> { run { throw stop } })
+    }
+
+    @Test
+    fun editorTokenizationPropagatesTheExactCancellation() =
+        cancelsWith { check -> Tokenizer(DorisDialect.TOKENIZER_CONFIG).tokenizeForEditor(script, check) }
+
+    @Test
+    fun snapshotPropagatesTheExactCancellation() = cancelsWith { check -> SqlScriptSnapshot.parse(script, "doris", check) }
+
+    @Test
+    fun editorParametersPropagateTheExactCancellation() =
+        cancelsWith { check -> SqlScriptParameters.parse(script, "doris", check) }
+
+    @Test
+    fun tokenizerIsReusableAfterCancellation() {
+        val tokenizer = Tokenizer(DorisDialect.TOKENIZER_CONFIG)
+        assertFailsWith<Stop> { tokenizer.tokenizeForEditor(script) { throw Stop() } }
+        assertTrue(tokenizer.tokenizeForEditor("SELECT 1").tokens.size == 2)
+        assertTrue(tokenizer.tokenizeForEditor(script).failureOffset == null)
+    }
+}
