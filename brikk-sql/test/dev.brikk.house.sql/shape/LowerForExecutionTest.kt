@@ -43,9 +43,13 @@ class LowerForExecutionTest {
     }
 
     @Test
-    fun lossyLoweringIsReturnedWithBlockers() {
+    fun unsupportedPivotIsRefused() {
         for (dialect in listOf("trino", "doris")) {
-            assertTrue(assertLowered("FROM t |> PIVOT (SUM(x) FOR k IN ('a'))", dialect).blockers.isNotEmpty(), dialect)
+            for (stage in listOf("PIVOT (SUM(x) FOR k IN ('a'))", "UNPIVOT (v FOR k IN (a, b))")) {
+                val refused = assertRefused("FROM t |> $stage", dialect)
+                assertEquals("$dialect cannot faithfully lower PIVOT/UNPIVOT for execution", refused.message)
+                assertNull(refused.range)
+            }
         }
     }
 

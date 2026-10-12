@@ -1781,6 +1781,60 @@ are unchanged. The retained precompiled brikk-house runtime also refuses a bound
 the original peer checkout stays clean. Logs are retained under
 `/tmp/opencode/trino-pipe-rename-*`; only the isolated task container is removed.
 
+## 52. DROP/SET capabilities, native Doris replacement and executable pivot refusal
+
+The Presto/Trino star guard from #51 now also refuses surviving EXCEPT and REPLACE
+modifiers. Schema-less `|> DROP` and `|> SET` previously returned invalid Trino SQL
+with no diagnostics. A complete caller-supplied layout can still expand them to
+ordered explicit projections; trait minima are not a complete field inventory.
+Ordinary stars, set-operation EXCEPT and explicit author pipe-formatting are unchanged.
+
+Doris is different: official 4.1.4.1 FE/BE images reporting
+`doris-4.1.4.1-rc02-5dbec55b399` execute both star EXCEPT and star REPLACE. Live
+schema-less pipeline checks compare row/header results and wire column metadata
+against independent explicit projections: untouched fields retain their positions,
+simultaneous replacements read the original values, chained SET reads the previous
+stage, and NULL/duplicate rows and wide/type-changing results survive. Native
+replacement rejects unknown, duplicate and ambiguous target names instead of
+appending missing fields or replacing both joined copies. Star RENAME is still
+unsupported. Do not apply Trino's EXCEPT/REPLACE refusal to Doris.
+
+One unrelated native limitation surfaced while probing metadata: creating a view
+from the generated WITH plus star REPLACE failed in this Doris build with a
+`start ... end ... length ...` SQL-text rewrite error. The SELECT itself executes
+correctly. Tests inspect its wire metadata directly and do not claim that this
+CREATE VIEW form works; this is not evidence that star REPLACE is unsupported.
+
+Unsupported PIVOT/UNPIVOT formerly dropped the operator and returned flagged SQL.
+IDE execution adapters may honor those blockers, but a plain consumer such as
+Brikk-house `Rel.render()` can use the SQL without reading the messages. Executable
+generation, standard rendering and source-preserving lowering now refuse the
+unsupported query transformation with `UnsupportedError`. `transpileTo` remains
+the diagnostic-preview API and retains its existing flagged best-effort output;
+native DuckDB pivot/unpivot still works. Internal purpose state is additive and
+does not change published generator constructors or fragment method/default bridges.
+
+The grand-unification `lowerForExecution` adapter maps this refusal to `Refused`;
+its earlier test expecting `Ok` plus PIVOT blockers needs the new expectation when
+integrating this change. Other diagnostic previews and blocker checks remain valid.
+Parser-derived join keyword enumeration is untouched: executable-engine completion
+filtering belongs in the IDE/profile consumer, not the core parser's keyword tables.
+
+`PipeExecutionCapabilitiesTest`, `PipeExecutionCapabilitiesResultTest` and
+`DorisPipeSetResultTest` cover the guards, complete-layout execution, preserved
+previews and native behavior. Live Trino 483 and Doris 4.1.4.1 run the relevant
+row checks. Scratch evidence is retained under `/tmp/opencode/pipe-capabilities-*`
+and `/tmp/opencode/doris-set-*`; no peer source or grand-unification branch is edited.
+
+Verification on 2026-10-12: build, 1,295 Kotlin methods (18 optional native skips),
+38 existing consumer/editor contracts, sixteen offline release and three candidate
+safety tests pass. All nine selected pipe-result methods run with live Trino/Doris
+configured; 111 core pipe methods pass. No generated metadata, fixture stamps or
+curated ledger entries change. The retained precompiled Brikk-house runtime also
+refuses unknown-layout DROP/SET and unsupported pivots while native Doris SET still
+renders; its original checkout remains clean. Only the task's isolated containers
+and internal network are removed after verification.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
