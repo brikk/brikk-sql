@@ -65,6 +65,11 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
         assertNull(doris.switchSql(SearchPath.of(catalog("hive").append("web", ObjectKind.SCHEMA).append("t", ObjectKind.TABLE))))
     }
 
+    fun testInsertedNamesAreNotReadAsTemplates() {
+        assertEquals("USE \"cat{schema}\".\"main\"", trino.switchSql(path("cat{schema}", "main")))
+        assertEquals("USE \"{catalog}\".\"{schema}\"", trino.switchSql(path("{catalog}", "{schema}")))
+    }
+
     fun testTrinoSwitchStatements() {
         assertEquals("USE \"hive\".\"web\"", trino.switchSql(path("hive", "web")))
         assertNull("no catalog to use", trino.switchSql(SearchPath.of(ObjectPath.create("web", ObjectKind.SCHEMA))))

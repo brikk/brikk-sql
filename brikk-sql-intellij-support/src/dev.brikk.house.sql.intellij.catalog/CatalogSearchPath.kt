@@ -80,8 +80,11 @@ public class CatalogSchemaSearchPath(
         return SearchPath.of(schema?.let { catalogPath.append(it, ObjectKind.SCHEMA) } ?: catalogPath)
     }
 
-    private fun String.fill(catalog: String?, schema: String?): String =
-        replace("{catalog}", catalog?.let(::quoted).orEmpty()).replace("{schema}", schema?.let(::quoted).orEmpty())
+    /** One pass over the template, so an inserted name is never read as a token. */
+    private fun String.fill(catalog: String?, schema: String?): String = TOKEN.replace(this) { token ->
+        val name = if (token.value == "{catalog}") catalog else schema
+        name?.let(::quoted).orEmpty()
+    }
 
     private fun quoted(name: String): String = "$quote${name.replace("$quote", "$quote$quote")}$quote"
 
@@ -134,5 +137,6 @@ public class CatalogSchemaSearchPath(
         const val FIRST = "\u0000first"
         const val MAX_ROWS = 1000
         val FLAGS = setOf("yes", "true", "1")
+        val TOKEN = Regex("""\{(?:catalog|schema)}""")
     }
 }
