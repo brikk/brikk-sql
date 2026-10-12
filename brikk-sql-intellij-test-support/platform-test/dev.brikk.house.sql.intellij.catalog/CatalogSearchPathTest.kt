@@ -70,6 +70,13 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
         assertEquals("USE \"{catalog}\".\"{schema}\"", trino.switchSql(path("{catalog}", "{schema}")))
     }
 
+    fun testCancellationPropagatesFromAProbe() {
+        val cancelled = databaseConnection(Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, _, _ ->
+            throw kotlin.coroutines.cancellation.CancellationException("cancelled")
+        } as Connection, LocalDataSource(), Dbms.POSTGRES, otherRequestor())
+        assertThrows(kotlin.coroutines.cancellation.CancellationException::class.java) { trino.readBack(cancelled) }
+    }
+
     fun testTrinoSwitchStatements() {
         assertEquals("USE \"hive\".\"web\"", trino.switchSql(path("hive", "web")))
         assertNull("no catalog to use", trino.switchSql(SearchPath.of(ObjectPath.create("web", ObjectKind.SCHEMA))))

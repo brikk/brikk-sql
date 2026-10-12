@@ -7,6 +7,8 @@ import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.coroutines.cancellation.CancellationException
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -46,6 +48,10 @@ public sealed interface NamespaceProbe {
  * The read-back tries [catalogProbes] in order until one names a catalog, else uses [defaultCatalog],
  * and likewise [schemaProbes]. Probes with the same SQL run it once. Without a catalog the path is
  * unknown; without a schema it is the catalog alone, unless [schemaRequired].
+ *
+ * The probes run on the console's own connection after every execution, inside an open transaction
+ * too. Where a failed statement aborts the transaction (PostgreSQL and engines like it), list only
+ * probes the server supports: a fallback probe that fails there breaks the user's transaction.
  */
 @ApiStatus.Experimental
 public class CatalogSchemaSearchPath(
@@ -58,6 +64,8 @@ public class CatalogSchemaSearchPath(
     private val defaultCatalog: String? = null,
     private val schemaRequired: Boolean = false,
 ) : CatalogSearchPathStrategy {
+    private val failedProbes: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
     override fun switchSql(path: SearchPath): String? {
         val current = path.current ?: return null
         return when (current.kind) {
@@ -126,9 +134,9 @@ public class CatalogSchemaSearchPath(
             JdbcNativeUtil.closeRemoteStatementSafe(statement)
         }
     } catch (e: Exception) {
-        if (e is ControlFlowException) throw e
-        // A probe the server does not support falls through to the next one.
-        LOG.info("Search path probe '$sql' failed: ${e.message}")
+        if (e is ControlFlowException || e is CancellationException) throw e
+        // A probe the server does not support falls through to the next one; it runs after every execution, so say so once.
+        if (failedProbes.add(sql)) LOG.info("Search path probe '$sql' failed: ${e.message}")
         emptyList()
     }
 
