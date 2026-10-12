@@ -14,7 +14,7 @@ class CommentRecoveryAllocationTest {
 
     private fun allocatedBytes(block: () -> Unit): Long {
         val bean = threads ?: return 0
-        val id = Thread.currentThread().id
+        val id = Thread.currentThread().threadId()
         val before = bean.getThreadAllocatedBytes(id)
         block()
         return bean.getThreadAllocatedBytes(id) - before
