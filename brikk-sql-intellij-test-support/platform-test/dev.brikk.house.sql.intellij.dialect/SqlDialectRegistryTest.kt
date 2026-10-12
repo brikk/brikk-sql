@@ -41,6 +41,19 @@ class SqlDialectRegistryTest : BasePlatformTestCase() {
         assertNull(Language.findLanguageByID("Oracle")?.let(SqlDialectRegistry::forLanguage))
     }
 
+    fun testStockIdentitiesAreAliases() {
+        val byDbms = mapOf("DUCKDB" to "duckdb", "DUCK" to "duckdb", "TRINO" to "trino", "PRESTO" to "presto", "HIVE" to "hive", "SPARK" to "spark2")
+        for ((name, dialect) in byDbms) assertEquals(name, dialect, SqlDialectRegistry.entries.single { name in it.dbmsIds }.coreDialect)
+        val registered = byDbms.keys.mapNotNull(Dbms::byName)
+        for (dbms in registered) assertEquals(dbms.name, byDbms[dbms.name], SqlDialectRegistry.forDbms(dbms)?.coreDialect)
+        assertTrue("a stock DuckDB dbms exists in every supported IDE", registered.any { byDbms[it.name] == "duckdb" })
+        assertEquals("duckdb", SqlDialectRegistry.forLanguageId("DuckDB")?.coreDialect)
+        Language.findLanguageByID("DuckDB")?.let { assertEquals("duckdb", SqlDialectRegistry.forLanguage(it)?.coreDialect) }
+        assertNull(SqlDialectRegistry.forLanguageId("GenericSQL"))
+        assertNull(Language.findLanguageByID("GenericSQL")?.let(SqlDialectRegistry::forLanguage))
+        assertTrue(SqlDialectRegistry.forCoreDialect("datafusion")?.dbmsIds.orEmpty().isEmpty())
+    }
+
     fun testMappingSetterAppliesAndClearsTheDialect() {
         val file = myFixture.configureByText("mapped-${UUID.randomUUID()}.sql", "SELECT 1").virtualFile
         setSqlDialectMapping(project, file, PgDialect.INSTANCE, testRootDisposable)

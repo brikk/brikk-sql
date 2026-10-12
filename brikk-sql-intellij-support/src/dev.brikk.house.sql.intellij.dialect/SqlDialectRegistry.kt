@@ -24,12 +24,13 @@ public data class SqlDialectEntry(
 /**
  * Core dialects and the platform identities that speak them. Every plugin bundles its own copy of
  * this table, so it is static versioned data, keyed only by platform identities: language ids and
- * `Dbms` names, never another plugin's objects.
+ * `Dbms` names, never another plugin's objects. Identities match exactly; stock platform ones sit
+ * next to the plugins' own. `GenericSQL` never maps: many engines share it.
  */
 @ApiStatus.Experimental
 public object SqlDialectRegistry {
     /** Changes whenever [entries] change. */
-    public const val VERSION: Int = 1
+    public const val VERSION: Int = 2
 
     /** Sorted by label. */
     public val entries: List<SqlDialectEntry> = listOf(
@@ -37,13 +38,14 @@ public object SqlDialectRegistry {
         SqlDialectEntry("clickhouse", "ClickHouse", languageIds = setOf("ClickHouse"), dbmsIds = setOf("CLICKHOUSE")),
         SqlDialectEntry("datafusion", "DataFusion"),
         SqlDialectEntry("doris", "Doris", languageIds = setOf("DorisSQL"), dbmsIds = setOf("DORIS")),
-        SqlDialectEntry("duckdb", "DuckDB", languageIds = setOf("DuckDBSQL"), dbmsIds = setOf("DUCKDB_BRIKK")),
+        // Stock DuckDB: DUCKDB on the generic dialect before 263, DUCK with its own DuckDB language from 263.
+        SqlDialectEntry("duckdb", "DuckDB", languageIds = setOf("DuckDBSQL", "DuckDB"), dbmsIds = setOf("DUCKDB_BRIKK", "DUCKDB", "DUCK")),
         SqlDialectEntry("hive", "Hive", languageIds = setOf("HiveQL"), dbmsIds = setOf("HIVE")),
         SqlDialectEntry("mysql", "MySQL", languageIds = setOf("MySQL", "MariaDB"), dbmsIds = setOf("MYSQL", "MARIADB")),
         SqlDialectEntry("postgres", "PostgreSQL", languageIds = setOf("PostgreSQL"), dbmsIds = setOf("POSTGRES")),
-        SqlDialectEntry("presto", "Presto"),
+        SqlDialectEntry("presto", "Presto", dbmsIds = setOf("PRESTO")),
         SqlDialectEntry("spark2", "Spark", languageIds = setOf("SparkSQL"), dbmsIds = setOf("SPARK")),
-        SqlDialectEntry("trino", "Trino", languageIds = setOf("TrinoSQL"), dbmsIds = setOf("TRINO_BRIKK")),
+        SqlDialectEntry("trino", "Trino", languageIds = setOf("TrinoSQL"), dbmsIds = setOf("TRINO_BRIKK", "TRINO")),
     )
 
     /** The entry of [language] or of the nearest base language that has one. */
