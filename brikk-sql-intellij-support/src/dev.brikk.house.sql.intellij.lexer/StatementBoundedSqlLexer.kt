@@ -16,7 +16,8 @@ import org.jetbrains.annotations.ApiStatus
  * is 0 at the first token of a statement and 1 elsewhere, so the editor highlighter restarts lexing
  * and stops relexing only at statement starts, where a restart gives the same tokens; the base
  * lexer's own states, which may be negative, never show. Restoring a position relexes from the start
- * of its statement. Starting in state 0 treats the offset as a statement start.
+ * of its statement. Starting in state 0 treats the offset as a statement start; starting in another
+ * state continues the statement holding the offset, within its bounds.
  *
  * Core ranges are read lazily, a window at a time, so an edit's relexing costs about the size of
  * its statement rather than of the rest of the text; a pass from the start of a text shares them
@@ -47,9 +48,26 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
         this.buffer = buffer
         bufferEnd = endOffset
-        statements = if (startOffset == 0) CoreStatements.of(buffer, endOffset, coreDialect)
+        val inside = initialState != 0 && startOffset > 0
+        statements = if (startOffset == 0 || inside) CoreStatements.of(buffer, endOffset, coreDialect)
         else CoreStatements(buffer, endOffset, coreDialect, startOffset)
-        enterStatement(startOffset)
+        if (inside) continueStatement(startOffset) else enterStatement(startOffset)
+    }
+
+    /**
+     * Continues the statement holding [offset], as the console's parameter preprocessing asks when
+     * it restarts mid-statement in the state reported there: the base lexer restarts at [offset] in
+     * its initial state (so a restart mid-token lexes the rest afresh), bounded by the statement.
+     */
+    private fun continueStatement(offset: Int) {
+        val range = statements.rangeAt(offset) ?: return enterStatement(offset)
+        first = false
+        cut = false
+        atTerminator = false
+        statementEnd = range.end
+        terminator = range.terminator
+        base.start(buffer, offset, statementEnd, 0)
+        load()
     }
 
     override fun getState(): Int = if (first) 0 else 1

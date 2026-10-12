@@ -79,6 +79,22 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
         for (case in CHOUSE_BOUNDARY_CORPUS) assertRestartsMatchFullLex(::bounded, case.sql)
     }
 
+    /**
+     * The console's parameter preprocessing restarts a lexer mid-statement with the state it
+     * reported there: the restart stays inside that statement, and later statements lex as in a
+     * full pass.
+     */
+    fun testStartingInsideAStatementKeepsItsBounds() {
+        val text = "SELECT 0;\nINSERT INTO t FORMAT CSV\n1,O'Brien\n;\nSELECT 2;\nSELECT 3;"
+        val full = bounded().lexAll(text)
+        val inside = full.single { it.type == SqlTokens.SQL_RAW_INPUT }
+        assertEquals(1, inside.state)
+        val restarted = bounded().lexAll(text, inside.start, inside.state)
+        assertEquals(1, restarted.first().state)
+        val next = text.indexOf("SELECT 2")
+        assertEquals(full.dropWhile { it.start < next }, restarted.dropWhile { it.start < next })
+    }
+
     fun testRestoringAPositionRelexesFromItsStatement() {
         val text = "SELECT 1;\nINSERT INTO events FORMAT JSONEachRow\n{\"id\":1};\nSELECT 2;"
         val lexer = bounded()
