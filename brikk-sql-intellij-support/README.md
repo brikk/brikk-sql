@@ -165,12 +165,15 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   `scanStatement`; `advanceLenient`, `consumeLenient` and `parseLenientStatement` keep platform
   user parameters; `parseColonParameter` parses `:name`.
 - `StatementBoundaryGate(coreDialect)` (`parser`): in a parser's `parseSqlStatement`, runs the
-  grammar on a top-level statement and, when it stops anywhere but at the end of the statement's
-  core range (before its `;`), parses the range again as one lenient `SQL_STATEMENT`. A grammar
-  gap then never splits (or joins) statements for PSI, Execute at the caret or statement
-  highlighting; statements the grammar parses keep its PSI. Nested statements and ranges with a
-  boundary error (an unclosed parenthesis being typed) keep the grammar's result. Text without `;`
-  between statements is one statement, as the server reads it.
+  grammar on a top-level statement and parses its core range again as one lenient `SQL_STATEMENT`
+  where the grammar's boundary is clearly wrong: it runs past the range's end (before its `;`), or
+  it stops before it after reporting an error in what it parsed (a clause it lacks), after parsing
+  nothing, or where core reads one construct on (inside brackets, a token or a comment). Errors are
+  read from the Grammar-Kit `ErrorState` frame; without one every early stop counts. Statements the
+  grammar reads cleanly without a `;` between them stay apart, as in the platform dialects; an
+  erroneous one absorbs the rest of its core range. Statements the grammar parses keep its PSI;
+  nested statements and ranges with a boundary error (an unclosed bracket being typed) keep the
+  grammar's result.
 - `CHouseFamilyParser(coreDialect)` (`parser`): the platform ClickHouse parser behind such a gate.
   The platform grammar lacks `PARTITION BY` in `INSERT INTO [TABLE] FUNCTION`, so it splits
   `INSERT INTO FUNCTION s3(...) PARTITION BY ...` before a `SELECT` on a new line (and mid-statement
@@ -206,7 +209,9 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   by `createComposite`, never by `createElement`). Its lexer is a `StatementBoundedSqlLexer` over
   `createBaseLexer`. Register a no-arg subclass as
   `lang.parserDefinition`; dialect rules go in `createBaseLexer` and in a `CHouseFamilyParser`
-  subclass from `createParser`.
+  subclass from `createParser`. A `MaskingSqlLexer` over `CHouseLexer` from `createBaseLexer` (to
+  mask what the grammar lacks, such as `PARTITION BY <expr>` after `INSERT INTO FUNCTION`) starts
+  afresh at each statement, so its context and the platform lexer's high state bits never cross one.
 - Comments: register the platform commenter, which toggles `-- ` lines and block comments:
   `<lang.commenter language="<your dialect language id>" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`.
 

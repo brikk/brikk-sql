@@ -97,11 +97,36 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         assertEquals(listOf(export.substring(export.indexOf("SELECT *"))), caretStatements(myFixture.file, text.indexOf("max_threads")))
     }
 
-    /** Without a `;` the server reads one query, and so does the editor. */
-    fun testStatementsWithoutASemicolonBetweenThemAreOne() {
-        val text = "SELECT 1\nSELECT 2;\nSELECT 3"
+    /**
+     * Statements the grammar reads cleanly without a `;` between them stay apart, as in the stock
+     * dialect, and Execute at the caret runs each. Stock ClickHouse itself reads `SELECT 1\nSELECT 2`
+     * as one statement (`SELECT` aliasing `1`), and so does the family.
+     */
+    fun testCleanStatementsWithoutASemicolonStayAsInStock() {
+        val split = listOf("DROP TABLE t\nSELECT 1", "SELECT 1 FROM t LIMIT 1\nSELECT 2;", "TRUNCATE TABLE t\nINSERT INTO t VALUES (1)",
+            "SELECT 1 FROM t ORDER BY a\nSELECT 2 FROM u;\nSELECT 3")
+        for (text in split + "SELECT 1\nSELECT 2") {
+            val stock = stockStatements(text).map { it.text }
+            val stockCaret = caretStatements(myFixture.file, text.length - 1)
+            configureCHouse(text)
+            assertEquals(text, stock, statements().map { it.text })
+            assertEquals(text, stockCaret, caretStatements(myFixture.file, text.length - 1))
+            if (text in split) assertEquals(text, stock.last(), stockCaret.first())
+            assertEquals(text, text in split, stock.size > 1)
+        }
+    }
+
+    /**
+     * A grammar error before the split means the grammar cannot be trusted to have ended the
+     * statement there, so the core range, which the server also reads as one query, is one
+     * statement: the clean SELECT after it joins it.
+     */
+    fun testAnErroneousStatementWithoutASemicolonAbsorbsTheCleanOneAfterIt() {
+        val text = "SELECT 1 FROM t WHERE a = = 1\nSELECT 2;\nSELECT 3;"
+        assertEquals(listOf("SELECT 1 FROM t WHERE a = = 1", "SELECT 2", "SELECT 3"), stockStatements(text).map { it.text })
         configureCHouse(text)
-        assertEquals(listOf("SELECT 1\nSELECT 2", "SELECT 3"), statements().map { it.text })
+        assertEquals(listOf("SELECT 1 FROM t WHERE a = = 1\nSELECT 2", "SELECT 3"), statements().map { it.text })
+        assertEquals(SqlCompositeElementTypes.SQL_STATEMENT, statements().first().node.elementType)
     }
 
     fun testABoundaryCoreCannotProveKeepsTheGrammarsStatements() {

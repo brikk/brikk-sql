@@ -3,6 +3,7 @@ package dev.brikk.house.sql.intellij.fixture
 import com.intellij.database.Dbms
 import com.intellij.icons.AllIcons
 import com.intellij.lang.LanguageParserDefinitions
+import com.intellij.lang.ParserDefinition
 import com.intellij.lang.PsiBuilder
 import com.intellij.lang.PsiParser
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
@@ -44,9 +45,12 @@ class CHouseFixtureHighlighterFactory : SqlSyntaxHighlighterFactory.Base(CHouseF
 abstract class CHouseFixtureTestCase : BasePlatformTestCase() {
     override fun setUp() {
         super.setUp()
-        LanguageParserDefinitions.INSTANCE.addExplicitExtension(CHouseFixtureDialect, CHouseFixtureParserDefinition(), testRootDisposable)
+        LanguageParserDefinitions.INSTANCE.addExplicitExtension(CHouseFixtureDialect, parserDefinition(), testRootDisposable)
         SyntaxHighlighterFactory.LANGUAGE_FACTORY.addExplicitExtension(CHouseFixtureDialect, CHouseFixtureHighlighterFactory(), testRootDisposable)
     }
+
+    /** The fixture dialect's parsing in this test. */
+    protected open fun parserDefinition(): ParserDefinition = CHouseFixtureParserDefinition()
 
     /** Opens [text] in a fixture-dialect file. */
     protected fun configureCHouse(text: String) {
