@@ -23,13 +23,15 @@ import dev.brikk.house.sql.intellij.fixture.OWNER_S3_EXPORT
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 
 class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
-    /** Each statement's range, without its `;`, as the editor's statements should have it. */
+    /** Each statement's range up to its terminating `;` (a `;` in data is data), as the editor's statements should have it. */
     private fun BoundaryCase.expectedRanges(): List<TextRange> {
+        val terminators = SqlScriptSnapshot.parse(sql, "clickhouse").statements.mapNotNull { it.terminator }.toSet()
         var from = 0
         return statements.map { statement ->
             val start = sql.indexOf(statement, from)
             from = start + statement.length
-            TextRange(start, start + statement.removeSuffix(";").trimEnd().length)
+            val end = if (from - 1 in terminators) from - 1 else from
+            TextRange(start, start + sql.substring(start, end).trimEnd().length)
         }
     }
 

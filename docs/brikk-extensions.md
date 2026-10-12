@@ -1879,19 +1879,25 @@ statement nor make its boundary an error. The rule applies at depth 0 of a state
 with `INSERT` and has no `SELECT`, `WITH`, `INFILE` or `VALUES` before the format; `FORMAT Values`
 stays SQL, as ClickHouse reads its rows with the Values parser up to the terminating `;`.
 
-Framing follows the platform ClickHouse editor lexer (IntelliJ 261 `CHouseLexer`), which an
-IDE console splits by: data starts after the first line break after the format name, or after its
-spaces on the same line, and ends before a blank line, before a line holding only `;`, or, when
-it starts on the format name's line, before a `;` that ends that line. A blank line ends the
-statement without a `;`. At the end of the text a final `;` is the terminator rather than data
-(an IDE choice). A `;` right after the format name means there is no data.
+Framing never alters stored data. Data starts after the spaces that follow the format name and,
+when a line break follows them, after it (ClickHouse's `ParserInsertQuery`). It ends only:
 
-Evidence: clickhouse-client's multi-query splitting (`ClientBase.cpp`, master 2026-10) runs the
-Values parser to the trailing `;` for `FORMAT Values`, and otherwise ends generic-format data at
-the first blank line (`\n\n`) or the end of the input; a `;` inside data never ends it there. The
-platform editor additionally ends data at a `;` alone on its line or ending the format name's
-line, so this rule never joins what the client keeps apart; at those `;` it splits where the
-client would send the rest as data. Which `;` a given format's server-side reader accepts is not proven here.
+- before a blank line, which also ends the statement, without a `;`;
+- before a line holding only `;` (spaces and tabs allowed), that `;` being the terminator;
+- at the real end of the text.
+
+A `;` at the end of a data line, or anywhere else in data, is data. A `;` ending the format name's
+line with nothing else on it is the terminator of a statement without data. So
+`INSERT ... FORMAT JSONEachRow\n{"id":1};\nSELECT 2;` is one statement, as the platform editor and
+clickhouse-client read it; a blank line or a `;` line separates the next one.
+
+Evidence (ClickHouse 26.7.1, `clickhouse local`, and JDBC 0.9.8, which an IDE console executes
+through one statement text at a time): TSV and CSV store a data line's trailing `;` (`a;` stays
+`a;`); JSONEachRow accepts a trailing `;` but rejects SQL text after it in the same payload; JDBC
+rejects a payload joining an INSERT and a SELECT. clickhouse-client (`ClientBase.cpp`, master
+2026-10) runs the Values parser to the trailing `;` for `FORMAT Values` and otherwise ends data at
+the first blank line or the end of its input. No single server rule frames data; this rule is
+the platform editor's without its line-end `;` cases, which cut stored data.
 
 ## Upstream sync protocol
 

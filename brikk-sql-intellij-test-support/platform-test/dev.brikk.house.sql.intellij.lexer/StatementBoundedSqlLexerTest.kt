@@ -33,12 +33,11 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
         assertEquals(listOf(text.indexOf(";"), text.lastIndexOf(";")), tokens.semicolons(text))
     }
 
-    fun testRawDataEndsBeforeTheFinalSemicolon() {
-        val text = "INSERT INTO events FORMAT JSONEachRow {\"id\":1};"
-        assertEquals("{\"id\":1};", text.of(CHouseLexer().lexAll(text).raw().single()))
+    fun testADataSemicolonStaysInTheData() {
+        val text = "INSERT INTO events FORMAT TSV a;\nb;\n;\nSELECT 2;"
         val tokens = bounded().lexAll(text)
-        assertEquals("{\"id\":1}", text.of(tokens.raw().single()))
-        assertEquals(listOf(text.lastIndex), tokens.semicolons(text))
+        assertEquals("a;\nb;", text.of(tokens.raw().single()))
+        assertEquals(listOf(text.indexOf("\n;") + 1, text.lastIndex), tokens.semicolons(text))
     }
 
     fun testRawDataKeepsSemicolonsAndQuotesInsideIt() {
@@ -61,7 +60,14 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
     fun testStatementsAfterRawDataParseOnTheirOwn() {
         for (case in CHOUSE_BOUNDARY_CORPUS.filter { "FORMAT" in it.sql && "INSERT INTO events" in it.sql }) {
             configureCHouse(case.sql)
-            assertEquals(case.name, case.statements.map { it.removeSuffix(";").trimEnd() }, statements().map { it.text })
+            val terminators = SqlScriptSnapshot.parse(case.sql, "clickhouse").statements.mapNotNull { it.terminator }.toSet()
+            var from = 0
+            val expected = case.statements.map { statement ->
+                val start = case.sql.indexOf(statement, from)
+                from = start + statement.length
+                case.sql.substring(start, if (from - 1 in terminators) from - 1 else from).trimEnd()
+            }
+            assertEquals(case.name, expected, statements().map { it.text })
         }
     }
 

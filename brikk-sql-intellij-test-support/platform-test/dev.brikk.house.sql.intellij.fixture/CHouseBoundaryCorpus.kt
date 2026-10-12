@@ -69,12 +69,15 @@ val CHOUSE_BOUNDARY_CORPUS: List<BoundaryCase> = listOf(
             "SELECT 4;",
         ),
     ),
-    BoundaryCase("json data tail", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2,\"label\":\"c\"};")),
+    BoundaryCase("json data tail", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2,\"label\":\"c\"}\n;")),
+    // A `;` ending a data line is data, also at the end of the text.
+    BoundaryCase("json ending in a data semicolon", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1};")),
     BoundaryCase("json then a semicolon line", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"q\":\"it's\"}\n;", "SELECT 2;")),
     BoundaryCase("json then a blank line", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1}", "SELECT 2;"), "\n\n"),
-    // As clickhouse-client and the platform editor read it: a `;` ending a later data line is data.
+    // As TSV and CSV store it: a `;` ending a data line is data.
     BoundaryCase("json swallowing a select", listOf("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1};\nSELECT 2;")),
-    BoundaryCase("json on one line followed by select", listOf("INSERT INTO events FORMAT JSONEachRow {\"id\":1};", "SELECT 2;")),
+    BoundaryCase("json on one line swallowing a select", listOf("INSERT INTO events FORMAT JSONEachRow {\"id\":1};\nSELECT 2;")),
+    BoundaryCase("tsv on one line then a semicolon line", listOf("INSERT INTO events FORMAT TSV a;b\n ;", "SELECT 2;")),
     BoundaryCase("tsv with semicolons and quotes", listOf("INSERT INTO events FORMAT TSV\na;b\tO'Brien\n;", "SELECT 2;")),
     BoundaryCase("csv with quotes then a blank line", listOf("INSERT INTO events FORMAT CSV\n1,O'Brien\n2,\"x;y\"", "SELECT 2;"), "\n\n"),
     BoundaryCase("values followed by select", listOf("INSERT INTO events FORMAT Values (1, 'x;y');", "SELECT 2;")),

@@ -13,6 +13,8 @@ data class SqlStatementRange(
     val boundaryError: String? = null,
     /** The offset of the `;` token that ends the statement, or null when none does. */
     val terminator: Int? = null,
+    /** The end of the statement's inline INSERT data (docs/brikk-extensions.md #55), or null without it. */
+    val dataEnd: Int? = null,
 )
 
 /** Half-open ranges retain leading trivia and the terminator. Trailing trivia is its own range. */
@@ -44,9 +46,11 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
             var afterEnd = false
             val brackets = ArrayList<TokenType>()
             val blocks = ArrayList<String>()
+            var dataEnd: Int? = null
             fun flush(end: Int, terminator: Int? = null) {
-                if (end > start) ranges.add(SqlStatementRange(start, end, hasSql, hasPipe, error, terminator))
+                if (end > start) ranges.add(SqlStatementRange(start, end, hasSql, hasPipe, error, terminator, dataEnd))
                 start = end
+                dataEnd = null
                 hasSql = false; hasPipe = false; error = null; head = null; routine = false; afterEnd = false
             }
             for ((index, token) in tokens.withIndex()) {
@@ -99,6 +103,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 if (kind == TokenType.SEMICOLON && brackets.isEmpty() && blocks.isEmpty() && error == null) {
                     flush(token.end + 1, token.start)
                 } else if (kind != TokenType.SEMICOLON) hasSql = true
+                if (kind == TokenType.INSERT_DATA) dataEnd = token.end + 1
                 // Inline INSERT data that a blank line ends also ends its statement.
                 if (kind == TokenType.INSERT_DATA && tokens.getOrNull(index + 1)?.tokenType != TokenType.SEMICOLON &&
                     brackets.isEmpty() && blocks.isEmpty() && error == null) flush(token.end + 1)

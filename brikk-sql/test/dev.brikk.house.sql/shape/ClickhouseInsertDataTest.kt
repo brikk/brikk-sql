@@ -8,6 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /** docs/brikk-extensions.md #55: ClickHouse inline INSERT data framing. */
@@ -20,10 +21,12 @@ class ClickhouseInsertDataTest {
             .filter { it.tokenType == TokenType.INSERT_DATA }.map { it.text }
 
     @Test fun aSemicolonAloneOnItsLineEndsData() {
-        val sql = "INSERT INTO t FORMAT TSV\na;b\n;\nSELECT 2;"
-        assertEquals(listOf("INSERT INTO t FORMAT TSV\na;b\n;", "SELECT 2;"), statements(sql))
+        val sql = "INSERT INTO t FORMAT TSV\na;b\n  ;\t\nSELECT 2;"
+        assertEquals(listOf("INSERT INTO t FORMAT TSV\na;b\n  ;", "SELECT 2;"), statements(sql))
         assertEquals(listOf("a;b"), data(sql))
-        assertEquals(sql.indexOf("\n;") + 1, SqlScriptSnapshot.parse(sql, "clickhouse").statements.first().terminator)
+        val range = SqlScriptSnapshot.parse(sql, "clickhouse").statements.first()
+        assertEquals(sql.indexOf(";\t"), range.terminator)
+        assertEquals(sql.indexOf("a;b") + 3, range.dataEnd)
     }
 
     @Test fun aBlankLineEndsDataAndItsStatement() {
@@ -31,32 +34,53 @@ class ClickhouseInsertDataTest {
         val ranges = SqlScriptSnapshot.parse(sql, "clickhouse").statements
         assertEquals(listOf("INSERT INTO t FORMAT CSV\n1,O'Brien\n2,\"x;y\"", "SELECT 2;"), statements(sql))
         assertTrue(ranges.all { it.boundaryError == null })
-        assertEquals(null, ranges.first().terminator)
+        assertNull(ranges.first().terminator)
     }
 
-    @Test fun dataOnTheFormatLineEndsAtASemicolonEndingThatLine() {
-        assertEquals(listOf("INSERT INTO t FORMAT JSONEachRow {\"id\":1};", "SELECT 2;"),
-            statements("INSERT INTO t FORMAT JSONEachRow {\"id\":1};\nSELECT 2;"))
-        assertEquals(listOf("{\"id\":1}"), data("INSERT INTO t FORMAT JSONEachRow {\"id\":1};\nSELECT 2;"))
+    @Test fun lineBreaksMayBeCrlf() {
+        assertEquals(listOf("a;b"), data("INSERT INTO t FORMAT TSV\r\na;b\r\n;\r\nSELECT 2;"))
+        assertEquals(2, statements("INSERT INTO t FORMAT TSV\r\na;b\r\n;\r\nSELECT 2;").size)
+        assertEquals(listOf("a;b"), data("INSERT INTO t FORMAT TSV\r\na;b\r\n\r\nSELECT 2;"))
+        assertEquals(2, statements("INSERT INTO t FORMAT TSV\r\na;b\r\n\r\nSELECT 2;").size)
     }
 
-    /** As in clickhouse-client and the platform editor, a `;` ending a data line is data. */
-    @Test fun aSemicolonEndingALaterDataLineIsData() {
-        val sql = "INSERT INTO t FORMAT JSONEachRow\n{\"id\":1};\nSELECT 2;"
-        assertEquals(listOf(sql), statements(sql))
-        assertEquals(listOf("{\"id\":1};\nSELECT 2"), data(sql))
+    /** As TSV and CSV store it, a `;` ending a data line is data, on the format's line too. */
+    @Test fun aSemicolonEndingADataLineIsData() {
+        for ((sql, payload) in listOf(
+            "INSERT INTO t FORMAT TSV\na;\nSELECT 'NEXT';" to "a;\nSELECT 'NEXT';",
+            "INSERT INTO t FORMAT TSV a;\nSELECT 'NEXT';" to "a;\nSELECT 'NEXT';",
+            "INSERT INTO t FORMAT JSONEachRow\n{\"id\":1};\nSELECT 2;" to "{\"id\":1};\nSELECT 2;",
+        )) {
+            assertEquals(listOf(sql), statements(sql), sql)
+            assertEquals(listOf(payload), data(sql), sql)
+        }
     }
 
-    @Test fun aFinalSemicolonEndsTheStatement() {
+    @Test fun dataRunsToTheRealEndOfTheText() {
         val sql = "INSERT INTO t FORMAT JSONEachRow\n{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2};\n"
-        assertEquals(sql.lastIndexOf(';') + 1, SqlScriptSnapshot.parse(sql, "clickhouse").statements.first().end)
-        assertEquals(listOf("{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2}"), data(sql))
+        val range = SqlScriptSnapshot.parse(sql, "clickhouse").statements.single()
+        assertEquals(sql.length, range.end)
+        assertNull(range.terminator)
+        assertEquals(listOf("{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2};\n"), data(sql))
     }
 
-    @Test fun valuesAndInsertSelectAreSql() {
+    @Test fun aSemicolonEndingTheFormatLineMeansNoData() {
+        for (sql in listOf("INSERT INTO t FORMAT TSV;\nSELECT 2;", "INSERT INTO t FORMAT TSV ;  \nSELECT 2;", "INSERT INTO t FORMAT TSV\n;\nSELECT 2;")) {
+            assertEquals(2, statements(sql).size, sql)
+            assertTrue(data(sql).isEmpty(), sql)
+        }
+    }
+
+    @Test fun aBlankLineRightAfterTheFormatEndsTheStatementWithoutData() {
+        val sql = "INSERT INTO t FORMAT TSV\n\nSELECT 2;"
+        assertEquals(listOf("INSERT INTO t FORMAT TSV", "SELECT 2;"), statements(sql))
+        assertEquals(listOf(""), data(sql))
+    }
+
+    @Test fun valuesInsertSelectAndInfileAreSql() {
         assertEquals(listOf("INSERT INTO t FORMAT Values (1, 'a;b');", "SELECT 2;"), statements("INSERT INTO t FORMAT Values (1, 'a;b');\nSELECT 2;"))
         for (sql in listOf("INSERT INTO t VALUES (1, ';');\nSELECT 2;", "INSERT INTO t SELECT * FROM s FORMAT TSV;\nSELECT 2;",
-            "INSERT INTO t FROM INFILE 'a;b.csv' FORMAT CSV;\nSELECT 2;", "INSERT INTO t FORMAT CSV;\nSELECT 2;")) {
+            "INSERT INTO t FROM INFILE 'a;b.csv' FORMAT CSV;\nSELECT 2;")) {
             assertEquals(2, statements(sql).size, sql)
             assertTrue(data(sql).isEmpty(), sql)
         }

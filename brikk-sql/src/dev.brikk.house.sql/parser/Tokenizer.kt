@@ -175,49 +175,58 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     }
 
     /**
-     * Reads inline data from [from], framed as the platform ClickHouse editor lexer frames it: data
-     * starts after the first line break that follows the format name, or after its spaces on the
-     * same line, and ends before a blank line, before a line holding only `;`, or, when it starts
-     * on the format name's line, before a `;` that ends that line. At the end of the text a final
-     * `;` ends the statement. A `;` on the format name's line right after it means there is no data.
+     * Reads inline data from [from], the end of the INSERT's header. Data starts after the spaces
+     * that follow the header and, when a line break follows them, after it, as ClickHouse's parser
+     * starts it; a `;` ending the header's line instead means there is no data. Data ends before a
+     * blank line, before a line holding only `;` (with spaces or tabs), or at the real end of the
+     * text; any other `;` is data. Data that a blank line ends at once is empty.
      */
     private fun scanInsertDataAfter(from: Int) {
         var dataStart = from
-        while (dataStart < size && (sql[dataStart] == ' ' || sql[dataStart] == '\t')) dataStart++
-        var oneLine = true
-        if (dataStart < size && isLineBreak(sql[dataStart])) {
-            dataStart = lineEnd(dataStart)
-            oneLine = false
-        }
-        if (dataStart >= size || oneLine && sql[dataStart] == ';' || !oneLine && isLoneSemicolonAt(dataStart)) return
+        while (dataStart < size && isSpace(sql[dataStart])) dataStart++
+        if (dataStart >= size || sql[dataStart] == ';' && isLineEnd(skipSpaces(dataStart + 1))) return
+        if (isLineBreak(sql[dataStart])) dataStart = lineEnd(dataStart)
+        if (dataStart < size && isLoneSemicolonLine(dataStart)) return
         var dataEnd = dataStart
-        while (dataEnd < size) {
-            if (!isLineBreak(sql[dataEnd])) {
-                dataEnd++
-                continue
-            }
-            if (oneLine) {
-                oneLine = false
-                if (sql[dataEnd - 1] == ';') {
-                    dataEnd--
+        if (!isEmptyLine(dataStart)) {
+            var lineStart = dataStart
+            while (true) {
+                var i = lineStart
+                while (i < size && !isLineBreak(sql[i])) i++
+                dataEnd = i
+                if (i >= size) break
+                val next = lineEnd(i)
+                if (next >= size) {
+                    dataEnd = size
                     break
                 }
+                if (isEmptyLine(next) || isLoneSemicolonLine(next)) break
+                lineStart = next
             }
-            val next = lineEnd(dataEnd)
-            if (next < size && (isLineBreak(sql[next]) || isLoneSemicolonAt(next))) break
-            dataEnd = next
         }
-        if (dataEnd >= size) {
-            var last = size
-            while (last > dataStart && sql[last - 1].isWhitespace()) last--
-            if (last > dataStart && sql[last - 1] == ';') dataEnd = last - 1
-        }
-        if (dataEnd <= dataStart) return
         while (current < dataStart) advance()
         start = dataStart
         while (current < dataEnd) advance()
         add(TokenType.INSERT_DATA)
         insertData.observed = tokens.size
+    }
+
+    private fun isSpace(c: Char): Boolean = c == ' ' || c == '\t' || c == '\u000C'
+
+    private fun skipSpaces(from: Int): Int {
+        var offset = from
+        while (offset < size && isSpace(sql[offset])) offset++
+        return offset
+    }
+
+    private fun isLineEnd(offset: Int): Boolean = offset >= size || isLineBreak(sql[offset])
+
+    private fun isEmptyLine(offset: Int): Boolean = offset < size && isLineBreak(sql[offset])
+
+    /** Whether the line at [offset] holds only `;`, with spaces or tabs. */
+    private fun isLoneSemicolonLine(offset: Int): Boolean {
+        val at = skipSpaces(offset)
+        return at < size && sql[at] == ';' && isLineEnd(skipSpaces(at + 1))
     }
 
     private fun isLineBreak(c: Char): Boolean = c == '\n' || c == '\r'
@@ -227,10 +236,6 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val next = offset + 1
         return if (next < size && isLineBreak(sql[next]) && sql[next] != sql[offset]) next + 1 else next
     }
-
-    /** Whether the line at [offset] holds only `;`. */
-    private fun isLoneSemicolonAt(offset: Int): Boolean =
-        sql[offset] == ';' && (offset + 1 >= size || isLineBreak(sql[offset + 1]))
 
     /** Statement context for [scanInsertData]. */
     private class InsertDataState {

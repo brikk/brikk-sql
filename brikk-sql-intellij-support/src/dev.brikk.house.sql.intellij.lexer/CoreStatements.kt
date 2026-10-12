@@ -32,7 +32,7 @@ internal class CoreStatements(private val text: CharSequence, private val end: I
             val complete = SqlScriptSnapshot.parse(text.subSequence(from, to).toString(), dialect, ProgressManager::checkCanceled).statements
                 .filter { from + it.end < to || to == end }
             if (complete.isNotEmpty()) {
-                complete.mapTo(ranges) { it.copy(start = from + it.start, end = from + it.end, terminator = it.terminator?.let { t -> from + t }) }
+                complete.mapTo(ranges) { it.copy(start = from + it.start, end = from + it.end, terminator = it.terminator?.let { t -> from + t }, dataEnd = it.dataEnd?.let { d -> from + d }) }
                 readTo = ranges.last().end
                 check(readTo > from) { "Core read no statement from $from" }
                 return

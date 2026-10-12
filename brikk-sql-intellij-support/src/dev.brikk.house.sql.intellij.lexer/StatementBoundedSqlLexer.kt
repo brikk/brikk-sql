@@ -4,13 +4,15 @@ import com.intellij.lexer.Lexer
 import com.intellij.lexer.LexerBase
 import com.intellij.lexer.LexerPosition
 import com.intellij.psi.tree.IElementType
+import com.intellij.sql.psi.SqlTokens
+import dev.brikk.house.sql.parser.SqlStatementRange
 import org.jetbrains.annotations.ApiStatus
 
 /**
  * Lexes each statement of the [coreDialect]'s script ranges on its own with a base lexer from
- * [baseFactory], so no base token runs past the end of its statement: inline `INSERT ... FORMAT`
- * data ends where core frames it, and a token that swallows the statement's terminating `;` is cut
- * before it, the base restarting at the `;` so it reads a separator.
+ * [baseFactory], so no base token runs past the end of its statement: a raw data token of inline
+ * `INSERT ... FORMAT` data covers exactly core's data, and a token that swallows the statement's
+ * terminating `;` is cut before it, the base restarting at the `;` so it reads a separator.
  *
  * Restarts: the base lexer starts afresh in its initial state at every statement start. [getState]
  * is 0 at the first token of a statement and 1 elsewhere, so the editor highlighter restarts lexing
@@ -30,9 +32,10 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     private var bufferEnd = 0
     private var statements = CoreStatements("", 0, coreDialect)
 
-    /** The end of the current statement's range and the offset of its terminating `;`, if any. */
+    /** The end of the current statement's range, the offset of its terminating `;` and the end of its data, if any. */
     private var statementEnd = 0
     private var terminator: Int? = null
+    private var dataEnd: Int? = null
 
     private var type: IElementType? = null
     private var start = 0
@@ -42,8 +45,8 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     /** Whether the base lexer was restarted at the current statement's terminator. */
     private var atTerminator = false
 
-    /** Whether the current token was cut before the terminator, where the base lexer resumes. */
-    private var cut = false
+    /** Where the base lexer restarts after the current token, which was cut or stretched to core's framing. */
+    private var resume: Int? = null
 
     override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
         this.buffer = buffer
@@ -62,10 +65,7 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     private fun continueStatement(offset: Int) {
         val range = statements.rangeAt(offset) ?: return enterStatement(offset)
         first = false
-        cut = false
-        atTerminator = false
-        statementEnd = range.end
-        terminator = range.terminator
+        enter(range)
         base.start(buffer, offset, statementEnd, 0)
         load()
     }
@@ -85,9 +85,10 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
     override fun advance() {
         if (type == null) return
         first = false
-        if (cut) {
-            cut = false
-            restartAtTerminator()
+        val at = resume
+        if (at != null) {
+            resume = null
+            restartAt(at)
         } else {
             base.advance()
         }
@@ -103,8 +104,6 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
 
     private fun enterStatement(offset: Int) {
         first = true
-        cut = false
-        atTerminator = false
         val range = statements.rangeAt(offset)
         if (range == null) {
             type = null
@@ -112,29 +111,44 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
             end = bufferEnd
             return
         }
-        statementEnd = range.end
-        terminator = range.terminator
+        enter(range)
         base.start(buffer, offset, statementEnd, 0)
         load()
     }
 
+    private fun enter(range: SqlStatementRange) {
+        statementEnd = range.end
+        terminator = range.terminator
+        dataEnd = range.dataEnd
+        atTerminator = false
+        resume = null
+    }
+
+    /**
+     * Takes the base token, framed as core frames the statement: a raw data token ends where core's
+     * data does (stretched over what the base read as SQL, or cut), and no token covers the
+     * terminator, which the base lexes afresh so it reads the `;` it is.
+     */
     private fun load() {
         val next = base.tokenType ?: return enterStatement(statementEnd)
         val at = terminator
-        if (at != null && base.tokenStart == at && !atTerminator) return restartAtTerminator().also { load() }
+        if (at != null && base.tokenStart == at && !atTerminator) return restartAt(at).also { load() }
         type = next
         start = base.tokenStart
         end = base.tokenEnd
+        val data = dataEnd
+        if (next == SqlTokens.SQL_RAW_INPUT && data != null && start < data && end != data) {
+            end = data
+            resume = data
+        }
         if (at != null && start < at && end > at) {
             end = at
-            cut = true
+            resume = at
         }
     }
 
-    /** Lexes the terminator afresh, so the base reads it as the `;` it is, not as part of raw data. */
-    private fun restartAtTerminator() {
-        val at = checkNotNull(terminator)
-        atTerminator = true
-        base.start(buffer, at, statementEnd, 0)
+    private fun restartAt(offset: Int) {
+        if (offset == terminator) atTerminator = true
+        base.start(buffer, offset, statementEnd, 0)
     }
 }
