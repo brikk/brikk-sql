@@ -54,11 +54,21 @@ class PipeEditorTest : BasePlatformTestCase() {
     fun testEveryStagePhraseIsOfferedAfterAPipe() {
         configure("FROM t |> <caret>")
         myFixture.completeBasic()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
+    }
+
+    fun testOnlyTheEnginesPhrasesAreOfferedAndColored() {
+        val parsedOnly = pipeStageKeywords("trino") - trino.stagePhrases.toSet()
+        assertContainsElements(parsedOnly, "STRAIGHT_JOIN", "ASOF JOIN", "NATURAL JOIN")
+        configure("FROM t |> <caret>")
+        myFixture.completeBasic()
+        assertSameElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
+        configure("FROM t |> STRAIGHT_JOIN u ON t.a = u.a |> NATURAL JOIN v |> WHERE a > 0")
+        assertEquals(listOf("WHERE"), coloredStagePhrases())
     }
 
     fun testAMultiWordPhraseIsInsertedOnce() {
-        val phrases = pipeStageKeywords("trino")
+        val phrases = trino.stagePhrases
         val phrase = phrases.first { candidate ->
             candidate.count { it == ' ' } == 2 && phrases.count { it.startsWith(candidate.substringBeforeLast(' ')) } == 1
         }
@@ -69,7 +79,7 @@ class PipeEditorTest : BasePlatformTestCase() {
     }
 
     fun testPhrasesMatchAcrossAnyWhitespace() {
-        val phrase = pipeStageKeywords("trino").first { it.count { c -> c == ' ' } == 2 }
+        val phrase = trino.stagePhrases.first { it.count { c -> c == ' ' } == 2 }
         val words = phrase.split(' ')
         for (gap in listOf("  ", "\n   ")) {
             configure("FROM t |> ${words[0]}$gap${words[1]}$gap${words[2].take(1)}<caret>")
@@ -89,7 +99,7 @@ class PipeEditorTest : BasePlatformTestCase() {
     fun testStagePhrasesInANestedPipeline() {
         configure("SELECT * FROM (FROM t |> <caret>) AS s")
         myFixture.completeBasic()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
     }
 
     fun testANestedPipelineCompletesItsOwnInputColumns() {
@@ -195,7 +205,7 @@ class PipeEditorTest : BasePlatformTestCase() {
     fun testStagesCompleteWhileLaterInputIsIncomplete() {
         configure("FROM t |> EXTEND 1 AS x |> <caret> |> SELECT 'unfinished")
         myFixture.completeBasic()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
     }
 
     fun testNothingCompletesInsideAnUnterminatedString() {

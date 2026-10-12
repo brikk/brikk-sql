@@ -20,24 +20,23 @@ import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
-import dev.brikk.house.sql.parser.pipeStageKeywords
 import dev.brikk.house.sql.shape.ShapeCatalog
 import dev.brikk.house.sql.shape.ShapeError
 import dev.brikk.house.sql.shape.SqlFragment
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Completes stage phrases right after a `|>`, hiding every other item there, and, once a stage has
- * begun, the columns its input provides, in the innermost pipeline at the caret. Items take the
- * [SqlLookupKind.PIPE_STAGE] and [SqlLookupKind.PIPE_INPUT_COLUMN] rows of [styles]. Register it
- * for the dialect's language with a no-arg subclass.
+ * Completes the profile's [PipeDialect.stagePhrases] right after a `|>`, hiding every other item
+ * there, and, once a stage has begun, the columns its input provides, in the innermost pipeline at
+ * the caret. Items take the [SqlLookupKind.PIPE_STAGE] and [SqlLookupKind.PIPE_INPUT_COLUMN] rows
+ * of [styles]. Register it for the dialect's language with a no-arg subclass.
  */
 @ApiStatus.Experimental
 public abstract class PipeStageCompletionContributor(
     private val dialect: PipeDialect,
     private val styles: SqlLookupStyles = SqlLookupStyles.DEFAULT,
 ) : CompletionContributor() {
-    private val phrases by lazy { pipeStageKeywords(dialect.dialect) }
+    private val phrases by lazy { dialect.stagePhrases }
     private val inputColumns = object : LinkedHashMap<Pair<String, ShapeCatalog>, List<String>>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Pair<String, ShapeCatalog>, List<String>>) = size > 32
     }
@@ -138,11 +137,11 @@ private class PhrasePrefixMatcher(prefix: String) : PrefixMatcher(prefix) {
     override fun cloneWithPrefix(prefix: String): PrefixMatcher = PhrasePrefixMatcher(prefix)
 }
 
-/** Colors the stage phrase after every `|>` as a keyword, also in a statement still being typed. Register it for the dialect's language with a no-arg subclass. */
+/** Colors the profile's stage phrase after every `|>` as a keyword, also in a statement still being typed. Register it for the dialect's language with a no-arg subclass. */
 @ApiStatus.Experimental
 public abstract class PipeStageKeywordAnnotator(private val dialect: PipeDialect) : Annotator {
     private val phrases by lazy {
-        pipeStageKeywords(dialect.dialect).map { it.split(' ') }.sortedByDescending { it.size }
+        dialect.stagePhrases.map { it.split(' ') }.sortedByDescending { it.size }
     }
 
     final override fun annotate(element: PsiElement, holder: AnnotationHolder) {

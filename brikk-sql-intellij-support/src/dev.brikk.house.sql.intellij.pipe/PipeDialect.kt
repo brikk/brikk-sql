@@ -65,6 +65,9 @@ public interface PipeDialect {
     /** [sql] with its named parameters replaced by same-length scalars, for validation before substitution. */
     public fun maskParameters(sql: String): String = maskNamedParameters(sql, dialect)
 
+    /** The stage phrases completion offers and coloring marks after `|>`; by default [pipeStagePhrases]. */
+    public val stagePhrases: List<String> get() = pipeStagePhrases(dialect)
+
     /** Which bare first stages run-to-stage may execute. */
     public val firstStage: FirstStageRule get() = FirstStageRule.AnyQuery
 
