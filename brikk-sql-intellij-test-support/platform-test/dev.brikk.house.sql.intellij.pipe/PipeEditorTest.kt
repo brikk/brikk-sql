@@ -2,11 +2,18 @@ package dev.brikk.house.sql.intellij.pipe
 
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionContributorEP
+import com.intellij.codeInsight.completion.CompletionParameters
+import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.completion.CompletionType
+import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.lookup.LookupElementBuilder
+import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
+import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
@@ -19,16 +26,28 @@ import java.util.UUID
 private val trino = testPipeDialects.first()
 
 class TestStageCompletion : PipeStageCompletionContributor(trino)
+class TestOpenStageCompletion : PipeStageCompletionContributor(trino) {
+    override val stopsAtStageHead = false
+    override fun stagePhrase(phrase: String): LookupElement = LookupElementBuilder.create(phrase).withTypeText("custom stage")
+}
+class TestEmbeddedStageCompletion : PipeStageCompletionContributor(object : PipeDialect by trino {
+    override fun enablesEditing(file: PsiFile) = true
+})
+class TestOtherCompletion : CompletionContributor() {
+    override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        result.addElement(LookupElementBuilder.create("other_item"))
+    }
+}
 class TestStageKeywords : PipeStageKeywordAnnotator(trino)
 
 class PipeEditorTest : BasePlatformTestCase() {
-    private fun configure(text: String) {
+    private fun configure(text: String, completion: Class<out PipeStageCompletionContributor> = TestStageCompletion::class.java) {
         myFixture.configureByText("pipe-${UUID.randomUUID()}.sql", text)
         val language = myFixture.file.language.id
         val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test"), javaClass.classLoader)
-        CompletionContributor.EP.point.registerExtension(
-            CompletionContributorEP(language, TestStageCompletion::class.java.name, plugin), testRootDisposable,
-        )
+        val point = CompletionContributor.EP.point
+        point.registerExtension(CompletionContributorEP(language, completion.name, plugin), LoadingOrder.FIRST, testRootDisposable)
+        point.registerExtension(CompletionContributorEP(language, TestOtherCompletion::class.java.name, plugin), LoadingOrder.LAST, testRootDisposable)
         LanguageAnnotators.INSTANCE.addExplicitExtension(myFixture.file.language, TestStageKeywords(), testRootDisposable)
     }
 
@@ -47,6 +66,62 @@ class PipeEditorTest : BasePlatformTestCase() {
         configure("FROM t |> $typed<caret>")
         myFixture.completeBasic()
         assertEquals("FROM t |> $phrase", myFixture.editor.document.text)
+    }
+
+    fun testPhrasesMatchAcrossAnyWhitespace() {
+        val phrase = pipeStageKeywords("trino").first { it.count { c -> c == ' ' } == 2 }
+        val words = phrase.split(' ')
+        for (gap in listOf("  ", "\n   ")) {
+            configure("FROM t |> ${words[0]}$gap${words[1]}$gap${words[2].take(1)}<caret>")
+            myFixture.completeBasic()
+            assertEquals("FROM t |> $phrase", myFixture.editor.document.text)
+        }
+    }
+
+    fun testStagePhrasesInANestedPipeline() {
+        configure("SELECT * FROM (FROM t |> <caret>) AS s")
+        myFixture.completeBasic()
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+    }
+
+    fun testANestedPipelineCompletesItsOwnInputColumns() {
+        configure("FROM t |> SELECT a AS outer_col |> WHERE x IN (FROM u |> SELECT b AS inner_col |> WHERE <caret>)")
+        myFixture.completeBasic()
+        val items = myFixture.lookupElementStrings.orEmpty()
+        assertContainsElements(items, "inner_col")
+        assertDoesntContain(items, "outer_col")
+    }
+
+    fun testAQueryNestedInAPipelineGetsNoOuterColumns() {
+        configure("FROM t |> SELECT a AS outer_col |> WHERE x IN (SELECT <caret>)")
+        myFixture.completeBasic()
+        assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "outer_col")
+    }
+
+    fun testStageHeadsHideOtherItemsByDefault() {
+        configure("FROM t |> <caret>")
+        myFixture.completeBasic()
+        assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "other_item")
+    }
+
+    fun testADialectCanKeepOtherItemsAndPresentPhrasesItsWay() {
+        configure("FROM t |> <caret>", TestOpenStageCompletion::class.java)
+        val items = myFixture.completeBasic().orEmpty()
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), "other_item", "WHERE")
+        val where = items.single { it.lookupString == "WHERE" }
+        assertEquals("custom stage", LookupElementPresentation.renderElement(where).typeText)
+    }
+
+    fun testOnlyBasicCompletionOffersStages() {
+        configure("FROM t |> <caret>")
+        myFixture.complete(CompletionType.SMART)
+        assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "WHERE")
+    }
+
+    fun testFilesEnabledByTheProfileGetNoInputColumnsByDefault() {
+        configure("FROM t |> SELECT a |> WHERE <caret>", TestEmbeddedStageCompletion::class.java)
+        myFixture.completeBasic()
+        assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "a")
     }
 
     fun testTypeableInputColumnsAreOfferedInAStage() {

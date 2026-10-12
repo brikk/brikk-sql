@@ -3,7 +3,9 @@ package dev.brikk.house.sql.intellij.pipe
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
-import com.intellij.codeInsight.completion.PlainPrefixMatcher
+import com.intellij.codeInsight.completion.CompletionType
+import com.intellij.codeInsight.completion.PrefixMatcher
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
@@ -24,8 +26,9 @@ import dev.brikk.house.sql.shape.SqlFragment
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Completes stage phrases right after a top-level `|>` and, once a stage has begun, the columns its
- * input provides. Register it for the dialect's language with a no-arg subclass.
+ * Completes stage phrases right after a `|>` and, once a stage has begun, the columns its input
+ * provides, in the innermost pipeline at the caret. Register it for the dialect's language with a
+ * no-arg subclass; presentation and whether stage heads hide other contributors are overridable.
  */
 @ApiStatus.Experimental
 public abstract class PipeStageCompletionContributor(private val dialect: PipeDialect) : CompletionContributor() {
@@ -35,33 +38,43 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
     }
 
     /**
-     * Relations that the stage input [input] may read in [file], such as base table columns;
-     * null offers no input columns here, for example where another contributor owns them.
+     * Relations that the stage input [input] may read in [file], such as base table columns; null
+     * offers no input columns. By default none where [PipeDialect.enablesEditing] enables the file,
+     * whose own completion owns its columns.
      */
-    protected open fun inputCatalog(file: PsiFile, input: String): ShapeCatalog? = ShapeCatalog.EMPTY
+    protected open fun inputCatalog(file: PsiFile, input: String): ShapeCatalog? =
+        if (dialect.enablesEditing(file)) null else ShapeCatalog.EMPTY
+
+    protected open fun stagePhrase(phrase: String): LookupElement = LookupElementBuilder.create(phrase).withTypeText("PIPE stage", true)
+
+    protected open fun inputColumn(name: String): LookupElement = LookupElementBuilder.create(name).withTypeText("PIPE input column", true)
+
+    /** Whether a stage head shows only stage phrases. */
+    protected open val stopsAtStageHead: Boolean get() = true
 
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        if (parameters.completionType != CompletionType.BASIC) return
         val file = parameters.originalFile
         if (!dialect.isEditingEnabled(file)) return
         val source = dialect.pipeText(file)
         val offset = source.textOffset(parameters.offset).coerceIn(0, source.text.length)
         val statement = dialect.statementAt(source.text, offset)?.takeIf { it.hasPipe } ?: return
         val before = source.text.substring(statement.start, offset)
-        val boundary = lastTopLevelPipe(before) ?: return
-        val typed = before.substring(boundary + 2).trimStart()
-        val words = typed.trim().split(WHITESPACE).joinToString(" ")
-        val complete = typed.lastOrNull()?.isWhitespace() == true && phrases.any { it.equals(words, ignoreCase = true) }
+        val stage = currentStage(before) ?: return
+        val typed = before.substring(stage.pipe + 2).trimStart()
+        val words = typed.replace(WHITESPACE, " ")
+        val complete = words.endsWith(' ') && phrases.any { it.equals(words.trimEnd(), ignoreCase = true) }
         val matching = phrases.filter { it.startsWith(words, ignoreCase = true) }
         if (!complete && matching.isNotEmpty()) {
-            val sink = result.withPrefixMatcher(PlainPrefixMatcher(typed))
-            matching.forEach { sink.addElement(LookupElementBuilder.create(it).withTypeText("PIPE stage", true)) }
-            result.stopHere()
+            val sink = result.withPrefixMatcher(PhrasePrefixMatcher(typed))
+            matching.forEach { sink.addElement(stagePhrase(it)) }
+            if (stopsAtStageHead) result.stopHere()
             return
         }
-        val input = before.substring(0, boundary).trim()
+        val input = before.substring(stage.inputStart, stage.pipe).trim()
         val catalog = inputCatalog(file, input) ?: return
         val sink = result.caseInsensitive()
-        for (column in columns(input, catalog)) sink.addElement(LookupElementBuilder.create(column).withTypeText("PIPE input column", true))
+        for (column in columns(input, catalog)) sink.addElement(inputColumn(column))
     }
 
     private fun columns(input: String, catalog: ShapeCatalog): List<String> {
@@ -81,22 +94,36 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
         return typeable.also { synchronized(inputColumns) { inputColumns[key] = it } }
     }
 
-    private fun lastTopLevelPipe(text: String): Int? {
+    /** The innermost bracketed or top-level pipeline at the end of [text], if a `|>` starts its current stage. */
+    private fun currentStage(text: String): Stage? {
         val tokens = try {
             PipeStageSplitter.split(text, dialect.dialect).tokens
         } catch (_: TokenError) {
             return null
         }
-        var depth = 0
-        var last: Int? = null
+        val pipelines = ArrayDeque(listOf(Pipeline(0)))
         for (token in tokens) when (token.tokenType) {
-            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> depth++
-            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> depth--
-            TokenType.PIPE_GT -> if (depth == 0) last = token.start
+            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> pipelines.addLast(Pipeline(token.end + 1))
+            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> if (pipelines.size > 1) pipelines.removeLast()
+            TokenType.PIPE_GT -> pipelines.last().pipe = token.start
             else -> {}
         }
-        return last
+        val pipeline = pipelines.last()
+        return pipeline.pipe?.let { Stage(pipeline.start, it) }
     }
+
+    private class Pipeline(val start: Int) {
+        var pipe: Int? = null
+    }
+
+    private class Stage(val inputStart: Int, val pipe: Int)
+}
+
+/** Matches phrases ignoring case and the amount of whitespace, so a typed `full  outer` still replaces exactly what was typed. */
+private class PhrasePrefixMatcher(prefix: String) : PrefixMatcher(prefix) {
+    private val words = prefix.replace(WHITESPACE, " ")
+    override fun prefixMatches(name: String): Boolean = name.startsWith(words, ignoreCase = true)
+    override fun cloneWithPrefix(prefix: String): PrefixMatcher = PhrasePrefixMatcher(prefix)
 }
 
 /** Colors the stage phrase after every `|>` as a keyword. Register it for the dialect's language with a no-arg subclass. */
