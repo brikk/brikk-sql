@@ -101,8 +101,8 @@ wrapper but may retain its classloader until restart.
 ## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
 
 A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; optional
-snapshot choice, function list, server-only functions, styles and gates) and registers
-no-arg subclasses:
+snapshot choice, function list, server-only functions, keyword catalog, styles and gates) and
+registers no-arg subclasses. The contributor calls each per-file hook at most once per completion:
 
 - `SqlCompletionContributor` (`order="first"`): metadata functions, one item per name and kind
   (`completableFunctions`). Whether parentheses are inserted comes from the invocation
@@ -110,8 +110,8 @@ no-arg subclasses:
   (`CURRENT_TIMESTAMP`, also when a call is accepted) and a special form (`CAST`) insert only
   the name. A name written with parentheses reuses an existing `(`, with the caret inside,
   and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
-  overloads: it goes after `()` when the only overload takes no arguments. Keywords from the snapshot's
-  `KeywordCatalog`, all or only reserved ones (`KeywordScope`), except those a later
+  overloads: it goes after `()` when the only overload takes no arguments. Keywords from the profile's
+  `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later
   contributor already offers. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.

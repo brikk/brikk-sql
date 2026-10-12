@@ -5,6 +5,7 @@ import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
+import dev.brikk.house.sql.metadata.KeywordCatalog
 import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.completionEntries
 import java.util.Collections
@@ -39,6 +40,9 @@ public interface SqlCompletionProfile {
     public val functionGates: SqlFunctionGates get() = SqlFunctionGates.OFF
 
     public val keywords: KeywordScope get() = KeywordScope.ALL
+
+    /** The keywords offered in [file], whose [snapshot] completion already read; a live harvest can supply its own. */
+    public fun keywordCatalog(file: PsiFile, snapshot: MetadataSnapshot): KeywordCatalog? = snapshot.keywords
 
     /** The quote a table-function property or value is wrapped in when completed outside a string. */
     public val propertyQuote: Char get() = '\''

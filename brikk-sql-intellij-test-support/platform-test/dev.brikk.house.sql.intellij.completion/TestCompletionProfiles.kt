@@ -21,6 +21,8 @@ import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.FunctionPresentation
+import dev.brikk.house.sql.metadata.KeywordCatalog
+import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TRINO_METADATA
 import java.util.UUID
 
@@ -45,8 +47,18 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
     override var propertyQuote = '\''
     var serverOnly: List<FunctionPresentation> = emptyList()
     var builtinFilter: ((String) -> Boolean)? = null
+    var keywordCatalog: KeywordCatalog? = null
 
-    override fun serverOnlyFunctions(file: PsiFile) = serverOnly
+    /** Calls of each per-file hook since the last [reset]. */
+    val calls = mutableMapOf<String, Int>()
+
+    private fun <T> counted(hook: String, value: () -> T): T = value().also { calls.merge(hook, 1, Int::plus) }
+
+    override fun snapshot(file: PsiFile) = counted("snapshot") { super.snapshot(file) }
+    override fun functions(file: PsiFile) = counted("functions") { metadata.default.completableFunctions() }
+    override fun serverOnlyFunctions(file: PsiFile) = counted("serverOnlyFunctions") { serverOnly }
+    override fun keywordCatalog(file: PsiFile, snapshot: MetadataSnapshot) =
+        counted("keywordCatalog") { keywordCatalog ?: super.keywordCatalog(file, snapshot) }
     override fun builtinFunctionFilter(file: PsiFile) = builtinFilter
 
     fun reset() {
@@ -57,6 +69,8 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
         propertyQuote = '\''
         serverOnly = emptyList()
         builtinFilter = null
+        keywordCatalog = null
+        calls.clear()
     }
 }
 

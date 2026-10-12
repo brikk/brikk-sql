@@ -18,7 +18,7 @@ import org.jetbrains.annotations.ApiStatus
 public abstract class SqlCompletionConfidence(private val profile: SqlCompletionProfile) : CompletionConfidence(), DumbAware {
     final override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
         !psiFile.language.isKindOf(profile.language) -> ThreeState.UNSURE
-        profile.tableFunctionCallAt(psiFile, contextElement, offset) != null -> ThreeState.NO
+        tableFunctionCallAt(profile.snapshot(psiFile), contextElement, offset) != null -> ThreeState.NO
         profile.functionGates.digitPrefix && prefixIsDigitLed(psiFile, offset) -> ThreeState.YES
         else -> ThreeState.UNSURE
     }

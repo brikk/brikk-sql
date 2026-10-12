@@ -2,14 +2,12 @@ package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionParameters
-import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.project.DumbAware
-import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -18,11 +16,11 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
-import com.intellij.util.ProcessingContext
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
 import dev.brikk.house.sql.metadata.KeywordCategory
+import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TableFunctionInfo
 import org.jetbrains.annotations.ApiStatus
 
@@ -34,17 +32,18 @@ import org.jetbrains.annotations.ApiStatus
  */
 @ApiStatus.Experimental
 public abstract class SqlCompletionContributor(private val profile: SqlCompletionProfile) : CompletionContributor(), DumbAware {
-    init {
-        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), FunctionProvider(profile))
-        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), TableFunctionArgumentProvider(profile))
+    final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return
+        val reads = ProfileReads(profile, parameters.originalFile)
+        completeFunctions(parameters, result, reads)
+        completeTableFunctionArguments(parameters, result, reads)
+        if (!result.isStopped) completeKeywords(parameters, result, reads)
     }
 
-    final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
-        super.fillCompletionVariants(parameters, result)
-        if (parameters.completionType != CompletionType.BASIC || result.isStopped || !parameters.originalFile.language.isKindOf(profile.language)) return
+    private fun completeKeywords(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads) {
         val scope = profile.keywords
         if (scope == KeywordScope.NONE) return
-        val keywords = profile.snapshot(parameters.originalFile).keywords?.keywords ?: return
+        val keywords = reads.keywords?.keywords ?: return
         val offered = HashSet<String>()
         result.runRemainingContributors(parameters) { completion ->
             offered += completion.lookupElement.lookupString.uppercase()
@@ -61,31 +60,30 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
     }
 }
 
-private abstract class ProfileProvider(protected val profile: SqlCompletionProfile) : CompletionProvider<CompletionParameters>() {
-    final override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) {
-        if (parameters.originalFile.language.isKindOf(profile.language)) complete(parameters, result)
-    }
-
-    abstract fun complete(parameters: CompletionParameters, result: CompletionResultSet)
+/** The profile's per-file hooks for one completion, each called at most once. */
+private class ProfileReads(val profile: SqlCompletionProfile, val file: PsiFile) {
+    val snapshot by lazy(LazyThreadSafetyMode.NONE) { profile.snapshot(file) }
+    val functions by lazy(LazyThreadSafetyMode.NONE) { profile.functions(file) }
+    val serverOnlyFunctions by lazy(LazyThreadSafetyMode.NONE) { profile.serverOnlyFunctions(file) }
+    val keywords by lazy(LazyThreadSafetyMode.NONE) { profile.keywordCatalog(file, snapshot) }
 }
 
-private class FunctionProvider(profile: SqlCompletionProfile) : ProfileProvider(profile) {
-    override fun complete(parameters: CompletionParameters, result: CompletionResultSet) {
-        val file = parameters.originalFile
-        val gates = profile.functionGates
-        if (gates.digitPrefix && prefixIsDigitLed(file, parameters.offset)) return
-        if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return
-        val qualifier = PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)
-            ?.qualifierExpression?.text
-        val sink = if (profile.snapshot(file).functions.caseSensitive) result else result.caseInsensitive()
-        val rule = gates.qualifier
-        if (qualifier != null && rule !is QualifierRule.Unrestricted) {
-            if (rule is QualifierRule.Namespaced) rule.functions(qualifier, file).forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
-            return
-        }
-        profile.functions(file).forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
-        profile.serverOnlyFunctions(file).forEach { sink.addElement(profile.lookup(it, serverOnly = true)) }
+private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads) {
+    val profile = reads.profile
+    val file = parameters.originalFile
+    val gates = profile.functionGates
+    if (gates.digitPrefix && prefixIsDigitLed(file, parameters.offset)) return
+    if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return
+    val qualifier = PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)
+        ?.qualifierExpression?.text
+    val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
+    val rule = gates.qualifier
+    if (qualifier != null && rule !is QualifierRule.Unrestricted) {
+        if (rule is QualifierRule.Namespaced) rule.functions(qualifier, file).forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
+        return
     }
+    reads.functions.forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
+    reads.serverOnlyFunctions.forEach { sink.addElement(profile.lookup(it, serverOnly = true)) }
 }
 
 /**
@@ -93,30 +91,29 @@ private class FunctionProvider(profile: SqlCompletionProfile) : ProfileProvider(
  * properties, and the known values on the right of `=`. Both are strings, so the prefix runs from
  * the opening quote to the caret; outside a string the item is inserted quoted.
  */
-private class TableFunctionArgumentProvider(profile: SqlCompletionProfile) : ProfileProvider(profile) {
-    override fun complete(parameters: CompletionParameters, result: CompletionResultSet) {
-        val position = parameters.position
-        val offset = parameters.offset
-        val (call, function) = profile.tableFunctionCallAt(parameters.originalFile, position, offset) ?: return
-        val binary = PsiTreeUtil.getParentOfType(position, SqlBinaryExpression::class.java)?.takeIf { call.textRange.contains(it.textRange) }
-        val key = binary?.lOperand?.takeIf { left ->
-            offset > left.textRange.endOffset &&
-                '=' in binary.text.substring(0, (offset - binary.textRange.startOffset).coerceIn(0, binary.textLength))
-        }?.text?.trim(*QUOTES)
-        val (kind, candidates) = if (key == null) {
-            SqlLookupKind.TABLE_FUNCTION_PROPERTY to function.properties.map { it.name }
-        } else {
-            SqlLookupKind.TABLE_FUNCTION_VALUE to function.properties.firstOrNull { it.name.equals(key, ignoreCase = true) }?.values.orEmpty()
-        }
-        if (candidates.isEmpty()) return
-        val typed = position.text.orEmpty().take((offset - position.textRange.startOffset).coerceAtLeast(0))
-        val quoted = typed.firstOrNull()?.let { it in QUOTES } == true
-        val prefix = if (quoted) typed.drop(1) else typed.takeWhile { it.isLetterOrDigit() || it == '_' || it == '.' }
-        val sink = result.withPrefixMatcher(prefix).caseInsensitive()
-        val style = profile.styles[kind]
-        val insert = if (quoted) null else QuotingInsertHandler(profile.propertyQuote)
-        for (name in candidates) sink.addElement(style.lookup(name, name, style.typeText(function.name), insertHandler = insert))
+private fun completeTableFunctionArguments(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads) {
+    val position = parameters.position
+    val offset = parameters.offset
+    val profile = reads.profile
+    val (call, function) = tableFunctionCallAt(reads.snapshot, position, offset) ?: return
+    val binary = PsiTreeUtil.getParentOfType(position, SqlBinaryExpression::class.java)?.takeIf { call.textRange.contains(it.textRange) }
+    val key = binary?.lOperand?.takeIf { left ->
+        offset > left.textRange.endOffset &&
+            '=' in binary.text.substring(0, (offset - binary.textRange.startOffset).coerceIn(0, binary.textLength))
+    }?.text?.trim(*QUOTES)
+    val (kind, candidates) = if (key == null) {
+        SqlLookupKind.TABLE_FUNCTION_PROPERTY to function.properties.map { it.name }
+    } else {
+        SqlLookupKind.TABLE_FUNCTION_VALUE to function.properties.firstOrNull { it.name.equals(key, ignoreCase = true) }?.values.orEmpty()
     }
+    if (candidates.isEmpty()) return
+    val typed = position.text.orEmpty().take((offset - position.textRange.startOffset).coerceAtLeast(0))
+    val quoted = typed.firstOrNull()?.let { it in QUOTES } == true
+    val prefix = if (quoted) typed.drop(1) else typed.takeWhile { it.isLetterOrDigit() || it == '_' || it == '.' }
+    val sink = result.withPrefixMatcher(prefix).caseInsensitive()
+    val style = profile.styles[kind]
+    val insert = if (quoted) null else QuotingInsertHandler(profile.propertyQuote)
+    for (name in candidates) sink.addElement(style.lookup(name, name, style.typeText(function.name), insertHandler = insert))
 }
 
 private class QuotingInsertHandler(private val quote: Char) : InsertHandler<LookupElement> {
@@ -130,8 +127,7 @@ private class QuotingInsertHandler(private val quote: Char) : InsertHandler<Look
 private val QUOTES = charArrayOf('\'', '"', '`')
 
 /** The innermost call of a known table function whose parentheses hold [offset], walking up from [position]. */
-internal fun SqlCompletionProfile.tableFunctionCallAt(file: PsiFile, position: PsiElement, offset: Int): Pair<SqlFunctionCallExpression, TableFunctionInfo>? {
-    val snapshot = snapshot(file)
+internal fun tableFunctionCallAt(snapshot: MetadataSnapshot, position: PsiElement, offset: Int): Pair<SqlFunctionCallExpression, TableFunctionInfo>? {
     if (snapshot.tableFunctions.isNullOrEmpty()) return null
     var call = PsiTreeUtil.getParentOfType(position, SqlFunctionCallExpression::class.java, false)
     while (call != null) {
