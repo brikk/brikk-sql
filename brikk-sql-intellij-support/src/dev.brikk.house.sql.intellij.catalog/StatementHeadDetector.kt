@@ -155,12 +155,14 @@ public class StatementHeadDetector(public val rules: List<StatementRule>, public
 public object StatementRules {
     /**
      * Transaction control most engines share: `BEGIN` and `START TRANSACTION` begin; `COMMIT`,
-     * `ROLLBACK`, `ABORT` and `END` end; rolling back to a savepoint keeps the transaction.
+     * `ROLLBACK`, `ABORT` and `END` end; rolling back to a savepoint keeps the transaction, and an end
+     * `AND CHAIN` starts the next one at once.
      */
     public val TRANSACTIONS: List<StatementRule> = listOf(
         StatementRule("BEGIN [TRANSACTION|WORK]", StatementEffect.Transaction(begins = true)),
         StatementRule("START TRANSACTION", StatementEffect.Transaction(begins = true)),
         StatementRule("ROLLBACK [TRANSACTION|WORK] TO", StatementEffect.Transaction(begins = null)),
+        StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK] AND CHAIN", StatementEffect.Transaction(begins = true)),
         StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK]", StatementEffect.Transaction(begins = false)),
     )
 

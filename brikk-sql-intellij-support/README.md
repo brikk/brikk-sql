@@ -334,12 +334,17 @@ The interceptor skips the helper connections refreshes open, so a refresh harves
 over a console session's own connection, so it also reads what the session loaded implicitly (DuckDB
 autoload): the harvest is queued on the session as a request and runs on its engine's thread, and both
 the shared inventory and the session's facts are recorded and returned (`RefreshOutcome.Refreshed.session`,
-which `onRefreshed` shows). A session in a transaction (manual commit with a change pending) is not
-harvested (`RefreshOutcome.SessionInTransaction`), nor one in a transaction a statement began in
-auto-commit mode, which the platform does not track: the `ExecutionObserver` treats a session as in a
-transaction from a detected begin until a detected end, a commit or rollback through the IDE, or a new
-connection (`ExecutionObserverProfile.transactionStatements`, default `StatementRules.TRANSACTIONS`:
-`BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`; `ROLLBACK ... TO` keeps it). A session that is not connected
+which `onRefreshed` shows). A session in manual-commit mode is not harvested
+(`RefreshOutcome.SessionInTransaction`): its harvest queries would open a transaction of their own. Nor is
+one in a transaction a statement began in auto-commit mode, which the platform does not track: the
+`ExecutionObserver` treats a session as in a transaction from a detected begin until a detected end, a
+commit or rollback through the IDE, or a new connection (`ExecutionObserverProfile.transactionStatements`,
+default `StatementRules.TRANSACTIONS`: `BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`;
+`ROLLBACK ... TO` keeps it, and an end `AND CHAIN` begins the next). From 263 the platform reads `COMMIT`
+and `ROLLBACK` statements itself (`transactionControlLanguageHandler`, PostgreSQL and MySQL families, not
+the stock `DUCK`), but only to end a manual-commit transaction, where this tracking does not apply; the
+two agree, `AND CHAIN` included. Without such a handler, a `COMMIT` statement leaves the platform holding
+the manual-commit transaction, and it refuses the harvest's request (`HarvestFailed`). A session that is not connected
 falls back to the helper connection. `RefreshLiveCatalogAction` uses the editor's connected console
 session when it has one. `inventoryChanged(project, session,
 requestor, sessionFacts, notify)` follows executed statements (see `ExecutionObserver`): when the change

@@ -79,6 +79,8 @@ class StatementHeadDetectorTest : TestCase() {
         assertEquals(listOf(true, true, true), begins("BEGIN; begin transaction; START TRANSACTION"))
         assertEquals(listOf(false, false, false, false, false), begins("COMMIT; ROLLBACK WORK; abort; END; END TRANSACTION"))
         assertEquals("a savepoint rollback keeps the transaction", listOf(null), begins("ROLLBACK TO SAVEPOINT s"))
+        assertEquals("a chained end starts the next transaction", listOf(true, true, true), begins("COMMIT AND CHAIN; rollback work and chain; END AND CHAIN"))
+        assertEquals(listOf(false), begins("COMMIT AND NO CHAIN"))
         assertEquals(emptyList<Boolean?>(), begins("SELECT 'BEGIN'; COMMITTED; CREATE TABLE begin_log(x INT)"))
     }
 
