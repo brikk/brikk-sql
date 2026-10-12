@@ -21,6 +21,7 @@ import com.intellij.sql.formatter.settings.SqlCodeStyles
 import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
+import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
@@ -42,7 +43,9 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return
         val reads = ProfileReads(profile, parameters.originalFile)
         val file = parameters.originalFile
-        val before = file.viewProvider.contents.subSequence(0, prefixAt(file, parameters.offset).first).toString()
+        // Injected SQL is read unescaped, so a host's doubled quotes do not change its literals.
+        val source = PipeText.of(file)
+        val before = source.text.substring(0, source.textOffset(prefixAt(file, parameters.offset).first).coerceIn(0, source.text.length))
         val position = functionPosition(
             before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
             { name -> name in reads.snapshot.functions }, ProgressManager::checkCanceled,

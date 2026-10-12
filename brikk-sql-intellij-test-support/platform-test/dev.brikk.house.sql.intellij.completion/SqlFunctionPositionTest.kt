@@ -1,6 +1,12 @@
 package dev.brikk.house.sql.intellij.completion
 
+import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.lang.injection.MultiHostInjector
+import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.openapi.extensions.LoadingOrder
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
+import com.intellij.sql.psi.SqlStringLiteralExpression
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionKind.SCALAR
 import dev.brikk.house.sql.metadata.FunctionKind.TABLE_GENERATING
@@ -74,6 +80,30 @@ class SqlFunctionPositionTest : CompletionTestCase() {
         expression,
         "SELECT SUBSTRING((SELECT 'abc') FROM ra<caret>", "SELECT TRIM(CASE WHEN EXISTS (SELECT 1) THEN 'a' ELSE 'b' END FROM ra<caret>",
     )
+
+    /** Completes in [sql] injected into a SQL string literal, its quotes doubled as the host requires. */
+    private fun offeredInjected(sql: String): Set<Pair<String, FunctionKind>> {
+        configure("SELECT '${sql.replace("'", "''")}'", DuckdbCompletion::class.java)
+        val manager = InjectedLanguageManager.getInstance(project)
+        manager.registerMultiHostInjector(object : MultiHostInjector {
+            override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
+                if (manager.isInjectedFragment(context.containingFile)) return
+                registrar.startInjecting(context.containingFile.language)
+                registrar.addPlace(null, null, context as SqlStringLiteralExpression, TextRange(1, context.textLength - 1))
+                registrar.doneInjecting()
+            }
+
+            override fun elementsToInjectIn() = listOf(SqlStringLiteralExpression::class.java)
+        }, testRootDisposable)
+        manager.dropFileCaches(myFixture.file)
+        return functionItems().mapTo(HashSet()) { it.name to it.kind }
+    }
+
+    fun testInjectedSqlIsReadUnescaped() =
+        assertTrue("length" to SCALAR in offeredInjected("SELECT SUBSTRING('SELECT' FROM le<caret>)"))
+
+    fun testInjectedSqlHasTablePositions() =
+        assertEquals(table, offeredInjected("SELECT * FROM ra<caret> WHERE true").filterTo(HashSet()) { it.first == "range" })
 
     fun testDistinctFromIsNotATablePosition() =
         assertOffers(everything, "SELECT * FROM t WHERE a IS DISTINCT FROM ra<caret>", "SELECT * FROM t WHERE a IS NOT DISTINCT FROM ra<caret>")
