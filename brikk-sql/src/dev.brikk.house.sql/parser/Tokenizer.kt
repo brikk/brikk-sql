@@ -391,16 +391,20 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     // Native BRACKETED_COMMENT (`'/*' (BRACKETED_COMMENT | .)*? '*/'`) ends where its preferred
     // reading completes: at each offset close, else open a nested comment, else take one char.
     // When the plain depth count cannot close, that is a backtracking search. Editor tokenization
-    // accepts the result only if a depth count (with or without `/*/` opening) closes there too.
+    // then requires a depth count that does not open at `/*/` to close at the same place.
     private fun scanNestedBlockComment(commentStartSize: Int, commentStartLine: Int) {
         val contentStart = start + 2
         val close = countedClose(contentStart, openOverlapping = true).takeIf { it >= 0 }
-            ?: nativeCommentClose(contentStart).takeIf {
-                it >= 0 && (!editorMode || countedClose(contentStart, openOverlapping = false) == it)
-            }
+            ?: recoveredClose(contentStart).takeIf { it >= 0 }
             ?: throw TokenError("Missing */ from $commentStartLine:$start")
         advanceTo(close + 2)
         comments.add(sql.substring(start + commentStartSize, close))
+    }
+
+    private fun recoveredClose(contentStart: Int): Int {
+        if (!editorMode) return nativeCommentClose(contentStart)
+        val counted = countedClose(contentStart, openOverlapping = false)
+        return if (counted >= 0 && nativeCommentClose(contentStart) == counted) counted else -1
     }
 
     // The offset of the closing `*/` by depth count, or -1.
@@ -417,39 +421,63 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return -1
     }
 
-    private class CommentFrame(val offset: Int, val depth: Int) {
+    private class CommentFrame(val delimiter: Int, val depth: Int) {
         var alternative = 0
     }
 
-    // The first completion in the native lexer's preference order, or -1. Depths beyond the
-    // closers still ahead cannot complete; failed states are not revisited.
+    // The first completion in the native lexer's preference order, or -1. The search only
+    // branches at `/*` and `*/`, so its states are (delimiter, depth); depths beyond the closers
+    // still ahead cannot complete, and failed states are not revisited.
     private fun nativeCommentClose(contentStart: Int): Int {
-        val closersFrom = IntArray(size + 1)
-        for (index in size - 2 downTo 0) closersFrom[index] = closersFrom[index + 1] + if (sql.startsWith("*/", index)) 1 else 0
+        val delimiters = delimitersFrom(contentStart)
+        val count = delimiters.size
+        val closersFrom = IntArray(count + 1)
+        for (k in count - 1 downTo 0) closersFrom[k] = closersFrom[k + 1] + if (sql[delimiters[k]] == '*') 1 else 0
+        fun nextDelimiter(offset: Int, from: Int): Int {
+            var k = from
+            while (k < count && delimiters[k] < offset) k++
+            return k
+        }
         val failed = HashSet<Long>()
         val frames = ArrayList<CommentFrame>()
-        fun key(offset: Int, depth: Int) = offset.toLong() shl 32 or depth.toLong()
-        fun visit(offset: Int, depth: Int) {
-            if (depth <= closersFrom[offset] && key(offset, depth) !in failed) frames += CommentFrame(offset, depth)
+        fun key(delimiter: Int, depth: Int) = delimiter.toLong() shl 32 or depth.toLong()
+        fun visit(delimiter: Int, depth: Int) {
+            if (delimiter < count && depth <= closersFrom[delimiter] && key(delimiter, depth) !in failed) {
+                frames += CommentFrame(delimiter, depth)
+            }
         }
-        visit(contentStart, 1)
+        visit(0, 1)
         while (frames.isNotEmpty()) {
             val frame = frames.last()
-            val offset = frame.offset
+            val offset = delimiters[frame.delimiter]
+            val closing = sql[offset] == '*'
             when (frame.alternative++) {
-                0 -> if (sql.startsWith("*/", offset)) {
+                0 -> if (closing) {
                     if (frame.depth == 1) return offset
-                    visit(offset + 2, frame.depth - 1)
+                    visit(nextDelimiter(offset + 2, frame.delimiter), frame.depth - 1)
                 }
-                1 -> if (sql.startsWith("/*", offset)) visit(offset + 2, frame.depth + 1)
-                2 -> if (offset < size) visit(offset + 1, frame.depth)
+                1 -> if (!closing) visit(nextDelimiter(offset + 2, frame.delimiter), frame.depth + 1)
+                2 -> visit(nextDelimiter(offset + 1, frame.delimiter), frame.depth)
                 else -> {
-                    failed += key(offset, frame.depth)
+                    failed += key(frame.delimiter, frame.depth)
                     frames.removeAt(frames.lastIndex)
                 }
             }
         }
         return -1
+    }
+
+    // Offsets of every `/*` and `*/` at or after [from], overlaps included.
+    private fun delimitersFrom(from: Int): IntArray {
+        var offsets = IntArray(16)
+        var count = 0
+        for (index in from until size - 1) {
+            val pair = sql[index] == '/' && sql[index + 1] == '*' || sql[index] == '*' && sql[index + 1] == '/'
+            if (!pair) continue
+            if (count == offsets.size) offsets = offsets.copyOf(count * 2)
+            offsets[count++] = index
+        }
+        return offsets.copyOf(count)
     }
 
     // Native Doris DOLLAR_QUOTED_STRING; a longer `$`-identifier match wins, ties go to the string.
