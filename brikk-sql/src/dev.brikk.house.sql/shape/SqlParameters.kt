@@ -71,7 +71,8 @@ data class SqlScriptParameters(
          *
          * Tokens cannot prove everything: a column named STRUCT, ARRAY or MAP compared with `<`
          * reads as a type, and a keyword-named column before a slice colon (`arr[date:n]`)
-         * does not end an operand. A statement terminator closes every open bracket.
+         * does not end an operand. A statement terminator closes every open bracket, and a
+         * half-open partition range (`VALUES [(a), (b))`, where the dialect has one) closes with `)`.
          *
          * Where the dialect has typed server parameters (ClickHouse), each `{name:Type}` is
          * reported as [ParamStyle.NAMED_TYPED] over its whole braces, for callers to skip.
@@ -80,10 +81,11 @@ data class SqlScriptParameters(
             val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text, checkCanceled)
             val source = Dialects.forName(dialect)
             val typeTokens = if (source.typedQueryParameters) source.parser().typeTokens else null
-            return SqlScriptParameters(text, dialect, colonBinds(text, lexed.tokens, typeTokens, checkCanceled), lexed.failureOffset, lexed.error)
+            val binds = colonBinds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, checkCanceled)
+            return SqlScriptParameters(text, dialect, binds, lexed.failureOffset, lexed.error)
         }
 
-        private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE }
+        private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE, RANGE }
 
         private class Open(val kind: Bracket) {
             var colonSeen = false
@@ -145,7 +147,13 @@ data class SqlScriptParameters(
                 SyntacticRange(name.start, name.end + 1)) to close
         }
 
-        private fun colonBinds(text: String, tokens: List<Token>, typeTokens: Set<TokenType>?, checkCanceled: () -> Unit): List<ParameterOccurrence> {
+        private fun colonBinds(
+            text: String,
+            tokens: List<Token>,
+            typeTokens: Set<TokenType>?,
+            halfOpenRanges: Boolean,
+            checkCanceled: () -> Unit,
+        ): List<ParameterOccurrence> {
             val open = OpenBrackets()
             val binds = ArrayList<ParameterOccurrence>()
             var bindNameEnd = -1
@@ -158,7 +166,11 @@ data class SqlScriptParameters(
                 when (token.tokenType) {
                     TokenType.SEMICOLON -> open.clear()
                     TokenType.L_PAREN -> open.push(Bracket.PAREN)
-                    TokenType.L_BRACKET -> open.push(if (endsOperand(previous)) Bracket.SUBSCRIPT else Bracket.ARRAY)
+                    TokenType.L_BRACKET -> open.push(when {
+                        halfOpenRanges && previous?.tokenType == TokenType.VALUES -> Bracket.RANGE
+                        endsOperand(previous) -> Bracket.SUBSCRIPT
+                        else -> Bracket.ARRAY
+                    })
                     TokenType.L_BRACE -> {
                         val parameter = typeTokens?.let { typedParameter(text, tokens, index, it) }
                         if (parameter != null) {
@@ -170,7 +182,7 @@ data class SqlScriptParameters(
                         open.push(Bracket.TYPE)
                     }
                     TokenType.GT -> if (open.innermost?.kind == Bracket.TYPE) open.close(Bracket.TYPE)
-                    TokenType.R_PAREN -> open.close(Bracket.PAREN)
+                    TokenType.R_PAREN -> open.close(Bracket.PAREN, Bracket.RANGE)
                     TokenType.R_BRACKET -> open.close(Bracket.ARRAY, Bracket.SUBSCRIPT)
                     TokenType.R_BRACE -> open.close(Bracket.MAP)
                     TokenType.COMMA -> open.innermost?.takeIf { it.kind == Bracket.MAP }?.colonSeen = false

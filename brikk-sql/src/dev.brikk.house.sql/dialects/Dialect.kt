@@ -152,6 +152,12 @@ open class Dialect {
      */
     open val semicolonsInBrackets: Boolean get() = true
 
+    /**
+     * brikk-native: whether `VALUES [lower, upper)` is a half-open partition range whose `[`
+     * closes with `)` (Doris). Editor bracket tracking then accepts that pairing after VALUES.
+     */
+    open val halfOpenPartitionRanges: Boolean get() = false
+
     /** brikk-native: whether `{name:Type}` is a server query parameter (ClickHouse). */
     open val typedQueryParameters: Boolean get() = false
 

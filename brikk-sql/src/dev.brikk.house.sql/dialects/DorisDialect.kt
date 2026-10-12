@@ -24,6 +24,9 @@ class DorisDialect : Dialect() {
     // brikk-native: no Doris construct puts `;` inside brackets outside strings and comments.
     override val semicolonsInBrackets: Boolean get() = false
 
+    // brikk-native: DorisParser.g4 fixedPartitionDef `VALUES [ (...), (...) )`, also in ALTER ... ADD PARTITION.
+    override val halfOpenPartitionRanges: Boolean get() = true
+
     // sqlglot: Doris(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
 

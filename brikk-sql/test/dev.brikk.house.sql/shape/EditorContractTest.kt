@@ -102,4 +102,31 @@ class EditorContractTest {
         assertEquals(2, postgres.size)
         assertTrue(postgres.all { it.boundaryError == null })
     }
+
+    @Test fun dorisHalfOpenPartitionRangesAreBalanced() {
+        val ddl = listOf(
+            "CREATE TABLE t (k DATE) PARTITION BY RANGE(k) (PARTITION p1 VALUES [('2020-01-01'), ('2020-02-01')), " +
+                "PARTITION p2 VALUES LESS THAN ('2020-03-01'), PARTITION p3 VALUES LESS THAN MAXVALUE) DISTRIBUTED BY HASH(k) BUCKETS 1",
+            "CREATE TABLE t (k INT, c VARCHAR(10)) PARTITION BY LIST(c) (PARTITION p1 VALUES IN ('a', 'b'), " +
+                "PARTITION p2 VALUES IN (('c'), ('d'))) DISTRIBUTED BY HASH(k) BUCKETS 1",
+            "CREATE TABLE t (k DATE) PARTITION BY RANGE(k) (FROM ('2020-01-01') TO ('2020-03-01') INTERVAL 1 MONTH) DISTRIBUTED BY HASH(k) BUCKETS 1",
+            "ALTER TABLE t ADD PARTITION IF NOT EXISTS p4 VALUES [('2020-03-01', '1'), (MAXVALUE, MAXVALUE)) (\"replication_num\" = \"1\")",
+            "ALTER TABLE t ADD TEMPORARY PARTITIONS FROM ('2020-04-01') TO ('2020-06-01') INTERVAL 1 MONTH",
+        )
+        for (statement in ddl) {
+            val script = "$statement; SELECT :p;"
+            val ranges = SqlScriptSnapshot.parse(script, "doris").statements
+            assertEquals(listOf(statement.length + 1, script.length), ranges.map { it.end }, statement)
+            assertTrue(ranges.all { it.boundaryError == null }, statement)
+            assertEquals(PipeLowering.NotPipe, lowerForExecution(statement, "doris"))
+            assertEquals(listOf("p"), SqlScriptParameters.parse(script, "doris").occurrences.map { it.name })
+        }
+    }
+
+    @Test fun halfOpenRangesNeedDorisAndValues() {
+        for (sql in listOf("SELECT [(1), (2)); SELECT 3", "INSERT INTO t VALUES [('a'), ('b')]; SELECT 3"))
+            assertNotNull(SqlScriptSnapshot.parse(sql, "doris").statements.single().boundaryError, sql)
+        for (dialect in listOf("duckdb", "trino", "mysql", "starrocks"))
+            assertNotNull(SqlScriptSnapshot.parse("ALTER TABLE t ADD PARTITION p VALUES [(1), (2)); SELECT 3", dialect).statements.single().boundaryError, dialect)
+    }
 }

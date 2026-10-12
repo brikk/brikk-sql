@@ -39,6 +39,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
             var head: String? = null
             var routine = false
             var afterEnd = false
+            // The closer each open bracket expects.
             val brackets = ArrayList<TokenType>()
             val blocks = ArrayList<String>()
             fun flush(end: Int) {
@@ -60,14 +61,15 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 if (head == "DELIMITER" || visibleWord && declaration && word in setOf("PROCEDURE", "TRIGGER"))
                     error = "Unsupported procedural/client delimiter boundary; select a complete supported statement"
                 when (kind) {
-                    TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> brackets.add(kind)
+                    TokenType.L_PAREN -> brackets.add(TokenType.R_PAREN)
+                    TokenType.L_BRACE -> brackets.add(TokenType.R_BRACE)
+                    TokenType.L_BRACKET -> brackets.add(
+                        if (source.halfOpenPartitionRanges && tokens.getOrNull(index - 1)?.tokenType == TokenType.VALUES) {
+                            TokenType.R_PAREN
+                        } else TokenType.R_BRACKET,
+                    )
                     TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> {
-                        val expected = when (kind) {
-                            TokenType.R_PAREN -> TokenType.L_PAREN
-                            TokenType.R_BRACKET -> TokenType.L_BRACKET
-                            else -> TokenType.L_BRACE
-                        }
-                        if (brackets.lastOrNull() == expected) brackets.removeAt(brackets.lastIndex)
+                        if (brackets.lastOrNull() == kind) brackets.removeAt(brackets.lastIndex)
                         else error = "Unbalanced SQL delimiter; statement boundary is unknown"
                     }
                     else -> {}
