@@ -25,6 +25,14 @@ def validate_version(version: str) -> str:
     return version
 
 
+def development_version(template_text: str) -> str:
+    """The shared publishing version in publish.module-template.yaml."""
+    match = re.search(r"^    version: (\S+)$", template_text, re.M)
+    if not match:
+        raise ValueError("No publishing version in the module template")
+    return match.group(1)
+
+
 def release_template(version: str, base_template: str) -> str:
     """Use native template inheritance, not text edits or a separate YAML parser."""
     validate_version(version)

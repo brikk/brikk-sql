@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import zipfile
 import xml.etree.ElementTree as ET
+from release_config import development_version
 
 STDLIB = ('org.jetbrains.kotlin', 'kotlin-stdlib')
 
@@ -45,12 +46,12 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('version')
-    parser.add_argument('--core-version', default='0.20.0-SNAPSHOT')
+    template = Path(__file__).resolve().parents[1] / 'publish.module-template.yaml'
+    parser.add_argument('--core-version', default=development_version(template.read_text()))
     parser.add_argument('--repository', type=Path, default=Path.home() / '.m2/repository')
     args = parser.parse_args()
-    versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-metadata-jvm': args.core_version,
-                'brikk-sql-intellij-support': args.version}
+    versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-intellij-support': args.version}
     verify(args.repository, args.version, 'brikk-sql-intellij-support', 'dev/brikk/house/sql/intellij/',
-           [('dev.brikk.house', 'brikk-sql-jvm'), ('dev.brikk.house', 'brikk-sql-metadata-jvm'), STDLIB], sources=True, versions=versions)
+           [('dev.brikk.house', 'brikk-sql-jvm'), STDLIB], sources=True, versions=versions)
     verify(args.repository, args.version, 'brikk-sql-intellij-test-support', 'dev/brikk/house/sql/intellij/testing/',
            [('dev.brikk.house', 'brikk-sql-intellij-support'), STDLIB], sources=False, versions=versions)

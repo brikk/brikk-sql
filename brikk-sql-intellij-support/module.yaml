@@ -8,7 +8,6 @@ apply:
 dependencies:
   # exported: the PIPE API exposes core types (statement ranges, lowering results).
   - ../brikk-sql: exported
-  - ../brikk-sql-metadata
 
 plugins:
   brikk-sql-intellij-tooling: enabled
@@ -20,7 +19,7 @@ settings:
     version: 2.4.10
     # This classpath replaces the toolchain's, so it repeats the module dependencies' outputs.
     freeCompilerArgs:
-      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-metadatajvm/kotlin-output
+      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output
       - -Xexplicit-api=strict
   publishing:
     artifactId: brikk-sql-intellij-support

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
-from release_config import validate_version, release_template
+from release_config import development_version, validate_version, release_template
 
 
 def main():
@@ -34,13 +34,14 @@ def main():
         if not os.environ.get("KOTLIN_TOOLCHAIN_SIGNING_KEY"):
             raise SystemExit("Missing KOTLIN_TOOLCHAIN_SIGNING_KEY")
     modules = intellij
+    core_version = args.core_version or development_version(originals[template])
     if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql"] + modules
     try:
         backup.write_text(originals[template])
         if args.local:
-            template.write_text(f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    version: {json.dumps(args.core_version or "0.20.0-SNAPSHOT")}\n')
+            template.write_text(f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    version: {json.dumps(core_version)}\n')
         else:
-            template.write_text(release_template(args.core_version or "0.20.0-SNAPSHOT", f"./{backup.name}")
+            template.write_text(release_template(core_version, f"./{backup.name}")
                                if args.core_version else f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    mavenCentral: {{ enabled: true, publishingMode: auto }}\n    signArtifacts: true\n')
         for descriptor in descriptors:
             released, count = re.subn(r"^    version: \S+-SNAPSHOT$", f"    version: {args.version}", originals[descriptor], flags=re.M)
