@@ -3,6 +3,9 @@
 /*/build/
 /*/*/build/
 
+# JVM attach files a running test JVM leaves in its working directory.
+.attach_pid*
+
 # Corpus review artifacts are build output, never fixtures.
 *-ledger-actual.json
 
