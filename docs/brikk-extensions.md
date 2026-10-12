@@ -1875,11 +1875,14 @@ lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonic
 `TokenizerConfig.inlineInsertData`: in editor tokenization only (so `SqlScriptSnapshot` and
 parameter discovery, never the parser), the data after `INSERT ... FORMAT <name>` is one
 `INSERT_DATA` token instead of SQL tokens, so quotes, braces and `;` inside it neither end the
-statement nor make its boundary an error. The rule applies at depth 0 of a statement that begins
-with `INSERT` and has no `SELECT`, `WITH`, `INFILE` or `VALUES` before the format; `FORMAT Values`
-stays SQL, as ClickHouse reads its rows with the Values parser up to the terminating `;`.
+statement nor make its boundary an error. The rule applies to a depth-0 `FORMAT <name>` of a
+statement that begins with `INSERT` and has no `INFILE` or `VALUES` before it, nor a `SELECT` or
+`WITH` unless the query reads its rows through the `input(...)` table function (as
+`ParserInsertQuery` decides). A `SETTINGS` clause on the format name's line comes before the data
+(`allow_settings_after_format_in_insert`); on a later line it is data. `FORMAT Values` stays SQL, as
+ClickHouse reads its rows with the Values parser up to the terminating `;`.
 
-Framing never alters stored data. Data starts after the spaces that follow the format name and,
+Framing never alters stored data. Data starts after the spaces that follow the header and,
 when a line break follows them, after it (ClickHouse's `ParserInsertQuery`). It ends only:
 
 - before a blank line, which also ends the statement, without a `;`;

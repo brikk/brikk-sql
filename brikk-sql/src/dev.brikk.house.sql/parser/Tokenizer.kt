@@ -144,35 +144,72 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     }
 
     /**
-     * brikk extension #55: follows each statement's tokens and, right after the format name of an
-     * `INSERT ... FORMAT <name>` that has no SELECT, WITH, INFILE or VALUES before it at depth 0
-     * (and whose format is not `Values`), reads its inline data as one INSERT_DATA token.
+     * brikk extension #55: follows each statement's tokens and reads the inline data of an `INSERT`
+     * as one INSERT_DATA token once its header ends: right after the name of a depth-0
+     * `FORMAT <name>` (not `Values`), or after a `SETTINGS` clause on that name's line. There is no
+     * inline data after `INFILE` or `VALUES`, nor after a `SELECT` or `WITH` unless the query reads
+     * it through the `input(...)` table function.
      */
     private fun scanInsertData() {
         val state = insertData
         while (state.observed < tokens.size) {
             val token = tokens[state.observed++]
-            when (token.tokenType) {
+            val type = token.tokenType
+            when (type) {
                 TokenType.SEMICOLON -> if (state.depth == 0) { state.reset(state.observed); continue }
                 TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> state.depth++
                 TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> state.depth--
                 else -> {}
             }
-            val word = token.text.takeIf { token.tokenType != TokenType.IDENTIFIER && it.firstOrNull()?.isLetter() == true }?.uppercase()
+            val word = token.text.takeIf { type != TokenType.IDENTIFIER && it.firstOrNull()?.isLetter() == true }?.uppercase()
             if (state.head == null) state.head = word ?: ""
-            val afterFormat = state.afterFormat
-            state.afterFormat = false
-            if (state.head != "INSERT" || state.blocked || state.depth != 0) continue
+            val previous = state.previous
+            state.previous = word
+            if (state.head != "INSERT" || state.noData) continue
+            if (state.settings) {
+                if (settingsEnd(state, type) && state.observed == tokens.size) scanInsertDataAfter(current)
+                continue
+            }
+            if (type == TokenType.L_PAREN && previous == "INPUT") state.input = true
+            if (state.depth != 0) continue
             when {
-                word in INSERT_WITHOUT_DATA -> state.blocked = true
-                afterFormat && (word != null || token.tokenType == TokenType.IDENTIFIER) -> {
-                    state.blocked = true
-                    if (state.observed == tokens.size) scanInsertDataAfter(current)
+                state.afterFormat -> {
+                    state.afterFormat = false
+                    if (word == "VALUES" || word == null && type != TokenType.IDENTIFIER || state.query && !state.input) {
+                        state.noData = true
+                    } else if (state.observed == tokens.size) {
+                        if (wordAt(skipSpaces(current), "SETTINGS")) state.settings = true else scanInsertDataAfter(current)
+                    }
                 }
-                else -> state.afterFormat = word == "FORMAT"
+                word in INSERT_WITHOUT_DATA -> state.noData = true
+                word == "SELECT" || word == "WITH" -> state.query = true
+                word == "FORMAT" -> state.afterFormat = true
             }
         }
     }
+
+    /**
+     * Follows `SETTINGS name = value, ...` after a format name; true once a value ends the clause,
+     * that is, when no `,` follows it. A value may be signed or a bracketed literal.
+     */
+    private fun settingsEnd(state: InsertDataState, type: TokenType): Boolean {
+        if (!state.settingValue) {
+            if (type == TokenType.EQ) state.settingValue = true
+            return false
+        }
+        when {
+            state.depth > 0 -> return false
+            type == TokenType.DASH || type == TokenType.PLUS -> return false
+        }
+        state.settingValue = false
+        var next = current
+        while (next < size && sql[next].isWhitespace()) next++
+        return next >= size || sql[next] != ','
+    }
+
+    private fun wordAt(offset: Int, word: String): Boolean =
+        sql.regionMatches(offset, word, 0, word.length, ignoreCase = true) &&
+            sql.getOrNull(offset + word.length)?.let { it.isLetterOrDigit() || it == '_' } != true
 
     /**
      * Reads inline data from [from], the end of the INSERT's header. Data starts after the spaces
@@ -243,15 +280,25 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         var observed = 0
         var depth = 0
         var head: String? = null
-        var blocked = false
+        var previous: String? = null
+        var noData = false
+        var query = false
+        var input = false
         var afterFormat = false
+        var settings = false
+        var settingValue = false
 
         fun reset(observed: Int = 0) {
             this.observed = observed
             depth = 0
             head = null
-            blocked = false
+            previous = null
+            noData = false
+            query = false
+            input = false
             afterFormat = false
+            settings = false
+            settingValue = false
         }
     }
 
@@ -1086,7 +1133,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
 
     private companion object {
         const val CANCEL_INTERVAL = 1 shl 16
-        private val INSERT_WITHOUT_DATA = setOf("SELECT", "WITH", "INFILE", "VALUES")
+        private val INSERT_WITHOUT_DATA = setOf("INFILE", "VALUES")
 
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'

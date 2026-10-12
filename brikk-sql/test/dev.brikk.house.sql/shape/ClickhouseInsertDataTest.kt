@@ -83,6 +83,21 @@ class ClickhouseInsertDataTest {
         assertEquals(listOf("INSERT INTO t FORMAT TSV\na", "INSERT INTO t FORMAT TSV\nb;c", "SELECT 2;"), statements(sql))
     }
 
+    @Test fun anInsertSelectReadingInputHasInlineData() {
+        val sql = "INSERT INTO t SELECT s FROM input('s String') FORMAT TSV\na;b\n\nSELECT 2;"
+        assertEquals(listOf("a;b"), data(sql))
+        assertEquals(2, statements(sql).size)
+    }
+
+    @Test fun settingsAfterTheFormatComeBeforeData() {
+        val sql = "INSERT INTO t FORMAT JSONEachRow SETTINGS input_format_skip_unknown_fields = 1,\n\nmax_threads = 1\n{\"s\":\"a\"}\n\nSELECT 2;"
+        assertEquals(listOf("{\"s\":\"a\"}"), data(sql))
+        assertEquals(2, statements(sql).size)
+        assertEquals(listOf("1;x"), data("INSERT INTO t FORMAT TSV SETTINGS a = -1, b = 'x;y', c = [1, 2] 1;x\n\nSELECT 2;"))
+        // Only on the format name's line: on the next line SETTINGS is data.
+        assertEquals(listOf("SETTINGS a = 1"), data("INSERT INTO t FORMAT TSV\nSETTINGS a = 1\n\nSELECT 2;"))
+    }
+
     @Test fun valuesInsertSelectAndInfileAreSql() {
         assertEquals(listOf("INSERT INTO t FORMAT Values (1, 'a;b');", "SELECT 2;"), statements("INSERT INTO t FORMAT Values (1, 'a;b');\nSELECT 2;"))
         for (sql in listOf("INSERT INTO t VALUES (1, ';');\nSELECT 2;", "INSERT INTO t SELECT * FROM s FORMAT TSV;\nSELECT 2;",

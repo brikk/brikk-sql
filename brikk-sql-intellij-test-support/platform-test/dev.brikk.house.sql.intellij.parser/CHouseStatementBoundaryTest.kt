@@ -63,15 +63,17 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
     private fun errors(): List<String> =
         PsiTreeUtil.findChildrenOfType(myFixture.file, PsiErrorElement::class.java).map { "${it.textOffset}: ${it.errorDescription}" }
 
-    /** Only the platform grammar's own gap for `FORMAT Values (...)` remains, where the stock dialect reports it too. */
+    /** Only the platform grammar's own gaps for `FORMAT Values (...)` and data after `input()` remain, where the stock dialect reports them too. */
     fun testTheCorpusParsesWithoutErrors() {
+        val grammarGaps = mapOf("values followed by select" to "VALUES expected", "insert select reading input" to "'a;b' unexpected")
         for (case in CHOUSE_BOUNDARY_CORPUS) {
             configureCHouse(case.sql)
             val errors = errors()
-            if (case.name == "values followed by select") {
+            val gap = grammarGaps[case.name]
+            if (gap != null) {
                 stockStatements(case.sql)
-                assertEquals(errors(), errors)
-                assertEquals(listOf("32: VALUES expected, got '('"), errors)
+                assertEquals(case.name, errors(), errors)
+                assertTrue(case.name, gap in errors.single())
             } else {
                 assertEquals(case.name, emptyList<String>(), errors)
             }
