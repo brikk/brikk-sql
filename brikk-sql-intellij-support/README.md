@@ -266,16 +266,22 @@ may well exist. `OutOfScopeClassifier(profile).classify(reference)` tells it apa
 the nearest qualifier that resolves is a namespace of the profile's levels and dbms; without loaded
 children it is `OutOfScope(dataSource, namespace)`, with children `Nonexistent`; nothing resolving above
 the name is `Unknown`. An unqualified table is in the console's current namespace (as far as the model
-lists it) when the profile `usesCurrentNamespace`, and a column of a query reading an out-of-scope table is
-out of scope with it. A namespace introspected but empty also counts as out of scope (the model cannot
-tell them apart), so a wrong name under it goes unreported. With `outOfScopeReferences` on (off by default):
+lists it) when the profile `usesCurrentNamespace`. A column is out of scope only with the relation it
+reads: the one its qualifier names (an alias, or an unaliased table by its name, in its query or an
+enclosing one), or, unqualified, every relation of its own query when all of them are out of scope. No
+other reference takes another's status: a wrong catalog, alias or table name, a column of a loaded table,
+of a CTE or of a derived table stays reported. A namespace introspected but empty also counts as out of
+scope (the model cannot tell them apart), so a wrong name under it goes unreported. With
+`outOfScopeReferences` on (off by default):
 
-- `OutOfScopeReferenceFilter(serviceClass)`, registered as `daemon.highlightInfoFilter`, hides warnings and
-  errors on exactly the name of an out-of-scope reference, such as the platform's "Unable to resolve".
+- `OutOfScopeReferenceFilter(serviceClass)`, registered as `daemon.highlightInfoFilter`, hides the
+  platform's "Unable to resolve" reports (matched by its own messages, in the IDE's language) on exactly
+  the name of an out-of-scope reference in SQL files. Annotator, server and other inspection reports stay.
   It cannot lower their severity, only hide them.
-- `IntrospectNamespaceIntention(serviceClass)`, registered as `intentionAction` for the dialect's language,
-  offers "<product>: introspect '<namespace>'" on such a reference and calls the service's `introspect`.
-  It changes no text and has no preview.
+- `IntrospectNamespaceIntention(serviceClass, productLabel)`, registered as `intentionAction` for the
+  dialect's language, offers "<product>: introspect '<namespace>'" on such a reference and calls the
+  service's `introspect`. It changes no text and has no preview; its family is "<product>: introspect
+  namespace".
 
 ### Console namespace
 

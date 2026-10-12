@@ -5,6 +5,7 @@ import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.database.Dbms
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.lang.LanguageAnnotators
@@ -56,8 +57,10 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         return OutOfScopeClassifier(profile).classify(reference)
     }
 
-    private fun assertOutOfScope(expected: List<String>, actual: ReferenceScope) {
-        val scope = assertInstanceOf(actual, ReferenceScope.OutOfScope::class.java)
+    private fun assertOutOfScope(expected: List<String>, actual: ReferenceScope) = assertOutOfScope("", expected, actual)
+
+    private fun assertOutOfScope(message: String, expected: List<String>, actual: ReferenceScope) {
+        val scope = actual as? ReferenceScope.OutOfScope ?: error("$message: $actual")
         assertSame(source, scope.dataSource)
         assertEquals(expected, scope.namespace.path)
     }
@@ -85,10 +88,31 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         open("SELECT o.x, y FROM hive.web.orders o")
         assertOutOfScope(listOf("hive"), classify("x"))
         assertOutOfScope(listOf("hive"), classify("y"))
-        open("SELECT o.x FROM hive.web.orders o, loaded.nope.t")
-        assertOutOfScope(listOf("hive"), classify("x"))
-        open("SELECT y FROM loaded.web.orders")
-        assertEquals("a column of an introspected table", ReferenceScope.Unknown, classify("y"))
+        open("SELECT o.x FROM hive.web.orders o, loaded.web.orders l")
+        assertOutOfScope("through its alias", listOf("hive"), classify("x"))
+        open("SELECT orders.y FROM hive.web.orders")
+        assertOutOfScope("through its table's name", listOf("hive"), classify("y"))
+        open("SELECT (SELECT o.x FROM loaded.web.orders) FROM hive.web.orders o")
+        assertOutOfScope("from an enclosing query", listOf("hive"), classify("x"))
+    }
+
+    /** Another relation's status is never taken: each of these is reported with the setting off, and stays. */
+    fun testOtherReferencesDoNotTakeAnOutOfScopeTablesStatus() {
+        val taken = listOf(
+            "SELECT * FROM hive.web.orders, nothere.web.t" to "nothere",
+            "SELECT zz.q FROM hive.web.orders o" to "zz",
+            "SELECT zz.q FROM hive.web.orders o" to "q",
+            "SELECT l.nope FROM loaded.web.orders l, hive.web.orders o" to "nope",
+            "SELECT nope FROM loaded.web.orders, hive.web.orders" to "nope",
+            "WITH c AS (SELECT 1 a) SELECT c.nope FROM c, hive.web.orders" to "nope",
+            "SELECT d.nope FROM (SELECT 1 a) d, hive.web.orders" to "nope",
+            "SELECT (SELECT nope FROM loaded.web.orders) FROM hive.web.orders" to "nope",
+            "SELECT y FROM loaded.web.orders" to "y",
+        ).filter { (text, name) ->
+            open(text)
+            classify(name) != ReferenceScope.Unknown
+        }
+        assertEmpty(taken)
     }
 
     fun testAnUnqualifiedTableIsInTheConsolesNamespace() {
@@ -133,6 +157,19 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         val reports = myFixture.doHighlighting(HighlightSeverity.ERROR).map { it.description }
         assertTrue(reports.toString(), "Server: no table orders" in reports)
         assertEquals("the unresolved report is hidden", listOf("Server: no table orders"), reports)
+    }
+
+    /** Another inspection's report on a name, here an ambiguous column next to an out-of-scope table, stays. */
+    fun testTheFilterKeepsAnAmbiguousColumn() {
+        HighlightInfoFilter.EXTENSION_POINT_NAME.point.registerExtension(Filter(), testRootDisposable)
+        orders.columns.createOrGet("x")
+        checkNotNull(orders.schema).tables.createOrGet("items").columns.createOrGet("x")
+        DbPsiFacade.getInstance(project).clearCaches()
+        val ambiguous = LocalInspectionEP.LOCAL_INSPECTION.extensionList.single { it.implementationClass.endsWith(".SqlAmbiguousColumnInspection") }
+        myFixture.enableInspections(ambiguous.instantiateTool() as LocalInspectionTool)
+        open("SELECT x FROM loaded.web.orders, loaded.web.items, hive.web.t")
+        val reports = myFixture.doHighlighting(HighlightSeverity.WEAK_WARNING).filter { myFixture.file.text.substring(it.startOffset, it.endOffset) == "x" }
+        assertTrue(reports.map { it.description }.toString(), reports.any { it.inspectionToolId?.contains("Ambiguous") == true })
     }
 
     fun testTheIntentionsFamilyNamesItsPlugin() {

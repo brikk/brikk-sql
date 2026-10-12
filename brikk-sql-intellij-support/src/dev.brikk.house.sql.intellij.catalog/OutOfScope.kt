@@ -19,6 +19,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.SqlBundle
 import com.intellij.sql.psi.SqlFile
+import com.intellij.sql.psi.SqlAsExpression
+import com.intellij.sql.psi.SqlExpression
+import com.intellij.sql.psi.SqlJoinExpression
 import com.intellij.sql.psi.SqlQueryExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.intellij.recoverEditorOperation
@@ -42,7 +45,10 @@ public sealed interface ReferenceScope {
  * that names nothing; [classify] answers for the reference's place, so call it on references the
  * platform reports. The namespace is the nearest qualifier that resolves; for an unqualified table
  * with [CatalogProfile.usesCurrentNamespace], the console's current namespace, as far as the model
- * lists it. A column of a query reading an out-of-scope table is out of scope with it. A namespace of
+ * lists it. A column is out of scope only with the relation it reads: the one its qualifier names (an
+ * alias, or an unaliased table by its name, in its query or an enclosing one), or, unqualified, every
+ * relation of its own query, when all of them are out of scope. No other reference takes another's
+ * status: a wrong catalog, alias or table name, a column of a loaded table, a CTE or a derived table stays. A namespace of
  * the profile's [levels][CatalogProfile.levels] is out of scope when it has no loaded children
  * ([CatalogProfile.childrenOf]), so a namespace introspected but empty counts as out of scope too.
  * Call under read access; resolution may be slow.
@@ -53,8 +59,7 @@ public class OutOfScopeClassifier(private val profile: CatalogProfile) {
 
     public fun classify(reference: SqlReferenceExpression): ReferenceScope {
         val own = ownScope(reference)
-        if (own != ReferenceScope.Unknown) return own
-        return readTables(reference).map(::ownScope).firstOrNull { it is ReferenceScope.OutOfScope } ?: ReferenceScope.Unknown
+        return if (own == ReferenceScope.Unknown && reference.referenceElementType.targetKind == ObjectKind.COLUMN) columnScope(reference) else own
     }
 
     /** The scope the reference's own qualifiers, or the console's namespace, give it. */
@@ -92,12 +97,48 @@ public class OutOfScopeClassifier(private val profile: CatalogProfile) {
         return ReferenceScope.OutOfScope(dataSource, target)
     }
 
-    /** The unresolved table references of the queries around [reference], innermost first. */
-    private fun readTables(reference: SqlReferenceExpression): Sequence<SqlReferenceExpression> =
-        generateSequence(PsiTreeUtil.getParentOfType(reference, SqlQueryExpression::class.java)) { PsiTreeUtil.getParentOfType(it, SqlQueryExpression::class.java) }
-            .mapNotNull { it.tableExpression }
-            .flatMap { PsiTreeUtil.findChildrenOfType(it, SqlReferenceExpression::class.java) }
-            .filter { it !== reference && it.referenceElementType.targetKind == ObjectKind.TABLE && it.resolve() == null }
+    /**
+     * A column is out of scope with the relation it reads: the one its qualifier names (an alias, or an
+     * unaliased table by its name, in its query or an enclosing one), or, unqualified, every relation of
+     * its own query, when all of them are out of scope.
+     */
+    private fun columnScope(column: SqlReferenceExpression): ReferenceScope {
+        val sources = when (val qualifier = column.qualifierExpression) {
+            null -> PsiTreeUtil.getParentOfType(column, SqlQueryExpression::class.java)?.let(::relations).orEmpty()
+            is SqlReferenceExpression -> listOfNotNull(relationNamed(qualifier, column))
+            else -> emptyList()
+        }
+        val scopes = sources.map(::relationScope)
+        return scopes.firstOrNull()?.takeIf { scopes.none { it == null } } ?: ReferenceScope.Unknown
+    }
+
+    private fun relationNamed(qualifier: SqlReferenceExpression, column: SqlReferenceExpression): SqlExpression? {
+        if (qualifier.qualifierExpression != null) return null
+        qualifier.resolve()?.let { alias ->
+            return PsiTreeUtil.getParentOfType(alias, SqlQueryExpression::class.java)?.let(::relations)?.firstOrNull { it == alias }
+        }
+        return generateSequence(PsiTreeUtil.getParentOfType(column, SqlQueryExpression::class.java)) { PsiTreeUtil.getParentOfType(it, SqlQueryExpression::class.java) }
+            .firstNotNullOfOrNull { query ->
+                relations(query).filter { it is SqlReferenceExpression && it.name.equals(qualifier.name, ignoreCase = true) }.singleOrNull()
+            }
+    }
+
+    /** The relations [query] reads: its FROM items, each a table, an aliased source, a derived table or a function. */
+    private fun relations(query: SqlQueryExpression): List<SqlExpression> {
+        fun items(element: PsiElement?): List<SqlExpression> = when (element) {
+            is SqlJoinExpression -> items(element.lOperand) + items(element.rOperand)
+            is SqlExpression -> listOf(element)
+            else -> emptyList()
+        }
+        return query.tableExpression?.fromClause?.children.orEmpty().flatMap(::items)
+    }
+
+    /** The scope of an out-of-scope table [relation] reads; null for a relation whose columns are known, or which is wrong itself. */
+    private fun relationScope(relation: SqlExpression): ReferenceScope.OutOfScope? {
+        val source = (relation as? SqlAsExpression)?.expression ?: relation
+        if (source !is SqlReferenceExpression || source.referenceElementType.targetKind != ObjectKind.TABLE || source.resolve() != null) return null
+        return ownScope(source) as? ReferenceScope.OutOfScope
+    }
 }
 
 /**
