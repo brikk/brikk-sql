@@ -113,7 +113,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
   overloads: it goes after `()` when the only overload takes no arguments. Keywords from the profile's
   `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later
-  contributor already offers. Inside the call of a table
+  contributor already offers. Keywords from later contributors (bold plain-text items whose words are
+  all in the catalog) are spelled in the same case, keeping their insertion; an explicit keyword case in
+  the user's SQL code style wins over the profile's, for both. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's

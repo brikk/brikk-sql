@@ -7,18 +7,23 @@ import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.lookup.LookupElementDecorator
+import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.database.util.Case
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.formatter.settings.SqlCodeStyles
 import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
+import dev.brikk.house.sql.metadata.KeywordCatalog
 import dev.brikk.house.sql.metadata.KeywordCategory
 import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TableFunctionInfo
@@ -40,24 +45,60 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         if (!result.isStopped) completeKeywords(parameters, result, reads, functions)
     }
 
-    /** Keywords that neither [functions] (upper-case names this contributor offered) nor a later contributor offered. */
+    /**
+     * Keywords that neither [functions] (upper-case names this contributor offered) nor a later
+     * contributor offered. Keywords of later contributors are spelled in the same case as these:
+     * the user's SQL code style keyword case if it sets one, else the profile's.
+     */
     private fun completeKeywords(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, functions: Set<String>) {
         val scope = profile.keywords
-        if (scope == KeywordScope.NONE) return
-        val keywords = reads.keywords?.keywords ?: return
+        val style = profile.styles[SqlLookupKind.KEYWORD]
+        val codeStyleCase = SqlCodeStyles.getSqlSettings(parameters.originalFile).keywordCase.takeIf { it != Case.MIXED }
+        val recased = style.case.takeIf { codeStyleCase == null && it != LookupCase.AS_GIVEN }
+        if (scope == KeywordScope.NONE && recased == null) return
+        val catalog = reads.keywords ?: return
         val offered = HashSet(functions)
         result.runRemainingContributors(parameters) { completion ->
-            offered += completion.lookupElement.lookupString.uppercase()
-            result.passResult(completion)
+            val element = completion.lookupElement
+            offered += element.lookupString.uppercase()
+            val keyword = recased?.takeIf { element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
+            result.passResult(keyword?.let(completion::withLookupElement) ?: completion)
         }
-        val style = profile.styles[SqlLookupKind.KEYWORD]
+        if (scope == KeywordScope.NONE) return
+        val fallback = if (codeStyleCase == null) style else style.copy(case = LookupCase.AS_GIVEN)
         val sink = result.caseInsensitive()
-        for (keyword in keywords) {
+        for (keyword in catalog.keywords) {
             if (scope == KeywordScope.RESERVED && keyword.category != KeywordCategory.RESERVED) continue
             if (keyword.word.uppercase() in offered) continue
-            val word = style.case.apply(keyword.word)
-            sink.addElement(style.lookup(word, word, style.typeText))
+            val word = codeStyleCase?.apply(keyword.word) ?: style.case.apply(keyword.word)
+            sink.addElement(fallback.lookup(word, word, style.typeText))
         }
+    }
+}
+
+/**
+ * Whether this item, from another contributor, is a keyword: a bold plain-text item whose words
+ * are all in [catalog]. Identifiers, columns and functions carry their symbol as the item's object.
+ */
+private fun LookupElement.isKeywordOf(catalog: KeywordCatalog): Boolean {
+    val text = lookupString
+    return `object` == text &&
+        text.split(' ').all { word -> word.none(Char::isLetter) || catalog[word] != null } &&
+        LookupElementPresentation.renderElement(this).isItemTextBold
+}
+
+/** [delegate] spelled [text], keeping its insertion, matching on its other lookup strings, and priority. */
+private class CasedKeyword(delegate: LookupElement, private val text: String) : LookupElementDecorator<LookupElement>(delegate) {
+    override fun getLookupString(): String = text
+
+    override fun getAllLookupStrings(): Set<String> = delegate.allLookupStrings - delegate.lookupString + text
+
+    // The platform's case-insensitive keywords are inserted in the typed prefix's case.
+    override fun isCaseSensitive(): Boolean = true
+
+    override fun renderElement(presentation: LookupElementPresentation) {
+        super.renderElement(presentation)
+        presentation.itemText = text
     }
 }
 
