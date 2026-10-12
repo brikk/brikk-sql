@@ -1359,10 +1359,7 @@ open class ClickhouseGenerator(
             reg(Nullif::class) { e -> ch().renameFuncSql("nullIf", e) }
             reg(PartitionedByProperty::class) { e -> "PARTITION BY ${sql(e, "this")}" }
             // sqlglot: dialect.no_pivot_sql
-            reg(Pivot::class) { _ ->
-                unsupported("PIVOT unsupported")
-                ""
-            }
+            reg(Pivot::class) { _ -> unsupportedPivotSql() }
             reg(Quantile::class) { e -> ch().quantileSql(e as Quantile) }
             reg(RegexpLike::class) { e -> func("match", e.thisArg, e.args["expression"]) }
             reg(Rand::class) { e -> ch().renameFuncSql("randCanonical", e) }

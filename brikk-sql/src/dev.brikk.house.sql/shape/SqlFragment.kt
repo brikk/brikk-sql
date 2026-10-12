@@ -123,9 +123,18 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         pretty: Boolean = false,
         trackSourceMap: Boolean = false,
         desugarPipes: Boolean = false,
+    ): TranspileResult = transpile(target, pretty, trackSourceMap, desugarPipes, refuseUnsupportedPivots = false)
+
+    private fun transpile(
+        target: String,
+        pretty: Boolean,
+        trackSourceMap: Boolean,
+        desugarPipes: Boolean,
+        refuseUnsupportedPivots: Boolean,
     ): TranspileResult {
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
+        generator.refuseUnsupportedPivots = refuseUnsupportedPivots
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -153,7 +162,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * positions never lie. See the identity invariant `sourceMap.output === sql`.
      *
      * This is the contract editor/plugin callers want; it is a thin, intent-revealing
-     * wrapper over [transpileTo] with `desugarPipes = true`.
+     * rendering path used by [transpileTo] with `desugarPipes = true`. Unsupported
+     * PIVOT/UNPIVOT lowering refuses here rather than returning a query with that
+     * row/column-changing operator removed; diagnostic previews remain available
+     * through [transpileTo].
      *
      * Lowering and generation may throw [dev.brikk.house.sql.generator.UnsupportedError]
      * when a safe translation cannot be established. Callers must handle that refusal;
@@ -164,11 +176,12 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         pretty: Boolean = false,
         trackSourceMap: Boolean = true,
     ): TranspileResult =
-        transpileTo(
+        transpile(
             target = target,
             pretty = pretty,
             trackSourceMap = trackSourceMap,
             desugarPipes = true,
+            refuseUnsupportedPivots = true,
         )
 
     /**
@@ -537,7 +550,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         // Source-aware: pass this fragment's dialect so same-dialect desugaring (the common
         // toStandardSql case, target defaults to `dialect`) stays faithful and never rewrites
         // native functions (e.g. ClickHouse lower stays LOWER, not lowerUTF8).
-        return targetDialect.generate(tree, sourceDialect = dialect.ifBlank { null })
+        val generator = targetDialect.generator(sourceDialect = dialect.ifBlank { null })
+        generator.refuseUnsupportedPivots = true
+        return generator.generate(tree)
     }
 
     /**
