@@ -40,7 +40,7 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
             SerializedSql.Parsed -> VerifyResult.Accepted
             is SerializedSql.Failed -> if (serialized.type == "parser") {
                 VerifyResult.Rejected(
-                    errorAtCodePoint(sql, "Parser Error: ${serialized.message.orEmpty()}", serialized.position),
+                    serialized.errorIn(sql, "Parser Error: ${serialized.message.orEmpty()}"),
                 )
             } else {
                 VerifyResult.Unverified(

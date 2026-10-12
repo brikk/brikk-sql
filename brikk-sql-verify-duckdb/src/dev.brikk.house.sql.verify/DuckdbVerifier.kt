@@ -55,7 +55,7 @@ public class DuckdbVerifier internal constructor(
                 verifyByPrepare(sql)
             } else {
                 val message = listOfNotNull(serialized.type, serialized.message).joinToString(": ")
-                VerifyResult.Rejected(errorAtCodePoint(sql, message.ifEmpty { serialized.document }, serialized.position))
+                VerifyResult.Rejected(serialized.errorIn(sql, message.ifEmpty { serialized.document }))
             }
         }
     }

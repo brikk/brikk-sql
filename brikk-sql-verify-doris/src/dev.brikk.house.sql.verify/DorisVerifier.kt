@@ -128,13 +128,8 @@ public class DorisVerifier private constructor(private val linked: LinkedParser)
     }
 
     /** ANTLR token indices count code points; an EOF token has an empty span. */
-    private fun tokenError(script: String, message: String, token: Token): VerifyError {
-        val codePoints = script.codePointCount(0, script.length)
-        fun utf16(index: Int): Int? = index.takeIf { it in 0..codePoints }?.let { script.offsetByCodePoints(0, it) }
-        val start = utf16(token.startIndex) ?: return VerifyError(message)
-        val end = utf16(token.stopIndex + 1)?.takeIf { it > start }
-        return VerifyError.atOffset(script, message, start, end)
-    }
+    private fun tokenError(script: String, message: String, token: Token): VerifyError =
+        VerifyError.atCodePoint(script, message, token.startIndex, token.stopIndex + 1)
 
     private class CancellationListener(private val checkCanceled: () -> Unit) : ParseTreeListener {
         override fun enterEveryRule(ctx: ParserRuleContext) = checkCanceled()

@@ -62,6 +62,17 @@ public data class VerifyError(
             ?.let { atOffset(text, message, it) }
             ?: VerifyError(message)
 
+        /**
+         * An error at the 0-based code-point offset [codePoint] in [text], optionally spanning to
+         * [endCodePoint], for engines that index their input by code point.
+         */
+        public fun atCodePoint(text: String, message: String, codePoint: Int, endCodePoint: Int? = null): VerifyError {
+            val codePoints = text.codePointCount(0, text.length)
+            fun utf16(index: Int): Int? = index.takeIf { it in 0..codePoints }?.let { text.offsetByCodePoints(0, it) }
+            val offset = utf16(codePoint) ?: return VerifyError(message)
+            return atOffset(text, message, offset, endCodePoint?.let(::utf16)?.takeIf { it > offset })
+        }
+
         /** An error at the UTF-16 [offset] in [text], optionally spanning to [endOffset]. */
         public fun atOffset(text: String, message: String, offset: Int, endOffset: Int? = null): VerifyError {
             if (offset !in 0..text.length) return VerifyError(message)

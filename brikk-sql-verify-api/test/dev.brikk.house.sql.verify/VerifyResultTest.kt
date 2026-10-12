@@ -46,6 +46,19 @@ internal class VerifyResultTest {
     }
 
     @Test
+    fun codePointOffsetsBecomeUtf16Ranges() {
+        val text = "SELECT '\uD83D\uDE00'\r\nFROM WHERE"
+        val where = text.indexOf("WHERE")
+        val codePoint = text.codePointCount(0, where)
+        assertEquals(
+            VerifyError("bad", line = 2, column = 6, offset = where, endOffset = where + 5),
+            VerifyError.atCodePoint(text, "bad", codePoint, codePoint + 5),
+        )
+        assertEquals(VerifyError("bad"), VerifyError.atCodePoint(text, "bad", text.length))
+        assertEquals(VerifyError("bad", line = 1, column = 1, offset = 0), VerifyError.atCodePoint(text, "bad", 0, 0))
+    }
+
+    @Test
     fun prefixRemovalMovesFirstLinePositionsOnly() {
         val wrapped = VerifyResult.Rejected(listOf(
             VerifyError("first", line = 1, column = 12, offset = 11, endOffset = 13),

@@ -17,7 +17,10 @@ internal sealed interface SerializedSql {
         val message: String?,
         val position: Int?,
         val document: String,
-    ) : SerializedSql
+    ) : SerializedSql {
+        fun errorIn(sql: String, message: String): VerifyError =
+            position?.let { VerifyError.atCodePoint(sql, message, it) } ?: VerifyError(message)
+    }
 }
 
 /**
@@ -46,10 +49,4 @@ internal fun Connection.serializeSql(sql: String): SerializedSql {
         position = json["position"]?.jsonPrimitive?.contentOrNull?.toIntOrNull(),
         document = document,
     )
-}
-
-/** The error at DuckDB's code-point [position] in [sql], unpositioned when it lies outside. */
-internal fun errorAtCodePoint(sql: String, message: String, position: Int?): VerifyError {
-    if (position == null || position < 0 || position > sql.codePointCount(0, sql.length)) return VerifyError(message)
-    return VerifyError.atOffset(sql, message, sql.offsetByCodePoints(0, position))
 }
