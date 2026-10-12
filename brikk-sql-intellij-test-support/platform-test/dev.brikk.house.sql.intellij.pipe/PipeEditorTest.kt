@@ -78,6 +78,14 @@ class PipeEditorTest : BasePlatformTestCase() {
         }
     }
 
+    fun testCommentsAfterAPipeDoNotHideStagePhrases() {
+        for (comment in listOf("/* note */ ", "-- note\n")) {
+            configure("FROM t |> ${comment}EXT<caret>")
+            myFixture.completeBasic()
+            assertEquals("FROM t |> ${comment}EXTEND", myFixture.editor.document.text)
+        }
+    }
+
     fun testStagePhrasesInANestedPipeline() {
         configure("SELECT * FROM (FROM t |> <caret>) AS s")
         myFixture.completeBasic()

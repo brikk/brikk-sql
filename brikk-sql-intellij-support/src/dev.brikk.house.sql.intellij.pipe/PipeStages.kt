@@ -61,7 +61,7 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
         val statement = dialect.statementAt(source.text, offset)?.takeIf { it.hasPipe } ?: return
         val before = source.text.substring(statement.start, offset)
         val stage = currentStage(before) ?: return
-        val typed = before.substring(stage.pipe + 2).trimStart()
+        val typed = before.substring(stage.typedStart)
         val words = typed.replace(WHITESPACE, " ")
         val complete = words.endsWith(' ') && phrases.any { it.equals(words.trimEnd(), ignoreCase = true) }
         val matching = phrases.filter { it.startsWith(words, ignoreCase = true) }
@@ -94,28 +94,35 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
         return typeable.also { synchronized(inputColumns) { inputColumns[key] = it } }
     }
 
-    /** The innermost bracketed or top-level pipeline at the end of [text], if a `|>` starts its current stage. */
+    /**
+     * The innermost bracketed or top-level pipeline at the end of [text], if a `|>` starts its
+     * current stage. The stage's typed text starts at its first token, so comments after `|>` stay.
+     */
     private fun currentStage(text: String): Stage? {
         val lexed = Tokenizer(TokenizerConfigs.forName(dialect.dialect)).tokenizeForEditor(text)
         // The text ends at the caret, so a lexical failure means the caret is inside an unterminated construct.
         if (lexed.failureOffset != null) return null
         val tokens = lexed.tokens
         val pipelines = ArrayDeque(listOf(Pipeline(0)))
-        for (token in tokens) when (token.tokenType) {
-            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> pipelines.addLast(Pipeline(token.end + 1))
-            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> if (pipelines.size > 1) pipelines.removeLast()
-            TokenType.PIPE_GT -> pipelines.last().pipe = token.start
-            else -> {}
+        for (token in tokens) {
+            pipelines.last().let { if (it.pipe != null && it.typedStart == null && token.tokenType != TokenType.PIPE_GT) it.typedStart = token.start }
+            when (token.tokenType) {
+                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> pipelines.addLast(Pipeline(token.end + 1))
+                TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> if (pipelines.size > 1) pipelines.removeLast()
+                TokenType.PIPE_GT -> pipelines.last().apply { pipe = token.start; typedStart = null }
+                else -> {}
+            }
         }
         val pipeline = pipelines.last()
-        return pipeline.pipe?.let { Stage(pipeline.start, it) }
+        return pipeline.pipe?.let { Stage(pipeline.start, it, pipeline.typedStart ?: text.length) }
     }
 
     private class Pipeline(val start: Int) {
         var pipe: Int? = null
+        var typedStart: Int? = null
     }
 
-    private class Stage(val inputStart: Int, val pipe: Int)
+    private class Stage(val inputStart: Int, val pipe: Int, val typedStart: Int)
 }
 
 /** Matches phrases ignoring case and the amount of whitespace, so a typed `full  outer` still replaces exactly what was typed. */
