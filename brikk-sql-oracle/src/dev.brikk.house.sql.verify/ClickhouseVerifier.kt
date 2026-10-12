@@ -32,10 +32,10 @@ class ClickhouseVerifier private constructor(
             unavailableReason ?: "ClickHouse verification was not performed: libchdb is unavailable.",
         )
         return try {
-            activeSession.query("EXPLAIN AST $sql", ChdbOutputFormat.TSV)
+            activeSession.query("$QUERY_PREFIX$sql", ChdbOutputFormat.TSV)
             VerifyResult.Accepted
         } catch (error: ChdbQueryException) {
-            classify(sql, error.message.orEmpty())
+            classifyClickhouseFailure(sql, error.message.orEmpty())
         }
     }
 
@@ -47,33 +47,8 @@ class ClickhouseVerifier private constructor(
         session?.close()
     }
 
-    private fun classify(sql: String, message: String): VerifyResult {
-        if (!isSyntaxError(message)) {
-            // EXPLAIN AST did reach the engine, and this error is not from the parser. This
-            // matches the contract of every verifier in this module: grammar accepted.
-            return VerifyResult.Accepted
-        }
-        val lineAndCol = LINE_AND_COLUMN.find(message)
-        val position = POSITION.find(message)?.groupValues?.get(1)?.toIntOrNull()
-        val error = when {
-            lineAndCol != null -> VerifyError(
-                message,
-                line = lineAndCol.groupValues[1].toIntOrNull(),
-                column = lineAndCol.groupValues[2].toIntOrNull(),
-            )
-            position != null -> VerifyError.atOffset(sql, message, position - 1)
-            else -> VerifyError(message)
-        }
-        return VerifyResult.Rejected(error)
-    }
-
     companion object {
         private const val EXPRESSION_PREFIX = "SELECT "
-        private val POSITION = Regex("""position\s+(\d+)""", RegexOption.IGNORE_CASE)
-        private val LINE_AND_COLUMN = Regex(
-            """line\s+(\d+),\s*column\s+(\d+)""",
-            RegexOption.IGNORE_CASE,
-        )
 
         /**
          * Creates a verifier without throwing for an unavailable native library. In that case
@@ -86,9 +61,38 @@ class ClickhouseVerifier private constructor(
             } catch (error: ChdbUnavailableException) {
                 ClickhouseVerifier(session = null, unavailableReason = error.message)
             }
-
-        private fun isSyntaxError(message: String): Boolean =
-            message.contains("Syntax error", ignoreCase = true) ||
-                message.contains("Code: 62", ignoreCase = true)
     }
+}
+
+private const val QUERY_PREFIX = "EXPLAIN AST "
+private val POSITION = Regex("""position\s+(\d+)""", RegexOption.IGNORE_CASE)
+
+internal fun classifyClickhouseFailure(sql: String, message: String): VerifyResult {
+    val syntaxError = message.contains("Syntax error", ignoreCase = true) || message.contains("Code: 62", ignoreCase = true)
+    if (!syntaxError) {
+        // EXPLAIN AST did reach the engine, and this error is not from the parser. This
+        // matches the contract of every verifier in this module: grammar accepted.
+        return VerifyResult.Accepted
+    }
+    // ClickHouse reports a 1-based UTF-8 byte position in the whole query, EXPLAIN AST included.
+    val position = POSITION.find(message)?.groupValues?.get(1)?.toIntOrNull()
+    val offset = position?.let { utf16OffsetOfByte(sql, it - 1 - QUERY_PREFIX.length) }
+    return VerifyResult.Rejected(offset?.let { VerifyError.atOffset(sql, message, it) } ?: VerifyError(message))
+}
+
+/** The UTF-16 offset of the UTF-8 [byteOffset] in [text], or null unless it starts a character. */
+private fun utf16OffsetOfByte(text: String, byteOffset: Int): Int? {
+    var bytes = 0
+    var index = 0
+    while (bytes < byteOffset && index < text.length) {
+        val codePoint = text.codePointAt(index)
+        bytes += when {
+            codePoint < 0x80 -> 1
+            codePoint < 0x800 -> 2
+            codePoint < 0x10000 -> 3
+            else -> 4
+        }
+        index += Character.charCount(codePoint)
+    }
+    return index.takeIf { bytes == byteOffset }
 }

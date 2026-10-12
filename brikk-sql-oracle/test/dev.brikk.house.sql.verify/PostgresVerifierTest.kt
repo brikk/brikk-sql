@@ -67,6 +67,22 @@ class PostgresVerifierTest {
     }
 
     @Test
+    fun postgresCodePointPositionsBecomeUtf16RangesAcrossCrlf() {
+        for (payload in listOf("ascii", "\uD83D\uDE00", "\uD83D\uDE00\uD83D\uDE80")) {
+            for (separator in listOf(" ", "\n", "\r\n")) {
+                val sql = "SELECT '$payload',$separator'$payload' FROM WHERE"
+                val where = sql.indexOf("WHERE")
+                val error = assertIs<VerifyResult.Rejected>(pg.verify(sql), sql).error
+                assertEquals(
+                    listOf(sql.take(where).count { it == '\n' } + 1, where - (sql.lastIndexOf('\n', where - 1) + 1) + 1, where),
+                    listOf(error.line, error.column, error.offset),
+                    "$sql: ${error.message}",
+                )
+            }
+        }
+    }
+
+    @Test
     fun postgresRejectsSyntaxErrorWithInteriorPosition() {
         // Position mapped to the offending token in the interior of the statement.
         val error = assertIs<VerifyResult.Rejected>(pg.verify("SELECT * FROM t WHERE")).error.message

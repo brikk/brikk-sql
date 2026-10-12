@@ -189,11 +189,11 @@ class PostgresVerifier internal constructor(
         }
 
         val server = e.serverErrorMessage
-        // ServerErrorMessage.position is a 1-based char offset into the submitted SQL text.
+        // ServerErrorMessage.position is a 1-based character (code point) offset into the SQL.
         val position = server?.position?.takeIf { it > 0 }
         val message = listOfNotNull(state, (server?.message ?: e.message)?.trim()).joinToString(": ")
         return VerifyResult.Rejected(
-            position?.let { VerifyError.atOffset(sql, message, it - 1) } ?: VerifyError(message),
+            position?.let { VerifyError.atCodePoint(sql, message, it - 1) } ?: VerifyError(message),
         )
     }
 
