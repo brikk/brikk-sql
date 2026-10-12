@@ -25,7 +25,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
     private var checkCanceled: () -> Unit = {}
-    private var scanned: Int = 0
+    private var cancelBudget: Int = CANCEL_INTERVAL
     private var breaksScanned: Int = 0
     private var lastBreak: Int = -1
 
@@ -43,7 +43,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         end = false
         peek = NONE
         prevTokenLine = -1
-        scanned = 0
+        cancelBudget = CANCEL_INTERVAL
         breaksScanned = 0
         lastBreak = -1
     }
@@ -53,7 +53,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
      *
      * sqlglot: TokenizerCore.tokenize
      */
-    fun tokenize(sql: String): List<Token> {
+    fun tokenize(sql: String): List<Token> = try {
+        scanAll(sql)
+    } catch (e: Canceled) {
+        throw e.signal
+    }
+
+    private fun scanAll(sql: String): List<Token> {
         reset()
         this.sql = sql
         this.size = sql.length
@@ -63,7 +69,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         } catch (e: TokenError) {
             throw e
         } catch (e: Canceled) {
-            throw e.signal
+            throw e
         } catch (e: Exception) {
             val ctxStart = maxOf(current - 50, 0)
             val ctxEnd = minOf(current + 50, size - 1).coerceAtLeast(ctxStart)
@@ -89,9 +95,11 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val previous = editorMode
         editorMode = true
         return try {
-            EditorTokens(tokenize(sql).toList())
+            EditorTokens(scanAll(sql).toList())
         } catch (e: TokenError) {
             EditorTokens(tokens.toList(), start.coerceIn(0, sql.length), e.message ?: "Incomplete SQL token")
+        } catch (e: Canceled) {
+            throw e.signal
         } finally { editorMode = previous }
     }
 
@@ -100,13 +108,11 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val identifiers = config.identifiers
 
         while (size != 0 && !end) {
-            if (++scanned and CANCEL_CHECK_MASK == 0) {
-                try { checkCanceled() } catch (e: Throwable) { throw Canceled(e) }
-            }
             var cur = current
 
-            // Skip spaces here rather than iteratively calling advance() for performance reasons
-            while (cur < size) {
+            // Skip spaces here rather than iteratively calling advance() for performance reasons;
+            // a long run is skipped in chunks, so cancellation is checked inside it.
+            while (cur < size && cur - current < CANCEL_INTERVAL) {
                 val c = sql[cur]
                 if (c == ' ' || c == '\t') cur++ else break
             }
@@ -143,7 +149,16 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     }
 
     // sqlglot: TokenizerCore._advance
+    // Calls the cancellation hook after every CANCEL_INTERVAL scanned characters.
+    private fun progress(scannedChars: Int) {
+        cancelBudget -= scannedChars
+        if (cancelBudget > 0) return
+        cancelBudget = CANCEL_INTERVAL
+        try { checkCanceled() } catch (e: Throwable) { throw Canceled(e) }
+    }
+
     private fun advance(i: Int = 1, alnum: Boolean = false) {
+        val before = current
         val c = char
 
         if (c == '\n' || c == '\r') {
@@ -168,7 +183,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             var e2 = end
             var p2 = peek
 
-            while (p2.isLetterOrDigit()) {
+            while (p2.isLetterOrDigit() && cur - before < CANCEL_INTERVAL) {
                 c2 += 1
                 cur += 1
                 e2 = cur >= size
@@ -181,6 +196,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             peek = p2
             char = sql[cur - 1]
         }
+        if (current > before) progress(current - before)
     }
 
     // sqlglot: TokenizerCore._text
@@ -242,6 +258,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     // The last CR or LF before [offset]; token starts only move forward, so the scan is amortized.
     private fun lineBreakBefore(offset: Int): Int {
         if (offset < breaksScanned) return maxOf(sql.lastIndexOf('\n', offset - 1), sql.lastIndexOf('\r', offset - 1))
+        progress(offset - breaksScanned)
         while (breaksScanned < offset) {
             val c = sql[breaksScanned]
             if (c == '\n' || c == '\r') lastBreak = breaksScanned
@@ -412,6 +429,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         var depth = 1
         var index = contentStart
         while (index < size) {
+            progress(1)
             when {
                 sql.startsWith("*/", index) -> if (--depth == 0) return index else index += 2
                 sql.startsWith("/*", index) && (openOverlapping || sql.getOrNull(index + 2) != '/') -> { depth++; index += 2 }
@@ -448,6 +466,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
         visit(0, 1)
         while (frames.isNotEmpty()) {
+            progress(1)
             val frame = frames.last()
             val offset = delimiters[frame.delimiter]
             val closing = sql[offset] == '*'
@@ -472,6 +491,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         var offsets = IntArray(16)
         var count = 0
         for (index in from until size - 1) {
+            progress(1)
             val pair = sql[index] == '/' && sql[index + 1] == '*' || sql[index] == '*' && sql[index + 1] == '/'
             if (!pair) continue
             if (count == offsets.size) offsets = offsets.copyOf(count * 2)
@@ -835,11 +855,12 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 // no backslash in the string that would need escape processing
                 (
                     !(unescapedSequences.isNotEmpty() || '\\' in esc) ||
-                        (pos until endIdx).none { sql[it] == '\\' }
+                        !hasBackslash(pos, endIdx)
                     )
             ) {
                 var newlines = 0
                 for (i in pos until endIdx) {
+                    progress(1)
                     if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlines++
                 }
                 if (newlines > 0) {
@@ -935,13 +956,21 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return text.toString()
     }
 
+    private fun hasBackslash(from: Int, until: Int): Boolean {
+        for (index in from until until) {
+            progress(1)
+            if (sql[index] == '\\') return true
+        }
+        return false
+    }
+
     private fun byteChunk(text: String, bytes: Boolean): String = if (bytes && text.any { it.code >= 128 })
         text.encodeToByteArray(throwOnInvalidSequence = true).joinToString("") { (it.toInt() and 0xFF).toChar().toString() } else text
 
     private class Canceled(val signal: Throwable) : RuntimeException(signal)
 
     private companion object {
-        const val CANCEL_CHECK_MASK = 1023
+        const val CANCEL_INTERVAL = 1 shl 16
 
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'
