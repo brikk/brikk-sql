@@ -59,7 +59,13 @@ registers no-arg subclasses:
   `PipeRunToStageAction`. Run-to-stage cuts at top-level stages and submits through
   the same checks; injected and inspection-only files cannot run.
 - `PipeStageCompletionContributor` and `PipeStageKeywordAnnotator`: core stage phrases
-  and offline stage input columns, also in injected SQL (`PipeText`).
+  and offline stage input columns, also in injected SQL (`PipeText`). Right after `|>` only
+  stage phrases are offered; once a stage has begun, other contributors complete as usual.
+  Items take the `PIPE_STAGE` (UPPER, bold, "PIPE stage") and `PIPE_INPUT_COLUMN` rows of the
+  `SqlLookupStyles` the contributor is given (`DEFAULT` unless the plugin passes its own).
+  Both read the profile's `stagePhrases`, by default `pipeStagePhrases(dialect)`: the phrases core
+  parses for the dialect that core lowers and the engine runs as lowered (recorded for Trino, DuckDB,
+  Doris and ClickHouse; other dialects get every parsed phrase).
 
 `lower` turns one statement into `PipeTranslation` over core `lowerForExecution`,
 also refusing what the profile's statement ranges refuse, and applies the optional
@@ -116,9 +122,22 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
   overloads: it goes after `()` when the only overload takes no arguments. Keywords from the profile's
   `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later
-  contributor already offers. Inside the call of a table
+  contributor already offers. Keywords from later contributors (bold plain-text items whose words are
+  all in the catalog) are spelled in the same case, keeping their insertion; an explicit keyword case in
+  the user's SQL code style wins over the profile's, for both. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
+  Function kinds follow the position, judged from the core tokens of the statement before the typed
+  name (`tablePositions`, by default `TablePositions.of(dialect)`). `STANDARD` places tables after FROM,
+  any join and PIPE `|> CALL`, after a comma continuing their list, and inside `TABLE(`; `IS DISTINCT
+  FROM`, ClickHouse's `ARRAY JOIN` and a FROM inside a call holding no query (`EXTRACT(YEAR FROM x)`)
+  are not table positions. A table position offers only table functions, a known expression position
+  hides them, so a name of both kinds (DuckDB `range`) shows its fitting form; where the text does not
+  tell, every function is offered. Aggregates and window functions are not filtered by clause.
+  Per dialect: DuckDB's `unnest` is also offered in expressions; Doris's generators are too, and
+  follow `LATERAL VIEW`; Trino's table functions other than UNNEST and JSON_TABLE are inserted as
+  `TABLE(name(...))` where they stand bare. Right after `|>`, where only one of the profile's
+  `stagePhrases` stands, no functions or metadata keywords are offered.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
 - `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
@@ -127,7 +146,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
 
 `SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
 signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
-a dialect replaces rows with `with`. `nativeKinds` maps engine-native function kinds
+a dialect replaces rows with `with`. `SqlLookupIcons` holds the two icons the platform lacks, each with a
+dark variant: `WindowFunction` ("W" in the function circle, the WINDOW row) and `BrikkColumn` (bricks
+laid 2-1-2, the BRIKK_COLUMN row). `nativeKinds` maps engine-native function kinds
 (`FunctionPresentation.nativeKind`, such as DuckDB macros) to their own rows. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
 the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).

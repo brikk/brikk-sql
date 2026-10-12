@@ -7,18 +7,25 @@ import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.lookup.LookupElementDecorator
+import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.database.util.Case
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.formatter.settings.SqlCodeStyles
 import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
+import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
+import dev.brikk.house.sql.metadata.KeywordCatalog
 import dev.brikk.house.sql.metadata.KeywordCategory
 import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TableFunctionInfo
@@ -35,29 +42,80 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return
         val reads = ProfileReads(profile, parameters.originalFile)
-        val functions = completeFunctions(parameters, result, reads)
+        val file = parameters.originalFile
+        // Injected SQL is read unescaped, so a host's doubled quotes do not change its literals.
+        val source = PipeText.of(file)
+        val before = source.text.substring(0, source.textOffset(prefixAt(file, parameters.offset).first).coerceIn(0, source.text.length))
+        val position = functionPosition(
+            before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
+            { name -> name in reads.snapshot.functions }, ProgressManager::checkCanceled,
+        )
+        val functions = completeFunctions(parameters, result, reads, position)
         completeTableFunctionArguments(parameters, result, reads)
-        if (!result.isStopped) completeKeywords(parameters, result, reads, functions)
+        if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position)
     }
 
-    /** Keywords that neither [functions] (upper-case names this contributor offered) nor a later contributor offered. */
-    private fun completeKeywords(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, functions: Set<String>) {
+    /**
+     * Keywords that neither [functions] (upper-case names this contributor offered) nor a later
+     * contributor offered. Keywords of later contributors are spelled in the same case as these:
+     * the user's SQL code style keyword case if it sets one, else the profile's. A PIPE stage head
+     * gets none of its own: only a stage phrase stands there.
+     */
+    private fun completeKeywords(
+        parameters: CompletionParameters,
+        result: CompletionResultSet,
+        reads: ProfileReads,
+        functions: Set<String>,
+        position: FunctionPosition,
+    ) {
         val scope = profile.keywords
-        if (scope == KeywordScope.NONE) return
-        val keywords = reads.keywords?.keywords ?: return
+        val style = profile.styles[SqlLookupKind.KEYWORD]
+        val codeStyleCase = SqlCodeStyles.getSqlSettings(parameters.originalFile).keywordCase.takeIf { it != Case.MIXED }
+        val recased = style.case.takeIf { codeStyleCase == null && it != LookupCase.AS_GIVEN }
+        if (scope == KeywordScope.NONE && recased == null) return
+        val catalog = reads.keywords ?: return
         val offered = HashSet(functions)
         result.runRemainingContributors(parameters) { completion ->
-            offered += completion.lookupElement.lookupString.uppercase()
-            result.passResult(completion)
+            val element = completion.lookupElement
+            offered += element.lookupString.uppercase()
+            val keyword = recased?.takeIf { element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
+            result.passResult(keyword?.let(completion::withLookupElement) ?: completion)
         }
-        val style = profile.styles[SqlLookupKind.KEYWORD]
+        if (scope == KeywordScope.NONE || position == FunctionPosition.STAGE_HEAD) return
+        val fallback = if (codeStyleCase == null) style else style.copy(case = LookupCase.AS_GIVEN)
         val sink = result.caseInsensitive()
-        for (keyword in keywords) {
+        for (keyword in catalog.keywords) {
             if (scope == KeywordScope.RESERVED && keyword.category != KeywordCategory.RESERVED) continue
             if (keyword.word.uppercase() in offered) continue
-            val word = style.case.apply(keyword.word)
-            sink.addElement(style.lookup(word, word, style.typeText))
+            val word = codeStyleCase?.apply(keyword.word) ?: style.case.apply(keyword.word)
+            sink.addElement(fallback.lookup(word, word, style.typeText))
         }
+    }
+}
+
+/**
+ * Whether this item, from another contributor, is a keyword: a bold plain-text item whose words
+ * are all in [catalog]. Identifiers, columns and functions carry their symbol as the item's object.
+ */
+private fun LookupElement.isKeywordOf(catalog: KeywordCatalog): Boolean {
+    val text = lookupString
+    return `object` == text &&
+        text.split(' ').all { word -> word.none(Char::isLetter) || catalog[word] != null } &&
+        LookupElementPresentation.renderElement(this).isItemTextBold
+}
+
+/** [delegate] spelled [text], keeping its insertion, matching on its other lookup strings, and priority. */
+private class CasedKeyword(delegate: LookupElement, private val text: String) : LookupElementDecorator<LookupElement>(delegate) {
+    override fun getLookupString(): String = text
+
+    override fun getAllLookupStrings(): Set<String> = delegate.allLookupStrings - delegate.lookupString + text
+
+    // The platform's case-insensitive keywords are inserted in the typed prefix's case.
+    override fun isCaseSensitive(): Boolean = true
+
+    override fun renderElement(presentation: LookupElementPresentation) {
+        super.renderElement(presentation)
+        presentation.itemText = text
     }
 }
 
@@ -69,8 +127,8 @@ private class ProfileReads(val profile: SqlCompletionProfile, val file: PsiFile)
     val keywords by lazy(LazyThreadSafetyMode.NONE) { profile.keywordCatalog(file, snapshot) }
 }
 
-/** Offers the functions the gates allow and returns their upper-case names. */
-private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads): Set<String> {
+/** Offers the functions the gates allow that fit [position] and returns their upper-case names. */
+private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, position: FunctionPosition): Set<String> {
     val profile = reads.profile
     val file = parameters.originalFile
     val gates = profile.functionGates
@@ -80,8 +138,11 @@ private fun completeFunctions(parameters: CompletionParameters, result: Completi
         ?.qualifierExpression?.text
     val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
     val names = HashSet<String>()
+    val positions = profile.tablePositions
     fun offer(entry: FunctionPresentation, serverOnly: Boolean) {
-        sink.addElement(profile.lookup(entry, serverOnly))
+        if (!position.offers(entry, positions)) return
+        val wrapper = positions.wrapper?.takeIf { position == FunctionPosition.TABLE && positions.wraps(entry) }
+        sink.addElement(profile.lookup(entry, serverOnly, wrapper))
         names += entry.name.uppercase()
     }
     val rule = gates.qualifier
@@ -149,7 +210,8 @@ internal fun tableFunctionCallAt(snapshot: MetadataSnapshot, position: PsiElemen
     return null
 }
 
-private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly: Boolean): LookupElement {
+/** The item for [entry]; with [wrapper], inserted as `wrapper(name(...))`. */
+private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly: Boolean, wrapper: String? = null): LookupElement {
     val style = styles[lookupKind(entry)]
     val extension = entry.extension
     val typeText = when {
@@ -160,7 +222,51 @@ private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly:
     }
     val tailText = entry.signature?.takeIf { style.showsSignature }
         ?.let { "($it)" + if (entry.overloadCount > 1) "  +${entry.overloadCount - 1}" else "" }
-    return style.lookup(entry, entry.name, typeText, tailText, entry.insertHandler)
+    val insertHandler = entry.insertHandler
+    return style.lookup(entry, entry.name, typeText, tailText, wrapper?.let { Wrapped(it, insertHandler) } ?: insertHandler)
+}
+
+/**
+ * Writes [wrapper] and `(` before the name and `)` after its call, as Trino's `TABLE(sequence(...))`.
+ * An existing call keeps its arguments, with the caret inside; one whose `)` cannot be found keeps
+ * only [call]'s insertion.
+ */
+private class Wrapped(private val wrapper: String, private val call: InsertHandler<LookupElement>?) : InsertHandler<LookupElement> {
+    override fun handleInsert(context: InsertionContext, item: LookupElement) {
+        val document = context.document
+        val start = context.startOffset
+        val tail = context.tailOffset
+        val text = document.charsSequence
+        if (tail < text.length && text[tail] == '(') {
+            val close = closingParen(text, tail)
+            if (close == null) {
+                call?.handleInsert(context, item)
+                return
+            }
+            document.insertString(close + 1, ")")
+        } else {
+            document.insertString(tail, "())")
+        }
+        document.insertString(start, "$wrapper(")
+        if (context.completionChar == '(') context.setAddCompletionChar(false)
+        context.editor.caretModel.moveToOffset(tail + wrapper.length + 2)
+    }
+}
+
+/** The `)` closing the `(` at [open], skipping quoted text; null when the text ends first. */
+private fun closingParen(text: CharSequence, open: Int): Int? {
+    var depth = 0
+    var quote: Char? = null
+    for (index in open until text.length) {
+        val char = text[index]
+        when {
+            quote != null -> if (char == quote) quote = null
+            char == '\'' || char == '"' || char == '`' -> quote = char
+            char == '(' -> depth++
+            char == ')' -> if (--depth == 0) return index
+        }
+    }
+    return null
 }
 
 private fun SqlCompletionProfile.lookupKind(entry: FunctionPresentation): SqlLookupKind =

@@ -2,6 +2,7 @@ package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
+import dev.brikk.house.sql.intellij.pipe.pipeStagePhrases
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
@@ -38,6 +39,15 @@ public interface SqlCompletionProfile {
     public val nativeKinds: Map<String, SqlLookupKind> get() = emptyMap()
 
     public val functionGates: SqlFunctionGates get() = SqlFunctionGates.OFF
+
+    /**
+     * Where only table functions are offered; everywhere else they are hidden, and where the text
+     * before the caret does not tell, every function is offered.
+     */
+    public val tablePositions: TablePositions get() = TablePositions.of(metadata.dialect)
+
+    /** The PIPE stages that may follow `|>`, where no function stands; keep it equal to the PIPE profile's `stagePhrases`. */
+    public val stagePhrases: List<String> get() = pipeStagePhrases(metadata.dialect)
 
     public val keywords: KeywordScope get() = KeywordScope.ALL
 
