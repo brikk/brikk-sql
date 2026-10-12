@@ -28,7 +28,8 @@ import org.jetbrains.annotations.ApiStatus
 /**
  * A dialect on the platform ClickHouse grammar that behaves as the platform ClickHouse dialect: its
  * tokens and builtin functions (special forms and combinator suffixes included), types, operators,
- * system variables, statement separators, raw data tokens and resolution rules. The subclass
+ * system variables, statement separators and resolution rules; a raw data leaf is never reparsed
+ * on its own. The subclass
  * supplies `getDbms`; keep its `Dbms` outside the dialect object, whose base constructor already
  * asks for it. Pair it with `CHouseFamilyParserDefinition`.
  *
@@ -52,7 +53,11 @@ public abstract class CHouseFamilyDialect(id: String) : SqlLanguageDialectBase(i
 
     override fun getStatementSeparators(): TokenSet = stock.statementSeparators
 
-    override fun isValidRawToken(type: IElementType, text: CharSequence): Boolean = stock.isValidRawToken(type, text)
+    /**
+     * Never reparses a raw data leaf on its own: an edit inside data can move statement boundaries
+     * (a `;` alone on a line, a blank line), which only reparsing the file finds.
+     */
+    override fun isValidRawToken(type: IElementType, text: CharSequence): Boolean = false
 
     override fun isSpecialFunctionReference(elementType: IElementType): Boolean = stock.isSpecialFunctionReference(elementType)
 

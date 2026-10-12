@@ -199,7 +199,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   `Dbms` outside the dialect object, whose base constructor already asks for it.
 - `CHouseFamilyDialect(id)` (`dialect`): a ClickHouse-grammar dialect that behaves as the platform
   ClickHouse dialect (tokens, builtin functions with special forms and combinator suffixes, types,
-  operators, system variables, separators, raw data tokens, resolution); the subclass supplies
+  operators, system variables, separators, resolution); a raw data leaf is never reparsed alone, as
+  an edit in data can move statement boundaries. The subclass supplies
   `getDbms`, best with `<extensionFallback fallbackDbms="CLICKHOUSE">`. The platform dialect is
   final, so its overrides are delegated to it, and a test fails when an IDE adds one.
   `isServerResolvedParameter` (263, a parameterized view's `{name:Type}`) is called reflectively,

@@ -44,10 +44,9 @@ class CHouseFamilyDialectTest : CHouseFixtureTestCase() {
         assertEquals(stock.statementSeparators.types.toSet(), family.statementSeparators.types.toSet())
     }
 
-    fun testRawDataAndFormatNamesFollowTheStockRules() {
-        for (text in listOf("{\"id\":1}", "(1, 'a')\n", "x;", " x")) {
-            assertEquals(text, stock.isValidRawToken(SqlTokens.SQL_RAW_INPUT, text), family.isValidRawToken(SqlTokens.SQL_RAW_INPUT, text))
-        }
+    fun testRawDataLeavesAreNeverReparsedAloneAndFormatNamesStayUnresolved() {
+        for (text in listOf("{\"id\":1}", "(1, 'a')\n", "x;", " x")) assertFalse(text, family.isValidRawToken(SqlTokens.SQL_RAW_INPUT, text))
+        assertTrue(stock.isValidRawToken(SqlTokens.SQL_RAW_INPUT, "{\"id\":1}"))
         assertFalse(family.shallResolve(null, ObjectKind.FORMAT))
         assertTrue(family.supportsJoinUsing())
     }

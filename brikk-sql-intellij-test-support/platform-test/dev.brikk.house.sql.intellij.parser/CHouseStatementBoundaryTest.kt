@@ -1,7 +1,11 @@
 package dev.brikk.house.sql.intellij.parser
 
 import com.intellij.database.script.ScriptModel
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.impl.DebugUtil
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
@@ -13,6 +17,7 @@ import com.intellij.sql.psi.SqlStatement
 import com.intellij.testFramework.LightVirtualFile
 import dev.brikk.house.sql.intellij.fixture.BoundaryCase
 import dev.brikk.house.sql.intellij.fixture.CHOUSE_BOUNDARY_CORPUS
+import dev.brikk.house.sql.intellij.fixture.CHouseFixtureDialect
 import dev.brikk.house.sql.intellij.fixture.CHouseFixtureTestCase
 import dev.brikk.house.sql.intellij.fixture.OWNER_S3_EXPORT
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
@@ -101,6 +106,19 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         configureCHouse(case.sql)
         assertEquals(case.statements, statements().map { it.text + if (it.text.startsWith("SELECT")) ";" else "" })
         assertNotNull(PsiTreeUtil.findChildOfType(statements().first(), SqlInsertDmlInstruction::class.java))
+    }
+
+    /** An edit inside data that changes statement boundaries reparses the file, not only the data leaf. */
+    fun testEditingDataGivesTheTreeOfAFreshParse() {
+        configureCHouse("INSERT INTO events FORMAT JSONEachRow\n{\"id\":1}\n{\"id\":2}\n;\nSELECT 3;")
+        val document = myFixture.editor.document
+        for (paste in listOf("\n;\nSELECT 8;\nINSERT INTO t FORMAT JSONEachRow", "x", "\n\nSELECT 9")) {
+            val offset = document.text.indexOf("{\"id\":1}") + 8
+            WriteCommandAction.runWriteCommandAction(project) { document.insertString(offset, paste) }
+            PsiDocumentManager.getInstance(project).commitDocument(document)
+            val fresh = PsiFileFactory.getInstance(project).createFileFromText("fresh.sql", CHouseFixtureDialect, document.text)
+            assertEquals(document.text, DebugUtil.psiToString(fresh, true).substringAfter('\n'), DebugUtil.psiToString(myFixture.file, true).substringAfter('\n'))
+        }
     }
 
     fun testStatementsTheGrammarParsesKeepTheirPsi() {
