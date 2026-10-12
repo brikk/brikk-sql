@@ -25,6 +25,9 @@ public class StatementBoundaryGate(private val coreDialect: String) {
     private var text: CharSequence? = null
     private var statements: CoreStatements? = null
 
+    /** Where the last clean split inside a core range left the next top-level statement, or -1. */
+    private var splitAt = -1
+
     /**
      * Runs [parse] on the statement at [builder]. When the statement starts a core range without a
      * boundary error, [parse] stops before the range's end (before its `;`) and the grammar's split
@@ -36,14 +39,17 @@ public class StatementBoundaryGate(private val coreDialect: String) {
      * core reads one construct on: inside brackets, or inside a token or comment. Errors are those
      * the platform builder (`PsiBuilderImpl.hasErrorsAfter`) recorded since the statement began,
      * through any `PsiBuilderAdapter`s; a builder without one shows none, so its early stops always
-     * count as wrong. Text
-     * that the grammar reads cleanly as statements without a `;` between them stays split, as it
-     * does in the platform dialects. Nested statements, and ranges whose boundary core cannot prove
-     * (an unclosed bracket while typing), keep what [parse] made.
+     * count as wrong. Text that the grammar reads cleanly as statements without a `;` between them
+     * stays split, as it does in the platform dialects, and the statement after such a split is
+     * gated as one starting the range. Nested statements, and ranges whose boundary core cannot
+     * prove (an unclosed bracket while typing), keep what [parse] made.
      */
     public fun parse(builder: PsiBuilder, type: IElementType = SqlCompositeElementTypes.SQL_STATEMENT, parse: () -> Boolean): Boolean {
         val range = rangeAt(builder)
-        if (range == null || range.boundaryError != null || !builder.startsStatementAt(range.start)) return parse()
+        val split = splitAt
+        splitAt = -1
+        if (range == null || range.boundaryError != null) return parse()
+        if (builder.currentOffset != split && !builder.startsStatementAt(range.start)) return parse()
         val source = builder.originalText
         val end = range.terminator ?: range.end
         val start = builder.currentOffset
@@ -52,8 +58,13 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         val stop = builder.currentOffset
         val erred = builder.platformBuilder()?.hasErrorsAfter(marker) ?: true
         val reached = builder.consumedEnd() <= end && stop >= end
-        if (reached || stop < end && stop > start && !erred && !continuesAt(source, range, stop)) {
+        if (reached) {
             marker.drop()
+            return parsed
+        }
+        if (stop < end && stop > start && !erred && !continuesAt(source, range, stop)) {
+            marker.drop()
+            splitAt = stop
             return parsed
         }
         marker.rollbackTo()
@@ -82,8 +93,11 @@ public class StatementBoundaryGate(private val coreDialect: String) {
 
     private fun rangeAt(builder: PsiBuilder): SqlStatementRange? {
         val source = builder.originalText
-        val known = statements?.takeIf { text === source }
-            ?: CoreStatements.of(source, source.length, coreDialect).also { text = source; statements = it }
+        val known = statements?.takeIf { text === source } ?: CoreStatements.of(source, source.length, coreDialect).also {
+            text = source
+            statements = it
+            splitAt = -1
+        }
         return known.rangeAt(builder.currentOffset)
     }
 }

@@ -175,7 +175,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   nothing, or where core reads one construct on (inside brackets, a token or a comment). Errors are
   those the platform builder recorded since the statement began (`PsiBuilderImpl.hasErrorsAfter`,
   public, under any `PsiBuilderAdapter`); a builder without one counts every early stop as wrong. Statements the
-  grammar reads cleanly without a `;` between them stay apart, as in the platform dialects; an
+  grammar reads cleanly without a `;` between them stay apart, as in the platform dialects, and the
+  statement after such a split is gated as one starting the range; an
   erroneous one absorbs the rest of its core range. Statements the grammar parses keep its PSI;
   nested statements and ranges with a boundary error (an unclosed bracket being typed) keep the
   grammar's result.

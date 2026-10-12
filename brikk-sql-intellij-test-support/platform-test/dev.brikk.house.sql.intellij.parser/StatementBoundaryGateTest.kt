@@ -46,6 +46,12 @@ class StatementBoundaryGateTest : CHouseFixtureTestCase() {
         assertEquals(listOf(SqlCompositeElementTypes.SQL_STATEMENT to "SELECT 1\nSELECT 2"), parse("SELECT 1\nSELECT 2;") { lineStatement(error = true) })
     }
 
+    fun testAnErrorAfterACleanSplitJoinsTheRestOfTheRange() {
+        var parsed = 0
+        assertEquals(listOf(GRAMMAR_STATEMENT to "SELECT 1", SqlCompositeElementTypes.SQL_STATEMENT to "SELECT 2\nSELECT 3"),
+            parse("SELECT 1\nSELECT 2\nSELECT 3;") { lineStatement(error = parsed++ == 1) })
+    }
+
     fun testASplitInsideBracketsJoinsTheRange() {
         assertEquals(listOf(SqlCompositeElementTypes.SQL_STATEMENT to "SELECT f(1\n, 2)"), parse("SELECT f(1\n, 2);") { lineStatement() })
     }

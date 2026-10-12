@@ -153,6 +153,15 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         assertEquals(listOf(export.substring(export.indexOf("SELECT *"))), caretStatements(myFixture.file, text.indexOf("max_threads")))
     }
 
+    /** After a clean split without a `;`, the next statement is gated like one starting the range. */
+    fun testAStatementAfterACleanSplitIsNotSplitEither() {
+        for (head in listOf("DROP TABLE scratch", "DROP TABLE scratch\nTRUNCATE TABLE t")) {
+            configureCHouse("$head\n$OWNER_S3_EXPORT")
+            assertEquals(head, head.lines() + OWNER_S3_EXPORT.removeSuffix(";"), statements().map { it.text })
+            assertEquals(SqlCompositeElementTypes.SQL_STATEMENT, statements().last().node.elementType)
+        }
+    }
+
     /**
      * Statements the grammar reads cleanly without a `;` between them stay apart, as in the stock
      * dialect, and Execute at the caret runs each. Stock ClickHouse itself reads `SELECT 1\nSELECT 2`
