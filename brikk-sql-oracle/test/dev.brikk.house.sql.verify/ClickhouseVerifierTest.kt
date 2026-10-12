@@ -4,8 +4,7 @@ import dev.brikk.house.chdb.ChdbConfig
 import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.assertIs
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
 class ClickhouseVerifierTest {
@@ -16,10 +15,7 @@ class ClickhouseVerifierTest {
         // Constructed directly: the chDB verifier is a fidelity oracle, no longer registered in
         // SqlVerifiers.forEngine (which now returns the advisory ShardingSphere verifier).
         if (System.getProperty("brikk.chdb.integrationLibrary") == null) {
-            val result = ClickhouseVerifier.create().verify("SELECT 1")
-            assertFalse(result.verified)
-            assertFalse(result.accepted)
-            assertNotNull(result.warning)
+            assertIs<VerifyResult.Unavailable>(ClickhouseVerifier.create().verify("SELECT 1"))
         }
     }
 
@@ -29,11 +25,10 @@ class ClickhouseVerifierTest {
         val library = System.getProperty("brikk.chdb.integrationLibrary")
         assumeTrue(library != null, "brikk.chdb.integrationLibrary is not configured")
         ClickhouseVerifier.create(ChdbConfig(libraryPath = Path.of(library!!))).use { verifier ->
-            assertTrue(verifier.verify("SELECT number FROM numbers(3)").verified)
-            assertTrue(verifier.verify("SELECT number FROM numbers(3)").accepted)
-            assertFalse(verifier.verify("SELECT FROM WHERE").accepted)
-            assertTrue(verifier.verifyExpression("arrayMap(x -> x + 1, [1, 2])").accepted)
-            assertFalse(verifier.verifyExpression("1 +").accepted)
+            assertIs<VerifyResult.Accepted>(verifier.verify("SELECT number FROM numbers(3)"))
+            assertFalse(verifier.verify("SELECT FROM WHERE") is VerifyResult.Accepted)
+            assertIs<VerifyResult.Accepted>(verifier.verifyExpression("arrayMap(x -> x + 1, [1, 2])"))
+            assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
         }
     }
 }

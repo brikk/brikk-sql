@@ -6,6 +6,7 @@ import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class SourcePreservingLoweringTest {
@@ -22,7 +23,7 @@ class SourcePreservingLoweringTest {
     private fun probe(source: String, expected: List<List<String?>>) {
         val fragment = SqlFragment(source, "duckdb")
         val preserved = fragment.toSourcePreservingExecutable()
-        assertTrue(SqlVerifiers.forEngine("duckdb")!!.verify(preserved.sql).accepted, preserved.sql)
+        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(preserved.sql), preserved.sql)
         assertEquals(expected, rows(preserved.sql), preserved.sql)
         assertEquals(rows(fragment.toExecutable("duckdb", trackSourceMap = false).sql), rows(preserved.sql), preserved.sql)
         assertTrue(preserved.unsupportedMessages.isEmpty(), preserved.unsupportedMessages.joinToString())
@@ -100,7 +101,7 @@ class SourcePreservingLoweringTest {
             "FROM (select 2 AS id) AS raw where id = 2",
         )) {
             val result = SqlFragment(source, "doris").toSourcePreservingExecutable()
-            assertTrue(SqlVerifiers.forEngine("doris")!!.verify(result.sql).accepted, result.sql)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("doris")!!.verify(result.sql), result.sql)
         }
     }
 

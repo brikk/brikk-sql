@@ -4,9 +4,9 @@ import dev.brikk.house.sql.shape.SqlFragment
 import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
-import kotlin.test.assertTrue
 
 /** Row and output-column checks in embedded DuckDB, plus the native Doris grammar. */
 class DorisDistinctSemanticsTest {
@@ -30,7 +30,7 @@ class DorisDistinctSemanticsTest {
                     val result = fragment.toExecutable("doris", pretty = pretty, trackSourceMap = true)
                     assertEquals(emptyList(), result.unsupportedMessages, source)
                     assertSame(result.sql, assertNotNull(result.sourceMap).output)
-                    assertTrue(verifier.verify(result.sql).accepted, result.sql)
+                    assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
                     statement.executeQuery(result.sql).use { rows ->
                         assertEquals(columns, (1..rows.metaData.columnCount).map { rows.metaData.getColumnLabel(it) }, result.sql)
                         val actual = buildList {

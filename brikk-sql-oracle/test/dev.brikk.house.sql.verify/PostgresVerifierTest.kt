@@ -2,9 +2,7 @@ package dev.brikk.house.sql.verify
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /**
@@ -38,16 +36,14 @@ class PostgresVerifierTest {
         val result = pg.verify("SELECT a FROM t WHERE b = 1")
         // A valid SELECT prepares cleanly against the empty catalog? No — `t` is undefined, so
         // this is a semantic (42P01) case: grammar accepted, catalog empty => accepted=true.
-        assertTrue(result.accepted, "expected grammar acceptance, got: ${result.error}")
-        assertNull(result.error)
+        assertIs<VerifyResult.Accepted>(result, "expected grammar acceptance, got: $result")
     }
 
     @Test
     fun postgresAcceptsFullyResolvableStatement() {
         // No catalog dependency at all: prepares AND analyzes with no error.
         val result = pg.verify("SELECT 1 + 2 AS x")
-        assertTrue(result.accepted, "expected acceptance, got: ${result.error}")
-        assertNull(result.error)
+        assertIs<VerifyResult.Accepted>(result, "expected acceptance, got: $result")
     }
 
     @Test
@@ -57,27 +53,23 @@ class PostgresVerifierTest {
             "SELECT JSON_VALUE('{}', '$.a' RETURNING BIGINT ERROR ON EMPTY)",
             "SELECT JSON_VALUE('[1,2]', 'strict $[*]' RETURNING BIGINT ERROR ON ERROR)")) {
             val result = pg.verify(source)
-            assertTrue(result.verified && result.accepted, "$source/${result.error}/${result.warning}")
+            assertIs<VerifyResult.Accepted>(result, "$source/$result")
         }
     }
 
     @Test
     fun postgresRejectsSyntaxErrorWithPosition() {
         // A keyword typo: PG reports `42601 syntax error at or near "SELCT"` at position 1.
-        val result = pg.verify("SELCT 1")
-        assertFalse(result.accepted)
-        val error = assertNotNull(result.error)
-        assertTrue(error.startsWith("42601"), "expected 42601 syntax error, got: $error")
-        assertEquals(1, result.line)
-        assertEquals(1, result.col)
+        val error = assertIs<VerifyResult.Rejected>(pg.verify("SELCT 1")).error
+        assertTrue(error.message.startsWith("42601"), "expected 42601 syntax error, got: $error")
+        assertEquals(1, error.line)
+        assertEquals(1, error.column)
     }
 
     @Test
     fun postgresRejectsSyntaxErrorWithInteriorPosition() {
         // Position mapped to the offending token in the interior of the statement.
-        val result = pg.verify("SELECT * FROM t WHERE")
-        assertFalse(result.accepted)
-        val error = assertNotNull(result.error)
+        val error = assertIs<VerifyResult.Rejected>(pg.verify("SELECT * FROM t WHERE")).error.message
         // "syntax error at end of input" — PG may or may not report a position; when it does
         // it should be past the WHERE. Just assert the classification here.
         assertTrue(error.startsWith("42601"), "expected 42601, got: $error")
@@ -86,22 +78,21 @@ class PostgresVerifierTest {
     @Test
     fun postgresTreatsSemanticOnlyErrorsAsAccepted() {
         // Grammar parsed; only the empty catalog complains => accepted=true, no error surfaced.
-        assertTrue(pg.verify("SELECT * FROM no_such_table").accepted, "undefined_table is semantic (42P01)")
+        assertIs<VerifyResult.Accepted>(pg.verify("SELECT * FROM no_such_table"), "undefined_table is semantic (42P01)")
         assertTrue(
-            pg.verify("SELECT missing_col FROM (SELECT 1 AS a) s").accepted,
+            pg.verify("SELECT missing_col FROM (SELECT 1 AS a) s") is VerifyResult.Accepted,
             "undefined_column is semantic (42703)",
         )
-        assertTrue(pg.verify("SELECT no_such_func(1)").accepted, "undefined_function is semantic (42883)")
+        assertIs<VerifyResult.Accepted>(pg.verify("SELECT no_such_func(1)"), "undefined_function is semantic (42883)")
     }
 
     @Test
     fun postgresAcceptsDdlViaRolledBackExecutionFallback() {
         // DDL isn't preparable; it falls back to BEGIN; <sql>; ROLLBACK direct execution.
-        assertTrue(pg.verify("CREATE TABLE brikk_ddl_probe (a INT, b TEXT)").accepted)
+        assertIs<VerifyResult.Accepted>(pg.verify("CREATE TABLE brikk_ddl_probe (a INT, b TEXT)"))
         // ...and a malformed DDL is still a real syntax reject through that path.
-        val bad = pg.verify("CREATE TABLE brikk_ddl_probe (a INT")
-        assertFalse(bad.accepted)
-        assertTrue(bad.error!!.startsWith("42601"), "expected 42601, got: ${bad.error}")
+        val bad = assertIs<VerifyResult.Rejected>(pg.verify("CREATE TABLE brikk_ddl_probe (a INT")).error.message
+        assertTrue(bad.startsWith("42601"), "expected 42601, got: $bad")
     }
 
     @Test
@@ -110,11 +101,11 @@ class PostgresVerifierTest {
         // so creating the SAME table twice must both succeed (no "already exists" 42P07 on the
         // second call — which would prove the first CREATE committed).
         val name = "brikk_rollback_probe"
-        assertTrue(pg.verify("CREATE TABLE $name (a INT)").accepted, "first create should parse+rollback")
+        assertIs<VerifyResult.Accepted>(pg.verify("CREATE TABLE $name (a INT)"), "first create should parse+rollback")
         val second = pg.verify("CREATE TABLE $name (a INT)")
-        assertTrue(
-            second.accepted,
-            "second create must also be accepted — if the first had committed, PG would raise 42P07; error=${second.error}",
+        assertIs<VerifyResult.Accepted>(
+            second,
+            "second create must also be accepted — if the first had committed, PG would raise 42P07; result=$second",
         )
         // Direct proof the table does not exist: a plain reference is a semantic miss (accepted),
         // but the catalog genuinely lacks it — verified by the double-create above.
@@ -125,31 +116,28 @@ class PostgresVerifierTest {
         // CREATE DATABASE can't run in a transaction block; PG raises 25001 which we treat as
         // "parsed, transaction context refused" => accepted, and it never leaves BEGIN so no db
         // is created.
-        assertTrue(pg.verify("CREATE DATABASE brikk_probe_db").accepted, "parsed; 25001 => accepted")
+        assertIs<VerifyResult.Accepted>(pg.verify("CREATE DATABASE brikk_probe_db"), "parsed; 25001 => accepted")
     }
 
     @Test
     fun postgresVerifiesExpressionFragments() {
-        assertTrue(pg.verifyExpression("1 + 2").accepted)
+        assertIs<VerifyResult.Accepted>(pg.verifyExpression("1 + 2"))
         // undefined column in an expression is still semantic (grammar accepted).
-        assertTrue(pg.verifyExpression("some_col + 1").accepted)
-        val bad = pg.verifyExpression("1 +")
-        assertFalse(bad.accepted)
+        assertIs<VerifyResult.Accepted>(pg.verifyExpression("some_col + 1"))
+        assertIs<VerifyResult.Rejected>(pg.verifyExpression("1 +"))
     }
 
     @Test
     fun postgresRejectsParseTimeFeatureNotSupportedErrors() {
-        val result = pg.verify("CREATE ASSERTION brikk_assertion CHECK (true)")
-        assertTrue(result.verified)
-        assertFalse(result.accepted)
-        assertTrue(result.error.orEmpty().startsWith("0A000"), result.error)
+        val error = assertIs<VerifyResult.Rejected>(pg.verify("CREATE ASSERTION brikk_assertion CHECK (true)")).error
+        assertTrue(error.message.startsWith("0A000"), error.message)
     }
 
     @Test
     fun postgresAcceptsProgramLimitErrorsAfterParsing() {
         val columns = (1..1700).joinToString(", ") { "$it AS c$it" }
         val result = pg.verify("SELECT $columns")
-        assertTrue(result.accepted, result.error)
+        assertIs<VerifyResult.Accepted>(result, "$result")
     }
 
     @Test
@@ -159,14 +147,12 @@ class PostgresVerifierTest {
             starts += 1
             error("must not start")
         }
-        val result = verifier.verify("SELECT 1; SELECT 2")
-        assertTrue(result.verified)
-        assertFalse(result.accepted)
-        assertTrue(result.error.orEmpty().contains("exactly one SQL statement"))
+        val error = assertIs<VerifyResult.Rejected>(verifier.verify("SELECT 1; SELECT 2")).error
+        assertTrue(error.message.contains("exactly one SQL statement"))
         assertEquals(0, starts)
-        assertTrue(pg.verify("SELECT ';' AS value").accepted)
-        assertTrue(pg.verify("SELECT ${'$'}tag${'$'};${'$'}tag${'$'} AS value").accepted)
-        assertTrue(pg.verify("SELECT 1 /* ; is not a statement boundary */").accepted)
+        assertIs<VerifyResult.Accepted>(pg.verify("SELECT ';' AS value"))
+        assertIs<VerifyResult.Accepted>(pg.verify("SELECT ${'$'}tag${'$'};${'$'}tag${'$'} AS value"))
+        assertIs<VerifyResult.Accepted>(pg.verify("SELECT 1 /* ; is not a statement boundary */"))
     }
 
     @Test
@@ -177,10 +163,7 @@ class PostgresVerifierTest {
             error("no postgres")
         }
         repeat(2) {
-            val result = unavailable.verify("SELECT 1")
-            assertFalse(result.verified)
-            assertFalse(result.accepted)
-            assertNotNull(result.warning)
+            assertIs<VerifyResult.Unavailable>(unavailable.verify("SELECT 1"))
         }
         assertEquals(1, starts)
 
@@ -190,9 +173,8 @@ class PostgresVerifierTest {
             error("must not start")
         }
         closed.close()
-        val result = closed.verify("SELECT 1")
-        assertFalse(result.verified)
-        assertTrue(result.warning.orEmpty().contains("closed"))
+        val result = assertIs<VerifyResult.Unavailable>(closed.verify("SELECT 1"))
+        assertTrue(result.reason.contains("closed"))
         assertEquals(0, closedStarts)
     }
 }

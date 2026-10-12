@@ -9,6 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class SparkDuckdbArrayResultTest {
@@ -20,7 +21,7 @@ class SparkDuckdbArrayResultTest {
         )) {
             val output = SqlFragment("SELECT $call", "spark").transpileTo("trino")
             assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
-            assertTrue(SqlVerifiers.forEngine("trino")!!.verify(output.sql).accepted, output.sql)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(output.sql), output.sql)
         }
     }
 
@@ -69,7 +70,7 @@ class SparkDuckdbArrayResultTest {
                     for (sourceDialect in listOf("spark2", "spark")) {
                         val output = SqlFragment("SELECT $call AS a", sourceDialect).transpileTo("duckdb")
                         assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
-                        assertTrue(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql).accepted, output.sql)
+                        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql), output.sql)
                         statement.executeQuery("SELECT to_json(a) FROM (${output.sql}) AS q").use { rows ->
                             assertTrue(rows.next())
                             assertEquals(expected, rows.getString(1), output.sql)
@@ -110,7 +111,7 @@ class SparkDuckdbArrayResultTest {
                 )) {
                     val output = SqlFragment("SELECT $call AS result", "spark").transpileTo("duckdb")
                     assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
-                    assertTrue(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql).accepted, output.sql)
+                    assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql), output.sql)
                     statement.executeQuery(output.sql).use { rows ->
                         assertTrue(rows.next())
                         assertEquals(expected, rows.getString("result"), output.sql)

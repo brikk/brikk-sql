@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.verify
 
+import java.util.concurrent.CancellationException
 import org.apache.shardingsphere.sql.parser.api.CacheOption
 import org.apache.shardingsphere.sql.parser.api.SQLParserEngine
 
@@ -8,11 +9,11 @@ import org.apache.shardingsphere.sql.parser.api.SQLParserEngine
  * parser (5.5.2). It answers "is this SQL syntactically legal for the dialect?" without booting
  * a real engine or a native library, which makes it cheap enough to ship and run in an IDE.
  *
- * This is the **advisory tier** ([VerifyResult.advisory] is always true): the parser is a port
- * of the dialect's grammar, not the engine's own parser, so it can diverge from engine-exact
- * behaviour. It is a syntax check only — there is no catalog, no name/arity resolution, and no
- * semantic analysis. Consumers may treat an advisory `accepted = false` as a non-blocking
- * warning rather than a hard rejection.
+ * This is the **advisory tier** ([advisory] is true): the parser is a port of the dialect's
+ * grammar, not the engine's own parser, so it can diverge from engine-exact behaviour. It is a
+ * syntax check only — there is no catalog, no name/arity resolution, and no semantic analysis.
+ * Consumers may treat an advisory [VerifyResult.Rejected] as a non-blocking warning. It reports
+ * no error positions.
  *
  * Fidelity notes per dialect (from offline validation; these are intentional and NOT bugs to
  * "fix" here):
@@ -24,16 +25,16 @@ import org.apache.shardingsphere.sql.parser.api.SQLParserEngine
  *   `PREWHERE`/`SETTINGS`, `{param:UInt32}`, and `CAST(x AS Nullable(String))`. For engine-exact
  *   ClickHouse verification use the chDB-backed `ClickhouseVerifier` in `brikk-sql-oracle`.
  *
- * ShardingSphere logs cosmetic `ANTLR Tool version 4.10.1 ... does not match runtime 4.13.2`
- * warnings on first parse; they are benign — the 5.5.2 grammars parse correctly under the
- * antlr4-runtime 4.13.2 that trino-parser/Doris force onto the classpath.
+ * ShardingSphere resolves its dialect parsers through `ServiceLoader`; in a plugin class loader,
+ * call it with the thread context class loader set to this library's loader.
  *
  * The [SQLParserEngine] is the expensive part; hold one instance per dialect and reuse it.
  */
-class ShardingSphereVerifier(
+public class ShardingSphereVerifier(
     override val engine: String,
-    private val databaseType: String,
+    databaseType: String,
 ) : SqlVerifier {
+    override val advisory: Boolean get() = true
 
     private val parser: SQLParserEngine =
         SQLParserEngine(databaseType, CacheOption(CACHE_INITIAL_CAPACITY, CACHE_MAXIMUM_SIZE))
@@ -41,31 +42,26 @@ class ShardingSphereVerifier(
     override fun verify(sql: String): VerifyResult =
         try {
             parser.parse(sql, false)
-            VerifyResult(accepted = true, advisory = true)
-        } catch (error: Throwable) {
-            VerifyResult(accepted = false, error = error.message, advisory = true)
+            VerifyResult.Accepted
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // ShardingSphere reports grammar rejections through several exception types.
+            VerifyResult.Rejected(VerifyError(e.message ?: e::class.java.name))
         }
 
-    /**
-     * ShardingSphere has no expression-only entry point, so wrap the fragment in `SELECT` and
-     * delegate. On reject we shift a reported column back past the `SELECT ` prefix (mirroring
-     * ClickhouseVerifier.verifyExpression); ShardingSphere rarely reports positions, so this is
-     * best-effort.
-     */
-    override fun verifyExpression(sql: String): VerifyResult {
-        val result = verify("$EXPRESSION_PREFIX$sql")
-        if (result.accepted || result.line != 1 || result.col == null) return result
-        return result.copy(col = (result.col - EXPRESSION_PREFIX.length).coerceAtLeast(1))
-    }
+    /** ShardingSphere has no expression-only entry point, so the fragment is wrapped in `SELECT`. */
+    override fun verifyExpression(sql: String): VerifyResult =
+        verify("$EXPRESSION_PREFIX$sql").withoutPrefix(EXPRESSION_PREFIX)
 
-    companion object {
+    public companion object {
         private const val EXPRESSION_PREFIX = "SELECT "
         // ShardingSphere parse-tree cache sizing; matches its own default CacheOption.
         private const val CACHE_INITIAL_CAPACITY = 128
         private const val CACHE_MAXIMUM_SIZE = 1024L
 
-        /** Maps a brikk engine name to a ShardingSphere database type, or null if unsupported. */
-        fun forEngine(engine: String): ShardingSphereVerifier? = when (engine.lowercase()) {
+        /** The advisory verifier for a brikk engine name, or null if unsupported. */
+        public fun forEngine(engine: String): ShardingSphereVerifier? = when (engine.lowercase()) {
             "postgres" -> ShardingSphereVerifier("postgres", "PostgreSQL")
             "mysql" -> ShardingSphereVerifier("mysql", "MySQL")
             "hive" -> ShardingSphereVerifier("hive", "Hive")

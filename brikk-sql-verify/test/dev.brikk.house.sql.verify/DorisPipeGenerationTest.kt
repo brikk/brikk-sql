@@ -7,6 +7,7 @@ import dev.brikk.house.sql.shape.SqlFragment
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -26,8 +27,8 @@ class DorisPipeGenerationTest {
             if (!pretty) assertEquals(expected, result.sql, source)
             assertEquals(parseOne(expected, "doris"), parseOne(result.sql, "doris"), result.sql)
             val verified = verifier.verify(result.sql)
-            assertTrue(verified.verified && !verified.advisory, "Native parser required: $verified")
-            assertTrue(verified.accepted, "Doris rejected ${result.sql}: ${verified.error}")
+            assertFalse(verifier.advisory, "Native parser required: $verified")
+            assertIs<VerifyResult.Accepted>(verified, "Doris rejected ${result.sql}: $verified")
         }
     }
 
@@ -146,7 +147,7 @@ class DorisPipeGenerationTest {
                 .toExecutable("doris")
             assertEquals(listOf("Date parts are not supported in LAST_DAY."), result.unsupportedMessages)
             // Syntax acceptance must not erase a lossy-translation diagnostic.
-            assertTrue(verifier.verify(result.sql).accepted)
+            assertIs<VerifyResult.Accepted>(verifier.verify(result.sql))
         }
     }
 
@@ -157,7 +158,7 @@ class DorisPipeGenerationTest {
         val warning = "Argument 'accuracy' is not supported for expression 'ApproxDistinct' when targeting Doris."
         val result = lossy.toExecutable("doris")
         assertEquals(listOf(warning), result.unsupportedMessages)
-        assertTrue(verifier.verify(result.sql).accepted)
+        assertIs<VerifyResult.Accepted>(verifier.verify(result.sql))
         assertExecutable(
             supported.sql,
             "WITH __tmp1 AS (SELECT APPROX_COUNT_DISTINCT(user_id) AS users FROM t) SELECT * FROM __tmp1",

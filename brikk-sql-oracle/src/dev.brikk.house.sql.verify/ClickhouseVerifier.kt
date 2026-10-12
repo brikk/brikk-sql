@@ -28,26 +28,20 @@ class ClickhouseVerifier private constructor(
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
-        val activeSession = session ?: return VerifyResult(
-            accepted = false,
-            verified = false,
-            warning = unavailableReason ?: "ClickHouse verification was not performed: libchdb is unavailable.",
+        val activeSession = session ?: return VerifyResult.Unavailable(
+            unavailableReason ?: "ClickHouse verification was not performed: libchdb is unavailable.",
         )
         return try {
             activeSession.query("EXPLAIN AST $sql", ChdbOutputFormat.TSV)
-            VerifyResult(accepted = true)
+            VerifyResult.Accepted
         } catch (error: ChdbQueryException) {
             classify(sql, error.message.orEmpty())
         }
     }
 
     /** ClickHouse has no expression-only parser entry point, so wrap the fragment in SELECT. */
-    override fun verifyExpression(sql: String): VerifyResult {
-        val result = verify("SELECT $sql")
-        val col = result.col
-        if (result.accepted || result.line != 1 || col == null) return result
-        return result.copy(col = (col - EXPRESSION_PREFIX.length).coerceAtLeast(1))
-    }
+    override fun verifyExpression(sql: String): VerifyResult =
+        verify("$EXPRESSION_PREFIX$sql").withoutPrefix(EXPRESSION_PREFIX)
 
     override fun close() {
         session?.close()
@@ -57,29 +51,20 @@ class ClickhouseVerifier private constructor(
         if (!isSyntaxError(message)) {
             // EXPLAIN AST did reach the engine, and this error is not from the parser. This
             // matches the contract of every verifier in this module: grammar accepted.
-            return VerifyResult(accepted = true)
+            return VerifyResult.Accepted
         }
         val lineAndCol = LINE_AND_COLUMN.find(message)
         val position = POSITION.find(message)?.groupValues?.get(1)?.toIntOrNull()
-        val (line, col) = when {
-            lineAndCol != null -> lineAndCol.groupValues[1].toIntOrNull() to lineAndCol.groupValues[2].toIntOrNull()
-            position != null -> lineColOf(sql, position - 1)
-            else -> null to null
+        val error = when {
+            lineAndCol != null -> VerifyError(
+                message,
+                line = lineAndCol.groupValues[1].toIntOrNull(),
+                column = lineAndCol.groupValues[2].toIntOrNull(),
+            )
+            position != null -> VerifyError.atOffset(sql, message, position - 1)
+            else -> VerifyError(message)
         }
-        return VerifyResult(accepted = false, error = message, line = line, col = col)
-    }
-
-    private fun lineColOf(sql: String, offset: Int): Pair<Int?, Int?> {
-        if (offset !in 0..sql.length) return null to null
-        var line = 1
-        var lineStart = 0
-        for (index in 0 until offset) {
-            if (sql[index] == '\n') {
-                line += 1
-                lineStart = index + 1
-            }
-        }
-        return line to offset - lineStart + 1
+        return VerifyResult.Rejected(error)
     }
 
     companion object {
@@ -92,7 +77,7 @@ class ClickhouseVerifier private constructor(
 
         /**
          * Creates a verifier without throwing for an unavailable native library. In that case
-         * [verify] returns `verified=false` and a warning, leaving the caller free to continue
+         * [verify] returns [VerifyResult.Unavailable], leaving the caller free to continue
          * on unsupported platforms such as Windows.
          */
         fun create(config: ChdbConfig = ChdbConfig()): ClickhouseVerifier =

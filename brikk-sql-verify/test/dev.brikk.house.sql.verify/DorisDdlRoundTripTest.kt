@@ -15,7 +15,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class DorisDdlRoundTripTest {
@@ -35,10 +34,8 @@ class DorisDdlRoundTripTest {
             // Grammar acceptance only, not server-side schema or semantic analysis.
             for (sql in listOf(fragment.sql, result.sql)) {
                 val verified = verifier.verify(sql)
-                assertTrue(verified.verified, "Doris parser unavailable: ${verified.warning}")
-                assertFalse(verified.advisory, "Expected Doris's native grammar")
-                assertNull(verified.warning, sql)
-                assertTrue(verified.accepted, "Doris FE parser rejected `$sql`: ${verified.error}")
+                assertFalse(verifier.advisory, "Expected Doris's native grammar")
+                assertIs<VerifyResult.Accepted>(verified, "Doris FE parser rejected `$sql`: $verified")
             }
         }
         return source.ast

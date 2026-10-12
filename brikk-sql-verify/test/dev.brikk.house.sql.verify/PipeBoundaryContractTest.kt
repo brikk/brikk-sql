@@ -266,8 +266,8 @@ class PipeBoundaryContractTest {
                                     assertNotNull(SqlVerifiers.forEngine(case.dialect), context)
                                 }
                                 val verified = verifier.verify(result.sql)
-                                assertTrue(verified.verified && !verified.advisory, "$context\nNative parser required: $verified")
-                                assertTrue(verified.accepted, "$context\n${result.sql}\n$verified")
+                                assertFalse(verifier.advisory, "$context\nNative parser required: $verified")
+                                assertIs<VerifyResult.Accepted>(verified, "$context\n${result.sql}\n$verified")
                                 val generated = dialect.parseOne(result.sql)
                                 assertIs<Select>(generated, context)
                                 assertFalse(generated.findAll<PipeQuery>().any(), context)
@@ -316,7 +316,7 @@ class PipeBoundaryContractTest {
                 val result = fragment.toExecutable(case.dialect, pretty = pretty)
                 assertEquals(emptyList(), result.unsupportedMessages, case.sql)
                 val verifier = assertNotNull(SqlVerifiers.forEngine(case.dialect))
-                assertTrue(verifier.verify(result.sql).accepted, result.sql)
+                assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
                 val qualified = qualify(Dialects.forName(case.dialect).parseOne(result.sql),
                     dialect = Dialects.forName(case.dialect), schema = schema,
                     inferSchema = false, validateQualifyColumns = true)

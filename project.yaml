@@ -7,6 +7,10 @@ modules:
   - brikk-sql-oracle
   - brikk-sql-verify
   - brikk-sql-verify-api
+  - brikk-sql-verify-doris
+  - brikk-sql-verify-duckdb
+  - brikk-sql-verify-shardingsphere
+  - brikk-sql-verify-trino
   - tools/metadata-capture
 
 plugins:
