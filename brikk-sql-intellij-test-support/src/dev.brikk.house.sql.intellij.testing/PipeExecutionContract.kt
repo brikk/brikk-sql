@@ -3,6 +3,8 @@ package dev.brikk.house.sql.intellij.testing
 import com.intellij.database.actions.ShowSqlParametersPanelAction
 import com.intellij.database.console.client.SessionClientHolder
 import com.intellij.database.datagrid.DataRequest
+import com.intellij.database.run.ConsoleDataRequest
+import com.intellij.database.settings.DatabaseSettings
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
@@ -35,16 +37,83 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * Execution contracts of a [PipeDialect], checked through the real Execute chain, parameter
- * prompting and a [RecordingConsole] for [driverId], whose sessions the dialect must own. Call each
- * check from a light platform test with PIPE enabled; a failed check throws [AssertionError].
- * [open] shows SQL in an editor as a file of the dialect's language; undo its setup in the test.
+ * prompting and a [RecordingConsole] for [driverId], whose sessions the dialect must own; it must not
+ * own [foreignDriverId]'s. Call each check from a light platform test with PIPE enabled; a failed
+ * check throws [AssertionError]. [setEnabled] changes the project's PIPE setting and [open] shows SQL
+ * in an editor as a file of the dialect's language; undo their effects in the test.
  */
 @ApiStatus.Experimental
 public class PipeExecutionContract(
     private val dialect: PipeDialect,
     private val driverId: String,
+    private val foreignDriverId: String,
+    private val setEnabled: (Boolean) -> Unit,
     private val open: (sql: String) -> Editor,
 ) {
+    /** With the setting off, or in a console the dialect does not own, Execute delegates once and says nothing. */
+    public fun declinesWhenNotOwned() {
+        for (foreign in listOf(false, true)) Run(PROGRAM).use { run ->
+            if (foreign) run.recording.replaceDataSource(foreignDriverId) else setEnabled(false)
+            try {
+                val event = run.execute()
+                expect(run.delegated == listOf(event)) { "Unowned PIPE (foreign=$foreign) must delegate once with the same event" }
+            } finally {
+                setEnabled(true)
+            }
+            expectNoRequests(run, "unowned PIPE")
+            expect(run.notifications.isEmpty()) { "Unowned PIPE must not be notified: ${run.messages}" }
+        }
+    }
+
+    /** The caret, selection and Execute options choose the same statements as stock Execute, and claimed ones lower. */
+    public fun selectsStatementsLikeStockExecute() {
+        Run("SELECT 1; FROM offline_rows |> LIMIT 2; SELECT 3;").use { run ->
+            run.editor.caretModel.moveToOffset(run.editor.document.text.indexOf("LIMIT"))
+            run.execute(execOption())
+            expectQueries(run, listOf(lowered("FROM offline_rows |> LIMIT 2")), "the statement at the caret")
+        }
+        Run("SELECT 1; FROM offline_rows |> SELECT id; -- caret outside statements").use { run ->
+            run.editor.caretModel.moveToOffset(run.editor.document.textLength)
+            run.execute(execOption(outside = DatabaseSettings.EXECUTE_OUTSIDE_WHOLE_SCRIPT))
+            run.finishRequests(2)
+            expectQueries(run, listOf("SELECT 1", lowered("FROM offline_rows |> SELECT id")), "outside statements, whole script")
+        }
+        Run("SELECT 0; /* ) caret here */ FROM offline_rows |> SELECT id;").use { run ->
+            run.editor.caretModel.moveToOffset(run.editor.document.text.indexOf("caret"))
+            run.execute(execOption(outside = DatabaseSettings.EXECUTE_OUTSIDE_SCRIPT_TAIL))
+            // Which statements the tail starts with is the dialect PSI's call; slicing the comment must not break the claim.
+            val case = "outside statements, script tail from inside a comment"
+            expect(run.queries.isNotEmpty() && run.queries.none { "|>" in it }) { "$case submitted ${run.queries}; ${run.messages}" }
+            expect(run.delegated.isEmpty() && run.notifications.isEmpty()) { "$case must neither delegate nor refuse: ${run.messages}" }
+        }
+        Run(PROGRAM).use { run ->
+            val text = run.editor.document.text
+            run.editor.selectionModel.setSelection(text.indexOf("WHERE"), text.indexOf(" |> SELECT"))
+            run.execute(execOption(selection = DatabaseSettings.EXECUTE_SELECTION_SMART_EXPAND))
+            expectQueries(run, listOf(lowered(PROGRAM)), "a smart-expanded selection")
+        }
+        Run("SELECT 1;\nFROM offline_rows |> SELECT id;\nSELECT 2;").use { run ->
+            run.editor.selectionModel.setSelection(0, run.editor.document.textLength)
+            run.execute(execOption(selection = DatabaseSettings.EXECUTE_SELECTION_EXACTLY_SCRIPT))
+            run.finishRequests(3)
+            expectQueries(run, listOf("SELECT 1", lowered("FROM offline_rows |> SELECT id"), "SELECT 2"), "a mixed selection")
+        }
+    }
+
+    /** A later failing PIPE statement or a missing console client submits nothing, not even earlier statements. */
+    public fun refusesWholeScriptsItCannotRun() {
+        Run("SELECT 1; FROM offline_rows |> BOGUS 2;").use { run ->
+            run.editor.selectionModel.setSelection(0, run.editor.document.textLength)
+            run.execute(DatabaseSettings.ExecOption().apply { execSelection = DatabaseSettings.EXECUTE_SELECTION_EXACTLY_SCRIPT })
+            expectRefused(run, "a script with a later untranslatable statement")
+        }
+        Run(PROGRAM).use { run ->
+            run.recording.console.session.detach(run.recording.console)
+            run.execute()
+            expectRefused(run, "a console without a client")
+        }
+    }
+
     /** Ordinary SQL, quoted markers included, delegates unchanged; PIPE SQL submits its lowering in every Execute variant. */
     public fun claimsOnlyPipes() {
         for (sql in listOf("SELECT 1", "SELECT '|>' AS a", "SELECT /* |> */ 1")) Run(sql).use { run ->
@@ -187,6 +256,21 @@ public class PipeExecutionContract(
         expect(run.notifications.any { it.type == NotificationType.ERROR }) { "$case must be notified as an error" }
     }
 
+    private fun expectQueries(run: Run, expected: List<String>, case: String) {
+        val queries = run.queries.map { it.trim().removeSuffix(";").trim() }
+        expect(queries == expected.map { it.trim() }) { "$case submitted $queries, expected $expected; ${run.messages}" }
+        expect(run.delegated.isEmpty()) { "$case must not delegate" }
+    }
+
+    private fun execOption(
+        outside: Int = DatabaseSettings.EXECUTE_OUTSIDE_NOTHING,
+        selection: Int = DatabaseSettings.EXECUTE_SELECTION_EXACTLY_ONE,
+    ) = DatabaseSettings.ExecOption().apply {
+        execInside = DatabaseSettings.EXECUTE_INSIDE_SMALLEST
+        execOutside = outside
+        execSelection = selection
+    }
+
     private fun expectNoRequests(run: Run, case: String) = expect(run.recording.requests.isEmpty()) { "$case submitted ${run.queries}" }
 
     private enum class Entry {
@@ -219,8 +303,33 @@ public class PipeExecutionContract(
         }
 
         /** Executes the whole document as a selection, so the check does not depend on the dialect's statement PSI. */
-        fun execute(variant: Int = 1): AnActionEvent = event().also { event ->
+        fun execute(variant: Int = 1): AnActionEvent {
             editor.selectionModel.setSelection(0, editor.document.textLength)
+            return perform(variant)
+        }
+
+        /** Executes from the current caret and selection with [option] as the first Execute variant's setting. */
+        fun execute(option: DatabaseSettings.ExecOption) {
+            val options = DatabaseSettings.getSettings().execOptions
+            val saved = options[0]
+            options[0] = option
+            try {
+                perform(1)
+            } finally {
+                options[0] = saved
+            }
+        }
+
+        /** Completes submitted requests until [count] were submitted; the console submits a script one statement at a time. */
+        fun finishRequests(count: Int) {
+            while (recording.requests.size in 1 until count) {
+                val before = recording.requests.size
+                (recording.requests.last() as ConsoleDataRequest).onFinished()
+                if (recording.requests.size == before) break
+            }
+        }
+
+        private fun perform(variant: Int): AnActionEvent = event().also { event ->
             val previous = object : AnAction() {
                 override fun actionPerformed(e: AnActionEvent) {
                     delegated += e

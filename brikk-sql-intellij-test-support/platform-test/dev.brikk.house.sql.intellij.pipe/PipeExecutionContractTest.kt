@@ -2,14 +2,12 @@ package dev.brikk.house.sql.intellij.pipe
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.testing.PipeExecutionContract
-import java.util.UUID
 
 class PipeExecutionContractTest : BasePlatformTestCase() {
     private fun forEachDialect(check: PipeExecutionContract.() -> Unit) {
         for (dialect in testPipeDialects) {
-            val contract = PipeExecutionContract(dialect, TEST_DRIVER) { sql ->
-                myFixture.configureByText("pipe-${UUID.randomUUID()}.sql", sql)
-                myFixture.editor
+            val contract = PipeExecutionContract(dialect, TEST_DRIVER, FOREIGN_DRIVER, { dialect.enabled = it }) { sql ->
+                myFixture.openPipeSql(sql, testRootDisposable)
             }
             try {
                 contract.check()
@@ -26,4 +24,7 @@ class PipeExecutionContractTest : BasePlatformTestCase() {
     fun testRunsTopLevelStagesToTheCaret() = forEachDialect { runsTopLevelStagesToTheCaret() }
     fun testRefusesDestinationChangesDuringPrompting() = forEachDialect { refusesDestinationChangesDuringPrompting() }
     fun testNotifiesRefusals() = forEachDialect { notifiesRefusals() }
+    fun testDeclinesWhenNotOwned() = forEachDialect { declinesWhenNotOwned() }
+    fun testSelectsStatementsLikeStockExecute() = forEachDialect { selectsStatementsLikeStockExecute() }
+    fun testRefusesWholeScriptsItCannotRun() = forEachDialect { refusesWholeScriptsItCannotRun() }
 }
