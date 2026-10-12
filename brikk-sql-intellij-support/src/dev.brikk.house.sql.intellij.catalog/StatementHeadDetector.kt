@@ -26,6 +26,9 @@ public sealed interface StatementEffect {
             require(depth >= 1 && refreshDepth in 0..depth) { "Invalid namespace effect: depth $depth, refresh depth $refreshDepth" }
         }
     }
+
+    /** Transaction control: the statement [begins] a transaction, or ends one (`false`); `null` leaves it as it is. */
+    public data class Transaction(val begins: Boolean?) : StatementEffect
 }
 
 /**
@@ -150,6 +153,17 @@ public class StatementHeadDetector(public val rules: List<StatementRule>, public
 /** Statement rules for the dialects of the Sortdev plugins; none notifies (see [StatementRule.notifying]). */
 @ApiStatus.Experimental
 public object StatementRules {
+    /**
+     * Transaction control most engines share: `BEGIN` and `START TRANSACTION` begin; `COMMIT`,
+     * `ROLLBACK`, `ABORT` and `END` end; rolling back to a savepoint keeps the transaction.
+     */
+    public val TRANSACTIONS: List<StatementRule> = listOf(
+        StatementRule("BEGIN [TRANSACTION|WORK]", StatementEffect.Transaction(begins = true)),
+        StatementRule("START TRANSACTION", StatementEffect.Transaction(begins = true)),
+        StatementRule("ROLLBACK [TRANSACTION|WORK] TO", StatementEffect.Transaction(begins = null)),
+        StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK]", StatementEffect.Transaction(begins = false)),
+    )
+
     private val server = StatementEffect.FunctionInventory(sessionFacts = false)
     private val session = StatementEffect.FunctionInventory(sessionFacts = true)
 

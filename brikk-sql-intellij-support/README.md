@@ -303,8 +303,11 @@ over a console session's own connection, so it also reads what the session loade
 autoload): the harvest is queued on the session as a request and runs on its engine's thread, and both
 the shared inventory and the session's facts are recorded and returned (`RefreshOutcome.Refreshed.session`,
 which `onRefreshed` shows). A session in a transaction (manual commit with a change pending) is not
-harvested (`RefreshOutcome.SessionInTransaction`); a transaction opened by a `BEGIN` statement in
-auto-commit mode is not visible to the platform and is not detected. A session that is not connected
+harvested (`RefreshOutcome.SessionInTransaction`), nor one in a transaction a statement began in
+auto-commit mode, which the platform does not track: the `ExecutionObserver` treats a session as in a
+transaction from a detected begin until a detected end, a commit or rollback through the IDE, or a new
+connection (`ExecutionObserverProfile.transactionStatements`, default `StatementRules.TRANSACTIONS`:
+`BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`; `ROLLBACK ... TO` keeps it). A session that is not connected
 falls back to the helper connection. `RefreshLiveCatalogAction` uses the editor's connected console
 session when it has one. `inventoryChanged(project, session,
 requestor, sessionFacts, notify)` follows executed statements (see `ExecutionObserver`): when the change

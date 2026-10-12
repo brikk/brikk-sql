@@ -73,6 +73,15 @@ class StatementHeadDetectorTest : TestCase() {
         }
     }
 
+    fun testTransactionControl() {
+        val transactions = StatementHeadDetector(StatementRules.TRANSACTIONS, "duckdb")
+        fun begins(sql: String) = transactions.detect(sql).map { (it.effect as StatementEffect.Transaction).begins }
+        assertEquals(listOf(true, true, true), begins("BEGIN; begin transaction; START TRANSACTION"))
+        assertEquals(listOf(false, false, false, false, false), begins("COMMIT; ROLLBACK WORK; abort; END; END TRANSACTION"))
+        assertEquals("a savepoint rollback keeps the transaction", listOf(null), begins("ROLLBACK TO SAVEPOINT s"))
+        assertEquals(emptyList<Boolean?>(), begins("SELECT 'BEGIN'; COMMITTED; CREATE TABLE begin_log(x INT)"))
+    }
+
     fun testNothingToDetect() {
         assertEquals(emptyList<DetectedStatement>(), duckdb.detect(null))
         assertEquals(emptyList<DetectedStatement>(), duckdb.detect("  "))

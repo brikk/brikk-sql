@@ -186,6 +186,9 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
      */
     private val consoleConnections: MutableMap<Any, ConsoleConnection> = Collections.synchronizedMap(WeakHashMap())
 
+    /** Sessions in a transaction a statement began, which the platform does not track. */
+    private val explicitTransactions: MutableSet<DatabaseSession> = Collections.synchronizedSet(Collections.newSetFromMap(WeakHashMap()))
+
     /** The connection requestor of each session that executed something, which keys its facts. */
     private val sessionRequestors: MutableMap<DatabaseSession, WeakReference<Any>> = Collections.synchronizedMap(WeakHashMap())
 
@@ -231,7 +234,11 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val dataSource = connection.connectionPoint.dataSource
         val identity = profile.identity(dataSource)
         val console = requestor is DataProducer
-        if (console) consoleConnections[requestor] = ConsoleConnection(connection, identity)
+        if (console) {
+            consoleConnections[requestor] = ConsoleConnection(connection, identity)
+            // A new connection starts outside any transaction.
+            synchronized(sessionRequestors) { sessionRequestors.filterValues { it.get() === requestor }.keys.toList() }.forEach(explicitTransactions::remove)
+        }
         val wanted = when (profile.trigger) {
             HarvestTrigger.ONCE_PER_SESSION -> !store.hasLive(dataSource.uniqueId, identity)
             HarvestTrigger.EVERY_CONSOLE_CONNECT -> console || !store.hasLive(dataSource.uniqueId, identity)
@@ -289,7 +296,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val dataSource = session.connectionPoint.dataSource
         if (!session.isConnected) return refresh(project, dataSource)
         // A request outside the session's transaction would make the engine end it; such a session is left alone.
-        if (session.currentTx != DataRequest.AUTO_COMMIT) return RefreshOutcome.SessionInTransaction
+        if (session.currentTx != DataRequest.AUTO_COMMIT || session in explicitTransactions) return RefreshOutcome.SessionInTransaction
         val result = CompletableDeferred<RefreshOutcome>()
         val request = object : DataRequest.RawRequest(session) {
             override fun processRaw(context: DataRequest.Context, connection: DatabaseConnectionCore) {
@@ -321,15 +328,15 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     private fun harvestSession(dataSource: LocalDataSource, session: DatabaseSession, requestor: Any?, connection: DatabaseConnectionCore): RefreshOutcome {
         requestor?.let { learnSession(session, it) }
         val identity = requestor?.let { consoleConnections[it] }?.identity ?: profile.identity(dataSource)
-        return harvestOver(dataSource, connection, identity, requestor)
+        return harvestOver(dataSource, connection, identity, requestor, session)
     }
 
-    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?): RefreshOutcome {
+    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?, session: DatabaseSession): RefreshOutcome {
         if (identity != profile.identity(dataSource)) {
             LOG.info("Not harvesting ${dataSource.name} over a connection to the server it named before")
             return RefreshOutcome.Superseded
         }
-        if (inTransaction(connection)) {
+        if (session in explicitTransactions || inTransaction(connection)) {
             LOG.info("Not harvesting ${dataSource.name} over a session in a transaction")
             return RefreshOutcome.SessionInTransaction
         }
@@ -362,7 +369,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             debouncer.submit(dataSource.uniqueId) { onRefreshed(project, dataSource, refresh(project, dataSource), reason) }
             return
         }
-        onRefreshed(project, dataSource, harvestOver(dataSource, connection, console.identity, requestor), reason)
+        onRefreshed(project, dataSource, harvestOver(dataSource, connection, console.identity, requestor, session), reason)
     }
 
     /** Whether [connection] may be in a transaction: not in auto-commit mode, or unknown. */
@@ -371,6 +378,11 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     } catch (e: Exception) {
         LOG.info("The auto-commit mode is unknown: ${e.message}")
         true
+    }
+
+    /** Records that a statement in [session] began a transaction, or ended one. */
+    internal fun transactionControl(session: DatabaseSession, begun: Boolean) {
+        if (begun) explicitTransactions += session else explicitTransactions -= session
     }
 
     /** Records that [session]'s requests run through [requestor], the connection requestor its facts are kept under. */

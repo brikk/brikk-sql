@@ -41,6 +41,13 @@ public interface ExecutionObserverProfile {
     /** The auto-introspection service that reloads a namespace after a statement changes it. */
     public val autoIntrospect: Class<out AutoIntrospectService>? get() = null
 
+    /**
+     * Transaction control statements: a session is treated as in a transaction from a detected begin
+     * until a detected end (or a commit or rollback through the IDE), so the live catalog does not
+     * harvest over it. Extend [StatementRules.TRANSACTIONS] for a dialect's own.
+     */
+    public val transactionStatements: List<StatementRule> get() = StatementRules.TRANSACTIONS
+
     /** How long a namespace reload waits for more statements changing the same namespace. */
     public val namespaceRefreshDelay: Duration get() = 2.seconds
 }
@@ -82,6 +89,7 @@ public abstract class ExecutionObserver(protected val project: Project, private 
     private val started = AtomicBoolean()
     private val debouncer by lazy { RefreshDebouncer(scope, profile.namespaceRefreshDelay) }
     private val dataSources by lazy { profile.dataSources }
+    private val transactions by lazy { StatementHeadDetector(profile.transactionStatements, profile.statements.dialect) }
 
     /** Subscribes to the project's root data bus, once, until the service is disposed. */
     public fun start() {
@@ -106,7 +114,13 @@ public abstract class ExecutionObserver(protected val project: Project, private 
         val requestor: Any? = context.producer
         val liveCatalog = profile.liveCatalog?.let { ApplicationManager.getApplication().getService(it) }
         requestor?.let { liveCatalog?.learnSession(session, it) }
+        if (context.request is DataRequest.TxRequest) {
+            liveCatalog?.transactionControl(session, begun = false)
+            return
+        }
         val text = (context.request as? DataRequest.QueryRequest)?.query ?: context.query
+        transactions.detect(text).mapNotNull { (it.effect as? StatementEffect.Transaction)?.begins }.lastOrNull()
+            ?.let { liveCatalog?.transactionControl(session, it) }
         val detected = profile.statements.detect(text)
         if (detected.isEmpty()) return
         val executed = ExecutedStatements(session, dataSource, requestor, detected)

@@ -161,6 +161,20 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         assertEquals(harvests, harvester.harvests.get())
     }
 
+    /** The platform does not see a transaction a statement began in auto-commit mode; the observer does. */
+    @Test
+    fun aRefreshFromAConsoleInATransactionItBeganReadsNothingUntilItEnds() {
+        val a = console("a")
+        a.run("SELECT 1")
+        val harvests = harvester.harvests.get()
+        a.run("BEGIN TRANSACTION")
+        assertEquals(RefreshOutcome.SessionInTransaction, refreshFrom(a.file))
+        assertEquals(harvests, harvester.harvests.get())
+        a.run("COMMIT")
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
+        assertEquals(harvests + 1, harvester.harvests.get())
+    }
+
     @Test
     fun aRefreshFromAnEditorWithoutAConnectedSessionUsesAHelperConnection() {
         val a = console("a")
