@@ -1890,7 +1890,9 @@ when a line break follows them, after it (ClickHouse's `ParserInsertQuery`). It 
 - at the real end of the text.
 
 A `;` at the end of a data line, or anywhere else in data, is data. A `;` ending the format name's
-line with nothing else on it is the terminator of a statement without data. So
+line with nothing else on it is the terminator of a statement without data. Without data the
+`INSERT_DATA` token is empty at the header's end (`SqlStatementRange.dataEnd` there), so the line
+breaks and indentation before a terminator line or a blank line are never submitted as data. So
 `INSERT ... FORMAT JSONEachRow\n{"id":1};\nSELECT 2;` is one statement, as the platform editor and
 clickhouse-client read it; a blank line or a `;` line separates the next one.
 

@@ -112,6 +112,17 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         assertNotSame(SqlCompositeElementTypes.SQL_STATEMENT, next.node.elementType)
     }
 
+    /** Without data, Execute submits the header alone: a terminator line's indentation is never payload. */
+    fun testATerminatorLinesIndentationIsNotSubmitted() {
+        for (text in listOf("INSERT INTO t FORMAT TSV\n  ;  \nSELECT 2;", "INSERT INTO t FORMAT TSV\n\t;\t\nSELECT 2;")) {
+            configureCHouse(text)
+            assertEquals(text, listOf("INSERT INTO t FORMAT TSV", "SELECT 2"), statements().map { it.text })
+            assertEquals(text, listOf("INSERT INTO t FORMAT TSV"),
+                SqlPsiFacade.getInstance(project).createScriptModel(myFixture.file).subModel(ScriptModel.PositionRange(3)).statements()
+                    .map { it.query() }.filter { it != text }.toList())
+        }
+    }
+
     /** A statement whose data a blank line ends has no `;`; the grammar's statement still ends it. */
     fun testDataEndedByABlankLineKeepsTheGrammarsStatement() {
         val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == "csv with quotes then a blank line" }

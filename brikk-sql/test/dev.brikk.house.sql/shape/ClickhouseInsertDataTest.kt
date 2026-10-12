@@ -64,10 +64,15 @@ class ClickhouseInsertDataTest {
         assertEquals(listOf("{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2};\n"), data(sql))
     }
 
-    @Test fun aSemicolonEndingTheFormatLineMeansNoData() {
-        for (sql in listOf("INSERT INTO t FORMAT TSV;\nSELECT 2;", "INSERT INTO t FORMAT TSV ;  \nSELECT 2;", "INSERT INTO t FORMAT TSV\n;\nSELECT 2;")) {
+    /** Empty data is explicit, ending where the header does; a terminator line's indentation is never data. */
+    @Test fun aSemicolonEndingTheFormatLineOrItsOwnLineMeansEmptyData() {
+        for (sql in listOf("INSERT INTO t FORMAT TSV;\nSELECT 2;", "INSERT INTO t FORMAT TSV ;  \nSELECT 2;", "INSERT INTO t FORMAT TSV\n;\nSELECT 2;",
+            "INSERT INTO t FORMAT TSV\n  ;  \nSELECT 2;", "INSERT INTO t FORMAT TSV\n\t;\t\nSELECT 2;")) {
+            val range = SqlScriptSnapshot.parse(sql, "clickhouse").statements.first()
             assertEquals(2, statements(sql).size, sql)
-            assertTrue(data(sql).isEmpty(), sql)
+            assertEquals(listOf(""), data(sql), sql)
+            assertEquals(sql.indexOf("TSV") + 3, range.dataEnd, sql)
+            assertEquals(sql.indexOf(';'), range.terminator, sql)
         }
     }
 

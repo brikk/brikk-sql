@@ -3,6 +3,7 @@ package dev.brikk.house.sql.intellij.lexer
 import com.intellij.lexer.Lexer
 import com.intellij.lexer.LexerBase
 import com.intellij.lexer.LexerPosition
+import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.parser.SqlStatementRange
@@ -126,8 +127,9 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
 
     /**
      * Takes the base token, framed as core frames the statement: a raw data token ends where core's
-     * data does (stretched over what the base read as SQL, or cut), and no token covers the
-     * terminator, which the base lexes afresh so it reads the `;` it is.
+     * data does (stretched over what the base read as SQL, or cut), blank raw input after core's
+     * data is whitespace, and no token covers the terminator, which the base lexes afresh so it
+     * reads the `;` it is.
      */
     private fun load() {
         val next = base.tokenType ?: return enterStatement(statementEnd)
@@ -136,8 +138,8 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
         type = next
         start = base.tokenStart
         end = base.tokenEnd
-        val data = dataEnd
-        if (next == SqlTokens.SQL_RAW_INPUT && data != null && start < data && end != data) {
+        val data = dataEnd.takeIf { next == SqlTokens.SQL_RAW_INPUT }
+        if (data != null && start < data && end != data) {
             end = data
             resume = data
         }
@@ -145,6 +147,8 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
             end = at
             resume = at
         }
+        // What the base reads as data after core's data (a terminator line's indentation) is whitespace.
+        if (data != null && start >= data && buffer.subSequence(start, end).isBlank()) type = TokenType.WHITE_SPACE
     }
 
     private fun restartAt(offset: Int) {

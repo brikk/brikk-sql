@@ -226,31 +226,38 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
      * that follow the header and, when a line break follows them, after it, as ClickHouse's parser
      * starts it; a `;` ending the header's line instead means there is no data. Data ends before a
      * blank line, before a line holding only `;` (with spaces or tabs), or at the real end of the
-     * text; any other `;` is data. Data that a blank line ends at once is empty.
+     * text; any other `;` is data. Without data, the token is empty at the header's end, so the
+     * line breaks and indentation before a terminator are never data.
      */
     private fun scanInsertDataAfter(from: Int) {
         var dataStart = from
         while (dataStart < size && isSpace(sql[dataStart])) dataStart++
-        if (dataStart >= size || sql[dataStart] == ';' && isLineEnd(skipSpaces(dataStart + 1))) return
+        // The end of a prefix leaves open whether data follows.
+        if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
+        if (sql[dataStart] == ';' && isLineEnd(skipSpaces(dataStart + 1))) return addInsertData(from, from)
         if (isLineBreak(sql[dataStart])) dataStart = lineEnd(dataStart)
-        if (dataStart < size && isLoneSemicolonLine(dataStart)) return
-        var dataEnd = dataStart
-        if (!isEmptyLine(dataStart)) {
-            var lineStart = dataStart
-            while (true) {
-                var i = lineStart
-                while (i < size && !isLineBreak(sql[i])) i++
-                dataEnd = i
-                if (i >= size) break
-                val next = lineEnd(i)
-                if (next >= size) {
-                    dataEnd = size
-                    break
-                }
-                if (isEmptyLine(next) || isLoneSemicolonLine(next)) break
-                lineStart = next
+        if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
+        if (isLoneSemicolonLine(dataStart) || isEmptyLine(dataStart)) return addInsertData(from, from)
+        var dataEnd: Int
+        var lineStart = dataStart
+        while (true) {
+            var i = lineStart
+            while (i < size && !isLineBreak(sql[i])) i++
+            dataEnd = i
+            if (i >= size) break
+            val next = lineEnd(i)
+            if (next >= size) {
+                dataEnd = size
+                break
             }
+            if (isEmptyLine(next) || isLoneSemicolonLine(next)) break
+            lineStart = next
         }
+        addInsertData(dataStart, dataEnd)
+    }
+
+    /** Adds `[dataStart, dataEnd)` as the INSERT_DATA token, empty at the header's end when there is no data. */
+    private fun addInsertData(dataStart: Int, dataEnd: Int) {
         while (current < dataStart) advance()
         start = dataStart
         while (current < dataEnd) advance()
