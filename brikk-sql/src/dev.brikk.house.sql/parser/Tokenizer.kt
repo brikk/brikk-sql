@@ -98,6 +98,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 when {
                     char in DIGIT_CHARS -> scanNumber()
                     identifiers.containsKey(char) -> scanIdentifier(identifiers.getValue(char))
+                    config.untaggedDollarStrings && char == '$' && peek == '$' && scanDollarString() -> {}
                     else -> scanKeywords()
                 }
             }
@@ -293,7 +294,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val commentStartSize = commentStart.length
         val commentEnd = config.comments[commentStart]
 
-        if (commentEnd != null) {
+        if (commentEnd == "*/" && config.nestedBlockComments) {
+            scanNestedBlockComment(commentStartSize, commentStartLine)
+        } else if (commentEnd != null) {
             // Skip the comment's start delimiter
             advance(commentStartSize)
 
@@ -325,7 +328,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             comments.add(if (sliceEnd < commentStartSize) "" else t.substring(commentStartSize, sliceEnd))
             advance(commentEndSize - 1)
         } else {
-            while (!end && peek != '\n' && (config.commentsTerminateAtNewlineOnly || peek != '\r')) {
+            while (!end && (config.commentsTerminateAtNewlineOnly || peek != '\r')) {
+                if (peek == '\n' && !(char == '\\' && config.dashCommentLineContinuation && commentStart == "--")) break
                 advance(alnum = true)
             }
             comments.add(text.substring(commentStartSize))
@@ -349,6 +353,50 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
 
         return true
+    }
+
+    // Native BRACKETED_COMMENT is the longest viable match: it closes at depth zero, else the
+    // native lexer treats inner openers as text and closes at the last terminator. Editor
+    // tokenization refuses that fallback, which usually means an unfinished comment.
+    private fun scanNestedBlockComment(commentStartSize: Int, commentStartLine: Int) {
+        var depth = 1
+        var index = start + commentStartSize
+        var lastClose = -1
+        while (index < size) {
+            when {
+                sql.startsWith("*/", index) -> {
+                    lastClose = index
+                    if (--depth == 0) break
+                    index += 2
+                }
+                sql.startsWith("/*", index) -> { depth++; index += 2 }
+                else -> index++
+            }
+        }
+        val close = if (depth == 0) index else lastClose.takeUnless { editorMode } ?: -1
+        if (close < 0) throw TokenError("Missing */ from $commentStartLine:$start")
+        advanceTo(close + 2)
+        comments.add(sql.substring(start + commentStartSize, close))
+    }
+
+    // Native Doris DOLLAR_QUOTED_STRING; a longer `$`-identifier match wins, ties go to the string.
+    private fun scanDollarString(): Boolean {
+        val close = sql.indexOf("$$", start + 2)
+        if (close == -1) {
+            if (editorMode) throw TokenError("Missing $$ from $line:$start")
+            return false
+        }
+        val identifierEnd = (start until size).firstOrNull { !isDorisIdentifierChar(sql[it]) } ?: size
+        if (identifierEnd > close + 2) return false
+        advanceTo(close + 2)
+        add(TokenType.HEREDOC_STRING, sql.substring(start + 2, close))
+        return true
+    }
+
+    private fun isDorisIdentifierChar(c: Char): Boolean = c == '$' || c == '_' || c.isLetterOrDigit() || c.code > 0x7F
+
+    private fun advanceTo(exclusiveEnd: Int) {
+        while (current < exclusiveEnd) advance()
     }
 
     // sqlglot: TokenizerCore._scan_number

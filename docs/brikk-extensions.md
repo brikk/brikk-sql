@@ -1781,6 +1781,34 @@ are unchanged. The retained precompiled brikk-house runtime also refuses a bound
 the original peer checkout stays clean. Logs are retained under
 `/tmp/opencode/trino-pipe-rename-*`; only the isolated task container is removed.
 
+## 52. Doris native lexical rules
+
+**NOT sqlglot parity.** `DorisDialect.LEXICAL_CONFIG` layers the native DorisLexer.g4
+(apache/doris `3226e0c`) rules over the generated tables through
+`TokenizerConfig.withLexicalRules`; `DorisTokenizerTables.kt` and its generator are unchanged.
+
+- Untagged `$$...$$` is one raw HEREDOC_STRING (embedded `;`, `:name`, `|>` and quotes
+  stay inside). A longer `$`-spelled identifier wins the match (`$$a$$b`); tagged forms
+  and an unclosed `$$abc` stay identifiers, as natively.
+- Block comments nest, also inside `/*+` hints. When nesting cannot close, the native
+  lexer closes at the last `*/`; the tokenizer does too.
+- Backslash + LF continues a `--` comment; backslash + CRLF does not (`SIMPLE_COMMENT`).
+- `#` and `{# #}` are not comments: `#` is HASH, `{` / `}` are braces.
+- Editor tokenization (`tokenizeForEditor`, so `SqlScriptSnapshot`) treats an unclosed
+  `$$` and the unbalanced-nesting fallback as lexical failures: they usually mean
+  unfinished input, and must not expose an executable suffix.
+
+Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`, FE digest as in
+`docs/doris-native-catchup-verification.md`), over raw JDBC with escape processing off,
+rejects `SELECT 1 # c`, `# c\nSELECT 1` and `SELECT 1 {# c #}` with the Nereids parser's
+`mismatched input '#'`; no preprocessing or fallback parser accepts them. It accepts
+nested comments and nested hints, accepts `SELECT 1 /* a /* b */ x y /* c */` (while
+rejecting `SELECT 1 x y`), continues `--` over backslash-LF but not backslash-CRLF, and
+lexes `$$a;b$$` as one token. `TokenCorpusDifferentialTest` replays the sqlglot Doris
+corpus against the layered config; a mismatch passes only under a named `DorisNativeLexing`
+exception, each of which must still diverge from the generated tables on its probe. Gates
+are unchanged: doris 42/1, doris-transpile 12/0, duckdb 393/0, trino 121/0, postgres 462/17.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

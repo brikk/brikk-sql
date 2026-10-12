@@ -45,11 +45,22 @@ class DorisDialect : Dialect() {
 
     companion object {
         /**
+         * brikk extension #52 (docs/brikk-extensions.md, NOT sqlglot parity): the GENERATED
+         * tables with the native Doris lexer's rules: untagged `$$` literals, nested block
+         * comments and hints, backslash-LF `--` continuation, and no `#` / `{# #}` comments.
+         */
+        internal val LEXICAL_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DORIS.withLexicalRules(
+            comments = DorisTokenizerTables.COMMENTS - setOf("#", "{#"),
+            nestedBlockComments = true,
+            dashCommentLineContinuation = true,
+            untaggedDollarStrings = true,
+        )
+
+        /**
          * brikk-native (docs/brikk-extensions.md #19, NOT sqlglot parity): Doris DDL type
          * keywords missing from sqlglot's Doris tokenizer, which is tuned for transpiling
-         * queries *into* Doris and never sees `SHOW CREATE TABLE` output. Layered over the
-         * GENERATED [DorisTokenizerTables.CONFIG] so the oracle-parity token corpus test
-         * keeps using the generated tables unchanged.
+         * queries *into* Doris and never sees `SHOW CREATE TABLE` output. Layered over
+         * [LEXICAL_CONFIG], so the generated tables stay unchanged.
          *
          * - `LARGEINT` -> INT128: StarRocks' mapping, never propagated to Doris upstream.
          * - `IPV4` / `IPV6`: existing TokenType/DType members (ClickHouse tokenizer has them).
@@ -61,7 +72,7 @@ class DorisDialect : Dialect() {
          * - `REFRESH` statement token; `BUILD` / `CANCEL` / `PAUSE` / `RECOVER` / `RESUME` as
          *   COMMAND so their statements degrade to Command rather than a parse error.
          */
-        val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DORIS.withKeywords(
+        val TOKENIZER_CONFIG: TokenizerConfig = LEXICAL_CONFIG.withKeywords(
             mapOf(
                 "LARGEINT" to TokenType.INT128,
                 "IPV4" to TokenType.IPV4,
