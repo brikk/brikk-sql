@@ -33,8 +33,11 @@ public abstract class SelectAliasResolveExtension(
         val element = reference.element
         if ((element.language as? SqlLanguageDialectEx)?.dbms != dbms) return true
         if (PsiTreeUtil.getNonStrictParentOfType(element, SqlReferenceExpression::class.java)?.qualifierExpression != null) return true
+        val query = PsiTreeUtil.getParentOfType(element, SqlQueryExpression::class.java) ?: return true
         val clause = PsiTreeUtil.getParentOfType(element, *clauses) ?: return true
-        val select = PsiTreeUtil.getParentOfType(clause, SqlQueryExpression::class.java)?.selectClause ?: return true
+        // A clause of an enclosing query, reached through a subquery, does not expose its aliases here.
+        if (PsiTreeUtil.getParentOfType(clause, SqlQueryExpression::class.java) != query) return true
+        val select = query.selectClause ?: return true
         return select.processDeclarations(processor, ResolveState.initial(), null, element)
     }
 }

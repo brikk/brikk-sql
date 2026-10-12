@@ -40,4 +40,9 @@ class SelectAliasResolveExtensionTest : BasePlatformTestCase() {
         assertDoesntContain(offered(where, extension(Dbms.POSTGRES)), "watches")
         assertContainsElements(offered(where, extension(Dbms.POSTGRES, SqlWhereClause::class)), "watches")
     }
+
+    fun testASubqueryInAClauseDoesNotSeeTheOuterAliases() {
+        val subquery = "SELECT a AS watches, a AS wall FROM t GROUP BY a HAVING EXISTS (SELECT wa<caret> FROM u)"
+        assertDoesntContain(offered(subquery, extension(Dbms.POSTGRES)), "watches")
+    }
 }
