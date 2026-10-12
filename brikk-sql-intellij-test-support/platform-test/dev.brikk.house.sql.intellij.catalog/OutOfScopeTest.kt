@@ -5,9 +5,13 @@ import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.database.Dbms
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.model.ObjectName
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
+import com.intellij.database.util.SmartPredicate
+import com.intellij.database.util.TreePattern
+import com.intellij.database.util.TreePatternNode
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
@@ -51,10 +55,11 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         }
     }
 
-    private fun classify(name: String, profile: CatalogProfile = service.profile): ReferenceScope {
+    private fun classify(name: String, profile: CatalogProfile? = null): ReferenceScope {
+        profile?.let(::useService)
         val offset = myFixture.file.text.indexOf(name).also { check(it >= 0) { "No $name" } }
         val reference = checkNotNull(PsiTreeUtil.getNonStrictParentOfType(myFixture.file.findElementAt(offset), SqlReferenceExpression::class.java))
-        return OutOfScopeClassifier(profile).classify(reference)
+        return OutOfScopeClassifier(service).classify(reference)
     }
 
     private fun assertOutOfScope(expected: List<String>, actual: ReferenceScope) = assertOutOfScope("", expected, actual)
@@ -76,6 +81,20 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         assertEquals(ReferenceScope.Nonexistent, classify("nope"))
         open("SELECT * FROM loaded.web.nope")
         assertEquals(ReferenceScope.Nonexistent, classify("nope"))
+    }
+
+    /** `memory` is childless, but the scope selects it by name: it was introspected and is empty. */
+    fun testAnEmptyNamespaceTheScopeSelectsByNameIsIntrospected() {
+        open("SELECT * FROM memory.nope.t")
+        assertEquals(ReferenceScope.Nonexistent, classify("nope"))
+    }
+
+    /** A scope that lists every catalog but some (as Doris's default does) selects none by name. */
+    fun testAScopeListingAllButSomeNamespacesSelectsNoneByName() {
+        val allButLoaded = TreePatternNode(TreePatternNode.NegativeNaming(SmartPredicate.all(), ObjectName.plain("loaded")), TreePatternNode.NO_GROUPS)
+        source.introspectionScope = CatalogScopes.widen(source.introspectionScope, TreePattern(TreePatternNode.Group(ObjectKind.DATABASE, arrayOf(allButLoaded))))
+        open("SELECT * FROM hive.web.orders")
+        assertOutOfScope(listOf("hive"), classify("web"))
     }
 
     fun testWithoutAResolvingQualifierTheModelCannotTell() {
@@ -193,6 +212,17 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         nextRefresh().finish { hive.schemas.createOrGet("web").tables.createOrGet("orders") }
         awaitIdle()
         assertFalse("resolved now", intention.isAvailable(project, myFixture.editor, myFixture.file))
+    }
+
+    /** Introspected and empty: the name does not exist, and introspecting again would find nothing either. */
+    fun testAfterAnEmptyIntrospectionTheNameDoesNotExist() {
+        open("SELECT * FROM hive.we<caret>b.orders")
+        val intention = Intention()
+        intention.invoke(project, myFixture.editor, myFixture.file)
+        nextRefresh().finish()
+        awaitIdle()
+        assertEquals(ReferenceScope.Nonexistent, classify("web"))
+        assertFalse(intention.isAvailable(project, myFixture.editor, myFixture.file))
     }
 
     fun testTheIntentionIsOfferedOnAColumnOfAnOutOfScopeTable() {

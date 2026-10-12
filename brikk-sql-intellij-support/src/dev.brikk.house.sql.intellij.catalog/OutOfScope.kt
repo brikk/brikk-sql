@@ -49,12 +49,15 @@ public sealed interface ReferenceScope {
  * alias, or an unaliased table by its name, in its query or an enclosing one), or, unqualified, every
  * relation of its own query, when all of them are out of scope. No other reference takes another's
  * status: a wrong catalog, alias or table name, a column of a loaded table, a CTE or a derived table stays. A namespace of
- * the profile's [levels][CatalogProfile.levels] is out of scope when it has no loaded children
- * ([CatalogProfile.childrenOf]), so a namespace introspected but empty counts as out of scope too.
+ * the service profile's [levels][CatalogProfile.levels] is out of scope when it has no loaded children
+ * ([CatalogProfile.childrenOf]) and the service does not know it introspected: a refresh of the service
+ * ran on it, or the introspection scope selects it by name. A namespace another way introspected but
+ * empty still counts as out of scope.
  * Call under read access; resolution may be slow.
  */
 @ApiStatus.Experimental
-public class OutOfScopeClassifier(private val profile: CatalogProfile) {
+public class OutOfScopeClassifier(private val service: AutoIntrospectService) {
+    private val profile = service.profile
     private val dataSources = profile.dataSources
 
     public fun classify(reference: SqlReferenceExpression): ReferenceScope {
@@ -79,8 +82,8 @@ public class OutOfScopeClassifier(private val profile: CatalogProfile) {
         val id = element.dataSource.uniqueId
         val dataSource = LocalDataSourceManager.getInstance(resolved.project).dataSources.firstOrNull { it.uniqueId == id } ?: return ReferenceScope.Unknown
         if (node.kind !in profile.levels || !dataSources.accepts(dataSource.dbms)) return ReferenceScope.Unknown
-        if (profile.childrenOf(node).isNotEmpty()) return ReferenceScope.Nonexistent
         val path = generateSequence(node) { it.dasParent }.takeWhile { it.kind in profile.levels }.map { it.name }.toList().asReversed()
+        if (profile.childrenOf(node).isNotEmpty() || service.introspected(dataSource, path)) return ReferenceScope.Nonexistent
         return ReferenceScope.OutOfScope(dataSource, NamespaceTarget(path, node))
     }
 
@@ -93,7 +96,7 @@ public class OutOfScopeClassifier(private val profile: CatalogProfile) {
         val resolver = profile.pathResolver
         val target = current.indices.reversed().firstNotNullOfOrNull { resolver.resolve(model.modelRoots.toList(), current.take(it + 1)) }
             ?: return ReferenceScope.Unknown
-        if (target.node.kind !in profile.levels || !resolver.isChildless(target.node)) return ReferenceScope.Unknown
+        if (target.node.kind !in profile.levels || !resolver.isChildless(target.node) || service.introspected(dataSource, target.path)) return ReferenceScope.Unknown
         return ReferenceScope.OutOfScope(dataSource, target)
     }
 
@@ -153,11 +156,11 @@ public class OutOfScopeClassifier(private val profile: CatalogProfile) {
 public abstract class OutOfScopeReferenceFilter(private val service: Class<out AutoIntrospectService>) : HighlightInfoFilter {
     final override fun accept(highlightInfo: HighlightInfo, file: PsiFile?): Boolean {
         if (file !is SqlFile || !isUnresolvedReport(highlightInfo.description)) return true
-        val profile = file.project.getService(service)?.profile?.takeIf { it.outOfScopeReferences } ?: return true
+        val requests = file.project.getService(service)?.takeIf { it.profile.outOfScopeReferences } ?: return true
         return recoverEditorOperation {
             val reference = PsiTreeUtil.getNonStrictParentOfType(file.findElementAt(highlightInfo.startOffset), SqlReferenceExpression::class.java)
             val reported = reference?.identifier?.textRange?.let { it.startOffset == highlightInfo.startOffset && it.endOffset == highlightInfo.endOffset } == true
-            !reported || OutOfScopeClassifier(profile).classify(reference) !is ReferenceScope.OutOfScope
+            !reported || OutOfScopeClassifier(requests).classify(reference) !is ReferenceScope.OutOfScope
         }.getOrElse { e ->
             LOG.warn("Classifying an unresolved reference failed", e)
             true
@@ -213,7 +216,7 @@ public abstract class IntrospectNamespaceIntention(
     private fun target(project: Project, element: PsiElement): Pair<AutoIntrospectService, ReferenceScope.OutOfScope>? {
         val requests = project.getService(service)?.takeIf { it.profile.outOfScopeReferences } ?: return null
         val reference = PsiTreeUtil.getNonStrictParentOfType(element, SqlReferenceExpression::class.java) ?: return null
-        val scope = OutOfScopeClassifier(requests.profile).classify(reference) as? ReferenceScope.OutOfScope ?: return null
+        val scope = OutOfScopeClassifier(requests).classify(reference) as? ReferenceScope.OutOfScope ?: return null
         val key = AutoIntrospectEngine.Key(scope.dataSource.uniqueId, scope.namespace.path)
         return (requests to scope).takeIf { requests.engine.state(key) != AutoIntrospectEngine.State.InFlight }
     }

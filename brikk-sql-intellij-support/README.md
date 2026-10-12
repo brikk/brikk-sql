@@ -262,16 +262,18 @@ takes the dbms the platform passes):
 ### Out-of-scope references
 
 A reference into a namespace the model lists but never introspected fails to resolve though the name
-may well exist. `OutOfScopeClassifier(profile).classify(reference)` tells it apart (`ReferenceScope`):
+may well exist. `OutOfScopeClassifier(service).classify(reference)` tells it apart (`ReferenceScope`):
 the nearest qualifier that resolves is a namespace of the profile's levels and dbms; without loaded
-children it is `OutOfScope(dataSource, namespace)`, with children `Nonexistent`; nothing resolving above
-the name is `Unknown`. An unqualified table is in the console's current namespace (as far as the model
+children it is `OutOfScope(dataSource, namespace)`, unless the service knows it introspected it (one of
+its refreshes ran on it without errors, or the introspection scope selects it by name; a scope listing
+every namespace but some selects none by name); with children or introspected it is `Nonexistent`;
+nothing resolving above the name is `Unknown`. An unqualified table is in the console's current namespace (as far as the model
 lists it) when the profile `usesCurrentNamespace`. A column is out of scope only with the relation it
 reads: the one its qualifier names (an alias, or an unaliased table by its name, in its query or an
 enclosing one), or, unqualified, every relation of its own query when all of them are out of scope. No
 other reference takes another's status: a wrong catalog, alias or table name, a column of a loaded table,
-of a CTE or of a derived table stays reported. A namespace introspected but empty also counts as out of
-scope (the model cannot tell them apart), so a wrong name under it goes unreported. With
+of a CTE or of a derived table stays reported. A namespace introspected some other way but empty still
+counts as out of scope (the model cannot tell them apart), so a wrong name under it goes unreported. With
 `outOfScopeReferences` on (off by default):
 
 - `OutOfScopeReferenceFilter(serviceClass)`, registered as `daemon.highlightInfoFilter`, hides the

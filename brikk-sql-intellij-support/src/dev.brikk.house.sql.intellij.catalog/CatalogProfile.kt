@@ -83,6 +83,18 @@ public object CatalogScopes {
         return true
     }
 
+    /** Whether [scope] names each namespace on [path] explicitly, not through a wildcard or an exception list. */
+    internal fun selectsByName(scope: TreePattern?, levels: List<ObjectKind>, path: List<String>): Boolean {
+        var node = scope?.root ?: return false
+        for ((level, name) in path.withIndex()) {
+            val kind = levels.getOrNull(level) ?: return false
+            node = node.getGroup(kind)?.children?.firstOrNull {
+                it.naming is TreePatternNode.PositiveNaming && it.naming.matches(ObjectName.plain(name), Casing.EXACT)
+            } ?: return false
+        }
+        return true
+    }
+
     /** [current] with [addition] added, keeping everything [current] selects. */
     public fun widen(current: TreePattern?, addition: TreePattern): TreePattern = current?.let { TreePatternUtils.union(it, addition) } ?: addition
 }
