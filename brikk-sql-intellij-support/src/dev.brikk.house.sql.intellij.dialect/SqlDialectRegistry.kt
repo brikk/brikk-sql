@@ -30,12 +30,12 @@ public data class SqlDialectEntry(
 @ApiStatus.Experimental
 public object SqlDialectRegistry {
     /** Changes whenever [entries] change. */
-    public const val VERSION: Int = 2
+    public const val VERSION: Int = 3
 
     /** Sorted by label. */
     public val entries: List<SqlDialectEntry> = listOf(
         SqlDialectEntry("bigquery", "BigQuery", languageIds = setOf("BigQuery"), dbmsIds = setOf("BIGQUERY")),
-        SqlDialectEntry("clickhouse", "ClickHouse", languageIds = setOf("ClickHouse"), dbmsIds = setOf("CLICKHOUSE")),
+        SqlDialectEntry("clickhouse", "ClickHouse", languageIds = setOf("ClickHouseSQL", "ClickHouse"), dbmsIds = setOf("CLICKHOUSE_BRIKK", "CLICKHOUSE")),
         SqlDialectEntry("datafusion", "DataFusion"),
         SqlDialectEntry("doris", "Doris", languageIds = setOf("DorisSQL"), dbmsIds = setOf("DORIS")),
         // Stock DuckDB: DUCKDB on the generic dialect before 263, DUCK with its own DuckDB language from 263.

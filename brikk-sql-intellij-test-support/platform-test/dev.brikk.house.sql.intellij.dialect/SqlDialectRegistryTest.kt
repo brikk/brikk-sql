@@ -42,16 +42,27 @@ class SqlDialectRegistryTest : BasePlatformTestCase() {
     }
 
     fun testStockIdentitiesAreAliases() {
-        val byDbms = mapOf("DUCKDB" to "duckdb", "DUCK" to "duckdb", "TRINO" to "trino", "PRESTO" to "presto", "HIVE" to "hive", "SPARK" to "spark2")
+        val byDbms = mapOf("DUCKDB" to "duckdb", "DUCK" to "duckdb", "TRINO" to "trino", "PRESTO" to "presto", "HIVE" to "hive", "SPARK" to "spark2",
+            "CLICKHOUSE" to "clickhouse")
         for ((name, dialect) in byDbms) assertEquals(name, dialect, SqlDialectRegistry.entries.single { name in it.dbmsIds }.coreDialect)
         val registered = byDbms.keys.mapNotNull(Dbms::byName)
         for (dbms in registered) assertEquals(dbms.name, byDbms[dbms.name], SqlDialectRegistry.forDbms(dbms)?.coreDialect)
         assertTrue("a stock DuckDB dbms exists in every supported IDE", registered.any { byDbms[it.name] == "duckdb" })
         assertEquals("duckdb", SqlDialectRegistry.forLanguageId("DuckDB")?.coreDialect)
         Language.findLanguageByID("DuckDB")?.let { assertEquals("duckdb", SqlDialectRegistry.forLanguage(it)?.coreDialect) }
+        assertEquals("clickhouse", Language.findLanguageByID("ClickHouse")?.let(SqlDialectRegistry::forLanguage)?.coreDialect)
         assertNull(SqlDialectRegistry.forLanguageId("GenericSQL"))
         assertNull(Language.findLanguageByID("GenericSQL")?.let(SqlDialectRegistry::forLanguage))
         assertTrue(SqlDialectRegistry.forCoreDialect("datafusion")?.dbmsIds.orEmpty().isEmpty())
+    }
+
+    /** The ClickHouse plugin's identities sit beside the stock ones. */
+    fun testPluginIdentitiesShareTheirEntryWithTheStockOnes() {
+        val clickhouse = requireNotNull(SqlDialectRegistry.forCoreDialect("clickhouse"))
+        assertSame(clickhouse, SqlDialectRegistry.forLanguageId("ClickHouseSQL"))
+        assertSame(clickhouse, SqlDialectRegistry.forLanguageId("ClickHouse"))
+        assertEquals(setOf("CLICKHOUSE_BRIKK", "CLICKHOUSE"), clickhouse.dbmsIds)
+        assertSame(clickhouse, Dbms.byName("CLICKHOUSE")?.let(SqlDialectRegistry::forDbms))
     }
 
     fun testMappingSetterAppliesAndClearsTheDialect() {

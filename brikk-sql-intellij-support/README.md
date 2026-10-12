@@ -213,7 +213,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
 `SqlDialectRegistry` (`dialect`): a static, versioned table (`VERSION`) of core dialect names,
 labels, `-- dialect:` marker spellings, IDE language ids and `Dbms` names. Each plugin's copy is
 identical data keyed only by platform identities, so plugins agree without sharing objects.
-Stock platform identities are aliases next to the plugins' own (stock DuckDB: `DUCKDB` before
+Stock platform identities are aliases next to the plugins' own (`ClickHouseSQL` and `CLICKHOUSE_BRIKK`
+beside the stock `ClickHouse` and `CLICKHOUSE`; stock DuckDB: `DUCKDB` before
 263, `DUCK` and the `DuckDB` language from 263; `TRINO`, `PRESTO`, `HIVE`, `SPARK`). `GenericSQL`
 never maps: many engines share it.
 
