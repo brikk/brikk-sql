@@ -68,6 +68,20 @@ class FunctionCatalogTest {
     }
 
     @Test
+    fun dorisSignatureConstantsAreResolved() {
+        // scalar/ElementAt.java lists VARIANT_KEY_SIGNATURE and VARIANT_INDEX_SIGNATURE by name.
+        assertEquals(
+            listOf(
+                FunctionOverload(listOf("ARRAY<ANY_0>", "BIGINT"), "ANY_0"),
+                FunctionOverload(listOf("VARIANT", "VARCHAR"), "VARIANT"),
+                FunctionOverload(listOf("VARIANT", "BIGINT"), "VARIANT"),
+                FunctionOverload(listOf("MAP<ANY_0,ANY_1>", "ANY_0"), "ANY_1"),
+            ),
+            DORIS_FUNCTION_CATALOG["element_at"]!!.overloads,
+        )
+    }
+
+    @Test
     fun dorisOverloadsMatchTheSourceSignatures() {
         // Pinned against scalar/Abs.java's SIGNATURES in the reference/doris checkout:
         // 9 overloads; widening integer returns (abs(BIGINT) -> LARGEINT, ...).
@@ -171,9 +185,9 @@ class FunctionCatalogTest {
 
     @Test
     fun dorisOverloadTotalsArePinned() {
-        // Doris 4.1.4: 618 defs carry 1416 overloads; the rest (dynamic getSignatures(): all table-valued functions,
+        // Doris 4.1.4: 618 defs carry 1418 overloads; the rest (dynamic getSignatures(): all table-valued functions,
         // rank-like window functions, ...) stay empty.
-        assertEquals(1416, DORIS_FUNCTION_CATALOG.functions.sumOf { it.overloads.size })
+        assertEquals(1418, DORIS_FUNCTION_CATALOG.functions.sumOf { it.overloads.size })
         assertEquals(618, DORIS_FUNCTION_CATALOG.functions.count { it.overloads.isNotEmpty() })
         // Dynamic-signature examples remain overload-free (names still resolvable).
         assertTrue(DORIS_FUNCTION_CATALOG["rank"]!!.overloads.isEmpty())

@@ -17,7 +17,7 @@
 // Apache Doris is Apache-2.0 licensed. See ATTRIBUTIONS.md and vendor/README.md.
 package dev.brikk.house.sql.metadata
 
-/** Doris built-in functions: 711 definitions, 806 names incl. aliases, 1416 overloads. */
+/** Doris built-in functions: 711 definitions, 806 names incl. aliases, 1418 overloads. */
 val DORIS_FUNCTION_CATALOG: FunctionCatalog = FunctionCatalog(
     chunk0() + chunk1() + chunk2() + chunk3() + chunk4() + chunk5() + chunk6() + chunk7() + chunk8(),
     // Grammar/operator forms absent from the registry (see DorisGrammarBuiltins.kt).
@@ -713,6 +713,8 @@ private fun chunk2(): List<FunctionDef> = listOf(
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.NEVER_NULL)),
     FunctionDef("ELEMENT_AT", FunctionKind.SCALAR, listOf("STRUCT_ELEMENT"), overloads = listOf(
         FunctionOverload(listOf("ARRAY<ANY_0>", "BIGINT"), "ANY_0"),
+        FunctionOverload(listOf("VARIANT", "VARCHAR"), "VARIANT"),
+        FunctionOverload(listOf("VARIANT", "BIGINT"), "VARIANT"),
         FunctionOverload(listOf("MAP<ANY_0,ANY_1>", "ANY_0"), "ANY_1"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.ALWAYS_NULLABLE)),
     FunctionDef("ELT", FunctionKind.SCALAR, overloads = listOf(
@@ -985,10 +987,10 @@ private fun chunk2(): List<FunctionDef> = listOf(
     FunctionDef("IPV4_TO_IPV6", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("IPV4"), "IPV6"),
     ), firstDocumentedIn = "3.x", profile = SemanticProfile(NullPropagation.STRICT)),
-    FunctionDef("IPV6_CIDR_TO_RANGE", FunctionKind.SCALAR, firstDocumentedIn = "2.1", profile = SemanticProfile(NullPropagation.STRICT)),
 )
 
 private fun chunk3(): List<FunctionDef> = listOf(
+    FunctionDef("IPV6_CIDR_TO_RANGE", FunctionKind.SCALAR, firstDocumentedIn = "2.1", profile = SemanticProfile(NullPropagation.STRICT)),
     FunctionDef("IPV6_FROM_UINT128_STRING_OR_NULL", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("VARCHAR"), "IPV6"),
         FunctionOverload(listOf("STRING"), "IPV6"),
@@ -1290,13 +1292,13 @@ private fun chunk3(): List<FunctionDef> = listOf(
         FunctionOverload(listOf("DATETIME", "BIGINT"), "DATETIME"),
         FunctionOverload(listOf("TIMESTAMPTZ", "BIGINT"), "TIMESTAMPTZ"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.STRICT)),
+)
+
+private fun chunk4(): List<FunctionDef> = listOf(
     FunctionDef("MICROSECONDS_DIFF", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("TIMESTAMPTZ", "TIMESTAMPTZ"), "BIGINT"),
         FunctionOverload(listOf("DATETIME", "DATETIME"), "BIGINT"),
     ), firstDocumentedIn = "2.0", profile = SemanticProfile(NullPropagation.STRICT)),
-)
-
-private fun chunk4(): List<FunctionDef> = listOf(
     FunctionDef("MICROSECONDS_SUB", FunctionKind.SCALAR, firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.STRICT)),
     FunctionDef("MICROSECOND_FROM_UNIXTIME", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("DECIMAL(18,6)"), "INT"),
@@ -1618,6 +1620,9 @@ private fun chunk4(): List<FunctionDef> = listOf(
         FunctionOverload(listOf("BIGINT"), "DOUBLE"),
         FunctionOverload(listOf("BIGINT", "BIGINT"), "BIGINT"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.UNKNOWN, "doris: custom nullable() override")),
+)
+
+private fun chunk5(): List<FunctionDef> = listOf(
     FunctionDef("RANDOM_BYTES", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("INT"), "STRING"),
         FunctionOverload(listOf("INT"), "VARCHAR"),
@@ -1625,9 +1630,6 @@ private fun chunk4(): List<FunctionDef> = listOf(
     FunctionDef("REGEXP", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("VARCHAR", "VARCHAR"), "BOOLEAN"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.STRICT)),
-)
-
-private fun chunk5(): List<FunctionDef> = listOf(
     FunctionDef("REGEXP_COUNT", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("VARCHAR", "VARCHAR"), "INT"),
         FunctionOverload(listOf("STRING", "STRING"), "INT"),
@@ -1945,6 +1947,9 @@ private fun chunk5(): List<FunctionDef> = listOf(
         FunctionOverload(listOf("VARCHAR"), "VARCHAR"),
         FunctionOverload(listOf("STRING"), "VARCHAR"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.ALWAYS_NULLABLE)),
+)
+
+private fun chunk6(): List<FunctionDef> = listOf(
     FunctionDef("ST_LINESTRINGFROMTEXT", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("VARCHAR"), "VARCHAR"),
         FunctionOverload(listOf("STRING"), "VARCHAR"),
@@ -1952,9 +1957,6 @@ private fun chunk5(): List<FunctionDef> = listOf(
     FunctionDef("ST_POINT", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("DOUBLE", "DOUBLE"), "VARCHAR"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.ALWAYS_NULLABLE)),
-)
-
-private fun chunk6(): List<FunctionDef> = listOf(
     FunctionDef("ST_POLYFROMTEXT", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("VARCHAR"), "VARCHAR"),
         FunctionOverload(listOf("STRING"), "VARCHAR"),
@@ -2273,6 +2275,9 @@ private fun chunk6(): List<FunctionDef> = listOf(
         FunctionOverload(listOf("TIMESTAMPTZ", "INT"), "TIMESTAMPTZ"),
         FunctionOverload(listOf("TIMESTAMPTZ", "INT", "TIMESTAMPTZ"), "TIMESTAMPTZ"),
     ), firstDocumentedIn = "2.1", profile = SemanticProfile(NullPropagation.STRICT)),
+)
+
+private fun chunk7(): List<FunctionDef> = listOf(
     FunctionDef("WIDTH_BUCKET", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("DOUBLE", "DOUBLE", "DOUBLE", "TINYINT"), "BIGINT"),
         FunctionOverload(listOf("FLOAT", "FLOAT", "FLOAT", "TINYINT"), "BIGINT"),
@@ -2284,9 +2289,6 @@ private fun chunk6(): List<FunctionDef> = listOf(
     FunctionDef("XOR", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("BOOLEAN", "BOOLEAN"), "BOOLEAN"),
     ), firstDocumentedIn = "3.x", profile = SemanticProfile(NullPropagation.STRICT)),
-)
-
-private fun chunk7(): List<FunctionDef> = listOf(
     FunctionDef("XPATH_STRING", FunctionKind.SCALAR, overloads = listOf(
         FunctionOverload(listOf("VARCHAR", "VARCHAR"), "VARCHAR"),
         FunctionOverload(listOf("STRING", "STRING"), "STRING"),
@@ -2598,12 +2600,12 @@ private fun chunk7(): List<FunctionDef> = listOf(
     FunctionDef("STDDEV_POP", FunctionKind.AGGREGATE, listOf("STDDEV", "STD"), overloads = listOf(
         FunctionOverload(listOf("DOUBLE"), "DOUBLE"),
     ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.UNKNOWN, "doris: custom nullable() override")),
-    FunctionDef("STDDEV_SAMP", FunctionKind.AGGREGATE, overloads = listOf(
-        FunctionOverload(listOf("DOUBLE"), "DOUBLE"),
-    ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.UNKNOWN, "doris: custom nullable() override")),
 )
 
 private fun chunk8(): List<FunctionDef> = listOf(
+    FunctionDef("STDDEV_SAMP", FunctionKind.AGGREGATE, overloads = listOf(
+        FunctionOverload(listOf("DOUBLE"), "DOUBLE"),
+    ), firstDocumentedIn = "1.2", profile = SemanticProfile(NullPropagation.UNKNOWN, "doris: custom nullable() override")),
     FunctionDef("SUM", FunctionKind.AGGREGATE, overloads = listOf(
         FunctionOverload(listOf("DOUBLE"), "DOUBLE"),
         FunctionOverload(listOf("FLOAT"), "DOUBLE"),

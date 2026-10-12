@@ -17,10 +17,11 @@ recorded verbatim per class under "unparsed" (never guessed, never dropped), and
 coverage is reported.
 
 Grammar handled (surveyed over the full functions/ tree at v0.8.2-31011-gd8fd23f7f38; at the
-4.1.4 pin 8 signatures across 5 classes stay unparsed):
+4.1.4 pin 6 signatures across 4 classes stay unparsed):
   entry    := 'FunctionSignature.ret(' type ')' tail
             | 'FunctionSignature.retArgType(' int ')' tail
   tail     := '.args(' type* ')' | '.varArgs(' type+ ')'
+  (an entry may also name a same-file `static final FunctionSignature` constant)
   type     := TypeClass '.' (INSTANCE | SYSTEM_DEFAULT | WILDCARD | MAX | CATALOG_DEFAULT
                               | INSTANCE_WITHOUT_INDEX)
             | 'ArrayType.of(' type ')' | 'MapType.of(' type ',' type ')'
@@ -172,6 +173,10 @@ CLASS_REF = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\.class,")
 
 class Unparseable(Exception):
     pass
+
+
+# A same-file signature constant listed by name in SIGNATURES (ElementAt's VARIANT_KEY_SIGNATURE).
+SIGNATURE_CONST = re.compile(r"\bstatic\s+final\s+FunctionSignature\s+([A-Z][A-Z0-9_]*)\s*=\s*(.*?);", re.S)
 
 
 def doris_version(doris_root: pathlib.Path) -> str:
@@ -418,10 +423,11 @@ def extract_class(
             return extract_class(sources[m.group(1)], sources, depth + 1)
         return [], []  # dynamic getSignatures() — no static signatures
     consts = {m.group(1): m.group(2) for m in INT_CONST.finditer(text)}
+    named = {m.group(1): m.group(2) for m in SIGNATURE_CONST.finditer(text)}
     signatures, unparsed = [], []
     for entry in split_top_level(block):
         try:
-            signatures.append(parse_entry(entry, consts))
+            signatures.append(parse_entry(named.get(entry.strip(), entry), consts))
         except Unparseable:
             unparsed.append(re.sub(r"\s+", " ", entry).strip())
     return signatures, unparsed

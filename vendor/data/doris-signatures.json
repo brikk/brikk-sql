@@ -4976,6 +4976,22 @@
      "variadic": false
     },
     {
+     "return": "VARIANT",
+     "args": [
+      "VARIANT",
+      "VARCHAR"
+     ],
+     "variadic": false
+    },
+    {
+     "return": "VARIANT",
+     "args": [
+      "VARIANT",
+      "BIGINT"
+     ],
+     "variadic": false
+    },
+    {
      "return": "ANY_1",
      "args": [
       "MAP<ANY_0,ANY_1>",
@@ -4984,10 +5000,7 @@
      "variadic": false
     }
    ],
-   "unparsed": [
-    "VARIANT_KEY_SIGNATURE",
-    "VARIANT_INDEX_SIGNATURE"
-   ],
+   "unparsed": [],
    "nullable_mode": "AlwaysNullable"
   },
   "Elt": {
