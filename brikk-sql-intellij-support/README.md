@@ -174,6 +174,13 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
 - `PgFamilyDialect(id)` (`dialect`): a PostgreSQL-grammar dialect with the platform PostgreSQL
   operators, system variables and builtin functions; the subclass supplies `getDbms`. Keep its
   `Dbms` outside the dialect object, whose base constructor already asks for it.
+- `CHouseFamilyDialect(id)` (`dialect`): a ClickHouse-grammar dialect that behaves as the platform
+  ClickHouse dialect (tokens, builtin functions with special forms and combinator suffixes, types,
+  operators, system variables, separators, raw data tokens, resolution); the subclass supplies
+  `getDbms`, best with `<extensionFallback fallbackDbms="CLICKHOUSE">`. The platform dialect is
+  final, so its overrides are delegated to it, and a test fails when an IDE adds one.
+  `isServerResolvedParameter` (263, a parameterized view's `{name:Type}`) is called reflectively,
+  being absent from the 261 API.
 - Comments: register the platform commenter, which toggles `-- ` lines and block comments:
   `<lang.commenter language="<your dialect language id>" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`.
 
