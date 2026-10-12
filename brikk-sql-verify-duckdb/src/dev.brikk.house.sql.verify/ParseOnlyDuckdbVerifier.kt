@@ -12,8 +12,10 @@ import org.duckdb.DuckDBDriver
  * `query(...)` or `CREATE TABLE ... AS`), so this verifier only calls `json_serialize_sql` and
  * never falls back to `EXPLAIN` or prepare.
  * Statements it cannot serialize, which is everything but SELECT, are [VerifyResult.Unverified].
+ * It accepts scripts as `json_serialize_sql` does (empty input is accepted).
  *
- * It runs on [driver], so an editor can verify with the user's own DuckDB version. The connection
+ * It runs on [driver], so an editor can verify with the user's own DuckDB version; the no-arg
+ * form needs `org.duckdb:duckdb_jdbc` at runtime. The connection
  * is an in-memory database with external access, extension installation and autoloading off, and
  * its configuration locked. A driver that cannot open it makes the verifier
  * [VerifyResult.Unavailable] for good; a connection that dies is dropped, that call is
