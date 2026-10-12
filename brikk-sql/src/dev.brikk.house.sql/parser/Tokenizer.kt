@@ -24,6 +24,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
+    private var breaksScanned: Int = 0
+    private var lastBreak: Int = -1
 
     // sqlglot: TokenizerCore.reset
     private fun reset() {
@@ -39,6 +41,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         end = false
         peek = NONE
         prevTokenLine = -1
+        breaksScanned = 0
+        lastBreak = -1
     }
 
     /**
@@ -184,7 +188,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlinesInToken++
         }
         val lineStart = line - newlinesInToken
-        val colStart = start - maxOf(sql.lastIndexOf('\n', start - 1), sql.lastIndexOf('\r', start - 1))
+        val colStart = start - lineBreakBefore(start)
 
         tokens.add(
             Token(
@@ -215,6 +219,17 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             val commandText = sql.substring(commandStart, current).trim()
             if (commandText.isNotEmpty()) add(TokenType.STRING, commandText)
         }
+    }
+
+    // The last CR or LF before [offset]; token starts only move forward, so the scan is amortized.
+    private fun lineBreakBefore(offset: Int): Int {
+        if (offset < breaksScanned) return maxOf(sql.lastIndexOf('\n', offset - 1), sql.lastIndexOf('\r', offset - 1))
+        while (breaksScanned < offset) {
+            val c = sql[breaksScanned]
+            if (c == '\n' || c == '\r') lastBreak = breaksScanned
+            breaksScanned++
+        }
+        return lastBreak
     }
 
     // sqlglot: TokenizerCore._scan_keywords
@@ -734,7 +749,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 // no backslash in the string that would need escape processing
                 (
                     !(unescapedSequences.isNotEmpty() || '\\' in esc) ||
-                        sql.indexOf('\\', pos).let { it == -1 || it >= endIdx }
+                        (pos until endIdx).none { sql[it] == '\\' }
                     )
             ) {
                 var newlines = 0
