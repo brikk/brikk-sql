@@ -242,7 +242,9 @@ takes the dbms the platform passes):
   keyed by data source and absolute path in an `AutoIntrospectEngine`: claimed while in flight and
   after success, claimable again a minute (`createEngine`) after a failure. Refreshes queue rather
   than stop one another. When one ends, its banner goes (a newer request's banner stays) and after
-  success the file is highlighted again.
+  success the file is highlighted again. `refreshChanged(dataSource, path)` reloads a loaded namespace
+  (empty path: the top-level list) after statements changed it, with no banner, no scope change and no
+  claim, so it may run again.
 - `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
   `editorNotificationProvider`; it shows "<product>: introspecting '<namespace>'…" with Dismiss while
   the file's newest request runs.
@@ -305,6 +307,29 @@ not list go, unknown listed names are server-only, platform builtin items neithe
 `EXTEND` (bundled stay, unknown listed names are server-only). Session functions are always offered.
 `profile.baseline(snapshot)` is the list merged (default `completableFunctions()`); it must not call
 back into the completion profile's hooks.
+
+### Executed statements
+
+`ExecutionObserver(project, scope)`: register a project service subclass with its
+`ExecutionObserverProfile` (`dbms`, `statements`, and the `liveCatalog` and `autoIntrospect` service
+classes it drives) and an `ExecutionObserverStartup(serviceClass)` subclass as `postStartupActivity`.
+It watches every request that finishes in the project's consoles of the dbms (the project's root data
+bus, after execution, on the session's engine thread) and passes what `statements` detects to
+`onFunctionInventoryChange` (default: the live catalog harvests again over the session's own
+connection, so a temporary macro reaches only that session) and `onNamespaceChange` (default:
+after `namespaceRefreshDelay`, 2 s, coalescing statements on the same namespace, the auto-introspection
+service's `refreshChanged(dataSource, path)` reloads it). Unqualified names complete from the console's
+current namespace; a namespace the model never loaded is not reloaded, and the introspection scope is
+left as it is. Implicitly loaded extensions (DuckDB autoload) run no statement; a refresh picks them up.
+
+`StatementHeadDetector(rules, quoteChars)` matches statement heads, not a parse: statements end at `;`
+outside quotes, comments and dollar quotes; heads are whole leading words (`StatementRule` patterns
+such as `CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION`); after the head, `IF [NOT] EXISTS` is
+skipped and the qualified name read. `StatementEffect.FunctionInventory`, or `Namespace(depth,
+refreshDepth)`: the name addresses a namespace at `depth` and the one at `refreshDepth` reloads
+(creating a schema is `Namespace(2)`, reloading a catalog `Namespace(1, 1)`). `StatementRules` holds
+DuckDB (`INSTALL`, `FORCE INSTALL`, `LOAD`, macro and function DDL; `ATTACH`, `DETACH`), Trino
+(`CREATE`/`DROP CATALOG` and `SCHEMA`; function DDL) and Doris (`CREATE`/`DROP`/`REFRESH CATALOG`).
 
 Internal API used, by class (the platform offers no public alternative):
 

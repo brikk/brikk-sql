@@ -7,6 +7,7 @@ import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.introspection.IntrospectionTask
 import com.intellij.database.introspection.prepareOneElementRefreshTask
 import com.intellij.database.model.basic.BasicElement
+import com.intellij.database.model.basic.BasicModel
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.LoaderContext
 import com.intellij.openapi.application.readAction
@@ -100,11 +101,13 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     private val dataSources by lazy { profile.dataSources }
     private val pathResolver by lazy { profile.pathResolver }
 
+    /** A refresh; [file] shows its banner, and only a [claimed] one widens the scope and settles the engine's state. */
     private class Request(
         val key: AutoIntrospectEngine.Key,
         val dataSource: LocalDataSource,
         val task: IntrospectionTask,
-        val file: VirtualFile,
+        val file: VirtualFile?,
+        val claimed: Boolean,
     )
 
     /** Running and queued requests, oldest first; a request's banner shows while it is here. */
@@ -139,17 +142,36 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         val task = prepareOneElementRefreshTask(dataSource.uniqueId, element) ?: return false
         val key = AutoIntrospectEngine.Key(dataSource.uniqueId, target.path)
         if (!engine.claim(key)) return false
-        val request = Request(key, dataSource, task, file.originalFile.viewProvider.virtualFile)
+        val virtualFile = file.originalFile.viewProvider.virtualFile
+        val request = Request(key, dataSource, task, virtualFile, claimed = true)
         synchronized(banners) { banners += request }
-        val worker = synchronized(workers) { workers.getOrPut(dataSource.uniqueId, ::Worker) }
-        if (!worker.offer(request)) {
+        if (!enqueue(request)) {
             synchronized(banners) { banners -= request }
             engine.release(key)
             return false
         }
-        EditorNotifications.getInstance(project).updateNotifications(request.file)
+        EditorNotifications.getInstance(project).updateNotifications(virtualFile)
         return true
     }
+
+    /**
+     * Reloads the namespace at [path] of [dataSource] (empty: its top-level namespaces) after executed
+     * statements changed its children, when the model has it loaded: what was never loaded is not stale.
+     * The scope is left as it is, and the refresh may run any number of times. True when it was queued.
+     */
+    public fun refreshChanged(dataSource: LocalDataSource, path: List<String>): Boolean = recoverEditorOperation {
+        val model = DbPsiFacade.getInstance(project).findDataSource(dataSource.uniqueId)?.model ?: return@recoverEditorOperation false
+        val element = if (path.isEmpty()) (model as? BasicModel)?.root
+        else pathResolver.resolve(model.modelRoots.toList(), path)?.node?.takeUnless(pathResolver::isChildless) as? BasicElement
+        val task = element?.let { prepareOneElementRefreshTask(dataSource.uniqueId, it) } ?: return@recoverEditorOperation false
+        enqueue(Request(AutoIntrospectEngine.Key(dataSource.uniqueId, path), dataSource, task, file = null, claimed = false))
+    }.getOrElse { e ->
+        LOG.warn("Refreshing $path of ${dataSource.name} failed", e)
+        false
+    }
+
+    private fun enqueue(request: Request): Boolean =
+        synchronized(workers) { workers.getOrPut(request.dataSource.uniqueId, ::Worker) }.offer(request)
 
     /** The namespace of [file]'s newest request, if any. */
     public fun pending(file: VirtualFile): String? =
@@ -202,13 +224,15 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         var loaded = false
         try {
             val dataSource = request.dataSource
-            dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
-            storageOf(dataSource)?.updateDataSource(dataSource)
-            loaded = sync(request) && readAction { isLoaded(request) }
+            if (request.claimed) {
+                dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
+                storageOf(dataSource)?.updateDataSource(dataSource)
+            }
+            loaded = sync(request) && (!request.claimed || readAction { isLoaded(request) })
         } finally {
             finish(request, loaded)
         }
-        if (loaded) highlightAgain(request.file)
+        if (loaded) request.file?.let { highlightAgain(it) }
     }
 
     /** Whether the sync ran without errors; a data source that is loading does not sync and gives no result. */
@@ -232,9 +256,10 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     }
 
     private fun finish(request: Request, loaded: Boolean) {
-        engine.finish(request.key, loaded)
+        if (request.claimed) engine.finish(request.key, loaded)
+        val file = request.file ?: return
         synchronized(banners) { banners -= request }
-        if (!project.isDisposed) EditorNotifications.getInstance(project).updateNotifications(request.file)
+        if (!project.isDisposed) EditorNotifications.getInstance(project).updateNotifications(file)
     }
 
     private fun storageOf(dataSource: LocalDataSource): DataSourceStorage? =
