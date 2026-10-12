@@ -7,7 +7,10 @@ import java.sql.Driver
 import java.sql.DriverPropertyInfo
 import java.util.Properties
 import java.util.logging.Logger
+import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.createDirectories
+import kotlin.io.path.deleteRecursively
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -19,8 +22,12 @@ import org.duckdb.DuckDBDriver
  * it); the verifier must leave `s` untouched.
  */
 internal class ParseOnlyDuckdbSafetyTest {
-    private val database = Files.createTempDirectory(Path.of("build").createDirectories(), "parse-only-safety-")
-        .resolve("safety.duckdb")
+    private val scratch = Files.createTempDirectory(Path.of("build").createDirectories(), "parse-only-safety-")
+    private val database = scratch.resolve("safety.duckdb")
+
+    @OptIn(ExperimentalPathApi::class)
+    @AfterTest
+    fun deleteScratch() = scratch.deleteRecursively()
 
     private val statements = listOf(
         "SELECT * FROM range(nextval('s'))",
