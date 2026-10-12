@@ -44,6 +44,24 @@ class ClickhouseTypedParametersTest {
     }
 
     @Test
+    fun onlyProvableTypesMakeTypedParameters() {
+        val sql = "SELECT {a: :p}, :q, {b:UInt8}, {c: Array(Nullable(String))}, {d: Decimal(10, 2)}, " +
+            "{e: Map(String, UInt64)}, {t: Identifier}, {f: g}, {h: Tuple(x UInt8, y String)}"
+        val expected = listOf(
+            Triple(ParamStyle.NAMED_COLON, "p", ":p"),
+            Triple(ParamStyle.NAMED_COLON, "q", ":q"),
+            Triple(ParamStyle.NAMED_TYPED, "b", "{b:UInt8}"),
+            Triple(ParamStyle.NAMED_TYPED, "c", "{c: Array(Nullable(String))}"),
+            Triple(ParamStyle.NAMED_TYPED, "d", "{d: Decimal(10, 2)}"),
+            Triple(ParamStyle.NAMED_TYPED, "e", "{e: Map(String, UInt64)}"),
+            Triple(ParamStyle.NAMED_TYPED, "t", "{t: Identifier}"),
+            Triple(ParamStyle.NAMED_TYPED, "h", "{h: Tuple(x UInt8, y String)}"),
+        )
+        assertEquals(expected, spans(sql, SqlScriptParameters.parse(sql, "clickhouse").occurrences))
+        assertEquals(spans(sql, parseParameterOccurrences(sql, "clickhouse")), spans(sql, SqlScriptParameters.parse(sql, "clickhouse").occurrences))
+    }
+
+    @Test
     fun maskingAndScalarParametersSkipOrSeparateTypedParameters() {
         val masked = maskNamedParameters(mixed, "clickhouse")
         assertEquals(mixed.length, masked.length)
