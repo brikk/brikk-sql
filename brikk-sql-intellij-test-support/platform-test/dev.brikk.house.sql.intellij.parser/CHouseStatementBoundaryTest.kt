@@ -89,6 +89,14 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
             stock.map { it.textRange })
     }
 
+    /** Without the plugin's PARTITION BY mask the grammar ends the one-line export at its end, keeping its error. */
+    fun testTheSingleLineExportIsOneStatementWithTheGrammarsError() {
+        val single = OWNER_S3_EXPORT.lines().joinToString(" ") { it.trim() }
+        configureCHouse(single)
+        assertEquals(listOf(single.removeSuffix(";")), statements().map { it.text })
+        assertTrue(PsiTreeUtil.findChildrenOfType(myFixture.file, PsiErrorElement::class.java).any { "PARTITION" in it.errorDescription })
+    }
+
     fun testTheOwnersExportIsOneLenientStatementWithoutErrors() {
         configureCHouse(OWNER_S3_EXPORT + "\nSELECT 1 FROM t;")
         val (export, next) = statements()
