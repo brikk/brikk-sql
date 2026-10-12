@@ -52,7 +52,9 @@ fun testRefusesStaleInput() = contract.refusesStaleInput()
 
 `assertRestartsMatchFullLex(::MyLexer, text)` lexes `text` in full and again from every token
 at which the lexer reports its initial state, where the editor highlighter restarts it, and
-fails unless every restarted pass yields the same tokens and states. Run it over the dialect's
+fails unless every restarted pass yields the same tokens and states. It also fails when no
+restart point follows a `;`, when a state is negative (the console's parameter preprocessing
+reserves those), or when starting at a token in the state reported there does not lex. Run it over the dialect's
 corpus. `lexAll` returns one pass as `LexedToken`s.
 
 ## Dialect mappings

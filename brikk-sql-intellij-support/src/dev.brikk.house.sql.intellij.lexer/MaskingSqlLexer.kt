@@ -21,6 +21,12 @@ import org.jetbrains.annotations.ApiStatus
  * highlighter restarts lexing at statement starts and stops relexing only at one. Starting
  * elsewhere would lose context; the state makes the highlighter never do so. Restoring a saved
  * position relexes from the start of its statement.
+ *
+ * States are never negative: the console's parameter preprocessing reserves negative states for
+ * its own matches. Bits 0-14 hold the base lexer's state, which must fit them; bit 15 marks a
+ * token inside a statement; bits 16-30 are non-zero for a token after the first of a lookahead,
+ * as [LookAheadLexer] encodes it, capped so the sign bit stays clear. [start] hands the base only
+ * its bits, as [LookAheadLexer] hands its base only the low 16.
  */
 @ApiStatus.Experimental
 public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTargetMask? = null) : LookAheadLexer(base) {
@@ -72,10 +78,14 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         }
         resetContext()
         onStart(buffer, startOffset, endOffset)
-        super.start(buffer, startOffset, endOffset, initialState)
+        super.start(buffer, startOffset, endOffset, initialState and BASE_STATE)
     }
 
-    final override fun getState(): Int = super.getState().let { if (restartable) it else it or IN_STATEMENT }
+    final override fun getState(): Int {
+        val state = super.getState()
+        val lookahead = (state ushr 16).coerceAtMost(LOOKAHEAD_CAP) shl 16
+        return lookahead or (state and BASE_STATE) or if (restartable) 0 else IN_STATEMENT
+    }
 
     final override fun restore(position: LookAheadLexerPosition) {
         val offset = position.offset
@@ -384,7 +394,9 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
     }
 }
 
-private const val IN_STATEMENT = Int.MIN_VALUE
+private const val BASE_STATE = 0x7FFF
+private const val IN_STATEMENT = 0x8000
+private const val LOOKAHEAD_CAP = 0x7FFF
 private val BLOCK_KINDS = setOf("IF", "WHILE", "REPEAT", "LOOP", "CASE")
 private val CAST_DELIMITERS = setOf(";", ")", ",")
 

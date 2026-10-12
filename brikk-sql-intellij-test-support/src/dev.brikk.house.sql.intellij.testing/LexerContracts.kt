@@ -31,6 +31,15 @@ public fun assertRestartsMatchFullLex(newLexer: () -> Lexer, text: CharSequence)
         state
     }
     val full = newLexer().lexAll(text, 0, initial)
+    full.firstOrNull { it.state < 0 }?.let { throw AssertionError("Negative state at ${it.start}: $it") }
+    for (token in full) {
+        val resumed = try {
+            newLexer().apply { start(text, token.start, text.length, token.state) }.tokenType
+        } catch (failure: RuntimeException) {
+            throw AssertionError("Starting at ${token.start} in the state reported there fails", failure)
+        }
+        if (resumed == null) throw AssertionError("Starting at ${token.start} in the state reported there yields no token")
+    }
     val semicolon = full.indexOfFirst { text.subSequence(it.start, it.end).toString() == ";" }
     if (semicolon in 0 until full.lastIndex && full.drop(1).none { it.state == initial }) {
         throw AssertionError("No restart point after the start, although a statement ends at ${full[semicolon].start}")

@@ -147,6 +147,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   into masking cast targets such as `TRY_CAST(x AS t)`. `getState` reports the base state only
   at statement starts, so the editor highlighter restarts and resynchronizes only there and
   never sees a lexer that lost its context: an edit relexes its own statement, nothing before.
+  States stay non-negative, as the console's parameter preprocessing requires; the base lexer's
+  state must fit 15 bits.
   Restoring a saved position relexes from its statement's start. A routine body still unbalanced
   at the end of the text ends before its first `;`, so later statements keep their tokens.
 - `LenientSqlParsing` (`parser`): `PsiBuilder` extensions that never consume, scanning the
