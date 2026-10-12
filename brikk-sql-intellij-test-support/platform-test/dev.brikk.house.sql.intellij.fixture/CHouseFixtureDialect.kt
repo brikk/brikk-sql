@@ -30,13 +30,13 @@ object CHouseFixtureDbms {
 }
 
 /** Parses SHOW statements leniently, as a plugin does for statements the grammar lacks. */
-class CHouseFixtureParser : CHouseFamilyParser() {
+class CHouseFixtureParser(coreDialect: String) : CHouseFamilyParser(coreDialect) {
     override fun parseStatement(builder: PsiBuilder, level: Int): Boolean =
         if (builder.wordAt(0) == "SHOW") builder.parseLenientStatement() else super.parseStatement(builder, level)
 }
 
 class CHouseFixtureParserDefinition : CHouseFamilyParserDefinition(CHouseFixtureDialect) {
-    override fun createParser(project: Project?): PsiParser = CHouseFixtureParser()
+    override fun createParser(project: Project?): PsiParser = CHouseFixtureParser(coreDialect)
 }
 
 class CHouseFixtureHighlighterFactory : SqlSyntaxHighlighterFactory.Base(CHouseFixtureDialect)

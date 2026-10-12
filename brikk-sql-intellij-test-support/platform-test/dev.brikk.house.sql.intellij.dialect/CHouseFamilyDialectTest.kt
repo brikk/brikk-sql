@@ -2,12 +2,12 @@ package dev.brikk.house.sql.intellij.dialect
 
 import com.intellij.database.model.ObjectKind
 import com.intellij.psi.tree.IElementType
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.dialects.SqlLanguageDialectEx
 import com.intellij.sql.dialects.clickhouse.CHouseDialect
-import com.intellij.sql.psi.SqlTokens
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlParameter
+import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.intellij.fixture.CHouseFixtureDbms
 import dev.brikk.house.sql.intellij.fixture.CHouseFixtureDialect
 import dev.brikk.house.sql.intellij.fixture.CHouseFixtureTestCase
@@ -52,7 +52,7 @@ class CHouseFamilyDialectTest : CHouseFixtureTestCase() {
     }
 
     /** From 263 the console leaves a parameterized view's `{name:Type}` to the server; earlier IDEs never ask. */
-    fun testServerBoundParametersFollowTheStockDialect() {
+    fun testParameterizedViewParametersAreLeftToTheServerFrom263() {
         // The platform's own call, virtual on the base dialect class; before 263 there is none.
         val platform = runCatching { SqlLanguageDialectEx::class.java.getMethod("isServerResolvedParameter", SqlParameter::class.java) }.getOrNull()
             ?: return

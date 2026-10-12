@@ -4,10 +4,10 @@ import com.intellij.database.script.ScriptModel
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.impl.DebugUtil
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.impl.DebugUtil
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.clickhouse.CHouseDialect
 import com.intellij.sql.psi.SqlCompositeElementTypes
