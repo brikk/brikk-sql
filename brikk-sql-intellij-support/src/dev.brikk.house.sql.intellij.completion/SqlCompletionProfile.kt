@@ -39,6 +39,12 @@ public interface SqlCompletionProfile {
 
     public val functionGates: SqlFunctionGates get() = SqlFunctionGates.OFF
 
+    /**
+     * Where only table functions are offered; everywhere else they are hidden, and where the text
+     * before the caret does not tell, every function is offered.
+     */
+    public val tablePositions: TablePositions get() = TablePositions.STANDARD
+
     public val keywords: KeywordScope get() = KeywordScope.ALL
 
     /** The keywords offered in [file], whose [snapshot] completion already read; a live harvest can supply its own. */

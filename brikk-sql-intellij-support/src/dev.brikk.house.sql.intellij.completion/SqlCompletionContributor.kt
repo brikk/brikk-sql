@@ -40,17 +40,27 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return
         val reads = ProfileReads(profile, parameters.originalFile)
-        val functions = completeFunctions(parameters, result, reads)
+        val file = parameters.originalFile
+        val before = file.viewProvider.contents.subSequence(0, prefixAt(file, parameters.offset).first)
+        val position = functionPosition(before, profile.metadata.dialect, profile.tablePositions)
+        val functions = completeFunctions(parameters, result, reads, position)
         completeTableFunctionArguments(parameters, result, reads)
-        if (!result.isStopped) completeKeywords(parameters, result, reads, functions)
+        if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position)
     }
 
     /**
      * Keywords that neither [functions] (upper-case names this contributor offered) nor a later
      * contributor offered. Keywords of later contributors are spelled in the same case as these:
-     * the user's SQL code style keyword case if it sets one, else the profile's.
+     * the user's SQL code style keyword case if it sets one, else the profile's. A PIPE stage head
+     * gets none of its own: only a stage phrase stands there.
      */
-    private fun completeKeywords(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, functions: Set<String>) {
+    private fun completeKeywords(
+        parameters: CompletionParameters,
+        result: CompletionResultSet,
+        reads: ProfileReads,
+        functions: Set<String>,
+        position: FunctionPosition,
+    ) {
         val scope = profile.keywords
         val style = profile.styles[SqlLookupKind.KEYWORD]
         val codeStyleCase = SqlCodeStyles.getSqlSettings(parameters.originalFile).keywordCase.takeIf { it != Case.MIXED }
@@ -64,7 +74,7 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
             val keyword = recased?.takeIf { element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
             result.passResult(keyword?.let(completion::withLookupElement) ?: completion)
         }
-        if (scope == KeywordScope.NONE) return
+        if (scope == KeywordScope.NONE || position == FunctionPosition.STAGE_HEAD) return
         val fallback = if (codeStyleCase == null) style else style.copy(case = LookupCase.AS_GIVEN)
         val sink = result.caseInsensitive()
         for (keyword in catalog.keywords) {
@@ -110,8 +120,8 @@ private class ProfileReads(val profile: SqlCompletionProfile, val file: PsiFile)
     val keywords by lazy(LazyThreadSafetyMode.NONE) { profile.keywordCatalog(file, snapshot) }
 }
 
-/** Offers the functions the gates allow and returns their upper-case names. */
-private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads): Set<String> {
+/** Offers the functions the gates allow that fit [position] and returns their upper-case names. */
+private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, position: FunctionPosition): Set<String> {
     val profile = reads.profile
     val file = parameters.originalFile
     val gates = profile.functionGates
@@ -122,6 +132,7 @@ private fun completeFunctions(parameters: CompletionParameters, result: Completi
     val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
     val names = HashSet<String>()
     fun offer(entry: FunctionPresentation, serverOnly: Boolean) {
+        if (!position.offers(entry.kind)) return
         sink.addElement(profile.lookup(entry, serverOnly))
         names += entry.name.uppercase()
     }

@@ -43,6 +43,7 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
     override var styles = SqlLookupStyles.DEFAULT
     override var nativeKinds = emptyMap<String, SqlLookupKind>()
     override var functionGates = SqlFunctionGates.OFF
+    override var tablePositions = TablePositions.STANDARD
     override var keywords = KeywordScope.NONE
     override var propertyQuote = '\''
     var serverOnly: List<FunctionPresentation> = emptyList()
@@ -65,6 +66,7 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
         styles = SqlLookupStyles.DEFAULT
         nativeKinds = emptyMap()
         functionGates = SqlFunctionGates.OFF
+        tablePositions = TablePositions.STANDARD
         keywords = KeywordScope.NONE
         propertyQuote = '\''
         serverOnly = emptyList()

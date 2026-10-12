@@ -86,7 +86,8 @@ class SqlFunctionCompletionTest : CompletionTestCase() {
 
     fun testANameUnderTwoKindsIsOfferedOncePerKind() {
         val multiKind = duckdb.groupBy { it.name }.values.first { entries -> entries.map { it.kind }.distinct().size > 1 }
-        configure("SELECT ${multiKind.first().name}<caret>", DuckdbCompletion::class.java)
+        // Where the position is unknown, every kind is offered.
+        configure("${multiKind.first().name}<caret>", DuckdbCompletion::class.java)
         assertContainsElements(functionItems(), multiKind)
     }
 

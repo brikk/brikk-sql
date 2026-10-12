@@ -124,6 +124,13 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   the user's SQL code style wins over the profile's, for both. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
+  Function kinds follow the position, judged from the core tokens before the typed name
+  (`tablePositions`, `TablePositions.STANDARD` by default: after FROM, any join, PIPE `|> CALL`, and a
+  comma continuing their list; `parenthesized` adds positions such as Trino's `TABLE(`, `after` such
+  as Doris's `LATERAL VIEW`). A table position offers only table functions, a known expression
+  position hides them, so a name of both kinds (DuckDB `range`) shows its fitting form; where the text
+  does not tell, every function is offered. Aggregates and window functions are not filtered by clause.
+  Right after `|>`, only stage phrases stand, so no functions or metadata keywords are offered there.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
 - `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
