@@ -16,7 +16,11 @@ object CatalogTestDbms {
     @JvmField val AUDITED: Dbms = create("BRIKK_TEST_AUDITED")
     @JvmField val AUDITED_BASE: Dbms = create("BRIKK_TEST_AUDITED_BASE")
 
-    private fun create(name: String) = Dbms.create(name, name, { AllIcons.Nodes.DataTables }, Dbms.defaultPattern(name.lowercase()))
+    /** A plugin's own Trino dbms, which the registry lists next to the stock `TRINO`; URLs `jdbc:brikkowntrino:`. */
+    @JvmField val TRINO_BRIKK: Dbms = create("TRINO_BRIKK", "brikkowntrino")
+
+    private fun create(name: String, urlKeyword: String = name.lowercase()) =
+        Dbms.create(name, name, { AllIcons.Nodes.DataTables }, Dbms.defaultPattern(urlKeyword))
 }
 
 private val testPlugin = DefaultPluginDescriptor(PluginId.getId("dev.brikk.house.sql.intellij.test"), CatalogTestDbms::class.java.classLoader)

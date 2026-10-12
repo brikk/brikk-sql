@@ -209,13 +209,16 @@ takes the dbms the platform passes):
   `<introspector dbms="X" implementationClass="my.XIntrospectorGate"/>`. The test kit's
   `assertIntrospectorRoutesToGeneric(dbms)` checks the routing.
 - `DialectDataSourceResolver(dbms, onlyDataSourceFallback = true)`: `resolve(file)` finds the data
-  source serving a file from its valid console, then its SQL resolution scope (file, directory or
-  project; only data sources it names), then, when enabled, the project's only data source of the
-  dbms. The `DataSourceResolution` says which (`Console`, `FileMapping`, `OnlyDataSource`) or why
-  none (`Ambiguous` with the candidates, `NotFound`); several never resolve to a guess. Injected files
-  and completion copies resolve through their host. A data source qualifies when its dbms is the
-  dbms or a registry alias of it (the stock `TRINO` for a plugin's Trino dbms). `consoleNamespace(file)`
-  is the valid console's current namespace, outermost first.
+  source serving a file. An explicit association decides: the file's valid console, else its SQL
+  resolution scope (file, directory or project) when that names data sources. A console or scope
+  bound only to another dbms, or a scope that excludes data sources ("all except ..."), gives
+  `NotFound`, never another source. Only a file with neither falls back, when enabled, to the
+  project's only data source of the dbms itself. Consoles and scopes also accept registry aliases
+  (the stock `TRINO` for a plugin's Trino dbms); the fallback does not. The `DataSourceResolution`
+  says which (`Console`, `FileMapping`, `OnlyDataSource`) or why none (`Ambiguous` with the
+  candidates, `NotFound`). Injected files and completion copies resolve through their host; failed
+  lookups give `NotFound`. `consoleNamespace(file)` is the valid console's current namespace,
+  outermost first.
 
 Internal API used, by class (the platform offers no public alternative):
 

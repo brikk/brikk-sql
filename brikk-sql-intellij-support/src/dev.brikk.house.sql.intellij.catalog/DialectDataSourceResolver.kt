@@ -1,7 +1,6 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
-import com.intellij.database.console.JdbcConsole
 import com.intellij.database.console.JdbcConsoleProvider
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
@@ -26,7 +25,7 @@ public sealed interface DataSourceResolution {
     /** The file's SQL resolution scope (its own, a directory's or the project's) names it alone. */
     public data class FileMapping(override val dataSource: LocalDataSource) : DataSourceResolution
 
-    /** It is the project's only data source of the dbms. */
+    /** The file has no console or scope, and this is the project's only data source of the dbms itself. */
     public data class OnlyDataSource(override val dataSource: LocalDataSource) : DataSourceResolution
 
     /** The scope or the project has several; none is guessed. */
@@ -34,17 +33,24 @@ public sealed interface DataSourceResolution {
         override val dataSource: LocalDataSource? get() = null
     }
 
+    /**
+     * Nothing qualifies, the file is bound to a data source of another dbms or excludes some by scope,
+     * or a lookup failed.
+     */
     public data object NotFound : DataSourceResolution {
         override val dataSource: LocalDataSource? get() = null
     }
 }
 
 /**
- * Finds the data source of [dbms] that serves a file, from the first of: the file's valid console, the
- * file's SQL resolution scope (Database Tools' "SQL Resolution Scopes"), and, with
- * [onlyDataSourceFallback], the project's single data source of the dbms. Injected files resolve
- * through their host. A data source qualifies when its dbms is [dbms] or speaks the same dialect in
- * [SqlDialectRegistry], such as the stock `TRINO` for a plugin's own Trino dbms.
+ * Finds the data source of [dbms] that serves a file. An explicit association decides: the file's
+ * valid console, else its SQL resolution scope (Database Tools' "SQL Resolution Scopes") when that
+ * names data sources. A console or scope that names only data sources of another dbms, or that
+ * excludes data sources ("all except ..."), resolves to nothing rather than to another source. Only a
+ * file with neither falls back, with [onlyDataSourceFallback], to the project's single data source of
+ * [dbms] itself. Consoles and scopes also accept dbms that speak the same dialect in
+ * [SqlDialectRegistry], such as the stock `TRINO` for a plugin's own Trino dbms. Injected files
+ * resolve through their host.
  *
  * Lookups that fail resolve to nothing; cancellation propagates.
  */
@@ -55,44 +61,58 @@ public class DialectDataSourceResolver(
 ) {
     private val aliases: Set<String> = SqlDialectRegistry.forDbms(dbms)?.dbmsIds.orEmpty() + dbms.name
 
+    /** Whether a console or scope bound to [candidate] serves files of [dbms]. */
     public fun accepts(candidate: Dbms): Boolean = candidate.name in aliases
 
-    public fun resolve(file: PsiFile): DataSourceResolution {
+    public fun resolve(file: PsiFile): DataSourceResolution = recoverEditorOperation {
         val host = hostFile(file)
-        validConsole(file, host)?.let { return DataSourceResolution.Console(it.dataSource) }
-        val candidates = recoverEditorOperation {
-            LocalDataSourceManager.getInstance(file.project).dataSources.filter { accepts(it.dbms) }
-        }.getOrDefault(emptyList())
-        val mapped = recoverEditorOperation { mappedDataSourceIds(file, host) }.getOrDefault(emptySet())
-        val inScope = candidates.filter { it.uniqueId in mapped }
-        if (inScope.isNotEmpty()) return inScope.choose(DataSourceResolution::FileMapping)
-        return if (onlyDataSourceFallback) candidates.choose(DataSourceResolution::OnlyDataSource) else DataSourceResolution.NotFound
-    }
+        val project = file.project
+        JdbcConsoleProvider.getValidConsole(project, host)?.let { console ->
+            return@recoverEditorOperation console.dataSource.takeIf { accepts(it.dbms) }?.let(DataSourceResolution::Console)
+                ?: DataSourceResolution.NotFound
+        }
+        val dataSources = LocalDataSourceManager.getInstance(project).dataSources
+        when (val scope = scopeOf(file, host)) {
+            Scope.Unscoped -> Unit
+            Scope.Excluding -> return@recoverEditorOperation DataSourceResolution.NotFound
+            is Scope.Naming -> return@recoverEditorOperation dataSources
+                .filter { it.uniqueId in scope.ids && accepts(it.dbms) }.choose(DataSourceResolution::FileMapping)
+        }
+        if (!onlyDataSourceFallback) return@recoverEditorOperation DataSourceResolution.NotFound
+        dataSources.filter { it.dbms.name == dbms.name }.choose(DataSourceResolution::OnlyDataSource)
+    }.getOrDefault(DataSourceResolution.NotFound)
 
     /**
      * The current namespace of the file's valid console, outermost first (for example catalog, then
      * schema); empty without a console of the dbms.
      */
-    public fun consoleNamespace(file: PsiFile): List<String> {
-        val console = validConsole(file, hostFile(file)) ?: return emptyList()
-        return recoverEditorOperation {
-            generateSequence(console.currentNamespace) { it.parent }.mapNotNull { path -> path.name?.takeIf(String::isNotBlank) }.toList().asReversed()
-        }.getOrDefault(emptyList())
-    }
-
-    private fun validConsole(file: PsiFile, host: VirtualFile): JdbcConsole? = recoverEditorOperation {
-        JdbcConsoleProvider.getValidConsole(file.project, host)?.takeIf { accepts(it.dataSource.dbms) }
-    }.getOrNull()
+    public fun consoleNamespace(file: PsiFile): List<String> = recoverEditorOperation {
+        val console = JdbcConsoleProvider.getValidConsole(file.project, hostFile(file))?.takeIf { accepts(it.dataSource.dbms) }
+        generateSequence(console?.currentNamespace) { it.parent }.mapNotNull { path -> path.name?.takeIf(String::isNotBlank) }.toList().asReversed()
+    }.getOrDefault(emptyList())
 
     private fun hostFile(file: PsiFile): VirtualFile =
         InjectedLanguageManager.getInstance(file.project).getTopLevelFile(file).originalFile.viewProvider.virtualFile
 
-    /** Data sources a scope names positively; "all data sources" names none. */
-    private fun mappedDataSourceIds(file: PsiFile, host: VirtualFile): Set<String> {
+    private sealed interface Scope {
+        /** No scope, or all data sources. */
+        data object Unscoped : Scope
+
+        /** "All except ...", or a naming this resolver cannot evaluate. */
+        data object Excluding : Scope
+
+        data class Naming(val ids: Set<String>) : Scope
+    }
+
+    private fun scopeOf(file: PsiFile, host: VirtualFile): Scope {
         val scope = SqlResolveMappings.getInstance(file.project).getMapping(host)
-        val dataSources = scope?.root?.getGroup(SqlImportUtil.DATA_SOURCE) ?: return emptySet()
-        return dataSources.children.orEmpty().mapNotNull { it?.naming as? TreePatternNode.PositiveNaming }
-            .flatMapTo(HashSet()) { naming -> naming.names.orEmpty().mapNotNull { it?.name } }
+        val namings = scope?.root?.getGroup(SqlImportUtil.DATA_SOURCE)?.children.orEmpty().mapNotNull { it?.naming }
+        val everything = namings.filterIsInstance<TreePatternNode.NegativeNaming>().map { it.names.orEmpty().isEmpty() }
+        return when {
+            namings.isEmpty() || everything.isNotEmpty() && everything.all { it } -> Scope.Unscoped
+            namings.all { it is TreePatternNode.PositiveNaming } -> Scope.Naming(namings.flatMapTo(HashSet()) { naming -> naming.names.orEmpty().mapNotNull { it?.name } })
+            else -> Scope.Excluding
+        }
     }
 
     private fun List<LocalDataSource>.choose(resolved: (LocalDataSource) -> DataSourceResolution): DataSourceResolution = when (size) {
