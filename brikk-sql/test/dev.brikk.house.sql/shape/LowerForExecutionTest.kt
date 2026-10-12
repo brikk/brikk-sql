@@ -42,6 +42,7 @@ class LowerForExecutionTest {
         }
     }
 
+    // brikk-extensions #52: executable lowering refuses an unsupported PIVOT instead of dropping it.
     @Test
     fun unsupportedPivotIsRefused() {
         for (dialect in listOf("trino", "doris")) {

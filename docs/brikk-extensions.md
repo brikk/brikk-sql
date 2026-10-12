@@ -1835,6 +1835,40 @@ refuses unknown-layout DROP/SET and unsupported pivots while native Doris SET st
 renders; its original checkout remains clean. Only the task's isolated containers
 and internal network are removed after verification.
 
+## 53. Doris native lexical rules
+
+**NOT sqlglot parity.** `DorisDialect.LEXICAL_CONFIG` layers native DorisLexer.g4 rules
+(apache/doris `3226e0c`) over the generated tables via `TokenizerConfig.withLexicalRules`;
+`DorisTokenizerTables.kt` and its generator are unchanged.
+
+- Untagged `$$...$$` is one raw HEREDOC_STRING; a longer `$`-spelled identifier wins
+  (`$$a$$b`); tagged forms and an unclosed `$$abc` stay identifiers.
+- Block comments nest, also in `/*+` hints, and end where the native lazy recursive rule
+  does, `/*/` overlaps and unclosable nesting included (checked against the native lexer for
+  every `/*`-prefixed string over `/`, `*`, `a` up to 13 characters).
+- Backslash + LF continues a `--` comment; backslash + CRLF does not.
+- `#` and `{# #}` are not comments.
+- Editor tokenization (so `SqlScriptSnapshot`) refuses an unclosed `$$` and a comment that no
+  depth count closes at the native end: both usually mean unfinished input.
+- `Dialect.semicolonsInBrackets` is false for Doris, so a snapshot statement with `;` inside
+  brackets is a boundary error (PostgreSQL rule actions keep the default).
+
+Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`) over raw JDBC rejects `#` and
+`{# #}` comments (`mismatched input '#'`) and accepts nested comments, nested hints and
+backslash-LF continuation. `TokenCorpusDifferentialTest` accepts sqlglot mismatches only under
+named `DorisNativeLexing` exceptions; `DorisScannerCorpusTest` replays the Doris plugin's
+scanner corpus against native results, naming its conventions and remaining disagreements.
+
+## 54. ClickHouse typed query parameters stay as written
+
+ClickHouse `{name:Type}` is a server query parameter, unlike an IDE `:name` bind. Parameter
+discovery (`parseParameterOccurrences`, `SqlScriptParameters`, `SqlFragment.scalarParams`)
+reports it as `ParamStyle.NAMED_TYPED`; `maskNamedParameters` and IDE prompting, which take
+only `NAMED_COLON`, leave it alone. `Dialect.typedQueryParameters` marks ClickHouse, the only
+core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the ClickHouse
+generator instead reuses the authored text while the parsed placeholder is unchanged, so
+lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

@@ -558,9 +558,9 @@ open class ClickhouseGenerator(
         )
     }
 
-    // sqlglot: ClickHouseGenerator.placeholder_sql
+    // sqlglot: ClickHouseGenerator.placeholder_sql; brikk extension #54 reuses the authored text.
     override fun placeholderSql(expression: Placeholder): String =
-        "{${expression.name}: ${sql(expression, "kind")}}"
+        expression.authoredSyntax?.textFor(expression) ?: "{${expression.name}: ${sql(expression, "kind")}}"
 
     // sqlglot: ClickHouseGenerator.oncluster_sql
     override fun onclusterSql(expression: OnCluster): String =

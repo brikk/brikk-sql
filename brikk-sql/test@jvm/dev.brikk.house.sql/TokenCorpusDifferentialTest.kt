@@ -1,5 +1,6 @@
 package dev.brikk.house.sql
 
+import dev.brikk.house.sql.dialects.DorisDialect
 import dev.brikk.house.sql.parser.BigqueryTokenizerTables
 import dev.brikk.house.sql.parser.ClickhouseTokenizerTables
 import dev.brikk.house.sql.parser.DorisTokenizerTables
@@ -52,7 +53,34 @@ class TokenCorpusDifferentialTest {
     private fun loadCorpus(name: String): Corpus =
         json.decodeFromString(Corpus.serializer(), testResource("token-corpus/$name"))
 
-    private fun runCorpus(name: String, config: TokenizerConfig) {
+    /**
+     * brikk extension #53: where the Doris tokenizer deliberately follows the native Doris
+     * lexer instead of sqlglot. A corpus mismatch is accepted only when one of these covers
+     * it, and each must still diverge from the generated (sqlglot) tables on its probe.
+     */
+    private enum class DorisNativeLexing(val probe: String, val covers: (String) -> Boolean) {
+        UNTAGGED_DOLLAR_STRING("SELECT \$\$a;b\$\$", { "\$\$" in it }),
+        NESTED_BLOCK_COMMENT("SELECT 1 /* a /* b */ c */", { Regex("/\\*.*/\\*", RegexOption.DOT_MATCHES_ALL) in it }),
+        NESTED_HINT("SELECT /*+ a /* b */ c */ 1", { "/*+" in it && it.indexOf("/*", it.indexOf("/*+") + 3) >= 0 }),
+        DASH_COMMENT_BACKSLASH_LF("SELECT 1 -- a\\\n; b", { "--" in it && "\\\n" in it }),
+        HASH_IS_NOT_A_COMMENT("SELECT 1 # a", { '#' in it }),
+        JINJA_IS_NOT_A_COMMENT("SELECT 1 {# a #}", { "{#" in it }),
+    }
+
+    @Test
+    fun dorisNativeLexingExceptionsDivergeFromSqlglot() {
+        for (exception in DorisNativeLexing.entries) {
+            val sqlglot = runCatching { Tokenizer(DorisTokenizerTables.CONFIG).tokenize(exception.probe).map { it.tokenType to it.text } }
+            val native = Tokenizer(DorisDialect.LEXICAL_CONFIG).tokenize(exception.probe).map { it.tokenType to it.text }
+            if (sqlglot.getOrNull() == native) fail("${exception.name} no longer diverges from sqlglot: ${exception.probe}")
+        }
+    }
+
+    private fun runCorpus(
+        name: String,
+        config: TokenizerConfig,
+        accepted: (String) -> Boolean = { false },
+    ) {
         val corpus = loadCorpus(name)
         check(corpus.cases.isNotEmpty()) { "empty corpus $name" }
 
@@ -93,7 +121,7 @@ class TokenCorpusDifferentialTest {
                 }
             }
 
-            if (caseMismatch != null) {
+            if (caseMismatch != null && !accepted(case.sql)) {
                 mismatches.add("SQL: ${case.sql}\n  $caseMismatch")
             }
         }
@@ -115,6 +143,10 @@ class TokenCorpusDifferentialTest {
 
     @Test
     fun dorisCorpusMatchesPythonOracle() = runCorpus("doris.json", DorisTokenizerTables.CONFIG)
+
+    @Test
+    fun dorisNativeLexingMatchesPythonOracleExceptNamedDivergences() =
+        runCorpus("doris.json", DorisDialect.LEXICAL_CONFIG) { sql -> DorisNativeLexing.entries.any { it.covers(sql) } }
 
     @Test
     fun starrocksCorpusMatchesPythonOracle() =
