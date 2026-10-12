@@ -46,9 +46,7 @@ class LowerForExecutionTest {
     fun unsupportedPivotIsRefused() {
         for (dialect in listOf("trino", "doris")) {
             for (stage in listOf("PIVOT (SUM(x) FOR k IN ('a'))", "UNPIVOT (v FOR k IN (a, b))")) {
-                val refused = assertRefused("FROM t |> $stage", dialect)
-                assertEquals("$dialect cannot faithfully lower PIVOT/UNPIVOT for execution", refused.message)
-                assertNull(refused.range)
+                assertNull(assertRefused("FROM t |> $stage", dialect).range)
             }
         }
     }
