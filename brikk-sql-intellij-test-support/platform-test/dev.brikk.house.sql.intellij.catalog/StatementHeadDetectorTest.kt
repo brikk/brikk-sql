@@ -81,6 +81,14 @@ class StatementHeadDetectorTest : TestCase() {
         assertEquals("a savepoint rollback keeps the transaction", listOf(null), begins("ROLLBACK TO SAVEPOINT s"))
         assertEquals("a chained end starts the next transaction", listOf(true, true, true), begins("COMMIT AND CHAIN; rollback work and chain; END AND CHAIN"))
         assertEquals(listOf(false), begins("COMMIT AND NO CHAIN"))
+    }
+
+    /** Trino has no BEGIN or END statement: a routine body's END must not end a transaction. */
+    fun testTrinoTransactionControl() {
+        val transactions = StatementHeadDetector(StatementRules.TRINO_TRANSACTIONS, "trino")
+        fun begins(sql: String) = transactions.detect(sql).map { (it.effect as StatementEffect.Transaction).begins }
+        assertEquals(listOf(true, false, false, false, false), begins("START TRANSACTION; COMMIT; COMMIT WORK; ROLLBACK; ROLLBACK WORK"))
+        assertEquals(emptyList<Boolean?>(), begins("CREATE FUNCTION f() RETURNS int BEGIN DECLARE x int; RETURN 1; END; END; BEGIN"))
         assertEquals(emptyList<Boolean?>(), begins("SELECT 'BEGIN'; COMMITTED; CREATE TABLE begin_log(x INT)"))
     }
 

@@ -166,6 +166,15 @@ public object StatementRules {
         StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK]", StatementEffect.Transaction(begins = false)),
     )
 
+    /**
+     * Trino's transaction control: `START TRANSACTION` begins, `COMMIT` and `ROLLBACK` end. Trino has no
+     * `BEGIN` or `END` statement, so the `END` closing a routine body ends nothing.
+     */
+    public val TRINO_TRANSACTIONS: List<StatementRule> = listOf(
+        StatementRule("START TRANSACTION", StatementEffect.Transaction(begins = true)),
+        StatementRule("COMMIT|ROLLBACK [WORK]", StatementEffect.Transaction(begins = false)),
+    )
+
     private val server = StatementEffect.FunctionInventory(sessionFacts = false)
     private val session = StatementEffect.FunctionInventory(sessionFacts = true)
 
