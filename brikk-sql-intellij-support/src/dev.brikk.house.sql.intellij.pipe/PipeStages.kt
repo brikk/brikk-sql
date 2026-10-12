@@ -5,14 +5,15 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.PrefixMatcher
-import com.intellij.codeInsight.lookup.LookupElement
-import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import dev.brikk.house.sql.intellij.completion.SqlLookupKind
+import dev.brikk.house.sql.intellij.completion.SqlLookupStyles
+import dev.brikk.house.sql.intellij.completion.lookup
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenError
@@ -26,12 +27,16 @@ import dev.brikk.house.sql.shape.SqlFragment
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Completes stage phrases right after a `|>` and, once a stage has begun, the columns its input
- * provides, in the innermost pipeline at the caret. Register it for the dialect's language with a
- * no-arg subclass; presentation and whether stage heads hide other contributors are overridable.
+ * Completes stage phrases right after a `|>`, hiding every other item there, and, once a stage has
+ * begun, the columns its input provides, in the innermost pipeline at the caret. Items take the
+ * [SqlLookupKind.PIPE_STAGE] and [SqlLookupKind.PIPE_INPUT_COLUMN] rows of [styles]. Register it
+ * for the dialect's language with a no-arg subclass.
  */
 @ApiStatus.Experimental
-public abstract class PipeStageCompletionContributor(private val dialect: PipeDialect) : CompletionContributor() {
+public abstract class PipeStageCompletionContributor(
+    private val dialect: PipeDialect,
+    private val styles: SqlLookupStyles = SqlLookupStyles.DEFAULT,
+) : CompletionContributor() {
     private val phrases by lazy { pipeStageKeywords(dialect.dialect) }
     private val inputColumns = object : LinkedHashMap<Pair<String, ShapeCatalog>, List<String>>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Pair<String, ShapeCatalog>, List<String>>) = size > 32
@@ -44,13 +49,6 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
      */
     protected open fun inputCatalog(file: PsiFile, input: String): ShapeCatalog? =
         if (dialect.enablesEditing(file)) null else ShapeCatalog.EMPTY
-
-    protected open fun stagePhrase(phrase: String): LookupElement = LookupElementBuilder.create(phrase).withTypeText("PIPE stage", true)
-
-    protected open fun inputColumn(name: String): LookupElement = LookupElementBuilder.create(name).withTypeText("PIPE input column", true)
-
-    /** Whether a stage head shows only stage phrases. */
-    protected open val stopsAtStageHead: Boolean get() = true
 
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         if (parameters.completionType != CompletionType.BASIC) return
@@ -67,14 +65,16 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
         val matching = phrases.filter { it.startsWith(words, ignoreCase = true) }
         if (!complete && matching.isNotEmpty()) {
             val sink = result.withPrefixMatcher(PhrasePrefixMatcher(typed))
-            matching.forEach { sink.addElement(stagePhrase(it)) }
-            if (stopsAtStageHead) result.stopHere()
+            val style = styles[SqlLookupKind.PIPE_STAGE]
+            matching.forEach { sink.addElement(style.lookup(StagePhrase(it), it, style.typeText)) }
+            result.stopHere()
             return
         }
         val input = before.substring(stage.inputStart, stage.pipe).trim()
         val catalog = inputCatalog(file, input) ?: return
         val sink = result.caseInsensitive()
-        for (column in columns(input, catalog)) sink.addElement(inputColumn(column))
+        val style = styles[SqlLookupKind.PIPE_INPUT_COLUMN]
+        for (column in columns(input, catalog)) sink.addElement(style.lookup(column))
     }
 
     private fun columns(input: String, catalog: ShapeCatalog): List<String> {
@@ -127,6 +127,9 @@ public abstract class PipeStageCompletionContributor(private val dialect: PipeDi
 
     private class Stage(val inputStart: Int, val pipe: Int, val typedStart: Int)
 }
+
+/** A stage phrase item's identity, so keyword styling and other contributors never take it for a plain keyword. */
+private data class StagePhrase(val phrase: String)
 
 /** Matches phrases ignoring case and the amount of whitespace, so a typed `full  outer` still replaces exactly what was typed. */
 private class PhrasePrefixMatcher(prefix: String) : PrefixMatcher(prefix) {

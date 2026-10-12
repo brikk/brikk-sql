@@ -56,7 +56,10 @@ registers no-arg subclasses:
   `PipeRunToStageAction`. Run-to-stage cuts at top-level stages and submits through
   the same checks; injected and inspection-only files cannot run.
 - `PipeStageCompletionContributor` and `PipeStageKeywordAnnotator`: core stage phrases
-  and offline stage input columns, also in injected SQL (`PipeText`).
+  and offline stage input columns, also in injected SQL (`PipeText`). Right after `|>` only
+  stage phrases are offered; once a stage has begun, other contributors complete as usual.
+  Items take the `PIPE_STAGE` (UPPER, bold, "PIPE stage") and `PIPE_INPUT_COLUMN` rows of the
+  `SqlLookupStyles` the contributor is given (`DEFAULT` unless the plugin passes its own).
 
 `lower` turns one statement into `PipeTranslation` over core `lowerForExecution`,
 also refusing what the profile's statement ranges refuse, and applies the optional

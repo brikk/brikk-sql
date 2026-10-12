@@ -32,6 +32,7 @@ class SqlLookupStylesTest : CompletionTestCase() {
             TABLE_FUNCTION_PROPERTY to SqlLookupStyle(AllIcons.Nodes.Parameter, "%s property", priority = 100.0),
             TABLE_FUNCTION_VALUE to SqlLookupStyle(AllIcons.Nodes.Parameter, "%s value", priority = 100.0),
             COLUMN to SqlLookupStyle(DatabaseIcons.Col),
+            PIPE_STAGE to SqlLookupStyle(typeText = "PIPE stage", bold = true, case = LookupCase.UPPER),
             PIPE_INPUT_COLUMN to SqlLookupStyle(DatabaseIcons.Col, "PIPE input column", priority = 95.0),
             BRIKK_COLUMN to SqlLookupStyle(SqlLookupIcons.BrikkColumn, priority = 120.0),
             CATALOG to SqlLookupStyle(DatabaseIcons.Database, "catalog", priority = 96.0),

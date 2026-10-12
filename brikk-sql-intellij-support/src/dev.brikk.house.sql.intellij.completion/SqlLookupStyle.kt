@@ -30,6 +30,9 @@ public enum class SqlLookupKind {
     TABLE_FUNCTION_PROPERTY,
     TABLE_FUNCTION_VALUE,
     COLUMN,
+
+    /** A stage phrase right after `|>`, such as `WHERE` or `LEFT JOIN`. */
+    PIPE_STAGE,
     PIPE_INPUT_COLUMN,
     BRIKK_COLUMN,
     CATALOG,
@@ -108,6 +111,7 @@ public class SqlLookupStyles private constructor(private val styles: Map<SqlLook
                     SqlLookupKind.TABLE_FUNCTION_PROPERTY -> SqlLookupStyle(AllIcons.Nodes.Parameter, "%s property", priority = 100.0)
                     SqlLookupKind.TABLE_FUNCTION_VALUE -> SqlLookupStyle(AllIcons.Nodes.Parameter, "%s value", priority = 100.0)
                     SqlLookupKind.COLUMN -> SqlLookupStyle(DatabaseIcons.Col)
+                    SqlLookupKind.PIPE_STAGE -> SqlLookupStyle(typeText = "PIPE stage", bold = true, case = LookupCase.UPPER)
                     SqlLookupKind.PIPE_INPUT_COLUMN -> SqlLookupStyle(DatabaseIcons.Col, "PIPE input column", priority = 95.0)
                     SqlLookupKind.BRIKK_COLUMN -> SqlLookupStyle(SqlLookupIcons.BrikkColumn, priority = 120.0)
                     SqlLookupKind.CATALOG -> SqlLookupStyle(DatabaseIcons.Database, "catalog", priority = 96.0)
