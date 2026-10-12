@@ -53,6 +53,16 @@ class MaskingSqlLexerTest : FixtureTestCase() {
             "AS \"INTEGER\"" to SqlTokens.SQL_BLOCK_COMMENT, ")" to null, ";" to null)
     }
 
+    fun testTargetsOfAnyIdentifierStartAndAfterACommentAreMasked() {
+        assertTokens("SELECT TRY_CAST(1 AS _int);", "AS _int" to SqlTokens.SQL_BLOCK_COMMENT, ")" to null, ";" to null)
+        assertTokens("SELECT TRY_CAST(1 AS /* type */ INTEGER);", "AS /* type */ INTEGER" to SqlTokens.SQL_BLOCK_COMMENT, ")" to null, ";" to null)
+    }
+
+    fun testAMissingTryCastTargetKeepsTheDelimiters() {
+        assertTokens("SELECT TRY_CAST(1 AS /* c */ ); SELECT 2", "TRY_CAST" to null, "1" to null, "AS" to null, "/* c */" to SqlTokens.SQL_BLOCK_COMMENT, ")" to null, ";" to null)
+        assertTokens("SELECT TRY_CAST(1 AS , 2)", "TRY_CAST" to null, "1" to null, "AS" to null, "," to null)
+    }
+
     fun testAnUnclosedTryCastDoesNotMaskTheNextStatementsCast() {
         assertTokens("SELECT TRY_CAST(a; SELECT CAST(b AS INT)", "TRY_CAST" to null, ";" to null, "CAST" to null, "(" to null,
             "b" to null, "AS" to null, "INT" to null)
@@ -168,6 +178,11 @@ class CastTargetMaskTest : FixtureTestCase() {
         assertEquals(listOf("SELECT", "TRY_CAST", "(", "x", "AS", ";", "SELECT", "1"), semicolon)
         val paren = nonBlank("SELECT CAST(x AS) FROM t").map { it.first }
         assertEquals(listOf("SELECT", "CAST", "(", "x", "AS", ")", "FROM", "t"), paren)
+    }
+
+    fun testUnderscoreAndCommentedTargetsAreMasked() {
+        val tokens = nonBlank("SELECT CAST(x AS _int), CAST(y AS /* t */ ARRAY<INT>)").map { it.first }
+        assertContainsElements(tokens, "AS _int", "AS /* t */ ARRAY<INT>")
     }
 
     fun testAQuotedTargetIsMasked() {

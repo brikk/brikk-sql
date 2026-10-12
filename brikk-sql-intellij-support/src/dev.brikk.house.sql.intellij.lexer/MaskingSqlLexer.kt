@@ -323,10 +323,8 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         }
         if (upper != "AS" || castDepths.lastOrNull() != parenDepth) return false
         castDepths.removeLast()
-        val at = offsetAfterWhitespace(base, base.tokenEnd)
-        val quoted = base.bufferSequence.getOrNull(at)?.let { it in mask.quotes } == true
-        val target = bufferWord(base, at).uppercase()
-        if (!quoted && target.firstOrNull()?.isLetter() != true || target in mask.keptTargets) return false
+        val target = nextSignificant(base)
+        if (target == null || target in CAST_DELIMITERS || target in mask.keptTargets) return false
         when (mask.extent) {
             CastTargetMask.Extent.ToCloseParen -> maskToCloseParen(base)
             CastTargetMask.Extent.TargetType -> maskCastType(base)
@@ -334,9 +332,23 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         return true
     }
 
+    /** The upper-cased first token after the current one that is no whitespace or comment, or null at the end. Never consumes. */
+    private fun nextSignificant(base: Lexer): String? {
+        val position = base.currentPosition
+        base.advance()
+        skipTrivia(base)
+        val text = base.tokenType?.let { base.tokenText.uppercase() }
+        base.restore(position)
+        return text
+    }
+
+    private fun skipTrivia(base: Lexer) {
+        while (base.tokenType != null && (base.tokenText.isBlank() || base.tokenType in SqlTokens.COMMENT_TOKENS)) base.advance()
+    }
+
     private fun maskCastType(base: Lexer) {
         base.advance()
-        skipWhitespaceTokens(base)
+        skipTrivia(base)
         if (base.tokenType != null) base.advance()
         consumeBalancedIfNext(base, '<', '>')
         consumeBalancedIfNext(base, '(', ')')
@@ -374,13 +386,15 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
 
 private const val IN_STATEMENT = Int.MIN_VALUE
 private val BLOCK_KINDS = setOf("IF", "WHILE", "REPEAT", "LOOP", "CASE")
+private val CAST_DELIMITERS = setOf(";", ")", ",")
 
 /** An offset where the context is fresh, with the base lexer's state there. */
 private class FreshPoint(val offset: Int, val state: Int)
 
 /**
  * Masks the target of a cast call written `fn(value AS target)` as a comment, so the call parses
- * as a one-argument function.
+ * as a one-argument function. Any target is masked unless, after whitespace and comments, `AS` is
+ * followed by `;`, `)`, `,` or the end of the text: input still being typed keeps those tokens.
  */
 @ApiStatus.Experimental
 public data class CastTargetMask(
@@ -389,8 +403,6 @@ public data class CastTargetMask(
     /** Upper-case first target words the grammar accepts; their casts stay unmasked. */
     val keptTargets: Set<String> = emptySet(),
     val extent: Extent = Extent.ToCloseParen,
-    /** Characters that open a quoted target such as `"INTEGER"`; any other target must be a letter-led word. */
-    val quotes: String = "\"`",
 ) {
     public enum class Extent {
         /** From `AS` up to the call's closing parenthesis. */
