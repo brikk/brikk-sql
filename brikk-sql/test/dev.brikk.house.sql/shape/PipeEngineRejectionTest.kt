@@ -26,6 +26,8 @@ class PipeEngineRejectionTest {
         Triple("doris", "FROM t |> STRAIGHT_JOIN u ON t.a = u.a", "STRAIGHT_JOIN"),
         Triple("doris", "FROM t |> NATURAL JOIN u", "NATURAL JOIN"),
         Triple("clickhouse", "FROM t |> CALL view()", "pipe CALL"),
+        Triple("clickhouse", "FROM t |> STRAIGHT_JOIN u ON t.a = u.a", "STRAIGHT_JOIN"),
+        Triple("presto", "FROM t |> STRAIGHT_JOIN u ON t.a = u.a", "STRAIGHT_JOIN"),
         Triple("clickhouse", "FROM t |> RENAME a AS z", "RENAME"),
         Triple("clickhouse", "FROM t |> SELECT a, b |> RENAME a AS z", "RENAME"),
     )
@@ -50,13 +52,18 @@ class PipeEngineRejectionTest {
     }
 
     @Test
-    fun previewsKeepTheirBestEffortOutput() {
-        assertTrue("STRAIGHT_JOIN" in SqlFragment("FROM t |> STRAIGHT_JOIN u ON t.a = u.a", "trino")
-            .transpileTo("trino", desugarPipes = true).sql)
-        assertTrue("RENAME (a AS z)" in SqlFragment("FROM t |> RENAME a AS z", "clickhouse")
-            .transpileTo("clickhouse", desugarPipes = true).sql)
-        assertTrue("F((SELECT * FROM t))" in SqlFragment("FROM t |> CALL f()", "doris")
-            .transpileTo("doris", desugarPipes = true).sql.replace("( ", "(").replace(" )", ")"))
+    fun previewsKeepTheirOutputAndCarryTheFinding() {
+        for ((dialect, sql, construct) in refused) {
+            val preview = SqlFragment(sql, dialect).transpileTo(dialect, desugarPipes = true)
+            assertTrue(preview.unsupportedMessages.any { construct in it }, "$dialect: $sql ${preview.unsupportedMessages}")
+        }
+        assertEquals("SELECT * FROM t STRAIGHT_JOIN u ON t.a = u.a",
+            SqlFragment("FROM t |> STRAIGHT_JOIN u ON t.a = u.a", "trino").transpileTo("trino", desugarPipes = true).sql)
+        assertEquals("WITH __tmp1 AS (SELECT * FROM t), __tmp2 AS (SELECT * RENAME (a AS z) FROM __tmp1) SELECT * FROM __tmp2",
+            SqlFragment("FROM t |> RENAME a AS z", "clickhouse").transpileTo("clickhouse", desugarPipes = true).sql)
+        assertEquals("SELECT * FROM F((SELECT * FROM t))",
+            SqlFragment("FROM t |> CALL f()", "doris").transpileTo("doris", desugarPipes = true).sql)
+        assertEquals(emptyList(), SqlFragment("FROM t |> NATURAL JOIN u", "duckdb").transpileTo("duckdb", desugarPipes = true).unsupportedMessages)
     }
 
     @Test

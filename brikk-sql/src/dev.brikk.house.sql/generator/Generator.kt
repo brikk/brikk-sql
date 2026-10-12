@@ -294,10 +294,16 @@ open class Generator(
 
     private val targetName: String get() = dialect.name.ifBlank { "Target dialect" }
 
-    /** Refuses, before pipe desugaring, a pipe stage this target cannot execute once lowered. */
-    internal fun refuseUnexecutablePipeStages(tree: Expression) {
-        if (forExecution && !executesPipeCall && tree.find(dev.brikk.house.sql.ast.PipeCall::class) != null) {
-            throw UnsupportedError("$targetName cannot execute a lowered pipe CALL: its table functions take no query argument")
+    /** Executable generation refuses [message]; a preview keeps its output and carries it as a finding. */
+    internal fun unexecutable(message: String) {
+        if (forExecution) throw UnsupportedError(message)
+        unsupported(message)
+    }
+
+    /** Before pipe desugaring: refuses, or flags in a preview, a pipe stage this target cannot execute once lowered. */
+    internal fun checkLoweredPipeStages(tree: Expression) {
+        if (!executesPipeCall && tree.find(dev.brikk.house.sql.ast.PipeCall::class) != null) {
+            unexecutable("$targetName cannot execute a lowered pipe CALL: its table functions take no query argument")
         }
     }
 
@@ -2521,11 +2527,9 @@ open class Generator(
 
     // sqlglot: Generator.join_sql
     open fun joinSql(expression: Join): String {
-        if (forExecution) {
-            listOf(expression.method, expression.side, expression.kind).map { it.uppercase() }
-                .firstOrNull { it in unexecutableJoinWords }
-                ?.let { throw UnsupportedError("$targetName cannot execute ${if (it.endsWith("_JOIN")) it else "$it JOIN"}") }
-        }
+        listOf(expression.method, expression.side, expression.kind).map { it.uppercase() }
+            .firstOrNull { it in unexecutableJoinWords }
+            ?.let { unexecutable("$targetName cannot execute ${if (it.endsWith("_JOIN")) it else "$it JOIN"}") }
         val side = if (!semiAntiJoinWithSide && expression.kind in setOf("SEMI", "ANTI")) {
             ""
         } else {

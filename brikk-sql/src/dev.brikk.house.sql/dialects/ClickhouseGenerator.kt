@@ -9,7 +9,6 @@ import dev.brikk.house.sql.ast.Map as MapNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
-import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -101,14 +100,16 @@ open class ClickhouseGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.CLICKHOUSE
 
-    // brikk extension #55: ClickHouse table functions take no `(query)` argument.
+    // brikk extension #55: ClickHouse table functions take no `(query)` argument, and
+    // ClickHouse 26.7 rejects STRAIGHT_JOIN.
     override val executesPipeCall: Boolean get() = false
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
 
     // brikk extension #55: ClickHouse has star EXCEPT/REPLACE but no RENAME. As for
     // Presto/Trino, executable generation needs it expanded from a complete layout.
     override fun starSql(expression: Star): String {
-        if (forExecution && !(expression.args["rename"] as? List<*>).isNullOrEmpty()) {
-            throw UnsupportedError("ClickHouse star RENAME requires a complete column layout " +
+        if (!(expression.args["rename"] as? List<*>).isNullOrEmpty()) {
+            unexecutable("ClickHouse star RENAME requires a complete column layout " +
                 "expanded to an explicit projection before generation")
         }
         return super.starSql(expression)

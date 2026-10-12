@@ -142,7 +142,6 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
         generator.forExecution = forExecution
-        generator.refuseUnexecutablePipeStages(ast)
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -150,6 +149,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             if (desugarPipes) dev.brikk.house.sql.ast.desugarPipes(ast, dialectObj, copy = true)
             else ast
         val out = generator.generate(tree, copy = true)
+        // After generation, which resets the findings.
+        if (desugarPipes) generator.checkLoweredPipeStages(ast)
         return TranspileResult(
             sql = out,
             unsupportedMessages = generator.unsupportedMessages.toList(),
@@ -561,7 +562,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         // native functions (e.g. ClickHouse lower stays LOWER, not lowerUTF8).
         val generator = targetDialect.generator(sourceDialect = dialect.ifBlank { null })
         generator.forExecution = true
-        generator.refuseUnexecutablePipeStages(ast)
+        generator.checkLoweredPipeStages(ast)
         return generator.generate(tree)
     }
 

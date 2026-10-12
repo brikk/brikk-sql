@@ -73,6 +73,9 @@ open class PrestoGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.PRESTO
 
+    // brikk extension #55: the Presto grammar has no STRAIGHT_JOIN (SqlBase.g4 `relation`).
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
+
     open val supportsTemporalPrecision: Boolean get() = false
 
     // brikk extension: an open/trait row cannot be enumerated for a faithful DROP,
