@@ -7,9 +7,12 @@ import com.intellij.database.Dbms
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
+import com.intellij.lang.LanguageAnnotators
+import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.postgres.PgDialect
+import com.intellij.sql.psi.SqlIdentifier
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import dev.brikk.house.sql.intellij.testing.setSqlDialectMapping
@@ -118,6 +121,18 @@ class OutOfScopeTest : AutoIntrospectTestCase() {
         useService(Profile(outOfScopeReferences = false))
         open("SELECT o.x FROM hive.web.orders o")
         assertEquals("off until the dialect enables it", listOf("x", "web"), unresolved().sorted().reversed())
+    }
+
+    /** Another tool's error exactly on an out-of-scope name, such as a server diagnostic, stays. */
+    fun testTheFilterKeepsOtherReportsOnTheSameName() {
+        HighlightInfoFilter.EXTENSION_POINT_NAME.point.registerExtension(Filter(), testRootDisposable)
+        LanguageAnnotators.INSTANCE.addExplicitExtension(PgDialect.INSTANCE, Annotator { element, holder ->
+            if (element is SqlIdentifier && element.text == "orders") holder.newAnnotation(HighlightSeverity.ERROR, "Server: no table orders").create()
+        }, testRootDisposable)
+        open("SELECT * FROM hive.web.orders")
+        val reports = myFixture.doHighlighting(HighlightSeverity.ERROR).map { it.description }
+        assertTrue(reports.toString(), "Server: no table orders" in reports)
+        assertEquals("the unresolved report is hidden", listOf("Server: no table orders"), reports)
     }
 
     fun testTheIntentionIntrospectsTheNamespace() {

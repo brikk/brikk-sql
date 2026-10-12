@@ -17,6 +17,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.SqlBundle
+import com.intellij.sql.psi.SqlFile
 import com.intellij.sql.psi.SqlQueryExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.intellij.recoverEditorOperation
@@ -99,16 +101,17 @@ public class OutOfScopeClassifier(private val profile: CatalogProfile) {
 }
 
 /**
- * Hides the reports of references that are out of scope ([OutOfScopeClassifier]) when the profile's
- * [outOfScopeReferences][CatalogProfile.outOfScopeReferences] is on: the names may exist, the model
- * just never loaded them. A report is a warning or error on exactly a reference's name, such as the
- * platform's "Unable to resolve" ones (whose columns may still resolve to a placeholder); names under
- * introspected namespaces stay reported. Register a no-arg subclass naming the plugin's service class as `daemon.highlightInfoFilter`.
+ * Hides the platform's "Unable to resolve" reports of references that are out of scope
+ * ([OutOfScopeClassifier]) when the profile's [outOfScopeReferences][CatalogProfile.outOfScopeReferences]
+ * is on: the names may exist, the model just never loaded them. Only those reports are hidden, matched by
+ * the platform's own message in the IDE's language, on exactly a reference's name; annotators', server
+ * and other inspections' reports stay, as do names under introspected namespaces. Register a no-arg
+ * subclass naming the plugin's service class as `daemon.highlightInfoFilter`.
  */
 @ApiStatus.Experimental
 public abstract class OutOfScopeReferenceFilter(private val service: Class<out AutoIntrospectService>) : HighlightInfoFilter {
     final override fun accept(highlightInfo: HighlightInfo, file: PsiFile?): Boolean {
-        if (file == null || highlightInfo.severity < HighlightSeverity.WEAK_WARNING) return true
+        if (file !is SqlFile || !isUnresolvedReport(highlightInfo.description)) return true
         val profile = file.project.getService(service)?.profile?.takeIf { it.outOfScopeReferences } ?: return true
         return recoverEditorOperation {
             val reference = PsiTreeUtil.getNonStrictParentOfType(file.findElementAt(highlightInfo.startOffset), SqlReferenceExpression::class.java)
@@ -122,6 +125,17 @@ public abstract class OutOfScopeReferenceFilter(private val service: Class<out A
 
     private companion object {
         val LOG = logger<OutOfScopeReferenceFilter>()
+
+        /** The platform's unresolved-reference messages ("Unable to resolve symbol 'x'", "Unable to resolve table 'x'"), any arguments. */
+        val UNRESOLVED: List<Regex> by lazy {
+            val first = "\u0000first\u0000"
+            val second = "\u0000second\u0000"
+            listOf(SqlBundle.message("unable.to.resolve.symbol.0", first), SqlBundle.message("unable.to.resolve.symbol.0.1", first, second)).map { template ->
+                Regex(template.split(first, second).joinToString("(.+)") { Regex.escape(it) })
+            }
+        }
+
+        fun isUnresolvedReport(description: String?): Boolean = description != null && UNRESOLVED.any { it.matches(description) }
     }
 }
 
