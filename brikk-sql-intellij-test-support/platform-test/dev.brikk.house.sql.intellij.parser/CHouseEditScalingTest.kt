@@ -15,17 +15,24 @@ class CHouseEditScalingTest : CHouseFixtureTestCase() {
         }
     }
 
-    /** Milliseconds to type a character in the middle of the open file and commit it. */
+    /** Milliseconds to type a character in the middle of the open file and commit it; the file is restored after. */
     private fun timeEdit(): Long {
         val document = myFixture.editor.document
-        PsiDocumentManager.getInstance(project).commitDocument(document)
+        val documents = PsiDocumentManager.getInstance(project)
+        documents.commitDocument(document)
         myFixture.file.node.text
-        val offset = document.text.indexOf("WHERE x = 16000") + 6
+        val anchor = document.text.indexOf("WHERE x = 16000;")
+        assertTrue("the edit's anchor is in the script", anchor >= 0)
+        val offset = anchor + 6
         val started = System.nanoTime()
         WriteCommandAction.runWriteCommandAction(project) { document.insertString(offset, "y") }
-        PsiDocumentManager.getInstance(project).commitDocument(document)
+        documents.commitDocument(document)
         myFixture.file.node.text
-        return (System.nanoTime() - started) / 1_000_000
+        val elapsed = (System.nanoTime() - started) / 1_000_000
+        WriteCommandAction.runWriteCommandAction(project) { document.deleteString(offset, offset + 1) }
+        documents.commitDocument(document)
+        assertEquals(script, document.text)
+        return elapsed
     }
 
     /** Core's ranges are read once per parse, a window at a time; a 1 MB script edits about as fast as in stock. */
