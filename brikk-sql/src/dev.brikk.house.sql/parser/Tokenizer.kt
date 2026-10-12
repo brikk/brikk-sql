@@ -208,7 +208,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         start = dataStart
         while (current < dataEnd) advance()
         add(TokenType.INSERT_DATA)
-        insertData.observed = tokens.size
+        // The data ends the statement, at a `;` line or a blank line: the next one starts afresh.
+        insertData.reset(tokens.size)
     }
 
     private fun isSpace(c: Char): Boolean = c == ' ' || c == '\t' || c == '\u000C'

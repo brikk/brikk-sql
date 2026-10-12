@@ -77,6 +77,12 @@ class ClickhouseInsertDataTest {
         assertEquals(listOf(""), data(sql))
     }
 
+    @Test fun consecutiveInsertsEachHaveTheirData() {
+        val sql = "INSERT INTO t FORMAT TSV\na\n\nINSERT INTO t FORMAT TSV\nb;c\n\nSELECT 2;"
+        assertEquals(listOf("a", "b;c"), data(sql))
+        assertEquals(listOf("INSERT INTO t FORMAT TSV\na", "INSERT INTO t FORMAT TSV\nb;c", "SELECT 2;"), statements(sql))
+    }
+
     @Test fun valuesInsertSelectAndInfileAreSql() {
         assertEquals(listOf("INSERT INTO t FORMAT Values (1, 'a;b');", "SELECT 2;"), statements("INSERT INTO t FORMAT Values (1, 'a;b');\nSELECT 2;"))
         for (sql in listOf("INSERT INTO t VALUES (1, ';');\nSELECT 2;", "INSERT INTO t SELECT * FROM s FORMAT TSV;\nSELECT 2;",
