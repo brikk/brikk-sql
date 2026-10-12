@@ -175,6 +175,8 @@ fun realDuckdbDataSource(project: Project, until: Disposable): LocalDataSource {
     val jar = System.getProperty("java.class.path").split(File.pathSeparator).first { "duckdb_jdbc" in it }
     val driver = DatabaseDriverManager.getInstance().createDriver("live-duckdb-${UUID.randomUUID()}", "Live DuckDB", UrlTemplate("default", "jdbc:duckdb:{file}")) as DatabaseDriverImpl
     driver.setDriverClass("org.duckdb.DuckDBDriver")
+    // The driver process unpacks the engine's native library into its temp directory: keep it under the build directory.
+    driver.vmOptions = "-Djava.io.tmpdir=${System.getProperty("java.io.tmpdir")}"
     driver.setAdditionalClasspathElements(SimpleClasspathElementFactory.createElements("jar://$jar!/"))
     val file = Path.of(PathManager.getSystemPath(), "live-${UUID.randomUUID()}.db")
     val dataSource = LocalDataSource().apply {

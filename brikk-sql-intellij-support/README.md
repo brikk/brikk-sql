@@ -257,6 +257,30 @@ takes the dbms the platform passes):
   file attached to another dbms's console is never introspected. Register a no-arg subclass as
   `<completion.contributor language="X" order="first" implementationClass="..."/>`.
 
+### Console namespace
+
+`CatalogSearchPathStrategy` is how a console switches and reads back its current namespace where
+catalogs (`DATABASE`) hold schemas (`SCHEMA`). A plugin's `<dialect>` subclass delegates
+`sqlSetSearchPath(path)` to `switchSql(path)` and `tryToLoadSearchPath(connection)` to
+`readBack(connection)`. `CatalogSchemaSearchPath(quote, useSchema, useBareSchema, useCatalog,
+catalogProbes, schemaProbes, defaultCatalog, schemaRequired)` builds one from statement templates
+(`{catalog}` and `{schema}` are replaced by quoted names, a doubled quote standing for itself; a null
+template cannot switch to that shape) and read-back probes tried in order (`NamespaceProbe.Value`, the
+first column; `Column`, a labelled column; `FlaggedRow`, the name of the row a flag column marks).
+Probes sharing SQL run it once; a probe that fails falls through. Without a catalog (and no default)
+the path is unknown; without a schema it is the catalog alone unless `schemaRequired`.
+
+```kotlin
+// Doris
+CatalogSchemaSearchPath('`', "use {catalog}.{schema}", "use {schema}", "SWITCH {catalog}",
+    listOf(NamespaceProbe.Value("select current_catalog()"), NamespaceProbe.FlaggedRow("SHOW CATALOGS", "CatalogName", "IsCurrent")),
+    listOf(NamespaceProbe.Value("select database()")), defaultCatalog = "internal")
+// Trino
+val row = "SELECT current_catalog AS catalog, current_schema AS schema"
+CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", catalogProbes = listOf(NamespaceProbe.Column(row, "catalog")),
+    schemaProbes = listOf(NamespaceProbe.Column(row, "schema")), schemaRequired = true)
+```
+
 ### Live function catalog
 
 What the connected server reports about its functions, harvested per data source and served to
