@@ -133,6 +133,54 @@ unqualified references in the given clauses (default HAVING, GROUP BY, ORDER BY)
 that DBMS see the SELECT-list aliases, as the platform does only for its own families. Register a
 no-arg subclass as `com.intellij.sql.resolveExtension`.
 
+## Language layer (experimental)
+
+A dialect plugin keeps its rule tables and small subclasses; the machinery is here.
+
+- `MaskingSqlLexer(base, castMask)` (`lexer`): a `LookAheadLexer` over the substrate lexer. The
+  subclass's `rule(base, upper)` collapses spans into one string or identifier token or masks
+  droppable modifiers as a comment, with raw-buffer probes (`nextIs`, `wordsFollow`, ...),
+  consumers (`consumeBalanced`, `consumeWords`) and span helpers (`maskWords`, `maskWithGroup`,
+  `collapseWithGroup`, `maskToCloseParen`, `collapseRoutineBody`, `span`). Statement context
+  (`parenDepth`, `lastMeaningful`, `statementHead`, the subclass's own in `resetStatement`)
+  starts fresh after every `;`; whitespace and comments never reach it. `CastTargetMask` opts
+  into masking cast targets such as `TRY_CAST(x AS t)`. `getState` reports the base state only
+  at statement starts, so the editor highlighter restarts and resynchronizes only there and
+  never sees a lexer that lost its context: an edit relexes its own statement, nothing before.
+- `LenientSqlParsing` (`parser`): `PsiBuilder` extensions that never consume, scanning the
+  statement to its `;` within `MAX_LOOKAHEAD` tokens: `wordAt`, `containsAny`, `firstOf`,
+  `wordThenWord` (next word), `wordThenToken` (exact next token) and the general
+  `scanStatement`; `advanceLenient`, `consumeLenient` and `parseLenientStatement` keep platform
+  user parameters; `parseColonParameter` parses `:name`.
+- `PipeStatementGate(pipeDialect)` (`pipe`): in a parser's `parseSqlStatement`, makes a PIPE
+  statement (or a statement the caller claims, such as FROM-first) one node bounded by the
+  dialect's statement range, before its final `;` unless the range has a boundary error. Text
+  without `|>` costs nothing; ranges are cached per parsed text.
+- `MaskedSpanRecolorAnnotator(language, coreDialect, keywords)` (`editor`): recolors masked and
+  collapsed spans token by token with the core tokenizer, in the colors the file's highlighter
+  gives the same platform token kinds. Genuine comments, quoted strings (`E'..'`, `$$..$$`) and
+  identifiers are never touched; comments inside a span keep comment colors.
+- `SubstrateErrorFilter(language)`: hides the substrate grammar's parse errors in the dialect.
+- `SqlDialectQuoteHandler(EnterInString)`: Enter in a quoted string inserts a newline or splits
+  it with `||`; collapsed spans are never split.
+- `KeywordOverlayHighlighter(base, language, keywords)`: colors listed plain identifiers as
+  keywords, with one overlay token type per language.
+- `PgFamilyDialect(id)` (`dialect`): a PostgreSQL-grammar dialect with the platform PostgreSQL
+  operators, system variables and builtin functions; the subclass supplies `getDbms`. Keep its
+  `Dbms` outside the dialect object, whose base constructor already asks for it.
+- Comments: register the platform commenter, which toggles `-- ` lines and block comments:
+  `<lang.commenter language="MySQL" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`
+  with the dialect's language id.
+
+`SqlDialectRegistry` (`dialect`): a static, versioned table (`VERSION`) of core dialect names,
+labels, `-- dialect:` marker spellings, IDE language ids and `Dbms` names. Each plugin's copy is
+identical data keyed only by platform identities, so plugins agree without sharing objects.
+
+`setDialectMapping(project, file, dialect)` (`dialect`): maps a file or the project and reparses.
+On 263 it calls `SqlDialectMappingUtilsKt.setDialectMappingSync` reflectively: a public function
+of the `intellij.database.sql.core.impl` module with no internal-API annotation, absent before
+263, where the old setter only updates storage.
+
 ## SQL-domain APIs
 
 The accompanying core update adds `SqlScriptSnapshot.parse(text, dialect)` and

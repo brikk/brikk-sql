@@ -48,6 +48,19 @@ private val contract = PipeExecutionContract(MyPipeDialect, "my-driver-id", "a-f
 fun testRefusesStaleInput() = contract.refusesStaleInput()
 ```
 
+## Lexer restarts
+
+`assertRestartsMatchFullLex(::MyLexer, text)` lexes `text` in full and again from every token
+at which the lexer reports its initial state, where the editor highlighter restarts it, and
+fails unless every restarted pass yields the same tokens and states. Run it over the dialect's
+corpus. `lexAll` returns one pass as `LexedToken`s.
+
+## Dialect mappings
+
+`setSqlDialectMapping(project, file, dialect, until)` maps a file, or the project with a null
+file, on every supported IDE (the workspace setter on 263) and reparses it; with `until`, the
+mapping is cleared when that disposable ends.
+
 ## Platform tests
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run
