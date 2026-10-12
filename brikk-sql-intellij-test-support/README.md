@@ -37,7 +37,7 @@ Set the file's SQL dialect before constructing the fixture and clear it after cl
 
 The PIPE execution contracts for a `PipeDialect`: only PIPE in owned consoles is claimed;
 statements are chosen as stock Execute chooses them; stale input, cancellation, destination
-changes during prompting, missing clients and refusals submit nothing; nested-only pipelines
+and current-namespace changes during prompting, missing clients and refusals submit nothing; nested-only pipelines
 lower; run-to-stage runs only top-level stages to the caret. Call each check from a light
 platform test with PIPE enabled:
 

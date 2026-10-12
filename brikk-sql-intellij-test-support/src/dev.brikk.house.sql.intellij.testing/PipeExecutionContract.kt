@@ -3,8 +3,11 @@ package dev.brikk.house.sql.intellij.testing
 import com.intellij.database.actions.ShowSqlParametersPanelAction
 import com.intellij.database.console.client.SessionClientHolder
 import com.intellij.database.datagrid.DataRequest
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.run.ConsoleDataRequest
 import com.intellij.database.settings.DatabaseSettings
+import com.intellij.database.util.ObjectPath
+import com.intellij.database.util.SearchPath
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
@@ -233,6 +236,29 @@ public class PipeExecutionContract(
         }
     }
 
+    /**
+     * A switch of the console's current namespace during parameter prompting submits nothing; an unchanged
+     * namespace runs, and so does one that could not be read before preparation.
+     */
+    public fun refusesNamespaceChangesDuringPrompting() {
+        for (entry in Entry.entries) {
+            Run(PARAMETERIZED).use { run ->
+                run.switchNamespace("lake", "web")
+                run.whilePrompting(entry) { run.switchNamespace("lake", "web") }
+                expect(run.queries.size == 1) { "Prompted $entry must submit when the namespace stays: ${run.messages}" }
+            }
+            Run(PARAMETERIZED).use { run ->
+                run.switchNamespace("lake", "web")
+                run.whilePrompting(entry) { run.switchNamespace("lake", "other") }
+                expectRefused(run, "namespace switch during prompting via $entry")
+            }
+            Run(PARAMETERIZED).use { run ->
+                run.whilePrompting(entry) { run.switchNamespace("lake", "web") }
+                expect(run.queries.size == 1) { "Prompted $entry must submit when the namespace was unknown: ${run.messages}" }
+            }
+        }
+    }
+
     /** Untranslatable PIPE is notified as an error, never thrown, and never submits or delegates. */
     public fun notifiesRefusals() {
         Run("FROM offline_rows |> BOGUS 2").use { run ->
@@ -362,6 +388,11 @@ public class PipeExecutionContract(
         }
 
         /** Runs [entry] on a statement whose `:id` parameter is prompted for, applying [change] in the dialog. */
+        /** Makes [catalog].[schema] the console's current namespace, as the platform does after a switch or a read-back. */
+        fun switchNamespace(catalog: String, schema: String) {
+            recording.console.setSearchPath(SearchPath.of(ObjectPath.create(catalog, ObjectKind.DATABASE).append(schema, ObjectKind.SCHEMA)))
+        }
+
         fun whilePrompting(entry: Entry, change: () -> Unit) {
             var prompted = false
             UiInterceptors.register(object : UiInterceptors.UiInterceptor<DialogWrapper>(DialogWrapper::class.java) {

@@ -50,7 +50,10 @@ registers no-arg subclasses:
 
 - `PipeExecuteInterceptor` as its `CooperativeExecuteConfiguration.interceptor`. It claims
   PIPE input in owned consoles, pins the document after the stock save, captures the
-  destination before preparation and rechecks it, with the setting, before submission.
+  destination before preparation and rechecks it, with the setting, before submission. The destination
+  includes the console's current namespace, which the dialect's search path (`CatalogSearchPathStrategy`)
+  switches and reads back; a switch refuses, and a namespace unknown before or after never blocks. It is
+  compared as the platform keeps it, so the check costs no round trip and runs no probe.
   Refusals are notified in the profile's group; claimed input never falls back to raw SQL.
 - `PipePreviewIntention`, `PipeRunToStageIntention`, `PipePreviewAction`,
   `PipeRunToStageAction`. Run-to-stage cuts at top-level stages and submits through
