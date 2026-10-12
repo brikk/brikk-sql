@@ -189,6 +189,18 @@ On 263 it calls `SqlDialectMappingUtilsKt.setDialectMappingSync` reflectively: a
 of the `intellij.database.sql.core.impl` module with no internal-API annotation, absent before
 263, where the old setter only updates storage.
 
+## Catalog kit (`dev.brikk.house.sql.intellij.catalog`, experimental)
+
+Database Tools integration for a dialect's own dbms. Register no-arg subclasses (the model facade
+takes the dbms the platform passes):
+
+- `PgFamilyModelFacade(dbms, databasesAsCatalogs = false)`: the PostgreSQL model and helper for a
+  dbms with `<extensionFallback fallbackDbms="POSTGRES">`, so facade, dialect and introspector agree
+  on one model family. With `databasesAsCatalogs`, the tree and schemas pane call the database level
+  "catalog"; otherwise the helper is `PgModelHelper` itself.
+  `<modelFacade dbms="X" implementationClass="my.XModelFacade"/>` with
+  `class XModelFacade(dbms: Dbms) : PgFamilyModelFacade(dbms)`.
+
 ## SQL-domain APIs
 
 The accompanying core update adds `SqlScriptSnapshot.parse(text, dialect)` and
