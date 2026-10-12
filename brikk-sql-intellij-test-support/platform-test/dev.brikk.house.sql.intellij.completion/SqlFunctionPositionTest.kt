@@ -163,6 +163,9 @@ class SqlFunctionPositionTest : CompletionTestCase() {
         assertEquals("SELECT * FROM TABLE(sequence(<caret>')', (2)))", acceptTrinoTableFunction("SELECT * FROM seq<caret>(')', (2))", "sequence"))
     }
 
+    fun testTrinoJsonTableStandsBareAsASpecialForm() =
+        assertEquals("SELECT * FROM JSON_TABLE<caret>", acceptTrinoTableFunction("SELECT * FROM json_t<caret>", "json_table"))
+
     fun testDorisGeneratorsAreNotHiddenInExpressions() {
         fun kinds(text: String, name: String): Set<FunctionKind> {
             configure(text, DorisCompletion::class.java)

@@ -50,8 +50,9 @@ public data class TablePositions(
         public fun of(dialect: String): TablePositions = when (dialect.lowercase(Locale.ROOT)) {
             // `SELECT unnest([1, 2])` runs; every other DuckDB table function is FROM-only.
             "duckdb" -> STANDARD.copy(inExpressions = setOf("unnest"))
-            // Table functions stand bare after FROM only as UNNEST; the others need TABLE(...).
-            "trino" -> STANDARD.copy(wrapper = "TABLE", unwrapped = setOf("unnest"))
+            // UNNEST and JSON_TABLE are relations of their own and stand bare (TABLE(JSON_TABLE(...)) does
+            // not parse); polymorphic table functions such as sequence and exclude_columns need TABLE(...).
+            "trino" -> STANDARD.copy(wrapper = "TABLE", unwrapped = setOf("unnest", "json_table"))
             // Generators (explode) follow LATERAL VIEW and are not proven illegal in SELECT.
             "doris" -> STANDARD.copy(after = STANDARD.after + "LATERAL VIEW", kindsInExpressions = setOf(FunctionKind.TABLE_GENERATING))
             else -> STANDARD

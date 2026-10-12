@@ -132,7 +132,7 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   hides them, so a name of both kinds (DuckDB `range`) shows its fitting form; where the text does not
   tell, every function is offered. Aggregates and window functions are not filtered by clause.
   Per dialect: DuckDB's `unnest` is also offered in expressions; Doris's generators are too, and
-  follow `LATERAL VIEW`; Trino's table functions other than UNNEST are inserted as
+  follow `LATERAL VIEW`; Trino's table functions other than UNNEST and JSON_TABLE are inserted as
   `TABLE(name(...))` where they stand bare. Right after `|>`, where only one of the profile's
   `stagePhrases` stands, no functions or metadata keywords are offered.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
