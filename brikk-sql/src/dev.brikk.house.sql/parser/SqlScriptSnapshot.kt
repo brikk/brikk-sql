@@ -1,5 +1,7 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.dialects.Dialects
+
 /** Token offsets and ranges are UTF-16; lexical failure leaves the remainder opaque. */
 data class EditorTokens(val tokens: List<Token>, val failureOffset: Int? = null, val error: String? = null)
 
@@ -23,7 +25,8 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
          * an apparently executable suffix. This proves boundaries, not SQL grammar validity.
          */
         fun parse(text: String, dialect: String): SqlScriptSnapshot {
-            val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text)
+            val source = Dialects.forName(dialect)
+            val lexed = Tokenizer(source.tokenizerConfig).tokenizeForEditor(text)
             val tokens = lexed.tokens
             val ranges = ArrayList<SqlStatementRange>()
             var start = 0
@@ -83,6 +86,8 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                         else -> afterEnd = false
                     }
                 }
+                if (kind == TokenType.SEMICOLON && brackets.isNotEmpty() && !source.semicolonsInBrackets)
+                    error = "Statement separator inside brackets; statement boundary is unknown"
                 if (kind == TokenType.PIPE_GT) hasPipe = true
                 if (kind == TokenType.SEMICOLON && brackets.isEmpty() && blocks.isEmpty() && error == null) {
                     flush(token.end + 1)

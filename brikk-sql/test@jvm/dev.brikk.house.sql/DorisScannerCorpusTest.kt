@@ -159,9 +159,6 @@ class DorisScannerCorpusTest {
         )
 
         val KNOWN_DISAGREEMENTS = mapOf(
-            ("jinja-comment" to "statements") to
-                "Brackets spanning `;` keep one statement in core. Native splits there, which leaves `{` " +
-                    "unbalanced, so the convention expects a boundary error that core does not report.",
             ("jinja-comment" to "parameters") to
                 "Native treats `:hidden` after `{# ;` as a map key of a brace group spanning `;`. Core " +
                     "closes brackets at `;`, where Doris starts a new statement, so `:hidden` is a bind.",

@@ -1797,6 +1797,8 @@ the original peer checkout stays clean. Logs are retained under
 - Editor tokenization (`tokenizeForEditor`, so `SqlScriptSnapshot`) treats an unclosed
   `$$` and the unbalanced-nesting fallback as lexical failures: they usually mean
   unfinished input, and must not expose an executable suffix.
+- `Dialect.semicolonsInBrackets` is false for Doris: `SqlScriptSnapshot` makes a statement with
+  `;` inside brackets a boundary error. Other dialects keep it (PostgreSQL rule actions).
 
 Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`, FE digest as in
 `docs/doris-native-catchup-verification.md`), over raw JDBC with escape processing off,

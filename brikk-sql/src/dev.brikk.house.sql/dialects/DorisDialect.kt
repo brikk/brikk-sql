@@ -21,6 +21,9 @@ class DorisDialect : Dialect() {
     // sqlglot: inherited MySQL ordering; the Kotlin umbrella does not subclass MySQL.
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE
 
+    // brikk-native: no Doris construct puts `;` inside brackets outside strings and comments.
+    override val semicolonsInBrackets: Boolean get() = false
+
     // sqlglot: Doris(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
 
