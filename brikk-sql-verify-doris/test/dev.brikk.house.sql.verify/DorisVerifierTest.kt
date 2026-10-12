@@ -7,6 +7,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 internal class DorisVerifierTest {
@@ -83,6 +84,22 @@ internal class DorisVerifierTest {
         }
         assertEquals(cancelled, thrown)
         assertEquals(5, rules)
+    }
+
+    @Test
+    fun cancellationAtAnyRulePropagatesTheCallersException() {
+        for (sql in listOf("SELECT * FROM a-b", "SELECT `a` FROM `t`", "SELECT 1 FROM;\nSELECT 2", "SELECT 1 FROM a-")) {
+            var rules = 0
+            verifier.verifyScript(sql) { rules++ }
+            for (index in 1..rules) {
+                val cancelled = CancellationException("cancelled at rule $index")
+                var seen = 0
+                val thrown = assertFailsWith<Throwable>("$sql, rule $index") {
+                    verifier.verifyScript(sql) { if (++seen == index) throw cancelled }
+                }
+                assertSame(cancelled, thrown, "$sql, rule $index")
+            }
+        }
     }
 
     @Test

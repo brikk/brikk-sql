@@ -70,11 +70,22 @@ public class DorisVerifier private constructor(private val linked: LinkedParser)
      * grammar alone: unlike [verify] it skips the SLL fast path, and a Doris post-processing
      * check that fails ends the scan with its error.
      *
-     * [checkCanceled] runs before every grammar rule; whatever it throws propagates, so an
-     * editor can cancel a long parse.
+     * [checkCanceled] runs on entering every grammar rule (a long ANTLR prediction is not
+     * interruptible); the exact exception it throws propagates. [verify] and [verifyExpression]
+     * take no hook.
      */
     public fun verifyScript(script: String, checkCanceled: () -> Unit = {}): VerifyResult {
         checkCanceled()
+        // Doris post-processing runs while ANTLR unwinds and can replace the callback's exception.
+        var cancellation: Throwable? = null
+        val recordingCheck = {
+            try {
+                checkCanceled()
+            } catch (e: Throwable) {
+                cancellation = e
+                throw e
+            }
+        }
         val errors = mutableListOf<VerifyError>()
         val collector = object : BaseErrorListener() {
             override fun syntaxError(
@@ -102,13 +113,15 @@ public class DorisVerifier private constructor(private val linked: LinkedParser)
             val parser = linked.newParser.invoke(linked.instance, lexer) as Parser
             parser.removeErrorListeners()
             parser.addErrorListener(collector)
-            parser.addParseListener(CancellationListener(checkCanceled))
+            parser.addParseListener(CancellationListener(recordingCheck))
             linked.multiStatements.invoke(parser)
         } catch (e: InvocationTargetException) {
+            cancellation?.let { throw it }
             val cause = e.targetException
             if (!isParseException(cause)) throw cause
             errors += errorAt(script, cause.message?.trim().orEmpty())
         }
+        cancellation?.let { throw it }
         return if (errors.isEmpty()) VerifyResult.Accepted else VerifyResult.Rejected(errors)
     }
 
