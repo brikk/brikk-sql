@@ -156,7 +156,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   script ranges on its own with a fresh start of the base lexer, so no token runs past its
   statement (ClickHouse inline `INSERT ... FORMAT` data ends where core frames it: at a blank line,
   a line holding only `;`, or the end of the text, never at another `;` or a quote in the data,
-  which is stored as written; a token covering the terminating `;` is
+  which is stored as written, also across quoted CSV fields; framing reads only settings written in
+  the INSERT itself, never session-level ones; a token covering the terminating `;` is
   cut before it, and the base restarts there, so it reads the `;` as a separator rather than data). States are 0 at statement starts and 1 elsewhere:
   non-negative, whatever the base reports, and the highlighter restarts and resynchronizes only at
   statement starts. Started in state 1 (the console's parameter preprocessing restarts mid-token),

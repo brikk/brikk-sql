@@ -113,6 +113,24 @@ class ClickhouseInsertDataTest {
         assertEquals(listOf("\"a"), data("INSERT INTO t$body"))
     }
 
+    /** A quote opens a field only after the effective field delimiter: the INSERT's own `format_csv_delimiter`, else `,`. */
+    @Test fun csvFieldsStartAfterTheInsertsDelimiter() {
+        val rows = "a;\"b\n\nc\"\n\nSELECT 2;"
+        assertEquals(listOf("a;\"b"), data("INSERT INTO t FORMAT CSV\n$rows"))
+        assertEquals(listOf("a;\"b\n\nc\""), data("INSERT INTO t SETTINGS format_csv_delimiter = ';' FORMAT CSV\n$rows"))
+        assertEquals(listOf("a;\"b\n\nc\""), data("INSERT INTO t FORMAT CSV SETTINGS format_csv_delimiter = ';'\n$rows"))
+        // Default CSV: `;` is a character, so `"b` is no quoted field, and `"c` on the next line starts one.
+        assertEquals(listOf("a;\"b\n\"c\n\nd\""), data("INSERT INTO t FORMAT CSV\na;\"b\n\"c\n\nd\"\n\nSELECT 2;"))
+    }
+
+    @Test fun customSeparatedFieldsStartAfterItsFieldDelimiter() {
+        val csv = "SETTINGS format_custom_escaping_rule = 'CSV'"
+        assertEquals(listOf("1\t\"a\n\nb\""), data("INSERT INTO t $csv FORMAT CustomSeparated\n1\t\"a\n\nb\"\n\nSELECT 2;"))
+        assertEquals(listOf("1,\"a"), data("INSERT INTO t $csv FORMAT CustomSeparated\n1,\"a\n\nb\"\n\nSELECT 2;"))
+        assertEquals(listOf("1,\"a\n\nb\""),
+            data("INSERT INTO t $csv, format_custom_field_delimiter = ',' FORMAT CustomSeparated\n1,\"a\n\nb\"\n\nSELECT 2;"))
+    }
+
     /** Never a guess: an open quoted field at the end of the text makes the boundary unknown. */
     @Test fun anUnclosedCsvQuoteIsABoundaryError() {
         val ranges = SqlScriptSnapshot.parse("SELECT 1;\nINSERT INTO t FORMAT CSV\n1,\"a\n\nSELECT 2;", "clickhouse").statements

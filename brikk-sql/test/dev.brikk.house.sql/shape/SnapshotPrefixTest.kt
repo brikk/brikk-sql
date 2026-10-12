@@ -21,6 +21,7 @@ class SnapshotPrefixTest {
             "INSERT INTO t FORMAT TSV SETTINGS a = 1 /* c */,\n\nb = 2 -- c\n, c = 3\na;b\n\nSELECT 2;",
             "INSERT INTO t SETTINGS x = 'VALUES' FORMAT TSV\n\t;\t\nSELECT 3;",
             // A quoted CSV field that holds an empty line and a `;` line.
+            "INSERT INTO t FORMAT CSV\na;\"b\n\"c\n\nd\"\n\nSELECT 4;\nINSERT INTO t SETTINGS format_csv_delimiter = ';' FORMAT CSV\na;\"b\n\nc\"\n;\nSELECT 5;",
             "INSERT INTO t FORMAT CSV\n1,\"a\n\n;\nb\"\n;\nSELECT 4;\nINSERT INTO t FORMAT CSV\n\"x\n\nSELECT 5;",
         )
         for (text in texts) {

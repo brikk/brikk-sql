@@ -177,13 +177,12 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             val previous = state.previous
             state.previous = word
             if (state.head != "INSERT" || state.noData) continue
-            if (type == TokenType.STRING && state.afterEquals && state.setting == "format_custom_escaping_rule") {
-                state.csvEscaping = token.text.equals("CSV", ignoreCase = true)
-            }
+            // `name = value` settings the INSERT itself writes, before or after its FORMAT.
+            if (state.afterEquals) state.setting?.let { state.settingValues[it] = token.text }
             state.afterEquals = type == TokenType.EQ
             if (type != TokenType.EQ) state.setting = token.text.lowercase()
             if (state.settings) {
-                if (settingsEnd(state, type) && state.observed == tokens.size) scanInsertDataAfter(current, state.quotedFields())
+                if (settingsEnd(state, type) && state.observed == tokens.size) scanInsertDataAfter(current, state.quoting())
                 continue
             }
             if (type == TokenType.L_PAREN && previous == "INPUT") state.input = true
@@ -195,7 +194,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                         state.noData = true
                     } else if (state.observed == tokens.size) {
                         state.format = token.text.uppercase()
-                        if (wordAt(skipSpaces(current), "SETTINGS")) state.settings = true else scanInsertDataAfter(current, state.quotedFields())
+                        if (wordAt(skipSpaces(current), "SETTINGS")) state.settings = true else scanInsertDataAfter(current, state.quoting())
                     }
                 }
                 word in INSERT_WITHOUT_DATA -> state.noData = true
@@ -254,7 +253,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
      * text; any other `;` is data. Without data, the token is empty at the header's end, so the
      * line breaks and indentation before a terminator are never data.
      */
-    private fun scanInsertDataAfter(from: Int, quotedFields: Boolean) {
+    private fun scanInsertDataAfter(from: Int, quoting: Quoting?) {
         var dataStart = from
         while (dataStart < size && isSpace(sql[dataStart])) dataStart++
         // The end of a prefix leaves open whether data follows.
@@ -263,33 +262,34 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         if (isLineBreak(sql[dataStart])) dataStart = lineEnd(dataStart)
         if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
         if (isLoneSemicolonLine(dataStart) || isEmptyLine(dataStart)) return addInsertData(from, from)
-        addInsertData(dataStart, insertDataEnd(dataStart, quotedFields))
+        addInsertData(dataStart, insertDataEnd(dataStart, quoting))
     }
 
     /**
      * The end of data from [dataStart]: before a blank line or a `;` line, or the text's end. With
-     * [quotedFields] (CSV), those lines inside an open double-quoted field are data; a field still
-     * open at the end of the text makes the boundary unknown, a lexical failure.
+     * [quoting] (CSV), those lines inside an open quoted field are data; a field still open at the
+     * end of the text makes the boundary unknown, a lexical failure.
      */
-    private fun insertDataEnd(dataStart: Int, quotedFields: Boolean): Int {
+    private fun insertDataEnd(dataStart: Int, quoting: Quoting?): Int {
         var at = dataStart
         var fieldStart = true
-        var quote = -1
+        var quote: Char? = null
+        var quoteStart = -1
         while (true) {
             if (at >= size) {
-                if (quote >= 0 && textEnds) {
-                    start = quote
+                if (quote != null && textEnds) {
+                    start = quoteStart
                     throw TokenError("Unclosed quoted field in INSERT data; statement boundary is unknown")
                 }
                 return size
             }
             val c = sql[at]
             when {
-                quote >= 0 -> {
-                    if (c == '"') {
+                quote != null -> {
+                    if (c == quote) {
                         // A prefix ending at a quote leaves open whether it doubles: data runs to its end.
                         if (at + 1 >= size && !textEnds) return size
-                        if (at + 1 < size && sql[at + 1] == '"') at++ else quote = -1
+                        if (at + 1 < size && sql[at + 1] == quote) at++ else quote = null
                         fieldStart = false
                     }
                     at++
@@ -301,15 +301,26 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                     at = next
                     fieldStart = true
                 }
-                quotedFields && c == '"' && fieldStart -> quote = at++
-                c == ' ' -> at++
+                quoting == null -> at++
+                fieldStart && c in quoting.quotes -> {
+                    quote = c
+                    quoteStart = at++
+                }
+                sql.startsWith(quoting.delimiter, at) -> {
+                    at += quoting.delimiter.length
+                    fieldStart = true
+                }
+                c == ' ' || c == '\t' -> at++
                 else -> {
-                    fieldStart = c in FIELD_DELIMITERS
+                    fieldStart = false
                     at++
                 }
             }
         }
     }
+
+    /** How a CSV-escaped format quotes fields: the field delimiter and the quote characters. */
+    private class Quoting(val delimiter: String, val quotes: Set<Char>)
 
     /** Adds `[dataStart, dataEnd)` as the INSERT_DATA token, empty at the header's end when there is no data. */
     private fun addInsertData(dataStart: Int, dataEnd: Int) {
@@ -366,12 +377,21 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         var format: String? = null
         var setting: String? = null
         var afterEquals = false
-        var csvEscaping = false
+        val settingValues = HashMap<String, String>()
 
-        /** Whether the format's fields may hold line breaks inside double quotes (docs/brikk-extensions.md #55). */
-        fun quotedFields(): Boolean {
-            val name = format ?: return false
-            return name in CSV_FORMATS || name.startsWith("CUSTOMSEPARATED") && csvEscaping
+        /**
+         * How the format's fields may hold line breaks inside quotes (docs/brikk-extensions.md #55),
+         * from settings the INSERT writes, else ClickHouse's defaults; null when they cannot.
+         */
+        fun quoting(): Quoting? {
+            val name = format ?: return null
+            val delimiter = when {
+                name in CSV_FORMATS -> settingValues["format_csv_delimiter"]?.takeIf { it.length == 1 } ?: ","
+                name.startsWith("CUSTOMSEPARATED") && settingValues["format_custom_escaping_rule"].equals("CSV", ignoreCase = true) ->
+                    settingValues["format_custom_field_delimiter"]?.takeIf { it.isNotEmpty() } ?: "\t"
+                else -> return null
+            }
+            return Quoting(delimiter, setOf('"'))
         }
 
         fun reset(observed: Int = 0) {
@@ -388,7 +408,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             format = null
             setting = null
             afterEquals = false
-            csvEscaping = false
+            settingValues.clear()
         }
     }
 
@@ -1225,7 +1245,6 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         const val CANCEL_INTERVAL = 1 shl 16
         private val INSERT_WITHOUT_DATA = setOf("INFILE", "VALUES")
         private val CSV_FORMATS = setOf("CSV", "CSVWITHNAMES", "CSVWITHNAMESANDTYPES")
-        private val FIELD_DELIMITERS = setOf(',', ';', '|', '\t')
 
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'

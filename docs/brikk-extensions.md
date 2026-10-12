@@ -1897,29 +1897,21 @@ line with nothing else on it is the terminator of a statement without data. With
 breaks and indentation before a terminator line or a blank line are never submitted as data.
 
 Quoted fields (data preservation over client parity): for `CSV`, `CSVWithNames` and
-`CSVWithNamesAndTypes` (format names in any case), and for `CustomSeparated*` when the INSERT's own
-`SETTINGS` set `format_custom_escaping_rule = 'CSV'`, a double quote at a field's start (line
-start, or after `,`, `;`, `|` or a tab, spaces allowed) opens a field that `""` escapes and `"`
-closes; a blank line or a `;` line inside it is data, and data ends at the next one outside quotes.
-A field still open at the end of the text is a lexical failure, so the statement's boundary is an
-error rather than a guess. clickhouse-client instead cuts such data at the blank line. Not covered,
-as their quoting is not known from the INSERT alone: `CustomSeparated*` with escaping set only for
-the session, `Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw
-line break, so their data keeps the plain rule. So
-`INSERT ... FORMAT JSONEachRow\n{"id":1};\nSELECT 2;` is one statement, as the platform editor and
-clickhouse-client read it; a blank line or a `;` line separates the next one.
+`CSVWithNamesAndTypes` (format names in any case), and for `CustomSeparated*` when the INSERT sets
+`format_custom_escaping_rule = 'CSV'`, a double quote at a field's start (line start, or right
+after the field delimiter, spaces allowed) opens a field that a doubled quote escapes and a single
+one closes; a blank line or a `;` line inside it is data, and data ends at the next one outside
+quotes. The field delimiter is the INSERT's `format_csv_delimiter` (default `,`) for CSV, and its
+`format_custom_field_delimiter` (default a tab) for `CustomSeparated*`. A field still open at the end
+of the text is a lexical failure, so the statement's boundary is an error rather than a guess.
+clickhouse-client instead cuts such data at the blank line.
 
-`SqlScriptSnapshot.parsePrefix` reads a window of a longer text (`Tokenizer.tokenizeForEditorPrefix`):
-the window's end is not taken as a line end or the text's end, and the statement reaching it is
-left out, so every range it returns is the whole text's.
-
-Evidence (ClickHouse 26.7.1, `clickhouse local`, and JDBC 0.9.8, which an IDE console executes
-through one statement text at a time): TSV and CSV store a data line's trailing `;` (`a;` stays
-`a;`); JSONEachRow accepts a trailing `;` but rejects SQL text after it in the same payload; JDBC
-rejects a payload joining an INSERT and a SELECT. clickhouse-client (`ClientBase.cpp`, master
-2026-10) runs the Values parser to the trailing `;` for `FORMAT Values` and otherwise ends data at
-the first blank line or the end of its input. No single server rule frames data; this rule is
-the platform editor's without its line-end `;` cases, which cut stored data.
+Framing reads only settings written in the INSERT itself (`SETTINGS` before or after `FORMAT`);
+everything else takes ClickHouse's defaults (`FormatFactorySettings.h`, master 2026-10, the same in
+the 26.x servers we target). Session-level settings (`SET`, profiles, connection properties) are
+invisible to the editor. Not covered, as their quoting is not known from the INSERT alone:
+`Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw line break,
+so their data keeps the plain rule.
 
 ## Upstream sync protocol
 
