@@ -5,6 +5,7 @@ import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.util.IconLoader
 import icons.DatabaseIcons
 import java.util.Locale
 import javax.swing.Icon
@@ -34,6 +35,19 @@ public enum class SqlLookupKind {
     CATALOG,
     SCHEMA,
     TABLE,
+}
+
+/** Icons the platform lacks, in its new UI style; dark themes load the `_dark` variant. */
+@ApiStatus.Experimental
+public object SqlLookupIcons {
+    /** A "W" in the platform's function circle. */
+    public val WindowFunction: Icon = load("windowFunction")
+
+    /** Five bricks laid 2-1-2. */
+    public val BrikkColumn: Icon = load("brikkColumn")
+
+    private fun load(name: String): Icon =
+        IconLoader.getIcon("dev/brikk/house/sql/intellij/icons/$name.svg", SqlLookupIcons::class.java.classLoader)
 }
 
 /** How a lookup string is spelled relative to the name metadata or the model gives. */
@@ -85,7 +99,7 @@ public class SqlLookupStyles private constructor(private val styles: Map<SqlLook
                     SqlLookupKind.KEYWORD -> SqlLookupStyle(bold = true, case = LookupCase.UPPER)
                     SqlLookupKind.FUNCTION -> callable(DatabaseIcons.Function, "function")
                     SqlLookupKind.AGGREGATE -> callable(DatabaseIcons.Aggregate, "aggregate")
-                    SqlLookupKind.WINDOW -> callable(DatabaseIcons.Aggregate, "window function")
+                    SqlLookupKind.WINDOW -> callable(SqlLookupIcons.WindowFunction, "window function")
                     SqlLookupKind.MACRO -> callable(DatabaseIcons.Routine, "macro")
                     SqlLookupKind.TABLE_FUNCTION -> SqlLookupStyle(DatabaseIcons.Table, "table function", showsSignature = true)
                     SqlLookupKind.TABLE_MACRO -> SqlLookupStyle(DatabaseIcons.Table, "table macro", showsSignature = true)
@@ -95,7 +109,7 @@ public class SqlLookupStyles private constructor(private val styles: Map<SqlLook
                     SqlLookupKind.TABLE_FUNCTION_VALUE -> SqlLookupStyle(AllIcons.Nodes.Parameter, "%s value", priority = 100.0)
                     SqlLookupKind.COLUMN -> SqlLookupStyle(DatabaseIcons.Col)
                     SqlLookupKind.PIPE_INPUT_COLUMN -> SqlLookupStyle(DatabaseIcons.Col, "PIPE input column", priority = 95.0)
-                    SqlLookupKind.BRIKK_COLUMN -> SqlLookupStyle(DatabaseIcons.Col, priority = 120.0)
+                    SqlLookupKind.BRIKK_COLUMN -> SqlLookupStyle(SqlLookupIcons.BrikkColumn, priority = 120.0)
                     SqlLookupKind.CATALOG -> SqlLookupStyle(DatabaseIcons.Database, "catalog", priority = 96.0)
                     SqlLookupKind.SCHEMA -> SqlLookupStyle(DatabaseIcons.Schema, "schema", priority = 96.0)
                     SqlLookupKind.TABLE -> SqlLookupStyle(DatabaseIcons.Table, "table", priority = 96.0)

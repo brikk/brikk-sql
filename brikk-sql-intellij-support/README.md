@@ -126,7 +126,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
 
 `SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
 signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
-a dialect replaces rows with `with`. `nativeKinds` maps engine-native function kinds
+a dialect replaces rows with `with`. `SqlLookupIcons` holds the two icons the platform lacks, each with a
+dark variant: `WindowFunction` ("W" in the function circle, the WINDOW row) and `BrikkColumn` (bricks
+laid 2-1-2, the BRIKK_COLUMN row). `nativeKinds` maps engine-native function kinds
 (`FunctionPresentation.nativeKind`, such as DuckDB macros) to their own rows. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
 the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
