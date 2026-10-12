@@ -1,40 +1,73 @@
 package dev.brikk.house.sql.intellij.completion
 
 import dev.brikk.house.sql.metadata.FunctionKind
+import dev.brikk.house.sql.metadata.FunctionPresentation
+import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
-import dev.brikk.house.sql.parser.pipeStageKeywords
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Where a table function stands, recognized by the words before the name being typed, ignoring
+ * Where a table function stands, recognized by the keywords before the name being typed, ignoring
  * case: right after a phrase in [after] (`FROM`, any join ending in `JOIN`), after a comma
  * continuing a list one of them began (`FROM a, b`), and right inside the parentheses of a word in
- * [parenthesized] (Trino's `TABLE(...)`). A longer phrase in [notAfter] wins, such as ClickHouse's
- * `ARRAY JOIN`, which takes an array.
+ * [parenthesized] (`TABLE(...)`). A longer phrase in [notAfter] wins, such as `IS DISTINCT FROM` or
+ * ClickHouse's `ARRAY JOIN`. A `FROM` inside a call that holds no query (`EXTRACT(YEAR FROM x)`) is
+ * an argument, not a table position.
+ *
+ * Table functions named in [inExpressions] or of a kind in [kindsInExpressions] are also offered in
+ * expressions. With [wrapper], a table function other than those in [unwrapped] is inserted as
+ * `wrapper(name(...))` where it stands bare, as Trino requires `TABLE(...)` around them.
  */
 @ApiStatus.Experimental
 public data class TablePositions(
     val after: Set<String>,
     val parenthesized: Set<String> = emptySet(),
     val notAfter: Set<String> = emptySet(),
+    val inExpressions: Set<String> = emptySet(),
+    val kindsInExpressions: Set<FunctionKind> = emptySet(),
+    val wrapper: String? = null,
+    val unwrapped: Set<String> = emptySet(),
 ) {
+    internal fun fitsExpressions(entry: FunctionPresentation): Boolean =
+        entry.kind in kindsInExpressions || inExpressions.any { it.equals(entry.name, ignoreCase = true) }
+
+    internal fun wraps(entry: FunctionPresentation): Boolean =
+        wrapper != null && unwrapped.none { it.equals(entry.name, ignoreCase = true) }
+
     public companion object {
-        /** After FROM, a join or a PIPE `CALL`, and after a comma in their lists. */
-        public val STANDARD: TablePositions = TablePositions(after = setOf("FROM", "JOIN", "|> CALL"), notAfter = setOf("ARRAY JOIN"))
+        /** After FROM, a join or a PIPE `CALL`, a comma in their lists, and inside `TABLE(`. */
+        public val STANDARD: TablePositions = TablePositions(
+            after = setOf("FROM", "JOIN", "|> CALL"),
+            parenthesized = setOf("TABLE"),
+            notAfter = setOf("DISTINCT FROM", "ARRAY JOIN"),
+        )
+
+        /** [STANDARD] with what the engine adds, for the dialects with recorded evidence. */
+        public fun of(dialect: String): TablePositions = when (dialect.lowercase(Locale.ROOT)) {
+            // `SELECT unnest([1, 2])` runs; every other DuckDB table function is FROM-only.
+            "duckdb" -> STANDARD.copy(inExpressions = setOf("unnest"))
+            // Table functions stand bare after FROM only as UNNEST; the others need TABLE(...).
+            "trino" -> STANDARD.copy(wrapper = "TABLE", unwrapped = setOf("unnest"))
+            // Generators (explode) follow LATERAL VIEW and are not proven illegal in SELECT.
+            "doris" -> STANDARD.copy(after = STANDARD.after + "LATERAL VIEW", kindsInExpressions = setOf(FunctionKind.TABLE_GENERATING))
+            else -> STANDARD
+        }
     }
 }
 
 /** What fits where completion is invoked, judged from the text before the typed name. */
 internal enum class FunctionPosition {
-    /** Only table functions. */
+    /** Only table functions, standing bare. */
     TABLE,
 
-    /** Everything but table functions. */
+    /** Only table functions, inside a [TablePositions.parenthesized] word's parentheses. */
+    TABLE_ARGUMENT,
+
+    /** Everything but the table functions not legal in expressions. */
     EXPRESSION,
 
     /** Right after `|>`, where only a stage phrase can stand. */
@@ -44,41 +77,62 @@ internal enum class FunctionPosition {
     UNKNOWN,
     ;
 
-    fun offers(kind: FunctionKind): Boolean {
-        val table = kind == FunctionKind.TABLE_VALUED || kind == FunctionKind.TABLE_GENERATING
+    fun offers(entry: FunctionPresentation, positions: TablePositions): Boolean {
+        val table = entry.kind == FunctionKind.TABLE_VALUED || entry.kind == FunctionKind.TABLE_GENERATING
         return when (this) {
-            TABLE -> table
-            EXPRESSION -> !table
+            TABLE, TABLE_ARGUMENT -> table
+            EXPRESSION -> !table || positions.fitsExpressions(entry)
             STAGE_HEAD -> false
             UNKNOWN -> true
         }
     }
 }
 
-/** The position after [text] (the statement up to the typed name) in the core [dialect]. */
-internal fun functionPosition(text: CharSequence, dialect: String, positions: TablePositions): FunctionPosition {
+/**
+ * The position after [text], which ends at the typed name, in the core [dialect]: only the
+ * statement holding its end is read. [stagePhrases] are the PIPE stages that may follow `|>`;
+ * [isFunction] tells a call such as `range(` from a keyword when the name tokenizes as one.
+ */
+internal fun functionPosition(
+    text: String,
+    dialect: String,
+    positions: TablePositions,
+    stagePhrases: List<String>,
+    isFunction: (String) -> Boolean,
+    checkCanceled: () -> Unit,
+): FunctionPosition {
     val config = TokenizerConfigs.forNameOrNull(dialect) ?: return FunctionPosition.UNKNOWN
-    val lexed = Tokenizer(config).tokenizeForEditor(text.toString())
+    val start = SqlScriptSnapshot.parse(text, dialect, checkCanceled).statements.lastOrNull()?.start ?: 0
+    val lexed = Tokenizer(config).tokenizeForEditor(text.substring(start), checkCanceled)
     if (lexed.failureOffset != null) return FunctionPosition.UNKNOWN
-    val tokens = lexed.tokens.takeLastWhile { it.tokenType != TokenType.SEMICOLON }
-    val words = tokens.flatMap(Token::words)
+    val words = lexed.tokens.takeLastWhile { it.tokenType != TokenType.SEMICOLON }.flatMap(Token::words)
     if (words.isEmpty()) return FunctionPosition.UNKNOWN
-    val stage = words.lastIndexOf("|>")
-    if (stage >= 0 && isStageHead(words.subList(stage + 1, words.size), dialect)) return FunctionPosition.STAGE_HEAD
-    positions.phraseAtEnd(words)?.let { return it }
-    return when (words.last()) {
-        "(" -> positions.parenthesized(words, words.size - 1)
-        "," -> positions.commaList(words)
-        in EXPRESSION_WORDS -> FunctionPosition.EXPRESSION
-        else -> FunctionPosition.UNKNOWN
+    val stage = words.indexOfLast { it.text == "|>" }
+    if (stage >= 0 && isStageHead(words.subList(stage + 1, words.size), stagePhrases)) return FunctionPosition.STAGE_HEAD
+    val context = Context(words, positions, isFunction)
+    positions.phraseAtEnd(words)?.let { return if (it == FunctionPosition.TABLE) context.tableUnlessCallArgument() else it }
+    return when (words.last().text) {
+        "(" -> context.parenthesized(words.size - 1)
+        "," -> context.commaList()
+        else -> if (words.startsExpression(words.size - 1)) FunctionPosition.EXPRESSION else FunctionPosition.UNKNOWN
     }
 }
 
-/** TABLE or UNKNOWN if a phrase of [TablePositions.after] or [TablePositions.notAfter] ends [words], the longest deciding. */
-private fun TablePositions.phraseAtEnd(words: List<String>): FunctionPosition? {
-    fun List<String>.matches(phrase: String) = phrase.uppercase(Locale.ROOT).split(' ').let { size >= it.size && takeLast(it.size) == it }
-    val table = after.filter(words::matches).maxOfOrNull { it.split(' ').size }
-    val other = notAfter.filter(words::matches).maxOfOrNull { it.split(' ').size }
+private class Word(val text: String, val type: TokenType) {
+    /** An identifier rather than a keyword, such as a table named `aggregate`. */
+    val isName: Boolean get() = type == TokenType.VAR || type == TokenType.IDENTIFIER
+}
+
+/** TABLE or UNKNOWN if a keyword phrase of [TablePositions.after] or [TablePositions.notAfter] ends [words], the longest deciding. */
+private fun TablePositions.phraseAtEnd(words: List<Word>): FunctionPosition? {
+    fun matches(phrase: String): Boolean {
+        val parts = phrase.uppercase(Locale.ROOT).split(' ')
+        return words.size >= parts.size && words.takeLast(parts.size).let { tail ->
+            tail.map(Word::text) == parts && tail.none(Word::isName)
+        }
+    }
+    val table = after.filter(::matches).maxOfOrNull { it.split(' ').size }
+    val other = notAfter.filter(::matches).maxOfOrNull { it.split(' ').size }
     return when {
         table == null && other == null -> null
         (other ?: 0) >= (table ?: 0) -> FunctionPosition.UNKNOWN
@@ -86,55 +140,92 @@ private fun TablePositions.phraseAtEnd(words: List<String>): FunctionPosition? {
     }
 }
 
-/**
- * Inside the `(` at [paren]: a table after a [TablePositions.parenthesized] word; not known after a
- * word a table follows (a subquery or nested join); call arguments or a list after another name.
- */
-private fun TablePositions.parenthesized(words: List<String>, paren: Int): FunctionPosition {
-    val before = words.getOrNull(paren - 1) ?: return FunctionPosition.UNKNOWN
-    return when {
-        parenthesized.any { it.equals(before, ignoreCase = true) } -> FunctionPosition.TABLE
-        before in listHeads -> FunctionPosition.UNKNOWN
-        before == "'" || before.first().isLetter() || before.first() == '_' -> FunctionPosition.EXPRESSION
-        else -> FunctionPosition.UNKNOWN
-    }
-}
+/** The words before the typed name, with what decides between them. */
+private class Context(val words: List<Word>, val positions: TablePositions, val isFunction: (String) -> Boolean) {
+    /** A name, or a function name that tokenizes as a keyword, before a `(` opens a call. */
+    fun isCall(word: Word): Boolean = word.isName || isFunction(word.text)
 
-/** After a comma: the clause or brackets holding the list decide, found by walking back over balanced brackets. */
-private fun TablePositions.commaList(words: List<String>): FunctionPosition {
-    var depth = 0
-    for (index in words.indices.reversed()) {
-        val word = words[index]
-        when {
-            word == ")" -> depth++
-            word == "(" && depth > 0 -> depth--
-            word == "(" -> return parenthesized(words, index).takeIf { it == FunctionPosition.EXPRESSION } ?: FunctionPosition.UNKNOWN
-            depth > 0 -> {}
-            word == "|>" -> return FunctionPosition.UNKNOWN
-            word in listHeads -> return phraseAtEnd(words.subList(0, index + 1)) ?: FunctionPosition.TABLE
-            word in CLAUSE_WORDS -> return FunctionPosition.EXPRESSION
+    /**
+     * TABLE, unless the table keyword sits in an unclosed call holding no query, as `FROM` does in
+     * `EXTRACT(YEAR FROM x)`: then an argument, or not known when the call is not recognized.
+     */
+    fun tableUnlessCallArgument(): FunctionPosition {
+        val paren = enclosingParen() ?: return FunctionPosition.TABLE
+        val inside = words.subList(paren + 1, words.size)
+        if (inside.firstOrNull()?.text == "FROM" || inside.any { it.text in QUERY_HEADS && !it.isName }) return FunctionPosition.TABLE
+        val before = words.getOrNull(paren - 1) ?: return FunctionPosition.UNKNOWN
+        return if (isCall(before)) FunctionPosition.EXPRESSION else FunctionPosition.UNKNOWN
+    }
+
+    /** The index of the innermost `(` still open at the end. */
+    private fun enclosingParen(): Int? {
+        var depth = 0
+        for (index in words.indices.reversed()) {
+            when (words[index].text) {
+                ")" -> depth++
+                "(" -> if (depth == 0) return index else depth--
+            }
+        }
+        return null
+    }
+
+    /**
+     * Inside the `(` at [paren]: a table argument after a [TablePositions.parenthesized] keyword, call
+     * arguments after a call or a list after `IN`, otherwise not known (`LATERAL (`, `FROM (`).
+     */
+    fun parenthesized(paren: Int): FunctionPosition {
+        val before = words.getOrNull(paren - 1) ?: return FunctionPosition.UNKNOWN
+        return when {
+            !before.isName && positions.parenthesized.any { it.equals(before.text, ignoreCase = true) } -> FunctionPosition.TABLE_ARGUMENT
+            isCall(before) || before.text == "IN" -> FunctionPosition.EXPRESSION
+            else -> FunctionPosition.UNKNOWN
         }
     }
-    return FunctionPosition.UNKNOWN
+
+    /** After a comma: the clause or brackets holding the list decide, found by walking back over balanced brackets. */
+    fun commaList(): FunctionPosition {
+        val heads = positions.after.mapTo(HashSet()) { it.uppercase(Locale.ROOT).substringAfterLast(' ') }
+        var depth = 0
+        for (index in words.indices.reversed()) {
+            val word = words[index]
+            when {
+                word.text == ")" -> depth++
+                word.text == "(" && depth > 0 -> depth--
+                word.text == "(" -> return parenthesized(index).takeIf { it == FunctionPosition.EXPRESSION } ?: FunctionPosition.UNKNOWN
+                depth > 0 -> {}
+                word.text == "|>" -> return FunctionPosition.UNKNOWN
+                word.text in heads && !word.isName ->
+                    return positions.phraseAtEnd(words.subList(0, index + 1))?.takeIf { it != FunctionPosition.TABLE } ?: tableUnlessCallArgument()
+                word.text in CLAUSES && !word.isName || word.text in PIPE_EXPRESSION_STAGES && words.getOrNull(index - 1)?.text == "|>" ->
+                    return FunctionPosition.EXPRESSION
+            }
+        }
+        return FunctionPosition.UNKNOWN
+    }
 }
 
-/** The last words of the [TablePositions.after] phrases: the words a table list begins with. */
-private val TablePositions.listHeads: Set<String>
-    get() = after.mapTo(HashSet()) { it.uppercase(Locale.ROOT).substringAfterLast(' ') }
+/** Whether an expression begins after the word at [index]: an operator, an expression keyword, or an expression PIPE stage. */
+private fun List<Word>.startsExpression(index: Int): Boolean {
+    val word = this[index]
+    return when (word.text) {
+        in PIPE_EXPRESSION_STAGES -> getOrNull(index - 1)?.text == "|>"
+        in OPERATORS -> true
+        else -> word.text in EXPRESSION_KEYWORDS && !word.isName
+    }
+}
 
 /** Whether the typed words after `|>` are not yet a whole stage phrase but begin one, or are none. */
-private fun isStageHead(typed: List<String>, dialect: String): Boolean {
-    val phrases = STAGE_PHRASES.getOrPut(dialect) { pipeStageKeywords(dialect).map { it.split(' ') } }
-    return phrases.none { it == typed } && phrases.any { it.size > typed.size && it.subList(0, typed.size) == typed }
+private fun isStageHead(typed: List<Word>, stagePhrases: List<String>): Boolean {
+    val words = typed.map(Word::text)
+    val phrases = stagePhrases.map { it.uppercase(Locale.ROOT).split(' ') }
+    return phrases.none { it == words } && phrases.any { it.size > words.size && it.subList(0, words.size) == words }
 }
 
-private val STAGE_PHRASES = ConcurrentHashMap<String, List<List<String>>>()
-
-/** Upper-case words of a keyword or punctuation token; a literal or identifier is one opaque word. */
-private val Token.words: List<String>
+/** Upper-case words of a keyword or punctuation token; a literal or quoted identifier is one opaque word. */
+private val Token.words: List<Word>
     get() = when (tokenType) {
-        in OPAQUE -> listOf("'")
-        else -> text.trim().split(WHITESPACE).filter(String::isNotEmpty).map { it.uppercase(Locale.ROOT) }
+        in OPAQUE -> listOf(Word("'", tokenType))
+        else -> text.trim().split(WHITESPACE).filter(String::isNotEmpty).map { Word(it.uppercase(Locale.ROOT), tokenType) }
     }
 
 private val OPAQUE = setOf(
@@ -144,11 +235,14 @@ private val OPAQUE = setOf(
 
 private val WHITESPACE = Regex("\\s+")
 
-/** Clauses whose comma lists hold expressions. */
-private val CLAUSE_WORDS = setOf(
-    "SELECT", "WHERE", "HAVING", "BY", "SET", "VALUES", "QUALIFY", "RETURNING", "WINDOW", "LIMIT", "EXTEND", "AGGREGATE",
-)
+private val QUERY_HEADS = setOf("SELECT", "WITH", "VALUES")
 
-/** Words after which an expression begins. */
-private val EXPRESSION_WORDS = ExpressionPositions.STANDARD.keywords + ExpressionPositions.STANDARD.operators - setOf("(", ",") +
-    setOf("BY", "*", "SET", "EXTEND", "AGGREGATE", "RETURN", "ELSEIF", "QUALIFY")
+/** Clauses whose comma lists hold expressions. */
+private val CLAUSES = setOf("SELECT", "WHERE", "HAVING", "BY", "SET", "VALUES", "QUALIFY", "RETURNING", "WINDOW", "LIMIT")
+
+/** PIPE stages taking expressions, which tokenize as names. */
+private val PIPE_EXPRESSION_STAGES = setOf("EXTEND", "AGGREGATE")
+
+private val OPERATORS = ExpressionPositions.STANDARD.operators - setOf("(", ",") + "*"
+
+private val EXPRESSION_KEYWORDS = ExpressionPositions.STANDARD.keywords + setOf("BY", "SET", "RETURN", "QUALIFY")

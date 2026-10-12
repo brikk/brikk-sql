@@ -10,6 +10,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementDecorator
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.database.util.Case
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
@@ -41,8 +42,11 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return
         val reads = ProfileReads(profile, parameters.originalFile)
         val file = parameters.originalFile
-        val before = file.viewProvider.contents.subSequence(0, prefixAt(file, parameters.offset).first)
-        val position = functionPosition(before, profile.metadata.dialect, profile.tablePositions)
+        val before = file.viewProvider.contents.subSequence(0, prefixAt(file, parameters.offset).first).toString()
+        val position = functionPosition(
+            before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
+            { name -> name in reads.snapshot.functions }, ProgressManager::checkCanceled,
+        )
         val functions = completeFunctions(parameters, result, reads, position)
         completeTableFunctionArguments(parameters, result, reads)
         if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position)
@@ -131,9 +135,11 @@ private fun completeFunctions(parameters: CompletionParameters, result: Completi
         ?.qualifierExpression?.text
     val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
     val names = HashSet<String>()
+    val positions = profile.tablePositions
     fun offer(entry: FunctionPresentation, serverOnly: Boolean) {
-        if (!position.offers(entry.kind)) return
-        sink.addElement(profile.lookup(entry, serverOnly))
+        if (!position.offers(entry, positions)) return
+        val wrapper = positions.wrapper?.takeIf { position == FunctionPosition.TABLE && positions.wraps(entry) }
+        sink.addElement(profile.lookup(entry, serverOnly, wrapper))
         names += entry.name.uppercase()
     }
     val rule = gates.qualifier
@@ -201,7 +207,8 @@ internal fun tableFunctionCallAt(snapshot: MetadataSnapshot, position: PsiElemen
     return null
 }
 
-private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly: Boolean): LookupElement {
+/** The item for [entry]; with [wrapper], inserted as `wrapper(name(...))`. */
+private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly: Boolean, wrapper: String? = null): LookupElement {
     val style = styles[lookupKind(entry)]
     val extension = entry.extension
     val typeText = when {
@@ -212,7 +219,24 @@ private fun SqlCompletionProfile.lookup(entry: FunctionPresentation, serverOnly:
     }
     val tailText = entry.signature?.takeIf { style.showsSignature }
         ?.let { "($it)" + if (entry.overloadCount > 1) "  +${entry.overloadCount - 1}" else "" }
-    return style.lookup(entry, entry.name, typeText, tailText, entry.insertHandler)
+    val insertHandler = entry.insertHandler
+    return style.lookup(entry, entry.name, typeText, tailText, wrapper?.let { Wrapped(it, insertHandler) } ?: insertHandler)
+}
+
+/** Writes [wrapper] and `(` before the name and `)` after its call, as Trino's `TABLE(sequence(...))`; an existing `(` keeps [call] alone. */
+private class Wrapped(private val wrapper: String, private val call: InsertHandler<LookupElement>?) : InsertHandler<LookupElement> {
+    override fun handleInsert(context: InsertionContext, item: LookupElement) {
+        val document = context.document
+        val tail = context.tailOffset
+        if (tail < document.textLength && document.charsSequence[tail] == '(') {
+            call?.handleInsert(context, item)
+            return
+        }
+        val name = document.charsSequence.subSequence(context.startOffset, tail).toString()
+        document.replaceString(context.startOffset, tail, "$wrapper($name())")
+        if (context.completionChar == '(') context.setAddCompletionChar(false)
+        context.editor.caretModel.moveToOffset(context.startOffset + wrapper.length + 1 + name.length + 1)
+    }
 }
 
 private fun SqlCompletionProfile.lookupKind(entry: FunctionPresentation): SqlLookupKind =

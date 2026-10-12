@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.pipe
 
+import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.parser.pipeStageKeywords
 import java.util.Locale
 import org.jetbrains.annotations.ApiStatus
@@ -7,10 +8,11 @@ import org.jetbrains.annotations.ApiStatus
 /**
  * The stage phrases core parses for [dialect] (`pipeStageKeywords`) that core lowers for it and
  * the engine runs as lowered, in core's order. A dialect without recorded evidence gets every
- * phrase core parses.
+ * phrase core parses; one core does not know gets none.
  */
 @ApiStatus.Experimental
 public fun pipeStagePhrases(dialect: String): List<String> {
+    if (Dialects.forNameOrNull(dialect) == null) return emptyList()
     val parsed = pipeStageKeywords(dialect)
     val runnable = RUNNABLE[dialect.lowercase(Locale.ROOT)] ?: return parsed
     return parsed.filter { it in runnable }
