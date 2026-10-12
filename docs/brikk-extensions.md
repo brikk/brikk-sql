@@ -1852,7 +1852,7 @@ and internal network are removed after verification.
   depth count closes at the native end: both usually mean unfinished input.
 - `Dialect.semicolonsInBrackets` is false for Doris, so a snapshot statement with `;` inside
   brackets is a boundary error (PostgreSQL rule actions keep the default).
-- `Dialect.halfOpenPartitionRanges` is true for Doris: after VALUES, `[` closes with `)`
+- `Dialect.halfOpenPartitionRanges` is true for Doris (and StarRocks): after VALUES, `[` closes with `)`
   (`fixedPartitionDef`, `VALUES [(lower), (upper))`, the grammar's only mismatched pair).
 
 Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`) over raw JDBC rejects `#` and

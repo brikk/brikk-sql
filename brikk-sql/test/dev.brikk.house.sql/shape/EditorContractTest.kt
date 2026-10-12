@@ -126,7 +126,18 @@ class EditorContractTest {
     @Test fun halfOpenRangesNeedDorisAndValues() {
         for (sql in listOf("SELECT [(1), (2)); SELECT 3", "INSERT INTO t VALUES [('a'), ('b')]; SELECT 3"))
             assertNotNull(SqlScriptSnapshot.parse(sql, "doris").statements.single().boundaryError, sql)
-        for (dialect in listOf("duckdb", "trino", "mysql", "starrocks"))
+        for (dialect in listOf("duckdb", "trino", "mysql"))
             assertNotNull(SqlScriptSnapshot.parse("ALTER TABLE t ADD PARTITION p VALUES [(1), (2)); SELECT 3", dialect).statements.single().boundaryError, dialect)
+    }
+
+    @Test fun starrocksHalfOpenPartitionRangesAreBalanced() {
+        val statement = "CREATE TABLE t (k DATE, v INT) PARTITION BY RANGE(k) (PARTITION p1 VALUES [('2020-01-01'), ('2020-02-01')), " +
+            "PARTITION p2 VALUES LESS THAN MAXVALUE) DISTRIBUTED BY HASH(k) BUCKETS 1"
+        val script = "$statement; ALTER TABLE t ADD PARTITION p3 VALUES [('2020-02-01'), ('2020-03-01')); SELECT :p;"
+        val ranges = SqlScriptSnapshot.parse(script, "starrocks").statements
+        assertEquals(3, ranges.size)
+        assertTrue(ranges.all { it.boundaryError == null })
+        assertEquals(listOf("p"), SqlScriptParameters.parse(script, "starrocks").occurrences.map { it.name })
+        assertNotNull(SqlScriptSnapshot.parse("SELECT [(1), (2)); SELECT 3", "starrocks").statements.single().boundaryError)
     }
 }
