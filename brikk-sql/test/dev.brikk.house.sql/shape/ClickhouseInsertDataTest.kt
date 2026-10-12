@@ -94,6 +94,33 @@ class ClickhouseInsertDataTest {
         }
     }
 
+    /** A double-quoted CSV field may hold empty lines and `;` lines; its quotes decide where data ends. */
+    @Test fun csvQuotedFieldsHoldEmptyAndSemicolonLines() {
+        for (format in listOf("CSV", "CSVWithNames", "CSVWithNamesAndTypes", "csv")) {
+            val sql = "INSERT INTO t FORMAT $format\n1,\"a\n\nb\"\n2,\"x\n;\n\"\"y\"\"\"\n\nSELECT 2;"
+            assertEquals(listOf("1,\"a\n\nb\"\n2,\"x\n;\n\"\"y\"\"\""), data(sql), format)
+            assertEquals(2, statements(sql).size, format)
+        }
+        // A quote inside an unquoted field is a character, not a quoted field.
+        assertEquals(listOf("1,ab\"c"), data("INSERT INTO t FORMAT CSV\n1,ab\"c\n\nSELECT 2;"))
+        // TSV fields cannot hold a raw line break, so quotes mean nothing there.
+        assertEquals(listOf("\"a"), data("INSERT INTO t FORMAT TSV\n\"a\n\nb\";\n"))
+    }
+
+    @Test fun customSeparatedFramesQuotesWhenItsInsertSetsCsvEscaping() {
+        val body = " FORMAT CustomSeparated\n\"a\n\nb\"\n\nSELECT 2;"
+        assertEquals(listOf("\"a\n\nb\""), data("INSERT INTO t SETTINGS format_custom_escaping_rule = 'CSV'$body"))
+        assertEquals(listOf("\"a"), data("INSERT INTO t$body"))
+    }
+
+    /** Never a guess: an open quoted field at the end of the text makes the boundary unknown. */
+    @Test fun anUnclosedCsvQuoteIsABoundaryError() {
+        val ranges = SqlScriptSnapshot.parse("SELECT 1;\nINSERT INTO t FORMAT CSV\n1,\"a\n\nSELECT 2;", "clickhouse").statements
+        assertNull(ranges.first().boundaryError)
+        assertNotNull(ranges.last().boundaryError)
+        assertEquals(2, ranges.size)
+    }
+
     @Test fun aBlankLineRightAfterTheFormatEndsTheStatementWithoutData() {
         val sql = "INSERT INTO t FORMAT TSV\n\nSELECT 2;"
         assertEquals(listOf("INSERT INTO t FORMAT TSV", "SELECT 2;"), statements(sql))

@@ -1894,7 +1894,18 @@ when a line break follows them, after it (ClickHouse's `ParserInsertQuery`). It 
 A `;` at the end of a data line, or anywhere else in data, is data. A `;` ending the format name's
 line with nothing else on it is the terminator of a statement without data. Without data the
 `INSERT_DATA` token is empty at the header's end (`SqlStatementRange.dataEnd` there), so the line
-breaks and indentation before a terminator line or a blank line are never submitted as data. So
+breaks and indentation before a terminator line or a blank line are never submitted as data.
+
+Quoted fields (data preservation over client parity): for `CSV`, `CSVWithNames` and
+`CSVWithNamesAndTypes` (format names in any case), and for `CustomSeparated*` when the INSERT's own
+`SETTINGS` set `format_custom_escaping_rule = 'CSV'`, a double quote at a field's start (line
+start, or after `,`, `;`, `|` or a tab, spaces allowed) opens a field that `""` escapes and `"`
+closes; a blank line or a `;` line inside it is data, and data ends at the next one outside quotes.
+A field still open at the end of the text is a lexical failure, so the statement's boundary is an
+error rather than a guess. clickhouse-client instead cuts such data at the blank line. Not covered,
+as their quoting is not known from the INSERT alone: `CustomSeparated*` with escaping set only for
+the session, `Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw
+line break, so their data keeps the plain rule. So
 `INSERT ... FORMAT JSONEachRow\n{"id":1};\nSELECT 2;` is one statement, as the platform editor and
 clickhouse-client read it; a blank line or a `;` line separates the next one.
 
