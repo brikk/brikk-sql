@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.codeInsight.completion.CompletionConfidence
+import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ThreeState
@@ -14,7 +15,7 @@ import org.jetbrains.annotations.ApiStatus
  * `order="first"` through a no-arg subclass.
  */
 @ApiStatus.Experimental
-public abstract class SqlCompletionConfidence(private val profile: SqlCompletionProfile) : CompletionConfidence() {
+public abstract class SqlCompletionConfidence(private val profile: SqlCompletionProfile) : CompletionConfidence(), DumbAware {
     final override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
         !psiFile.language.isKindOf(profile.language) -> ThreeState.UNSURE
         profile.tableFunctionCallAt(psiFile, contextElement, offset) != null -> ThreeState.NO

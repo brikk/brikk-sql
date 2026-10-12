@@ -8,6 +8,7 @@ import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.openapi.project.DumbAware
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
@@ -27,11 +28,12 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completes the profile's functions, keywords and table-function properties from metadata.
- * Register it for the dialect's language with a no-arg subclass and `order="first"`: it runs
- * the contributors after it and offers only the keywords none of them offered.
+ * It reads no indexes, so it also completes while they are built. Register it for the dialect's
+ * language with a no-arg subclass and `order="first"`: it runs the contributors after it and
+ * offers only the keywords none of them offered.
  */
 @ApiStatus.Experimental
-public abstract class SqlCompletionContributor(private val profile: SqlCompletionProfile) : CompletionContributor() {
+public abstract class SqlCompletionContributor(private val profile: SqlCompletionProfile) : CompletionContributor(), DumbAware {
     init {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), FunctionProvider(profile))
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), TableFunctionArgumentProvider(profile))

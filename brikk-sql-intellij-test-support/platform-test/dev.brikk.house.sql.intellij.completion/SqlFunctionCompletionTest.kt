@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.codeInsight.lookup.Lookup
+import com.intellij.testFramework.DumbModeTestUtils
 import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.FunctionKind
@@ -116,5 +117,12 @@ class SqlFunctionCompletionTest : CompletionTestCase() {
     fun testFunctionsMatchIgnoringCase() {
         configure("SELECT ABS<caret>", DuckdbCompletion::class.java)
         assertTrue(functionItems().any { it.name == "abs" })
+    }
+
+    fun testFunctionsCompleteWhileIndexesAreBuilt() {
+        configure("SELECT ab<caret>", DuckdbCompletion::class.java)
+        var offered = emptyList<String>()
+        DumbModeTestUtils.runInDumbModeSynchronously(project) { offered = functionItems().map { it.name } }
+        assertContainsElements(offered, "abs")
     }
 }
