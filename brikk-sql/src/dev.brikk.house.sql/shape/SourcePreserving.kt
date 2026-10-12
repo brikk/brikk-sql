@@ -101,7 +101,8 @@ fun SqlFragment.toSourcePreservingExecutable(
     }
     val lowered = desugarPipes(original, sourceDialect, copy = true)
     val generator = targetDialect.generator(sourceDialect = sourceDialect.name)
-    generator.refuseUnsupportedPivots = true
+    generator.forExecution = true
+    generator.refuseUnexecutablePipeStages(original)
     generator.sourcePreservingSql = { node ->
         renderer.reuse(node) { child ->
             val rendered = generator.sql(child)

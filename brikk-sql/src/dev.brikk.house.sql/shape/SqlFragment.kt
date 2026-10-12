@@ -130,18 +130,19 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         pretty: Boolean = false,
         trackSourceMap: Boolean = false,
         desugarPipes: Boolean = false,
-    ): TranspileResult = transpile(target, pretty, trackSourceMap, desugarPipes, refuseUnsupportedPivots = false)
+    ): TranspileResult = transpile(target, pretty, trackSourceMap, desugarPipes, forExecution = false)
 
     private fun transpile(
         target: String,
         pretty: Boolean,
         trackSourceMap: Boolean,
         desugarPipes: Boolean,
-        refuseUnsupportedPivots: Boolean,
+        forExecution: Boolean,
     ): TranspileResult {
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
-        generator.refuseUnsupportedPivots = refuseUnsupportedPivots
+        generator.forExecution = forExecution
+        generator.refuseUnexecutablePipeStages(ast)
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -188,7 +189,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             pretty = pretty,
             trackSourceMap = trackSourceMap,
             desugarPipes = true,
-            refuseUnsupportedPivots = true,
+            forExecution = true,
         )
 
     /**
@@ -559,7 +560,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         // toStandardSql case, target defaults to `dialect`) stays faithful and never rewrites
         // native functions (e.g. ClickHouse lower stays LOWER, not lowerUTF8).
         val generator = targetDialect.generator(sourceDialect = dialect.ifBlank { null })
-        generator.refuseUnsupportedPivots = true
+        generator.forExecution = true
+        generator.refuseUnexecutablePipeStages(ast)
         return generator.generate(tree)
     }
 

@@ -1869,6 +1869,25 @@ core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the Cl
 generator instead reuses the authored text while the parsed placeholder is unchanged, so
 lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
 
+## 55. Executable refusal for pipe stages the target rejects
+
+Executable lowering (`toExecutable`, `toStandardSql`, source-preserving lowering and so
+`lowerForExecution`) refuses with `UnsupportedError`, using #52's executable-purpose state,
+where it used to return SQL the target engine rejects:
+
+| Target | Refused | Engine evidence |
+|---|---|---|
+| Trino | pipe CALL, STRAIGHT_JOIN, ASOF JOIN, NATURAL JOIN | Trino 483: syntax errors; `t ASOF` reads as an alias; "Natural join not supported" |
+| DuckDB | STRAIGHT_JOIN | DuckDB 1.5.6: syntax error |
+| Doris | pipe CALL, STRAIGHT_JOIN, NATURAL JOIN | Doris 4.1.4 FE parser: mismatched input |
+| ClickHouse | pipe CALL, star RENAME | ClickHouse 26.7: `f((SELECT …))` and `* RENAME` syntax errors |
+
+Pipe CALL becomes a table function taking `(query)`, which these targets lack. ClickHouse
+star RENAME follows #51: a complete caller-supplied layout (`toStandardSql` with
+`expandStars`) still expands it to explicit ordered projections, which ClickHouse runs.
+`transpileTo` previews keep their earlier output. DuckDB CALL, ASOF, NATURAL and RENAME,
+Doris ASOF and ClickHouse ASOF still lower. `PipeEngineRejectionTest` covers each case.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
