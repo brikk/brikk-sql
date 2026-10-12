@@ -36,6 +36,13 @@ public interface CatalogProfile {
     /** Introspecting what a path names when it is listed but not loaded. Off until a dialect enables it. */
     public val autoIntrospect: Boolean get() = false
 
+    /**
+     * Unresolved references into namespaces that are listed but never introspected are not reported
+     * ([OutOfScopeReferenceFilter]) and offer to introspect them ([IntrospectNamespaceIntention]). Off
+     * until a dialect enables it.
+     */
+    public val outOfScopeReferences: Boolean get() = false
+
     /** Which data source serves a file. Override with a stored instance to set the resolver's options. */
     public val dataSources: DialectDataSourceResolver get() = DialectDataSourceResolver(dbms)
 

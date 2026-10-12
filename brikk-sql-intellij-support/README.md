@@ -230,7 +230,7 @@ takes the dbms the platform passes):
 
 - `CatalogProfile`: a dialect's catalog facts. Minimum: `dbms`, `productLabel`, `quoteChars`,
   `levels`. Defaults: `usesCurrentNamespace = false`, `maxDeepenDepth = levels.size`,
-  `autoIntrospect = false` (a dialect turns it on), `dataSources` (a `DialectDataSourceResolver`;
+  `autoIntrospect = false` (a dialect turns it on), `outOfScopeReferences = false` (see below), `dataSources` (a `DialectDataSourceResolver`;
   override with a stored instance for its options), `childrenOf`. `pathResolver` builds the
   `NamespacePathResolver`. `CatalogScopes.select(levels, path)` selects exactly one namespace (its
   direct children load, not its subtree); `widen` adds it to a scope.
@@ -246,6 +246,8 @@ takes the dbms the platform passes):
   (empty path: the top-level list) after statements changed it, with no banner, no scope change and no
   claim, so it may run again. Loaded means it has children, the scope selects it, or a refresh of the
   service loaded it, so a namespace a statement emptied still reloads.
+  `introspect(file, dataSource, target)` is the user-initiated request: it runs also when `autoIntrospect`
+  is off and right after a failure, but not while in flight or once loaded.
 - `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
   `editorNotificationProvider`; it shows "<product>: introspecting '<namespace>'…" with Dismiss while
   the file's newest request runs.
@@ -256,6 +258,24 @@ takes the dbms the platform passes):
   while the IDE indexes. Only a console or data source the profile's resolver accepts is used, so a
   file attached to another dbms's console is never introspected. Register a no-arg subclass as
   `<completion.contributor language="X" order="first" implementationClass="..."/>`.
+
+### Out-of-scope references
+
+A reference into a namespace the model lists but never introspected fails to resolve though the name
+may well exist. `OutOfScopeClassifier(profile).classify(reference)` tells it apart (`ReferenceScope`):
+the nearest qualifier that resolves is a namespace of the profile's levels and dbms; without loaded
+children it is `OutOfScope(dataSource, namespace)`, with children `Nonexistent`; nothing resolving above
+the name is `Unknown`. An unqualified table is in the console's current namespace (as far as the model
+lists it) when the profile `usesCurrentNamespace`, and a column of a query reading an out-of-scope table is
+out of scope with it. A namespace introspected but empty also counts as out of scope (the model cannot
+tell them apart), so a wrong name under it goes unreported. With `outOfScopeReferences` on (off by default):
+
+- `OutOfScopeReferenceFilter(serviceClass)`, registered as `daemon.highlightInfoFilter`, hides warnings and
+  errors on exactly the name of an out-of-scope reference, such as the platform's "Unable to resolve".
+  It cannot lower their severity, only hide them.
+- `IntrospectNamespaceIntention(serviceClass)`, registered as `intentionAction` for the dialect's language,
+  offers "<product>: introspect '<namespace>'" on such a reference and calls the service's `introspect`.
+  It changes no text and has no preview.
 
 ### Console namespace
 
@@ -279,6 +299,10 @@ CatalogSchemaSearchPath('`', "use {catalog}.{schema}", "use {schema}", "SWITCH {
 val row = "SELECT current_catalog AS catalog, current_schema AS schema"
 CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", catalogProbes = listOf(NamespaceProbe.Column(row, "catalog")),
     schemaProbes = listOf(NamespaceProbe.Column(row, "schema")), schemaRequired = true)
+// DuckDB: USE "c" switches to the catalog's default schema
+val current = "SELECT current_database() AS catalog, current_schema() AS schema"
+CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", useCatalog = "USE {catalog}",
+    catalogProbes = listOf(NamespaceProbe.Column(current, "catalog")), schemaProbes = listOf(NamespaceProbe.Column(current, "schema")))
 ```
 
 `CatalogImports.allCatalogs(base, dataSourceNames)`: for a dialect whose own SQL editor imports reach

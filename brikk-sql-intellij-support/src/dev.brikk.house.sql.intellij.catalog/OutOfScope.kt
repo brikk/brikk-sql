@@ -1,0 +1,162 @@
+package dev.brikk.house.sql.intellij.catalog
+
+import com.intellij.codeInsight.daemon.impl.HighlightInfo
+import com.intellij.codeInsight.daemon.impl.HighlightInfoFilter
+import com.intellij.codeInsight.intention.PsiElementBaseIntentionAction
+import com.intellij.codeInsight.intention.preview.IntentionPreviewInfo
+import com.intellij.database.dataSource.LocalDataSource
+import com.intellij.database.dataSource.LocalDataSourceManager
+import com.intellij.database.model.DasObject
+import com.intellij.database.model.ObjectKind
+import com.intellij.database.psi.DbElement
+import com.intellij.database.psi.DbPsiFacade
+import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.psi.SqlQueryExpression
+import com.intellij.sql.psi.SqlReferenceExpression
+import dev.brikk.house.sql.intellij.recoverEditorOperation
+import org.jetbrains.annotations.ApiStatus
+
+/** What a data source's model says about a reference that does not resolve. */
+@ApiStatus.Experimental
+public sealed interface ReferenceScope {
+    /** The reference lies in [namespace] of [dataSource], listed but never introspected: the name may exist. */
+    public data class OutOfScope(val dataSource: LocalDataSource, val namespace: NamespaceTarget) : ReferenceScope
+
+    /** The reference's namespace was introspected and has no such name. */
+    public data object Nonexistent : ReferenceScope
+
+    /** The model cannot tell: no namespace of the profile's dbms holds the reference. */
+    public data object Unknown : ReferenceScope
+}
+
+/**
+ * Tells a reference that does not resolve because its namespace was never introspected from one
+ * that names nothing; [classify] answers for the reference's place, so call it on references the
+ * platform reports. The namespace is the nearest qualifier that resolves; for an unqualified table
+ * with [CatalogProfile.usesCurrentNamespace], the console's current namespace, as far as the model
+ * lists it. A column of a query reading an out-of-scope table is out of scope with it. A namespace of
+ * the profile's [levels][CatalogProfile.levels] is out of scope when it has no loaded children
+ * ([CatalogProfile.childrenOf]), so a namespace introspected but empty counts as out of scope too.
+ * Call under read access; resolution may be slow.
+ */
+@ApiStatus.Experimental
+public class OutOfScopeClassifier(private val profile: CatalogProfile) {
+    private val dataSources = profile.dataSources
+
+    public fun classify(reference: SqlReferenceExpression): ReferenceScope {
+        val own = ownScope(reference)
+        if (own != ReferenceScope.Unknown) return own
+        return readTables(reference).map(::ownScope).firstOrNull { it is ReferenceScope.OutOfScope } ?: ReferenceScope.Unknown
+    }
+
+    /** The scope the reference's own qualifiers, or the console's namespace, give it. */
+    private fun ownScope(reference: SqlReferenceExpression): ReferenceScope {
+        var qualifier = reference.qualifierExpression as? SqlReferenceExpression
+        while (qualifier != null) {
+            qualifier.resolve()?.let { return namespaceScope(it) }
+            qualifier = qualifier.qualifierExpression as? SqlReferenceExpression
+        }
+        if (reference.qualifierExpression != null || reference.referenceElementType.targetKind != ObjectKind.TABLE) return ReferenceScope.Unknown
+        return currentNamespaceScope(reference.containingFile)
+    }
+
+    private fun namespaceScope(resolved: PsiElement): ReferenceScope {
+        val element = resolved as? DbElement ?: return ReferenceScope.Unknown
+        val node = element.delegate as? DasObject ?: return ReferenceScope.Unknown
+        val id = element.dataSource.uniqueId
+        val dataSource = LocalDataSourceManager.getInstance(resolved.project).dataSources.firstOrNull { it.uniqueId == id } ?: return ReferenceScope.Unknown
+        if (node.kind !in profile.levels || !dataSources.accepts(dataSource.dbms)) return ReferenceScope.Unknown
+        if (profile.childrenOf(node).isNotEmpty()) return ReferenceScope.Nonexistent
+        val path = generateSequence(node) { it.dasParent }.takeWhile { it.kind in profile.levels }.map { it.name }.toList().asReversed()
+        return ReferenceScope.OutOfScope(dataSource, NamespaceTarget(path, node))
+    }
+
+    /** The deepest listed namespace of the console's current one, when it is childless. */
+    private fun currentNamespaceScope(file: PsiFile): ReferenceScope {
+        if (!profile.usesCurrentNamespace) return ReferenceScope.Unknown
+        val current = dataSources.consoleNamespace(file).ifEmpty { return ReferenceScope.Unknown }
+        val dataSource = dataSources.resolve(file).dataSource ?: return ReferenceScope.Unknown
+        val model = DbPsiFacade.getInstance(file.project).findDataSource(dataSource.uniqueId)?.model ?: return ReferenceScope.Unknown
+        val resolver = profile.pathResolver
+        val target = current.indices.reversed().firstNotNullOfOrNull { resolver.resolve(model.modelRoots.toList(), current.take(it + 1)) }
+            ?: return ReferenceScope.Unknown
+        if (target.node.kind !in profile.levels || !resolver.isChildless(target.node)) return ReferenceScope.Unknown
+        return ReferenceScope.OutOfScope(dataSource, target)
+    }
+
+    /** The unresolved table references of the queries around [reference], innermost first. */
+    private fun readTables(reference: SqlReferenceExpression): Sequence<SqlReferenceExpression> =
+        generateSequence(PsiTreeUtil.getParentOfType(reference, SqlQueryExpression::class.java)) { PsiTreeUtil.getParentOfType(it, SqlQueryExpression::class.java) }
+            .mapNotNull { it.tableExpression }
+            .flatMap { PsiTreeUtil.findChildrenOfType(it, SqlReferenceExpression::class.java) }
+            .filter { it !== reference && it.referenceElementType.targetKind == ObjectKind.TABLE && it.resolve() == null }
+}
+
+/**
+ * Hides the reports of references that are out of scope ([OutOfScopeClassifier]) when the profile's
+ * [outOfScopeReferences][CatalogProfile.outOfScopeReferences] is on: the names may exist, the model
+ * just never loaded them. A report is a warning or error on exactly a reference's name, such as the
+ * platform's "Unable to resolve" ones (whose columns may still resolve to a placeholder); names under
+ * introspected namespaces stay reported. Register a no-arg subclass naming the plugin's service class as `daemon.highlightInfoFilter`.
+ */
+@ApiStatus.Experimental
+public abstract class OutOfScopeReferenceFilter(private val service: Class<out AutoIntrospectService>) : HighlightInfoFilter {
+    final override fun accept(highlightInfo: HighlightInfo, file: PsiFile?): Boolean {
+        if (file == null || highlightInfo.severity < HighlightSeverity.WEAK_WARNING) return true
+        val profile = file.project.getService(service)?.profile?.takeIf { it.outOfScopeReferences } ?: return true
+        return recoverEditorOperation {
+            val reference = PsiTreeUtil.getNonStrictParentOfType(file.findElementAt(highlightInfo.startOffset), SqlReferenceExpression::class.java)
+            val reported = reference?.identifier?.textRange?.let { it.startOffset == highlightInfo.startOffset && it.endOffset == highlightInfo.endOffset } == true
+            !reported || OutOfScopeClassifier(profile).classify(reference) !is ReferenceScope.OutOfScope
+        }.getOrElse { e ->
+            LOG.warn("Classifying an unresolved reference failed", e)
+            true
+        }
+    }
+
+    private companion object {
+        val LOG = logger<OutOfScopeReferenceFilter>()
+    }
+}
+
+/**
+ * Alt+Enter on an out-of-scope reference ([OutOfScopeClassifier]): "Introspect '<namespace>'" loads
+ * that namespace's children now through the plugin's [AutoIntrospectService.introspect], with its
+ * banner, even where automatic introspection is off. Available when the profile's
+ * [outOfScopeReferences][CatalogProfile.outOfScopeReferences] is on and the namespace is not being
+ * introspected already. Register a no-arg subclass naming the plugin's service class as
+ * `intentionAction` for the dialect's language.
+ */
+@ApiStatus.Experimental
+public abstract class IntrospectNamespaceIntention(private val service: Class<out AutoIntrospectService>) : PsiElementBaseIntentionAction() {
+    final override fun getFamilyName(): String = "Introspect namespace"
+
+    final override fun startInWriteAction(): Boolean = false
+
+    final override fun isAvailable(project: Project, editor: Editor?, element: PsiElement): Boolean {
+        val target = target(project, element) ?: return false
+        text = "${target.first.profile.productLabel}: introspect '${target.second.namespace.path.joinToString(".")}'"
+        return true
+    }
+
+    final override fun invoke(project: Project, editor: Editor?, element: PsiElement) {
+        val (requests, scope) = target(project, element) ?: return
+        requests.introspect(element.containingFile, scope.dataSource, scope.namespace)
+    }
+
+    final override fun generatePreview(project: Project, editor: Editor, file: PsiFile): IntentionPreviewInfo = IntentionPreviewInfo.EMPTY
+
+    private fun target(project: Project, element: PsiElement): Pair<AutoIntrospectService, ReferenceScope.OutOfScope>? {
+        val requests = project.getService(service)?.takeIf { it.profile.outOfScopeReferences } ?: return null
+        val reference = PsiTreeUtil.getNonStrictParentOfType(element, SqlReferenceExpression::class.java) ?: return null
+        val scope = OutOfScopeClassifier(requests.profile).classify(reference) as? ReferenceScope.OutOfScope ?: return null
+        val key = AutoIntrospectEngine.Key(scope.dataSource.uniqueId, scope.namespace.path)
+        return (requests to scope).takeIf { requests.engine.state(key) != AutoIntrospectEngine.State.InFlight }
+    }
+}

@@ -1,0 +1,158 @@
+package dev.brikk.house.sql.intellij.catalog
+
+import com.intellij.codeInsight.daemon.impl.HighlightInfoFilter
+import com.intellij.codeInspection.LocalInspectionEP
+import com.intellij.codeInspection.LocalInspectionTool
+import com.intellij.database.Dbms
+import com.intellij.database.model.ObjectKind
+import com.intellij.database.util.ObjectPath
+import com.intellij.database.util.SearchPath
+import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.dialects.postgres.PgDialect
+import com.intellij.sql.psi.SqlReferenceExpression
+import dev.brikk.house.sql.intellij.testing.RecordingConsole
+import dev.brikk.house.sql.intellij.testing.setSqlDialectMapping
+import java.util.UUID
+
+/** Unresolved references under the fixture model's childless catalogs `hive` and `memory`, from a PostgreSQL file attached to its console. */
+class OutOfScopeTest : AutoIntrospectTestCase() {
+    class Filter : OutOfScopeReferenceFilter(Service::class.java)
+    class Intention : IntrospectNamespaceIntention(Service::class.java)
+
+    private lateinit var recording: RecordingConsole
+
+    override fun setUp() {
+        super.setUp()
+        useService(Profile(autoIntrospect = false, outOfScopeReferences = true))
+    }
+
+    override fun tearDown() {
+        try {
+            if (::recording.isInitialized) recording.close()
+        } finally {
+            super.tearDown()
+        }
+    }
+
+    /** Opens [text] (with `<caret>` where wanted) as a PostgreSQL file attached to the data source's console. */
+    private fun open(text: String, current: List<String> = emptyList()) {
+        if (::recording.isInitialized) recording.close()
+        myFixture.configureByText("scope-${UUID.randomUUID()}.sql", text)
+        setSqlDialectMapping(project, myFixture.file.virtualFile, PgDialect.INSTANCE, testRootDisposable)
+        recording = RecordingConsole(project, myFixture.file.virtualFile, source)
+        if (current.isNotEmpty()) {
+            val path = current.drop(1).fold(ObjectPath.create(current[0], ObjectKind.DATABASE)) { parent, name -> parent.append(name, ObjectKind.SCHEMA) }
+            recording.console.setSearchPath(SearchPath.of(path))
+        }
+    }
+
+    private fun classify(name: String, profile: CatalogProfile = service.profile): ReferenceScope {
+        val offset = myFixture.file.text.indexOf(name).also { check(it >= 0) { "No $name" } }
+        val reference = checkNotNull(PsiTreeUtil.getNonStrictParentOfType(myFixture.file.findElementAt(offset), SqlReferenceExpression::class.java))
+        return OutOfScopeClassifier(profile).classify(reference)
+    }
+
+    private fun assertOutOfScope(expected: List<String>, actual: ReferenceScope) {
+        val scope = assertInstanceOf(actual, ReferenceScope.OutOfScope::class.java)
+        assertSame(source, scope.dataSource)
+        assertEquals(expected, scope.namespace.path)
+    }
+
+    fun testANameUnderAChildlessCatalogIsOutOfScope() {
+        open("SELECT * FROM hive.web.orders")
+        assertOutOfScope(listOf("hive"), classify("web"))
+        assertOutOfScope(listOf("hive"), classify("orders"))
+    }
+
+    fun testANameUnderAnIntrospectedNamespaceDoesNotExist() {
+        open("SELECT * FROM loaded.nope.orders")
+        assertEquals(ReferenceScope.Nonexistent, classify("nope"))
+        open("SELECT * FROM loaded.web.nope")
+        assertEquals(ReferenceScope.Nonexistent, classify("nope"))
+    }
+
+    fun testWithoutAResolvingQualifierTheModelCannotTell() {
+        open("SELECT * FROM nothere.web.orders")
+        assertEquals(ReferenceScope.Unknown, classify("nothere"))
+        assertEquals(ReferenceScope.Unknown, classify("web"))
+    }
+
+    fun testColumnsOfAnOutOfScopeTableAreOutOfScope() {
+        open("SELECT o.x, y FROM hive.web.orders o")
+        assertOutOfScope(listOf("hive"), classify("x"))
+        assertOutOfScope(listOf("hive"), classify("y"))
+        open("SELECT o.x FROM hive.web.orders o, loaded.nope.t")
+        assertOutOfScope(listOf("hive"), classify("x"))
+        open("SELECT y FROM loaded.web.orders")
+        assertEquals("a column of an introspected table", ReferenceScope.Unknown, classify("y"))
+    }
+
+    fun testAnUnqualifiedTableIsInTheConsolesNamespace() {
+        open("SELECT * FROM orders", current = listOf("hive", "web"))
+        assertEquals("only where the dialect uses the console's namespace", ReferenceScope.Unknown, classify("orders"))
+        val profile = Profile(usesCurrentNamespace = true, outOfScopeReferences = true)
+        assertOutOfScope(listOf("hive"), classify("orders", profile))
+        open("SELECT * FROM nope", current = listOf("loaded", "web"))
+        assertEquals(ReferenceScope.Unknown, classify("nope", profile))
+    }
+
+    fun testOnlyNamespacesOfTheProfilesDbmsCount() {
+        open("SELECT * FROM hive.web.orders")
+        assertEquals(ReferenceScope.Unknown, classify("web", Profile(dbms = Dbms.MYSQL)))
+    }
+
+    private fun unresolved(): List<String> {
+        // The platform's SQL resolution inspection, whose package differs between releases.
+        val resolve = LocalInspectionEP.LOCAL_INSPECTION.extensionList.single { it.implementationClass.endsWith(".SqlResolveInspection") }
+        myFixture.enableInspections(resolve.instantiateTool() as LocalInspectionTool)
+        return myFixture.doHighlighting(HighlightSeverity.WEAK_WARNING)
+            .filter { it.inspectionToolId == "SqlResolveInspection" }
+            .map { myFixture.file.text.substring(it.startOffset, it.endOffset) }
+    }
+
+    fun testTheFilterHidesOnlyOutOfScopeReports() {
+        HighlightInfoFilter.EXTENSION_POINT_NAME.point.registerExtension(Filter(), testRootDisposable)
+        open("SELECT o.x FROM hive.web.orders o, loaded.nope.t; SELECT * FROM nothere.web.orders")
+        assertEquals(listOf("nope", "nothere"), unresolved())
+        useService(Profile(outOfScopeReferences = false))
+        open("SELECT o.x FROM hive.web.orders o")
+        assertEquals("off until the dialect enables it", listOf("x", "web"), unresolved().sorted().reversed())
+    }
+
+    fun testTheIntentionIntrospectsTheNamespace() {
+        open("SELECT * FROM hive.we<caret>b.orders")
+        val intention = Intention()
+        assertTrue(intention.isAvailable(project, myFixture.editor, myFixture.file))
+        assertEquals("Fixture: introspect 'hive'", intention.text)
+        intention.invoke(project, myFixture.editor, myFixture.file)
+        val refresh = nextRefresh()
+        assertEquals("even with automatic introspection off", "hive", pending())
+        assertTrue(selects(listOf("hive")))
+        assertFalse("not while in flight", intention.isAvailable(project, myFixture.editor, myFixture.file))
+        refresh.finish { throw java.sql.SQLException("offline") }
+        awaitIdle()
+        assertTrue("again at once after a failure", intention.isAvailable(project, myFixture.editor, myFixture.file))
+        intention.invoke(project, myFixture.editor, myFixture.file)
+        nextRefresh().finish { hive.schemas.createOrGet("web").tables.createOrGet("orders") }
+        awaitIdle()
+        assertFalse("resolved now", intention.isAvailable(project, myFixture.editor, myFixture.file))
+    }
+
+    fun testTheIntentionIsOfferedOnAColumnOfAnOutOfScopeTable() {
+        open("SELECT o.<caret>x FROM hive.web.orders o")
+        val intention = Intention()
+        assertTrue(intention.isAvailable(project, myFixture.editor, myFixture.file))
+        assertEquals("Fixture: introspect 'hive'", intention.text)
+    }
+
+    fun testTheIntentionIsNotOfferedForNamesThatDoNotExist() {
+        val intention = Intention()
+        open("SELECT * FROM loaded.no<caret>pe.orders")
+        assertFalse(intention.isAvailable(project, myFixture.editor, myFixture.file))
+        open("SELECT * FROM hive.we<caret>b.orders")
+        useService(Profile(outOfScopeReferences = false))
+        assertFalse("off until the dialect enables it", intention.isAvailable(project, myFixture.editor, myFixture.file))
+        assertNoRefresh()
+    }
+}
