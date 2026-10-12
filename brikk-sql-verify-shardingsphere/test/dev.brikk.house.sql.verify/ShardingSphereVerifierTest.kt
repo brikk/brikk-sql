@@ -1,9 +1,11 @@
 package dev.brikk.house.sql.verify
 
+import java.net.URLClassLoader
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
@@ -12,6 +14,23 @@ import kotlin.test.assertTrue
  * advisory tier — not bugs to "fix" in this module.
  */
 internal class ShardingSphereVerifierTest {
+
+    @Test
+    fun parsersLoadUnderAForeignContextClassLoader() {
+        val thread = Thread.currentThread()
+        val previous = thread.contextClassLoader
+        val foreign = URLClassLoader(emptyArray(), null)
+        thread.contextClassLoader = foreign
+        try {
+            for (engine in listOf("hive", "mysql")) {
+                val v = verifier(engine)
+                assertIs<VerifyResult.Accepted>(v.verify("SELECT * FROM t"), engine)
+                assertSame(foreign, thread.contextClassLoader)
+            }
+        } finally {
+            thread.contextClassLoader = previous
+        }
+    }
 
     // -- postgres -------------------------------------------------------------------------
 

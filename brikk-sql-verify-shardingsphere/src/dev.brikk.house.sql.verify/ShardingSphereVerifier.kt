@@ -25,8 +25,8 @@ import org.apache.shardingsphere.sql.parser.api.SQLParserEngine
  *   `PREWHERE`/`SETTINGS`, `{param:UInt32}`, and `CAST(x AS Nullable(String))`. For engine-exact
  *   ClickHouse verification use the chDB-backed `ClickhouseVerifier` in `brikk-sql-oracle`.
  *
- * ShardingSphere resolves its dialect parsers through `ServiceLoader`; in a plugin class loader,
- * call it with the thread context class loader set to this library's loader.
+ * ShardingSphere resolves its dialect parsers through `ServiceLoader` on the thread context class
+ * loader, so construction and parsing run with it set to this library's loader (a plugin's).
  *
  * The [SQLParserEngine] is the expensive part; hold one instance per dialect and reuse it.
  */
@@ -36,12 +36,13 @@ public class ShardingSphereVerifier(
 ) : SqlVerifier {
     override val advisory: Boolean get() = true
 
-    private val parser: SQLParserEngine =
+    private val parser: SQLParserEngine = withOwnContextClassLoader {
         SQLParserEngine(databaseType, CacheOption(CACHE_INITIAL_CAPACITY, CACHE_MAXIMUM_SIZE))
+    }
 
     override fun verify(sql: String): VerifyResult =
         try {
-            parser.parse(sql, false)
+            withOwnContextClassLoader { parser.parse(sql, false) }
             VerifyResult.Accepted
         } catch (e: CancellationException) {
             throw e
@@ -53,6 +54,17 @@ public class ShardingSphereVerifier(
     /** ShardingSphere has no expression-only entry point, so the fragment is wrapped in `SELECT`. */
     override fun verifyExpression(sql: String): VerifyResult =
         verify("$EXPRESSION_PREFIX$sql").withoutPrefix(EXPRESSION_PREFIX)
+
+    private inline fun <T> withOwnContextClassLoader(action: () -> T): T {
+        val thread = Thread.currentThread()
+        val previous = thread.contextClassLoader
+        thread.contextClassLoader = ShardingSphereVerifier::class.java.classLoader
+        try {
+            return action()
+        } finally {
+            thread.contextClassLoader = previous
+        }
+    }
 
     public companion object {
         private const val EXPRESSION_PREFIX = "SELECT "
