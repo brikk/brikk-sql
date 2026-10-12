@@ -220,6 +220,14 @@ takes the dbms the platform passes):
   lookups give `NotFound`. `consoleNamespace(file)` is the valid console's current namespace,
   outermost first.
 
+- `NamespacePathResolver(levels, usesCurrentNamespace, maxDepth = levels.size, childrenOf)`:
+  `resolve(roots, path, currentNamespace)` finds the model object a typed dotted path addresses and
+  returns its absolute path (`NamespaceTarget`). `levels` are the namespace kinds, top first:
+  `[DATABASE, SCHEMA]` for catalogs as databases, `[SCHEMA]` for one level. Paths are tried as
+  absolute first, then (when enabled) under the current namespace's first one, two, ... names; up
+  to `maxDepth` names, so a dialect may address tables below its namespaces. Names match exactly,
+  else ignoring case; an unresolved path gives null. `isChildless(node)`: listed but not introspected.
+
 Internal API used, by class (the platform offers no public alternative):
 
 | API | Used by | Why | Marketplace |
