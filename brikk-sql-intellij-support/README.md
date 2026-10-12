@@ -308,6 +308,11 @@ not list go, unknown listed names are server-only, platform builtin items neithe
 `profile.baseline(snapshot)` is the list merged (default `completableFunctions()`); it must not call
 back into the completion profile's hooks.
 
+`TrinoFunctionHarvester` reads Trino's `SHOW FUNCTIONS` (and `version()`) with the bundled Trino
+catalog's modeling, which is generated from the same command: the harvest of the vendored 483 dump
+equals the bundled 483 catalog. `TrinoLiveCatalogProfile` (only `dbms` left) uses it once per session
+with `REPLACE`, in memory, and is off (`enabled = false`) until the Trino plugin turns it on.
+
 ### Executed statements
 
 `ExecutionObserver(project, scope)`: register a project service subclass with its
