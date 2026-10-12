@@ -66,7 +66,7 @@ public class DorisVerifier private constructor(private val linked: LinkedParser)
 
     /**
      * Verifies [script], one or more `;`-separated statements, and reports every syntax error
-     * the grammar recovers past, in source order, each spanning its offending token. This is the
+     * the grammar recovers past, in offset order, each spanning its offending token. This is the
      * grammar alone: unlike [verify] it skips the SLL fast path, and a Doris post-processing
      * check that fails ends the scan with its error.
      *
@@ -122,7 +122,9 @@ public class DorisVerifier private constructor(private val linked: LinkedParser)
             errors += errorAt(script, cause.message?.trim().orEmpty())
         }
         cancellation?.let { throw it }
-        return if (errors.isEmpty()) VerifyResult.Accepted else VerifyResult.Rejected(errors)
+        if (errors.isEmpty()) return VerifyResult.Accepted
+        // Recovery can report an error after a later one; editors expect source order.
+        return VerifyResult.Rejected(errors.sortedWith(compareBy(nullsLast()) { it.offset }))
     }
 
     /** ANTLR token indices count code points; an EOF token has an empty span. */

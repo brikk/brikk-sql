@@ -103,6 +103,13 @@ internal class DorisVerifierTest {
     }
 
     @Test
+    fun scriptErrorsAreInOffsetOrder() {
+        val offsets = assertIs<VerifyResult.Rejected>(verifier.verifyScript("SELECT 1 FROM a-")).errors.map { it.offset }
+        assertEquals(offsets.sortedBy { it }, offsets)
+        assertEquals(2, offsets.size)
+    }
+
+    @Test
     fun aMissingParserIsReportedWithItsSource() {
         val missing = Path.of("build/no-such-doris-parser.jar")
         assertContains(
