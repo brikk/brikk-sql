@@ -22,11 +22,17 @@ import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.runBlocking
+import org.junit.Assume
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.JUnit4
 
 /**
  * Real consoles on a real DuckDB data source: statements run through each console's own session and
  * engine, the registered interceptor sees their connections, and the observer their finished requests.
+ * JUnit 4, so a test can skip on an assumption.
  */
+@RunWith(JUnit4::class)
 class LiveCatalogConsoleTest : BasePlatformTestCase() {
     private class Console(val file: PsiFile, val session: DatabaseSession, val console: JdbcConsole)
 
@@ -85,7 +91,8 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
 
     private fun Console.sessionFunctions() = service.completion(file).selection.session.functions.map { it.def.name }
 
-    fun testTwoConsolesKeepTheirOwnTemporaryMacrosThroughARefresh() {
+    @Test
+    fun twoConsolesKeepTheirOwnTemporaryMacrosThroughARefresh() {
         val a = console("a")
         a.run("CREATE TEMP MACRO only_in_a(x) AS x + 1")
         val b = console("b")
@@ -99,8 +106,13 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         assertFalse("only_in_b" in service.completion(a.file).functions.map { it.name })
     }
 
-    /** Needs the `fts` extension installed for the user (`INSTALL fts` once); the test loads it, offline. */
-    fun testAnExtensionASessionLoadedSurvivesARefresh() {
+    /** Needs the `fts` extension installed for the user (`INSTALL fts` once), and skips without; it loads it offline. */
+    @Test
+    fun anExtensionASessionLoadedSurvivesARefresh() {
+        val installed = embeddedDuckdb().use { engine ->
+            engine.createStatement().use { it.executeQuery("SELECT installed FROM duckdb_extensions() WHERE extension_name = 'fts'").use { rows -> rows.next() && rows.getBoolean(1) } }
+        }
+        Assume.assumeTrue("the fts extension is not installed for this user", installed)
         val a = console("a")
         a.run("LOAD fts")
         assertTrue("stem" in a.sessionFunctions())
