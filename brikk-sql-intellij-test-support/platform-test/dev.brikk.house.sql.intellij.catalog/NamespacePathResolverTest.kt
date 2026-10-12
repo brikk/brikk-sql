@@ -42,7 +42,8 @@ class NamespacePathResolverTest : BasePlatformTestCase() {
         val resolver = NamespacePathResolver(twoLevels, usesCurrentNamespace = false)
         assertEquals("Hive", resolver.resolve(catalogs, listOf("Hive"))?.node?.name)
         assertEquals("hive", resolver.resolve(catalogs, listOf("hive"))?.node?.name)
-        assertEquals(listOf("hive", "web"), resolver.resolve(catalogs, listOf("HIVE", "WEB"))?.path?.map(String::lowercase))
+        assertEquals("the model's names, so one object has one path", listOf("hive", "web"), resolver.resolve(catalogs, listOf("hive", "WEB"))?.path)
+        assertEquals(listOf("Hive"), resolver.resolve(catalogs, listOf("Hive"))?.path)
     }
 
     fun testRelativePathsUseTheCurrentNamespace() {

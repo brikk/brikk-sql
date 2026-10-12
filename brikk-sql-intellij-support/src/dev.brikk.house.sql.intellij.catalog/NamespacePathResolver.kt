@@ -4,7 +4,7 @@ import com.intellij.database.model.DasObject
 import com.intellij.database.model.ObjectKind
 import org.jetbrains.annotations.ApiStatus
 
-/** A model object addressed by its absolute path, top level first (for example catalog, schema). */
+/** A model object and its absolute path in the model's own names, top level first (for example catalog, schema). */
 @ApiStatus.Experimental
 public data class NamespaceTarget(val path: List<String>, val node: DasObject)
 
@@ -35,9 +35,9 @@ public class NamespacePathResolver(
         if (path.isEmpty() || path.size > maxDepth) return null
         val prefixes = if (usesCurrentNamespace) 0..minOf(currentNamespace.size, maxDepth - path.size) else 0..0
         return prefixes.asSequence().map { currentNamespace.take(it) + path }.firstNotNullOfOrNull { absolute ->
-            val top = roots.named(absolute.first()) ?: return@firstNotNullOfOrNull null
-            absolute.drop(1).fold<String, DasObject?>(top) { node, name -> node?.let(childrenOf)?.named(name) }
-                ?.let { NamespaceTarget(absolute, it) }
+            val nodes = ArrayList<DasObject>(absolute.size)
+            for (name in absolute) nodes += (nodes.lastOrNull()?.let(childrenOf) ?: roots).named(name) ?: return@firstNotNullOfOrNull null
+            NamespaceTarget(nodes.map { it.name }, nodes.last())
         }
     }
 

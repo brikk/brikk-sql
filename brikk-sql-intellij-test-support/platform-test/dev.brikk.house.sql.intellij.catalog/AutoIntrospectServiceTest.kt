@@ -191,6 +191,16 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertNull(pending())
     }
 
+    /** Typed in another case, a namespace is the same request and the same scope entry. */
+    fun testTheModelsNamesKeyRequests() {
+        assertTrue(service.requestPath(myFixture.file, listOf("HIVE")))
+        assertEquals("hive", pending())
+        assertFalse(service.requestPath(myFixture.file, listOf("hive")))
+        nextRefresh().finish { hive.schemas.createOrGet("web") }
+        awaitState(listOf("hive"), AutoIntrospectEngine.State.Done)
+        assertEquals(1, source.introspectionScope.root.getGroup(ObjectKind.DATABASE)?.children?.count { it.naming.names.any { name -> name.name.equals("hive", true) } })
+    }
+
     fun testDismissHidesTheBanner() {
         assertTrue(service.requestPath(myFixture.file, listOf("hive")))
         val refresh = nextRefresh()
