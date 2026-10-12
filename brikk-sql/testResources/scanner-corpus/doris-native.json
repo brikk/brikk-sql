@@ -1,5 +1,5 @@
 {
-  "source": "doris-intellij-plugin 61fce44 src/test/resources/parity/doris-scanners.json (inputs) and build/scanner-parity/disagreements.json (native results where they differed from core a84577b; elsewhere native equalled that core result)",
+  "source": "doris-intellij-plugin 61fce44 src/test/resources/parity/doris-scanners.json (inputs) and build/scanner-parity/disagreements.json (native results where they differed from core a84577b; elsewhere native equalled that core result); partitions cases: inputs added in core, native results from the DorisLexer token stream (split on SEMICOLON, adjacent COLON + name), DDL accepted by DorisSqlParser 4.1.4",
   "nativeArtifact": "doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar",
   "grammarRevision": "3226e0c28acf04db96878a6afc7013315defe75c",
   "cases": [
@@ -2102,6 +2102,77 @@
           {"start": 12, "end": 30, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
         ],
         "parameters": []
+      }
+    },
+    {
+      "id": "partition-fixed-range-create",
+      "group": "partitions",
+      "input": "CREATE TABLE t (k DATE, v INT) PARTITION BY RANGE(k) (PARTITION p1 VALUES [('2020-01-01'), ('2020-02-01')), PARTITION p2 VALUES LESS THAN ('2020-03-01'), PARTITION p3 VALUES LESS THAN MAXVALUE) DISTRIBUTED BY HASH(k) BUCKETS 1; SELECT :p;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 227, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 227, "end": 238, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "p", "start": 235, "end": 237}
+        ]
+      }
+    },
+    {
+      "id": "partition-list-create",
+      "group": "partitions",
+      "input": "CREATE TABLE t (k INT, c VARCHAR(10)) PARTITION BY LIST(c) (PARTITION p1 VALUES IN ('a', 'b'), PARTITION p2 VALUES IN (('c'), ('d'))) DISTRIBUTED BY HASH(k) BUCKETS 1; SELECT :q;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 167, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 167, "end": 178, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "q", "start": 175, "end": 177}
+        ]
+      }
+    },
+    {
+      "id": "partition-step-create",
+      "group": "partitions",
+      "input": "CREATE TABLE t (k DATE) PARTITION BY RANGE(k) (FROM ('2020-01-01') TO ('2020-03-01') INTERVAL 1 MONTH) DISTRIBUTED BY HASH(k) BUCKETS 1; SELECT :r;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 136, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 136, "end": 147, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "r", "start": 144, "end": 146}
+        ]
+      }
+    },
+    {
+      "id": "partition-fixed-range-alter",
+      "group": "partitions",
+      "input": "ALTER TABLE t ADD PARTITION p4 VALUES [('2020-03-01', '1'), ('2020-04-01', '5')); ALTER TABLE t ADD TEMPORARY PARTITIONS FROM ('2020-04-01') TO ('2020-06-01') INTERVAL 1 MONTH; SELECT :s;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 81, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 81, "end": 176, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 176, "end": 187, "hasSql": true, "hasPipeOperator": false, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "s", "start": 184, "end": 186}
+        ]
+      }
+    },
+    {
+      "id": "partition-alter-pipe",
+      "group": "partitions",
+      "input": "ALTER TABLE t ADD PARTITION IF NOT EXISTS p5 VALUES [(-1), (MAXVALUE)) (\"replication_num\" = \"1\"); FROM t |> WHERE k = :k;",
+      "native": {
+        "statements": [
+          {"start": 0, "end": 97, "hasSql": true, "hasPipeOperator": false, "boundaryError": false},
+          {"start": 97, "end": 121, "hasSql": true, "hasPipeOperator": true, "boundaryError": false}
+        ],
+        "parameters": [
+          {"name": "k", "start": 118, "end": 120}
+        ]
       }
     }
   ]

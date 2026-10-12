@@ -27,6 +27,9 @@ class StarrocksDialect : Dialect() {
     override val name: String get() = "starrocks"
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.MERGED_FIRST
 
+    // brikk-native: StarRocks.g4 partitionKeyDesc `VALUES [ (...), (...) )`, as in Doris.
+    override val halfOpenPartitionRanges: Boolean get() = true
+
     // sqlglot: StarRocks(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
 

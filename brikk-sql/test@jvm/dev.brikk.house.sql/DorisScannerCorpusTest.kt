@@ -131,24 +131,24 @@ class DorisScannerCorpusTest {
         } else ranges
     }
 
+    // Doris `VALUES [lower, upper)` partition ranges close `[` with `)`, as the grammar requires.
     private fun bracketsBalance(statement: String): Boolean {
-        val open = ArrayList<TokenType>()
-        for (token in Tokenizer(DorisDialect.TOKENIZER_CONFIG).tokenizeForEditor(statement).tokens) {
+        val closers = ArrayList<TokenType>()
+        val tokens = Tokenizer(DorisDialect.TOKENIZER_CONFIG).tokenizeForEditor(statement).tokens
+        for ((index, token) in tokens.withIndex()) {
             when (token.tokenType) {
-                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> open += token.tokenType
+                TokenType.L_PAREN -> closers += TokenType.R_PAREN
+                TokenType.L_BRACE -> closers += TokenType.R_BRACE
+                TokenType.L_BRACKET ->
+                    closers += if (tokens.getOrNull(index - 1)?.tokenType == TokenType.VALUES) TokenType.R_PAREN else TokenType.R_BRACKET
                 TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> {
-                    val opener = when (token.tokenType) {
-                        TokenType.R_PAREN -> TokenType.L_PAREN
-                        TokenType.R_BRACKET -> TokenType.L_BRACKET
-                        else -> TokenType.L_BRACE
-                    }
-                    if (open.lastOrNull() != opener) return false
-                    open.removeAt(open.lastIndex)
+                    if (closers.lastOrNull() != token.tokenType) return false
+                    closers.removeAt(closers.lastIndex)
                 }
                 else -> {}
             }
         }
-        return open.isEmpty()
+        return closers.isEmpty()
     }
 
     private companion object {
