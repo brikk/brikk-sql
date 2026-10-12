@@ -169,12 +169,17 @@ public class PipeExecutionContract(
         }
     }
 
-    /** A statement whose only pipe is nested executes its lowering. */
+    /** A statement whose only pipe is nested executes its lowering, selected or found at the caret. */
     public fun lowersNestedOnlyPipelines() {
         val sql = "SELECT id FROM (FROM offline_rows |> WHERE id > 0) AS s"
         Run(sql).use { run ->
             run.execute()
             expect(run.queries == listOf(lowered(sql))) { "Nested-only pipeline: ${run.queries} ${run.messages}" }
+        }
+        Run("SELECT 1; $sql; SELECT 2;").use { run ->
+            run.editor.caretModel.moveToOffset(run.editor.document.text.indexOf("WHERE"))
+            run.execute(execOption())
+            expectQueries(run, listOf(lowered(sql)), "the nested-only pipeline at the caret")
         }
     }
 
