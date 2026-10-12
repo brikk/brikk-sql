@@ -19,6 +19,7 @@ import java.sql.SQLException
  *
  * Binding evaluates some expressions (table-function arguments such as `range(nextval('s'))`),
  * and the engine has external access enabled, so this oracle is for trusted corpus SQL only.
+ * Editors use [ParseOnlyDuckdbVerifier].
  *
  * Cold start: the first [verify] boots an embedded DuckDB; the connection is created lazily
  * and kept for the verifier's lifetime. [verify] is synchronized because one connection is

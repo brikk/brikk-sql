@@ -30,8 +30,8 @@ public object SqlVerifiers {
      *   SQLSTATE discrimination) for the postgres corpus gate, and `ClickhouseVerifier` (chDB
      *   `EXPLAIN AST`) for offline ClickHouse fidelity checks.
      *
-     * Editors should construct the engine verifier they need directly rather than use this
-     * registry.
+     * Editors should construct the engine verifier they need directly, for example
+     * [ParseOnlyDuckdbVerifier], rather than use this registry.
      */
     public fun forEngine(name: String): SqlVerifier? = when (name.lowercase()) {
         "doris" -> dorisVerifier()

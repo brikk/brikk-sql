@@ -18,13 +18,19 @@ All artifacts use the **`dev.brikk.house`** group:
 | --- | --- | --- |
 | [brikk-sql](brikk-sql/README.md) | `brikk-sql-jvm` | Tokenizer, AST, dialects, parser, generator, optimizer, lineage, and schema/shape analysis. |
 | [brikk-sql-metadata](brikk-sql-metadata/) | `brikk-sql-metadata-jvm` | Function/type catalogs and evidence-backed semantic metadata; exported by core. |
-| [brikk-sql-verify](brikk-sql-verify/) | `brikk-sql-verify` | Native-grammar verification using Trino, DuckDB, and Doris; ShardingSphere advisory parsers. |
+| [brikk-sql-verify-api](brikk-sql-verify-api/) | `brikk-sql-verify-api` | `SqlVerifier` contract, four-state `VerifyResult`, and editor-ready error positions. |
+| [brikk-sql-verify-trino](brikk-sql-verify-trino/) | `brikk-sql-verify-trino` | Trino verifier over trino-parser 483 (Java 25 runtime). |
+| [brikk-sql-verify-duckdb](brikk-sql-verify-duckdb/) | `brikk-sql-verify-duckdb` | DuckDB corpus-gate verifier and the parse-only editor verifier. |
+| [brikk-sql-verify-doris](brikk-sql-verify-doris/) | `brikk-sql-verify-doris` | Doris FE parser verifier, single statement or every error in a script. |
+| [brikk-sql-verify-shardingsphere](brikk-sql-verify-shardingsphere/) | `brikk-sql-verify-shardingsphere` | Advisory ShardingSphere grammars for PostgreSQL, MySQL, Hive and ClickHouse. |
+| [brikk-sql-verify](brikk-sql-verify/) | `brikk-sql-verify` | Aggregate of every verifier plus the `SqlVerifiers` registry. |
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Embedded IntelliJ action, snapshot and console-preparation mechanics; independently versioned. |
 
 Core and metadata target JVM for current publications and retain the `-jvm`
-coordinates. They emit Java 21-compatible bytecode. Verification modules require
-JDK 25. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
+coordinates. They emit Java 21-compatible bytecode, as do the verification
+modules; trino-parser itself, and so the Trino verifier and the aggregate, need a
+Java 25 runtime. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
 Latest core, metadata, verify and oracle release: **`0.19.1`**. SQL IntelliJ
