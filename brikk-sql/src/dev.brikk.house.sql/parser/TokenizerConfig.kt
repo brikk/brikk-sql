@@ -71,7 +71,7 @@ class TokenizerConfig(
     )
 
     /**
-     * brikk extension #52 (docs/brikk-extensions.md): native lexer rules sqlglot's tables lack.
+     * brikk extension #53 (docs/brikk-extensions.md): native lexer rules sqlglot's tables lack.
      * [nestedBlockComments]: block comments nest, also inside optimizer hints, ending where the
      * native lexer ends them; editor tokenization refuses one that no depth count closes there.
      * [dashCommentLineContinuation]: backslash + LF (not CRLF) continues a `--` comment.

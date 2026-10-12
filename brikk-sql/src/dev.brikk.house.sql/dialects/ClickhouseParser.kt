@@ -608,7 +608,7 @@ open class ClickhouseParser(
         }
 
         val placeholder = expression(Placeholder(args("this" to this_, "kind" to kind)))
-        // brikk extension #53: server query parameters keep their authored spelling.
+        // brikk extension #54: server query parameters keep their authored spelling.
         val open = tokens.getOrNull(startIndex - 1)
         val close = prevToken
         if (open?.tokenType == TokenType.L_BRACE && close.end < sql.length && sql[open.start] == '{') {

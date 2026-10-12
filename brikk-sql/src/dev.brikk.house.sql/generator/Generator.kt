@@ -280,6 +280,19 @@ open class Generator(
     open val dialect: dev.brikk.house.sql.dialects.Dialect
         get() = dev.brikk.house.sql.dialects.Dialects.BASE
 
+    // brikk-native: previews may show flagged loss, but executable lowering must
+    // not silently remove a row/column-changing query operator. Additive state,
+    // not a constructor parameter: existing generator JVM signatures stay intact.
+    internal var refuseUnsupportedPivots: Boolean = false
+
+    internal fun unsupportedPivotSql(): String {
+        if (refuseUnsupportedPivots) {
+            throw UnsupportedError("${dialect.name.ifBlank { "Target dialect" }} cannot faithfully lower PIVOT/UNPIVOT for execution")
+        }
+        unsupported("PIVOT unsupported")
+        return ""
+    }
+
     // sqlglot: Dialect.* defaults used by the base generator
     open val dialectSupportsColumnJoinMarks: Boolean get() = false
     open val dialectAliasPostTablesample: Boolean get() = false

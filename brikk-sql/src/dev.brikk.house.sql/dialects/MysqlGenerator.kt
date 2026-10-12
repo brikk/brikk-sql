@@ -320,10 +320,7 @@ open class MysqlGenerator(
         renameFuncSql(if (expression.expressionsArg.isNotEmpty()) "LEAST" else "MIN", expression)
 
     // sqlglot: dialect.no_pivot_sql
-    open fun noPivotSql(expression: Pivot): String {
-        unsupported("PIVOT unsupported")
-        return ""
-    }
+    open fun noPivotSql(expression: Pivot): String = unsupportedPivotSql()
 
     // sqlglot: dialect.no_tablesample_sql
     open fun noTablesampleSql(expression: TableSample): String {

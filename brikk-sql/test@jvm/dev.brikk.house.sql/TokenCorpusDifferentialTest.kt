@@ -54,7 +54,7 @@ class TokenCorpusDifferentialTest {
         json.decodeFromString(Corpus.serializer(), testResource("token-corpus/$name"))
 
     /**
-     * brikk extension #52: where the Doris tokenizer deliberately follows the native Doris
+     * brikk extension #53: where the Doris tokenizer deliberately follows the native Doris
      * lexer instead of sqlglot. A corpus mismatch is accepted only when one of these covers
      * it, and each must still diverge from the generated (sqlglot) tables on its probe.
      */

@@ -75,13 +75,16 @@ open class PrestoGenerator(
 
     open val supportsTemporalPrecision: Boolean get() = false
 
-    // brikk extension: an open/trait row cannot be enumerated for a faithful rename.
-    // Presto/Trino have no native star RENAME; never return invalid executable SQL,
-    // drop the modifier, or append the renamed column in a different position.
+    // brikk extension: an open/trait row cannot be enumerated for a faithful DROP,
+    // SET or RENAME. Presto/Trino have no native star EXCEPT/REPLACE/RENAME; do not
+    // discard modifiers or guess an incomplete/reordered projection.
     override fun starSql(expression: Star): String {
-        if (!(expression.args["rename"] as? List<*>).isNullOrEmpty()) {
+        val modifiers = listOf("except_" to "EXCEPT", "replace" to "REPLACE", "rename" to "RENAME")
+            .filter { !(expression.args[it.first] as? List<*>).isNullOrEmpty() }
+            .map { it.second }
+        if (modifiers.isNotEmpty()) {
             val target = dialect.name.replaceFirstChar { it.uppercaseChar() }
-            throw UnsupportedError("$target star RENAME requires a complete column layout " +
+            throw UnsupportedError("$target star ${modifiers.joinToString("/")} requires a complete column layout " +
                 "expanded to an explicit projection before generation")
         }
         return super.starSql(expression)
@@ -610,10 +613,7 @@ open class PrestoGenerator(
         )
 
     // sqlglot: dialect.no_pivot_sql
-    open fun noPivotSql(expression: Pivot): String {
-        unsupported("PIVOT unsupported")
-        return ""
-    }
+    open fun noPivotSql(expression: Pivot): String = unsupportedPivotSql()
 
     // sqlglot: dialect.no_timestamp_sql
     open fun noTimestampSql(expression: Timestamp): String {

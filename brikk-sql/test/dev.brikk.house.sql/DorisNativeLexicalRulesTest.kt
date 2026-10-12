@@ -12,7 +12,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 
 /**
- * brikk extension #52 (docs/brikk-extensions.md): the Doris tokenizer follows the native
+ * brikk extension #53 (docs/brikk-extensions.md): the Doris tokenizer follows the native
  * DorisLexer.g4 (apache/doris 3226e0c) where sqlglot's generated tables differ.
  */
 class DorisNativeLexicalRulesTest {

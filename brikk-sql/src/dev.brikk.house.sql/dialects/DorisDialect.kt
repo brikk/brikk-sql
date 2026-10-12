@@ -48,7 +48,7 @@ class DorisDialect : Dialect() {
 
     companion object {
         /**
-         * brikk extension #52 (docs/brikk-extensions.md, NOT sqlglot parity): the GENERATED
+         * brikk extension #53 (docs/brikk-extensions.md, NOT sqlglot parity): the GENERATED
          * tables with the native Doris lexer's rules: untagged `$$` literals, nested block
          * comments and hints, backslash-LF `--` continuation, and no `#` / `{# #}` comments.
          */
