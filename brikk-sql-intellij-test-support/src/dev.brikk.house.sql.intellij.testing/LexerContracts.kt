@@ -21,7 +21,9 @@ public fun Lexer.lexAll(text: CharSequence, startOffset: Int = 0, initialState: 
 /**
  * Lexes [text] in full, then again from every token at which the lexer reports its initial state,
  * as the editor highlighter restarts it after an edit, and fails unless each restarted pass yields
- * the same tokens and states as the full pass from there on.
+ * the same tokens and states as the full pass from there on. Fails too when a `;` token is
+ * followed by more text but no token after the first is a restart point: the highlighter would
+ * then relex from the start on every edit.
  */
 public fun assertRestartsMatchFullLex(newLexer: () -> Lexer, text: CharSequence) {
     val initial = newLexer().run {
@@ -29,6 +31,10 @@ public fun assertRestartsMatchFullLex(newLexer: () -> Lexer, text: CharSequence)
         state
     }
     val full = newLexer().lexAll(text, 0, initial)
+    val semicolon = full.indexOfFirst { text.subSequence(it.start, it.end).toString() == ";" }
+    if (semicolon in 0 until full.lastIndex && full.drop(1).none { it.state == initial }) {
+        throw AssertionError("No restart point after the start, although a statement ends at ${full[semicolon].start}")
+    }
     for ((index, token) in full.withIndex()) {
         if (index == 0 || token.state != initial) continue
         val restarted = newLexer().lexAll(text, token.start, initial)

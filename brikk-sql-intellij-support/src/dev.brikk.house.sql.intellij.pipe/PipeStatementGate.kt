@@ -12,12 +12,13 @@ import org.jetbrains.annotations.ApiStatus
 /**
  * Parses PIPE statements as one node each, bounded by the dialect's statement ranges, so the
  * platform grammar never shreds them. Hold one per parser instance: it caches the ranges of the
- * text being parsed.
+ * text being parsed, which [PipeDialect.scriptRanges] returns in offset order, as core does.
  */
 @ApiStatus.Experimental
 public class PipeStatementGate(private val dialect: PipeDialect) {
     private var text: CharSequence? = null
-    private var ranges: List<SqlStatementRange> = emptyList()
+    private var hasPipe = false
+    private var ranges: List<SqlStatementRange>? = null
 
     /**
      * Where PIPE editing is enabled for the parsed file, or the project when the builder has no
@@ -28,13 +29,15 @@ public class PipeStatementGate(private val dialect: PipeDialect) {
     public fun parse(builder: PsiBuilder, claim: Boolean = false, type: IElementType = SqlCompositeElementTypes.SQL_STATEMENT): Boolean {
         if (!isEnabled(builder)) return false
         val source = builder.originalText
-        if (!claim && !source.contains("|>")) return false
         if (text !== source) {
-            ranges = dialect.scriptRanges(source.toString())
             text = source
+            hasPipe = source.contains("|>")
+            ranges = null
         }
+        if (!hasPipe && !claim) return false
+        val all = ranges ?: dialect.scriptRanges(source.toString()).also { ranges = it }
         val offset = builder.currentOffset
-        val range = ranges.firstOrNull { offset >= it.start && offset < it.end }
+        val range = all.binarySearch { if (it.end <= offset) -1 else if (it.start > offset) 1 else 0 }.let(all::getOrNull)
         if (range?.hasPipe != true && !claim) return false
         val marker = builder.mark()
         if (range == null) builder.consumeLenient()

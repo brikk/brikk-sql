@@ -20,8 +20,9 @@ public abstract class SubstrateErrorFilter(private val language: Language) : Hig
 
 /**
  * The quote handler of a dialect. Enter inside a quoted string inserts a newline, or, with
- * [EnterInString.Split], splits it into a `||` concatenation. Spans a masking lexer collapsed into
- * one string token are never split. Register a no-arg subclass as the language's `lang.quoteHandler`.
+ * [EnterInString.Split], splits it into a `||` concatenation; prefixed strings such as `E'..'`
+ * split like plain ones. Spans a masking lexer collapsed into one string token are never split.
+ * Register a no-arg subclass as the language's `lang.quoteHandler`.
  */
 @ApiStatus.Experimental
 public abstract class SqlDialectQuoteHandler(private val enter: EnterInString) : SqlQuoteHandler.Concat() {
@@ -35,5 +36,5 @@ public abstract class SqlDialectQuoteHandler(private val enter: EnterInString) :
 
     final override fun canBeConcatenated(element: PsiElement): Boolean =
         enter == EnterInString.Split && element.node?.elementType == SqlTokens.SQL_STRING_TOKEN &&
-            element.text.startsWith('\'')
+            quoteAfterPrefix(element.text) == '\''
 }

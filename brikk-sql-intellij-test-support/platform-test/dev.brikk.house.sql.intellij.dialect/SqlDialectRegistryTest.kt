@@ -45,7 +45,7 @@ class SqlDialectRegistryTest : BasePlatformTestCase() {
         val file = myFixture.configureByText("mapped-${UUID.randomUUID()}.sql", "SELECT 1").virtualFile
         setSqlDialectMapping(project, file, PgDialect.INSTANCE, testRootDisposable)
         assertEquals(PgDialect.INSTANCE, PsiManager.getInstance(project).findFile(file)?.language)
-        setDialectMapping(project, file, null)
+        assertTrue(setDialectMapping(project, file, null))
         assertNotSame(PgDialect.INSTANCE, PsiManager.getInstance(project).findFile(file)?.language)
     }
 }

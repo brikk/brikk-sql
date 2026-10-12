@@ -147,6 +147,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   into masking cast targets such as `TRY_CAST(x AS t)`. `getState` reports the base state only
   at statement starts, so the editor highlighter restarts and resynchronizes only there and
   never sees a lexer that lost its context: an edit relexes its own statement, nothing before.
+  Restoring a saved position relexes from its statement's start. A routine body still unbalanced
+  at the end of the text ends before its first `;`, so later statements keep their tokens.
 - `LenientSqlParsing` (`parser`): `PsiBuilder` extensions that never consume, scanning the
   statement to its `;` within `MAX_LOOKAHEAD` tokens: `wordAt`, `containsAny`, `firstOf`,
   `wordThenWord` (next word), `wordThenToken` (exact next token) and the general
@@ -169,14 +171,16 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   operators, system variables and builtin functions; the subclass supplies `getDbms`. Keep its
   `Dbms` outside the dialect object, whose base constructor already asks for it.
 - Comments: register the platform commenter, which toggles `-- ` lines and block comments:
-  `<lang.commenter language="MySQL" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`
-  with the dialect's language id.
+  `<lang.commenter language="<your dialect language id>" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`.
 
 `SqlDialectRegistry` (`dialect`): a static, versioned table (`VERSION`) of core dialect names,
 labels, `-- dialect:` marker spellings, IDE language ids and `Dbms` names. Each plugin's copy is
 identical data keyed only by platform identities, so plugins agree without sharing objects.
+`GenericSQL` never maps: many engines share it. Stock `DUCKDB` data sources (Generic dialect) are
+not listed while no consumer resolves a dialect by `Dbms`; adding them is a data change.
 
-`setDialectMapping(project, file, dialect)` (`dialect`): maps a file or the project and reparses.
+`setDialectMapping(project, file, dialect)` (`dialect`): maps a file or the project, reparses, and
+returns whether the mapping took effect.
 On 263 it calls `SqlDialectMappingUtilsKt.setDialectMappingSync` reflectively: a public function
 of the `intellij.database.sql.core.impl` module with no internal-API annotation, absent before
 263, where the old setter only updates storage.

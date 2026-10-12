@@ -36,6 +36,10 @@ class EditorPoliciesTest : FixtureTestCase() {
         assertTrue(enter("SELECT 'ab<caret>cd' FROM t", SplitQuotes()).contains("'ab' ||"))
     }
 
+    fun testEnterInAPrefixedStringSplitsItUnderTheSplitPolicy() {
+        assertTrue(enter("SELECT E'ab<caret>cd' FROM t", SplitQuotes()).contains("'ab' ||"))
+    }
+
     fun testEnterInACollapsedSpanNeverSplitsIt() {
         assertFalse(enter("SELECT {'k': 1<caret>2} FROM t", SplitQuotes()).contains("||"))
     }

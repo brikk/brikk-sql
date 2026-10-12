@@ -4,6 +4,7 @@ import com.intellij.lang.Language
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.HighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
@@ -11,6 +12,7 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import com.intellij.psi.tree.IElementType
 import com.intellij.sql.psi.SqlCommonTokens
 import com.intellij.sql.psi.SqlTokens
@@ -25,7 +27,8 @@ import org.jetbrains.annotations.ApiStatus
  * read as the SQL they are. A comment leaf without a comment introducer, a string leaf without a
  * leading quote, and an identifier leaf the core tokenizer of [coreDialect] reads as several
  * tokens are such spans. Each core token gets the colors the file's highlighter gives the platform
- * token of the same kind; comments inside a span keep comment colors.
+ * token of the same kind; comments inside a span keep comment colors. In injected SQL a span is
+ * read decoded, as the host's escaper decodes it.
  *
  * Words are keywords when the core tokenizer reads them as such, or, with [keywords], when they
  * are in that upper-case set. Register a no-arg subclass for the dialect's language.
@@ -36,43 +39,43 @@ public abstract class MaskedSpanRecolorAnnotator(
     private val coreDialect: String,
     private val keywords: Set<String>? = null,
 ) : Annotator {
-    private val config by lazy { TokenizerConfigs.forName(coreDialect) }
+    private val config = TokenizerConfigs.forName(coreDialect)
 
     final override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         if (element.firstChild != null) return
         val type = element.node?.elementType ?: return
-        if (element !is PsiComment && type != SqlTokens.SQL_STRING_TOKEN && type != SqlTokens.SQL_IDENT) return
-        val text = element.text
-        if (text.isEmpty() || !isSpan(element, type, text)) return
+        val comment = element is PsiComment || type in SqlTokens.COMMENT_TOKENS
+        if (!comment && type != SqlTokens.SQL_STRING_TOKEN && type != SqlTokens.SQL_IDENT) return
         val file = element.containingFile ?: return
         if (!file.language.isKindOf(language)) return
+        val span = Span.of(file, element.textRange) ?: return
+        val text = span.text
+        if (text.isEmpty() || !isSpan(comment, type, text)) return
         val lexed = Tokenizer(config).tokenizeForEditor(text)
         if (type == SqlTokens.SQL_IDENT && lexed.tokens.size < 2) return
         val highlighter = SyntaxHighlighterFactory.getSyntaxHighlighter(file.language, file.project, file.virtualFile) ?: return
-        val base = element.textRange.startOffset
         var covered = 0
         for (token in lexed.tokens) {
-            comments(text, covered, token.start, highlighter, base, holder)
-            recolor(holder, base + token.start, base + token.end + 1, attributes(highlighter, platformType(token)))
+            comments(span, covered, token.start, highlighter, holder)
+            recolor(holder, span.fileRange(token.start, token.end + 1), attributes(highlighter, platformType(token)))
             covered = token.end + 1
         }
-        comments(text, covered, lexed.failureOffset ?: text.length, highlighter, base, holder)
+        comments(span, covered, lexed.failureOffset ?: text.length, highlighter, holder)
     }
 
-    private fun isSpan(element: PsiElement, type: IElementType, text: String): Boolean = when {
-        element is PsiComment -> config.comments.keys.none(text::startsWith)
+    private fun isSpan(comment: Boolean, type: IElementType, text: String): Boolean = when {
+        comment -> config.comments.keys.none(text::startsWith)
         type == SqlTokens.SQL_STRING_TOKEN -> !startsAsString(text)
-        type == SqlTokens.SQL_IDENT -> !text.all { it.isLetterOrDigit() || it == '_' || it == '$' }
-        else -> false
+        else -> !text.all { it.isLetterOrDigit() || it == '_' || it == '$' }
     }
 
     /** Non-blank text between tokens is a comment. */
-    private fun comments(text: String, from: Int, to: Int, highlighter: SyntaxHighlighter, base: Int, holder: AnnotationHolder) {
+    private fun comments(span: Span, from: Int, to: Int, highlighter: SyntaxHighlighter, holder: AnnotationHolder) {
         var start = from
         var end = to
-        while (start < end && text[start].isWhitespace()) start++
-        while (end > start && text[end - 1].isWhitespace()) end--
-        if (start < end) recolor(holder, base + start, base + end, attributes(highlighter, SqlTokens.SQL_BLOCK_COMMENT))
+        while (start < end && span.text[start].isWhitespace()) start++
+        while (end > start && span.text[end - 1].isWhitespace()) end--
+        if (start < end) recolor(holder, span.fileRange(start, end), attributes(highlighter, SqlTokens.SQL_BLOCK_COMMENT))
     }
 
     /** The platform token of the same kind; null for operators, which the highlighter leaves plain. */
@@ -96,13 +99,40 @@ public abstract class MaskedSpanRecolorAnnotator(
     private fun attributes(highlighter: SyntaxHighlighter, type: IElementType?): TextAttributesKey =
         type?.let { highlighter.getTokenHighlights(it).lastOrNull() } ?: HighlighterColors.TEXT
 
-    private fun recolor(holder: AnnotationHolder, start: Int, end: Int, key: TextAttributesKey) {
-        if (end > start) holder.newSilentAnnotation(HighlightSeverity.INFORMATION).range(TextRange(start, end)).textAttributes(key).create()
+    private fun recolor(holder: AnnotationHolder, range: TextRange?, key: TextAttributesKey) {
+        if (range != null && !range.isEmpty) holder.newSilentAnnotation(HighlightSeverity.INFORMATION).range(range).textAttributes(key).create()
+    }
+}
+
+/**
+ * The SQL [text] of a leaf at [range] in a file, with ranges in it mapped back to the file. An
+ * injected leaf reads its host's decoded text and maps through the host's escaper, character by
+ * character; a leaf across several host fragments is no span.
+ */
+private class Span(val text: String, private val range: TextRange, private val toLeaf: (Int) -> Int) {
+    fun fileRange(from: Int, to: Int): TextRange? {
+        val start = toLeaf(from)
+        val end = toLeaf(to)
+        return if (start < 0 || end < start) null else TextRange(range.startOffset + start, range.startOffset + end)
+    }
+
+    companion object {
+        fun of(file: PsiFile, range: TextRange): Span? {
+            val manager = InjectedLanguageManager.getInstance(file.project)
+            if (!manager.isInjectedFragment(file)) return Span(file.viewProvider.contents.substring(range.startOffset, range.endOffset), range) { it }
+            val host = manager.getInjectionHost(file) ?: return null
+            val inside = manager.injectedToHost(file, range).shiftLeft(host.textRange.startOffset)
+            if (inside.length != range.length || inside.startOffset < 0 || inside.endOffset > host.textLength) return null
+            val escaper = host.createLiteralTextEscaper()
+            val decoded = StringBuilder()
+            if (!escaper.decode(inside, decoded)) return null
+            return Span(decoded.toString(), range) { offset -> escaper.getOffsetInHost(offset, inside).let { if (it < 0) it else it - inside.startOffset } }
+        }
     }
 }
 
 /** A string token starts with a quote, optionally after a prefix of up to two letters or `&`, such as `E'` or `U&'`. */
-private fun startsAsString(text: String): Boolean {
-    val prefix = text.indexOfFirst { !it.isLetter() && it != '&' }
-    return prefix in 0..2 && text[prefix] in "'\"`$"
-}
+internal fun startsAsString(text: String): Boolean = quoteAfterPrefix(text) in "'\"`$"
+
+/** The character after a prefix of up to two letters or `&`, or a blank when the text is a word. */
+internal fun quoteAfterPrefix(text: String): Char = text.indexOfFirst { !it.isLetter() && it != '&' }.takeIf { it in 0..2 }?.let(text::get) ?: ' '

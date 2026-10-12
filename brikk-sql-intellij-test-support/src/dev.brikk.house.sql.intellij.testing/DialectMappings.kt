@@ -9,9 +9,10 @@ import dev.brikk.house.sql.intellij.dialect.setDialectMapping
 
 /**
  * Maps [file], or the project with a null file, to [dialect] and reparses it, on every supported
- * IDE. With [until], the mapping is cleared when it is disposed.
+ * IDE, failing when the mapping did not take effect. With [until], the mapping is cleared when it
+ * is disposed.
  */
 public fun setSqlDialectMapping(project: Project, file: VirtualFile?, dialect: SqlLanguageDialect?, until: Disposable? = null) {
-    setDialectMapping(project, file, dialect)
+    check(setDialectMapping(project, file, dialect)) { "The IDE did not apply the dialect mapping" }
     if (until != null) Disposer.register(until) { setDialectMapping(project, file, null) }
 }

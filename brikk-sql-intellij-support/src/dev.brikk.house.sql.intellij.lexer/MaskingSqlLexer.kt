@@ -19,7 +19,8 @@ import org.jetbrains.annotations.ApiStatus
  *
  * Restarts: [getState] reports the base state only where the context is fresh, so the editor
  * highlighter restarts lexing at statement starts and stops relexing only at one. Starting
- * elsewhere would lose context; the state makes the highlighter never do so.
+ * elsewhere would lose context; the state makes the highlighter never do so. Restoring a saved
+ * position relexes from the start of its statement.
  */
 @ApiStatus.Experimental
 public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTargetMask? = null) : LookAheadLexer(base) {
@@ -38,6 +39,10 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
     private val castDepths = ArrayDeque<Int>()
     private var fresh = true
     private var restartable = true
+
+    /** The fresh points of [startsBuffer] seen so far, in offset order. */
+    private val starts = ArrayList<FreshPoint>()
+    private var startsBuffer: CharSequence? = null
 
     /**
      * Applies the dialect's rules to the base token that [upper] spells in upper case. Returns
@@ -61,6 +66,10 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
     protected open fun onCloseParen(depth: Int) {}
 
     final override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
+        if (buffer !== startsBuffer) {
+            startsBuffer = buffer
+            starts.clear()
+        }
         resetContext()
         onStart(buffer, startOffset, endOffset)
         super.start(buffer, startOffset, endOffset, initialState)
@@ -68,8 +77,19 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
 
     final override fun getState(): Int = super.getState().let { if (restartable) it else it or IN_STATEMENT }
 
+    final override fun restore(position: LookAheadLexerPosition) {
+        val offset = position.offset
+        val index = starts.binarySearch { it.offset.compareTo(offset) }.let { if (it >= 0) it else -it - 2 }
+        val from = starts.getOrNull(index) ?: return super.restore(position)
+        start(bufferSequence, from.offset, bufferEnd, from.state)
+        while (tokenType != null && tokenStart < offset) advance()
+    }
+
     final override fun lookAhead(baseLexer: Lexer) {
         restartable = fresh
+        if (fresh && starts.lastOrNull().let { it == null || it.offset < baseLexer.tokenStart }) {
+            starts.add(FreshPoint(baseLexer.tokenStart, baseLexer.state))
+        }
         val type = baseLexer.tokenType
         val text = baseLexer.tokenText
         when {
@@ -244,13 +264,16 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
      * From a routine `BEGIN`, collapses the body through its balancing `END` into one [type] token,
      * so the `;` inside never ends the statement. Blocks: BEGIN, CASE, statement IF, WHILE,
      * statement REPEAT and LOOP; `END <kind>` closes through the innermost block of that kind and
-     * a bare `END` closes the innermost block.
+     * a bare `END` closes the innermost block. A body still being typed, unbalanced at the end of
+     * the text, ends before its first `;`, so the statements after it keep their own tokens.
      */
     protected fun collapseRoutineBody(base: Lexer, type: IElementType = SqlTokens.SQL_STRING_TOKEN) {
         val blocks = ArrayDeque(listOf("BEGIN"))
+        var firstSemicolon = -1
         base.advance()
         while (base.tokenType != null && blocks.isNotEmpty()) {
             when (val word = base.tokenText.uppercase()) {
+                ";" -> if (firstSemicolon < 0) firstSemicolon = base.tokenStart
                 "BEGIN", "CASE", "WHILE", "LOOP" -> blocks.addLast(word)
                 "IF" -> if (ifIsStatement(base)) blocks.addLast(word)
                 "REPEAT" -> if (!nextIs(base, "(")) blocks.addLast(word)
@@ -267,6 +290,7 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
             }
             base.advance()
         }
+        if (blocks.isNotEmpty() && firstSemicolon >= 0) base.start(base.bufferSequence, firstSemicolon, base.bufferEnd, 0)
         span(base, type, ROUTINE_BODY)
     }
 
@@ -299,7 +323,8 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         }
         if (upper != "AS" || castDepths.lastOrNull() != parenDepth) return false
         castDepths.removeLast()
-        if (bufferWord(base, offsetAfterWhitespace(base, base.tokenEnd)).uppercase() in mask.keptTargets) return false
+        val target = bufferWord(base, offsetAfterWhitespace(base, base.tokenEnd)).uppercase()
+        if (target.firstOrNull()?.isLetter() != true || target in mask.keptTargets) return false
         when (mask.extent) {
             CastTargetMask.Extent.ToCloseParen -> maskToCloseParen(base)
             CastTargetMask.Extent.TargetType -> maskCastType(base)
@@ -316,13 +341,18 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         span(base, SqlTokens.SQL_BLOCK_COMMENT, MASKED)
     }
 
-    /** Counts characters, because the base lexer may join brackets into one token such as `>>`. */
+    /**
+     * Counts characters, because the base lexer may join brackets into one token such as `>>`.
+     * Stops before a `;`, and before a `)` that cannot belong to the group.
+     */
     private fun consumeBalancedIfNext(base: Lexer, open: Char, close: Char) {
         val at = offsetAfterWhitespace(base, base.tokenStart)
         if (base.bufferSequence.getOrNull(at) != open) return
         var depth = 0
         while (base.tokenType != null) {
-            for (c in base.tokenText) {
+            val text = base.tokenText
+            if (text == ";" || text == ")" && open != '(') break
+            for (c in text) {
                 if (c == open) depth++ else if (c == close) depth--
             }
             val end = base.tokenEnd
@@ -331,13 +361,20 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         }
     }
 
-    private companion object {
-        const val IN_STATEMENT = Int.MIN_VALUE
-        const val MASKED = "MASKED"
-        const val ROUTINE_BODY = "ROUTINE_BODY"
-        val BLOCK_KINDS = setOf("IF", "WHILE", "REPEAT", "LOOP", "CASE")
+    protected companion object {
+        /** The word [maskWithGroup], [maskToCloseParen] and cast masks note. */
+        public const val MASKED: String = "MASKED"
+
+        /** The word [collapseRoutineBody] notes. */
+        public const val ROUTINE_BODY: String = "ROUTINE_BODY"
     }
 }
+
+private const val IN_STATEMENT = Int.MIN_VALUE
+private val BLOCK_KINDS = setOf("IF", "WHILE", "REPEAT", "LOOP", "CASE")
+
+/** An offset where the context is fresh, with the base lexer's state there. */
+private class FreshPoint(val offset: Int, val state: Int)
 
 /**
  * Masks the target of a cast call written `fn(value AS target)` as a comment, so the call parses

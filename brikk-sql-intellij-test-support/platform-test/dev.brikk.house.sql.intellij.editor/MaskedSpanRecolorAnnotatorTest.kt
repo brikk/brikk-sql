@@ -1,6 +1,14 @@
 package dev.brikk.house.sql.intellij.editor
 
 import com.intellij.lang.LanguageAnnotators
+import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.lang.injection.MultiHostInjector
+import com.intellij.lang.injection.MultiHostRegistrar
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.sql.psi.SqlStringLiteralExpression
+import java.util.UUID
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.HighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
@@ -28,7 +36,7 @@ class MaskedSpanRecolorAnnotatorTest : FixtureTestCase() {
 
     /** What the file's highlighter colors a platform token of [type]. */
     private fun colorOf(type: IElementType): TextAttributesKey =
-        SyntaxHighlighterFactory.getSyntaxHighlighter(FixtureDialect, project, myFixture.file.virtualFile)
+        SyntaxHighlighterFactory.getSyntaxHighlighter(FixtureDialect, project, null)
             .getTokenHighlights(type).lastOrNull() ?: HighlighterColors.TEXT
 
     fun testMaskedSpanTakesTheHighlighterColorsOfItsTokens() {
@@ -52,5 +60,25 @@ class MaskedSpanRecolorAnnotatorTest : FixtureTestCase() {
     fun testGenuineTokensAreLeftAlone() {
         val colors = recolored("SELECT 'a', E'b\\n', \"c d\", \$\$e\$\$ FROM t -- note\n/* block */")
         assertEquals("only the platform's reference colors", setOf("\"c d\"", "t"), colors.keys)
+    }
+
+    fun testInjectedSpansReadTheUnescapedText() {
+        LanguageAnnotators.INSTANCE.addExplicitExtension(FixtureDialect, FixtureRecolor(), testRootDisposable)
+        val host = "SELECT 'SELECT {''k'': 1}, * EXCLUDE (a /* c */) FROM t'"
+        myFixture.configureByText("host-${UUID.randomUUID()}.sql", host)
+        InjectedLanguageManager.getInstance(project).registerMultiHostInjector(object : MultiHostInjector {
+            override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
+                registrar.startInjecting(FixtureDialect).addPlace(null, null, context as PsiLanguageInjectionHost, TextRange(1, context.textLength - 1)).doneInjecting()
+            }
+
+            override fun elementsToInjectIn() = listOf(SqlStringLiteralExpression::class.java)
+        }, testRootDisposable)
+        val colors = myFixture.doHighlighting(HighlightSeverity.INFORMATION).filter { it.forcedTextAttributesKey != null }
+            .associate { host.substring(it.startOffset, it.endOffset) to it.forcedTextAttributesKey }
+        assertEquals(colors.toString(), colorOf(SqlTokens.SQL_STRING_TOKEN), colors["''k''"])
+        assertEquals(colorOf(SqlTokens.SQL_INTEGER_TOKEN), colors["1"])
+        assertNull(colors["''"])
+        assertEquals(colorOf(SqlTokens.SQL_IDENT), colors["a"])
+        assertEquals(colorOf(SqlTokens.SQL_BLOCK_COMMENT), colors["/* c */"])
     }
 }

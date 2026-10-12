@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.lexer
 
+import com.intellij.lexer.Lexer
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.highlighter.EditorHighlighter
@@ -11,6 +12,7 @@ import dev.brikk.house.sql.intellij.fixture.FixtureLexer
 import dev.brikk.house.sql.intellij.fixture.FixtureTestCase
 import dev.brikk.house.sql.intellij.testing.assertRestartsMatchFullLex
 import dev.brikk.house.sql.intellij.testing.lexAll
+import com.intellij.sql.dialects.postgres.PgLexer
 
 class MaskingSqlLexerTest : FixtureTestCase() {
     /** Asserts that each fragment, found in order, is exactly one token, of [type] when given. */
@@ -66,6 +68,45 @@ class MaskingSqlLexerTest : FixtureTestCase() {
         assertTokens("CREATE FUNCTION f() BEGIN END; SELECT 1; BEGIN", "BEGIN END" to SqlTokens.SQL_STRING_TOKEN, "BEGIN" to null)
     }
 
+    fun testAnUnterminatedRoutineBodyEndsBeforeItsFirstSemicolon() {
+        val text = "CREATE FUNCTION f() BEGIN SET x = 1; IF x THEN SET y = 2;\nSELECT a FROM t;\nSELECT b FROM u"
+        assertTokens(text, "BEGIN SET x = 1" to SqlTokens.SQL_STRING_TOKEN, ";" to null, "IF" to null, "SELECT" to null, "a" to null)
+        assertRestartsMatchFullLex(::FixtureLexer, text)
+    }
+
+    fun testTypingInAnUnterminatedBodyKeepsTheLaterStatements() {
+        configureFixture("CREATE FUNCTION f() BEGIN SET x = 1; END;\nSELECT a FROM t;\nSELECT b FROM u")
+        val document = myFixture.editor.document
+        WriteCommandAction.runWriteCommandAction(project) { document.deleteString(document.text.indexOf("END;"), document.text.indexOf("END;") + 4) }
+        WriteCommandAction.runWriteCommandAction(project) { document.insertString(document.text.indexOf("x = 1"), "q") }
+        val highlighter = (myFixture.editor as EditorEx).highlighter
+        val later = document.text.indexOf("SELECT b")
+        assertTrue(tokens(highlighter).any { it.first == later && it.third == "SELECT" })
+        val fresh = EditorHighlighterFactory.getInstance().createEditorHighlighter(project, myFixture.file.virtualFile)
+        fresh.setText(document.immutableCharSequence)
+        assertEquals(tokens(fresh), tokens(highlighter))
+    }
+
+    fun testTheStatementAfterEachSemicolonStartsAtARestartPoint() {
+        val initial = FixtureLexer().run { start(""); state }
+        val tokens = FixtureLexer().lexAll(MIXED).filter { it.type != TokenType.WHITE_SPACE }
+        val after = tokens.zipWithNext().filter { (token, _) -> MIXED.substring(token.start, token.end) == ";" }.map { it.second }
+        assertEquals(3, after.size)
+        assertEquals(after.map { initial }, after.map { it.state })
+    }
+
+    fun testRestoringAPositionKeepsTheStatementContext() {
+        val text = "SELECT 1; SELECT * EXCLUDE (a) FROM t; SELECT 2"
+        val lexer = FixtureLexer()
+        lexer.start(text)
+        while (lexer.tokenStart != text.indexOf("EXCLUDE")) lexer.advance()
+        val position = lexer.currentPosition
+        repeat(6) { lexer.advance() }
+        lexer.restore(position)
+        assertEquals(SqlTokens.SQL_BLOCK_COMMENT, lexer.tokenType)
+        assertEquals(text.indexOf(" FROM"), lexer.tokenEnd)
+    }
+
     fun testEveryRestartMatchesTheFullLex() {
         assertRestartsMatchFullLex(::FixtureLexer, MIXED)
     }
@@ -99,5 +140,33 @@ class MaskingSqlLexerTest : FixtureTestCase() {
             SELECT TRY_CAST(a AS INT), {'k': ';'} FROM t /* ; */ AT LOCAL;
             SELECT x::STRUCT(a INT) FROM t
         """.trimIndent()
+    }
+}
+
+/** Casts whose target is masked through its type, keeping the INT targets the grammar knows. */
+class TypeCastLexer : MaskingSqlLexer(PgLexer(), CastTargetMask(setOf("CAST", "TRY_CAST"), setOf("INT"), CastTargetMask.Extent.TargetType)) {
+    override fun rule(base: Lexer, upper: String): Boolean = false
+}
+
+class CastTargetMaskTest : FixtureTestCase() {
+    private fun nonBlank(text: String) =
+        TypeCastLexer().lexAll(text).filter { it.type != TokenType.WHITE_SPACE }.map { text.substring(it.start, it.end) to it.type }
+
+    fun testTheTypeAndItsArgumentsAreMasked() {
+        val tokens = nonBlank("SELECT CAST(a AS ARRAY<MAP<INT, INT>>) , TRY_CAST(b AS DECIMAL(10, 2)), CAST(c AS INT)")
+        assertContainsElements(tokens, "AS ARRAY<MAP<INT, INT>>" to SqlTokens.SQL_BLOCK_COMMENT, "AS DECIMAL(10, 2)" to SqlTokens.SQL_BLOCK_COMMENT)
+        assertTrue(tokens.any { it.first == "AS" })
+    }
+
+    fun testAMissingTargetConsumesNeitherSemicolonNorParenthesis() {
+        val semicolon = nonBlank("SELECT TRY_CAST(x AS ; SELECT 1").map { it.first }
+        assertEquals(listOf("SELECT", "TRY_CAST", "(", "x", "AS", ";", "SELECT", "1"), semicolon)
+        val paren = nonBlank("SELECT CAST(x AS) FROM t").map { it.first }
+        assertEquals(listOf("SELECT", "CAST", "(", "x", "AS", ")", "FROM", "t"), paren)
+    }
+
+    fun testAnUnclosedTypeArgumentStopsAtTheStatementEnd() {
+        val tokens = nonBlank("SELECT CAST(x AS ARRAY<INT ; SELECT 1").map { it.first.trim() }
+        assertEquals(listOf("SELECT", "CAST", "(", "x", "AS ARRAY<INT", ";", "SELECT", "1"), tokens)
     }
 }

@@ -17,7 +17,7 @@ import org.jetbrains.annotations.ApiStatus
 public abstract class PgFamilyDialect(id: String) : PgDialectBase(id) {
     override fun isOperatorSupported(op: IElementType?): Boolean = PgDialect.INSTANCE.isOperatorSupported(op)
 
-    override fun getSystemVariables(): MutableSet<String> = PgDialect.INSTANCE.systemVariables
+    override fun getSystemVariables(): Set<String> = PgDialect.INSTANCE.systemVariables
 
     override fun createTokensHelper(): TokensHelper =
         TokensHelper(PgTokens::class.java, SqlFunctionsUtil.loadFunctionDefinition(PgDialect.INSTANCE))

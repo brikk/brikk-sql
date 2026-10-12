@@ -7,7 +7,7 @@ import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlElementTypes
 import org.jetbrains.annotations.ApiStatus
 
-/** Tokens a statement scan reads at most. */
+/** Tokens a statement scan reads at most; every scan below is bounded by it. */
 @ApiStatus.Experimental
 public const val MAX_LOOKAHEAD: Int = 512
 
@@ -38,7 +38,7 @@ public fun <T : Any> PsiBuilder.scanStatement(limit: Int = MAX_LOOKAHEAD, match:
 @ApiStatus.Experimental
 public fun PsiBuilder.wordAt(index: Int): String? {
     var seen = 0
-    return scanStatement(Int.MAX_VALUE) { _, text ->
+    return scanStatement { _, text ->
         text.takeIf { it.firstOrNull()?.isLetter() == true }?.let { if (seen++ == index) it.uppercase() else null }
     }
 }
