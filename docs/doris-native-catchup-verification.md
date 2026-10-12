@@ -79,6 +79,23 @@ error from the baseline. Raw old/new SQL and results are retained in
 `/tmp/opencode/sqlglot-catchup-doris4141-matrix.log`. This rechecks these exact
 vectors, not the entirety of Doris or every older pairwise hazard dataset.
 
+## 2026-10-12 SET/REPLACE execution follow-up
+
+The same pinned 4.1.4.1 FE/BE release was rerun for `DorisPipeSetResultTest`.
+Schema-less SET lowers to native `* REPLACE`, which the engine actually executes.
+Nine pipeline/reference comparisons cover constants, dependent expressions,
+simultaneous swaps in both assignment orders, chained SET, typed NULLs, untouched
+columns, DROP and wide results. Row headers/order and values (including duplicates)
+and direct wire metadata match explicit reference projections. Missing, repeated
+and ambiguous replacement targets raise native errors. Native star EXCEPT works;
+native star RENAME does not. Evidence: `/tmp/opencode/doris-set-versions.tsv`,
+`/tmp/opencode/doris-set-exploration.log` and the pipe-capabilities native test log.
+
+A CREATE VIEW metadata probe failed on generated WITH plus star REPLACE with a
+native SQL-text range-rewrite error. SELECT execution succeeds; no view-DDL
+compatibility is claimed. The test uses `mysql --column-type-info -vvv` directly
+to compare query column names, types, decimals, collation and flags instead.
+
 ## Isolated runtime setup
 
 The FE runs on a task-only internal Docker network; the BE shares its network

@@ -929,10 +929,7 @@ open class PostgresGenerator(
     }
 
     // sqlglot: dialect.no_pivot_sql
-    open fun noPivotSql(expression: Pivot): String {
-        unsupported("PIVOT unsupported")
-        return ""
-    }
+    open fun noPivotSql(expression: Pivot): String = unsupportedPivotSql()
 
     // sqlglot: dialect.max_or_greatest / min_or_least
     open fun maxOrGreatestSql(expression: Max): String =

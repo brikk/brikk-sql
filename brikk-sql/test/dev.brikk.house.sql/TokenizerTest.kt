@@ -203,4 +203,18 @@ class TokenizerTest {
         assertEquals(27, target.col)
         assertEquals("target", sql.substring(target.start, target.end + 1))
     }
+
+    // colStart is the distance from the last CR or LF before the token, for every break style.
+    @Test
+    fun startColumnsFollowEveryLineBreakStyle() {
+        val sql = "SELECT a,\n  b,\r\n   'x\ny',\r    c /* \r\n */ ,\n\r d\n-- e\rf FROM t"
+        for (dialect in listOf("doris", "duckdb", "trino", "mysql")) {
+            for (token in Tokenizer(TokenizerConfigs.forName(dialect)).tokenize(sql)) {
+                val reference = token.start - maxOf(sql.lastIndexOf('\n', token.start - 1), sql.lastIndexOf('\r', token.start - 1))
+                assertEquals(reference, token.colStart, "$dialect ${token.text}")
+            }
+        }
+        val tokens = Tokenizer(TokenizerConfigs.forName("doris")).tokenize(sql)
+        assertEquals(listOf(8, 3, 4, 5, 2, 1), listOf("a", "b", "x\ny", "c", "d", "f").map { text -> tokens.first { it.text == text }.colStart })
+    }
 }

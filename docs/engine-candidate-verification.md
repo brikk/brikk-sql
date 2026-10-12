@@ -101,6 +101,15 @@ explicit SELECT still renders and authored source remains unchanged. The probe
 and log are `/tmp/opencode/TrinoRenameRuntimeProbe.java` and
 `/tmp/opencode/trino-pipe-rename-peer-runtime.log`; no peer-source edits occurred.
 
+The subsequent DROP/SET and executable-pivot follow-up (#52) uses core hash
+`3cd3d46ca32fdb22f599b0a9b3066c11d1c8fe32ea6ddae4e7a0524778dde9d0` with unchanged
+metadata. Its targeted old-binary runtime probe is retained at
+`/tmp/opencode/PipeCapabilitiesRuntimeProbe.java` and
+`/tmp/opencode/pipe-capabilities-peer-runtime.log`: Presto/Trino trait-backed
+DROP/SET and Trino/Doris PIVOT/UNPIVOT refuse, while native Doris SET renders.
+Build, the full 1,295-method configured test sweep, 38 contracts and native row/type
+checks pass. This is not a fresh execution of the original 163-test peer suite.
+
 This is a well-tested release candidate for the scoped catch-up, not proof of
 arbitrary SQL equivalence. Confidence is strongest for the hand-owned behaviors:
 partial/empty catalogs, all three legacy inference policies and the new disabled

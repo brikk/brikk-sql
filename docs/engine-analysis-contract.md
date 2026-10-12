@@ -63,6 +63,13 @@ runtime route, refuses an unexpanded rename with `UnsupportedError`. Complete
 caller-supplied layouts can still be expanded in place; minimum analysis evidence
 must not be treated as an execution or closedness proof (extension #51).
 
+The same rule now covers unexpanded Presto/Trino DROP and SET (star EXCEPT/REPLACE).
+Doris supports those two modifiers natively, verified against 4.1.4.1 execution,
+so its runtime does not need a client-side complete field list for them. Unsupported
+PIVOT/UNPIVOT is a hard executable refusal rather than a dropped operator plus a
+warning that a plain runtime renderer could ignore; flagged previews remain
+available through `transpileTo` (extension #52).
+
 `InferencePolicyContractTest` exercises both `qualify()` and `qualifyColumns()`:
 
 - `inferSchema=true`: keep the explicit legacy ownership fallback.
