@@ -19,6 +19,7 @@ import dev.brikk.house.sql.intellij.fixture.FixtureTestCase
 class FixtureErrorFilter : SubstrateErrorFilter(FixtureDialect)
 class NewlineQuotes : SqlDialectQuoteHandler(EnterInString.Newline)
 class SplitQuotes : SqlDialectQuoteHandler(EnterInString.Split)
+class FixtureOverlayFactory : KeywordOverlayHighlighterFactory(FixtureDialect, setOf("BUCKETS"))
 
 class EditorPoliciesTest : FixtureTestCase() {
     private fun enter(text: String, quotes: SqlDialectQuoteHandler): String {
@@ -71,6 +72,17 @@ class EditorPoliciesTest : FixtureTestCase() {
         val again = KeywordOverlayHighlighter(base, FixtureDialect, setOf("BUCKETS")).highlightingLexer
         again.start("buckets")
         assertSame(types["buckets"], again.tokenType)
+    }
+
+    fun testOverlayFactoryRegistersByItsNoArgSubclass() {
+        configureFixture("SELECT buckets, other FROM t")
+        val factory = FixtureOverlayFactory::class.java.getDeclaredConstructor().newInstance()
+        val highlighter = factory.getSyntaxHighlighter(project, myFixture.file.virtualFile)
+        val lexer = highlighter.highlightingLexer
+        lexer.start(myFixture.editor.document.text)
+        while (lexer.tokenText != "buckets") lexer.advance()
+        val base = SyntaxHighlighterFactory.getSyntaxHighlighter(FixtureDialect, project, myFixture.file.virtualFile)
+        assertEquals(base.getTokenHighlights(SqlTokens.SQL_KEYWORD_TOKEN).toList(), highlighter.getTokenHighlights(lexer.tokenType).toList())
     }
 
     fun testPlatformNestedCommenterServesTheDialect() {

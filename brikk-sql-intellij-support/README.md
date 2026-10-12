@@ -165,8 +165,9 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
 - `SubstrateErrorFilter(language)`: hides the substrate grammar's parse errors in the dialect.
 - `SqlDialectQuoteHandler(EnterInString)`: Enter in a quoted string inserts a newline or splits
   it with `||`; collapsed spans are never split.
-- `KeywordOverlayHighlighter(base, language, keywords)`: colors listed plain identifiers as
-  keywords, with one overlay token type per language.
+- `KeywordOverlayHighlighterFactory(dialect, keywords)`: the dialect's SQL highlighter factory
+  wrapped in a `KeywordOverlayHighlighter`, which colors listed plain identifiers as keywords with
+  one overlay token type per language. Register a no-arg subclass as `lang.syntaxHighlighterFactory`.
 - `PgFamilyDialect(id)` (`dialect`): a PostgreSQL-grammar dialect with the platform PostgreSQL
   operators, system variables and builtin functions; the subclass supplies `getDbms`. Keep its
   `Dbms` outside the dialect object, whose base constructor already asks for it.
