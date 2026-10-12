@@ -362,7 +362,10 @@ which `onRefreshed` shows). A session in manual-commit mode is not harvested
 (`RefreshOutcome.SessionInTransaction`): its harvest queries would open a transaction of their own. Nor is
 one in a transaction a statement began in auto-commit mode, which the platform does not track: the
 `ExecutionObserver` treats a session as in a transaction from a detected begin until a detected end, a
-commit or rollback through the IDE, or a new connection (`ExecutionObserverProfile.transactionStatements`,
+commit or rollback through the IDE, or a new connection. Only statements that succeed count: a failed
+begin begins nothing, a failed end ends nothing, and a failed script whose statements include a begin
+leaves the session in a transaction, since its begin may have run and its end may not
+ (`ExecutionObserverProfile.transactionStatements`,
 default `StatementRules.TRANSACTIONS`: `BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`;
 `ROLLBACK ... TO`, `COMMIT PREPARED` and `ROLLBACK PREPARED` keep it, `PREPARE TRANSACTION` ends it, and an
 end `AND CHAIN` begins the next; Trino's profile uses

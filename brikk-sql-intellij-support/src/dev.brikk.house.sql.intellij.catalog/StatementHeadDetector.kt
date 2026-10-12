@@ -86,10 +86,13 @@ public data class DetectedStatement(val rule: StatementRule, val name: List<Stri
 public class StatementHeadDetector(public val rules: List<StatementRule>, public val dialect: String) {
     private val config = TokenizerConfigs.forName(dialect)
 
-    public fun detect(script: String?): List<DetectedStatement> {
+    public fun detect(script: String?): List<DetectedStatement> = detectEach(script).filterNotNull()
+
+    /** One entry per statement of [script], null where no rule matched. */
+    internal fun detectEach(script: String?): List<DetectedStatement?> {
         if (script.isNullOrBlank() || rules.isEmpty()) return emptyList()
         val tokens = Tokenizer(config).tokenizeForEditor(script).tokens
-        return statements(tokens).mapNotNull { statement ->
+        return statements(tokens).map { statement ->
             val words = statement.takeWhile { it.isWord(script) }.map { it.text.uppercase() }
             rules.firstNotNullOfOrNull { rule -> match(rule.elements, words, 0)?.let { used -> DetectedStatement(rule, nameAfter(statement.drop(used), script)) } }
         }

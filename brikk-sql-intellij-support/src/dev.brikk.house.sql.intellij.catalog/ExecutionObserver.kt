@@ -4,6 +4,7 @@ import com.intellij.database.DataBus
 import com.intellij.database.Dbms
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.console.client.SessionClient
+import com.intellij.database.connection.throwable.info.ErrorInfo
 import com.intellij.database.console.session.DatabaseSession
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.datagrid.DataAuditor
@@ -14,6 +15,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.startup.ProjectActivity
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.cancellation.CancellationException
@@ -96,6 +98,11 @@ public abstract class ExecutionObserver(protected val project: Project, private 
         if (started.compareAndSet(false, true)) DataBus.addRootAuditor(project, this, this)
     }
 
+    /** Remembers that a statement of the request failed, before the request finishes. */
+    override fun error(context: DataRequest.Context, info: ErrorInfo) {
+        context.putUserData(FAILED, true)
+    }
+
     override fun requestFinished(context: DataRequest.Context) {
         try {
             observe(context)
@@ -114,13 +121,13 @@ public abstract class ExecutionObserver(protected val project: Project, private 
         val requestor: Any? = context.producer
         val liveCatalog = profile.liveCatalog?.let { ApplicationManager.getApplication().getService(it) }
         requestor?.let { liveCatalog?.learnSession(session, it) }
+        val failed = context.getUserData(FAILED) == true
         if (context.request is DataRequest.TxRequest) {
-            liveCatalog?.transactionControl(session, begun = false)
+            if (!failed) liveCatalog?.transactionControl(session, begun = false)
             return
         }
         val text = (context.request as? DataRequest.QueryRequest)?.query ?: context.query
-        transactions.detect(text).mapNotNull { (it.effect as? StatementEffect.Transaction)?.begins }.lastOrNull()
-            ?.let { liveCatalog?.transactionControl(session, it) }
+        transactionChange(transactions.detectEach(text), failed)?.let { liveCatalog?.transactionControl(session, it) }
         val detected = profile.statements.detect(text)
         if (detected.isEmpty()) return
         val executed = ExecutedStatements(session, dataSource, requestor, detected)
@@ -133,6 +140,20 @@ public abstract class ExecutionObserver(protected val project: Project, private 
             // A reload below the top level needs the whole name, written or completed from the console's namespace.
             absolute.takeIf { effect.refreshDepth == 0 || it.size == effect.depth }?.take(effect.refreshDepth)
         }.distinct().forEach { onNamespaceChange(NamespaceChange(dataSource, it)) }
+    }
+
+    /**
+     * Whether the request's statements left a transaction begun (true) or ended (false); null leaves it as it
+     * was. A failed statement changes nothing. In a failed script, statements before the failure ran, those
+     * after did not, and which one failed is unknown: a begin among them may have run, an end may not.
+     */
+    private fun transactionChange(statements: List<DetectedStatement?>, failed: Boolean): Boolean? {
+        val effects = statements.map { (it?.effect as? StatementEffect.Transaction)?.begins }
+        return when {
+            !failed -> effects.lastOrNull { it != null }
+            statements.size > 1 && true in effects -> true
+            else -> null
+        }
     }
 
     /** Harvests the live catalog again ([LiveCatalogService.inventoryChanged]). */
@@ -154,6 +175,7 @@ public abstract class ExecutionObserver(protected val project: Project, private 
 
     private companion object {
         val LOG = logger<ExecutionObserver>()
+        val FAILED = Key.create<Boolean>("brikk.execution.failed")
     }
 }
 

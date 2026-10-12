@@ -113,6 +113,27 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
      * platform (263 and later) also reads for transaction control statements.
      */
     private fun Console.run(sql: String) {
+        submit(sql)
+        assertEmpty(executionErrors)
+    }
+
+    /** Runs [sql], which must fail, from the console's editor. */
+    private fun Console.runFailing(sql: String) {
+        submit(sql)
+        assertFalse("'$sql' fails", executionErrors.isEmpty())
+        executionErrors.clear()
+    }
+
+    /** Runs the script [sql] as one request, which must fail. */
+    private fun Console.runScriptFailing(sql: String) {
+        val request = FinishedQuery(console, sql)
+        session.messageBus.dataProducer.processRequest(request)
+        PlatformTestUtil.waitWithEventsDispatching("'$sql' finishes", { request in finished }, 30)
+        assertFalse("'$sql' fails", executionErrors.isEmpty())
+        executionErrors.clear()
+    }
+
+    private fun Console.submit(sql: String) {
         myFixture.configureFromExistingVirtualFile(virtualFile)
         val document = myFixture.editor.document
         WriteCommandAction.runWriteCommandAction(project) { document.setText(sql) }
@@ -121,7 +142,6 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         val request = checkNotNull(ConsoleDataRequest.newConsoleRequest(console, myFixture.editor, console.scriptModel, false))
         session.messageBus.dataProducer.processRequest(request)
         PlatformTestUtil.waitWithEventsDispatching("'$sql' finishes", { request in finished }, 30)
-        assertEmpty(executionErrors)
     }
 
     private fun Console.sessionFunctions() = service.completion(file).selection.session.functions.map { it.def.name }
@@ -226,6 +246,35 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
             assertInstanceOf(outcome, RefreshOutcome.HarvestFailed::class.java)
             assertEquals(harvests, harvester.harvests.get())
         }
+    }
+
+    @Test
+    fun aFailedBeginBeginsNothing() {
+        val a = console("a")
+        a.run("SELECT 1")
+        a.runFailing("BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE")
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
+    }
+
+    @Test
+    fun aFailedEndKeepsTheTransaction() {
+        val a = console("a")
+        a.run("BEGIN TRANSACTION")
+        a.runFailing("COMMIT nonsense")
+        assertEquals(RefreshOutcome.SessionInTransaction, refreshFrom(a.file))
+        a.run("ROLLBACK")
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
+    }
+
+    /** The script stops at its failing statement, so its COMMIT never runs; the ROLLBACK proves the transaction is open. */
+    @Test
+    fun aScriptFailingBeforeItsCommitLeavesTheTransactionOpen() {
+        val a = console("a")
+        a.run("SELECT 1")
+        a.runScriptFailing("BEGIN TRANSACTION; SELECT * FROM missing; COMMIT")
+        assertEquals(RefreshOutcome.SessionInTransaction, refreshFrom(a.file))
+        a.run("ROLLBACK")
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
     }
 
     @Test
