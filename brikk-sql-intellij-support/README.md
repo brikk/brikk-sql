@@ -281,6 +281,14 @@ CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", catalogProbes = listOf(Na
     schemaProbes = listOf(NamespaceProbe.Column(row, "schema")), schemaRequired = true)
 ```
 
+`CatalogImports.allCatalogs(base, dataSourceNames)`: for a dialect whose own SQL editor imports reach
+only schemas (the MySQL family) over a model whose top level is catalogs, a dialect overrides
+`getBaseImports(dataSource, names)` with `allCatalogs(super.getBaseImports(dataSource, names), names)`:
+every catalog of the attached data sources becomes a qualifier head, without importing its schemas into
+unqualified scope; without data source names the base imports return unchanged. PostgreSQL-family
+dialects already resolve catalog heads (`CatalogImportsTest` shows it for the platform PostgreSQL
+dialect and a `PgFamilyDialect`), so Trino and DuckDB need none of this.
+
 ### Live function catalog
 
 What the connected server reports about its functions, harvested per data source and served to
