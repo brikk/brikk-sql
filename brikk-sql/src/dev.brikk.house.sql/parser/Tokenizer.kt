@@ -319,7 +319,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
     }
 
-    /** How a CSV-escaped format quotes fields: the field delimiter and the quote characters. */
+    /** How a CSV-escaped format quotes fields: the field delimiter and the quote characters, each escaped by doubling. */
     private class Quoting(val delimiter: String, val quotes: Set<Char>)
 
     /** Adds `[dataStart, dataEnd)` as the INSERT_DATA token, empty at the header's end when there is no data. */
@@ -391,7 +391,18 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                     settingValues["format_custom_field_delimiter"]?.takeIf { it.isNotEmpty() } ?: "\t"
                 else -> return null
             }
-            return Quoting(delimiter, setOf('"'))
+            val quotes = buildSet {
+                if (enabled("format_csv_allow_double_quotes", default = true)) add('"')
+                if (enabled("format_csv_allow_single_quotes", default = false)) add('\'')
+            }
+            return Quoting(delimiter, quotes).takeIf { quotes.isNotEmpty() }
+        }
+
+        /** A boolean setting the INSERT writes (`1`, `0`, `true`, `false`, quoted or not), else [default]. */
+        private fun enabled(name: String, default: Boolean): Boolean = when (settingValues[name]?.lowercase()) {
+            "1", "true" -> true
+            "0", "false" -> false
+            else -> default
         }
 
         fun reset(observed: Int = 0) {

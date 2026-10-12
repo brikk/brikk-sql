@@ -1898,9 +1898,10 @@ breaks and indentation before a terminator line or a blank line are never submit
 
 Quoted fields (data preservation over client parity): for `CSV`, `CSVWithNames` and
 `CSVWithNamesAndTypes` (format names in any case), and for `CustomSeparated*` when the INSERT sets
-`format_custom_escaping_rule = 'CSV'`, a double quote at a field's start (line start, or right
-after the field delimiter, spaces allowed) opens a field that a doubled quote escapes and a single
-one closes; a blank line or a `;` line inside it is data, and data ends at the next one outside
+`format_custom_escaping_rule = 'CSV'`, a quote at a field's start (line start, or right after the
+field delimiter, spaces allowed) opens a field that the same quote doubled escapes and alone
+closes. Quotes are `"` unless the INSERT sets `format_csv_allow_double_quotes = 0` (default 1) and
+`'` when it sets `format_csv_allow_single_quotes = 1` (default 0); a blank line or a `;` line inside it is data, and data ends at the next one outside
 quotes. The field delimiter is the INSERT's `format_csv_delimiter` (default `,`) for CSV, and its
 `format_custom_field_delimiter` (default a tab) for `CustomSeparated*`. A field still open at the end
 of the text is a lexical failure, so the statement's boundary is an error rather than a guess.

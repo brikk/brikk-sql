@@ -44,7 +44,7 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
         for ((name, data) in listOf("json data tail" to "{\"id\":1,\"label\":\"a; b\"}\n{\"id\":2,\"label\":\"c\"}",
             "tsv with semicolons and quotes" to "a;b\tO'Brien", "csv with quotes then a blank line" to "1,O'Brien\n2,\"x;y\"",
             "csv quoted fields holding an empty line and a semicolon line" to "1,\"a\n\nb\"\n2,\"x\n;\ny\"",
-            "csv quote after a character that is no delimiter" to "a;\"b\n\"c\n\nd\"")) {
+            "csv quote after a character that is no delimiter" to "a;\"b\n\"c\n\nd\"", "csv single quotes the insert allows" to "'a\n\nb'")) {
             val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == name }
             assertEquals(name, data, case.sql.of(bounded().lexAll(case.sql).raw().single()))
         }

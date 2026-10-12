@@ -66,7 +66,7 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
     /** Only the platform grammar's own gaps (`FORMAT Values (...)`, data after `input()`, `SETTINGS` before `FORMAT`) remain, where the stock dialect reports them too. */
     fun testTheCorpusParsesWithoutErrors() {
         val grammarGaps = mapOf("values followed by select" to "VALUES expected", "insert select reading input" to "'a;b' unexpected",
-            "a settings string naming a keyword" to "got 'SETTINGS'")
+            "a settings string naming a keyword" to "got 'SETTINGS'", "csv single quotes the insert allows" to "got 'SETTINGS'")
         for (case in CHOUSE_BOUNDARY_CORPUS) {
             configureCHouse(case.sql)
             val errors = errors()

@@ -131,6 +131,17 @@ class ClickhouseInsertDataTest {
             data("INSERT INTO t $csv, format_custom_field_delimiter = ',' FORMAT CustomSeparated\n1,\"a\n\nb\"\n\nSELECT 2;"))
     }
 
+    /** Single quotes quote a field only when the INSERT allows them; double quotes unless it forbids them. */
+    @Test fun csvQuoteCharactersFollowTheInsertsSettings() {
+        val single = "'a\n\nb','it''s\n;\nok'\n\nSELECT 2;"
+        assertEquals(listOf("'a"), data("INSERT INTO t FORMAT CSV\n$single"))
+        for (setting in listOf("format_csv_allow_single_quotes = 1", "format_csv_allow_single_quotes = true", "format_csv_allow_single_quotes = '1'")) {
+            assertEquals(listOf("'a\n\nb','it''s\n;\nok'"), data("INSERT INTO t SETTINGS $setting FORMAT CSV\n$single"), setting)
+        }
+        assertEquals(listOf("'a\n\nb','it''s\n;\nok'"), data("INSERT INTO t FORMAT CSV SETTINGS format_csv_allow_single_quotes = 1\n$single"))
+        assertEquals(listOf("\"a"), data("INSERT INTO t SETTINGS format_csv_allow_double_quotes = 0 FORMAT CSV\n\"a\n\nb\"\n\nSELECT 2;"))
+    }
+
     /** Never a guess: an open quoted field at the end of the text makes the boundary unknown. */
     @Test fun anUnclosedCsvQuoteIsABoundaryError() {
         val ranges = SqlScriptSnapshot.parse("SELECT 1;\nINSERT INTO t FORMAT CSV\n1,\"a\n\nSELECT 2;", "clickhouse").statements
