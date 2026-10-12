@@ -54,6 +54,8 @@ class PgFamilyModelFacadeTest : BasePlatformTestCase() {
     private fun Method.overridesSuperclassMethod(): Boolean {
         if (isSynthetic || isBridge || Modifier.isStatic(modifiers) || Modifier.isPrivate(modifiers) || Modifier.isFinal(modifiers)) return false
         return generateSequence(declaringClass.superclass) { it.superclass }
-            .any { type -> runCatching { type.getDeclaredMethod(name, *parameterTypes) }.isSuccess }
+            .flatMap { sequenceOf(it) + it.interfaces.asSequence() }
+            .mapNotNull { type -> runCatching { type.getDeclaredMethod(name, *parameterTypes) }.getOrNull() }
+            .any { !Modifier.isPrivate(it.modifiers) && !Modifier.isStatic(it.modifiers) }
     }
 }
