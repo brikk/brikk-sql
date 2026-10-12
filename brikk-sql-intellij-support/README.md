@@ -247,6 +247,13 @@ takes the dbms the platform passes):
   `editorNotificationProvider`; it shows "<product>: introspecting '<namespace>'…" with Dismiss while
   the file's newest request runs.
 
+- `QualifiedPathIntrospectContributor(serviceClass)`: completion right after a qualified path
+  (`hive.` or `hive.web.wh`, names quoted with the profile's `quoteChars`, a doubled quote standing
+  for itself) passes the path to the service's `requestPath`; it offers nothing itself and works
+  while the IDE indexes. Only a console or data source the profile's resolver accepts is used, so a
+  file attached to another dbms's console is never introspected. Register a no-arg subclass as
+  `<completion.contributor language="X" order="first" implementationClass="..."/>`.
+
 Internal API used, by class (the platform offers no public alternative):
 
 | API | Used by | Why | Marketplace |
