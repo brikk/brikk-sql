@@ -46,6 +46,15 @@ fun prepareSqlIdeApi(@Output outputDir: Path, @Output revisionDir: Path,
         }
         Files.writeString(stamp, fingerprint)
     }
+    // The test kit compiles against the SDK's test framework; consumers supply it at test runtime.
+    val frameworkDir = Files.createDirectories(outputDir.resolve("test-framework"))
+    for (name in listOf("test-framework", "test-framework-core", "test-framework-common")) {
+        val downloaded = frameworkJar(frameworkDir, name, buildNumber(sdk))
+        val target = frameworkDir.resolve("$name.jar")
+        if (!Files.exists(target) || fileSha(target) != fileSha(downloaded)) {
+            Files.copy(downloaded, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
     Files.createDirectories(revisionDir)
     Files.writeString(revisionDir.resolve("SqlIdeApiRevision.kt"),
         "package dev.brikk.house.sql.intellij.internal\ninternal const val API_REVISION = \"$fingerprint\"\n")

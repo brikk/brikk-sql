@@ -73,7 +73,7 @@ fun testIntellijPlatform(
     println("IntelliJ platform tests on $runtimeBuild: $summary")
 }
 
-private fun buildNumber(sdk: Path): String =
+internal fun buildNumber(sdk: Path): String =
     Regex("\"buildNumber\"\\s*:\\s*\"(\\d+\\.\\d+\\.\\d+)\"").find(Files.readString(sdk.resolve("product-info.json")))
         ?.groupValues?.get(1) ?: error("Missing IDE build number in $sdk")
 
@@ -118,10 +118,13 @@ private fun descriptorTexts(jar: Path, mainOnly: Boolean): List<String> = ZipFil
         .map { zip.getInputStream(it).bufferedReader().use { reader -> reader.readText() } }.toList()
 }
 
-private fun frameworkJars(outputDir: Path, build: String): List<Path> = testFramework.map { name ->
-    val jar = outputDir.resolve("$name-$build.jar")
+private fun frameworkJars(outputDir: Path, build: String): List<Path> = testFramework.map { frameworkJar(outputDir, it, build) }
+
+/** The test framework module [name] of IDE [build] in [dir], downloaded once from the IntelliJ repository. */
+internal fun frameworkJar(dir: Path, name: String, build: String): Path {
+    val jar = dir.resolve("$name-$build.jar")
     if (!Files.isRegularFile(jar)) {
-        val download = Files.createTempFile(outputDir, ".$name-", ".jar")
+        val download = Files.createTempFile(dir, ".$name-", ".jar")
         try {
             val client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
             val found = listOf("releases", "snapshots").any { repository ->
@@ -135,7 +138,7 @@ private fun frameworkJars(outputDir: Path, build: String): List<Path> = testFram
             Files.deleteIfExists(download)
         }
     }
-    jar
+    return jar
 }
 
 private fun java(classpath: List<Path>, main: String, args: List<String>, log: Path,

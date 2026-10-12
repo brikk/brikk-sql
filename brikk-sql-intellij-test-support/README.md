@@ -90,6 +90,62 @@ fun testFallbackExtensionsAreAudited() = assertFallbackExtensionsAudited(MyDbms.
 Finding the extension points reads `ExtensionsArea.nameToPointMap`, internal platform API; the
 test kit is never bundled, so the support jar's containment rule does not apply to it.
 
+## Background work
+
+Tests of anything that runs on a pooled thread or in a coroutine must fail on what that work logs
+or throws, which never reaches the test thread on its own.
+
+- `BackgroundErrors(until)`: from construction until `until` ends, collects errors logged on any
+  thread (the platform logger still logs and rethrows them as usual) and throwables escaping the
+  coroutines of its scopes. `newScope(until)` is a supervisor scope on `Dispatchers.Default`,
+  cancelled when `until` ends, for example for a project service the test builds; `handler` collects
+  for scopes the test builds itself. `awaitScopes()` waits, dispatching events, until no coroutine of
+  its scopes is active; `assertNone()` fails with everything collected as suppressed causes.
+- `HeldIntrospections(until, answerTimeoutSeconds = 30)`: replaces only the database boundary of the
+  real `DataSourceSyncManager` (through `DataSourceSyncManager.withDefaultExecutor`, a Database Tools
+  implementation seam). Every introspection waits for the test: `next()` returns the oldest one
+  started, waiting while dispatching events, with its `LoaderContext`; `finish(effect)` lets it end
+  after playing the introspection's effect on the model (idempotent: a refresh may reach the
+  database more than once). `assertNone(millis = 200)` fails if one starts; `finishAll()` and the end
+  of `until` finish every started one without an effect. A refresh left waiting longer than the
+  timeout fails inside the sync, which `BackgroundErrors` collects.
+
+An auto-introspection test with the plugin's own service subclass:
+
+```kotlin
+class MyAutoIntrospectTest : BasePlatformTestCase() {
+    private lateinit var errors: BackgroundErrors
+    private lateinit var introspections: HeldIntrospections
+    private lateinit var service: MyAutoIntrospectService
+
+    override fun setUp() {
+        super.setUp()
+        errors = BackgroundErrors(testRootDisposable)
+        introspections = HeldIntrospections(testRootDisposable)
+        service = MyAutoIntrospectService(project, errors.newScope(testRootDisposable))
+        project.registerOrReplaceServiceInstance(MyAutoIntrospectService::class.java, service, testRootDisposable)
+        // Add a data source whose model lists the namespace without children.
+    }
+
+    override fun tearDown() = RunAll(
+        { introspections.finishAll() },
+        { errors.awaitScopes() },
+        { errors.assertNone() },
+        // Remove the data source.
+        { super.tearDown() },
+    ).run()
+
+    fun testATypedCatalogIsIntrospected() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        introspections.next().finish { hive.schemas.createOrGet("web") }
+        PlatformTestUtil.waitWithEventsDispatching("done", { service.pending(myFixture.file.virtualFile) == null }, 10)
+    }
+}
+```
+
+The kit compiles against the 261 test framework (`test-framework`, `-core`, `-common`) without
+declaring it; the consumer's test runtime supplies its IDE's copy.
+
 ## Platform tests
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run
