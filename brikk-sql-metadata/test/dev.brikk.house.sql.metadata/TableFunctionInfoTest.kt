@@ -55,7 +55,6 @@ class TableFunctionInfoTest {
     @Test
     fun ingestFunctionsAreNotQueryable() {
         assertFalse(doris.tableFunction("group_commit")!!.queryable)
-        assertFalse(doris.tableFunction("binlog")!!.queryable)
         assertTrue(doris.tableFunction("numbers")!!.queryable)
     }
 
@@ -63,6 +62,7 @@ class TableFunctionInfoTest {
     fun everyDorisEntryIsARegisteredTableFunction() {
         for (info in dorisTableFunctions) assertTrue(doris.functions.isTableFunction(info.name), info.name)
         assertNull(doris.tableFunction("iceberg_meta"))
+        assertNull(doris.tableFunction("binlog"))
     }
 
     @Test

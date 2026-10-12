@@ -10,8 +10,7 @@ import java.sql.Statement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertIs
 
 class PipeExecutionCapabilitiesResultTest {
     private val complete = ShapeCatalog(tables = mapOf("t" to
@@ -29,7 +28,7 @@ class PipeExecutionCapabilitiesResultTest {
         val verifier = TrinoVerifier()
         for ((stage, modifier) in listOf("DROP id" to "EXCEPT (id)", "SET id = 7" to "REPLACE (7 AS id)")) {
             val old = "WITH __tmp1 AS (SELECT * FROM t) SELECT * $modifier FROM __tmp1"
-            assertFalse(verifier.verify(old).accepted, old)
+            assertIs<VerifyResult.Rejected>(verifier.verify(old), old)
             assertFailsWith<UnsupportedError> { SqlFragment("FROM t |> $stage", "trino").toExecutable("trino") }
         }
     }
@@ -54,7 +53,7 @@ class PipeExecutionCapabilitiesResultTest {
                 for (target in listOf("presto", "trino")) {
                     for ((stage, reference) in cases) {
                         val sql = SqlFragment("FROM t |> $stage", target).toStandardSql(target, complete, expandStars = true)
-                        assertTrue(TrinoVerifier().verify(sql).accepted, sql)
+                        assertIs<VerifyResult.Accepted>(TrinoVerifier().verify(sql), sql)
                         assertEquals(rows(statement, reference), rows(statement, sql), stage)
                     }
                 }

@@ -44,9 +44,11 @@ class LowerForExecutionTest {
 
     // brikk-extensions #52: executable lowering refuses an unsupported PIVOT instead of dropping it.
     @Test
-    fun unsupportedPivotLoweringIsRefused() {
+    fun unsupportedPivotIsRefused() {
         for (dialect in listOf("trino", "doris")) {
-            assertTrue("PIVOT" in assertRefused("FROM t |> PIVOT (SUM(x) FOR k IN ('a'))", dialect).message, dialect)
+            for (stage in listOf("PIVOT (SUM(x) FOR k IN ('a'))", "UNPIVOT (v FOR k IN (a, b))")) {
+                assertNull(assertRefused("FROM t |> $stage", dialect).range)
+            }
         }
     }
 

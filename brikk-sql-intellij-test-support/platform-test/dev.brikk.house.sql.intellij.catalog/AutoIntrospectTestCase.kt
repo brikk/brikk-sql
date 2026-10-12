@@ -37,8 +37,9 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         override val autoIntrospect: Boolean = true,
         override val usesCurrentNamespace: Boolean = false,
         override val maxDeepenDepth: Int = 2,
+        override val outOfScopeReferences: Boolean = false,
+        override val dbms: Dbms = Dbms.POSTGRES,
     ) : CatalogProfile {
-        override val dbms: Dbms = Dbms.POSTGRES
         override val productLabel = "Fixture"
         override val quoteChars = "\""
         override val levels = listOf(ObjectKind.DATABASE, ObjectKind.SCHEMA)

@@ -5,9 +5,7 @@ import com.intellij.codeInsight.completion.CompletionContributorEP
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
-import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
@@ -19,6 +17,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.TestActionEvent
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import dev.brikk.house.sql.intellij.completion.LookupCase
+import dev.brikk.house.sql.intellij.completion.SqlLookupKind
+import dev.brikk.house.sql.intellij.completion.SqlLookupStyles
 import dev.brikk.house.sql.parser.SyntacticRange
 import dev.brikk.house.sql.parser.pipeStageKeywords
 import java.util.UUID
@@ -26,10 +27,9 @@ import java.util.UUID
 private val trino = testPipeDialects.first()
 
 class TestStageCompletion : PipeStageCompletionContributor(trino)
-class TestOpenStageCompletion : PipeStageCompletionContributor(trino) {
-    override val stopsAtStageHead = false
-    override fun stagePhrase(phrase: String): LookupElement = LookupElementBuilder.create(phrase).withTypeText("custom stage")
-}
+class TestLowerStageCompletion : PipeStageCompletionContributor(
+    trino, SqlLookupStyles.DEFAULT.with(SqlLookupKind.PIPE_STAGE to SqlLookupStyles.DEFAULT[SqlLookupKind.PIPE_STAGE].copy(case = LookupCase.LOWER)),
+)
 class TestEmbeddedStageCompletion : PipeStageCompletionContributor(object : PipeDialect by trino {
     override fun enablesEditing(file: PsiFile) = true
 })
@@ -54,11 +54,21 @@ class PipeEditorTest : BasePlatformTestCase() {
     fun testEveryStagePhraseIsOfferedAfterAPipe() {
         configure("FROM t |> <caret>")
         myFixture.completeBasic()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
+    }
+
+    fun testOnlyTheEnginesPhrasesAreOfferedAndColored() {
+        val parsedOnly = pipeStageKeywords("trino") - trino.stagePhrases.toSet()
+        assertContainsElements(parsedOnly, "STRAIGHT_JOIN", "ASOF JOIN", "NATURAL JOIN")
+        configure("FROM t |> <caret>")
+        myFixture.completeBasic()
+        assertSameElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
+        configure("FROM t |> STRAIGHT_JOIN u ON t.a = u.a |> NATURAL JOIN v |> WHERE a > 0")
+        assertEquals(listOf("WHERE"), coloredStagePhrases())
     }
 
     fun testAMultiWordPhraseIsInsertedOnce() {
-        val phrases = pipeStageKeywords("trino")
+        val phrases = trino.stagePhrases
         val phrase = phrases.first { candidate ->
             candidate.count { it == ' ' } == 2 && phrases.count { it.startsWith(candidate.substringBeforeLast(' ')) } == 1
         }
@@ -69,7 +79,7 @@ class PipeEditorTest : BasePlatformTestCase() {
     }
 
     fun testPhrasesMatchAcrossAnyWhitespace() {
-        val phrase = pipeStageKeywords("trino").first { it.count { c -> c == ' ' } == 2 }
+        val phrase = trino.stagePhrases.first { it.count { c -> c == ' ' } == 2 }
         val words = phrase.split(' ')
         for (gap in listOf("  ", "\n   ")) {
             configure("FROM t |> ${words[0]}$gap${words[1]}$gap${words[2].take(1)}<caret>")
@@ -89,7 +99,7 @@ class PipeEditorTest : BasePlatformTestCase() {
     fun testStagePhrasesInANestedPipeline() {
         configure("SELECT * FROM (FROM t |> <caret>) AS s")
         myFixture.completeBasic()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
     }
 
     fun testANestedPipelineCompletesItsOwnInputColumns() {
@@ -135,12 +145,24 @@ class PipeEditorTest : BasePlatformTestCase() {
         assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "other_item")
     }
 
-    fun testADialectCanKeepOtherItemsAndPresentPhrasesItsWay() {
-        configure("FROM t |> <caret>", TestOpenStageCompletion::class.java)
-        val items = myFixture.completeBasic().orEmpty()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), "other_item", "WHERE")
-        val where = items.single { it.lookupString == "WHERE" }
-        assertEquals("custom stage", LookupElementPresentation.renderElement(where).typeText)
+    fun testAStagePhraseIsInsertedInUpperCase() {
+        configure("FROM t |> whe<caret>")
+        myFixture.completeBasic()
+        assertEquals("FROM t |> WHERE", myFixture.editor.document.text)
+    }
+
+    fun testAStagePhraseIsInsertedInItsRowsCase() {
+        configure("FROM t |> whe<caret>", TestLowerStageCompletion::class.java)
+        myFixture.completeBasic()
+        assertEquals("FROM t |> where", myFixture.editor.document.text)
+    }
+
+    fun testOtherItemsReturnOnceAStageHasBegun() {
+        configure("FROM t |> SELECT a |> WHERE <caret>")
+        myFixture.completeBasic()
+        val items = myFixture.lookupElementStrings.orEmpty()
+        assertContainsElements(items, "other_item", "a")
+        assertDoesntContain(items, "WHERE")
     }
 
     fun testOnlyBasicCompletionOffersStages() {
@@ -183,7 +205,7 @@ class PipeEditorTest : BasePlatformTestCase() {
     fun testStagesCompleteWhileLaterInputIsIncomplete() {
         configure("FROM t |> EXTEND 1 AS x |> <caret> |> SELECT 'unfinished")
         myFixture.completeBasic()
-        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), pipeStageKeywords("trino"))
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), trino.stagePhrases)
     }
 
     fun testNothingCompletesInsideAnUnterminatedString() {

@@ -50,13 +50,22 @@ registers no-arg subclasses:
 
 - `PipeExecuteInterceptor` as its `CooperativeExecuteConfiguration.interceptor`. It claims
   PIPE input in owned consoles, pins the document after the stock save, captures the
-  destination before preparation and rechecks it, with the setting, before submission.
+  destination before preparation and rechecks it, with the setting, before submission. The destination
+  includes the console's current namespace, which the dialect's search path (`CatalogSearchPathStrategy`)
+  switches and reads back; a switch refuses, and a namespace unknown before or after never blocks. It is
+  compared as the platform keeps it, so the check costs no round trip and runs no probe.
   Refusals are notified in the profile's group; claimed input never falls back to raw SQL.
 - `PipePreviewIntention`, `PipeRunToStageIntention`, `PipePreviewAction`,
   `PipeRunToStageAction`. Run-to-stage cuts at top-level stages and submits through
   the same checks; injected and inspection-only files cannot run.
 - `PipeStageCompletionContributor` and `PipeStageKeywordAnnotator`: core stage phrases
-  and offline stage input columns, also in injected SQL (`PipeText`).
+  and offline stage input columns, also in injected SQL (`PipeText`). Right after `|>` only
+  stage phrases are offered; once a stage has begun, other contributors complete as usual.
+  Items take the `PIPE_STAGE` (UPPER, bold, "PIPE stage") and `PIPE_INPUT_COLUMN` rows of the
+  `SqlLookupStyles` the contributor is given (`DEFAULT` unless the plugin passes its own).
+  Both read the profile's `stagePhrases`, by default `pipeStagePhrases(dialect)`: the phrases core
+  parses for the dialect that core lowers and the engine runs as lowered (recorded for Trino, DuckDB,
+  Doris and ClickHouse; other dialects get every parsed phrase).
 
 `lower` turns one statement into `PipeTranslation` over core `lowerForExecution`,
 also refusing what the profile's statement ranges refuse, and applies the optional
@@ -113,9 +122,22 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
   overloads: it goes after `()` when the only overload takes no arguments. Keywords from the profile's
   `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later
-  contributor already offers. Inside the call of a table
+  contributor already offers. Keywords from later contributors (bold plain-text items whose words are
+  all in the catalog) are spelled in the same case, keeping their insertion; an explicit keyword case in
+  the user's SQL code style wins over the profile's, for both. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
+  Function kinds follow the position, judged from the core tokens of the statement before the typed
+  name (`tablePositions`, by default `TablePositions.of(dialect)`). `STANDARD` places tables after FROM,
+  any join and PIPE `|> CALL`, after a comma continuing their list, and inside `TABLE(`; `IS DISTINCT
+  FROM`, ClickHouse's `ARRAY JOIN` and a FROM inside a call holding no query (`EXTRACT(YEAR FROM x)`)
+  are not table positions. A table position offers only table functions, a known expression position
+  hides them, so a name of both kinds (DuckDB `range`) shows its fitting form; where the text does not
+  tell, every function is offered. Aggregates and window functions are not filtered by clause.
+  Per dialect: DuckDB's `unnest` is also offered in expressions; Doris's generators are too, and
+  follow `LATERAL VIEW`; Trino's table functions other than UNNEST and JSON_TABLE are inserted as
+  `TABLE(name(...))` where they stand bare. Right after `|>`, where only one of the profile's
+  `stagePhrases` stands, no functions or metadata keywords are offered.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
 - `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
@@ -124,7 +146,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
 
 `SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
 signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
-a dialect replaces rows with `with`. `nativeKinds` maps engine-native function kinds
+a dialect replaces rows with `with`. `SqlLookupIcons` holds the two icons the platform lacks, each with a
+dark variant: `WindowFunction` ("W" in the function circle, the WINDOW row) and `BrikkColumn` (bricks
+laid 2-1-2, the BRIKK_COLUMN row). `nativeKinds` maps engine-native function kinds
 (`FunctionPresentation.nativeKind`, such as DuckDB macros) to their own rows. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
 the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
@@ -230,7 +254,7 @@ takes the dbms the platform passes):
 
 - `CatalogProfile`: a dialect's catalog facts. Minimum: `dbms`, `productLabel`, `quoteChars`,
   `levels`. Defaults: `usesCurrentNamespace = false`, `maxDeepenDepth = levels.size`,
-  `autoIntrospect = false` (a dialect turns it on), `dataSources` (a `DialectDataSourceResolver`;
+  `autoIntrospect = false` (a dialect turns it on), `outOfScopeReferences = false` (see below), `dataSources` (a `DialectDataSourceResolver`;
   override with a stored instance for its options), `childrenOf`. `pathResolver` builds the
   `NamespacePathResolver`. `CatalogScopes.select(levels, path)` selects exactly one namespace (its
   direct children load, not its subtree); `widen` adds it to a scope.
@@ -246,6 +270,8 @@ takes the dbms the platform passes):
   (empty path: the top-level list) after statements changed it, with no banner, no scope change and no
   claim, so it may run again. Loaded means it has children, the scope selects it, or a refresh of the
   service loaded it, so a namespace a statement emptied still reloads.
+  `introspect(file, dataSource, target)` is the user-initiated request: it runs also when `autoIntrospect`
+  is off and right after a failure, but not while in flight or once loaded.
 - `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
   `editorNotificationProvider`; it shows "<product>: introspecting '<namespace>'…" with Dismiss while
   the file's newest request runs.
@@ -256,6 +282,32 @@ takes the dbms the platform passes):
   while the IDE indexes. Only a console or data source the profile's resolver accepts is used, so a
   file attached to another dbms's console is never introspected. Register a no-arg subclass as
   `<completion.contributor language="X" order="first" implementationClass="..."/>`.
+
+### Out-of-scope references
+
+A reference into a namespace the model lists but never introspected fails to resolve though the name
+may well exist. `OutOfScopeClassifier(service).classify(reference)` tells it apart (`ReferenceScope`):
+the nearest qualifier that resolves is a namespace of the profile's levels and dbms; without loaded
+children it is `OutOfScope(dataSource, namespace)`, unless the service knows it introspected it (one of
+its refreshes ran on it without errors, or the introspection scope selects it by name; a scope listing
+every namespace but some selects none by name); with children or introspected it is `Nonexistent`;
+nothing resolving above the name is `Unknown`. An unqualified table is in the console's current namespace (as far as the model
+lists it) when the profile `usesCurrentNamespace`. A column is out of scope only with the relation it
+reads: the one its qualifier names (an alias, or an unaliased table by its name, in its query or an
+enclosing one), or, unqualified, every relation of its own query when all of them are out of scope. No
+other reference takes another's status: a wrong catalog, alias or table name, a column of a loaded table,
+of a CTE or of a derived table stays reported. A namespace introspected some other way but empty still
+counts as out of scope (the model cannot tell them apart), so a wrong name under it goes unreported. With
+`outOfScopeReferences` on (off by default):
+
+- `OutOfScopeReferenceFilter(serviceClass)`, registered as `daemon.highlightInfoFilter`, hides the
+  platform's "Unable to resolve" reports (matched by its own messages, in the IDE's language) on exactly
+  the name of an out-of-scope reference in SQL files. Annotator, server and other inspection reports stay.
+  It cannot lower their severity, only hide them.
+- `IntrospectNamespaceIntention(serviceClass, productLabel)`, registered as `intentionAction` for the
+  dialect's language, offers "<product>: introspect '<namespace>'" on such a reference and calls the
+  service's `introspect`. It changes no text and has no preview; its family is "<product>: introspect
+  namespace".
 
 ### Console namespace
 
@@ -279,6 +331,10 @@ CatalogSchemaSearchPath('`', "use {catalog}.{schema}", "use {schema}", "SWITCH {
 val row = "SELECT current_catalog AS catalog, current_schema AS schema"
 CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", catalogProbes = listOf(NamespaceProbe.Column(row, "catalog")),
     schemaProbes = listOf(NamespaceProbe.Column(row, "schema")), schemaRequired = true)
+// DuckDB: USE "c" switches to the catalog's default schema
+val current = "SELECT current_database() AS catalog, current_schema() AS schema"
+CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", useCatalog = "USE {catalog}",
+    catalogProbes = listOf(NamespaceProbe.Column(current, "catalog")), schemaProbes = listOf(NamespaceProbe.Column(current, "schema")))
 ```
 
 `CatalogImports.allCatalogs(base, dataSourceNames)`: for a dialect whose own SQL editor imports reach
@@ -334,12 +390,23 @@ The interceptor skips the helper connections refreshes open, so a refresh harves
 over a console session's own connection, so it also reads what the session loaded implicitly (DuckDB
 autoload): the harvest is queued on the session as a request and runs on its engine's thread, and both
 the shared inventory and the session's facts are recorded and returned (`RefreshOutcome.Refreshed.session`,
-which `onRefreshed` shows). A session in a transaction (manual commit with a change pending) is not
-harvested (`RefreshOutcome.SessionInTransaction`), nor one in a transaction a statement began in
-auto-commit mode, which the platform does not track: the `ExecutionObserver` treats a session as in a
-transaction from a detected begin until a detected end, a commit or rollback through the IDE, or a new
-connection (`ExecutionObserverProfile.transactionStatements`, default `StatementRules.TRANSACTIONS`:
-`BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`; `ROLLBACK ... TO` keeps it). A session that is not connected
+which `onRefreshed` shows). A session in manual-commit mode is not harvested
+(`RefreshOutcome.SessionInTransaction`): its harvest queries would open a transaction of their own. Nor is
+one in a transaction a statement began in auto-commit mode, which the platform does not track: the
+`ExecutionObserver` treats a session as in a transaction from a detected begin until a detected end, a
+commit or rollback through the IDE, or a new connection (`ExecutionObserverProfile.transactionStatements`,
+default `StatementRules.TRANSACTIONS`: `BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`;
+`ROLLBACK ... TO`, `COMMIT PREPARED` and `ROLLBACK PREPARED` keep it, PostgreSQL's two-phase
+`PREPARE TRANSACTION 'gid'` ends it (not a statement prepared under the name `transaction`, as DuckDB's
+`PREPARE transaction AS ...`), and an end `AND CHAIN` begins the next; Trino's profile uses
+`StatementRules.TRINO_TRANSACTIONS`, without `BEGIN` and `END`, which only delimit its routine bodies).
+Only statements that succeed count: a failed begin begins nothing, a failed end ends nothing, and a
+failed script whose statements include a begin leaves the session in a transaction, since its begin may
+have run and its end may not. From 263 the platform reads `COMMIT`
+and `ROLLBACK` statements itself (`transactionControlLanguageHandler`, PostgreSQL and MySQL families, not
+the stock `DUCK`), but only to end a manual-commit transaction, where this tracking does not apply; the
+two agree, `AND CHAIN` included. Without such a handler, a `COMMIT` statement leaves the platform holding
+the manual-commit transaction, and it refuses the harvest's request (`HarvestFailed`). A session that is not connected
 falls back to the helper connection. `RefreshLiveCatalogAction` uses the editor's connected console
 session when it has one. `inventoryChanged(project, session,
 requestor, sessionFacts, notify)` follows executed statements (see `ExecutionObserver`): when the change

@@ -71,6 +71,9 @@ jobs:
       - name: Verify Maven publications locally
         run: ./kotlin publish mavenLocal
 
+      - name: Audit the SQL verifier publications
+        run: python3 tools/verify_verifier_publication.py
+
       - name: Audit the SQL IntelliJ support publication
         run: python3 tools/verify_intellij_publication.py 0.1.2-SNAPSHOT
 

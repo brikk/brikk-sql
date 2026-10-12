@@ -79,6 +79,38 @@ class StatementHeadDetectorTest : TestCase() {
         assertEquals(listOf(true, true, true), begins("BEGIN; begin transaction; START TRANSACTION"))
         assertEquals(listOf(false, false, false, false, false), begins("COMMIT; ROLLBACK WORK; abort; END; END TRANSACTION"))
         assertEquals("a savepoint rollback keeps the transaction", listOf(null), begins("ROLLBACK TO SAVEPOINT s"))
+        assertEquals("a chained end starts the next transaction", listOf(true, true, true), begins("COMMIT AND CHAIN; rollback work and chain; END AND CHAIN"))
+        assertEquals(listOf(false), begins("COMMIT AND NO CHAIN"))
+        assertEquals("two-phase: preparing ends the session's transaction", listOf(false), begins("PREPARE TRANSACTION 'gid'"))
+        assertEquals("finishing a prepared one leaves the session's as it is", listOf(null, null), begins("COMMIT PREPARED 'gid'; ROLLBACK PREPARED 'gid'"))
+    }
+
+    /** Only the two-phase forms, a literal transaction id and nothing after it, are transaction control. */
+    fun testPreparedStatementsNamedTransactionAreNotTwoPhase() {
+        for (dialect in listOf("duckdb", "postgres")) {
+            val transactions = StatementHeadDetector(StatementRules.TRANSACTIONS, dialect)
+            fun begins(sql: String) = transactions.detect(sql).map { (it.effect as StatementEffect.Transaction).begins }
+            assertEquals(dialect, listOf(false, null, null), begins("prepare transaction 'gid'; COMMIT PREPARED 'g''id'; rollback prepared 'gid' -- done"))
+            for (sql in listOf(
+                "PREPARE TRANSACTION AS SELECT 1",
+                "PREPARE TRANSACTION FROM 'SELECT 1'",
+                "PREPARE TRANSACTION (INT) AS SELECT \$1",
+                "PREPARE TRANSACTION 'gid' AS SELECT 1",
+                "PREPARE TRANSACTION",
+            )) assertEquals("$dialect: $sql", emptyList<Boolean?>(), begins(sql))
+            // Not the two-phase form either, but never an end: these must not fall through to COMMIT and ROLLBACK.
+            for (sql in listOf("COMMIT PREPARED", "COMMIT PREPARED gid", "ROLLBACK PREPARED 'gid' x")) {
+                assertEquals("$dialect: $sql", listOf(null), begins(sql))
+            }
+        }
+    }
+
+    /** Trino has no BEGIN or END statement: a routine body's END must not end a transaction. */
+    fun testTrinoTransactionControl() {
+        val transactions = StatementHeadDetector(StatementRules.TRINO_TRANSACTIONS, "trino")
+        fun begins(sql: String) = transactions.detect(sql).map { (it.effect as StatementEffect.Transaction).begins }
+        assertEquals(listOf(true, false, false, false, false), begins("START TRANSACTION; COMMIT; COMMIT WORK; ROLLBACK; ROLLBACK WORK"))
+        assertEquals(emptyList<Boolean?>(), begins("CREATE FUNCTION f() RETURNS int BEGIN DECLARE x int; RETURN 1; END; END; BEGIN"))
         assertEquals(emptyList<Boolean?>(), begins("SELECT 'BEGIN'; COMMITTED; CREATE TABLE begin_log(x INT)"))
     }
 

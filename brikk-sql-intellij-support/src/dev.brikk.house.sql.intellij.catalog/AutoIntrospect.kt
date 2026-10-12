@@ -67,6 +67,16 @@ public class AutoIntrospectEngine(
         return claimed
     }
 
+    /** Like [claim], but a failure does not hold back a request the user asked for. */
+    internal fun claimNow(key: Key): Boolean {
+        var claimed = false
+        states.compute(key) { _, state ->
+            claimed = state == null || state is State.Failed
+            if (claimed) State.InFlight else state
+        }
+        return claimed
+    }
+
     /** Forgets an in-flight claim that never ran. */
     internal fun release(key: Key) {
         states.remove(key, State.InFlight)
@@ -113,6 +123,9 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     /** Namespaces a refresh of this service loaded, which stay loaded when a statement empties them. */
     private val loaded = ConcurrentHashMap.newKeySet<AutoIntrospectEngine.Key>()
 
+    /** Namespaces whose last refresh by this service ran without errors, empty ones included. */
+    private val synced = ConcurrentHashMap.newKeySet<AutoIntrospectEngine.Key>()
+
     /** Running and queued requests, oldest first; a request's banner shows while it is here. */
     private val banners = LinkedHashSet<Request>()
     private val workers = HashMap<String, Worker>()
@@ -139,12 +152,22 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
      * Introspects [target] of [dataSource] for [file], unless it is claimed. True when a refresh was
      * queued. Each data source refreshes one target at a time, in request order.
      */
-    public fun request(file: PsiFile, dataSource: LocalDataSource, target: NamespaceTarget): Boolean {
-        if (!profile.autoIntrospect) return false
+    public fun request(file: PsiFile, dataSource: LocalDataSource, target: NamespaceTarget): Boolean =
+        profile.autoIntrospect && queue(file, dataSource, target, engine::claim)
+
+    /**
+     * Introspects [target] of [dataSource] for [file] because the user asked to
+     * ([IntrospectNamespaceIntention]): also when automatic introspection is off, and right after a
+     * failed attempt. Not while it is in flight, or once it loaded. True when a refresh was queued.
+     */
+    public fun introspect(file: PsiFile, dataSource: LocalDataSource, target: NamespaceTarget): Boolean =
+        queue(file, dataSource, target, engine::claimNow)
+
+    private fun queue(file: PsiFile, dataSource: LocalDataSource, target: NamespaceTarget, claim: (AutoIntrospectEngine.Key) -> Boolean): Boolean {
         val element = target.node as? BasicElement ?: return false
         val task = prepareOneElementRefreshTask(dataSource.uniqueId, element) ?: return false
         val key = AutoIntrospectEngine.Key(dataSource.uniqueId, target.path)
-        if (!engine.claim(key)) return false
+        if (!claim(key)) return false
         val virtualFile = file.originalFile.viewProvider.virtualFile
         val request = Request(key, dataSource, task, virtualFile, claimed = true)
         synchronized(banners) { banners += request }
@@ -233,6 +256,7 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     }
 
     private suspend fun refresh(request: Request) {
+        var synced = false
         var loaded = false
         try {
             val dataSource = request.dataSource
@@ -240,12 +264,31 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
                 dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
                 storageOf(dataSource)?.updateDataSource(dataSource)
             }
-            loaded = sync(request) && (!request.claimed || readAction { isLoaded(request) })
+            synced = sync(request)
+            loaded = synced && (!request.claimed || readAction { isLoaded(request) })
         } finally {
+            if (synced) this.synced += request.key else this.synced -= request.key
             finish(request, loaded)
         }
         if (loaded && request.key.path.isNotEmpty()) this.loaded += request.key
-        if (loaded) request.file?.let { highlightAgain(it) }
+        // Also after an empty result: what it was asked for is now known not to exist.
+        if (synced) request.file?.let { highlightAgain(it) }
+    }
+
+    /**
+     * Whether the namespace at [path] of [dataSource] was introspected, so that a missing name under it does
+     * not exist: a refresh of this service ran on it without errors, or the introspection scope selects it
+     * by name (a scope that lists every namespace but some, as a default may, selects none by name). Not
+     * while a refresh runs or after one failed.
+     */
+    internal fun introspected(dataSource: LocalDataSource, path: List<String>): Boolean {
+        val key = AutoIntrospectEngine.Key(dataSource.uniqueId, path)
+        return when (engine.state(key)) {
+            AutoIntrospectEngine.State.InFlight -> false
+            AutoIntrospectEngine.State.Done -> true
+            is AutoIntrospectEngine.State.Failed -> key in synced
+            null -> key in synced || key in loaded || CatalogScopes.selectsByName(dataSource.introspectionScope, profile.levels, path)
+        }
     }
 
     /** Whether the sync ran without errors; a data source that is loading does not sync and gives no result. */

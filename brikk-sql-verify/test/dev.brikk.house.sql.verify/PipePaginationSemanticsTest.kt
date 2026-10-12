@@ -61,7 +61,7 @@ class PipePaginationSemanticsTest {
                                 assertFalse(result.isRawPassthroughStatement, source)
                                 assertSame(result.sql, assertNotNull(result.sourceMap).output)
                                 val verified = verifier.verify(result.sql)
-                                assertTrue(verified.verified && !verified.advisory && verified.accepted, "$source\n${result.sql}\n$verified")
+                                assertTrue(!verifier.advisory && verified is VerifyResult.Accepted, "$source\n${result.sql}\n$verified")
                                 val qualified = qualify(
                                     assertIs<Select>(parseOne(result.sql, "doris")), dialect = Dialects.DORIS, schema = schema,
                                     inferSchema = false, validateQualifyColumns = true, allowPartialQualification = false,

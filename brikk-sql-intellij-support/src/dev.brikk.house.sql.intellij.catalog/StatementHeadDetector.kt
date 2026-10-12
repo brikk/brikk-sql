@@ -34,6 +34,7 @@ public sealed interface StatementEffect {
 /**
  * A statement head and its effect. [pattern] lists the head's words: `A|B` accepts either, `[...]`
  * makes words optional (`CREATE [OR REPLACE] TEMP|TEMPORARY MACRO|FUNCTION`). Words match ignoring case.
+ * `<string>` matches one string literal and `$` the end of the statement (`PREPARE TRANSACTION <string> $`).
  * With [notifies], a refresh after the statement shows its result in the live catalog's notification group.
  */
 @ApiStatus.Experimental
@@ -43,6 +44,12 @@ public class StatementRule(public val pattern: String, public val effect: Statem
     internal sealed interface Element {
         data class Word(val choices: Set<String>) : Element
         data class Optional(val elements: List<Element>) : Element
+
+        /** One string literal, written `<string>`. */
+        data object StringLiteral : Element
+
+        /** The end of the statement, written `$`. */
+        data object End : Element
     }
 
     /** This rule with [notifies] set. */
@@ -59,6 +66,8 @@ public class StatementRule(public val pattern: String, public val effect: Statem
                     when (val token = tokens[at++]) {
                         "[" -> add(Element.Optional(sequence(nested = true)))
                         "]" -> if (nested) return@buildList else throw IllegalArgumentException("Unbalanced ] in '$pattern'")
+                        "<string>" -> add(Element.StringLiteral)
+                        "$" -> add(Element.End)
                         else -> add(Element.Word(token.split('|').map(String::uppercase).toSet()))
                     }
                 }
@@ -86,22 +95,28 @@ public data class DetectedStatement(val rule: StatementRule, val name: List<Stri
 public class StatementHeadDetector(public val rules: List<StatementRule>, public val dialect: String) {
     private val config = TokenizerConfigs.forName(dialect)
 
-    public fun detect(script: String?): List<DetectedStatement> {
+    public fun detect(script: String?): List<DetectedStatement> = detectEach(script).filterNotNull()
+
+    /** One entry per statement of [script], null where no rule matched. */
+    internal fun detectEach(script: String?): List<DetectedStatement?> {
         if (script.isNullOrBlank() || rules.isEmpty()) return emptyList()
         val tokens = Tokenizer(config).tokenizeForEditor(script).tokens
-        return statements(tokens).mapNotNull { statement ->
-            val words = statement.takeWhile { it.isWord(script) }.map { it.text.uppercase() }
-            rules.firstNotNullOfOrNull { rule -> match(rule.elements, words, 0)?.let { used -> DetectedStatement(rule, nameAfter(statement.drop(used), script)) } }
+        return statements(tokens).map { statement ->
+            rules.firstNotNullOfOrNull { rule -> match(rule.elements, statement, script, 0)?.let { used -> DetectedStatement(rule, nameAfter(statement.drop(used), script)) } }
         }
     }
 
-    /** The number of [words] from [from] that [elements] match, preferring the longest; null when they do not. */
-    private fun match(elements: List<StatementRule.Element>, words: List<String>, from: Int): Int? {
+    /** The number of [tokens] from [from] that [elements] match, preferring the longest; null when they do not. */
+    private fun match(elements: List<StatementRule.Element>, tokens: List<Token>, script: String, from: Int): Int? {
         if (elements.isEmpty()) return from
         val rest = elements.drop(1)
+        val token = tokens.getOrNull(from)
         return when (val first = elements.first()) {
-            is StatementRule.Element.Word -> if (from < words.size && words[from] in first.choices) match(rest, words, from + 1) else null
-            is StatementRule.Element.Optional -> match(first.elements + rest, words, from) ?: match(rest, words, from)
+            is StatementRule.Element.Word ->
+                if (token != null && token.isWord(script) && token.text.uppercase() in first.choices) match(rest, tokens, script, from + 1) else null
+            is StatementRule.Element.Optional -> match(first.elements + rest, tokens, script, from) ?: match(rest, tokens, script, from)
+            StatementRule.Element.StringLiteral -> if (token?.tokenType == TokenType.STRING) match(rest, tokens, script, from + 1) else null
+            StatementRule.Element.End -> if (token == null) match(rest, tokens, script, from) else null
         }
     }
 
@@ -155,13 +170,29 @@ public class StatementHeadDetector(public val rules: List<StatementRule>, public
 public object StatementRules {
     /**
      * Transaction control most engines share: `BEGIN` and `START TRANSACTION` begin; `COMMIT`,
-     * `ROLLBACK`, `ABORT` and `END` end; rolling back to a savepoint keeps the transaction.
+     * `ROLLBACK`, `ABORT` and `END` end; rolling back to a savepoint keeps the transaction, and an end
+     * `AND CHAIN` starts the next one at once. PostgreSQL's two-phase `PREPARE TRANSACTION 'gid'` (a literal
+     * id and nothing more) ends the session's transaction, while a statement prepared under the name
+     * `transaction` (DuckDB's `PREPARE transaction AS ...`) does nothing; `COMMIT PREPARED` and
+     * `ROLLBACK PREPARED` finish a prepared transaction and never end the session's, whatever follows them.
      */
     public val TRANSACTIONS: List<StatementRule> = listOf(
         StatementRule("BEGIN [TRANSACTION|WORK]", StatementEffect.Transaction(begins = true)),
         StatementRule("START TRANSACTION", StatementEffect.Transaction(begins = true)),
         StatementRule("ROLLBACK [TRANSACTION|WORK] TO", StatementEffect.Transaction(begins = null)),
+        StatementRule("PREPARE TRANSACTION <string> $", StatementEffect.Transaction(begins = false)),
+        StatementRule("COMMIT|ROLLBACK PREPARED", StatementEffect.Transaction(begins = null)),
+        StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK] AND CHAIN", StatementEffect.Transaction(begins = true)),
         StatementRule("COMMIT|ROLLBACK|ABORT|END [TRANSACTION|WORK]", StatementEffect.Transaction(begins = false)),
+    )
+
+    /**
+     * Trino's transaction control: `START TRANSACTION` begins, `COMMIT` and `ROLLBACK` end. Trino has no
+     * `BEGIN` or `END` statement, so the `END` closing a routine body ends nothing.
+     */
+    public val TRINO_TRANSACTIONS: List<StatementRule> = listOf(
+        StatementRule("START TRANSACTION", StatementEffect.Transaction(begins = true)),
+        StatementRule("COMMIT|ROLLBACK [WORK]", StatementEffect.Transaction(begins = false)),
     )
 
     private val server = StatementEffect.FunctionInventory(sessionFacts = false)

@@ -54,6 +54,9 @@ settings:
       # chDB uses restricted FFM; without this the JDK 25 test JVM warns and native teardown
       # can segfault.
       freeJvmArgs: ["--enable-native-access=ALL-UNNAMED"]
+      systemProperties:
+        # SqlVerifiers' Doris parser for the corpus gates; the tests run from this module's directory.
+        brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar
   kotlin:
     version: 2.4.10
     serialization: json

@@ -54,10 +54,7 @@ class SqlOraclesTest {
             val verifier = SqlOracles.forEngine(engine)
             assertNotNull(verifier, "expected a verifier for $engine")
             assertTrue(verifier is ShardingSphereVerifier, "$engine should be the advisory ShardingSphere oracle")
-            assertTrue(
-                verifier.verify("SELECT * FROM t").advisory,
-                "$engine results should be advisory",
-            )
+            assertTrue(verifier.advisory, "$engine results should be advisory")
         }
     }
 

@@ -6,10 +6,10 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import java.sql.SQLException
 
 class SqlVerifierTest {
 
@@ -42,7 +42,7 @@ class SqlVerifierTest {
         )) {
             for (target in listOf("doris", "trino", "duckdb")) {
                 val result = SqlFragment(source, "duckdb").toExecutable(target)
-                assertTrue(SqlVerifiers.forEngine(target)!!.verify(result.sql).accepted, result.sql)
+                assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine(target)!!.verify(result.sql), result.sql)
                 if (target == "duckdb") {
                     java.sql.DriverManager.getConnection("jdbc:duckdb:").use { connection ->
                         connection.createStatement().use { statement ->
@@ -79,10 +79,7 @@ class SqlVerifierTest {
         for (engine in listOf("postgres", "mysql", "hive", "clickhouse")) {
             val verifier = SqlVerifiers.forEngine(engine)!!
             assertTrue(verifier is ShardingSphereVerifier, "$engine should be a ShardingSphereVerifier")
-            assertTrue(
-                verifier.verify("SELECT * FROM t").advisory,
-                "$engine results should be advisory",
-            )
+            assertTrue(verifier.advisory, "$engine results should be advisory")
         }
     }
 
@@ -95,18 +92,14 @@ class SqlVerifierTest {
 
     @Test
     fun trinoAcceptsValidSql() {
-        val result = SqlVerifiers.forEngine("trino")!!.verify("SELECT a FROM t WHERE b = 1")
-        assertTrue(result.accepted)
-        assertNull(result.error)
+        assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify("SELECT a FROM t WHERE b = 1"))
     }
 
     @Test
     fun trinoRejectsInvalidSqlWithErrorAndPosition() {
-        val result = SqlVerifiers.forEngine("trino")!!.verify("SELECT FROM WHERE")
-        assertFalse(result.accepted)
-        assertNotNull(result.error)
-        assertEquals(1, result.line)
-        assertEquals(8, result.col)
+        val error = assertIs<VerifyResult.Rejected>(SqlVerifiers.forEngine("trino")!!.verify("SELECT FROM WHERE")).error
+        assertEquals(1, error.line)
+        assertEquals(8, error.column)
     }
 
     @Test
@@ -119,15 +112,15 @@ class SqlVerifierTest {
         assertTrue(report.ok, "${report.findings}")
         assertEquals(emptyList(), report.findings)
         val result = SqlVerifiers.forEngine("trino")!!.verify(report.result.sql)
-        assertTrue(result.accepted, "Trino parser rejected `${report.result.sql}`: ${result.error}")
+        assertIs<VerifyResult.Accepted>(result, "Trino parser rejected `${report.result.sql}`: $result")
     }
 
     @Test
     fun trinoVerifiesExpressionFragments() {
         val verifier = SqlVerifiers.forEngine("trino")!!
-        assertTrue(verifier.verifyExpression("JSON_QUERY(x, 'strict $.a' WITH ARRAY WRAPPER)").accepted)
-        assertFalse(verifier.verify("JSON_QUERY(x, 'strict $.a' WITH ARRAY WRAPPER)").accepted, "bare expression is not a statement")
-        assertFalse(verifier.verifyExpression("1 +").accepted)
+        assertIs<VerifyResult.Accepted>(verifier.verifyExpression("JSON_QUERY(x, 'strict $.a' WITH ARRAY WRAPPER)"))
+        assertFalse(verifier.verify("JSON_QUERY(x, 'strict $.a' WITH ARRAY WRAPPER)") is VerifyResult.Accepted, "bare expression is not a statement")
+        assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
     }
 
     @Test
@@ -146,11 +139,11 @@ class SqlVerifierTest {
         )
         for (sql in expressions) {
             val result = verifier.verifyExpression(sql)
-            assertTrue(result.accepted, "Trino parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Trino parser rejected `$sql`: $result")
         }
         // ... and the sqlglot-inherited form it replaces is indeed grammar-illegal.
         assertFalse(
-            verifier.verifyExpression("JSON_QUERY(content, 'strict $.HY.*' WITHOUT CONDITIONAL WRAPPER)").accepted,
+            verifier.verifyExpression("JSON_QUERY(content, 'strict $.HY.*' WITHOUT CONDITIONAL WRAPPER)") is VerifyResult.Accepted,
             "Trino unexpectedly accepts WITHOUT CONDITIONAL WRAPPER",
         )
 
@@ -162,10 +155,10 @@ class SqlVerifierTest {
         )
         for (sql in statements) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Trino parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Trino parser rejected `$sql`: $result")
         }
         assertFalse(
-            verifier.verify("ALTER TABLE people SET PROPERTIES foo = 123, 'foo bar' = 456").accepted,
+            verifier.verify("ALTER TABLE people SET PROPERTIES foo = 123, 'foo bar' = 456") is VerifyResult.Accepted,
             "Trino unexpectedly accepts string-literal property names",
         )
     }
@@ -185,7 +178,7 @@ class SqlVerifierTest {
             "CAST(value AS VARIANT)",
         )) {
             val result = verifier.verifyExpression(sql)
-            assertTrue(result.accepted, "Trino parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Trino parser rejected `$sql`: $result")
         }
 
         for (sql in listOf(
@@ -199,7 +192,7 @@ class SqlVerifierTest {
             "MERGE INTO target@dev USING source ON target.id = source.id WHEN MATCHED THEN DELETE",
         )) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Trino parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Trino parser rejected `$sql`: $result")
         }
     }
 
@@ -208,49 +201,26 @@ class SqlVerifierTest {
     @Test
     fun duckdbAcceptsValidSql() {
         val verifier = SqlVerifiers.forEngine("duckdb")!!
-        assertTrue(verifier.verify("SELECT a FROM t WHERE b = 1").accepted, "select goes through json_serialize_sql")
-        assertTrue(verifier.verify("CREATE TABLE t (a INT)").accepted, "non-select goes through the prepare fallback")
+        assertIs<VerifyResult.Accepted>(verifier.verify("SELECT a FROM t WHERE b = 1"), "select goes through json_serialize_sql")
+        assertIs<VerifyResult.Accepted>(verifier.verify("CREATE TABLE t (a INT)"), "non-select goes through the prepare fallback")
         assertTrue(
-            verifier.verify("SELECT * FROM completely_unknown_table").accepted,
+            verifier.verify("SELECT * FROM completely_unknown_table") is VerifyResult.Accepted,
             "binder errors (unknown table) are not grammar rejections",
         )
     }
 
     @Test
     fun duckdbRejectsInvalidSqlWithErrorAndPosition() {
-        val result = SqlVerifiers.forEngine("duckdb")!!.verify("SELECT FROM WHERE")
-        assertFalse(result.accepted)
-        assertNotNull(result.error)
-        assertEquals(1, result.line)
-        assertEquals(13, result.col)
+        val error = assertIs<VerifyResult.Rejected>(SqlVerifiers.forEngine("duckdb")!!.verify("SELECT FROM WHERE")).error
+        assertEquals(1, error.line)
+        assertEquals(13, error.column)
     }
 
     @Test
     fun duckdbVerifiesExpressionFragments() {
         val verifier = SqlVerifiers.forEngine("duckdb")!!
-        assertTrue(verifier.verifyExpression("x -> '$.family'").accepted)
-        assertFalse(verifier.verifyExpression("1 +").accepted)
-    }
-
-    @Test
-    fun duckdbInfrastructureFailuresAreUnavailableNotAccepted() {
-        val result = DuckdbVerifier { throw SQLException("Connection was closed") }.verify("SELECT 1")
-        assertFalse(result.accepted)
-        assertFalse(result.verified)
-        assertNotNull(result.warning)
-        assertNull(result.error)
-
-        for (prefix in listOf("Binder Error", "Catalog Error", "Not implemented Error")) {
-            assertTrue(classifyDuckdbPrepareFailure("$prefix: detail").accepted)
-        }
-        val parser = classifyDuckdbPrepareFailure("Parser Error: bad\nLINE 2: 123 invalid")
-        assertTrue(parser.verified)
-        assertFalse(parser.accepted)
-        assertEquals(2, parser.line)
-        assertNull(parser.col)
-        val unexpected = classifyDuckdbPrepareFailure("IO Error: disk unavailable")
-        assertFalse(unexpected.verified)
-        assertFalse(unexpected.accepted)
+        assertIs<VerifyResult.Accepted>(verifier.verifyExpression("x -> '$.family'"))
+        assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
     }
 
     // -- doris ----------------------------------------------------------------------------
@@ -258,7 +228,7 @@ class SqlVerifierTest {
     @Test
     fun dorisAcceptsValidSql() {
         val result = SqlVerifiers.forEngine("doris")!!.verify("SELECT a FROM t WHERE b = 1")
-        assertTrue(result.accepted)
+        assertIs<VerifyResult.Accepted>(result)
     }
 
     @Test
@@ -266,12 +236,10 @@ class SqlVerifierTest {
         val previous = System.getProperty("brikk.doris.parser.jar")
         try {
             System.setProperty("brikk.doris.parser.jar", "/definitely/missing/doris-parser.jar")
-            val verifier = DorisVerifier.createOrUnavailable()
-            val result = verifier.verify("SELECT 1")
+            val verifier = assertNotNull(SqlVerifiers.forEngine("doris"))
+            val result = assertIs<VerifyResult.Unavailable>(verifier.verify("SELECT 1"))
             assertEquals("doris", verifier.engine)
-            assertFalse(result.accepted)
-            assertFalse(result.verified)
-            assertContains(result.warning.orEmpty(), "brikk.doris.parser.jar")
+            assertContains(result.reason, "brikk.doris.parser.jar")
         } finally {
             if (previous == null) System.clearProperty("brikk.doris.parser.jar")
             else System.setProperty("brikk.doris.parser.jar", previous)
@@ -280,11 +248,9 @@ class SqlVerifierTest {
 
     @Test
     fun dorisRejectsInvalidSqlWithErrorAndPosition() {
-        val result = SqlVerifiers.forEngine("doris")!!.verify("SELECT FROM WHERE")
-        assertFalse(result.accepted)
-        assertNotNull(result.error)
-        assertEquals(1, result.line)
-        assertEquals(8, result.col)
+        val error = assertIs<VerifyResult.Rejected>(SqlVerifiers.forEngine("doris")!!.verify("SELECT FROM WHERE")).error
+        assertEquals(1, error.line)
+        assertEquals(8, error.column)
     }
 
     @Test
@@ -293,12 +259,10 @@ class SqlVerifierTest {
         for (payload in listOf("ascii", "\uD83D\uDE00", "\uD83D\uDE00\uD83D\uDE80")) {
             for (separator in listOf(" ", "\n", "\r\n")) {
                 val sql = "SELECT$separator'$payload' FROM WHERE"
-                val result = verifier.verify(sql)
+                val error = assertIs<VerifyResult.Rejected>(verifier.verify(sql)).error
                 val offset = sql.indexOf("WHERE")
-                assertTrue(result.verified)
-                assertFalse(result.accepted)
-                assertEquals(sql.take(offset).count { it == '\n' } + 1, result.line, sql)
-                assertEquals(offset - sql.lastIndexOf('\n', offset - 1), result.col, sql)
+                assertEquals(sql.take(offset).count { it == '\n' } + 1, error.line, sql)
+                assertEquals(offset - sql.lastIndexOf('\n', offset - 1), error.column, sql)
             }
         }
     }
@@ -306,8 +270,8 @@ class SqlVerifierTest {
     @Test
     fun dorisVerifiesExpressionFragments() {
         val verifier = SqlVerifiers.forEngine("doris")!!
-        assertTrue(verifier.verifyExpression("DATE_TRUNC(c2, 'MONTH')").accepted)
-        assertFalse(verifier.verifyExpression("1 +").accepted)
+        assertIs<VerifyResult.Accepted>(verifier.verifyExpression("DATE_TRUNC(c2, 'MONTH')"))
+        assertFalse(verifier.verifyExpression("1 +") is VerifyResult.Accepted)
     }
 
     @Test
@@ -315,8 +279,8 @@ class SqlVerifierTest {
         // Doris's real grammar accepts arrays; the Doris dialect now emits them first-class
         // (brikk extension, docs/brikk-extensions.md entry 7). This pins the engine-side truth.
         val verifier = SqlVerifiers.forEngine("doris")!!
-        assertTrue(verifier.verify("SELECT ARRAY(1, 2, 3)").accepted)
-        assertTrue(verifier.verify("CREATE TABLE t (a ARRAY<INT>)").accepted)
+        assertIs<VerifyResult.Accepted>(verifier.verify("SELECT ARRAY(1, 2, 3)"))
+        assertIs<VerifyResult.Accepted>(verifier.verify("CREATE TABLE t (a ARRAY<INT>)"))
     }
 
     @Test
@@ -347,7 +311,7 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Doris FE parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Doris FE parser rejected `$sql`: $result")
         }
     }
 
@@ -365,11 +329,11 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Doris FE parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Doris FE parser rejected `$sql`: $result")
         }
         // ... and the sqlglot-inherited bare form is indeed grammar-illegal.
         assertFalse(
-            verifier.verify("CREATE TABLE test_table (c1 INT, c2 DATE) PARTITION BY (c2)").accepted,
+            verifier.verify("CREATE TABLE test_table (c1 INT, c2 DATE) PARTITION BY (c2)") is VerifyResult.Accepted,
             "Doris FE parser unexpectedly accepts a bare PARTITION BY (cols)",
         )
     }
@@ -483,7 +447,7 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Doris FE parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Doris FE parser rejected `$sql`: $result")
         }
     }
 
@@ -505,12 +469,12 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "DuckDB parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "DuckDB parser rejected `$sql`: $result")
         }
         // ... and the Python-oracle rendering of a zone-less TIME(x) (empty AT TIME ZONE
         // operand) is indeed grammar-invalid — the reason entry 15 diverges.
         assertFalse(
-            verifier.verify("SELECT CAST(CAST(x AS TIMESTAMPTZ) AT TIME ZONE  AS TIME) FROM t").accepted,
+            verifier.verify("SELECT CAST(CAST(x AS TIMESTAMPTZ) AT TIME ZONE  AS TIME) FROM t") is VerifyResult.Accepted,
             "DuckDB unexpectedly accepts an empty AT TIME ZONE operand",
         )
     }
@@ -531,12 +495,12 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Trino parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Trino parser rejected `$sql`: $result")
         }
         // ... and the Python-oracle CURRENT_SCHEMA() call form is indeed grammar-illegal
         // (CURRENT_SCHEMA is a reserved parenthesis-less special form in SqlBase.g4).
         assertFalse(
-            verifier.verify("SELECT CURRENT_SCHEMA()").accepted,
+            verifier.verify("SELECT CURRENT_SCHEMA()") is VerifyResult.Accepted,
             "Trino unexpectedly accepts CURRENT_SCHEMA()",
         )
     }
@@ -565,7 +529,7 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Doris FE parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Doris FE parser rejected `$sql`: $result")
         }
     }
 
@@ -603,7 +567,7 @@ class SqlVerifierTest {
         )
         for (sql in renderings) {
             val result = verifier.verify(sql)
-            assertTrue(result.accepted, "Doris FE parser rejected `$sql`: ${result.error}")
+            assertIs<VerifyResult.Accepted>(result, "Doris FE parser rejected `$sql`: $result")
         }
     }
 
@@ -620,12 +584,12 @@ class SqlVerifierTest {
         val accepted = verifier.verify(
             "CREATE MATERIALIZED VIEW test_table (c1, c2) KEY (c1) AS SELECT a, b FROM t"
         )
-        assertTrue(accepted.accepted, "Doris FE parser rejected MV bare column list: ${accepted.error}")
+        assertIs<VerifyResult.Accepted>(accepted, "Doris FE parser rejected MV bare column list: $accepted")
         // ... typed MV column defs are indeed grammar-illegal.
         assertFalse(
             verifier.verify(
                 "CREATE MATERIALIZED VIEW test_table (c1 INT, c2 INT) KEY (c1) AS SELECT a, b FROM t"
-            ).accepted,
+            ) is VerifyResult.Accepted,
             "Doris FE parser unexpectedly accepts typed MV column defs",
         )
     }

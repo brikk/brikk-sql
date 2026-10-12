@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class TemporalDiffResultTest {
@@ -16,7 +17,7 @@ class TemporalDiffResultTest {
                 "Presto only supports millisecond precision for temporal types"
             } else emptyList(), result.unsupportedMessages)
             assertFalse(result.sql.contains("WEEK_START"), result.sql)
-            assertTrue(SqlVerifiers.forEngine("trino")!!.verify(result.sql).accepted, result.sql)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(result.sql), result.sql)
             // Trino is not a native Presto result oracle. A diagnosed precision
             // reduction must not be executed as if it preserved BigQuery values.
             if (target == "presto" && prestoLossWarnings > 0) continue

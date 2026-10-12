@@ -3,6 +3,7 @@ package dev.brikk.house.sql.intellij.pipe
 import com.intellij.database.actions.RunQueryAction
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.console.JdbcConsoleProvider
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.script.ScriptModel
 import com.intellij.database.script.translator.TranslateException
 import com.intellij.database.settings.DatabaseSettings
@@ -122,18 +123,36 @@ public class PipeRunStatement(
     public val sourceMap: ((line: Int, column: Int) -> TextRange?)?,
 )
 
-/** The console target captured before preparation, which parameter prompting can change. */
+/**
+ * The console target captured before preparation, which parameter prompting can change: console, session,
+ * data source and URL, and the console's current namespace. That namespace is the one the dialect's search
+ * path (D-I `CatalogSearchPathStrategy`) switched to or read back after the last execution, so comparing it
+ * costs no round trip and runs no probe in the user's transaction; one unknown before or after never blocks.
+ */
 internal class PipeDestination(private val dialect: PipeDialect, private val console: JdbcConsole) {
     private val session = console.session
     private val dataSource = console.dataSource
     private val url = dataSource.url
+    private val namespace = namespaceOf(console)
 
     fun requireCurrent(current: JdbcConsole) {
         if (!dialect.isEnabled(current.project)) throw SqlExecutionRefusal("PIPE was disabled during preparation.")
         if (current !== console || !current.isValid || current.session !== session || current.dataSource !== dataSource ||
-            dataSource.url != url || !dialect.ownsSession(session)
+            dataSource.url != url || !dialect.ownsSession(session) || namespaceChanged(current)
         ) throw SqlExecutionRefusal("The destination changed during preparation. Run the query again.")
     }
+
+    private fun namespaceChanged(current: JdbcConsole): Boolean {
+        val before = namespace ?: return false
+        val now = namespaceOf(current) ?: return false
+        return now != before
+    }
+
+    /** The current namespace, outermost first, by kind and name; null when the console does not know it. */
+    private fun namespaceOf(console: JdbcConsole): List<Pair<ObjectKind, String>>? =
+        generateSequence(console.currentNamespace) { it.parent }
+            .mapNotNull { path -> path.name?.takeIf(String::isNotBlank)?.let { path.kind to it } }
+            .toList().asReversed().ifEmpty { null }
 }
 
 /** Translates the claimed statements of [selected], then submits the whole model through [console]. */

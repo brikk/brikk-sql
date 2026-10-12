@@ -34,6 +34,15 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
         schemaRequired = true,
     )
 
+    /** DuckDB: `USE "c"."s"` or `USE "c"` (its default schema); catalog and schema read back from one row. */
+    private val duckdb = CatalogSchemaSearchPath(
+        quote = '"',
+        useSchema = "USE {catalog}.{schema}",
+        useCatalog = "USE {catalog}",
+        catalogProbes = listOf(NamespaceProbe.Column(DUCKDB_READ_BACK, "catalog")),
+        schemaProbes = listOf(NamespaceProbe.Column(DUCKDB_READ_BACK, "schema")),
+    )
+
     private val connections = ArrayList<Connection>()
 
     override fun tearDown() {
@@ -56,10 +65,39 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
         assertNull(doris.switchSql(SearchPath.of(catalog("hive").append("web", ObjectKind.SCHEMA).append("t", ObjectKind.TABLE))))
     }
 
+    fun testInsertedNamesAreNotReadAsTemplates() {
+        assertEquals("USE \"cat{schema}\".\"main\"", trino.switchSql(path("cat{schema}", "main")))
+        assertEquals("USE \"{catalog}\".\"{schema}\"", trino.switchSql(path("{catalog}", "{schema}")))
+    }
+
+    fun testCancellationPropagatesFromAProbe() {
+        val cancelled = databaseConnection(Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, _, _ ->
+            throw kotlin.coroutines.cancellation.CancellationException("cancelled")
+        } as Connection, LocalDataSource(), Dbms.POSTGRES, otherRequestor())
+        assertThrows(kotlin.coroutines.cancellation.CancellationException::class.java) { trino.readBack(cancelled) }
+    }
+
     fun testTrinoSwitchStatements() {
         assertEquals("USE \"hive\".\"web\"", trino.switchSql(path("hive", "web")))
         assertNull("no catalog to use", trino.switchSql(SearchPath.of(ObjectPath.create("web", ObjectKind.SCHEMA))))
         assertNull("Trino cannot use a bare catalog", trino.switchSql(path("hive")))
+    }
+
+    /** What the switch statements select is what the engine reads back. */
+    fun testDuckdbSwitchesAndReadsBackOnTheEngine() {
+        val engine = embeddedDuckdb()
+        val connection = connection(engine)
+        engine.createStatement().use {
+            it.execute("ATTACH ':memory:' AS \"la\"\"ke\"")
+            it.execute("CREATE SCHEMA \"la\"\"ke\".web")
+        }
+        for (target in listOf(path("la\"ke", "web"), path("la\"ke"), path("memory", "main"))) {
+            val sql = checkNotNull(duckdb.switchSql(target))
+            engine.createStatement().use { it.execute(sql) }
+            val switched = checkNotNull(target.current)
+            val expected = if (switched.kind == ObjectKind.DATABASE) switched.append("main", ObjectKind.SCHEMA) else switched
+            assertEquals(sql, expected, duckdb.readBack(connection)?.current)
+        }
     }
 
     fun testOneRowReadBackRunsItsQueryOnce() {
@@ -112,5 +150,6 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
 
     private companion object {
         const val TRINO_READ_BACK = "SELECT current_database() AS catalog, current_schema() AS schema"
+        const val DUCKDB_READ_BACK = "SELECT current_database() AS catalog, current_schema() AS schema"
     }
 }

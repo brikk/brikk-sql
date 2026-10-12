@@ -15,9 +15,7 @@ package dev.brikk.house.sql.metadata
  *    (file), and `BuiltinTableValuedFunctions` / `TableValuedFunctionIf` for which names exist.
  *
  * `iceberg_meta` (documented for earlier 4.x releases) is not registered at 4.1.4, so it is
- * not listed; its schemas are in the plugin file above. `binlog` is not registered at 4.1.4
- * either, but DORIS_FUNCTION_CATALOG (an older registry pin) lists it, so it is marked not
- * queryable for consumers to suppress.
+ * not listed; its schemas are in the plugin file above.
  * Column types use plain spellings: text for strings and nested types.
  */
 
@@ -231,5 +229,4 @@ internal val DORIS_TABLE_FUNCTIONS: List<TableFunctionInfo> = listOf(
     TableFunctionInfo("group_commit", queryable = false),
     TableFunctionInfo("http_stream", queryable = false),
     TableFunctionInfo("cdc_stream", queryable = false),
-    TableFunctionInfo("binlog", queryable = false),
 )

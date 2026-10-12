@@ -5,6 +5,7 @@ import dev.brikk.house.sql.shape.SqlFragment
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -19,9 +20,8 @@ class Doris414GrammarTest {
         assertTrue(generated.unsupportedMessages.isEmpty(), generated.unsupportedMessages.toString())
         for (text in listOf(sql, generated.sql)) {
             val result = verifier.verify(text)
-            assertTrue(result.verified, result.warning)
-            assertFalse(result.advisory)
-            assertTrue(result.accepted, "$text: ${result.error}")
+            assertFalse(verifier.advisory)
+            assertIs<VerifyResult.Accepted>(result, "$text: $result")
         }
         assertEquals(generated.sql, SqlFragment(generated.sql, "doris").transpileTo("doris").sql)
     }
@@ -92,8 +92,7 @@ class Doris414GrammarTest {
             "PLAN REPLAYER PLAY '/tmp/plan.json'",
         )) {
             val result = verifier.verify(sql)
-            assertTrue(result.verified, result.warning)
-            assertFalse(result.accepted, "Unexpected 4.1.4 grammar acceptance: $sql")
+            assertIs<VerifyResult.Rejected>(result, "Unexpected 4.1.4 grammar acceptance: $sql")
         }
     }
 }

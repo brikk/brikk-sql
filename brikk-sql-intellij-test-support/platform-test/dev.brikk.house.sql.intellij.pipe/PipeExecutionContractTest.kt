@@ -23,6 +23,7 @@ class PipeExecutionContractTest : BasePlatformTestCase() {
     fun testLowersNestedOnlyPipelines() = forEachDialect { lowersNestedOnlyPipelines() }
     fun testRunsTopLevelStagesToTheCaret() = forEachDialect { runsTopLevelStagesToTheCaret() }
     fun testRefusesDestinationChangesDuringPrompting() = forEachDialect { refusesDestinationChangesDuringPrompting() }
+    fun testRefusesNamespaceChangesDuringPrompting() = forEachDialect { refusesNamespaceChangesDuringPrompting() }
     fun testNotifiesRefusals() = forEachDialect { notifiesRefusals() }
     fun testDeclinesWhenNotOwned() = forEachDialect { declinesWhenNotOwned() }
     fun testSelectsStatementsLikeStockExecute() = forEachDialect { selectsStatementsLikeStockExecute() }

@@ -52,9 +52,7 @@ https://github.com/apache/doris-website, both Apache License 2.0:
 - `brikk-sql-metadata/.../GeneratedDorisFunctionCatalog.kt` — function names/aliases/kinds
   extracted from Doris's runtime function registry
   (`fe/fe-core/.../catalog/Builtin*Functions.java`) by `tools/generate_doris_functions.py`
-  (adapted from the doris-intellij-plugin extraction script). Includes the separately
-  pinned `vendor/data/doris-4.1.4-additions.json` release-branch supplement, generated
-  by `tools/extract_doris_signatures.py`.
+  (adapted from the doris-intellij-plugin extraction script), at the Doris 4.1.4 release.
 - `vendor/data/doris-since-versions.json` — per-function "first documented in" version,
   extracted from `apache/doris-website`'s function docs
   (`docs/sql-manual/sql-functions/`, `versioned_docs/version-*/sql-manual/sql-functions/`)

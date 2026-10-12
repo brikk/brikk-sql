@@ -1,5 +1,5 @@
 {
- "doris_version": "v0.8.2-31011-gd8fd23f7f38",
+ "doris_version": "4.1.4",
  "classes": {
   "AIAgg": {
    "kind": "AGGREGATE",
@@ -2182,15 +2182,6 @@
    "unparsed": [],
    "nullable_mode": "custom"
   },
-  "AvgMap": {
-   "kind": "AGGREGATE",
-   "names": [
-    "AVG_MAP"
-   ],
-   "signatures": [],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNotNullable"
-  },
   "AvgWeighted": {
    "kind": "AGGREGATE",
    "names": [
@@ -2234,15 +2225,6 @@
    ],
    "unparsed": [],
    "nullable_mode": "PropagateNullable"
-  },
-  "Binlog": {
-   "kind": "TABLE_VALUED",
-   "names": [
-    "BINLOG"
-   ],
-   "signatures": [],
-   "unparsed": [],
-   "nullable_mode": null
   },
   "BitCount": {
    "kind": "SCALAR",
@@ -3721,15 +3703,6 @@
    "unparsed": [],
    "nullable_mode": "custom"
   },
-  "CountMap": {
-   "kind": "AGGREGATE",
-   "names": [
-    "COUNT_MAP"
-   ],
-   "signatures": [],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNotNullable"
-  },
   "CountSubstring": {
    "kind": "SCALAR",
    "names": [
@@ -3997,32 +3970,6 @@
     {
      "return": "STRING",
      "args": [
-      "STRING"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "PropagateNullable"
-  },
-  "DamerauLevenshteinDistance": {
-   "kind": "SCALAR",
-   "names": [
-    "DAMERAU_LEVENSHTEIN_DISTANCE"
-   ],
-   "signatures": [
-    {
-     "return": "INT",
-     "args": [
-      "VARCHAR",
-      "VARCHAR"
-     ],
-     "variadic": false
-    },
-    {
-     "return": "INT",
-     "args": [
-      "STRING",
       "STRING"
      ],
      "variadic": false
@@ -6679,32 +6626,6 @@
    "unparsed": [],
    "nullable_mode": "AlwaysNotNullable"
   },
-  "HammingDistance": {
-   "kind": "SCALAR",
-   "names": [
-    "HAMMING_DISTANCE"
-   ],
-   "signatures": [
-    {
-     "return": "BIGINT",
-     "args": [
-      "VARCHAR",
-      "VARCHAR"
-     ],
-     "variadic": false
-    },
-    {
-     "return": "BIGINT",
-     "args": [
-      "STRING",
-      "STRING"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "PropagateNullable"
-  },
   "Hdfs": {
    "kind": "TABLE_VALUED",
    "names": [
@@ -7890,30 +7811,6 @@
    "unparsed": [],
    "nullable_mode": "PropagateNullable"
   },
-  "IsUuid": {
-   "kind": "SCALAR",
-   "names": [
-    "IS_UUID"
-   ],
-   "signatures": [
-    {
-     "return": "BOOLEAN",
-     "args": [
-      "VARCHAR"
-     ],
-     "variadic": false
-    },
-    {
-     "return": "BOOLEAN",
-     "args": [
-      "STRING"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "PropagateNullable"
-  },
   "IsValidUtf8": {
    "kind": "SCALAR",
    "names": [
@@ -8908,34 +8805,6 @@
    "unparsed": [],
    "nullable_mode": "PropagateNullable"
   },
-  "Levenshtein": {
-   "kind": "SCALAR",
-   "names": [
-    "LEVENSHTEIN",
-    "LEVENSHTEIN_DISTANCE",
-    "EDIT_DISTANCE"
-   ],
-   "signatures": [
-    {
-     "return": "INT",
-     "args": [
-      "VARCHAR",
-      "VARCHAR"
-     ],
-     "variadic": false
-    },
-    {
-     "return": "INT",
-     "args": [
-      "STRING",
-      "STRING"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "PropagateNullable"
-  },
   "Like": {
    "kind": "SCALAR",
    "names": [
@@ -9626,15 +9495,6 @@
    "unparsed": [],
    "nullable_mode": "custom"
   },
-  "MaxMap": {
-   "kind": "AGGREGATE",
-   "names": [
-    "MAX_MAP"
-   ],
-   "signatures": [],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNotNullable"
-  },
   "Md5": {
    "kind": "SCALAR",
    "names": [
@@ -9962,15 +9822,6 @@
    ],
    "unparsed": [],
    "nullable_mode": "custom"
-  },
-  "MinMap": {
-   "kind": "AGGREGATE",
-   "names": [
-    "MIN_MAP"
-   ],
-   "signatures": [],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNotNullable"
   },
   "Minute": {
    "kind": "SCALAR",
@@ -11422,6 +11273,23 @@
    "unparsed": [],
    "nullable_mode": "PropagateNullable"
   },
+  "ParseToVariant": {
+   "kind": "SCALAR",
+   "names": [
+    "PARSE_TO_VARIANT"
+   ],
+   "signatures": [
+    {
+     "return": "VARIANT",
+     "args": [
+      "VARCHAR"
+     ],
+     "variadic": false
+    }
+   ],
+   "unparsed": [],
+   "nullable_mode": "PropagateNullable"
+  },
   "ParseUrl": {
    "kind": "SCALAR",
    "names": [
@@ -12676,60 +12544,6 @@
    "unparsed": [],
    "nullable_mode": "AlwaysNullable"
   },
-  "RegrAvgx": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_AVGX"
-   ],
-   "signatures": [
-    {
-     "return": "DOUBLE",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "RegrAvgy": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_AVGY"
-   ],
-   "signatures": [
-    {
-     "return": "DOUBLE",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "RegrCount": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_COUNT"
-   ],
-   "signatures": [
-    {
-     "return": "BIGINT",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNotNullable"
-  },
   "RegrIntercept": {
    "kind": "AGGREGATE",
    "names": [
@@ -12748,82 +12562,10 @@
    "unparsed": [],
    "nullable_mode": "AlwaysNullable"
   },
-  "RegrR2": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_R2"
-   ],
-   "signatures": [
-    {
-     "return": "DOUBLE",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
   "RegrSlope": {
    "kind": "AGGREGATE",
    "names": [
     "REGR_SLOPE"
-   ],
-   "signatures": [
-    {
-     "return": "DOUBLE",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "RegrSxx": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_SXX"
-   ],
-   "signatures": [
-    {
-     "return": "DOUBLE",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "RegrSxy": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_SXY"
-   ],
-   "signatures": [
-    {
-     "return": "DOUBLE",
-     "args": [
-      "DOUBLE",
-      "DOUBLE"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "RegrSyy": {
-   "kind": "AGGREGATE",
-   "names": [
-    "REGR_SYY"
    ],
    "signatures": [
     {
@@ -14496,23 +14238,6 @@
    "unparsed": [],
    "nullable_mode": "AlwaysNullable"
   },
-  "StGeometries": {
-   "kind": "SCALAR",
-   "names": [
-    "ST_GEOMETRIES"
-   ],
-   "signatures": [
-    {
-     "return": "ARRAY<VARCHAR>",
-     "args": [
-      "VARCHAR"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
   "StGeometryFromWKB": {
    "kind": "SCALAR",
    "names": [
@@ -14686,41 +14411,6 @@
      "return": "VARCHAR",
      "args": [
       "STRING"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "StNumGeometries": {
-   "kind": "SCALAR",
-   "names": [
-    "ST_NUMGEOMETRIES"
-   ],
-   "signatures": [
-    {
-     "return": "BIGINT",
-     "args": [
-      "VARCHAR"
-     ],
-     "variadic": false
-    }
-   ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNullable"
-  },
-  "StNumPoints": {
-   "kind": "SCALAR",
-   "names": [
-    "ST_NUMPOINTS",
-    "ST_NPOINTS"
-   ],
-   "signatures": [
-    {
-     "return": "BIGINT",
-     "args": [
-      "VARCHAR"
      ],
      "variadic": false
     }
@@ -15412,15 +15102,6 @@
      "variadic": false
     }
    ],
-   "unparsed": [],
-   "nullable_mode": "AlwaysNotNullable"
-  },
-  "SumMap": {
-   "kind": "AGGREGATE",
-   "names": [
-    "SUM_MAP"
-   ],
-   "signatures": [],
    "unparsed": [],
    "nullable_mode": "AlwaysNotNullable"
   },
@@ -16632,6 +16313,23 @@
    "unparsed": [],
    "nullable_mode": "PropagateNullable"
   },
+  "TryParseToVariant": {
+   "kind": "SCALAR",
+   "names": [
+    "TRY_PARSE_TO_VARIANT"
+   ],
+   "signatures": [
+    {
+     "return": "VARIANT",
+     "args": [
+      "VARCHAR"
+     ],
+     "variadic": false
+    }
+   ],
+   "unparsed": [],
+   "nullable_mode": "AlwaysNullable"
+  },
   "Uncompress": {
    "kind": "SCALAR",
    "names": [
@@ -17049,6 +16747,15 @@
    ],
    "unparsed": [],
    "nullable_mode": "custom"
+  },
+  "VectorSearch": {
+   "kind": "TABLE_VALUED",
+   "names": [
+    "VECTOR_SEARCH"
+   ],
+   "signatures": [],
+   "unparsed": [],
+   "nullable_mode": null
   },
   "Version": {
    "kind": "SCALAR",
