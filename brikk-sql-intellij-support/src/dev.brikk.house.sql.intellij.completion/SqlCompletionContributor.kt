@@ -27,14 +27,35 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completes the profile's functions, keywords and table-function properties from metadata.
- * Register it for the dialect's language with a no-arg subclass.
+ * Register it for the dialect's language with a no-arg subclass and `order="first"`: it runs
+ * the contributors after it and offers only the keywords none of them offered.
  */
 @ApiStatus.Experimental
-public abstract class SqlCompletionContributor(profile: SqlCompletionProfile) : CompletionContributor() {
+public abstract class SqlCompletionContributor(private val profile: SqlCompletionProfile) : CompletionContributor() {
     init {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), FunctionProvider(profile))
-        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), KeywordProvider(profile))
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), TableFunctionArgumentProvider(profile))
+    }
+
+    final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        super.fillCompletionVariants(parameters, result)
+        if (parameters.completionType != CompletionType.BASIC || result.isStopped || !parameters.originalFile.language.isKindOf(profile.language)) return
+        val scope = profile.keywords
+        if (scope == KeywordScope.NONE) return
+        val keywords = profile.snapshot(parameters.originalFile).keywords?.keywords ?: return
+        val offered = HashSet<String>()
+        result.runRemainingContributors(parameters) { completion ->
+            offered += completion.lookupElement.lookupString.uppercase()
+            result.passResult(completion)
+        }
+        val style = profile.styles[SqlLookupKind.KEYWORD]
+        val sink = result.caseInsensitive()
+        for (keyword in keywords) {
+            if (scope == KeywordScope.RESERVED && keyword.category != KeywordCategory.RESERVED) continue
+            if (keyword.word.uppercase() in offered) continue
+            val word = style.case.apply(keyword.word)
+            sink.addElement(style.lookup(word, word, style.typeText))
+        }
     }
 }
 
@@ -63,20 +84,6 @@ private class FunctionProvider(profile: SqlCompletionProfile) : ProfileProvider(
         }
         profile.functions(file).forEach { sink.addElement(styles.function(it, serverOnly = false)) }
         profile.serverOnlyFunctions(file).forEach { sink.addElement(styles.function(it, serverOnly = true)) }
-    }
-}
-
-private class KeywordProvider(profile: SqlCompletionProfile) : ProfileProvider(profile) {
-    override fun complete(parameters: CompletionParameters, result: CompletionResultSet) {
-        val scope = profile.keywords
-        if (scope == KeywordScope.NONE) return
-        val keywords = profile.snapshot(parameters.originalFile).keywords?.keywords ?: return
-        val style = profile.styles[SqlLookupKind.KEYWORD]
-        val sink = result.caseInsensitive()
-        for (keyword in keywords) {
-            if (scope == KeywordScope.RESERVED && keyword.category != KeywordCategory.RESERVED) continue
-            sink.addElement(style.lookup(keyword, keyword.word, style.typeText))
-        }
     }
 }
 

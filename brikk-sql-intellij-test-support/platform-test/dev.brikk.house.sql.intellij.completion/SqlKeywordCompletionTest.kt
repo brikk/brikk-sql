@@ -8,27 +8,35 @@ import dev.brikk.house.sql.metadata.TRINO_METADATA
 
 class SqlKeywordCompletionTest : CompletionTestCase() {
     private val trinoKeywords = TRINO_METADATA.default.keywords!!.keywords
-    private val reserved = trinoKeywords.first { it.category == KeywordCategory.RESERVED }
-    private val unreserved = trinoKeywords.first { it.category == KeywordCategory.UNRESERVED }
 
     private fun offered(scope: KeywordScope, keyword: KeywordDef): Boolean {
         trinoProfile.keywords = scope
         configure("SELECT 1; ${keyword.word.take(2).lowercase()}<caret>", TrinoCompletion::class.java)
-        return complete().any { it.`object` == keyword }
+        return complete().any { it.lookupString.equals(keyword.word, ignoreCase = true) }
     }
 
+    /** A keyword of [category] that the platform does not offer by itself. */
+    private fun keywordOnlyWeOffer(category: KeywordCategory) =
+        trinoKeywords.filter { it.category == category }.first { !offered(KeywordScope.NONE, it) }
+
     fun testReservedScopeOffersOnlyReservedKeywords() {
+        val reserved = keywordOnlyWeOffer(KeywordCategory.RESERVED)
+        val unreserved = keywordOnlyWeOffer(KeywordCategory.UNRESERVED)
         assertTrue(offered(KeywordScope.RESERVED, reserved))
         assertFalse(offered(KeywordScope.RESERVED, unreserved))
     }
 
     fun testAllScopeOffersEveryKeyword() {
-        assertTrue(offered(KeywordScope.ALL, reserved))
-        assertTrue(offered(KeywordScope.ALL, unreserved))
+        assertTrue(offered(KeywordScope.ALL, keywordOnlyWeOffer(KeywordCategory.RESERVED)))
+        assertTrue(offered(KeywordScope.ALL, keywordOnlyWeOffer(KeywordCategory.UNRESERVED)))
     }
 
-    fun testNoneScopeOffersNoKeywords() {
-        assertFalse(offered(KeywordScope.NONE, reserved))
+    fun testAKeywordThePlatformAlsoOffersIsListedOnce() {
+        val select = trinoKeywords.single { it.word == "SELECT" }
+        assertTrue(offered(KeywordScope.NONE, select))
+        trinoProfile.keywords = KeywordScope.RESERVED
+        configure("SELECT 1; SE<caret>", TrinoCompletion::class.java)
+        assertEquals(1, complete().count { it.lookupString.equals("SELECT", ignoreCase = true) })
     }
 
     fun testAKeywordIsInsertedInTheRowsCase() {
@@ -36,7 +44,7 @@ class SqlKeywordCompletionTest : CompletionTestCase() {
         duckdbProfile.keywords = KeywordScope.ALL
         duckdbProfile.styles = SqlLookupStyles.DEFAULT.with(SqlLookupKind.KEYWORD to SqlLookupStyle(case = LookupCase.UPPER))
         configure("SELECT 1; ${keyword.word}<caret>", DuckdbCompletion::class.java)
-        val item = complete().single { it.`object` == keyword }
+        val item = complete().single { it.lookupString == keyword.word.uppercase() && it.`object` == keyword.word.uppercase() }
         myFixture.lookup.currentItem = item
         myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR)
         assertEquals("SELECT 1; ${keyword.word.uppercase()}<caret>", resultWithCaret())

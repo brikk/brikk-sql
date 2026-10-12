@@ -104,12 +104,13 @@ A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; 
 snapshot choice, function list, server-only functions, styles and gates) and registers
 no-arg subclasses:
 
-- `SqlCompletionContributor`: metadata functions, one item per name and kind
+- `SqlCompletionContributor` (`order="first"`): metadata functions, one item per name and kind
   (`completableFunctions`). Insertion follows the invocation syntax, never arity: a call
   inserts `()` with the caret inside, or after it when the only overload takes no
   arguments; an existing `(` is reused; a grammar bare form (`CURRENT_TIMESTAMP`) and a
   special form (`CAST`) insert only the name. Keywords from the snapshot's
-  `KeywordCatalog`, all or only reserved ones (`KeywordScope`). Inside the call of a table
+  `KeywordCatalog`, all or only reserved ones (`KeywordScope`), except those a later
+  contributor already offers. Inside the call of a table
   function with metadata `TableFunctionInfo`, its property names, and their known values
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
