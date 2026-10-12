@@ -5,7 +5,11 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
+import com.intellij.lang.LanguageParserDefinitions
 import com.intellij.openapi.project.DumbAware
+import com.intellij.psi.PsiComment
+import com.intellij.psi.PsiElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 import org.jetbrains.annotations.ApiStatus
@@ -14,7 +18,7 @@ import org.jetbrains.annotations.ApiStatus
  * Completion after a qualified path (`hive.` or `hive.web.` with the caret after the dot or in the
  * next name) asks the plugin's [AutoIntrospectService] to introspect what the path names. It offers
  * nothing itself; the platform's completion shows the loaded names when invoked again. Only a
- * console or data source of the profile's dbms is used. Needs no indexes, so it also works while
+ * console or data source of the profile's dbms is used; comments and string literals never trigger it. Needs no indexes, so it also works while
  * the IDE indexes.
  *
  * Register a no-arg subclass naming the plugin's service class as `completion.contributor` for the
@@ -27,12 +31,19 @@ public abstract class QualifiedPathIntrospectContributor(private val service: Cl
             override fun addCompletions(parameters: CompletionParameters, context: ProcessingContext, result: CompletionResultSet) {
                 val file = parameters.originalFile
                 val requests = file.project.getService(service) ?: return
-                if (!requests.profile.autoIntrospect) return
-                val path = qualifiedPathBefore(file.text, parameters.offset, requests.profile.quoteChars) ?: return
+                if (!requests.profile.autoIntrospect || inCommentOrString(parameters.position)) return
+                val path = qualifiedPathBefore(parameters.editor.document.charsSequence, parameters.offset, requests.profile.quoteChars) ?: return
                 requests.requestPath(file, path)
             }
         })
     }
+}
+
+private fun inCommentOrString(position: PsiElement): Boolean {
+    if (PsiTreeUtil.getNonStrictParentOfType(position, PsiComment::class.java) != null) return true
+    val type = position.node?.elementType ?: return false
+    val definition = LanguageParserDefinitions.INSTANCE.forLanguage(position.language) ?: return false
+    return definition.stringLiteralElements.contains(type) || definition.commentTokens.contains(type)
 }
 
 /** How far back a path before the caret may start. */

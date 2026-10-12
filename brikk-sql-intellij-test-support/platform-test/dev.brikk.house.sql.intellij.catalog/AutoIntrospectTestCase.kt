@@ -1,7 +1,6 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
-import com.intellij.database.dataSource.DataSourceStorage
 import com.intellij.database.dataSource.DataSourceSyncManager
 import com.intellij.database.dataSource.DatabaseDriverManager
 import com.intellij.database.dataSource.LocalDataSource
@@ -15,14 +14,12 @@ import com.intellij.database.model.ObjectName
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.Casing
 import com.intellij.database.util.LoaderContext
-import com.intellij.database.util.ObjectPath
-import com.intellij.database.util.SearchPath
-import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.database.util.TreePattern
 import com.intellij.testFramework.LoggedErrorProcessor
 import com.intellij.testFramework.PlatformTestUtil
+import com.intellij.testFramework.RunAll
 import com.intellij.testFramework.registerOrReplaceServiceInstance
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.util.UUID
@@ -133,17 +130,14 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
     }
 
     override fun tearDown() {
-        try {
-            refreshes.forEach { it.finish() }
-            PlatformTestUtil.waitWithEventsDispatching("the service's coroutines end", { serviceScope.coroutineContext.job.children.none(Job::isActive) }, 10)
-            assertEmpty("background errors", backgroundErrors)
-            LocalDataSourceManager.getInstance(project).removeDataSource(source)
-            DbPsiFacade.getInstance(project).clearCaches()
-        } catch (e: Throwable) {
-            addSuppressedException(e)
-        } finally {
-            super.tearDown()
-        }
+        RunAll(
+            { refreshes.forEach { it.finish() } },
+            { PlatformTestUtil.waitWithEventsDispatching("the service's coroutines end", { serviceScope.coroutineContext.job.children.none(Job::isActive) }, 10) },
+            { assertEmpty("background errors", backgroundErrors) },
+            { LocalDataSourceManager.getInstance(project).removeDataSource(source) },
+            { DbPsiFacade.getInstance(project).clearCaches() },
+            { super.tearDown() },
+        ).run()
     }
 
     protected fun useService(profile: CatalogProfile) {
@@ -172,7 +166,7 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         PlatformTestUtil.waitWithEventsDispatching("introspection finishes", { pending() == null && refreshes.isEmpty() }, 10)
     }
 
-    protected fun scopeNode(path: List<String>) = path.withIndex().fold(source.introspectionScope?.root) { node, (level, name) ->
+    protected fun scopeNode(path: List<String>) = path.withIndex().fold(source.introspectionScope.root) { node, (level, name) ->
         node?.getGroup(levels()[level])?.children?.firstOrNull { it.naming.matches(ObjectName.plain(name), Casing.EXACT) }
     }
 

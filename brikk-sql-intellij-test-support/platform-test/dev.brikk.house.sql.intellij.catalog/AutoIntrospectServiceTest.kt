@@ -2,37 +2,18 @@ package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
 import com.intellij.database.dataSource.DataSourceStorage
-import com.intellij.database.dataSource.DataSourceSyncManager
-import com.intellij.database.dataSource.DatabaseDriverManager
 import com.intellij.database.dataSource.LocalDataSource
-import com.intellij.database.dataSource.LocalDataSourceManager
-import com.intellij.database.dialects.postgres.model.PgDatabase
 import com.intellij.database.dialects.postgres.model.PgRoot
 import com.intellij.database.model.ModelFactory
 import com.intellij.database.model.ObjectKind
-import com.intellij.database.model.ObjectName
 import com.intellij.database.psi.DbPsiFacade
-import com.intellij.database.util.Casing
-import com.intellij.database.util.LoaderContext
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.testFramework.registerOrReplaceServiceInstance
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.TestTimeSource
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 
 class AutoIntrospectServiceTest : AutoIntrospectTestCase() {

@@ -44,6 +44,8 @@ class QualifiedPathIntrospectContributorTest : AutoIntrospectTestCase() {
         complete("SELECT hive.x FROM <caret>")
         complete("SELECT 1.5<caret>")
         complete("SELECT memory<caret>")
+        complete("SELECT 1 -- memory.<caret>")
+        complete("SELECT 'memory.<caret>'")
         assertNoRefresh()
         assertNull(pending())
         complete("SELECT memory.<caret>")

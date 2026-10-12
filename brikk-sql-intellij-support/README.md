@@ -267,6 +267,13 @@ references a class, enclosing class or package annotated `@ApiStatus.Internal` o
 owner's supertypes). It also fails if the kit's internal API differs from the test's own list, which
 this table mirrors.
 
+Auto-introspection's sync seams carry no internal-API annotation on IDEA 261.25134.95, 262.8665.81
+and 263.5701.42 (the containment test runs on each), but they are Database Tools implementation
+classes that a release may change: `prepareOneElementRefreshTask(dataSourceId, element)` (a public
+top-level function of `IntrospectionTasks.kt`, so no Java shim is needed), `LoaderContext.selectTask`
+(the class itself is not internal; only `selectSkip` is) and the suspending
+`DataSourceSyncManager.tryPerformSync`, the sync entry point that remains in 263.
+
 ## SQL-domain APIs
 
 The accompanying core update adds `SqlScriptSnapshot.parse(text, dialect)` and
