@@ -4,7 +4,10 @@ An embedded Apache-2.0 JVM library for SQL dialect plugins. The first consumer i
 SQL Dialect for Trino. Each consumer owns its copy through its plugin classloader.
 It registers no extensions itself. It depends on Brikk SQL core and metadata, has no
 Kotlin IDE dependency, uses no Brikk (Kotlin-embedded SQL) types, and uses internal
-Database Tools APIs only in packages listed here (none).
+Database Tools APIs only in packages listed here (none). SQL PSI hooks live in
+`dev.brikk.house.sql.intellij.psi`; `SelectAliasResolveExtension` implements the
+`com.intellij.sql.resolveExtension` interface from `com.intellij.sql.psi.impl`, which carries
+no internal-API annotation.
 
 ## API
 
@@ -115,6 +118,11 @@ signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shar
 a dialect replaces rows with `with`. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
 the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
+
+`SelectAliasResolveExtension(dbms, clauses)` (`dev.brikk.house.sql.intellij.psi`, experimental):
+unqualified references in the given clauses (default HAVING, GROUP BY, ORDER BY) of a query in
+that DBMS see the SELECT-list aliases, as the platform does only for its own families. Register a
+no-arg subclass as `com.intellij.sql.resolveExtension`.
 
 ## SQL-domain APIs
 
