@@ -1890,6 +1890,51 @@ star RENAME follows #51: a complete caller-supplied layout (`toStandardSql` with
 unsupported finding. DuckDB CALL, ASOF, NATURAL and RENAME,
 Doris ASOF and ClickHouse ASOF still lower. `PipeEngineRejectionTest` covers each case.
 
+## 56. ClickHouse inline INSERT data
+
+**NOT sqlglot parity.** `ClickhouseDialect.TOKENIZER_CONFIG` turns on
+`TokenizerConfig.inlineInsertData`: in editor tokenization only (so `SqlScriptSnapshot` and
+parameter discovery, never the parser), the data after `INSERT ... FORMAT <name>` is one
+`INSERT_DATA` token instead of SQL tokens, so quotes, braces and `;` inside it neither end the
+statement nor make its boundary an error. The rule applies to a depth-0 `FORMAT <name>` of a
+statement that begins with `INSERT` and has no `INFILE` or `VALUES` before it, nor a `SELECT` or
+`WITH` unless the query reads its rows through the `input(...)` table function (as
+`ParserInsertQuery` decides). A `SETTINGS` clause on the format name's line comes before the data
+(`allow_settings_after_format_in_insert`); on a later line it is data. The clause ends at a value
+that no `,` follows past whitespace, blank lines and comments; a window that ends before that is
+decided leaves the statement open. `FORMAT Values` stays SQL, as
+ClickHouse reads its rows with the Values parser up to the terminating `;`.
+
+Framing never alters stored data. Data starts after the spaces that follow the header and,
+when a line break follows them, after it (ClickHouse's `ParserInsertQuery`). It ends only:
+
+- before a blank line, which also ends the statement, without a `;`;
+- before a line holding only `;` (spaces and tabs allowed), that `;` being the terminator;
+- at the real end of the text.
+
+A `;` at the end of a data line, or anywhere else in data, is data. A `;` ending the format name's
+line with nothing else on it is the terminator of a statement without data. Without data the
+`INSERT_DATA` token is empty at the header's end (`SqlStatementRange.dataEnd` there), so the line
+breaks and indentation before a terminator line or a blank line are never submitted as data.
+
+Quoted fields (data preservation over client parity): for `CSV`, `CSVWithNames` and
+`CSVWithNamesAndTypes` (format names in any case), and for `CustomSeparated*` when the INSERT sets
+`format_custom_escaping_rule = 'CSV'`, a quote at a field's start (line start, or right after the
+field delimiter, spaces allowed) opens a field that the same quote doubled escapes and alone
+closes. Quotes are `"` unless the INSERT sets `format_csv_allow_double_quotes = 0` (default 1) and
+`'` when it sets `format_csv_allow_single_quotes = 1` (default 0); a blank line or a `;` line inside it is data, and data ends at the next one outside
+quotes. The field delimiter is the INSERT's `format_csv_delimiter` (default `,`) for CSV, and its
+`format_custom_field_delimiter` (default a tab) for `CustomSeparated*`. A field still open at the end
+of the text is a lexical failure, so the statement's boundary is an error rather than a guess.
+clickhouse-client instead cuts such data at the blank line.
+
+Framing reads only settings written in the INSERT itself (`SETTINGS` before or after `FORMAT`);
+everything else takes ClickHouse's defaults (`FormatFactorySettings.h`, master 2026-10, the same in
+the 26.x servers we target). Session-level settings (`SET`, profiles, connection properties) are
+invisible to the editor. Not covered, as their quoting is not known from the INSERT alone:
+`Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw line break,
+so their data keeps the plain rule.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

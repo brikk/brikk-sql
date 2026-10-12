@@ -66,11 +66,16 @@ open class ClickhouseDialect : Dialect() {
     // vendored engine registry by tools/generate_clickhouse_functions.py.
     override val functionCatalog: FunctionCatalog get() = CLICKHOUSE_FUNCTION_CATALOG
 
-    override val tokenizerConfig: TokenizerConfig get() = StringEscapeProfiles.CLICKHOUSE
+    override val tokenizerConfig: TokenizerConfig get() = TOKENIZER_CONFIG
 
     override fun parser(errorLevel: ErrorLevel?): Parser =
         ClickhouseParser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig)
 
     override fun generator(pretty: Boolean, sourceDialect: String?): Generator =
         ClickhouseGenerator(pretty = pretty, tokenizerConfig = tokenizerConfig, sourceDialect = sourceDialect)
+
+    companion object {
+        /** The generated tables with the editor-only inline INSERT data rule (docs/brikk-extensions.md #56). */
+        internal val TOKENIZER_CONFIG: TokenizerConfig = StringEscapeProfiles.CLICKHOUSE.withInlineInsertData()
+    }
 }

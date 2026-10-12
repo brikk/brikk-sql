@@ -24,10 +24,12 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
+    private var textEnds: Boolean = true
     private var checkCanceled: () -> Unit = {}
     private var cancelBudget: Int = CANCEL_INTERVAL
     private var breaksScanned: Int = 0
     private var lastBreak: Int = -1
+    private val insertData = InsertDataState()
 
     // sqlglot: TokenizerCore.reset
     private fun reset() {
@@ -46,6 +48,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         cancelBudget = CANCEL_INTERVAL
         breaksScanned = 0
         lastBreak = -1
+        insertData.reset()
     }
 
     /**
@@ -90,6 +93,15 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return try { tokenizeForEditor(sql) } finally { this.checkCanceled = previous }
     }
 
+    /**
+     * [tokenizeForEditor] of [sql] as the start of a longer text: the end of [sql] is not a line end,
+     * so no rule decides from it what the rest of the text could change (docs/brikk-extensions.md #56).
+     */
+    fun tokenizeForEditorPrefix(sql: String, checkCanceled: () -> Unit): EditorTokens {
+        textEnds = false
+        return try { tokenizeForEditor(sql, checkCanceled) } finally { textEnds = true }
+    }
+
     /** Editor recovery stops at the failing lexical construct, never inside its tail. */
     fun tokenizeForEditor(sql: String): EditorTokens {
         val previous = editorMode
@@ -129,6 +141,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                     config.untaggedDollarStrings && char == '$' && peek == '$' -> if (!scanDollarString()) scanKeywords()
                     else -> scanKeywords()
                 }
+                if (editorMode && config.inlineInsertData) scanInsertData()
             }
 
             if (checkSemicolon && peek == ';') break
@@ -137,6 +150,276 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         if (tokens.isNotEmpty() && comments.isNotEmpty()) {
             tokens.last().comments.addAll(comments)
             comments = mutableListOf()
+        }
+    }
+
+    /**
+     * brikk extension #56: follows each statement's tokens and reads the inline data of an `INSERT`
+     * as one INSERT_DATA token once its header ends: right after the name of a depth-0
+     * `FORMAT <name>` (not `Values`), or after a `SETTINGS` clause on that name's line. There is no
+     * inline data after `INFILE` or `VALUES`, nor after a `SELECT` or `WITH` unless the query reads
+     * it through the `input(...)` table function.
+     */
+    private fun scanInsertData() {
+        val state = insertData
+        while (state.observed < tokens.size) {
+            val token = tokens[state.observed++]
+            val type = token.tokenType
+            when (type) {
+                TokenType.SEMICOLON -> if (state.depth == 0) { state.reset(state.observed); continue }
+                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> state.depth++
+                TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> state.depth--
+                else -> {}
+            }
+            // Header words are keywords and names, never the contents of a string or quoted name.
+            val word = token.text.takeIf { type.isWordKind() && it.firstOrNull()?.isLetter() == true }?.uppercase()
+            if (state.head == null) state.head = word ?: ""
+            val previous = state.previous
+            state.previous = word
+            if (state.head != "INSERT" || state.noData) continue
+            // `name = value` settings the INSERT itself writes, before or after its FORMAT.
+            if (state.afterEquals) state.setting?.let { state.settingValues[it] = token.text }
+            state.afterEquals = type == TokenType.EQ
+            if (type != TokenType.EQ) state.setting = token.text.lowercase()
+            if (state.settings) {
+                if (settingsEnd(state, type) && state.observed == tokens.size) scanInsertDataAfter(current, state.quoting())
+                continue
+            }
+            if (type == TokenType.L_PAREN && previous == "INPUT") state.input = true
+            if (state.depth != 0) continue
+            when {
+                state.afterFormat -> {
+                    state.afterFormat = false
+                    if (word == "VALUES" || word == null && type != TokenType.IDENTIFIER || state.query && !state.input) {
+                        state.noData = true
+                    } else if (state.observed == tokens.size) {
+                        state.format = token.text.uppercase()
+                        if (wordAt(skipSpaces(current), "SETTINGS")) state.settings = true else scanInsertDataAfter(current, state.quoting())
+                    }
+                }
+                word in INSERT_WITHOUT_DATA -> state.noData = true
+                word == "SELECT" || word == "WITH" -> state.query = true
+                word == "FORMAT" -> state.afterFormat = true
+            }
+        }
+    }
+
+    /**
+     * Follows `SETTINGS name = value, ...` after a format name; true once a value ends the clause,
+     * that is, when no `,` follows it past whitespace, blank lines and comments. A value may be
+     * signed or a bracketed literal.
+     */
+    private fun settingsEnd(state: InsertDataState, type: TokenType): Boolean {
+        if (!state.settingValue) {
+            if (type == TokenType.EQ) state.settingValue = true
+            return false
+        }
+        when {
+            state.depth > 0 -> return false
+            type == TokenType.DASH || type == TokenType.PLUS -> return false
+        }
+        state.settingValue = false
+        // At the end of a prefix, the rest of the text decides: wait.
+        val next = skipTrivia(current) ?: return false
+        return next >= size || sql[next] != ','
+    }
+
+    /**
+     * The offset of the first character from [from] that is no whitespace or comment, or the text's
+     * end; null when the end of a prefix (or a comment it leaves open) comes first.
+     */
+    private fun skipTrivia(from: Int): Int? {
+        var at = from
+        while (true) {
+            while (at < size && sql[at].isWhitespace()) at++
+            if (at >= size) return if (textEnds) size else null
+            val comment = config.comments.entries.filter { sql.startsWith(it.key, at) }.maxByOrNull { it.key.length } ?: return at
+            val close = comment.value
+            val closed = if (close == null) sql.indexOfAny(charArrayOf('\n', '\r'), at) else sql.indexOf(close, at + comment.key.length).let { if (it < 0) it else it + close.length }
+            if (closed < 0) return if (textEnds) size else null
+            at = closed
+        }
+    }
+
+    private fun wordAt(offset: Int, word: String): Boolean =
+        sql.regionMatches(offset, word, 0, word.length, ignoreCase = true) &&
+            sql.getOrNull(offset + word.length)?.let { it.isLetterOrDigit() || it == '_' } != true
+
+    /**
+     * Reads inline data from [from], the end of the INSERT's header. Data starts after the spaces
+     * that follow the header and, when a line break follows them, after it, as ClickHouse's parser
+     * starts it; a `;` ending the header's line instead means there is no data. Data ends before a
+     * blank line, before a line holding only `;` (with spaces or tabs), or at the real end of the
+     * text; any other `;` is data. Without data, the token is empty at the header's end, so the
+     * line breaks and indentation before a terminator are never data.
+     */
+    private fun scanInsertDataAfter(from: Int, quoting: Quoting?) {
+        var dataStart = from
+        while (dataStart < size && isSpace(sql[dataStart])) dataStart++
+        // The end of a prefix leaves open whether data follows.
+        if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
+        if (sql[dataStart] == ';' && isLineEnd(skipSpaces(dataStart + 1))) return addInsertData(from, from)
+        if (isLineBreak(sql[dataStart])) dataStart = lineEnd(dataStart)
+        if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
+        if (isLoneSemicolonLine(dataStart) || isEmptyLine(dataStart)) return addInsertData(from, from)
+        addInsertData(dataStart, insertDataEnd(dataStart, quoting))
+    }
+
+    /**
+     * The end of data from [dataStart]: before a blank line or a `;` line, or the text's end. With
+     * [quoting] (CSV), those lines inside an open quoted field are data; a field still open at the
+     * end of the text makes the boundary unknown, a lexical failure.
+     */
+    private fun insertDataEnd(dataStart: Int, quoting: Quoting?): Int {
+        var at = dataStart
+        var fieldStart = true
+        var quote: Char? = null
+        var quoteStart = -1
+        while (true) {
+            if (at >= size) {
+                if (quote != null && textEnds) {
+                    start = quoteStart
+                    throw TokenError("Unclosed quoted field in INSERT data; statement boundary is unknown")
+                }
+                return size
+            }
+            val c = sql[at]
+            when {
+                quote != null -> {
+                    if (c == quote) {
+                        // A prefix ending at a quote leaves open whether it doubles: data runs to its end.
+                        if (at + 1 >= size && !textEnds) return size
+                        if (at + 1 < size && sql[at + 1] == quote) at++ else quote = null
+                        fieldStart = false
+                    }
+                    at++
+                }
+                isLineBreak(c) -> {
+                    val next = lineEnd(at)
+                    if (next >= size) return size
+                    if (isEmptyLine(next) || isLoneSemicolonLine(next)) return at
+                    at = next
+                    fieldStart = true
+                }
+                quoting == null -> at++
+                fieldStart && c in quoting.quotes -> {
+                    quote = c
+                    quoteStart = at++
+                }
+                sql.startsWith(quoting.delimiter, at) -> {
+                    at += quoting.delimiter.length
+                    fieldStart = true
+                }
+                c == ' ' || c == '\t' -> at++
+                else -> {
+                    fieldStart = false
+                    at++
+                }
+            }
+        }
+    }
+
+    /** How a CSV-escaped format quotes fields: the field delimiter and the quote characters, each escaped by doubling. */
+    private class Quoting(val delimiter: String, val quotes: Set<Char>)
+
+    /** Adds `[dataStart, dataEnd)` as the INSERT_DATA token, empty at the header's end when there is no data. */
+    private fun addInsertData(dataStart: Int, dataEnd: Int) {
+        while (current < dataStart) advance()
+        start = dataStart
+        while (current < dataEnd) advance()
+        add(TokenType.INSERT_DATA)
+        // The data ends the statement, at a `;` line or a blank line: the next one starts afresh.
+        insertData.reset(tokens.size)
+    }
+
+    private fun TokenType.isWordKind(): Boolean =
+        this != TokenType.IDENTIFIER && this != TokenType.STRING && !name.endsWith("_STRING")
+
+    private fun isSpace(c: Char): Boolean = c == ' ' || c == '\t' || c == '\u000C'
+
+    private fun skipSpaces(from: Int): Int {
+        var offset = from
+        while (offset < size && isSpace(sql[offset])) offset++
+        return offset
+    }
+
+    /** Whether a line ends at [offset]; the end of a prefix is not known to be one. */
+    private fun isLineEnd(offset: Int): Boolean = if (offset >= size) textEnds else isLineBreak(sql[offset])
+
+    private fun isEmptyLine(offset: Int): Boolean = offset < size && isLineBreak(sql[offset])
+
+    /** Whether the line at [offset] holds only `;`, with spaces or tabs. */
+    private fun isLoneSemicolonLine(offset: Int): Boolean {
+        val at = skipSpaces(offset)
+        return at < size && sql[at] == ';' && isLineEnd(skipSpaces(at + 1))
+    }
+
+    private fun isLineBreak(c: Char): Boolean = c == '\n' || c == '\r'
+
+    /** The offset after the line break at [offset], CRLF and LFCR counting as one. */
+    private fun lineEnd(offset: Int): Int {
+        val next = offset + 1
+        return if (next < size && isLineBreak(sql[next]) && sql[next] != sql[offset]) next + 1 else next
+    }
+
+    /** Statement context for [scanInsertData]. */
+    private class InsertDataState {
+        var observed = 0
+        var depth = 0
+        var head: String? = null
+        var previous: String? = null
+        var noData = false
+        var query = false
+        var input = false
+        var afterFormat = false
+        var settings = false
+        var settingValue = false
+        var format: String? = null
+        var setting: String? = null
+        var afterEquals = false
+        val settingValues = HashMap<String, String>()
+
+        /**
+         * How the format's fields may hold line breaks inside quotes (docs/brikk-extensions.md #56),
+         * from settings the INSERT writes, else ClickHouse's defaults; null when they cannot.
+         */
+        fun quoting(): Quoting? {
+            val name = format ?: return null
+            val delimiter = when {
+                name in CSV_FORMATS -> settingValues["format_csv_delimiter"]?.takeIf { it.length == 1 } ?: ","
+                name.startsWith("CUSTOMSEPARATED") && settingValues["format_custom_escaping_rule"].equals("CSV", ignoreCase = true) ->
+                    settingValues["format_custom_field_delimiter"]?.takeIf { it.isNotEmpty() } ?: "\t"
+                else -> return null
+            }
+            val quotes = buildSet {
+                if (enabled("format_csv_allow_double_quotes", default = true)) add('"')
+                if (enabled("format_csv_allow_single_quotes", default = false)) add('\'')
+            }
+            return Quoting(delimiter, quotes).takeIf { quotes.isNotEmpty() }
+        }
+
+        /** A boolean setting the INSERT writes (`1`, `0`, `true`, `false`, quoted or not), else [default]. */
+        private fun enabled(name: String, default: Boolean): Boolean = when (settingValues[name]?.lowercase()) {
+            "1", "true" -> true
+            "0", "false" -> false
+            else -> default
+        }
+
+        fun reset(observed: Int = 0) {
+            this.observed = observed
+            depth = 0
+            head = null
+            previous = null
+            noData = false
+            query = false
+            input = false
+            afterFormat = false
+            settings = false
+            settingValue = false
+            format = null
+            setting = null
+            afterEquals = false
+            settingValues.clear()
         }
     }
 
@@ -971,6 +1254,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
 
     private companion object {
         const val CANCEL_INTERVAL = 1 shl 16
+        private val INSERT_WITHOUT_DATA = setOf("INFILE", "VALUES")
+        private val CSV_FORMATS = setOf("CSV", "CSVWITHNAMES", "CSVWITHNAMESANDTYPES")
 
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'

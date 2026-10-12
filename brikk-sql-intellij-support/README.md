@@ -176,11 +176,39 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   state must fit 15 bits.
   Restoring a saved position relexes from its statement's start. A routine body still unbalanced
   at the end of the text ends before its first `;`, so later statements keep their tokens.
+- `StatementBoundedSqlLexer(baseFactory, coreDialect)` (`lexer`): lexes each statement of core's
+  script ranges on its own with a fresh start of the base lexer, so no token runs past its
+  statement (ClickHouse inline `INSERT ... FORMAT` data ends where core frames it: at a blank line,
+  a line holding only `;`, or the end of the text, never at another `;` or a quote in the data,
+  which is stored as written, also across quoted CSV fields; framing reads only settings written in
+  the INSERT itself, never session-level ones; a token covering the terminating `;` is
+  cut before it, and the base restarts there, so it reads the `;` as a separator rather than data). States are 0 at statement starts and 1 elsewhere:
+  non-negative, whatever the base reports, and the highlighter restarts and resynchronizes only at
+  statement starts. Started in state 1 (the console's parameter preprocessing restarts mid-token),
+  it continues the statement holding the offset, within its bounds. Core ranges are read a window at a time, so relexing an edit costs about its
+  statement, and a pass from the start of a text shares them with `StatementBoundaryGate`'s parse of
+  the same text. `CHouseFamilyParserDefinition` lexes this way; a `MaskingSqlLexer` may be its base.
 - `LenientSqlParsing` (`parser`): `PsiBuilder` extensions that never consume, scanning the
   statement to its `;` within `MAX_LOOKAHEAD` tokens: `wordAt`, `containsAny`, `firstOf`,
   `wordThenWord` (next word), `wordThenToken` (exact next token) and the general
   `scanStatement`; `advanceLenient`, `consumeLenient` and `parseLenientStatement` keep platform
   user parameters; `parseColonParameter` parses `:name`.
+- `StatementBoundaryGate(coreDialect)` (`parser`): in a parser's `parseSqlStatement`, runs the
+  grammar on a top-level statement and parses its core range again as one lenient `SQL_STATEMENT`
+  where the grammar's boundary is clearly wrong: it runs past the range's end (before its `;`), or
+  it stops before it after reporting an error in what it parsed (a clause it lacks), after parsing
+  nothing, or where core reads one construct on (inside brackets, a token or a comment). Errors are
+  those the platform builder recorded since the statement began (`PsiBuilderImpl.hasErrorsAfter`,
+  public, under any `PsiBuilderAdapter`); a builder without one counts every early stop as wrong. Statements the
+  grammar reads cleanly without a `;` between them stay apart, as in the platform dialects, and the
+  statement after such a split is gated as one starting the range; an
+  erroneous one absorbs the rest of its core range. Statements the grammar parses keep its PSI;
+  nested statements and ranges with a boundary error (an unclosed bracket being typed) keep the
+  grammar's result.
+- `CHouseFamilyParser(coreDialect)` (`parser`): the platform ClickHouse parser behind such a gate.
+  The platform grammar lacks `PARTITION BY` in `INSERT INTO [TABLE] FUNCTION`, so it splits
+  `INSERT INTO FUNCTION s3(...) PARTITION BY ...` before a `SELECT` on a new line (and mid-statement
+  after a comment); the family keeps it whole. Subclasses add statements in `parseStatement`.
 - `PipeStatementGate(pipeDialect)` (`pipe`): in a parser's `parseSqlStatement`, makes a PIPE
   statement (or a statement the caller claims, such as FROM-first) one node bounded by the
   dialect's statement range, before its final `;` unless the range has a boundary error. Text
@@ -198,13 +226,32 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
 - `PgFamilyDialect(id)` (`dialect`): a PostgreSQL-grammar dialect with the platform PostgreSQL
   operators, system variables and builtin functions; the subclass supplies `getDbms`. Keep its
   `Dbms` outside the dialect object, whose base constructor already asks for it.
+- `CHouseFamilyDialect(id)` (`dialect`): a ClickHouse-grammar dialect that behaves as the platform
+  ClickHouse dialect (tokens, builtin functions with special forms and combinator suffixes, types,
+  operators, system variables, separators, resolution); a raw data leaf is never reparsed alone, as
+  an edit in data can move statement boundaries. The subclass supplies
+  `getDbms`, best with `<extensionFallback fallbackDbms="CLICKHOUSE">`. The platform dialect is
+  final, so its overrides are delegated to it, and a test fails when an IDE adds one.
+  `isServerResolvedParameter` (263, a parameterized view's `{name:Type}`) is called reflectively,
+  being absent from the 261 API.
+- `CHouseFamilyParserDefinition(dialect)` (`parser`): parsing for such a dialect, with one file node
+  type per dialect and the platform ClickHouse element factory, reached through a platform
+  definition's public `getElementFactory`. It creates the grammar's ClickHouse PSI and the platform
+  PSI of shared nodes such as `parseLenientStatement`'s `SQL_STATEMENT` (a composite node, created
+  by `createComposite`, never by `createElement`). Its lexer is a `StatementBoundedSqlLexer` over
+  `createBaseLexer`. Register a no-arg subclass as
+  `lang.parserDefinition`; dialect rules go in `createBaseLexer` and in a `CHouseFamilyParser`
+  subclass from `createParser`. A `MaskingSqlLexer` over `CHouseLexer` from `createBaseLexer` (to
+  mask what the grammar lacks, such as `PARTITION BY <expr>` after `INSERT INTO FUNCTION`) starts
+  afresh at each statement, so its context and the platform lexer's high state bits never cross one.
 - Comments: register the platform commenter, which toggles `-- ` lines and block comments:
   `<lang.commenter language="<your dialect language id>" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`.
 
 `SqlDialectRegistry` (`dialect`): a static, versioned table (`VERSION`) of core dialect names,
 labels, `-- dialect:` marker spellings, IDE language ids and `Dbms` names. Each plugin's copy is
 identical data keyed only by platform identities, so plugins agree without sharing objects.
-Stock platform identities are aliases next to the plugins' own (stock DuckDB: `DUCKDB` before
+Stock platform identities are aliases next to the plugins' own (`ClickHouseSQL` and `CLICKHOUSE_BRIKK`
+beside the stock `ClickHouse` and `CLICKHOUSE`; stock DuckDB: `DUCKDB` before
 263, `DUCK` and the `DuckDB` language from 263; `TRINO`, `PRESTO`, `HIVE`, `SPARK`). `GenericSQL`
 never maps: many engines share it.
 
