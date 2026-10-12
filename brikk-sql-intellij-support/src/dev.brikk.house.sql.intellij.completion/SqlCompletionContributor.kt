@@ -14,16 +14,19 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.psi.SqlBinaryExpression
+import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.util.ProcessingContext
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
 import dev.brikk.house.sql.metadata.KeywordCategory
+import dev.brikk.house.sql.metadata.TableFunctionInfo
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Completes the profile's functions and keywords from metadata.
+ * Completes the profile's functions, keywords and table-function properties from metadata.
  * Register it for the dialect's language with a no-arg subclass.
  */
 @ApiStatus.Experimental
@@ -31,6 +34,7 @@ public abstract class SqlCompletionContributor(profile: SqlCompletionProfile) : 
     init {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), FunctionProvider(profile))
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), KeywordProvider(profile))
+        extend(CompletionType.BASIC, PlatformPatterns.psiElement(), TableFunctionArgumentProvider(profile))
     }
 }
 
@@ -74,6 +78,63 @@ private class KeywordProvider(profile: SqlCompletionProfile) : ProfileProvider(p
             sink.addElement(style.lookup(keyword, keyword.word, style.typeText))
         }
     }
+}
+
+/**
+ * Property names inside the parentheses of a table function taking `"key" = "value"`
+ * properties, and the known values on the right of `=`. Both are strings, so the prefix runs from
+ * the opening quote to the caret; outside a string the item is inserted quoted.
+ */
+private class TableFunctionArgumentProvider(profile: SqlCompletionProfile) : ProfileProvider(profile) {
+    override fun complete(parameters: CompletionParameters, result: CompletionResultSet) {
+        val position = parameters.position
+        val offset = parameters.offset
+        val (call, function) = profile.tableFunctionCallAt(parameters.originalFile, position, offset) ?: return
+        val binary = PsiTreeUtil.getParentOfType(position, SqlBinaryExpression::class.java)?.takeIf { call.textRange.contains(it.textRange) }
+        val key = binary?.lOperand?.takeIf { left ->
+            offset > left.textRange.endOffset &&
+                '=' in binary.text.substring(0, (offset - binary.textRange.startOffset).coerceIn(0, binary.textLength))
+        }?.text?.trim('\'', '"', '`')
+        val (kind, candidates) = if (key == null) {
+            SqlLookupKind.TABLE_FUNCTION_PROPERTY to function.properties.map { it.name }
+        } else {
+            SqlLookupKind.TABLE_FUNCTION_VALUE to function.properties.firstOrNull { it.name.equals(key, ignoreCase = true) }?.values.orEmpty()
+        }
+        if (candidates.isEmpty()) return
+        val typed = position.text.orEmpty().take((offset - position.textRange.startOffset).coerceAtLeast(0))
+        val quoted = typed.firstOrNull()?.let { it in QUOTES } == true
+        val prefix = if (quoted) typed.drop(1) else typed.takeWhile { it.isLetterOrDigit() || it == '_' || it == '.' }
+        val sink = result.withPrefixMatcher(prefix).caseInsensitive()
+        val style = profile.styles[kind]
+        val insert = if (quoted) null else QuotingInsertHandler(profile.propertyQuote)
+        for (name in candidates) sink.addElement(style.lookup(name, name, style.typeText(function.name), insertHandler = insert))
+    }
+}
+
+private class QuotingInsertHandler(private val quote: Char) : InsertHandler<LookupElement> {
+    override fun handleInsert(context: InsertionContext, item: LookupElement) {
+        val text = "$quote${item.lookupString}$quote"
+        context.document.replaceString(context.startOffset, context.tailOffset, text)
+        context.editor.caretModel.moveToOffset(context.startOffset + text.length)
+    }
+}
+
+private const val QUOTES = "'\"`"
+
+/** The innermost call of a known table function whose parentheses hold [offset], walking up from [position]. */
+internal fun SqlCompletionProfile.tableFunctionCallAt(file: PsiFile, position: PsiElement, offset: Int): Pair<SqlFunctionCallExpression, TableFunctionInfo>? {
+    val snapshot = snapshot(file)
+    if (snapshot.tableFunctions.isNullOrEmpty()) return null
+    var call = PsiTreeUtil.getParentOfType(position, SqlFunctionCallExpression::class.java, false)
+    while (call != null) {
+        // With empty parentheses the caret leaf can be `)` or an error element, so "after the `(`" decides.
+        val paren = call.text.indexOf('(')
+        if (paren >= 0 && offset > call.textRange.startOffset + paren) {
+            call.nameElement?.name?.let(snapshot::tableFunction)?.let { return call to it }
+        }
+        call = PsiTreeUtil.getParentOfType(call, SqlFunctionCallExpression::class.java)
+    }
+    return null
 }
 
 private fun SqlLookupStyles.function(entry: FunctionPresentation, serverOnly: Boolean): LookupElement {

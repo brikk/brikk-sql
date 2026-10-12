@@ -36,6 +36,9 @@ public interface SqlCompletionProfile {
     public val functionGates: SqlFunctionGates get() = SqlFunctionGates.OFF
 
     public val keywords: KeywordScope get() = KeywordScope.ALL
+
+    /** The quote a table-function property or value is wrapped in when completed outside a string. */
+    public val propertyQuote: Char get() = '\''
 }
 
 /** Which keywords completion offers. */

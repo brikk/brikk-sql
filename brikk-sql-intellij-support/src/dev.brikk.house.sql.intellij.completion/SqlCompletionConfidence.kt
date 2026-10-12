@@ -7,14 +7,17 @@ import com.intellij.util.ThreeState
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Autopopup decisions for the profile's language. With [SqlFunctionGates.digitPrefix] the
- * autopopup is skipped after a digit-led prefix, where no name can begin. Elsewhere it leaves
- * the decision to the next confidence. Register it with `order="first"` through a no-arg subclass.
+ * Autopopup decisions for the profile's language. Inside the parentheses of a known table
+ * function, where properties are strings, the autopopup is never skipped. With
+ * [SqlFunctionGates.digitPrefix] it is skipped after a digit-led prefix, where no name can
+ * begin. Elsewhere it leaves the decision to the next confidence. Register it with
+ * `order="first"` through a no-arg subclass.
  */
 @ApiStatus.Experimental
 public abstract class SqlCompletionConfidence(private val profile: SqlCompletionProfile) : CompletionConfidence() {
     final override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
         !psiFile.language.isKindOf(profile.language) -> ThreeState.UNSURE
+        profile.tableFunctionCallAt(psiFile, contextElement, offset) != null -> ThreeState.NO
         profile.functionGates.digitPrefix && prefixIsDigitLed(psiFile, offset) -> ThreeState.YES
         else -> ThreeState.UNSURE
     }

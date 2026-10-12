@@ -101,9 +101,11 @@ no-arg subclasses:
   inserts `()` with the caret inside, or after it when the only overload takes no
   arguments; an existing `(` is reused; a grammar bare form (`CURRENT_TIMESTAMP`) and a
   special form (`CAST`) insert only the name. Keywords from the snapshot's
-  `KeywordCatalog`, all or only reserved ones (`KeywordScope`).
-- `SqlCompletionConfidence` (`order="first"`): skips the autopopup after a digit-led prefix
-  when the digit gate is on.
+  `KeywordCatalog`, all or only reserved ones (`KeywordScope`). Inside the call of a table
+  function with metadata `TableFunctionInfo`, its property names, and their known values
+  right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
+- `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
+  property strings, and skips it after a digit-led prefix when the digit gate is on.
 
 `SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
 signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
