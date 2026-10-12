@@ -3,10 +3,14 @@ package dev.brikk.house.sql.intellij.pipe
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionContributorEP
 import com.intellij.lang.LanguageAnnotators
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiFile
+import com.intellij.testFramework.TestActionEvent
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.parser.SyntacticRange
 import dev.brikk.house.sql.parser.pipeStageKeywords
@@ -60,6 +64,20 @@ class PipeEditorTest : BasePlatformTestCase() {
             .filter { it.forcedTextAttributesKey == DefaultLanguageHighlighterColors.KEYWORD }
             .map { myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset)) }
         assertSameElements(colored, "WHERE", "LIMIT", "ORDER BY")
+    }
+
+    fun testPreviewIsOfferedWhereTheProfileEnablesIt() {
+        myFixture.configureByText("pipe-${UUID.randomUUID()}.sql", "FROM t |> WHERE a = 1")
+        val withoutPreview = object : PipeDialect by trino {
+            override fun enablesPreview(file: PsiFile) = false
+        }
+        for ((dialect, offered) in listOf(trino to true, withoutPreview to false)) {
+            assertEquals(offered, object : PipePreviewIntention(dialect) {}.isAvailable(project, myFixture.editor, myFixture.file))
+            val event = TestActionEvent.createTestEvent(SimpleDataContext.builder()
+                .add(CommonDataKeys.PSI_FILE, myFixture.file).add(CommonDataKeys.EDITOR, myFixture.editor).build())
+            object : PipePreviewAction(dialect) {}.update(event)
+            assertEquals(offered, event.presentation.isEnabledAndVisible)
+        }
     }
 
     fun testErrorRangesStayInsideTheStatement() {

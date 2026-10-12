@@ -90,7 +90,7 @@ private fun PipeDialect.caretStatement(text: String, caret: Int): CaretStatement
     statementAt(text, caret)?.takeIf { it.hasPipe }?.let { CaretStatement(it.start, text.substring(it.start, it.end), it.boundaryError) }
 
 private fun PipeDialect.previewable(file: PsiFile, editor: Editor): CaretStatement? {
-    if (!isEditingEnabled(file)) return null
+    if (!isEditingEnabled(file) || !enablesPreview(file)) return null
     val source = pipeText(file)
     return caretStatement(source.text, source.textOffset(editor.caretModel.offset))
 }

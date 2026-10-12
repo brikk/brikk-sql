@@ -40,6 +40,9 @@ public interface PipeDialect {
     /** Enables PIPE editing, never execution, in [file] regardless of the project setting. */
     public fun enablesEditing(file: PsiFile): Boolean = false
 
+    /** Where PIPE editing is enabled, whether [file] offers the generated-SQL preview. */
+    public fun enablesPreview(file: PsiFile): Boolean = true
+
     /** An inspection-only view: Execute is refused and run-to-stage is unavailable. */
     public fun isInspectionHost(file: PsiFile): Boolean = false
 
