@@ -370,14 +370,14 @@ which `onRefreshed` shows). A session in manual-commit mode is not harvested
 (`RefreshOutcome.SessionInTransaction`): its harvest queries would open a transaction of their own. Nor is
 one in a transaction a statement began in auto-commit mode, which the platform does not track: the
 `ExecutionObserver` treats a session as in a transaction from a detected begin until a detected end, a
-commit or rollback through the IDE, or a new connection. Only statements that succeed count: a failed
-begin begins nothing, a failed end ends nothing, and a failed script whose statements include a begin
-leaves the session in a transaction, since its begin may have run and its end may not
- (`ExecutionObserverProfile.transactionStatements`,
+commit or rollback through the IDE, or a new connection (`ExecutionObserverProfile.transactionStatements`,
 default `StatementRules.TRANSACTIONS`: `BEGIN`, `START TRANSACTION`; `COMMIT`, `ROLLBACK`, `ABORT`, `END`;
 `ROLLBACK ... TO`, `COMMIT PREPARED` and `ROLLBACK PREPARED` keep it, `PREPARE TRANSACTION` ends it, and an
 end `AND CHAIN` begins the next; Trino's profile uses
-`StatementRules.TRINO_TRANSACTIONS`, without `BEGIN` and `END`, which only delimit its routine bodies). From 263 the platform reads `COMMIT`
+`StatementRules.TRINO_TRANSACTIONS`, without `BEGIN` and `END`, which only delimit its routine bodies).
+Only statements that succeed count: a failed begin begins nothing, a failed end ends nothing, and a
+failed script whose statements include a begin leaves the session in a transaction, since its begin may
+have run and its end may not. From 263 the platform reads `COMMIT`
 and `ROLLBACK` statements itself (`transactionControlLanguageHandler`, PostgreSQL and MySQL families, not
 the stock `DUCK`), but only to end a manual-commit transaction, where this tracking does not apply; the
 two agree, `AND CHAIN` included. Without such a handler, a `COMMIT` statement leaves the platform holding
