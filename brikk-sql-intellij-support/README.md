@@ -208,6 +208,14 @@ takes the dbms the platform passes):
   flag is no substitute: the platform resets it when the IDE build changes.
   `<introspector dbms="X" implementationClass="my.XIntrospectorGate"/>`. The test kit's
   `assertIntrospectorRoutesToGeneric(dbms)` checks the routing.
+- `DialectDataSourceResolver(dbms, onlyDataSourceFallback = true)`: `resolve(file)` finds the data
+  source serving a file from its valid console, then its SQL resolution scope (file, directory or
+  project; only data sources it names), then, when enabled, the project's only data source of the
+  dbms. The `DataSourceResolution` says which (`Console`, `FileMapping`, `OnlyDataSource`) or why
+  none (`Ambiguous` with the candidates, `NotFound`); several never resolve to a guess. Injected files
+  and completion copies resolve through their host. A data source qualifies when its dbms is the
+  dbms or a registry alias of it (the stock `TRINO` for a plugin's Trino dbms). `consoleNamespace(file)`
+  is the valid console's current namespace, outermost first.
 
 Internal API used, by class (the platform offers no public alternative):
 
