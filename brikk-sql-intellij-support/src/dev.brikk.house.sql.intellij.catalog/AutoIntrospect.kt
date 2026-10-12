@@ -159,9 +159,11 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     private fun storageOf(dataSource: LocalDataSource): DataSourceStorage? =
         listOfNotNull(DataSourceStorage.getProjectStorage(project), DataSourceStorage.getStorage()).firstOrNull { dataSource in it.ownDataSources }
 
-    private suspend fun highlightAgain(file: VirtualFile) {
-        val psi = readAction { if (project.isDisposed || !file.isValid) null else PsiManager.getInstance(project).findFile(file) } ?: return
-        DaemonCodeAnalyzer.getInstance(project).restart(psi, "introspected")
+    /** The daemon's restart, like the PSI lookup, needs read access. */
+    private suspend fun highlightAgain(file: VirtualFile) = readAction {
+        if (!project.isDisposed && file.isValid) {
+            PsiManager.getInstance(project).findFile(file)?.let { DaemonCodeAnalyzer.getInstance(project).restart(it, "introspected") }
+        }
     }
 
     private companion object {

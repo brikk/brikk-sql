@@ -20,17 +20,24 @@ import com.intellij.database.util.SearchPath
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.database.util.TreePattern
+import com.intellij.testFramework.LoggedErrorProcessor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.registerOrReplaceServiceInstance
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.TestTimeSource
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -53,7 +60,7 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         override val levels = listOf(ObjectKind.DATABASE, ObjectKind.SCHEMA)
     }
 
-    class Service(project: Project, scope: CoroutineScope, override val profile: CatalogProfile, protected val time: TestTimeSource) :
+    class Service(project: Project, scope: CoroutineScope, override val profile: CatalogProfile, private val time: TestTimeSource) :
         AutoIntrospectService(project, scope) {
         override fun createEngine() = AutoIntrospectEngine(1.minutes, time)
     }
@@ -64,16 +71,40 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         fun finish(effect: () -> Unit = {}) = done.complete(effect)
     }
 
+    /** Reads of its introspection scope can be held until a second read arrives, to expose unserialized updates. */
+    class GatedDataSource : LocalDataSource() {
+        @Volatile var gate: CountDownLatch? = null
+
+        override fun getIntrospectionScope(): TreePattern {
+            gate?.let { latch ->
+                latch.countDown()
+                latch.await(1, TimeUnit.SECONDS)
+            }
+            return super.getIntrospectionScope()
+        }
+    }
+
     protected val time = TestTimeSource()
+    /** Throwables that escaped the service's coroutines, and errors logged on any thread. */
+    private val backgroundErrors = CopyOnWriteArrayList<Throwable>()
+    protected lateinit var serviceScope: CoroutineScope
     protected val refreshes = LinkedBlockingQueue<Refresh>()
     protected lateinit var service: Service
-    protected lateinit var source: LocalDataSource
+    protected lateinit var source: GatedDataSource
     protected lateinit var hive: PgDatabase
     protected lateinit var memory: PgDatabase
     protected lateinit var orders: PgLocalTable
 
     override fun setUp() {
         super.setUp()
+        val errors = object : LoggedErrorProcessor() {
+            override fun processError(category: String, message: String, details: Array<out String>, t: Throwable?): Set<Action> {
+                backgroundErrors += t ?: AssertionError(message)
+                return super.processError(category, message, details, t)
+            }
+        }
+        val logging = LoggedErrorProcessor.executeWith(errors)
+        Disposer.register(testRootDisposable) { logging.finish() }
         useService(Profile())
         val model = ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES)
         val databases = (model.root as PgRoot).databases
@@ -81,14 +112,14 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         memory = databases.createOrGet("memory")
         orders = databases.createOrGet("loaded").schemas.createOrGet("web").tables.createOrGet("orders")
         databases.createOrGet("q\"t")
-        source = LocalDataSource().apply {
+        source = GatedDataSource().apply {
             name = "auto-introspect ${UUID.randomUUID()}"
             databaseDriver = checkNotNull(DatabaseDriverManager.getInstance().getDriver("postgresql"))
             url = "jdbc:offline:auto-introspect"
             isAutoSynchronize = false
             isKeepAlive = false
             this.model = model
-            introspectionScope = CatalogScopes.widen(CatalogScopes.select(levels(), listOf("memory")), CatalogScopes.select(levels(), listOf("loaded", "web")))
+            setIntrospectionScope(CatalogScopes.widen(CatalogScopes.select(levels(), listOf("memory")), CatalogScopes.select(levels(), listOf("loaded", "web"))))
         }
         LocalDataSourceManager.getInstance(project).addDataSource(source)
         DbPsiFacade.getInstance(project).clearCaches()
@@ -103,6 +134,8 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
     override fun tearDown() {
         try {
             refreshes.forEach { it.finish() }
+            PlatformTestUtil.waitWithEventsDispatching("the service's coroutines end", { serviceScope.coroutineContext.job.children.none(Job::isActive) }, 10)
+            assertEmpty("background errors", backgroundErrors)
             LocalDataSourceManager.getInstance(project).removeDataSource(source)
             DbPsiFacade.getInstance(project).clearCaches()
         } catch (e: Throwable) {
@@ -113,8 +146,9 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
     }
 
     protected fun useService(profile: CatalogProfile) {
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default + CoroutineExceptionHandler { _, e -> backgroundErrors += e })
         Disposer.register(testRootDisposable) { scope.cancel() }
+        serviceScope = scope
         service = Service(project, scope, profile, time)
         project.registerOrReplaceServiceInstance(Service::class.java, service, testRootDisposable)
     }
