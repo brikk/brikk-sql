@@ -70,6 +70,11 @@ class SqlFunctionPositionTest : CompletionTestCase() {
         assertOffers(table, "SELECT * FROM t WHERE a IN (SELECT b FROM ra<caret>", "SELECT * FROM t WHERE a IN (FROM ra<caret>")
     }
 
+    fun testOnlyAQueryAtTheCallsOwnLevelMakesItsFromATable() = assertOffers(
+        expression,
+        "SELECT SUBSTRING((SELECT 'abc') FROM ra<caret>", "SELECT TRIM(CASE WHEN EXISTS (SELECT 1) THEN 'a' ELSE 'b' END FROM ra<caret>",
+    )
+
     fun testDistinctFromIsNotATablePosition() =
         assertOffers(everything, "SELECT * FROM t WHERE a IS DISTINCT FROM ra<caret>", "SELECT * FROM t WHERE a IS NOT DISTINCT FROM ra<caret>")
 

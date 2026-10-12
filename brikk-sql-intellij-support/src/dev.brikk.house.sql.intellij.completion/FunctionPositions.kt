@@ -152,9 +152,21 @@ private class Context(val words: List<Word>, val positions: TablePositions, val 
     fun tableUnlessCallArgument(): FunctionPosition {
         val paren = enclosingParen() ?: return FunctionPosition.TABLE
         val inside = words.subList(paren + 1, words.size)
-        if (inside.firstOrNull()?.text == "FROM" || inside.any { it.text in QUERY_HEADS && !it.isName }) return FunctionPosition.TABLE
+        if (inside.firstOrNull()?.text == "FROM" || inside.atTopLevel().any { it.text in QUERY_HEADS && !it.isName }) return FunctionPosition.TABLE
         val before = words.getOrNull(paren - 1) ?: return FunctionPosition.UNKNOWN
         return if (isCall(before)) FunctionPosition.EXPRESSION else FunctionPosition.UNKNOWN
+    }
+
+    /** The words outside every bracket pair these words open and close, such as a nested `(SELECT ...)`. */
+    private fun List<Word>.atTopLevel(): List<Word> {
+        var depth = 0
+        return filter { word ->
+            when (word.text) {
+                "(" -> depth++
+                ")" -> depth--
+            }
+            depth == 0 && word.text != ")"
+        }
     }
 
     /** The index of the innermost `(` still open at the end. */
