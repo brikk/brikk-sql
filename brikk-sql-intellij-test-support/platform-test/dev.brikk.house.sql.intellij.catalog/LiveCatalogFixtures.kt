@@ -18,6 +18,7 @@ import com.intellij.util.ui.classpath.SimpleClasspathElementFactory
 import java.io.File
 import java.nio.file.Files
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.runBlocking
 import com.intellij.database.dataSource.connection.ConnectionRequestor
 import com.intellij.database.remote.jdbc.helpers.GenericJdbcHelper
@@ -137,7 +138,15 @@ class LiveProfile(
 }
 
 class LiveService(scope: CoroutineScope, override val profile: LiveCatalogProfile, private val directory: Path?) : LiveCatalogService(scope) {
+    /** What [onRefreshed] received, in order: what a notification shows. */
+    val refreshed = CopyOnWriteArrayList<RefreshOutcome>()
+
     override fun persistenceDirectory(): Path? = directory
+
+    override fun onRefreshed(project: Project, dataSource: LocalDataSource, outcome: RefreshOutcome, reason: RefreshReason) {
+        refreshed += outcome
+        super.onRefreshed(project, dataSource, outcome, reason)
+    }
 }
 
 /** The interceptor a plugin registers for [LiveService]. */

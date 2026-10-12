@@ -298,7 +298,15 @@ When harvests run (`HarvestTrigger`): `ONCE_PER_SESSION` (default: the first con
 in an IDE session), `EVERY_CONSOLE_CONNECT` (every console connection, other connections only while no
 live harvest exists), `ON_REFRESH`. Connections of the profile's dbms or its registry aliases count.
 The interceptor skips the helper connections refreshes open, so a refresh harvests once.
-`refresh(project, dataSource)` harvests over a helper connection. `inventoryChanged(project, session,
+`refresh(project, dataSource)` harvests over a helper connection. `refresh(project, session)` harvests
+over a console session's own connection, so it also reads what the session loaded implicitly (DuckDB
+autoload): the harvest is queued on the session as a request and runs on its engine's thread, and both
+the shared inventory and the session's facts are recorded and returned (`RefreshOutcome.Refreshed.session`,
+which `onRefreshed` shows). A session in a transaction (manual commit with a change pending) is not
+harvested (`RefreshOutcome.SessionInTransaction`); a transaction opened by a `BEGIN` statement in
+auto-commit mode is not visible to the platform and is not detected. A session that is not connected
+falls back to the helper connection. `RefreshLiveCatalogAction` uses the editor's connected console
+session when it has one. `inventoryChanged(project, session,
 requestor, sessionFacts, notify)` follows executed statements (see `ExecutionObserver`): when the change
 may belong to the session, the session's connection is known and reaches the current server, and the
 session is in auto-commit mode, it harvests over that connection on the engine's thread; a session in a

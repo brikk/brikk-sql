@@ -11,6 +11,7 @@ import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.dataSource.connection.ConnectionRequestor
 import com.intellij.database.datagrid.DataProducer
+import com.intellij.database.datagrid.DataRequest
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -39,6 +40,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -126,7 +128,8 @@ public sealed interface RefreshReason {
 /** How a refresh ended. */
 @ApiStatus.Experimental
 public sealed interface RefreshOutcome {
-    public data class Refreshed(val inventory: LiveInventory) : RefreshOutcome
+    /** The server's [inventory], and the facts of the [session] whose connection was harvested (none over a helper connection). */
+    public data class Refreshed(val inventory: LiveInventory, val session: SessionFacts = SessionFacts.NONE) : RefreshOutcome
 
     /** The profile is not enabled. */
     public data object Disabled : RefreshOutcome
@@ -138,6 +141,9 @@ public sealed interface RefreshOutcome {
 
     /** The data source's connection identity changed while the harvest ran; nothing was stored. */
     public data object Superseded : RefreshOutcome
+
+    /** The session is in a transaction, which a failing harvest query could abort; nothing was harvested. */
+    public data object SessionInTransaction : RefreshOutcome
 }
 
 /**
@@ -211,6 +217,8 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
 
     internal fun dataSourceOf(file: PsiFile): LocalDataSource? = dataSources.resolve(file).dataSource
 
+    internal fun consoleSessionOf(file: PsiFile): DatabaseSession? = dataSources.consoleSession(file)
+
     /** Whether connections of [dbms] are this profile's. */
     internal fun accepts(dbms: Dbms): Boolean = profile.enabled && dataSources.accepts(dbms)
 
@@ -268,9 +276,69 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         }
     }
 
-    /** [refresh] in the background, then [onRefreshed]. */
-    public fun refreshInBackground(project: Project, dataSource: LocalDataSource) {
-        scope.launch { onRefreshed(project, dataSource, refresh(project, dataSource), RefreshReason.Manual) }
+    /**
+     * Refreshes over [session]'s own connection, so the session's facts are read too (extensions it
+     * loaded implicitly, for example DuckDB autoload): the harvest is queued on the session as a request
+     * and runs on its engine's thread, with the same rules as after executed statements. A session in a
+     * transaction is not harvested ([RefreshOutcome.SessionInTransaction]). A session that is not
+     * connected falls back to [refresh] over a helper connection. Cancellation propagates; a harvest
+     * cancelled before the session ran it does not run.
+     */
+    public suspend fun refresh(project: Project, session: DatabaseSession): RefreshOutcome {
+        if (!profile.enabled) return RefreshOutcome.Disabled
+        val dataSource = session.connectionPoint.dataSource
+        if (!session.isConnected) return refresh(project, dataSource)
+        // A request outside the session's transaction would make the engine end it; such a session is left alone.
+        if (session.currentTx != DataRequest.AUTO_COMMIT) return RefreshOutcome.SessionInTransaction
+        val result = CompletableDeferred<RefreshOutcome>()
+        val request = object : DataRequest.RawRequest(session) {
+            override fun processRaw(context: DataRequest.Context, connection: DatabaseConnectionCore) {
+                if (result.isCompleted) return
+                result.complete(harvestSession(dataSource, session, context.producer, connection))
+            }
+        }
+        request.promise.onError { error ->
+            result.complete(RefreshOutcome.HarvestFailed(HarvestOutcome.Failed(error as? Exception ?: RuntimeException(error))))
+        }
+        request.promise.onSuccess { result.complete(RefreshOutcome.HarvestFailed(HarvestOutcome.Incomplete)) }
+        try {
+            session.messageBus.dataProducer.processRequest(request)
+            return result.await()
+        } finally {
+            result.cancel()
+        }
+    }
+
+    /** [refresh] in the background, over [session]'s connection when it is given, then [onRefreshed]. */
+    public fun refreshInBackground(project: Project, dataSource: LocalDataSource, session: DatabaseSession? = null) {
+        scope.launch {
+            val outcome = if (session != null) refresh(project, session) else refresh(project, dataSource)
+            onRefreshed(project, dataSource, outcome, RefreshReason.Manual)
+        }
+    }
+
+    /** Harvests over a session's [connection] on its engine's thread, which [requestor] runs. */
+    private fun harvestSession(dataSource: LocalDataSource, session: DatabaseSession, requestor: Any?, connection: DatabaseConnectionCore): RefreshOutcome {
+        requestor?.let { learnSession(session, it) }
+        val identity = requestor?.let { consoleConnections[it] }?.identity ?: profile.identity(dataSource)
+        return harvestOver(dataSource, connection, identity, requestor)
+    }
+
+    private fun harvestOver(dataSource: LocalDataSource, connection: DatabaseConnectionCore, identity: ConnectionIdentity, requestor: Any?): RefreshOutcome {
+        if (identity != profile.identity(dataSource)) {
+            LOG.info("Not harvesting ${dataSource.name} over a connection to the server it named before")
+            return RefreshOutcome.Superseded
+        }
+        if (inTransaction(connection)) {
+            LOG.info("Not harvesting ${dataSource.name} over a session in a transaction")
+            return RefreshOutcome.SessionInTransaction
+        }
+        val outcome = runHarvestBlocking(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
+        return when {
+            !record(dataSource, identity, outcome, requestor) -> RefreshOutcome.Superseded
+            outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared, requestor?.let { outcome.harvest.session } ?: SessionFacts.NONE)
+            else -> RefreshOutcome.HarvestFailed(outcome)
+        }
     }
 
     /**
@@ -294,21 +362,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             debouncer.submit(dataSource.uniqueId) { onRefreshed(project, dataSource, refresh(project, dataSource), reason) }
             return
         }
-        if (console.identity != profile.identity(dataSource)) {
-            LOG.info("Not harvesting ${dataSource.name} over a connection to the server it named before")
-            return
-        }
-        if (inTransaction(connection)) {
-            LOG.info("Not harvesting ${dataSource.name} over a session in a transaction")
-            return
-        }
-        val outcome = runHarvestBlocking(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
-        val refreshed = when {
-            !record(dataSource, console.identity, outcome, requestor) -> RefreshOutcome.Superseded
-            outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared)
-            else -> RefreshOutcome.HarvestFailed(outcome)
-        }
-        onRefreshed(project, dataSource, refreshed, reason)
+        onRefreshed(project, dataSource, harvestOver(dataSource, connection, console.identity, requestor), reason)
     }
 
     /** Whether [connection] may be in a transaction: not in auto-commit mode, or unknown. */
@@ -347,10 +401,16 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
                 append("${dataSource.name}: ${outcome.inventory.functions.size} functions")
                 outcome.inventory.serverVersion?.let { append(", $label $it") }
                 if (outcome.inventory.extensions.isNotEmpty()) append(", extensions: ${outcome.inventory.extensions.joinToString(", ")}")
+                val session = outcome.session
+                if (session.functions.isNotEmpty() || session.extensions.isNotEmpty()) {
+                    append("; this session: ${session.functions.size} functions")
+                    if (session.extensions.isNotEmpty()) append(", extensions: ${session.extensions.joinToString(", ")}")
+                }
             }
             is RefreshOutcome.ConnectFailed -> NotificationType.WARNING to "Could not connect to ${dataSource.name}" + (outcome.detail?.let { ": ${it.take(200)}" } ?: ".")
             is RefreshOutcome.HarvestFailed -> NotificationType.WARNING to "Reading the functions of ${dataSource.name} failed; the previous catalog stays."
             RefreshOutcome.Superseded -> NotificationType.WARNING to "${dataSource.name} changed while its functions were read; refresh again."
+            RefreshOutcome.SessionInTransaction -> NotificationType.WARNING to "Not read: the console's session is in a transaction. Refresh after it ends."
             RefreshOutcome.Disabled -> return
         }
         notifyEscaped(project, group, "$label functions", text, type)
@@ -463,7 +523,11 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         val catalog = ApplicationManager.getApplication().getService(service) ?: return
-        target(project, catalog, e.getData(CommonDataKeys.PSI_FILE))?.let { catalog.refreshInBackground(project, it) }
+        val file = e.getData(CommonDataKeys.PSI_FILE)
+        val dataSource = target(project, catalog, file) ?: return
+        // The editor's console session, when connected, also reads what that session loaded.
+        val session = file?.let(catalog::consoleSessionOf)?.takeIf { it.connectionPoint.dataSource == dataSource && it.isConnected }
+        catalog.refreshInBackground(project, dataSource, session)
     }
 
     private fun target(project: Project, catalog: LiveCatalogService, file: PsiFile?): LocalDataSource? {
