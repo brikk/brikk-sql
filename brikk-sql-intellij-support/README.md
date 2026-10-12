@@ -4,7 +4,8 @@ An embedded Apache-2.0 JVM library for SQL dialect plugins. The first consumer i
 SQL Dialect for Trino. Each consumer owns its copy through its plugin classloader.
 It registers no extensions itself. It depends on Brikk SQL core and metadata, has no
 Kotlin IDE dependency, uses no Brikk (Kotlin-embedded SQL) types, and uses internal
-Database Tools APIs only in packages listed here (none). SQL PSI hooks live in
+Database Tools APIs only in the catalog kit, `dev.brikk.house.sql.intellij.catalog` (see there;
+a platform test fails on any other use). SQL PSI hooks live in
 `dev.brikk.house.sql.intellij.psi`; `SelectAliasResolveExtension` implements the
 `com.intellij.sql.resolveExtension` interface from `com.intellij.sql.psi.impl`, which carries
 no internal-API annotation.
@@ -200,6 +201,23 @@ takes the dbms the platform passes):
   "catalog"; otherwise the helper is `PgModelHelper` itself.
   `<modelFacade dbms="X" implementationClass="my.XModelFacade"/>` with
   `class XModelFacade(dbms: Dbms) : PgFamilyModelFacade(dbms)`.
+- `GenericJdbcIntrospectorGate`: registered for the exact dbms, it shadows the fallback dbms's
+  introspector and supports no server version, so the platform always uses its generic JDBC
+  introspector. Without it, a PostgreSQL fallback introspects any server reporting major 9 or later
+  (Trino reports 483) with `pg_catalog` queries. The per-data-source "Use JDBC-based introspector"
+  flag is no substitute: the platform resets it when the IDE build changes.
+  `<introspector dbms="X" implementationClass="my.XIntrospectorGate"/>`. The test kit's
+  `assertIntrospectorRoutesToGeneric(dbms)` checks the routing.
+
+Internal API used, by class (the platform offers no public alternative):
+
+| API | Used by | Why | Marketplace |
+| --- | --- | --- | --- |
+| `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | the only seam for introspector selection | ignored for the Doris and Trino plugins; confirm it holds for classes in a bundled jar |
+
+`InternalApiContainmentTest` reads this jar's bytecode and fails if a class outside the kit
+references a class, enclosing class, package or member annotated `@ApiStatus.Internal` or
+`@IntellijInternalApi`, or if the kit's set differs from this table.
 
 ## SQL-domain APIs
 

@@ -63,6 +63,12 @@ corpus. `lexAll` returns one pass as `LexedToken`s.
 file, on every supported IDE (the workspace setter on 263) and reparses it; with `until`, the
 mapping is cleared when that disposable ends.
 
+## Catalog contracts
+
+`assertIntrospectorRoutesToGeneric(dbms)` fails unless the dbms's introspector factory is a
+`GenericJdbcIntrospectorGate` registered for that exact dbms and the platform refuses native
+introspection at server majors around PostgreSQL's threshold and Trino's (0 to 10000).
+
 ## Platform tests
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run
