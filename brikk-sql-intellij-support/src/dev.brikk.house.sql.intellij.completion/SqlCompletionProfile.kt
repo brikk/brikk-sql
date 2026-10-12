@@ -39,6 +39,12 @@ public interface SqlCompletionProfile {
 
     /** The quote a table-function property or value is wrapped in when completed outside a string. */
     public val propertyQuote: Char get() = '\''
+
+    /**
+     * Which platform builtin-function items (`functions.xml` prototypes of the base dialect)
+     * completion keeps in [file], by name; null keeps all of them.
+     */
+    public fun builtinFunctionFilter(file: PsiFile): ((name: String) -> Boolean)? = null
 }
 
 /** Which keywords completion offers. */

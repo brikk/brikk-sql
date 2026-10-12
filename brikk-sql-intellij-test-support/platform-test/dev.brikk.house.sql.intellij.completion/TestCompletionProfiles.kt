@@ -28,8 +28,10 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
     override var keywords = KeywordScope.NONE
     override var propertyQuote = '\''
     var serverOnly: List<FunctionPresentation> = emptyList()
+    var builtinFilter: ((String) -> Boolean)? = null
 
     override fun serverOnlyFunctions(file: PsiFile) = serverOnly
+    override fun builtinFunctionFilter(file: PsiFile) = builtinFilter
 
     fun reset() {
         styles = SqlLookupStyles.DEFAULT
@@ -37,6 +39,7 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
         keywords = KeywordScope.NONE
         propertyQuote = '\''
         serverOnly = emptyList()
+        builtinFilter = null
     }
 }
 
@@ -64,10 +67,10 @@ abstract class CompletionTestCase : BasePlatformTestCase() {
         register(contributor, LoadingOrder.FIRST)
     }
 
-    protected fun register(contributor: Class<out CompletionContributor>, order: LoadingOrder) {
+    protected fun register(contributor: Class<out CompletionContributor>, order: LoadingOrder, language: String = myFixture.file.language.id) {
         val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test"), javaClass.classLoader)
         CompletionContributor.EP.point.registerExtension(
-            CompletionContributorEP(myFixture.file.language.id, contributor.name, plugin), order, testRootDisposable,
+            CompletionContributorEP(language, contributor.name, plugin), order, testRootDisposable,
         )
     }
 

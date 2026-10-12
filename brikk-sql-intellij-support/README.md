@@ -106,6 +106,9 @@ no-arg subclasses:
   right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
+- `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
+  items (`BuiltinFunction.Prototype` only) that the profile's `builtinFunctionFilter` does not
+  keep; null (the default) keeps them all.
 
 `SqlLookupStyles` holds one `SqlLookupStyle` (icon, type text, bold, priority, case,
 signature tail, return type) per `SqlLookupKind`; `DEFAULT` is the proposed shared table and
