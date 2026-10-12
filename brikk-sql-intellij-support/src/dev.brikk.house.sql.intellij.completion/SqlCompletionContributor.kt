@@ -35,16 +35,17 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return
         val reads = ProfileReads(profile, parameters.originalFile)
-        completeFunctions(parameters, result, reads)
+        val functions = completeFunctions(parameters, result, reads)
         completeTableFunctionArguments(parameters, result, reads)
-        if (!result.isStopped) completeKeywords(parameters, result, reads)
+        if (!result.isStopped) completeKeywords(parameters, result, reads, functions)
     }
 
-    private fun completeKeywords(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads) {
+    /** Keywords that neither [functions] (upper-case names this contributor offered) nor a later contributor offered. */
+    private fun completeKeywords(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, functions: Set<String>) {
         val scope = profile.keywords
         if (scope == KeywordScope.NONE) return
         val keywords = reads.keywords?.keywords ?: return
-        val offered = HashSet<String>()
+        val offered = HashSet(functions)
         result.runRemainingContributors(parameters) { completion ->
             offered += completion.lookupElement.lookupString.uppercase()
             result.passResult(completion)
@@ -68,22 +69,29 @@ private class ProfileReads(val profile: SqlCompletionProfile, val file: PsiFile)
     val keywords by lazy(LazyThreadSafetyMode.NONE) { profile.keywordCatalog(file, snapshot) }
 }
 
-private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads) {
+/** Offers the functions the gates allow and returns their upper-case names. */
+private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads): Set<String> {
     val profile = reads.profile
     val file = parameters.originalFile
     val gates = profile.functionGates
-    if (gates.digitPrefix && prefixIsDigitLed(file, parameters.offset)) return
-    if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return
+    if (gates.digitPrefix && prefixIsDigitLed(file, parameters.offset)) return emptySet()
+    if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return emptySet()
     val qualifier = PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)
         ?.qualifierExpression?.text
     val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
+    val names = HashSet<String>()
+    fun offer(entry: FunctionPresentation, serverOnly: Boolean) {
+        sink.addElement(profile.lookup(entry, serverOnly))
+        names += entry.name.uppercase()
+    }
     val rule = gates.qualifier
     if (qualifier != null && rule !is QualifierRule.Unrestricted) {
-        if (rule is QualifierRule.Namespaced) rule.functions(qualifier, file).forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
-        return
+        if (rule is QualifierRule.Namespaced) rule.functions(qualifier, file).forEach { offer(it, serverOnly = false) }
+        return names
     }
-    reads.functions.forEach { sink.addElement(profile.lookup(it, serverOnly = false)) }
-    reads.serverOnlyFunctions.forEach { sink.addElement(profile.lookup(it, serverOnly = true)) }
+    reads.functions.forEach { offer(it, serverOnly = false) }
+    reads.serverOnlyFunctions.forEach { offer(it, serverOnly = true) }
+    return names
 }
 
 /**

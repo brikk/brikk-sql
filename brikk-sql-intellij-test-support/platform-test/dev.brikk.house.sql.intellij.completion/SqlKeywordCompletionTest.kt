@@ -2,6 +2,7 @@ package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.codeInsight.lookup.Lookup
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
+import dev.brikk.house.sql.metadata.InvocationSyntax
 import dev.brikk.house.sql.metadata.KeywordCategory
 import dev.brikk.house.sql.metadata.KeywordDef
 import dev.brikk.house.sql.metadata.TRINO_METADATA
@@ -48,5 +49,23 @@ class SqlKeywordCompletionTest : CompletionTestCase() {
         myFixture.lookup.currentItem = item
         myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR)
         assertEquals("SELECT 1; ${keyword.word.uppercase()}<caret>", resultWithCaret())
+    }
+
+    /** [name], a Trino keyword and function, is offered once, as the syntax-aware function item. */
+    private fun assertOfferedOnceAsFunction(name: String) {
+        assertTrue("$name is a keyword", trinoKeywords.any { it.word.equals(name, ignoreCase = true) })
+        val function = TRINO_METADATA.default.completableFunctions().single { it.name.equals(name, ignoreCase = true) }
+        trinoProfile.keywords = KeywordScope.ALL
+        configure("SELECT 1; ${name.lowercase()}<caret>", TrinoCompletion::class.java)
+        assertEquals(listOf(function), complete().filter { it.lookupString.equals(name, ignoreCase = true) }.map { it.`object` })
+    }
+
+    fun testUnnestIsOfferedOnceAsATableFunction() = assertOfferedOnceAsFunction("UNNEST")
+
+    fun testGroupingIsOfferedOnceAsAFunction() = assertOfferedOnceAsFunction("GROUPING")
+
+    fun testCurrentPathIsOfferedOnceAsABareForm() {
+        assertTrue(InvocationSyntax.BARE in TRINO_METADATA.default.completableFunctions().single { it.name == "CURRENT_PATH" }.syntaxes)
+        assertOfferedOnceAsFunction("CURRENT_PATH")
     }
 }
