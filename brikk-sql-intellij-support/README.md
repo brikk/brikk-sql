@@ -226,9 +226,12 @@ Internal API used, by class (the platform offers no public alternative):
 | --- | --- | --- | --- |
 | `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | the only seam for introspector selection | ignored for the Doris and Trino plugins; confirm it holds for classes in a bundled jar |
 
-`InternalApiContainmentTest` reads this jar's bytecode and fails if a class outside the kit
-references a class, enclosing class, package or member annotated `@ApiStatus.Internal` or
-`@IntellijInternalApi`, or if the kit's set differs from this table.
+`InternalApiContainmentTest` (in the test kit's platform tests) reads every class of this jar in
+full, signatures, method bodies, lambdas and annotation values, and fails if a class outside the kit
+references a class, enclosing class or package annotated `@ApiStatus.Internal` or
+`@IntellijInternalApi`, or a member so annotated or declared by such a class (found through the
+owner's supertypes). It also fails if the kit's internal API differs from the test's own list, which
+this table mirrors.
 
 ## SQL-domain APIs
 
