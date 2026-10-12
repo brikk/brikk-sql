@@ -110,6 +110,9 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         val claimed: Boolean,
     )
 
+    /** Namespaces a refresh of this service loaded, which stay loaded when a statement empties them. */
+    private val loaded = ConcurrentHashMap.newKeySet<AutoIntrospectEngine.Key>()
+
     /** Running and queued requests, oldest first; a request's banner shows while it is here. */
     private val banners = LinkedHashSet<Request>()
     private val workers = HashMap<String, Worker>()
@@ -156,18 +159,27 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
 
     /**
      * Reloads the namespace at [path] of [dataSource] (empty: its top-level namespaces) after executed
-     * statements changed its children, when the model has it loaded: what was never loaded is not stale.
-     * The scope is left as it is, and the refresh may run any number of times. True when it was queued.
+     * statements changed its children, when it was loaded: it has children, the introspection scope
+     * selects it, or a refresh of this service loaded it (an emptied namespace stays loaded). What was
+     * never loaded is not stale. The scope is left as it is, and the refresh may run any number of times.
+     * True when it was queued.
      */
     public fun refreshChanged(dataSource: LocalDataSource, path: List<String>): Boolean = recoverEditorOperation {
         val model = DbPsiFacade.getInstance(project).findDataSource(dataSource.uniqueId)?.model ?: return@recoverEditorOperation false
+        val key = AutoIntrospectEngine.Key(dataSource.uniqueId, path)
         val element = if (path.isEmpty()) (model as? BasicModel)?.root
-        else pathResolver.resolve(model.modelRoots.toList(), path)?.node?.takeUnless(pathResolver::isChildless) as? BasicElement
+        else pathResolver.resolve(model.modelRoots.toList(), path)?.takeIf { wasLoaded(dataSource, it) }?.node as? BasicElement
         val task = element?.let { prepareOneElementRefreshTask(dataSource.uniqueId, it) } ?: return@recoverEditorOperation false
-        enqueue(Request(AutoIntrospectEngine.Key(dataSource.uniqueId, path), dataSource, task, file = null, claimed = false))
+        enqueue(Request(key, dataSource, task, file = null, claimed = false))
     }.getOrElse { e ->
         LOG.warn("Refreshing $path of ${dataSource.name} failed", e)
         false
+    }
+
+    private fun wasLoaded(dataSource: LocalDataSource, target: NamespaceTarget): Boolean {
+        val key = AutoIntrospectEngine.Key(dataSource.uniqueId, target.path)
+        return !pathResolver.isChildless(target.node) || key in loaded || engine.state(key) == AutoIntrospectEngine.State.Done ||
+            CatalogScopes.selects(dataSource.introspectionScope, profile.levels, target.path)
     }
 
     private fun enqueue(request: Request): Boolean =
@@ -232,6 +244,7 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         } finally {
             finish(request, loaded)
         }
+        if (loaded && request.key.path.isNotEmpty()) this.loaded += request.key
         if (loaded) request.file?.let { highlightAgain(it) }
     }
 

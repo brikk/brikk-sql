@@ -4,7 +4,10 @@ import com.intellij.database.Dbms
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.datagrid.DataProducer
 import com.intellij.database.datagrid.DataRequest
+import com.intellij.database.dialects.postgres.model.PgRoot
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.model.basic.BasicModel
+import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.openapi.project.Project
@@ -28,8 +31,9 @@ class ExecutionObserverTest : AutoIntrospectTestCase() {
         override val autoIntrospect: Class<out AutoIntrospectService>? = Service::class.java,
         override val namespaceRefreshDelay: Duration = 50.milliseconds,
         rules: List<StatementRule> = StatementRules.TRINO,
+        dialect: String = "trino",
     ) : ExecutionObserverProfile {
-        override val statements = StatementHeadDetector(rules)
+        override val statements = StatementHeadDetector(rules, dialect)
     }
 
     class Observer(project: Project, scope: CoroutineScope, override val profile: ExecutionObserverProfile) : ExecutionObserver(project, scope)
@@ -74,6 +78,19 @@ class ExecutionObserverTest : AutoIntrospectTestCase() {
         val refresh = nextRefresh()
         assertEquals(1, refresh.context.tasks.size)
         refresh.finish()
+        awaitIdle()
+    }
+
+    /** A namespace a refresh loaded stays loaded when a statement empties it, so a schema created later appears. */
+    fun testAnEmptiedNamespaceStillReloads() {
+        val other = ((source.model as BasicModel).root as PgRoot).databases.createOrGet("other")
+        other.schemas.createOrGet("s")
+        DbPsiFacade.getInstance(project).clearCaches()
+        run("DROP SCHEMA other.s")
+        nextRefresh().finish { other.schemas.remove { it.name == "s" } }
+        awaitIdle()
+        run("CREATE SCHEMA other.t")
+        nextRefresh().finish { other.schemas.createOrGet("t") }
         awaitIdle()
     }
 

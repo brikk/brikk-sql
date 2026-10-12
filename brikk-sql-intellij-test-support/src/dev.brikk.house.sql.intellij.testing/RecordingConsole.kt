@@ -61,7 +61,8 @@ public class RecordingConsole private constructor(
     public var beforeSessionCall: (String) -> Unit = {}
 
     public var console: JdbcConsole = try {
-        open(shared ?: newDataSource())
+        // A data source added just before may not be in the PSI view yet; console validity reads it.
+        open(shared?.also { DbPsiFacade.getInstance(project).clearCaches() } ?: newDataSource())
     } catch (failure: Throwable) {
         releaseDataSources()
         throw failure

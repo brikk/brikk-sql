@@ -21,6 +21,7 @@ import java.sql.Connection
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.listDirectoryEntries
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -60,7 +61,7 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         errors = BackgroundErrors(testRootDisposable)
         dir = Path.of(PathManager.getSystemPath(), "live-catalog-service", UUID.randomUUID().toString())
         harvester = CountingHarvester()
-        service = newService(LiveProfile(harvester))
+        newService(LiveProfile(harvester))
         fileA = myFixture.configureByText("a-${UUID.randomUUID()}.sql", "SELECT 1")
         fileB = myFixture.addFileToProject("b-${UUID.randomUUID()}.sql", "SELECT 2")
         consoleA = RecordingConsole(project, fileA.virtualFile, "postgresql")
@@ -81,13 +82,25 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         { super.tearDown() },
     ).run()
 
-    private fun newService(profile: LiveCatalogProfile) = LiveService(errors.newScope(testRootDisposable), profile, dir).also { service = it }
-
-    private fun connect(index: Int, requestor: ConnectionRequestor) = runBlocking {
-        service.connected(databaseConnection(jdbc[index], dataSource, Dbms.POSTGRES, requestor).also { connections += it })
+    private fun newService(profile: LiveCatalogProfile): LiveService {
+        service = LiveService(errors.newScope(testRootDisposable), profile, dir)
+        ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, service, testRootDisposable)
+        return service
     }
 
+    private fun connect(index: Int, requestor: ConnectionRequestor, point: LocalDataSource = dataSource, dbms: Dbms = Dbms.POSTGRES) =
+        connected(databaseConnection(jdbc[index], point, dbms, requestor).also { connections += it })
+
     private fun execute(index: Int, sql: String) = jdbc[index].createStatement().use { it.execute(sql) }
+
+    /** As the observer calls it: on the session's engine thread, never the EDT. */
+    private fun changed(console: RecordingConsole, engine: Engine) =
+        ApplicationManager.getApplication().executeOnPooledThread { service.inventoryChanged(project, console.console.session, engine, sessionFacts = true) }.get(30, TimeUnit.SECONDS)
+
+    /** Links a console's session to its engine as its first observed request does. */
+    private fun link(console: RecordingConsole, engine: Engine) =
+        ExecutionObserverTest.Observer(project, errors.newScope(testRootDisposable), ExecutionObserverTest.Profile(liveCatalog = LiveService::class.java, autoIntrospect = null, rules = StatementRules.DUCKDB))
+            .requestFinished(finished(console.console, engine, "SELECT 1"))
 
     private fun offered(file: PsiFile) = service.completion(file).functions.map { it.name }
 
@@ -118,14 +131,23 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         assertEquals(CatalogSource.Bundled, service.completion(fileA).selection.source)
     }
 
+    fun testARegistryAliasOfTheDbmsIsAccepted() {
+        registerDbms(CatalogTestDbms.TRINO_BRIKK, testRootDisposable)
+        newService(LiveProfile(harvester, dbms = CatalogTestDbms.TRINO_BRIKK))
+        connect(0, engines[0], dbms = checkNotNull(Dbms.byName("TRINO")))
+        assertEquals(1, harvester.harvests.get())
+        connect(0, engines[0], dbms = Dbms.MYSQL)
+        assertEquals(1, harvester.harvests.get())
+    }
+
     fun testTwoSessionsKeepTheirOwnTemporaryMacros() {
         newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT))
         connect(0, engines[0])
         connect(1, engines[1])
         execute(0, "CREATE TEMP MACRO only_in_a(x) AS x + 1")
-        service.inventoryChanged(project, consoleA.console.session, engines[0])
+        changed(consoleA, engines[0])
         execute(1, "CREATE TEMP MACRO only_in_b(x) AS x + 2")
-        service.inventoryChanged(project, consoleB.console.session, engines[1])
+        changed(consoleB, engines[1])
         assertTrue("only_in_a" in offered(fileA))
         assertFalse("only_in_b" in offered(fileA))
         assertTrue("only_in_b" in offered(fileB))
@@ -139,11 +161,11 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT))
         connect(0, engines[0])
         execute(0, "CREATE TEMP MACRO only_in_a(x) AS x + 1")
-        service.inventoryChanged(project, consoleA.console.session, engines[0])
+        changed(consoleA, engines[0])
         assertTrue("only_in_a" in offered(fileA))
-        val restarted = newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT))
-        restarted.learnSession(consoleA.console.session, engines[0])
-        val completion = restarted.completion(fileA)
+        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT))
+        link(consoleA, engines[0])
+        val completion = service.completion(fileA)
         assertInstanceOf(completion.selection.source, CatalogSource.Disk::class.java)
         assertTrue("duckdb_functions" in completion.functions.map { it.name })
         assertFalse("only_in_a" in completion.functions.map { it.name })
@@ -153,9 +175,9 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         connect(0, engines[0])
         val before = service.completion(fileA).selection
         harvester.answer = { throw IllegalStateException("server gone") }
-        service.inventoryChanged(project, consoleA.console.session, engines[0])
+        changed(consoleA, engines[0])
         harvester.answer = { null }
-        service.inventoryChanged(project, consoleA.console.session, engines[0])
+        changed(consoleA, engines[0])
         assertEquals(3, harvester.harvests.get())
         assertSame(before.inventory, service.completion(fileA).selection.inventory)
         assertInstanceOf(service.completion(fileA).selection.source, CatalogSource.Live::class.java)
@@ -170,6 +192,18 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         assertEquals("the old identity's file is gone", 1, dir.listDirectoryEntries().size)
     }
 
+    fun testAHarvestFromTheServerTheDataSourceNamedBeforeIsDiscarded() {
+        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT))
+        harvester.answer = { rows -> DuckdbTestHarvester.harvest(rows).also { dataSource.url = "jdbc:duckdb:/moved.db" } }
+        connect(0, engines[0])
+        assertEquals("a harvest in flight while the URL changed", CatalogSource.Bundled, service.completion(fileA).selection.source)
+        harvester.answer = DuckdbTestHarvester::harvest
+        execute(0, "CREATE TEMP MACRO old_server(x) AS x")
+        changed(consoleA, engines[0])
+        assertEquals("the console's connection still reaches the old server", 1, harvester.harvests.get())
+        assertEquals(CatalogSource.Bundled, service.completion(fileA).selection.source)
+    }
+
     fun testANewerLiveServerBeatsTheOlderBundledSnapshot() {
         harvester.answer = { Harvest(inventory(liveFunction("abs", "DOUBLE", returnType = "DOUBLE"), liveFunction("from_the_future"), version = "9.9.0")) }
         connect(0, engines[0])
@@ -179,38 +213,63 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         assertTrue("from_the_future" in completion.functions.map { it.name })
     }
 
-    fun testAHarvestPastItsDeadlineIsAbandoned() {
+    fun testAHarvestPastItsDeadlineStopsItsQueryBeforeTheConnectionIsHandedOver() {
         connect(0, engines[0])
         val before = service.completion(fileA).selection.inventory
-        val release = CountDownLatch(1)
-        harvester.answer = { release.await(30, TimeUnit.SECONDS); null }
-        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 300.milliseconds))
-        val started = TimeSource.Monotonic.markNow()
-        connect(0, engines[0])
-        assertTrue("the connection waited ${started.elapsedNow()}", started.elapsedNow() < 5.seconds)
-        release.countDown()
-        assertEquals(before?.functions, service.completion(fileA).selection.inventory?.functions)
-    }
-
-    fun testCancellingTheCallerCancelsTheHarvest() {
-        val started = CountDownLatch(1)
-        val interrupted = CountDownLatch(1)
-        val blocking = LiveCatalogHarvester {
-            started.countDown()
+        val queryEnded = AtomicBoolean()
+        harvester.answer = { rows ->
             try {
-                Thread.sleep(30_000)
-            } catch (e: InterruptedException) {
-                interrupted.countDown()
+                rows.forEachRow("SELECT sum(i % 7) FROM range(1000000000000) t(i)") { }
+            } finally {
+                queryEnded.set(true)
             }
             null
         }
-        runBlocking {
-            val harvest = async(Dispatchers.Default) { runHarvest(blocking, 30.seconds) { CatalogRowSource { _, _ -> } } }
-            assertTrue(started.await(10, TimeUnit.SECONDS))
-            harvest.cancel()
-            assertThrows(CancellationException::class.java) { runBlocking { harvest.await() } }
+        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 300.milliseconds))
+        val started = TimeSource.Monotonic.markNow()
+        connected(databaseConnection(ignoringInterrupts(jdbc[0]), dataSource, Dbms.POSTGRES, engines[0]).also { connections += it })
+        val waited = started.elapsedNow()
+        assertTrue("the harvest ran into its deadline: $waited", waited >= 300.milliseconds)
+        assertTrue("the connection waited $waited", waited < 2.seconds)
+        assertTrue("the query ended before the connection was handed over", queryEnded.get())
+        assertEquals(42, jdbc[0].createStatement().use { it.executeQuery("SELECT 42").use { rows -> rows.next(); rows.getInt(1) } })
+        assertEquals(before?.functions, service.completion(fileA).selection.inventory?.functions)
+    }
+
+    fun testCancellingTheConnectCancelsTheHarvestsQuery() {
+        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 60.seconds))
+        val running = CountDownLatch(1)
+        val queryEnded = AtomicBoolean()
+        harvester.answer = { rows ->
+            running.countDown()
+            try {
+                rows.forEachRow("SELECT sum(i % 7) FROM range(1000000000000) t(i)") { }
+            } finally {
+                queryEnded.set(true)
+            }
+            null
         }
-        assertTrue("the harvest thread is interrupted", interrupted.await(10, TimeUnit.SECONDS))
+        val connection = databaseConnection(ignoringInterrupts(jdbc[0]), dataSource, Dbms.POSTGRES, engines[0]).also { connections += it }
+        runBlocking {
+            val connecting = async(Dispatchers.Default) { connected(connection) }
+            assertTrue(running.await(10, TimeUnit.SECONDS))
+            connecting.cancel()
+            assertTrue(runCatching { connecting.await() }.exceptionOrNull() is CancellationException)
+        }
+        assertTrue("the query was cancelled", queryEnded.get())
+    }
+
+    fun testASessionInATransactionIsNotHarvested() {
+        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT))
+        connect(0, engines[0])
+        jdbc[0].autoCommit = false
+        execute(0, "CREATE TEMP MACRO in_tx(x) AS x")
+        changed(consoleA, engines[0])
+        assertEquals(1, harvester.harvests.get())
+        jdbc[0].commit()
+        jdbc[0].autoCommit = true
+        changed(consoleA, engines[0])
+        assertTrue("in_tx" in offered(fileA))
     }
 
     fun testADisabledProfileHarvestsNothing() {
@@ -237,12 +296,11 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         connect(0, engines[0])
         val other = LocalDataSource().apply { name = "other ${UUID.randomUUID()}"; url = "jdbc:duckdb:" }
         LocalDataSourceManager.getInstance(project).addDataSource(other)
-        service.store.store(other.uniqueId, service.profile.identity(other), inventory(liveFunction("abs")))
+        connect(2, otherRequestor(), point = other)
         assertEquals(2, dir.listDirectoryEntries().size)
-        ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, service, testRootDisposable)
         project.messageBus.connect(testRootDisposable).subscribe(DataSourceStorage.TOPIC, Cleanup())
         LocalDataSourceManager.getInstance(project).removeDataSource(other)
         assertEquals(1, dir.listDirectoryEntries().size)
-        assertEquals(CatalogSource.Bundled, service.store.select(other.uniqueId, service.profile.identity(other)).source)
+        assertEquals(CatalogSource.Bundled, service.selection(other).source)
     }
 }

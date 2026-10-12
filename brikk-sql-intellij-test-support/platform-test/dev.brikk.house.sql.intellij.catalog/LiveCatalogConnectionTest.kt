@@ -9,6 +9,10 @@ import com.intellij.testFramework.RunAll
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.registerOrReplaceServiceInstance
 import dev.brikk.house.sql.intellij.testing.BackgroundErrors
+import dev.brikk.house.sql.intellij.testing.RecordingConsole
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 import java.nio.file.Path
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -18,8 +22,6 @@ import kotlinx.coroutines.runBlocking
  * a DuckDB file reached through the IDE's remote JDBC process.
  */
 class LiveCatalogConnectionTest : BasePlatformTestCase() {
-    class Interceptor : HarvestConnectionInterceptor(LiveService::class.java)
-
     private lateinit var errors: BackgroundErrors
     private lateinit var dir: Path
     private lateinit var dataSource: LocalDataSource
@@ -35,7 +37,7 @@ class LiveCatalogConnectionTest : BasePlatformTestCase() {
         useProfile(LiveProfile(harvester, dbms = dataSource.dbms))
         ApplicationManager.getApplication().extensionArea
             .getExtensionPoint<DatabaseConnectionInterceptor>("com.intellij.database.connectionInterceptor")
-            .registerExtension(Interceptor(), testRootDisposable)
+            .registerExtension(LiveInterceptor(), testRootDisposable)
     }
 
     override fun tearDown() = RunAll(
@@ -74,6 +76,30 @@ class LiveCatalogConnectionTest : BasePlatformTestCase() {
         val outcome = runBlocking { service.refresh(project, dataSource) }
         assertInstanceOf((outcome as RefreshOutcome.HarvestFailed).outcome, HarvestOutcome.Failed::class.java)
         assertSame(before, service.selection(dataSource).inventory)
+    }
+
+    /** Without a known session connection a refresh follows, debounced; a change during it brings another. */
+    fun testAChangeDuringADebouncedRefreshRefreshesAgain() {
+        myFixture.configureByText("debounce-${UUID.randomUUID()}.sql", "SELECT 1")
+        RecordingConsole(project, myFixture.file.virtualFile, dataSource).use { recording ->
+            val entered = Semaphore(0)
+            val release = CountDownLatch(1)
+            harvester.answer = { rows ->
+                entered.release()
+                release.await(10, TimeUnit.SECONDS)
+                DuckdbTestHarvester.harvest(rows)
+            }
+            val session = recording.console.session
+            service.inventoryChanged(project, session, requestor = null, sessionFacts = true)
+            service.inventoryChanged(project, session, requestor = null, sessionFacts = true)
+            assertTrue("the debounced refresh runs", entered.tryAcquire(10, TimeUnit.SECONDS))
+            service.inventoryChanged(project, session, requestor = null, sessionFacts = true)
+            release.countDown()
+            assertTrue("a change during the refresh refreshes again", entered.tryAcquire(10, TimeUnit.SECONDS))
+            errors.awaitScopes()
+            assertEquals("the first two changes joined", 2, harvester.harvests.get())
+            assertInstanceOf(service.selection(dataSource).source, CatalogSource.Live::class.java)
+        }
     }
 
     fun testOtherDbmsConnectionsAreNotIntercepted() {

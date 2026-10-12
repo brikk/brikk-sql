@@ -1,12 +1,20 @@
 package dev.brikk.house.sql.intellij.catalog
 
+import dev.brikk.house.sql.parser.Token
+import dev.brikk.house.sql.parser.TokenType
+import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.parser.TokenizerConfigs
 import org.jetbrains.annotations.ApiStatus
 
 /** What an executed statement changes. */
 @ApiStatus.Experimental
 public sealed interface StatementEffect {
-    /** The functions a session can call: an installed or loaded extension, a created or dropped function or macro. */
-    public data object FunctionInventory : StatementEffect
+    /**
+     * The functions a session can call: an installed or loaded extension, a created or dropped function
+     * or macro. With [sessionFacts], the change may belong to the session (a temporary macro, an extension
+     * it loaded), so the harvest runs over the session's own connection.
+     */
+    public data class FunctionInventory(val sessionFacts: Boolean = false) : StatementEffect
 
     /**
      * Namespaces: the statement creates, drops or reloads the namespace its name addresses at [depth]
@@ -22,16 +30,20 @@ public sealed interface StatementEffect {
 
 /**
  * A statement head and its effect. [pattern] lists the head's words: `A|B` accepts either, `[...]`
- * makes words optional (`CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION`). Words match ignoring case.
+ * makes words optional (`CREATE [OR REPLACE] TEMP|TEMPORARY MACRO|FUNCTION`). Words match ignoring case.
+ * With [notifies], a refresh after the statement shows its result in the live catalog's notification group.
  */
 @ApiStatus.Experimental
-public class StatementRule(public val pattern: String, public val effect: StatementEffect) {
+public class StatementRule(public val pattern: String, public val effect: StatementEffect, public val notifies: Boolean = false) {
     internal val elements: List<Element> = parse(pattern)
 
     internal sealed interface Element {
         data class Word(val choices: Set<String>) : Element
         data class Optional(val elements: List<Element>) : Element
     }
+
+    /** This rule with [notifies] set. */
+    public fun notifying(): StatementRule = StatementRule(pattern, effect, notifies = true)
 
     override fun toString(): String = "$pattern -> $effect"
 
@@ -62,19 +74,21 @@ public data class DetectedStatement(val rule: StatementRule, val name: List<Stri
 
 /**
  * Finds the statements of an executed script whose heads match [rules], cheaply enough to run on
- * every execution: no parse, only the leading words of each statement. Statements end at `;` outside
- * quotes and comments; leading comments are skipped; heads match whole words only, so `install_log`
- * or `INSTALLER` never match `INSTALL`. After the head, `IF [NOT] EXISTS` is skipped and the qualified
- * name read, its parts quoted with [quoteChars] (a doubled quote stands for itself) or bare.
+ * every execution: the core tokenizer of [dialect] (a core dialect name such as `duckdb`) reads the
+ * script, so its quotes, escape strings and nested comments are the dialect's own, and only the leading
+ * words of each statement are compared, whole. After the head, `IF [NOT] EXISTS` is skipped and the
+ * qualified name read. Text the tokenizer cannot read past ends the scan there.
  */
 @ApiStatus.Experimental
-public class StatementHeadDetector(public val rules: List<StatementRule>, private val quoteChars: String = "\"") {
+public class StatementHeadDetector(public val rules: List<StatementRule>, public val dialect: String) {
+    private val config = TokenizerConfigs.forName(dialect)
+
     public fun detect(script: String?): List<DetectedStatement> {
         if (script.isNullOrBlank() || rules.isEmpty()) return emptyList()
-        return statements(script).mapNotNull { statement ->
-            val scanner = Scanner(statement, quoteChars)
-            val words = scanner.leadingWords()
-            rules.firstNotNullOfOrNull { rule -> match(rule.elements, words, 0)?.let { used -> DetectedStatement(rule, scanner.nameAfter(used)) } }
+        val tokens = Tokenizer(config).tokenizeForEditor(script).tokens
+        return statements(tokens).mapNotNull { statement ->
+            val words = statement.takeWhile { it.isWord(script) }.map { it.text.uppercase() }
+            rules.firstNotNullOfOrNull { rule -> match(rule.elements, words, 0)?.let { used -> DetectedStatement(rule, nameAfter(statement.drop(used), script)) } }
         }
     }
 
@@ -88,137 +102,69 @@ public class StatementHeadDetector(public val rules: List<StatementRule>, privat
         }
     }
 
-    private fun statements(script: String): List<String> {
-        val result = ArrayList<String>()
-        var start = 0
+    private fun statements(tokens: List<Token>): List<List<Token>> {
+        val result = ArrayList<List<Token>>()
+        var current = ArrayList<Token>()
+        for (token in tokens) {
+            if (token.tokenType == TokenType.SEMICOLON) {
+                result += current
+                current = ArrayList()
+            } else {
+                current += token
+            }
+        }
+        result += current
+        return result.filter { it.isNotEmpty() }
+    }
+
+    private fun nameAfter(tokens: List<Token>, script: String): List<String> {
+        var rest = tokens
+        fun word(index: Int) = rest.getOrNull(index)?.takeIf { it.isWord(script) }?.text?.uppercase()
+        if (word(0) == "IF" && word(1) == "EXISTS") rest = rest.drop(2)
+        else if (word(0) == "IF" && word(1) == "NOT" && word(2) == "EXISTS") rest = rest.drop(3)
+        val parts = ArrayList<String>()
         var at = 0
-        while (at < script.length) {
-            at = when {
-                script[at] == ';' -> {
-                    result += script.substring(start, at)
-                    start = at + 1
-                    at + 1
-                }
-                else -> skipQuotedOrComment(script, at) ?: (at + 1)
+        while (at < rest.size) {
+            val part = rest[at]
+            parts += when {
+                part.tokenType == TokenType.IDENTIFIER -> part.text
+                part.isWord(script) -> part.text
+                else -> break
             }
+            if (rest.getOrNull(at + 1)?.tokenType != TokenType.DOT) break
+            at += 2
         }
-        result += script.substring(start)
-        return result
+        return parts
     }
 
-    private fun skipQuotedOrComment(text: String, at: Int): Int? {
-        val c = text[at]
-        return when {
-            text.startsWith("--", at) -> text.indexOf('\n', at).let { if (it < 0) text.length else it + 1 }
-            text.startsWith("/*", at) -> text.indexOf("*/", at + 2).let { if (it < 0) text.length else it + 2 }
-            c == '\'' || c in quoteChars || c == '"' || c == '`' -> closingQuote(text, at)
-            c == '$' -> dollarQuoteEnd(text, at)
-            else -> null
-        }
-    }
+    /** A bare word as written: neither a quoted identifier nor a string, whose token text differs from its source. */
+    private fun Token.isWord(script: String): Boolean =
+        tokenType != TokenType.IDENTIFIER && WORD.matches(text) &&
+            end - start + 1 == text.length && script.regionMatches(start, text, 0, text.length)
 
-    /** After the quote opened at [at]; a doubled quote stands for itself. */
-    private fun closingQuote(text: String, at: Int): Int {
-        val quote = text[at]
-        var i = at + 1
-        while (i < text.length) {
-            if (text[i] == quote) {
-                if (i + 1 < text.length && text[i + 1] == quote) i += 2 else return i + 1
-            } else {
-                i++
-            }
-        }
-        return text.length
-    }
-
-    /** After a `$tag$...$tag$` string opened at [at], or null when no dollar quote opens there. */
-    private fun dollarQuoteEnd(text: String, at: Int): Int? {
-        val close = text.indexOf('$', at + 1).takeIf { it > 0 } ?: return null
-        val tag = text.substring(at, close + 1)
-        if (!tag.drop(1).dropLast(1).all { it.isLetterOrDigit() || it == '_' }) return null
-        return text.indexOf(tag, close + 1).let { if (it < 0) text.length else it + tag.length }
-    }
-
-    private inner class Scanner(private val text: String, private val quotes: String) {
-        private var at = 0
-        private val wordEnds = ArrayList<Int>()
-
-        /** The statement's leading words, uppercased, up to the first token that is not a word. */
-        fun leadingWords(): List<String> = buildList {
-            while (true) {
-                skipTrivia()
-                val word = bareWord() ?: break
-                add(word.uppercase())
-                wordEnds += at
-            }
-        }
-
-        /** The qualified name after the first [used] words, skipping `IF [NOT] EXISTS`. */
-        fun nameAfter(used: Int): List<String> {
-            at = if (used == 0) 0 else wordEnds[used - 1]
-            skipTrivia()
-            val mark = at
-            if (bareWord().equals("IF", ignoreCase = true)) {
-                skipTrivia()
-                var word = bareWord()
-                if (word.equals("NOT", ignoreCase = true)) {
-                    skipTrivia()
-                    word = bareWord()
-                }
-                if (!word.equals("EXISTS", ignoreCase = true)) at = mark
-            } else {
-                at = mark
-            }
-            return buildList {
-                while (true) {
-                    skipTrivia()
-                    add(part() ?: break)
-                    skipTrivia()
-                    if (at < text.length && text[at] == '.') at++ else break
-                }
-            }
-        }
-
-        private fun part(): String? {
-            if (at >= text.length) return null
-            val quote = text[at]
-            if (quote !in quotes) return bareWord()
-            val end = closingQuote(text, at)
-            if (end > text.length || text[end - 1] != quote || end - at < 2) return null
-            return text.substring(at + 1, end - 1).replace("$quote$quote", "$quote").also { at = end }
-        }
-
-        private fun bareWord(): String? {
-            val start = at
-            if (at >= text.length || !(text[at].isLetter() || text[at] == '_')) return null
-            while (at < text.length && (text[at].isLetterOrDigit() || text[at] == '_' || text[at] == '$')) at++
-            return text.substring(start, at)
-        }
-
-        private fun skipTrivia() {
-            while (at < text.length) {
-                at = when {
-                    text[at].isWhitespace() -> at + 1
-                    text.startsWith("--", at) || text.startsWith("/*", at) -> skipQuotedOrComment(text, at) ?: return
-                    else -> return
-                }
-            }
-        }
+    private companion object {
+        val WORD = Regex("[A-Za-z_][A-Za-z0-9_$]*")
     }
 }
 
-/** Statement rules for the dialects of the Sortdev plugins. */
+/** Statement rules for the dialects of the Sortdev plugins; none notifies (see [StatementRule.notifying]). */
 @ApiStatus.Experimental
 public object StatementRules {
-    private val inventory = StatementEffect.FunctionInventory
+    private val server = StatementEffect.FunctionInventory(sessionFacts = false)
+    private val session = StatementEffect.FunctionInventory(sessionFacts = true)
 
-    /** DuckDB: installing or loading extensions, creating or dropping macros and functions; attaching and detaching databases. */
+    /**
+     * DuckDB: installing extensions and creating persistent macros change the server's functions; loading
+     * extensions and creating temporary macros, or dropping any, may change only the session's. Attaching
+     * and detaching databases change the top-level namespaces.
+     */
     public val DUCKDB: List<StatementRule> = listOf(
-        StatementRule("INSTALL", inventory),
-        StatementRule("FORCE INSTALL", inventory),
-        StatementRule("LOAD", inventory),
-        StatementRule("CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION", inventory),
-        StatementRule("DROP MACRO|FUNCTION", inventory),
+        StatementRule("INSTALL", server),
+        StatementRule("FORCE INSTALL", server),
+        StatementRule("LOAD", session),
+        StatementRule("CREATE [OR REPLACE] TEMP|TEMPORARY MACRO|FUNCTION", session),
+        StatementRule("CREATE [OR REPLACE] MACRO|FUNCTION", server),
+        StatementRule("DROP MACRO|FUNCTION", session),
         StatementRule("ATTACH [DATABASE]", StatementEffect.Namespace(1)),
         StatementRule("DETACH [DATABASE]", StatementEffect.Namespace(1)),
     )
@@ -229,8 +175,8 @@ public object StatementRules {
         StatementRule("DROP CATALOG", StatementEffect.Namespace(1)),
         StatementRule("CREATE SCHEMA", StatementEffect.Namespace(2)),
         StatementRule("DROP SCHEMA", StatementEffect.Namespace(2)),
-        StatementRule("CREATE [OR REPLACE] FUNCTION", inventory),
-        StatementRule("DROP FUNCTION", inventory),
+        StatementRule("CREATE [OR REPLACE] FUNCTION", server),
+        StatementRule("DROP FUNCTION", server),
     )
 
     /** Doris: creating, dropping or refreshing catalogs. */

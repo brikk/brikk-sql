@@ -11,10 +11,10 @@ import com.intellij.database.datagrid.DataRequest
 import com.intellij.database.util.ObjectPath
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
-import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
@@ -29,6 +29,9 @@ import org.jetbrains.annotations.ApiStatus
 @ApiStatus.Experimental
 public interface ExecutionObserverProfile {
     public val dbms: Dbms
+
+    /** Which data sources' consoles are watched: those whose dbms it accepts. */
+    public val dataSources: DialectDataSourceResolver get() = DialectDataSourceResolver(dbms)
 
     public val statements: StatementHeadDetector
 
@@ -49,7 +52,13 @@ public data class ExecutedStatements(
     val dataSource: LocalDataSource,
     val requestor: Any?,
     val statements: List<DetectedStatement>,
-)
+) {
+    /** Whether a change may belong to the session alone. */
+    val sessionFacts: Boolean get() = statements.any { (it.effect as? StatementEffect.FunctionInventory)?.sessionFacts == true }
+
+    /** Whether a matched rule asks for the refresh's result to be shown. */
+    val notifies: Boolean get() = statements.any { it.rule.notifies }
+}
 
 /** A namespace of [dataSource] to reload: [path] from the top level, empty for the top-level list itself. */
 @ApiStatus.Experimental
@@ -72,7 +81,7 @@ public abstract class ExecutionObserver(protected val project: Project, private 
 
     private val started = AtomicBoolean()
     private val debouncer by lazy { RefreshDebouncer(scope, profile.namespaceRefreshDelay) }
-    private val aliases by lazy { SqlDialectRegistry.forDbms(profile.dbms)?.dbmsIds.orEmpty() + profile.dbms.name }
+    private val dataSources by lazy { profile.dataSources }
 
     /** Subscribes to the project's root data bus, once, until the service is disposed. */
     public fun start() {
@@ -82,10 +91,9 @@ public abstract class ExecutionObserver(protected val project: Project, private 
     override fun requestFinished(context: DataRequest.Context) {
         try {
             observe(context)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            // Never fail the console's request.
+        } catch (e: Throwable) {
+            // Never fail the console's request, whatever a plugin's harvester throws.
+            if (e is ControlFlowException || e is CancellationException || e is VirtualMachineError) throw e
             LOG.warn("Observing an executed request failed", e)
         }
     }
@@ -94,7 +102,7 @@ public abstract class ExecutionObserver(protected val project: Project, private 
         val client = context.request.owner as? SessionClient<*> ?: return
         val session = client.session as? DatabaseSession ?: return
         val dataSource = session.connectionPoint.dataSource
-        if (dataSource.dbms.name !in aliases) return
+        if (!dataSources.accepts(dataSource.dbms)) return
         val requestor: Any? = context.producer
         val liveCatalog = profile.liveCatalog?.let { ApplicationManager.getApplication().getService(it) }
         requestor?.let { liveCatalog?.learnSession(session, it) }
@@ -102,7 +110,7 @@ public abstract class ExecutionObserver(protected val project: Project, private 
         val detected = profile.statements.detect(text)
         if (detected.isEmpty()) return
         val executed = ExecutedStatements(session, dataSource, requestor, detected)
-        if (detected.any { it.effect == StatementEffect.FunctionInventory }) onFunctionInventoryChange(executed)
+        if (detected.any { it.effect is StatementEffect.FunctionInventory }) onFunctionInventoryChange(executed)
         val current by lazy { (client as? JdbcConsole)?.currentNamespace?.let(::namesOf).orEmpty() }
         detected.mapNotNull { statement ->
             val effect = statement.effect as? StatementEffect.Namespace ?: return@mapNotNull null
@@ -113,10 +121,10 @@ public abstract class ExecutionObserver(protected val project: Project, private 
         }.distinct().forEach { onNamespaceChange(NamespaceChange(dataSource, it)) }
     }
 
-    /** Harvests the live catalog again over the session's connection, on this (the engine's) thread. */
+    /** Harvests the live catalog again ([LiveCatalogService.inventoryChanged]). */
     protected open fun onFunctionInventoryChange(executed: ExecutedStatements) {
         val liveCatalog = profile.liveCatalog?.let { ApplicationManager.getApplication().getService(it) } ?: return
-        liveCatalog.inventoryChanged(project, executed.session, executed.requestor)
+        liveCatalog.inventoryChanged(project, executed.session, executed.requestor, executed.sessionFacts, executed.notifies)
     }
 
     /** Reloads [change]'s namespace through the auto-introspection service, after the profile's quiet delay. */

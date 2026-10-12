@@ -7,6 +7,7 @@ import com.intellij.database.util.TreePattern
 import com.intellij.database.util.TreePatternNode
 import com.intellij.database.util.TreePatternUtils
 import com.intellij.database.model.ObjectName
+import com.intellij.database.util.Casing
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -63,6 +64,16 @@ public object CatalogScopes {
             TreePatternNode.Group(levels[level], arrayOf(TreePatternNode(TreePatternNode.PositiveNaming(ObjectName.plain(names[level])), arrayOf(group))))
         }
         return TreePattern(top)
+    }
+
+    /** Whether [scope] selects the namespace at [path] (kinds [levels], top first). */
+    internal fun selects(scope: TreePattern?, levels: List<ObjectKind>, path: List<String>): Boolean {
+        var node = scope?.root ?: return false
+        for ((level, name) in path.withIndex()) {
+            val kind = levels.getOrNull(level) ?: return false
+            node = node.getGroup(kind)?.children?.firstOrNull { it.naming.matches(ObjectName.plain(name), Casing.EXACT) } ?: return false
+        }
+        return true
     }
 
     /** [current] with [addition] added, keeping everything [current] selects. */

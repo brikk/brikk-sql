@@ -8,6 +8,7 @@ import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.FileTime
 import java.time.Clock
 import java.time.Instant
 import java.util.Collections
@@ -112,13 +113,18 @@ public class LiveCatalogStore(
         }
     }
 
-    /** Deletes the files not written within [maxAge], which data sources deleted while the store was not listening leave behind. */
+    /**
+     * Deletes the files neither written nor selected within [maxAge], which data sources deleted while the
+     * store was not listening leave behind. Entries selected or stored this session stay.
+     */
     public fun sweep(maxAge: Duration): Int {
         val dir = directory?.takeIf(Files::isDirectory) ?: return 0
         val oldest = clock.instant().minusMillis(maxAge.inWholeMilliseconds)
+        val inUse = entries.keys.mapTo(HashSet()) { fileOf(dir, it) }
         return try {
             Files.list(dir).use { files ->
                 files.filter { it.fileName.toString().endsWith(SUFFIX) || it.fileName.toString().endsWith(TEMP_SUFFIX) }
+                    .filter { it !in inUse }
                     .filter { Files.getLastModifiedTime(it).toInstant() < oldest }
                     .toList()
             }.count(Files::deleteIfExists)
@@ -130,9 +136,18 @@ public class LiveCatalogStore(
 
     private fun loadOnce(key: Key): Entry? {
         if (directory == null || !probed.add(key)) return null
-        val loaded = read(directory, key) ?: migrate(directory, key) ?: return null
+        val loaded = read(directory, key)?.also { touch(fileOf(directory, key)) } ?: migrate(directory, key) ?: return null
         // A harvest stored meanwhile is newer than the file.
         return entries.putIfAbsent(key, loaded) ?: loaded
+    }
+
+    /** Marks a selected file as used, so [sweep] keeps it. */
+    private fun touch(file: Path) {
+        try {
+            Files.setLastModifiedTime(file, FileTime.from(clock.instant()))
+        } catch (e: IOException) {
+            LOG.info("The live catalog file $file was not marked as used: ${e.message}")
+        }
     }
 
     private fun migrate(dir: Path, key: Key): Entry? {

@@ -244,7 +244,8 @@ takes the dbms the platform passes):
   than stop one another. When one ends, its banner goes (a newer request's banner stays) and after
   success the file is highlighted again. `refreshChanged(dataSource, path)` reloads a loaded namespace
   (empty path: the top-level list) after statements changed it, with no banner, no scope change and no
-  claim, so it may run again.
+  claim, so it may run again. Loaded means it has children, the scope selects it, or a refresh of the
+  service loaded it, so a namespace a statement emptied still reloads.
 - `IntrospectBannerProvider(serviceClass)`: register a no-arg subclass as
   `editorNotificationProvider`; it shows "<product>: introspecting '<namespace>'…" with Dismiss while
   the file's newest request runs.
@@ -271,7 +272,8 @@ completion. A plugin implements one `LiveCatalogProfile` (minimum: `dbms`, `prod
 The dialect's `LiveCatalogHarvester` holds its SQL and parsing: over a `CatalogRowSource` it returns a
 `Harvest` (the server's `LiveInventory` and the connection's `SessionFacts`), or null when what it read
 is incomplete. `LiveInventory.signatures` says whether overloads are the engine's own; a names-only
-inventory proves availability, not overloads. `JdbcCatalogRows` runs a harvester over plain JDBC.
+inventory proves availability, not overloads. The test kit's `JdbcCatalogRows` runs a harvester over
+plain JDBC.
 
 Selection (`LiveCatalogStore`), one ordered rule per data source and connection identity (by default a
 hash of dbms, URL and user; `profile.identity`): a complete harvest from the current identity taken this
@@ -281,21 +283,32 @@ stored, so a failed, timed-out or partial one never replaces a complete one. A c
 nothing old, and storing deletes the data source's files of other identities. Session facts (temporary
 macros, extensions the session loaded) are kept per console session in memory, never persisted, and
 served only to that session under the identity they were read from. Only a harvest on the console's own
-connection updates them; any other harvest updates only the shared inventory. With `persistenceId`,
+connection updates them; any other harvest updates only the shared inventory. A console's facts are
+served once the session ran a request the `ExecutionObserver` saw: that links the session to its engine,
+the connection requestor the platform reports (the session itself is not reachable from a connection). A
+harvest is labelled with the identity taken when its connection opened, and discarded
+(`RefreshOutcome.Superseded`) if the data source names another server by the time it ends. With `persistenceId`,
 harvests are written under `<system>/brikk-live-catalog/<persistenceId>/`, one file per data source and
 identity; files of deleted data sources are deleted (`LiveCatalogCleanup`), and files not written for
-`maxAge` (90 days) are swept at startup. `legacyFiles` reads an earlier data-source-keyed format, which
+`maxAge` (90 days) are swept at startup; files selected or stored in this IDE session are kept (a
+selected file is marked as used). `legacyFiles` reads an earlier data-source-keyed format, which
 is rewritten under the current identity on first use and then deleted.
 
 When harvests run (`HarvestTrigger`): `ONCE_PER_SESSION` (default: the first connection of an identity
 in an IDE session), `EVERY_CONSOLE_CONNECT` (every console connection, other connections only while no
-live harvest exists), `ON_REFRESH`. The interceptor skips the helper connections refreshes open, so a
-refresh harvests once. `refresh(project, dataSource)` harvests over a helper connection;
-`inventoryChanged(project, session, requestor)` harvests over the session's own connection on its
-engine's thread (after executed statements, see `ExecutionObserver`), else schedules a debounced
-refresh (`RefreshDebouncer`). Every harvest runs on a pooled thread under `deadline` (5 s, also each
-query's timeout); past it the harvest is cancelled and discarded, even if a driver call never returns.
-Cancelling the caller cancels the harvest. Refresh results go to `notificationGroupId` (`onRefreshed`).
+live harvest exists), `ON_REFRESH`. Connections of the profile's dbms or its registry aliases count.
+The interceptor skips the helper connections refreshes open, so a refresh harvests once.
+`refresh(project, dataSource)` harvests over a helper connection. `inventoryChanged(project, session,
+requestor, sessionFacts, notify)` follows executed statements (see `ExecutionObserver`): when the change
+may belong to the session, the session's connection is known and reaches the current server, and the
+session is in auto-commit mode, it harvests over that connection on the engine's thread; a session in a
+transaction is not harvested (a failing harvest query could abort it). Otherwise, and never on the EDT, a
+debounced refresh follows (2 s, `refreshDelay`; a change during a refresh brings another). Every harvest
+runs on a pooled thread under `deadline` (5 s, also each query's timeout). Past it, or when the caller is
+cancelled, the running statement is cancelled and closed and the thread interrupted, and the connection
+is handed back once the harvest let go of it, after at most 2 s more: a driver that ignores cancellation
+may keep the connection busy. Results go to `notificationGroupId` (`onRefreshed`): for manual refreshes,
+and after statements whose rule `notifies` (`StatementRule.notifying()`).
 
 Completion: `service.completion(file)` returns a `LiveCompletion` for the file's data source and console
 session; a `SqlCompletionProfile` forwards its hooks to it (`snapshot`, `functions`,
@@ -304,7 +317,9 @@ is the one for the harvested server version. `LiveMergePolicy`: `REPLACE` (live 
 bundled registry; live signatures win, names-only ones keep the bundled def; grammar-only entries and
 extension functions not loaded stay), `FILTER_AND_EXTEND` (bundled registry functions the server does
 not list go, unknown listed names are server-only, platform builtin items neither knows are hidden),
-`EXTEND` (bundled stay, unknown listed names are server-only). Session functions are always offered.
+`EXTEND` (bundled stay, unknown listed names are server-only). With live signatures, `FILTER_AND_EXTEND`
+presents kept functions with them too. Session functions are always offered and win over a server or
+bundled function of the same name and kind (a temporary macro shadowing a built-in).
 `profile.baseline(snapshot)` is the list merged (default `completableFunctions()`); it must not call
 back into the completion profile's hooks.
 
@@ -324,17 +339,22 @@ bus, after execution, on the session's engine thread) and passes what `statement
 connection, so a temporary macro reaches only that session) and `onNamespaceChange` (default:
 after `namespaceRefreshDelay`, 2 s, coalescing statements on the same namespace, the auto-introspection
 service's `refreshChanged(dataSource, path)` reloads it). Unqualified names complete from the console's
-current namespace; a namespace the model never loaded is not reloaded, and the introspection scope is
-left as it is. Implicitly loaded extensions (DuckDB autoload) run no statement; a refresh picks them up.
+current namespace; a namespace that was never loaded is not reloaded, and the introspection scope is
+left as it is. The observer never fails a request: what a handler throws is logged, apart from
+control flow and cancellation; the interceptor never fails a connection the same way. Implicitly loaded extensions (DuckDB autoload) run no statement; a refresh picks them up.
 
-`StatementHeadDetector(rules, quoteChars)` matches statement heads, not a parse: statements end at `;`
-outside quotes, comments and dollar quotes; heads are whole leading words (`StatementRule` patterns
-such as `CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION`); after the head, `IF [NOT] EXISTS` is
-skipped and the qualified name read. `StatementEffect.FunctionInventory`, or `Namespace(depth,
-refreshDepth)`: the name addresses a namespace at `depth` and the one at `refreshDepth` reloads
-(creating a schema is `Namespace(2)`, reloading a catalog `Namespace(1, 1)`). `StatementRules` holds
-DuckDB (`INSTALL`, `FORCE INSTALL`, `LOAD`, macro and function DDL; `ATTACH`, `DETACH`), Trino
-(`CREATE`/`DROP CATALOG` and `SCHEMA`; function DDL) and Doris (`CREATE`/`DROP`/`REFRESH CATALOG`).
+`StatementHeadDetector(rules, dialect)` matches statement heads, not a parse: the core tokenizer of the
+core dialect (`duckdb`, `trino`, `doris`, ...) reads the script, so quotes, escape strings and nested
+comments are the dialect's; statements end at `;` tokens and heads are whole leading words
+(`StatementRule` patterns such as `CREATE [OR REPLACE] TEMP|TEMPORARY MACRO|FUNCTION`); after the head,
+`IF [NOT] EXISTS` is skipped and the qualified name read. `StatementEffect.FunctionInventory(sessionFacts)`
+(true when the change may belong to the session alone, so its own connection is harvested), or
+`Namespace(depth, refreshDepth)`: the name addresses a namespace at `depth` and the one at `refreshDepth`
+reloads (creating a schema is `Namespace(2)`, reloading a catalog `Namespace(1, 1)`). `StatementRules`
+holds DuckDB (`INSTALL`, `FORCE INSTALL` and persistent macro DDL change the server's functions; `LOAD`,
+temporary macro DDL and `DROP MACRO` may change only the session's; `ATTACH`, `DETACH`), Trino
+(`CREATE`/`DROP CATALOG` and `SCHEMA`; function DDL) and Doris (`CREATE`/`DROP`/`REFRESH CATALOG`); none
+notifies.
 
 Internal API used, by class (the platform offers no public alternative):
 

@@ -8,7 +8,8 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * How a live inventory combines with the bundled functions for completion. Without a harvest every
- * policy offers the bundled functions unchanged. Session facts are always offered.
+ * policy offers the bundled functions unchanged. Session functions are always offered, and win over a
+ * server or bundled function of the same name and kind (a temporary macro shadowing a built-in).
  */
 @ApiStatus.Experimental
 public enum class LiveMergePolicy {
@@ -23,6 +24,7 @@ public enum class LiveMergePolicy {
     /**
      * Bundled registry functions the server does not list are dropped; listed names the bundle lacks
      * are server-only functions; platform builtin items neither the bundle nor the server knows are hidden.
+     * With live signatures, a kept function is presented with them.
      */
     FILTER_AND_EXTEND,
 
@@ -51,14 +53,15 @@ public fun LiveMergePolicy.merge(selection: LiveCatalogSelection, snapshot: Meta
     fun key(name: String) = if (catalog.caseSensitive) name else name.uppercase()
     val session = selection.session.functions.map { it.def.presentation() }
     val inventory = selection.inventory
-        ?: return LiveCompletion(selection, snapshot, distinct(baseline + session, ::key), emptyList(), snapshot.keywords, null)
+        ?: return LiveCompletion(selection, snapshot, distinct(session + baseline, ::key), emptyList(), snapshot.keywords, null)
     val keywords = inventory.keywords?.let(::KeywordCatalog) ?: snapshot.keywords
     val listed = inventory.functions.map { it.def }
     val listedNames = listed.mapTo(HashSet()) { key(it.name) }
+    val sessionNames = session.mapTo(HashSet()) { key(it.name) to it.kind }
     val baselineNames = baseline.mapTo(HashSet()) { key(it.name) }
     fun registryBacked(entry: FunctionPresentation) = catalog.getAll(entry.name).any { it.overloads.isNotEmpty() }
     val serverOnly by lazy {
-        listed.filter { key(it.name) !in baselineNames && snapshot.tableFunction(it.name)?.queryable != false }
+        listed.filter { key(it.name) !in baselineNames && (key(it.name) to it.kind) !in sessionNames && snapshot.tableFunction(it.name)?.queryable != false }
             .map { it.presentation() }
     }
     return when (this) {
@@ -72,14 +75,16 @@ public fun LiveMergePolicy.merge(selection: LiveCatalogSelection, snapshot: Meta
             val kept = baseline.filter { entry ->
                 key(entry.name) !in listedNames && (entry.extension != null || !registryBacked(entry))
             }
-            LiveCompletion(selection, snapshot, distinct(live + kept + session, ::key), emptyList(), keywords, null)
+            LiveCompletion(selection, snapshot, distinct(session + live + kept, ::key), emptyList(), keywords, null)
         }
         LiveMergePolicy.FILTER_AND_EXTEND -> {
+            val live = if (inventory.signatures) listed.associateBy { key(it.name) to it.kind } else emptyMap()
             val kept = baseline.filter { catalog.getAll(it.name).isEmpty() || key(it.name) in listedNames }
+                .map { entry -> live[key(entry.name) to entry.kind]?.presentation(entry.name)?.copy(syntaxes = entry.syntaxes, template = entry.template) ?: entry }
             val filter = { name: String -> catalog.isKnown(name) || key(name) in listedNames }
-            LiveCompletion(selection, snapshot, distinct(kept + session, ::key), serverOnly, keywords, filter)
+            LiveCompletion(selection, snapshot, distinct(session + kept, ::key), serverOnly, keywords, filter)
         }
-        LiveMergePolicy.EXTEND -> LiveCompletion(selection, snapshot, distinct(baseline + session, ::key), serverOnly, keywords, null)
+        LiveMergePolicy.EXTEND -> LiveCompletion(selection, snapshot, distinct(session + baseline, ::key), serverOnly, keywords, null)
     }
 }
 

@@ -108,8 +108,21 @@ class LiveCatalogStoreTest : BasePlatformTestCase() {
         store.store("new", a, shared)
         val old = dir.listDirectoryEntries().single { it.fileName.toString().startsWith("old~") }
         Files.setLastModifiedTime(old, FileTime.from(Instant.now().minusSeconds(100L * 24 * 3600)))
-        assertEquals(1, store.sweep(90.days))
+        assertEquals("a restarted store sweeps it", 1, LiveCatalogStore(dir).sweep(90.days))
         assertEquals(listOf("new"), dir.listDirectoryEntries().map { it.fileName.toString().substringBefore('~') })
+    }
+
+    fun testSweepKeepsWhatThisSessionSelected() {
+        LiveCatalogStore(dir).store("old", a, shared)
+        val file = dir.listDirectoryEntries().single()
+        val longAgo = FileTime.from(Instant.now().minusSeconds(100L * 24 * 3600))
+        Files.setLastModifiedTime(file, longAgo)
+        val restarted = LiveCatalogStore(dir)
+        assertInstanceOf(restarted.select("old", a).source, CatalogSource.Disk::class.java)
+        assertEquals("a selected file is marked as used", 0, LiveCatalogStore(dir).sweep(90.days))
+        Files.setLastModifiedTime(file, longAgo)
+        assertEquals("an entry selected this session stays", 0, restarted.sweep(90.days))
+        assertTrue(Files.exists(file))
     }
 
     fun testAMemoryOnlyStoreWritesNothing() {

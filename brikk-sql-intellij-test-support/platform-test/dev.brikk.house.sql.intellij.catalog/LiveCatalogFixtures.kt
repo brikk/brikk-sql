@@ -2,6 +2,7 @@ package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
 import com.intellij.database.dataSource.DatabaseConnection
+import com.intellij.database.dataSource.DatabaseConnectionInterceptor
 import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.DatabaseConnectionPoint
 import com.intellij.database.dataSource.DatabaseDriverImpl
@@ -33,12 +34,16 @@ import dev.brikk.house.sql.metadata.FunctionOverload
 import dev.brikk.house.sql.metadata.KeywordDef
 import dev.brikk.house.sql.metadata.toSnapshot
 import dev.brikk.house.sql.metadata.userFunctions
+import java.lang.reflect.InvocationTargetException
+import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.nio.file.Path
 import java.sql.Connection
+import java.sql.Statement
 import java.util.Properties
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import org.duckdb.DuckDBConnection
@@ -46,7 +51,8 @@ import org.duckdb.DuckDBDriver
 
 /**
  * DuckDB's harvest as a dialect would write it, over the metadata capture: built-in and persistent
- * functions are the server's, temporary macros (database `temp`) the session's.
+ * functions are the server's; temporary macros (database `temp`) and the functions of loaded extensions
+ * that are not statically linked (known from the bundled extension functions) are the session's.
  */
 object DuckdbTestHarvester : LiveCatalogHarvester {
     override fun harvest(rows: CatalogRowSource): Harvest? {
@@ -56,18 +62,22 @@ object DuckdbTestHarvester : LiveCatalogHarvester {
         rows.forEachRow(DUCKDB_FUNCTIONS.sql) { row -> functions += DUCKDB_FUNCTIONS.decode(DUCKDB_FUNCTIONS.columns.indices.map { row.string(it + 1) }) }
         val keywords = ArrayList<DuckdbKeywordRow>()
         rows.forEachRow(DUCKDB_KEYWORDS.sql) { row -> keywords += DUCKDB_KEYWORDS.decode(listOf(row.string(1), row.string(2))) }
-        val extensions = ArrayList<String>()
-        rows.forEachRow("SELECT extension_name FROM duckdb_extensions() WHERE loaded ORDER BY 1") { row -> row.string(1)?.let(extensions::add) }
+        val linked = ArrayList<String>()
+        val loaded = ArrayList<String>()
+        rows.forEachRow("SELECT extension_name, install_mode FROM duckdb_extensions() WHERE loaded ORDER BY 1") { row ->
+            row.string(1)?.let { if (row.string(2) == "STATICALLY_LINKED") linked += it else loaded += it }
+        }
         val engine = version?.removePrefix("v") ?: return null
         val dump = DuckdbDump(engine, functions, keywords)
-        val builtIn = dump.toSnapshot().functions.functions.map(::LiveFunction)
+        val fromLoaded = DUCKDB_METADATA.default.extensionFunctions.orEmpty().filter { it.extension in loaded }.mapTo(HashSet()) { it.name }
+        val (sessionBuiltIn, builtIn) = dump.toSnapshot().functions.functions.map(::LiveFunction).partition { it.def.name in fromLoaded }
         if (builtIn.isEmpty()) return null
         val (temporary, persistent) = dump.userFunctions().partition { it.database == "temp" }
         val shared = builtIn + persistent.map { LiveFunction(it.def, listOf(it.database, it.schema)) }
         val keywordDefs = dump.toSnapshot().keywords?.keywords
         return Harvest(
-            LiveInventory(engine, shared, signatures = true, keywords = keywordDefs, extensions = extensions),
-            SessionFacts(temporary.map { LiveFunction(it.def, listOf(it.database, it.schema)) }),
+            LiveInventory(engine, shared, signatures = true, keywords = keywordDefs, extensions = linked),
+            SessionFacts(sessionBuiltIn + temporary.map { LiveFunction(it.def, listOf(it.database, it.schema)) }, loaded),
         )
     }
 }
@@ -99,6 +109,7 @@ fun databaseConnection(connection: Connection, point: DatabaseConnectionPoint, d
             "getConnectionPoint" -> point
             "getDbms" -> dbms
             "getRequestor" -> requestor
+            "getAutoCommit" -> connection.autoCommit
             "equals" -> proxy === args?.get(0)
             "hashCode" -> System.identityHashCode(proxy)
             "toString" -> "test connection"
@@ -119,6 +130,7 @@ class LiveProfile(
     override val legacyFiles: LegacyCatalogFiles? = null,
     override val persistenceId: String? = "live-test",
     override val dbms: Dbms = Dbms.POSTGRES,
+    override val refreshDelay: Duration = 100.milliseconds,
 ) : LiveCatalogProfile {
     override val productLabel = "Fixture"
     override val metadata = DUCKDB_METADATA
@@ -126,6 +138,16 @@ class LiveProfile(
 
 class LiveService(scope: CoroutineScope, override val profile: LiveCatalogProfile, private val directory: Path?) : LiveCatalogService(scope) {
     override fun persistenceDirectory(): Path? = directory
+}
+
+/** The interceptor a plugin registers for [LiveService]. */
+class LiveInterceptor : HarvestConnectionInterceptor(LiveService::class.java)
+
+/** Hands [connection] to the registered [LiveService] as the platform does once it connected. */
+fun connected(connection: DatabaseConnection) = runBlocking {
+    LiveInterceptor().handleConnected(connection, Proxy.newProxyInstance(DatabaseConnection::class.java.classLoader,
+        arrayOf(DatabaseConnectionInterceptor.ProtoConnection::class.java)) { _, method, _ -> throw UnsupportedOperationException(method.name) }
+        as DatabaseConnectionInterceptor.ProtoConnection)
 }
 
 fun liveFunction(name: String, vararg argTypes: String, returnType: String = "VARCHAR", kind: FunctionKind = FunctionKind.SCALAR) =
@@ -164,3 +186,40 @@ fun realDuckdbDataSource(project: Project, until: Disposable): LocalDataSource {
 fun <T> withIdeConnection(project: Project, dataSource: LocalDataSource, requestor: ConnectionRequestor, use: (DatabaseConnection) -> T): T =
     runBlocking { DatabaseConnectionManager.getInstance().build(project, dataSource).setRequestor(requestor).create() }
         .let { checkNotNull(it) { "No connection" } }.use { use(it.get()) }
+
+/**
+ * [connection] as a remote driver may behave: a running query ignores query timeouts and interrupts of
+ * the waiting thread, and ends only when it completes or its statement is cancelled.
+ */
+fun ignoringInterrupts(connection: Connection): Connection = wrap(connection, Connection::class.java) { method, args ->
+    val result = method.invoke(connection, *args)
+    if (result !is Statement) return@wrap result
+    wrap(result, Statement::class.java) { call, callArgs ->
+        if (call.name == "setQueryTimeout") null else uninterruptibly { call.invoke(result, *callArgs) }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun <T : Any> wrap(target: T, type: Class<T>, call: (Method, Array<Any?>) -> Any?): T =
+    Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, args ->
+        try {
+            call(method, arrayOf<Any?>(*(args ?: emptyArray())))
+        } catch (e: InvocationTargetException) {
+            throw e.targetException
+        }
+    } as T
+
+private fun uninterruptibly(call: () -> Any?): Any? {
+    var result: Result<Any?>? = null
+    val worker = Thread { result = runCatching(call) }.apply { start() }
+    var interrupted = false
+    while (worker.isAlive) {
+        try {
+            worker.join()
+        } catch (_: InterruptedException) {
+            interrupted = true
+        }
+    }
+    if (interrupted) Thread.currentThread().interrupt()
+    return checkNotNull(result).getOrThrow()
+}

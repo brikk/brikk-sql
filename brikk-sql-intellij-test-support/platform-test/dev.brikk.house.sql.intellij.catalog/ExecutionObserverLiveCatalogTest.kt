@@ -11,7 +11,7 @@ import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import java.nio.file.Path
 import java.sql.Connection
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
+import java.util.concurrent.TimeUnit
 
 /** Function inventory statements: the live catalog harvests again over the session's own connection. */
 class ExecutionObserverLiveCatalogTest : BasePlatformTestCase() {
@@ -34,7 +34,7 @@ class ExecutionObserverLiveCatalogTest : BasePlatformTestCase() {
         myFixture.configureByText("observe-${UUID.randomUUID()}.sql", "SELECT 1")
         recording = RecordingConsole(project, myFixture.file.virtualFile, "postgresql")
         jdbc = embeddedDuckdb()
-        runBlocking { catalog.connected(databaseConnection(jdbc, recording.console.dataSource, Dbms.POSTGRES, engine).also { held += it }) }
+        connected(databaseConnection(jdbc, recording.console.dataSource, Dbms.POSTGRES, engine).also { held += it })
     }
 
     override fun tearDown() = RunAll(
@@ -48,21 +48,25 @@ class ExecutionObserverLiveCatalogTest : BasePlatformTestCase() {
 
     private fun observer(rules: List<StatementRule> = StatementRules.DUCKDB) =
         ExecutionObserverTest.Observer(project, errors.newScope(testRootDisposable),
-            ExecutionObserverTest.Profile(liveCatalog = LiveService::class.java, autoIntrospect = null, rules = rules))
+            ExecutionObserverTest.Profile(liveCatalog = LiveService::class.java, autoIntrospect = null, rules = rules, dialect = "duckdb"))
+
+    /** Requests finish on their session's engine thread. */
+    private fun ExecutionObserver.finishedOnEngine(sql: String) =
+        ApplicationManager.getApplication().executeOnPooledThread { requestFinished(finished(recording.console, engine, sql)) }.get(30, TimeUnit.SECONDS)
 
     private fun offered() = catalog.completion(myFixture.file).functions.map { it.name }
 
     fun testATemporaryMacroIsOfferedToItsSessionAfterItRan() {
         jdbc.createStatement().use { it.execute("CREATE TEMP MACRO add_one(x) AS x + 1") }
         assertFalse("add_one" in offered())
-        observer().requestFinished(finished(recording.console, engine, "CREATE TEMP MACRO add_one(x) AS x + 1"))
+        observer().finishedOnEngine("CREATE TEMP MACRO add_one(x) AS x + 1")
         assertEquals(2, harvester.harvests.get())
         assertTrue("add_one" in offered())
     }
 
     fun testOtherStatementsHarvestNothing() {
-        observer().requestFinished(finished(recording.console, engine, "SELECT 'LOAD spatial'; CREATE TABLE t(x INT)"))
-        observer(rules = emptyList()).requestFinished(finished(recording.console, engine, "LOAD spatial"))
+        observer().finishedOnEngine("SELECT 'LOAD spatial'; CREATE TABLE t(x INT)")
+        observer(rules = emptyList()).finishedOnEngine("LOAD spatial")
         assertEquals(1, harvester.harvests.get())
     }
 }

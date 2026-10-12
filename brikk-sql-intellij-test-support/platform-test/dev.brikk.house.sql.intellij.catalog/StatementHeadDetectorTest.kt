@@ -3,19 +3,20 @@ package dev.brikk.house.sql.intellij.catalog
 import junit.framework.TestCase
 
 class StatementHeadDetectorTest : TestCase() {
-    private val duckdb = StatementHeadDetector(StatementRules.DUCKDB)
-    private val trino = StatementHeadDetector(StatementRules.TRINO)
-    private val doris = StatementHeadDetector(StatementRules.DORIS, quoteChars = "`")
+    private val duckdb = StatementHeadDetector(StatementRules.DUCKDB, "duckdb")
+    private val trino = StatementHeadDetector(StatementRules.TRINO, "trino")
+    private val doris = StatementHeadDetector(StatementRules.DORIS, "doris")
 
     private fun StatementHeadDetector.heads(script: String) = detect(script).map { it.rule.pattern }
 
     fun testExtensionStatementsChangeTheFunctionInventory() {
         assertEquals(listOf("INSTALL", "LOAD", "FORCE INSTALL"), duckdb.heads("install httpfs; LOAD httpfs;\n  FORCE  INSTALL spatial"))
-        assertTrue(duckdb.detect("load spatial").single().effect == StatementEffect.FunctionInventory)
+        assertEquals(StatementEffect.FunctionInventory(sessionFacts = true), duckdb.detect("load spatial").single().effect)
+        assertEquals(StatementEffect.FunctionInventory(sessionFacts = false), duckdb.detect("install spatial").single().effect)
     }
 
     fun testOnlyWholeLeadingWordsMatch() {
-        assertEquals(emptyList<String>(), duckdb.heads("SELECT * FROM install_log; INSTALLER x; install2 y; FORCE CHECKPOINT; UPDATE EXTENSIONS"))
+        assertEquals(emptyList<String>(), duckdb.heads("SELECT * FROM install_log; INSTALLER x; install2 y; FORCE CHECKPOINT; UPDATE EXTENSIONS; \"LOAD\" x"))
         assertEquals(emptyList<String>(), duckdb.heads("SELECT 1 /* ; LOAD x */"))
     }
 
@@ -29,11 +30,26 @@ class StatementHeadDetectorTest : TestCase() {
     }
 
     fun testOptionalWordsMayBeLeftOut() {
-        val pattern = "CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION"
-        for (sql in listOf("CREATE MACRO m(x) AS x", "create or replace temp macro m(x) AS x", "CREATE TEMPORARY FUNCTION f() AS 1")) {
-            assertEquals(sql, listOf(pattern), duckdb.heads(sql))
+        val temporary = "CREATE [OR REPLACE] TEMP|TEMPORARY MACRO|FUNCTION"
+        for (sql in listOf("create or replace temp macro m(x) AS x", "CREATE TEMPORARY FUNCTION f() AS 1")) {
+            assertEquals(sql, listOf(temporary), duckdb.heads(sql))
         }
+        assertEquals(listOf("CREATE [OR REPLACE] MACRO|FUNCTION"), duckdb.heads("CREATE MACRO m(x) AS x"))
         assertEquals(emptyList<String>(), duckdb.heads("CREATE OR MACRO m() AS 1"))
+    }
+
+    fun testNestedCommentsHideNothingAfterThem() {
+        assertEquals(listOf("CREATE [OR REPLACE] MACRO|FUNCTION"), duckdb.heads("/* outer /* inner */ still a comment */ CREATE MACRO m() AS 1"))
+    }
+
+    fun testEscapeStringsNeitherStartNorHideStatements() {
+        assertEquals(listOf("CREATE [OR REPLACE] TEMP|TEMPORARY MACRO|FUNCTION"), duckdb.heads("SELECT E'it\\'s; LOAD x'; CREATE TEMP MACRO m() AS 1"))
+    }
+
+    fun testRulesMayAskToNotify() {
+        val rule = StatementRules.DUCKDB.first { it.pattern == "LOAD" }
+        assertFalse(rule.notifies)
+        assertTrue(StatementHeadDetector(listOf(rule.notifying()), "duckdb").detect("LOAD x").single().rule.notifies)
     }
 
     fun testTheNameAfterTheHeadIsRead() {
@@ -53,13 +69,13 @@ class StatementHeadDetectorTest : TestCase() {
 
     fun testMalformedPatternsAreRejected() {
         for (pattern in listOf("[CREATE", "CREATE]", "[OPTIONAL]", "")) {
-            assertTrue(pattern, runCatching { StatementRule(pattern, StatementEffect.FunctionInventory) }.exceptionOrNull() is IllegalArgumentException)
+            assertTrue(pattern, runCatching { StatementRule(pattern, StatementEffect.FunctionInventory()) }.exceptionOrNull() is IllegalArgumentException)
         }
     }
 
     fun testNothingToDetect() {
         assertEquals(emptyList<DetectedStatement>(), duckdb.detect(null))
         assertEquals(emptyList<DetectedStatement>(), duckdb.detect("  "))
-        assertEquals(emptyList<DetectedStatement>(), StatementHeadDetector(emptyList()).detect("LOAD x"))
+        assertEquals(emptyList<DetectedStatement>(), StatementHeadDetector(emptyList(), "duckdb").detect("LOAD x"))
     }
 }

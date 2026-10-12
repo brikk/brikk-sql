@@ -149,6 +149,11 @@ class MyAutoIntrospectTest : BasePlatformTestCase() {
 The kit compiles against the 261 test framework (`test-framework`, `-core`, `-common`) without
 declaring it; the consumer's test runtime supplies its IDE's copy.
 
+## Live catalog
+
+`JdbcCatalogRows(connection, queryTimeoutSeconds)` runs a dialect's `LiveCatalogHarvester` over a plain
+JDBC connection, such as an embedded engine.
+
 ## Platform tests
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run

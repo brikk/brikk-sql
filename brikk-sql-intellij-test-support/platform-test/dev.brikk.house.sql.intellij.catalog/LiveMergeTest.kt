@@ -86,7 +86,7 @@ class LiveMergeTest : TestCase() {
         val session = SessionFacts(listOf(liveFunction("my_macro")))
         for (policy in LiveMergePolicy.entries) {
             val merged = policy.merge(LiveCatalogSelection(CatalogSource.Bundled, null, session), bundled, baseline)
-            assertEquals(policy.name, baseline.map { it.name } + "my_macro", merged.functions.map { it.name })
+            assertEquals(policy.name, listOf("my_macro") + baseline.map { it.name }, merged.functions.map { it.name })
             assertSame(bundled.keywords, merged.keywords)
             assertNull(merged.builtinFunctionFilter)
         }
@@ -97,6 +97,22 @@ class LiveMergeTest : TestCase() {
         for (policy in LiveMergePolicy.entries) {
             assertNotNull(policy.name, policy.merge(live(newer, session), bundled, baseline).named("my_macro"))
         }
+    }
+
+    fun testASessionFunctionShadowsTheServerAndBundledOnes() {
+        val session = SessionFacts(listOf(liveFunction("abs", "ANY", "ANY", returnType = "ANY")))
+        for (policy in LiveMergePolicy.entries) {
+            val merged = policy.merge(live(newer, session), bundled, baseline)
+            assertEquals(policy.name, "ANY, ANY", merged.named("abs")?.signature)
+        }
+        val bundledOnly = LiveMergePolicy.REPLACE.merge(LiveCatalogSelection(CatalogSource.Bundled, null, session), bundled, baseline)
+        assertEquals("ANY, ANY", bundledOnly.named("abs")?.signature)
+    }
+
+    fun testFilterAndExtendPresentsLiveSignaturesWhenTheInventoryHasThem() {
+        val merged = LiveMergePolicy.FILTER_AND_EXTEND.merge(live(newer), bundled, baseline)
+        assertEquals("DOUBLE", merged.named("abs")?.signature)
+        assertEquals("the grammar's form stays", setOf(InvocationSyntax.BARE), merged.named("current_date")?.syntaxes)
     }
 
     fun testLiveKeywordsReplaceTheBundledOnes() {

@@ -1,19 +1,23 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.dataSource.DatabaseConnectionCore
+import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
 import com.intellij.util.concurrency.AppExecutorUtil
-import java.sql.Connection
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.ceil
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.jetbrains.annotations.ApiStatus
 
@@ -32,78 +36,117 @@ public sealed interface HarvestOutcome {
 }
 
 /** The end of a harvest's time budget. */
-@ApiStatus.Experimental
-public class HarvestDeadline(public val budget: Duration, timeSource: TimeSource = TimeSource.Monotonic) {
+internal class HarvestDeadline(val budget: Duration, timeSource: TimeSource = TimeSource.Monotonic) {
     private val end = timeSource.markNow() + budget
 
-    public val remaining: Duration get() = -end.elapsedNow()
+    val remaining: Duration get() = -end.elapsedNow()
 
-    /** Throws [HarvestTimeoutException] once the budget is spent. */
-    public fun check() {
+    fun check() {
         if (end.hasPassedNow()) throw HarvestTimeoutException(budget)
     }
 
     /** The JDBC query timeout for what remains, at least one second. */
-    internal val queryTimeoutSeconds: Int get() = ceil(remaining.inWholeMilliseconds / 1000.0).toInt().coerceAtLeast(1)
+    val queryTimeoutSeconds: Int get() = ceil(remaining.inWholeMilliseconds / 1000.0).toInt().coerceAtLeast(1)
 }
 
-@ApiStatus.Experimental
-public class HarvestTimeoutException(budget: Duration) : Exception("The harvest exceeded its $budget deadline")
+internal class HarvestTimeoutException(budget: Duration) : Exception("The harvest exceeded its $budget deadline")
+
+/** Rows whose running statement can be cancelled from another thread. */
+internal interface CancellableRows : CatalogRowSource {
+    fun cancel()
+}
+
+/** How long a cancelled harvest may take to give its connection back. */
+private val CLEANUP = 2.seconds
 
 /**
  * Runs [harvester] over the rows [rows] opens, on a pooled thread, for at most [budget]. Every query
- * and row checks the deadline; past it, the harvest is cancelled and its result discarded even if a
- * driver call never returns. Cancelling the caller cancels the harvest.
+ * and row checks the deadline. Past it, or when the caller is cancelled, the running statement is
+ * cancelled and closed and the harvest thread interrupted, and this returns once the harvest has let
+ * go of the connection, waiting at most [CLEANUP]: a driver that ignores cancellation may keep it busy.
  */
-@ApiStatus.Experimental
-public suspend fun runHarvest(harvester: LiveCatalogHarvester, budget: Duration, rows: (HarvestDeadline) -> CatalogRowSource): HarvestOutcome {
-    val running = startHarvest(harvester, budget, rows)
-    return try {
-        withTimeoutOrNull(budget) { Read(running.result.await()) }?.let { outcomeOf(it.harvest) } ?: HarvestOutcome.TimedOut
+internal suspend fun runHarvest(harvester: LiveCatalogHarvester, budget: Duration, rows: (HarvestDeadline) -> CatalogRowSource): HarvestOutcome {
+    val running = Running.start(harvester, budget, rows)
+    try {
+        return withTimeoutOrNull(budget) { Read(running.result.await()) }?.let { outcomeOf(it.harvest) } ?: HarvestOutcome.TimedOut
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        failure(e)
+        return failure(e)
     } finally {
-        running.task.cancel(true)
+        withContext(NonCancellable) {
+            running.stop()
+            withTimeoutOrNull(CLEANUP) { running.finished.await() }
+        }
     }
 }
 
-private class Read(val harvest: Harvest?)
-
 /** [runHarvest] for a thread that must wait, such as a console's engine thread holding its connection. */
-@ApiStatus.Experimental
-public fun runHarvestBlocking(harvester: LiveCatalogHarvester, budget: Duration, rows: (HarvestDeadline) -> CatalogRowSource): HarvestOutcome {
-    val running = startHarvest(harvester, budget, rows)
-    return try {
-        outcomeOf(running.result.get(budget.inWholeMilliseconds, TimeUnit.MILLISECONDS))
+internal fun runHarvestBlocking(harvester: LiveCatalogHarvester, budget: Duration, rows: (HarvestDeadline) -> CatalogRowSource): HarvestOutcome {
+    val running = Running.start(harvester, budget, rows)
+    try {
+        return outcomeOf(running.result.get(budget.inWholeMilliseconds, TimeUnit.MILLISECONDS))
     } catch (_: TimeoutException) {
-        HarvestOutcome.TimedOut
+        return HarvestOutcome.TimedOut
     } catch (e: ExecutionException) {
-        when (val cause = e.cause) {
+        return when (val cause = e.cause) {
             is Exception -> failure(cause)
             null -> HarvestOutcome.Failed(e)
             else -> throw cause
         }
     } finally {
-        running.task.cancel(true)
+        running.stop()
+        try {
+            running.finished.get(CLEANUP.inWholeMilliseconds, TimeUnit.MILLISECONDS)
+        } catch (_: TimeoutException) {
+        }
     }
 }
 
-/** A harvest's [result], and the [task] whose cancellation interrupts its thread. */
-private class Running(val result: CompletableFuture<Harvest?>, val task: Future<*>)
+private class Read(val harvest: Harvest?)
 
-private fun startHarvest(harvester: LiveCatalogHarvester, budget: Duration, rows: (HarvestDeadline) -> CatalogRowSource): Running {
-    val deadline = HarvestDeadline(budget)
-    val result = CompletableFuture<Harvest?>()
-    val task = AppExecutorUtil.getAppExecutorService().submit {
-        try {
-            result.complete(harvester.harvest(GuardedRows(rows(deadline), deadline)))
-        } catch (e: Throwable) {
-            result.completeExceptionally(e)
+/** One harvest on a pooled thread: its [result], and [finished] once it no longer uses the connection. */
+private class Running(
+    private val rows: CatalogRowSource,
+    val result: CompletableFuture<Harvest?>,
+    private val task: Future<*>,
+    private val state: AtomicInteger,
+    val finished: CompletableFuture<Unit>,
+) {
+    /** Abandons a harvest that has not started; cancels the statement and interrupts one that runs. */
+    fun stop() {
+        if (state.compareAndSet(NEW, ABANDONED)) {
+            finished.complete(Unit)
+        } else if (!finished.isDone) {
+            (rows as? CancellableRows)?.cancel()
+            task.cancel(true)
         }
     }
-    return Running(result, task)
+
+    companion object {
+        const val NEW = 0
+        const val RUNNING = 1
+        const val ABANDONED = 2
+
+        fun start(harvester: LiveCatalogHarvester, budget: Duration, open: (HarvestDeadline) -> CatalogRowSource): Running {
+            val deadline = HarvestDeadline(budget)
+            val rows = open(deadline)
+            val result = CompletableFuture<Harvest?>()
+            val finished = CompletableFuture<Unit>()
+            val state = AtomicInteger(NEW)
+            val task = AppExecutorUtil.getAppExecutorService().submit {
+                if (!state.compareAndSet(NEW, RUNNING)) return@submit
+                try {
+                    result.complete(harvester.harvest(GuardedRows(rows, deadline)))
+                } catch (e: Throwable) {
+                    result.completeExceptionally(e)
+                } finally {
+                    finished.complete(Unit)
+                }
+            }
+            return Running(rows, result, task, state, finished)
+        }
+    }
 }
 
 private fun outcomeOf(harvest: Harvest?): HarvestOutcome = harvest?.let(HarvestOutcome::Complete) ?: HarvestOutcome.Incomplete
@@ -126,25 +169,20 @@ private class GuardedRows(private val rows: CatalogRowSource, private val deadli
     }
 }
 
-/** Catalog rows over a plain JDBC [connection], such as an embedded engine; the query timeout follows [deadline]. */
-@ApiStatus.Experimental
-public class JdbcCatalogRows(private val connection: Connection, private val deadline: HarvestDeadline? = null) : CatalogRowSource {
-    override fun forEachRow(sql: String, onRow: (CatalogRow) -> Unit) {
-        connection.createStatement().use { statement ->
-            deadline?.let { runCatching { statement.queryTimeout = it.queryTimeoutSeconds } }
-            statement.executeQuery(sql).use { rows ->
-                while (rows.next()) onRow(CatalogRow(rows::getString))
-            }
-        }
-    }
-}
+/**
+ * Catalog rows over a Database Tools connection, whose JDBC objects live in the driver process. The
+ * running statement is cancelled and closed by [cancel], since a driver may ignore query timeouts.
+ */
+internal class RemoteCatalogRows(private val connection: DatabaseConnectionCore, private val deadline: HarvestDeadline) : CancellableRows {
+    @Volatile private var active: RemoteStatement? = null
+    @Volatile private var cancelled = false
 
-/** Catalog rows over a Database Tools connection, whose JDBC objects live in the driver process. */
-internal class RemoteCatalogRows(private val connection: DatabaseConnectionCore, private val deadline: HarvestDeadline) : CatalogRowSource {
     override fun forEachRow(sql: String, onRow: (CatalogRow) -> Unit) {
+        if (cancelled) throw InterruptedException("The harvest was cancelled")
         val statement = JdbcNativeUtil.computeRemote { connection.remoteConnection.createStatement() } ?: error("No statement")
+        active = statement
         try {
-            // Drivers without query timeouts skip it; the deadline still holds.
+            if (cancelled) throw InterruptedException("The harvest was cancelled")
             JdbcNativeUtil.performSafe { statement.setQueryTimeout(deadline.queryTimeoutSeconds) }
             val rows = JdbcNativeUtil.computeRemote { statement.executeQuery(sql) } ?: error("No result for $sql")
             try {
@@ -153,6 +191,15 @@ internal class RemoteCatalogRows(private val connection: DatabaseConnectionCore,
                 JdbcNativeUtil.performSafe { rows.close() }
             }
         } finally {
+            active = null
+            JdbcNativeUtil.closeRemoteStatementSafe(statement)
+        }
+    }
+
+    override fun cancel() {
+        cancelled = true
+        active?.let { statement ->
+            JdbcNativeUtil.performSafe { statement.cancel() }
             JdbcNativeUtil.closeRemoteStatementSafe(statement)
         }
     }
