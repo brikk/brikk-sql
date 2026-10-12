@@ -1783,37 +1783,27 @@ the original peer checkout stays clean. Logs are retained under
 
 ## 52. Doris native lexical rules
 
-**NOT sqlglot parity.** `DorisDialect.LEXICAL_CONFIG` layers the native DorisLexer.g4
-(apache/doris `3226e0c`) rules over the generated tables through
-`TokenizerConfig.withLexicalRules`; `DorisTokenizerTables.kt` and its generator are unchanged.
+**NOT sqlglot parity.** `DorisDialect.LEXICAL_CONFIG` layers native DorisLexer.g4 rules
+(apache/doris `3226e0c`) over the generated tables via `TokenizerConfig.withLexicalRules`;
+`DorisTokenizerTables.kt` and its generator are unchanged.
 
-- Untagged `$$...$$` is one raw HEREDOC_STRING (embedded `;`, `:name`, `|>` and quotes
-  stay inside). A longer `$`-spelled identifier wins the match (`$$a$$b`); tagged forms
-  and an unclosed `$$abc` stay identifiers, as natively.
-- Block comments nest, also inside `/*+` hints, and end where the native lazy recursive rule
-  does, including `/*/` overlaps and nesting that cannot close (verified against the native
-  lexer for every `/*`-prefixed string over `/`, `*`, `a` up to 13 characters).
-- Backslash + LF continues a `--` comment; backslash + CRLF does not (`SIMPLE_COMMENT`).
-- `#` and `{# #}` are not comments: `#` is HASH, `{` / `}` are braces.
-- Editor tokenization (`tokenizeForEditor`, so `SqlScriptSnapshot`) treats an unclosed
-  `$$` and a comment no depth count closes at the native end as lexical failures: they usually mean
-  unfinished input, and must not expose an executable suffix.
-- `Dialect.semicolonsInBrackets` is false for Doris: `SqlScriptSnapshot` makes a statement with
-  `;` inside brackets a boundary error. Other dialects keep it (PostgreSQL rule actions).
+- Untagged `$$...$$` is one raw HEREDOC_STRING; a longer `$`-spelled identifier wins
+  (`$$a$$b`); tagged forms and an unclosed `$$abc` stay identifiers.
+- Block comments nest, also in `/*+` hints, and end where the native lazy recursive rule
+  does, `/*/` overlaps and unclosable nesting included (checked against the native lexer for
+  every `/*`-prefixed string over `/`, `*`, `a` up to 13 characters).
+- Backslash + LF continues a `--` comment; backslash + CRLF does not.
+- `#` and `{# #}` are not comments.
+- Editor tokenization (so `SqlScriptSnapshot`) refuses an unclosed `$$` and a comment that no
+  depth count closes at the native end: both usually mean unfinished input.
+- `Dialect.semicolonsInBrackets` is false for Doris, so a snapshot statement with `;` inside
+  brackets is a boundary error (PostgreSQL rule actions keep the default).
 
-Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`, FE digest as in
-`docs/doris-native-catchup-verification.md`), over raw JDBC with escape processing off,
-rejects `SELECT 1 # c`, `# c\nSELECT 1` and `SELECT 1 {# c #}` with the Nereids parser's
-`mismatched input '#'`; no preprocessing or fallback parser accepts them. It accepts
-nested comments and nested hints, accepts `SELECT 1 /* a /* b */ x y /* c */` (while
-rejecting `SELECT 1 x y`), continues `--` over backslash-LF but not backslash-CRLF, and
-lexes `$$a;b$$` as one token. `TokenCorpusDifferentialTest` replays the sqlglot Doris
-corpus against the layered config; a mismatch passes only under a named `DorisNativeLexing`
-exception, each of which must still diverge from the generated tables on its probe. Gates
-are unchanged: doris 42/1, doris-transpile 12/0, duckdb 393/0, trino 121/0, postgres 462/17.
-`DorisScannerCorpusTest` replays the Doris plugin's 160-input scanner corpus against native
-statement ranges and binds; its accepted conventions and remaining disagreements are named
-in the test.
+Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`) over raw JDBC rejects `#` and
+`{# #}` comments (`mismatched input '#'`) and accepts nested comments, nested hints and
+backslash-LF continuation. `TokenCorpusDifferentialTest` accepts sqlglot mismatches only under
+named `DorisNativeLexing` exceptions; `DorisScannerCorpusTest` replays the Doris plugin's
+scanner corpus against native results, naming its conventions and remaining disagreements.
 
 ## Upstream sync protocol
 

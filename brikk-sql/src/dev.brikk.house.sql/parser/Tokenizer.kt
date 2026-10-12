@@ -120,7 +120,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 when {
                     char in DIGIT_CHARS -> scanNumber()
                     identifiers.containsKey(char) -> scanIdentifier(identifiers.getValue(char))
-                    config.untaggedDollarStrings && char == '$' && peek == '$' && scanDollarString() -> {}
+                    config.untaggedDollarStrings && char == '$' && peek == '$' -> if (!scanDollarString()) scanKeywords()
                     else -> scanKeywords()
                 }
             }
@@ -459,14 +459,14 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             if (editorMode) throw TokenError("Missing $$ from $line:$start")
             return false
         }
-        val identifierEnd = (start until size).firstOrNull { !isDorisIdentifierChar(sql[it]) } ?: size
+        val identifierEnd = (start until size).firstOrNull { !isDollarIdentifierChar(sql[it]) } ?: size
         if (identifierEnd > close + 2) return false
         advanceTo(close + 2)
         add(TokenType.HEREDOC_STRING, sql.substring(start + 2, close))
         return true
     }
 
-    private fun isDorisIdentifierChar(c: Char): Boolean = c == '$' || c == '_' || c.isLetterOrDigit() || c.code > 0x7F
+    private fun isDollarIdentifierChar(c: Char): Boolean = c == '$' || c == '_' || c.isLetterOrDigit() || c.code > 0x7F
 
     private fun advanceTo(exclusiveEnd: Int) {
         while (current < exclusiveEnd) advance()
