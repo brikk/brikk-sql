@@ -43,7 +43,7 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         val range = rangeAt(builder)
         if (range == null || range.boundaryError != null || !builder.startsStatementAt(range.start)) return parse()
         val source = builder.originalText
-        val end = if (source[range.end - 1] == ';') range.end - 1 else range.end
+        val end = range.terminator ?: range.end
         val start = builder.currentOffset
         val startIndex = builder.rawTokenIndex()
         val frame = (builder as? GeneratedParserUtilBase.Builder)?.state?.currentFrame
@@ -52,7 +52,8 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         val parsed = parse()
         val stop = builder.currentOffset
         val erred = frame == null || frame.errorReportedAt != errorsBefore && frame.errorReportedAt >= startIndex
-        if (stop == end || stop < end && stop > start && !erred && !continuesAt(source, range, stop)) {
+        val reached = builder.consumedEnd() <= end && stop >= end
+        if (reached || stop < end && stop > start && !erred && !continuesAt(source, range, stop)) {
             marker.drop()
             return parsed
         }
@@ -88,6 +89,16 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         }
         val offset = builder.currentOffset
         return ranges.binarySearch { if (it.end <= offset) -1 else if (it.start > offset) 1 else 0 }.let(ranges::getOrNull)
+    }
+}
+
+/** The end of the last token before the current one that is no whitespace or comment, or 0. */
+private fun PsiBuilder.consumedEnd(): Int {
+    var step = -1
+    while (true) {
+        val type = rawLookup(step) ?: return 0
+        if (type !in SqlTokens.WS_TOKENS && type !in SqlTokens.COMMENT_TOKENS) return rawTokenTypeStart(step + 1)
+        step--
     }
 }
 

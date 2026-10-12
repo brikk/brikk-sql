@@ -125,9 +125,7 @@ public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val core
                 .filter { from + it.end < to || to == bufferEnd }
             if (ranges.isNotEmpty()) {
                 ranges.mapTo(pending) { range ->
-                    val rangeEnd = from + range.end
-                    val terminated = range.boundaryError == null && buffer[rangeEnd - 1] == ';'
-                    Bound(rangeEnd, if (terminated) rangeEnd - 1 else NONE)
+                    Bound(from + range.end, range.terminator?.let { from + it } ?: NONE)
                 }
                 return pending.removeFirst()
             }

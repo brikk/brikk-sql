@@ -4,6 +4,8 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.highlighter.EditorHighlighter
 import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory
+import com.intellij.psi.PsiErrorElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.clickhouse.CHouseLexer
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.intellij.fixture.CHOUSE_BOUNDARY_CORPUS
@@ -44,6 +46,15 @@ class StatementBoundedSqlLexerTest : CHouseFixtureTestCase() {
             "tsv with semicolons and quotes" to "a;b\tO'Brien", "csv with quotes then a blank line" to "1,O'Brien\n2,\"x;y\"")) {
             val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == name }
             assertEquals(name, data, case.sql.of(bounded().lexAll(case.sql).raw().single()))
+        }
+    }
+
+    fun testASemicolonInATrailingCommentStaysInIt() {
+        for (text in listOf("SELECT 1 -- trailing ;", "SELECT 1 /* ; */", "SELECT 1; -- c ;")) {
+            val tokens = bounded().lexAll(text)
+            assertEquals(text, CHouseLexer().lexAll(text).map { text.of(it) }, tokens.map { text.of(it) })
+            configureCHouse(text)
+            assertEmpty(PsiTreeUtil.findChildrenOfType(myFixture.file, PsiErrorElement::class.java))
         }
     }
 

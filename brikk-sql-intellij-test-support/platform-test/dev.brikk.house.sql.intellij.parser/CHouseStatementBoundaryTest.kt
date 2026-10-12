@@ -77,6 +77,14 @@ class CHouseStatementBoundaryTest : CHouseFixtureTestCase() {
         assertNotSame(SqlCompositeElementTypes.SQL_STATEMENT, next.node.elementType)
     }
 
+    /** A statement whose data a blank line ends has no `;`; the grammar's statement still ends it. */
+    fun testDataEndedByABlankLineKeepsTheGrammarsStatement() {
+        val case = CHOUSE_BOUNDARY_CORPUS.single { it.name == "csv with quotes then a blank line" }
+        configureCHouse(case.sql)
+        assertEquals(case.statements, statements().map { it.text + if (it.text.startsWith("SELECT")) ";" else "" })
+        assertNotNull(PsiTreeUtil.findChildOfType(statements().first(), SqlInsertDmlInstruction::class.java))
+    }
+
     fun testStatementsTheGrammarParsesKeepTheirPsi() {
         configureCHouse("INSERT INTO FUNCTION null('id UInt64') SELECT id FROM events;\nSELECT 1 /* ; */ FROM t;;\nSELECT 2")
         assertEquals(listOf("INSERT INTO FUNCTION null('id UInt64') SELECT id FROM events", "SELECT 1 /* ; */ FROM t", "SELECT 2"), statements().map { it.text })

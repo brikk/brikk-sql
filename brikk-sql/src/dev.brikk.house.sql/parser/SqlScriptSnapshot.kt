@@ -11,6 +11,8 @@ data class SqlStatementRange(
     val hasSql: Boolean,
     val hasPipe: Boolean,
     val boundaryError: String? = null,
+    /** The offset of the `;` token that ends the statement, or null when none does. */
+    val terminator: Int? = null,
 )
 
 /** Half-open ranges retain leading trivia and the terminator. Trailing trivia is its own range. */
@@ -42,8 +44,8 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
             var afterEnd = false
             val brackets = ArrayList<TokenType>()
             val blocks = ArrayList<String>()
-            fun flush(end: Int) {
-                if (end > start) ranges.add(SqlStatementRange(start, end, hasSql, hasPipe, error))
+            fun flush(end: Int, terminator: Int? = null) {
+                if (end > start) ranges.add(SqlStatementRange(start, end, hasSql, hasPipe, error, terminator))
                 start = end
                 hasSql = false; hasPipe = false; error = null; head = null; routine = false; afterEnd = false
             }
@@ -95,7 +97,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                     error = "Statement separator inside brackets; statement boundary is unknown"
                 if (kind == TokenType.PIPE_GT) hasPipe = true
                 if (kind == TokenType.SEMICOLON && brackets.isEmpty() && blocks.isEmpty() && error == null) {
-                    flush(token.end + 1)
+                    flush(token.end + 1, token.start)
                 } else if (kind != TokenType.SEMICOLON) hasSql = true
                 // Inline INSERT data that a blank line ends also ends its statement.
                 if (kind == TokenType.INSERT_DATA && tokens.getOrNull(index + 1)?.tokenType != TokenType.SEMICOLON &&

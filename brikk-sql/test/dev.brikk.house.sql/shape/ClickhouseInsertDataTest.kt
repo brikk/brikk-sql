@@ -23,6 +23,7 @@ class ClickhouseInsertDataTest {
         val sql = "INSERT INTO t FORMAT TSV\na;b\n;\nSELECT 2;"
         assertEquals(listOf("INSERT INTO t FORMAT TSV\na;b\n;", "SELECT 2;"), statements(sql))
         assertEquals(listOf("a;b"), data(sql))
+        assertEquals(sql.indexOf("\n;") + 1, SqlScriptSnapshot.parse(sql, "clickhouse").statements.first().terminator)
     }
 
     @Test fun aBlankLineEndsDataAndItsStatement() {
@@ -30,6 +31,7 @@ class ClickhouseInsertDataTest {
         val ranges = SqlScriptSnapshot.parse(sql, "clickhouse").statements
         assertEquals(listOf("INSERT INTO t FORMAT CSV\n1,O'Brien\n2,\"x;y\"", "SELECT 2;"), statements(sql))
         assertTrue(ranges.all { it.boundaryError == null })
+        assertEquals(null, ranges.first().terminator)
     }
 
     @Test fun dataOnTheFormatLineEndsAtASemicolonEndingThatLine() {

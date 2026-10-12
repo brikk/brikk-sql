@@ -102,4 +102,12 @@ class EditorContractTest {
         assertEquals(2, postgres.size)
         assertTrue(postgres.all { it.boundaryError == null })
     }
+
+    @Test fun terminatorsAreSemicolonTokens() {
+        assertNull(SqlScriptSnapshot.parse("SELECT 1 -- trailing ;", "clickhouse").statements.single().terminator)
+        assertNull(SqlScriptSnapshot.parse("SELECT ';'", "trino").statements.single().terminator)
+        assertNull(SqlScriptSnapshot.parse("SELECT f(1; 2)", "doris").statements.single().terminator)
+        val ranges = SqlScriptSnapshot.parse("SELECT 1 /* ; */ ; -- c ;", "trino").statements
+        assertEquals(listOf(17, null), ranges.map { it.terminator })
+    }
 }
