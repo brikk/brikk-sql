@@ -12,6 +12,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
@@ -98,9 +99,10 @@ public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteI
 /** Observes translated submissions, for example to map server errors back to authored PIPE text. */
 @ApiStatus.Experimental
 public interface PipeSubmitListener {
+    /** Runs before the final destination and freshness checks; a refusal there still submits nothing. */
     public fun beforeSubmit(run: PipeRun) {}
 
-    /** Runs after every [beforeSubmit], also when submission fails. */
+    /** Runs after every [beforeSubmit], also when it, a final check or submission fails. */
     public fun afterSubmit(run: PipeRun) {}
 }
 
@@ -113,7 +115,7 @@ public class PipeRun internal constructor(public val console: JdbcConsole, publi
  * [sql] to a range in [source]; null when parameter expansion changed the input.
  */
 @ApiStatus.Experimental
-public data class PipeRunStatement(
+public class PipeRunStatement(
     public val source: String,
     public val sql: String,
     public val range: TextRange,
@@ -161,16 +163,17 @@ internal fun <E> PipeDialect.execute(
             if (verdict is NativeVerdict.Rejected) throw SqlExecutionRefusal("Generated SQL failed validation: ${verdict.message}")
         }
     }
-    destination.requireCurrent(console)
-    if (!model.isActual) throw SqlExecutionRefusal(STALE_SQL)
-    if (console.session.clientsWithFile.isNullOrEmpty()) throw SqlExecutionRefusal("No console client is attached.")
-    val listener = submitListener ?: return@refusalsNotified console.executeQueries(editor, model, option)
+    val listener = submitListener
     val run = PipeRun(console, editor, translated)
-    listener.beforeSubmit(run)
     try {
+        listener?.beforeSubmit(run)
+        destination.requireCurrent(console)
+        if (!model.isActual) throw SqlExecutionRefusal(STALE_SQL)
+        if (console.session.clientsWithFile.isNullOrEmpty()) throw SqlExecutionRefusal("No console client is attached.")
+        ProgressManager.checkCanceled()
         console.executeQueries(editor, model, option)
     } finally {
-        listener.afterSubmit(run)
+        listener?.afterSubmit(run)
     }
 }
 

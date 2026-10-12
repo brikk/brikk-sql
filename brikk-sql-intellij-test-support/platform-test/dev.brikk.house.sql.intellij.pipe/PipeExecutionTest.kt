@@ -12,6 +12,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
@@ -62,7 +63,7 @@ class PipeExecutionTest : BasePlatformTestCase() {
     }
 
     fun testSubmissionValidatorChecksOnlyFinalSqlAndUnavailableProceeds() {
-        var verdict: NativeVerdict = NativeVerdict.Unavailable("no engine")
+        var verdict: NativeVerdict = NativeVerdict.Unavailable
         val seen = mutableListOf<String>()
         val dialect = object : PipeDialect by TestPipeDialect("trino", FirstStageRule.AnyQuery) {
             override val validator = object : NativeSqlValidator {
@@ -116,6 +117,36 @@ class PipeExecutionTest : BasePlatformTestCase() {
                 assertEquals("offline_rows", statement.sourceMap!!(line + 1, column)!!.substring(statement.source))
             }
         }
+    }
+
+    fun testSubmitHooksBracketTheFinalChecks() {
+        var before: (PipeRun) -> Unit = {}
+        var afters = 0
+        val dialect = object : PipeDialect by TestPipeDialect("trino", FirstStageRule.AnyQuery) {
+            override val submitListener = object : PipeSubmitListener {
+                override fun beforeSubmit(run: PipeRun) = before(run)
+                override fun afterSubmit(run: PipeRun) {
+                    afters++
+                }
+            }
+        }
+        val changes = listOf<(PipeRun) -> Unit>(
+            { it.console.dataSource.url = "jdbc:offline:another-destination" },
+            { WriteCommandAction.runWriteCommandAction(project) { it.editor.document.insertString(0, " ") } },
+        )
+        for (change in changes) Run(dialect, "FROM offline_rows |> WHERE id > 0").use { run ->
+            before = change
+            run.execute()
+            assertEmpty(run.recording.requests)
+            assertTrue(run.notifications.any { it.type == NotificationType.ERROR })
+        }
+        Run(dialect, "FROM offline_rows |> WHERE id > 0").use { run ->
+            val failure = IllegalStateException("listener failed")
+            before = { throw failure }
+            assertSame(failure, runCatching { run.execute() }.exceptionOrNull())
+            assertEmpty(run.recording.requests)
+        }
+        assertEquals(3, afters)
     }
 
     fun testInspectionHostRefusesExecuteAndHidesRunToStage() {

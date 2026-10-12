@@ -29,5 +29,5 @@ public sealed interface NativeVerdict {
     public data class Rejected(public val message: String) : NativeVerdict
 
     /** Not checked; execution proceeds on the core lowering alone. */
-    public data class Unavailable(public val reason: String) : NativeVerdict
+    public data object Unavailable : NativeVerdict
 }
