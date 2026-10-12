@@ -152,6 +152,13 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   state must fit 15 bits.
   Restoring a saved position relexes from its statement's start. A routine body still unbalanced
   at the end of the text ends before its first `;`, so later statements keep their tokens.
+- `StatementBoundedSqlLexer(baseFactory, coreDialect)` (`lexer`): lexes each statement of core's
+  script ranges on its own with a fresh start of the base lexer, so no token runs past its
+  statement (ClickHouse `FORMAT JSONEachRow` data ends where core ends the statement; a token
+  covering the terminating `;` is cut before it). States are 0 at statement starts and 1 elsewhere:
+  non-negative, whatever the base reports, and the highlighter restarts and resynchronizes only at
+  statement starts. Core ranges are read a window at a time, so relexing an edit costs about its
+  statement. `CHouseFamilyParserDefinition` lexes this way; a `MaskingSqlLexer` may be its base.
 - `LenientSqlParsing` (`parser`): `PsiBuilder` extensions that never consume, scanning the
   statement to its `;` within `MAX_LOOKAHEAD` tokens: `wordAt`, `containsAny`, `firstOf`,
   `wordThenWord` (next word), `wordThenToken` (exact next token) and the general
@@ -185,7 +192,8 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   type per dialect and the platform ClickHouse element factory, reached through a platform
   definition's public `getElementFactory`. It creates the grammar's ClickHouse PSI and the platform
   PSI of shared nodes such as `parseLenientStatement`'s `SQL_STATEMENT` (a composite node, created
-  by `createComposite`, never by `createElement`). Register a no-arg subclass as
+  by `createComposite`, never by `createElement`). Its lexer is a `StatementBoundedSqlLexer` over
+  `createBaseLexer`. Register a no-arg subclass as
   `lang.parserDefinition`; `createBaseLexer` and `createParser` take dialect rules.
 - Comments: register the platform commenter, which toggles `-- ` lines and block comments:
   `<lang.commenter language="<your dialect language id>" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`.

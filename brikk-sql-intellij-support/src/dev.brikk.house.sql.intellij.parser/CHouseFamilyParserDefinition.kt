@@ -11,6 +11,7 @@ import com.intellij.sql.dialects.clickhouse.CHouseLexer
 import com.intellij.sql.dialects.clickhouse.CHouseParser
 import com.intellij.sql.dialects.clickhouse.CHouseParserDefinition
 import com.intellij.sql.psi.stubs.elementTypes.SqlFileElementType
+import dev.brikk.house.sql.intellij.lexer.StatementBoundedSqlLexer
 import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.annotations.ApiStatus
 
@@ -20,17 +21,23 @@ import org.jetbrains.annotations.ApiStatus
  * `getElementFactory`: its own PSI for the grammar's nodes, and the platform's for shared nodes such
  * as the lenient `SQL_STATEMENT` of `parseLenientStatement`. Register a no-arg subclass as
  * `lang.parserDefinition` of [dialect]; override [createBaseLexer] or [createParser] to add
- * dialect rules.
+ * dialect rules. The lexer is a `StatementBoundedSqlLexer` over [createBaseLexer], so raw data
+ * tails end with their statement.
  */
 @ApiStatus.Experimental
-public open class CHouseFamilyParserDefinition(dialect: SqlLanguageDialect) : SqlParserDefinitionBase() {
+public open class CHouseFamilyParserDefinition(
+    dialect: SqlLanguageDialect,
+    /** The core dialect whose script ranges bound statements. */
+    protected val coreDialect: String = "clickhouse",
+) : SqlParserDefinitionBase() {
     private val fileNodeType = fileNodeTypes.computeIfAbsent(dialect) { SqlFileElementType("${it.id.uppercase()}_SQL_FILE", it) }
 
     override fun createElementFactory(): SqlElementFactoryBase = CHouseParserDefinition().elementFactory
 
-    override fun createLexer(project: Project?): Lexer = createBaseLexer()
+    /** The [createBaseLexer] lexer, bounded by [coreDialect] statements. */
+    final override fun createLexer(project: Project?): Lexer = StatementBoundedSqlLexer(::createBaseLexer, coreDialect)
 
-    /** The substrate lexer: the platform ClickHouse lexer, or one wrapping it. */
+    /** The substrate lexer of one statement: the platform ClickHouse lexer, or one wrapping it. */
     protected open fun createBaseLexer(): Lexer = CHouseLexer()
 
     override fun createParser(project: Project?): PsiParser = CHouseParser()
