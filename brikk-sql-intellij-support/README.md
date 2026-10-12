@@ -181,6 +181,12 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   final, so its overrides are delegated to it, and a test fails when an IDE adds one.
   `isServerResolvedParameter` (263, a parameterized view's `{name:Type}`) is called reflectively,
   being absent from the 261 API.
+- `CHouseFamilyParserDefinition(dialect)` (`parser`): parsing for such a dialect, with one file node
+  type per dialect and the platform ClickHouse element factory, reached through a platform
+  definition's public `getElementFactory`. It creates the grammar's ClickHouse PSI and the platform
+  PSI of shared nodes such as `parseLenientStatement`'s `SQL_STATEMENT` (a composite node, created
+  by `createComposite`, never by `createElement`). Register a no-arg subclass as
+  `lang.parserDefinition`; `createBaseLexer` and `createParser` take dialect rules.
 - Comments: register the platform commenter, which toggles `-- ` lines and block comments:
   `<lang.commenter language="<your dialect language id>" implementationClass="com.intellij.database.sql.common.core.psi.impl.support.SqlNestedCommenter"/>`.
 

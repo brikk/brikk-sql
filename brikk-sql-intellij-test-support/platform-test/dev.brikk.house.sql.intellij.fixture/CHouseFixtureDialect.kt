@@ -9,18 +9,12 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.base.SqlSyntaxHighlighterFactory
-import com.intellij.lexer.Lexer
-import com.intellij.psi.tree.IFileElementType
-import com.intellij.sql.dialects.base.SqlElementFactoryBase
-import com.intellij.sql.dialects.base.SqlParserDefinitionBase
-import com.intellij.sql.dialects.clickhouse.CHouseLexer
 import com.intellij.sql.dialects.clickhouse.CHouseParser
-import com.intellij.sql.dialects.clickhouse.CHouseParserDefinition
-import com.intellij.sql.psi.stubs.elementTypes.SqlFileElementType
 import com.intellij.sql.psi.SqlStatement
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.dialect.CHouseFamilyDialect
+import dev.brikk.house.sql.intellij.parser.CHouseFamilyParserDefinition
 import dev.brikk.house.sql.intellij.parser.parseLenientStatement
 import dev.brikk.house.sql.intellij.parser.wordAt
 import java.util.UUID
@@ -40,14 +34,9 @@ class CHouseFixtureParser : CHouseParser() {
         if (builder.wordAt(0) == "SHOW") builder.parseLenientStatement() else super.parseSqlStatement(builder, level)
 }
 
-class CHouseFixtureParserDefinition : SqlParserDefinitionBase() {
-    override fun createElementFactory(): SqlElementFactoryBase = CHouseParserDefinition().elementFactory
-    override fun createLexer(project: Project?): Lexer = CHouseLexer()
+class CHouseFixtureParserDefinition : CHouseFamilyParserDefinition(CHouseFixtureDialect) {
     override fun createParser(project: Project?): PsiParser = CHouseFixtureParser()
-    override fun getFileNodeType(): IFileElementType = CHOUSE_FIXTURE_FILE
 }
-
-private val CHOUSE_FIXTURE_FILE = SqlFileElementType("BRIKK_CHOUSE_FIXTURE_SQL_FILE", CHouseFixtureDialect)
 
 class CHouseFixtureHighlighterFactory : SqlSyntaxHighlighterFactory.Base(CHouseFixtureDialect)
 
