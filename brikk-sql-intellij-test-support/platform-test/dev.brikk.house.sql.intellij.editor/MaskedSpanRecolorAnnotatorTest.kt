@@ -6,7 +6,7 @@ import com.intellij.lang.injection.MultiHostInjector
 import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlStringLiteralExpression
 import java.util.UUID
 import com.intellij.lang.annotation.HighlightSeverity
@@ -77,23 +77,56 @@ class MaskedSpanRecolorAnnotatorTest : FixtureTestCase() {
         assertEquals("only the platform's reference colors", setOf("\"c d\"", "t"), colors.keys)
     }
 
-    fun testInjectedSpansReadTheUnescapedText() {
-        LanguageAnnotators.INSTANCE.addExplicitExtension(FixtureDialect, FixtureRecolor(), testRootDisposable)
-        val host = "SELECT 'SELECT {''k'': 1}, * EXCLUDE (a /* c */) FROM t'"
+    /** A place of the injection: a host literal, its range, and the placeholder text after it that no host holds. */
+    private class Place(val literal: Int, val range: (SqlStringLiteralExpression) -> TextRange, val suffix: String? = null)
+
+    /**
+     * Injects the fixture dialect into the string literals of the SQL [host], at [places], as Kotlin
+     * hosts inject: interpolations become placeholders between fragments and a trimmed multiline
+     * string leaves its indentation out. Returns the recolored host ranges by host text.
+     */
+    private fun injectedColors(host: String, vararg places: Place): Map<String, TextAttributesKey?> {
         myFixture.configureByText("host-${UUID.randomUUID()}.sql", host)
         InjectedLanguageManager.getInstance(project).registerMultiHostInjector(object : MultiHostInjector {
             override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
-                registrar.startInjecting(FixtureDialect).addPlace(null, null, context as PsiLanguageInjectionHost, TextRange(1, context.textLength - 1)).doneInjecting()
+                val literals = PsiTreeUtil.findChildrenOfType(context.containingFile, SqlStringLiteralExpression::class.java).toList()
+                if (literals.firstOrNull() !== context) return
+                registrar.startInjecting(FixtureDialect)
+                for (place in places) literals[place.literal].let { registrar.addPlace(null, place.suffix, it, place.range(it)) }
+                registrar.doneInjecting()
             }
 
             override fun elementsToInjectIn() = listOf(SqlStringLiteralExpression::class.java)
         }, testRootDisposable)
-        val colors = myFixture.doHighlighting(HighlightSeverity.INFORMATION).filter { it.forcedTextAttributesKey != null }
+        return myFixture.doHighlighting(HighlightSeverity.INFORMATION).filter { it.forcedTextAttributesKey != null }
             .associate { host.substring(it.startOffset, it.endOffset) to it.forcedTextAttributesKey }
+    }
+
+    private val inner = { literal: SqlStringLiteralExpression -> TextRange(1, literal.textLength - 1) }
+
+    fun testInjectedSpansReadTheUnescapedText() {
+        val colors = injectedColors("SELECT 'SELECT {''k'': 1}, * EXCLUDE (a /* c */) FROM t'", Place(0, inner))
         assertEquals(colors.toString(), colorOf(SqlTokens.SQL_STRING_TOKEN), colors["''k''"])
         assertEquals(colorOf(SqlTokens.SQL_INTEGER_TOKEN), colors["1"])
         assertNull(colors["''"])
         assertEquals(colorOf(SqlTokens.SQL_IDENT), colors["a"])
         assertEquals(colorOf(SqlTokens.SQL_BLOCK_COMMENT), colors["/* c */"])
+    }
+
+    fun testAnInjectedSpanAroundAnInterpolationIsRecoloredInBothFragments() {
+        val colors = injectedColors("SELECT 'SELECT {''k'': ' || ', ''v'': 2}'", Place(0, inner, suffix = "0"), Place(1, inner))
+        assertEquals(colors.toString(), colorOf(SqlTokens.SQL_STRING_TOKEN), colors["''k''"])
+        assertEquals(colorOf(SqlTokens.SQL_STRING_TOKEN), colors["''v''"])
+        assertEquals(colorOf(SqlTokens.SQL_INTEGER_TOKEN), colors["2"])
+    }
+
+    fun testAnInjectedSpanAcrossATrimmedMultilineStringIsRecolored() {
+        val host = "SELECT 'SELECT {''k'':\n    1}'"
+        val lineBreak = host.indexOf('\n') - host.indexOf('\'')
+        val colors = injectedColors(host,
+            Place(0, { TextRange(1, lineBreak + 1) }),
+            Place(0, { literal -> TextRange(lineBreak + 5, literal.textLength - 1) }))
+        assertEquals(colors.toString(), colorOf(SqlTokens.SQL_STRING_TOKEN), colors["''k''"])
+        assertEquals(colorOf(SqlTokens.SQL_INTEGER_TOKEN), colors["1"])
     }
 }

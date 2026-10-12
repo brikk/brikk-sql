@@ -13,7 +13,9 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.tree.IElementType
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlCommonTokens
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.parser.Token
@@ -28,7 +30,7 @@ import org.jetbrains.annotations.ApiStatus
  * leading quote, and an identifier leaf the core tokenizer of [coreDialect] reads as several
  * tokens are such spans. Each core token gets the colors the file's highlighter gives the platform
  * token of the same kind; comments inside a span keep comment colors. In injected SQL a span is
- * read decoded, as the host's escaper decodes it.
+ * read decoded, as each host's escaper decodes it, and annotated only where it lies in host text.
  *
  * Words are keywords when the core tokenizer reads them as such, or, with [keywords], when they
  * are in that upper-case set. Register a no-arg subclass for the dialect's language.
@@ -57,12 +59,12 @@ public abstract class MaskedSpanRecolorAnnotator(
         var covered = 0
         for (token in lexed.tokens) {
             comments(span, covered, token.start, highlighter, holder)
-            recolor(holder, span.fileRange(token.start, token.end + 1), attributes(highlighter, platformType(token)))
+            recolor(holder, span.fileRanges(token.start, token.end + 1), attributes(highlighter, platformType(token)))
             covered = token.end + 1
         }
         val failure = lexed.failureOffset ?: text.length
         comments(span, covered, failure, highlighter, holder)
-        unclosedType(text, failure)?.let { recolor(holder, span.fileRange(failure, text.length), attributes(highlighter, it)) }
+        unclosedType(text, failure)?.let { recolor(holder, span.fileRanges(failure, text.length), attributes(highlighter, it)) }
     }
 
     /** The kind of an unterminated quoted string or identifier the text ends with from [offset], as while it is typed. */
@@ -86,7 +88,7 @@ public abstract class MaskedSpanRecolorAnnotator(
         var end = to
         while (start < end && span.text[start].isWhitespace()) start++
         while (end > start && span.text[end - 1].isWhitespace()) end--
-        if (start < end) recolor(holder, span.fileRange(start, end), attributes(highlighter, SqlTokens.SQL_BLOCK_COMMENT))
+        if (start < end) recolor(holder, span.fileRanges(start, end), attributes(highlighter, SqlTokens.SQL_BLOCK_COMMENT))
     }
 
     /** The platform token of the same kind; null for operators, which the highlighter leaves plain. */
@@ -110,34 +112,67 @@ public abstract class MaskedSpanRecolorAnnotator(
     private fun attributes(highlighter: SyntaxHighlighter, type: IElementType?): TextAttributesKey =
         type?.let { highlighter.getTokenHighlights(it).lastOrNull() } ?: HighlighterColors.TEXT
 
-    private fun recolor(holder: AnnotationHolder, range: TextRange?, key: TextAttributesKey) {
-        if (range != null && !range.isEmpty) holder.newSilentAnnotation(HighlightSeverity.INFORMATION).range(range).textAttributes(key).create()
+    private fun recolor(holder: AnnotationHolder, ranges: List<TextRange>, key: TextAttributesKey) {
+        for (range in ranges) holder.newSilentAnnotation(HighlightSeverity.INFORMATION).range(range).textAttributes(key).create()
     }
 }
 
 /**
- * The SQL [text] of a leaf at [range] in a file, with ranges in it mapped back to the file. An
- * injected leaf reads its host's decoded text and maps through the host's escaper, character by
- * character; a leaf across several host fragments is no span.
+ * The SQL [text] of a leaf in a file, made of [pieces], with ranges in it mapped back to the file.
+ * An injected leaf may cross several host fragments: each editable part reads its host's decoded
+ * text and maps through that host's escaper character by character, and the text between parts
+ * that no host holds, such as an interpolation's placeholder, is read as the injected file has it
+ * and never annotated.
  */
-private class Span(val text: String, private val range: TextRange, private val toLeaf: (Int) -> Int) {
-    fun fileRange(from: Int, to: Int): TextRange? {
-        val start = toLeaf(from)
-        val end = toLeaf(to)
-        return if (start < 0 || end < start) null else TextRange(range.startOffset + start, range.startOffset + end)
+private class Span(val text: String, private val pieces: List<Piece>) {
+    /** Text `[start, end)` of [Span.text]; [toFile] maps an offset relative to [start] into the file, or to a negative value. */
+    class Piece(val start: Int, val end: Int, val toFile: ((Int) -> Int)?)
+
+    /** The file ranges of `[from, to)` that lie in editable parts. */
+    fun fileRanges(from: Int, to: Int): List<TextRange> = pieces.mapNotNull { piece ->
+        val map = piece.toFile ?: return@mapNotNull null
+        val start = maxOf(from, piece.start)
+        val end = minOf(to, piece.end)
+        if (start >= end) return@mapNotNull null
+        val fileStart = map(start - piece.start)
+        val fileEnd = map(end - piece.start)
+        if (fileStart < 0 || fileEnd <= fileStart) null else TextRange(fileStart, fileEnd)
     }
 
     companion object {
         fun of(file: PsiFile, range: TextRange): Span? {
+            val contents = file.viewProvider.contents
             val manager = InjectedLanguageManager.getInstance(file.project)
-            if (!manager.isInjectedFragment(file)) return Span(file.viewProvider.contents.substring(range.startOffset, range.endOffset), range) { it }
-            val host = manager.getInjectionHost(file) ?: return null
-            val inside = manager.injectedToHost(file, range).shiftLeft(host.textRange.startOffset)
-            if (inside.length != range.length || inside.startOffset < 0 || inside.endOffset > host.textLength) return null
-            val escaper = host.createLiteralTextEscaper()
-            val decoded = StringBuilder()
-            if (!escaper.decode(inside, decoded)) return null
-            return Span(decoded.toString(), range) { offset -> escaper.getOffsetInHost(offset, inside).let { if (it < 0) it else it - inside.startOffset } }
+            if (!manager.isInjectedFragment(file)) {
+                return Span(contents.substring(range.startOffset, range.endOffset), listOf(Piece(0, range.length) { range.startOffset + it }))
+            }
+            val top = manager.getTopLevelFile(file) ?: return null
+            val text = StringBuilder()
+            val pieces = ArrayList<Piece>()
+            var cursor = range.startOffset
+            fun gap(to: Int) {
+                if (to <= cursor) return
+                pieces += Piece(text.length, text.length + to - cursor, null)
+                text.append(contents, cursor, to)
+            }
+            for (part in manager.intersectWithAllEditableFragments(file, range).sortedBy { it.startOffset }) {
+                if (part.isEmpty) continue
+                gap(part.startOffset)
+                val hostRange = manager.injectedToHost(file, part)
+                val host = PsiTreeUtil.getParentOfType(top.findElementAt(hostRange.startOffset), PsiLanguageInjectionHost::class.java, false) ?: return null
+                val inside = hostRange.shiftLeft(host.textRange.startOffset)
+                if (inside.length != part.length || inside.startOffset < 0 || inside.endOffset > host.textLength) return null
+                val escaper = host.createLiteralTextEscaper()
+                val decoded = StringBuilder()
+                if (!escaper.decode(inside, decoded)) return null
+                pieces += Piece(text.length, text.length + decoded.length) { offset ->
+                    escaper.getOffsetInHost(offset, inside).let { if (it < 0) it else part.startOffset + it - inside.startOffset }
+                }
+                text.append(decoded)
+                cursor = part.endOffset
+            }
+            gap(range.endOffset)
+            return Span(text.toString(), pieces)
         }
     }
 }
