@@ -1,0 +1,42 @@
+package dev.brikk.house.sql.intellij.testing
+
+import com.intellij.database.Dbms
+import com.intellij.database.DbmsExtension
+import com.intellij.openapi.application.ApplicationManager
+
+/**
+ * Fails unless every Database Tools extension that [dbms] inherits through its `extensionFallback`
+ * chain is overridden (registered for [dbms] itself) or listed in [allowed] with the reason that
+ * inheriting it is right. Keys are extension point names, such as `com.intellij.database.dialect`.
+ * Blank reasons and listed points the dbms no longer inherits fail too, so the list stays current.
+ *
+ * A dbms resolves an extension point to its fallback's extensions only when it has none of its own,
+ * so a new platform extension point is inherited silently; this audit makes that a test failure.
+ */
+public fun assertFallbackExtensionsAudited(dbms: Dbms, allowed: Map<String, String>) {
+    val inherited = inheritedDbmsExtensions(dbms)
+    val problems = buildList {
+        inherited.filterKeys { it !in allowed }.forEach { (point, from) -> add("$point is inherited from $from without an override or a reason") }
+        allowed.filterValues(String::isBlank).keys.forEach { add("$it has a blank reason") }
+        (allowed.keys - inherited.keys).forEach { add("$it is allowed but not inherited") }
+    }
+    if (problems.isNotEmpty()) throw AssertionError("${dbms.name} fallback extensions:\n" + problems.sorted().joinToString("\n"))
+}
+
+/**
+ * The dbms-keyed extension points [dbms] resolves only through its `extensionFallback` chain, each
+ * mapped to the name of the dbms it inherits from: the starting point for an allow-list.
+ */
+public fun inheritedDbmsExtensions(dbms: Dbms): Map<String, String> {
+    val area = ApplicationManager.getApplication().extensionArea
+    val fallbacks = area.getExtensionPoint<DbmsExtension.FallbackBean>("com.intellij.database.extensionFallback").extensionList
+        .mapNotNull { bean -> bean.dbmsStr?.let { from -> bean.fallbackDbmsStr?.let { from to it } } }.toMap()
+    val chain = generateSequence(fallbacks[dbms.name]) { fallbacks[it] }.take(fallbacks.size).toList()
+    return area.nameToPointMap.values
+        .filter { DbmsExtension.Bean::class.java.isAssignableFrom(it.getExtensionClass()) }
+        .mapNotNull { point ->
+            val keys = point.extensionList.mapNotNullTo(HashSet()) { (it as? DbmsExtension.Bean<*>)?.key }
+            if (dbms.name in keys) null else chain.firstOrNull { it in keys }?.let { point.name to it }
+        }
+        .toMap(sortedMapOf())
+}

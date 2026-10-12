@@ -14,6 +14,7 @@ object CatalogTestDbms {
     @JvmField val CATALOG_FACADE: Dbms = create("BRIKK_TEST_CATALOG_FACADE")
     @JvmField val GATED: Dbms = create("BRIKK_TEST_GATED")
     @JvmField val AUDITED: Dbms = create("BRIKK_TEST_AUDITED")
+    @JvmField val AUDITED_BASE: Dbms = create("BRIKK_TEST_AUDITED_BASE")
 
     private fun create(name: String) = Dbms.create(name, name, { AllIcons.Nodes.DataTables }, Dbms.defaultPattern(name.lowercase()))
 }

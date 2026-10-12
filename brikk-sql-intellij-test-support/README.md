@@ -69,6 +69,23 @@ mapping is cleared when that disposable ends.
 `GenericJdbcIntrospectorGate` registered for that exact dbms and the platform refuses native
 introspection at server majors around PostgreSQL's threshold and Trino's (0 to 10000).
 
+`assertFallbackExtensionsAudited(dbms, allowed)` fails unless every dbms-keyed Database Tools
+extension the dbms inherits through its `extensionFallback` chain is registered for the dbms itself
+or listed in `allowed` (extension point name to reason). Blank reasons and listed points that are no
+longer inherited fail too. A dbms takes its fallback's extensions for any point where it has none of
+its own, so a new platform extension point would otherwise be inherited silently.
+`inheritedDbmsExtensions(dbms)` lists the inherited points and the dbms each comes from, to start
+the list:
+
+```kotlin
+fun testFallbackExtensionsAreAudited() = assertFallbackExtensionsAudited(MyDbms.DBMS, mapOf(
+    "com.intellij.database.typeSystem" to "PostgreSQL types are the engine's types",
+))
+```
+
+Finding the extension points reads `ExtensionsArea.nameToPointMap`, internal platform API; the
+test kit is never bundled, so the support jar's containment rule does not apply to it.
+
 ## Platform tests
 
 Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run
