@@ -8,7 +8,6 @@ import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.dialects.base.SqlElementFactoryBase
 import com.intellij.sql.dialects.base.SqlParserDefinitionBase
 import com.intellij.sql.dialects.clickhouse.CHouseLexer
-import com.intellij.sql.dialects.clickhouse.CHouseParser
 import com.intellij.sql.dialects.clickhouse.CHouseParserDefinition
 import com.intellij.sql.psi.stubs.elementTypes.SqlFileElementType
 import dev.brikk.house.sql.intellij.lexer.StatementBoundedSqlLexer
@@ -40,7 +39,8 @@ public open class CHouseFamilyParserDefinition(
     /** The substrate lexer of one statement: the platform ClickHouse lexer, or one wrapping it. */
     protected open fun createBaseLexer(): Lexer = CHouseLexer()
 
-    override fun createParser(project: Project?): PsiParser = CHouseParser()
+    /** A [CHouseFamilyParser], so statements keep their [coreDialect] boundaries. */
+    override fun createParser(project: Project?): PsiParser = CHouseFamilyParser(coreDialect)
 
     override fun getFileNodeType(): IFileElementType = fileNodeType
 

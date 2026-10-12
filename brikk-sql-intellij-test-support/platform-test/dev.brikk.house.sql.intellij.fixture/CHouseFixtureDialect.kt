@@ -9,11 +9,11 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 import com.intellij.openapi.project.Project
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.base.SqlSyntaxHighlighterFactory
-import com.intellij.sql.dialects.clickhouse.CHouseParser
 import com.intellij.sql.psi.SqlStatement
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.dialect.CHouseFamilyDialect
+import dev.brikk.house.sql.intellij.parser.CHouseFamilyParser
 import dev.brikk.house.sql.intellij.parser.CHouseFamilyParserDefinition
 import dev.brikk.house.sql.intellij.parser.parseLenientStatement
 import dev.brikk.house.sql.intellij.parser.wordAt
@@ -29,9 +29,9 @@ object CHouseFixtureDbms {
 }
 
 /** Parses SHOW statements leniently, as a plugin does for statements the grammar lacks. */
-class CHouseFixtureParser : CHouseParser() {
-    override fun parseSqlStatement(builder: PsiBuilder, level: Int): Boolean =
-        if (builder.wordAt(0) == "SHOW") builder.parseLenientStatement() else super.parseSqlStatement(builder, level)
+class CHouseFixtureParser : CHouseFamilyParser() {
+    override fun parseStatement(builder: PsiBuilder, level: Int): Boolean =
+        if (builder.wordAt(0) == "SHOW") builder.parseLenientStatement() else super.parseStatement(builder, level)
 }
 
 class CHouseFixtureParserDefinition : CHouseFamilyParserDefinition(CHouseFixtureDialect) {
