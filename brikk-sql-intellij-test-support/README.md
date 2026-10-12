@@ -73,7 +73,10 @@ introspection at server majors around PostgreSQL's threshold and Trino's (0 to 1
 extension the dbms inherits through its `extensionFallback` chain is registered for the dbms itself
 or listed in `allowed` (extension point name to reason). Blank reasons and listed points that are no
 longer inherited fail too. A dbms takes its fallback's extensions for any point where it has none of
-its own, so a new platform extension point would otherwise be inherited silently.
+its own, so a new platform extension point would otherwise be inherited silently. The chain is the
+platform's: each dbms's first `extensionFallback`, then `UNKNOWN` (the generic dbms), which every
+dbms falls back to last, so a dbms without a declared fallback is audited too. Points whose bean
+class cannot load are skipped.
 `inheritedDbmsExtensions(dbms)` lists the inherited points and the dbms each comes from, to start
 the list:
 
