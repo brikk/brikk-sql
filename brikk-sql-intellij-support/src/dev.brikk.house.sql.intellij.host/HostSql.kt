@@ -63,9 +63,10 @@ public data class HostSqlState(val claim: HostSqlClaim, val layout: HostSqlLayou
 
 /**
  * One plugin's SQL in host strings: it performs a recognizer's [HostSqlClaim]s, remembers each host's
- * state and marks the injected files, schedules a retry for every unavailable claim, and answers
- * what other features ask of a file. Keys belong to the instance, so plugins (and their copies of
- * this library) never see each other's state. Keep one instance per plugin.
+ * state and marks the injected files, schedules a retry for every unavailable or pending claim, and
+ * answers what other features ask of a file. Keys belong to the instance, so plugins (and their copies
+ * of this library) never see each other's state. Keep one instance per plugin; register its claims
+ * through a [HostSqlInjector], the one registration that keeps other injections off claimed strings.
  */
 @ApiStatus.Experimental
 public open class HostSqlChannel(public val id: String) {
@@ -76,8 +77,9 @@ public open class HostSqlChannel(public val id: String) {
     /**
      * Performs [claim] for [host]: injects the SQL of [HostSqlClaim.Injected] (with [prefix] before
      * the first place and [suffix] after the last), claims [HostSqlClaim.Unavailable] without
-     * injecting anything and schedules a retry. Returns whether the host is claimed, so the caller's
-     * performer returns it and no other injection (plain SQL, say) takes the string.
+     * injecting anything and schedules a retry. Returns whether the host is claimed: a
+     * [HostSqlInjector] returns it as its performer's result, which keeps every later contributor and
+     * performer of the host language off the string.
      */
     public fun perform(registrar: MultiHostRegistrar, host: PsiLanguageInjectionHost, claim: HostSqlClaim, prefix: String = "", suffix: String = ""): Boolean =
         when (claim) {
@@ -118,8 +120,24 @@ public open class HostSqlChannel(public val id: String) {
     /** The marker of [file] when this channel injected it; also for a completion copy. */
     public fun marker(file: PsiFile?): HostSqlMarker? = file?.let { it.getUserData(fileKey) ?: it.originalFile.getUserData(fileKey) }
 
-    /** Whether [file] is SQL this channel injected for editing only: PIPE Execute refuses it, run-to-stage is unavailable. */
-    public fun isInspectionOnly(file: PsiFile?): Boolean = marker(file)?.inspectionOnly == true
+    /**
+     * Whether a host string this channel has not decided about is still its own, so SQL another
+     * injector put there is inspection-only too; a plugin asks its recognizer. False by default.
+     */
+    protected open fun claimsHost(host: PsiLanguageInjectionHost): Boolean = false
+
+    /**
+     * Whether [file] is SQL for editing only, never to run as it is: SQL this channel injected as
+     * inspection-only or pending, or any SQL injected into a host string the channel claims (its
+     * last claim, or [claimsHost]), even by another injector. PIPE Execute refuses it and
+     * run-to-stage is unavailable.
+     */
+    public fun isInspectionOnly(file: PsiFile?): Boolean {
+        file ?: return false
+        marker(file)?.let { return it.inspectionOnly || it.pending }
+        val host = InjectedLanguageManager.getInstance(file.project).getInjectionHost(file.originalFile) ?: return false
+        return state(host)?.claim.let { it != null && it != HostSqlClaim.NotClaimed } || claimsHost(host)
+    }
 
     /** Whether [file] waits for facts; relation diagnostics do not run then. */
     public fun isPending(file: PsiFile?): Boolean = marker(file)?.pending == true
