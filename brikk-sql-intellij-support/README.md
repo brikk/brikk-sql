@@ -351,6 +351,27 @@ catalog, over the connection the platform hands over for loading sources. Regist
 `ShowCreateDefinitionProvider("trino", mapOf(TABLE to DefinedObject.TABLE, VIEW to DefinedObject.VIEW,
 MAT_VIEW to DefinedObject.MATERIALIZED_VIEW, SCHEMA to DefinedObject.SCHEMA), listOf(DATABASE, SCHEMA))`.
 
+### Text explain
+
+Explain Plan as text in a popup with Copy, for dialects whose plan is text (Doris, Trino). A plugin
+implements one `TextExplainProfile` (minimum `dbms`, `productLabel`, core `dialect`, the bundled
+`builtinFunctions`; optional `searchPath`, `pipe`, `timeout`; `enabled` is false until a dialect turns it
+on) and registers no-arg subclasses: `TextExplainService(project, scope)` as a project service, and
+`TextExplainConfiguration(serviceClass)` as `dynamicActionConfigurationCustomizer`. The configuration
+wraps `Console.Jdbc.ExplainPlan` cooperatively: in the profile's consoles it shows the action and
+explains the selection, else the statement at the caret; every other console keeps the wrapped action
+(the stock graphical explain, or another plugin's wrapper).
+
+Safety: the statement (PIPE lowered first, unresolved PIPE parameters refused) goes through core's
+`prepareTextExplain`, which explains only a single plain query that reads no table function and calls
+only built-in functions, for Trino and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
+function arguments (`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence). It runs on a new
+helper connection to the console's data source, never the console's session, so the session's
+transaction, settings and namespace stay as they are; the helper first switches to the console's current
+namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), and a namespace the
+strategy cannot switch to refuses rather than explaining in the wrong one. Cancellation and the
+`timeout` cancel the running statement.
+
 ### Out-of-scope references
 
 A reference into a namespace the model lists but never introspected fails to resolve though the name

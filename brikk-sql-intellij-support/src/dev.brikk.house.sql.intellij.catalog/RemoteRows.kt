@@ -35,3 +35,16 @@ internal fun DatabaseConnectionCore.queryRows(
         JdbcNativeUtil.closeRemoteStatementSafe(statement)
     }
 }
+
+/** Runs [sql], which returns no rows (such as `USE`), over this connection; [onStatement] as for [queryRows]. Failures throw. */
+internal fun DatabaseConnectionCore.executeStatement(sql: String, queryTimeoutSeconds: Int = 0, onStatement: (RemoteStatement?) -> Unit = {}) {
+    val statement = JdbcNativeUtil.computeRemote { remoteConnection.createStatement() } ?: error("No statement")
+    onStatement(statement)
+    try {
+        if (queryTimeoutSeconds > 0) JdbcNativeUtil.performSafe { statement.setQueryTimeout(queryTimeoutSeconds) }
+        JdbcNativeUtil.computeRemote { statement.execute(sql) }
+    } finally {
+        onStatement(null)
+        JdbcNativeUtil.closeRemoteStatementSafe(statement)
+    }
+}
