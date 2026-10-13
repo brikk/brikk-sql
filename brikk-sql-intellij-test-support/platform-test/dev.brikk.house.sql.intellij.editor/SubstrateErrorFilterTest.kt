@@ -41,8 +41,8 @@ class SubstrateErrorFilterTest : CHouseFixtureTestCase() {
     override fun parserDefinition(): ParserDefinition = ErrorRecordingDefinition()
 
     /** The error inside the lenient SHOW and the grammar's own errors in the SELECT. */
-    private fun errors(): Pair<PsiErrorElement, List<PsiErrorElement>> {
-        configureCHouse("SHOW x y;\nSELECT 1 FROM;")
+    private fun errors(show: String = "SHOW x y"): Pair<PsiErrorElement, List<PsiErrorElement>> {
+        configureCHouse("$show;\nSELECT 1 FROM;")
         val (lenient, grammar) = PsiTreeUtil.findChildrenOfType(myFixture.file, PsiErrorElement::class.java)
             .partition { it.textOffset < myFixture.editor.document.text.indexOf(';') }
         assertNotEmpty(grammar)
@@ -58,6 +58,15 @@ class SubstrateErrorFilterTest : CHouseFixtureTestCase() {
         val highlighted = myFixture.doHighlighting(HighlightSeverity.ERROR).map { it.startOffset }
         assertNotEmpty(highlighted)
         assertTrue(highlighted.none { it < myFixture.editor.document.text.indexOf(';') })
+    }
+
+    fun testALenientStatementWithUserParametersIsStillLenient() {
+        for (show in listOf("SHOW x \${p} y", "SHOW x :p y", "SHOW x ? y")) {
+            val (lenient, grammar) = errors(show)
+            val filter = LenientErrorFilter()
+            assertFalse(show, filter.shouldHighlightErrorElement(lenient))
+            assertTrue(show, grammar.all(filter::shouldHighlightErrorElement))
+        }
     }
 
     fun testAllHidesEveryError() {
