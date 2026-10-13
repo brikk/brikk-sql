@@ -51,6 +51,52 @@ private val contract = PipeExecutionContract(MyPipeDialect, "my-driver-id", "a-f
 fun testRefusesStaleInput() = contract.refusesStaleInput()
 ```
 
+## Plugin isolation
+
+`PluginIsolationContract` holds the isolation checks every dialect plugin repeated: the plugin and its
+siblings are installed and enabled, each with its own `PluginClassLoader`; the packages it bundles load
+from its own jars and are defined by its loader, while a sibling bundling the same class has its own copy;
+its languages are its own and parse; every Execute action chains each wrapping plugin's
+`CooperativeExecuteAction` and ends in `RunQueryAction`; registering the installed Execute customizers in
+every order reaches each action exactly once, also after the first registered is removed; and nothing
+logs an error on any thread, from before the light project opens (its startup) to the end of each test.
+The plugin supplies only its id, its siblings' ids, its language ids and its owned packages; it knows
+nothing of any one plugin. Run it in the isolation test run (the plugin and its siblings installed as
+distributions, the Brikk jars off the test classpath):
+
+```kotlin
+class MyPluginIsolationTest : BasePlatformTestCase() {
+    private val contract = PluginIsolationContract(
+        pluginId = "dev.sort.my-intellij-plugin",
+        siblingPluginIds = System.getProperty("test.siblingPlugins", "").split(',').filter(String::isNotBlank)
+            .map { "dev.sort.$it-intellij-plugin" },
+        languageIds = setOf("MySQL Dialect"),
+        ownedPackages = listOf("dev.brikk.house.sql", "dev.brikk.house.sql.intellij"),
+        wrapsExecuteActions = true,              // false for a plugin without CooperativeExecuteConfiguration
+        kotlinPluginEnabled = System.getProperty("test.kotlin")?.let { it == "present" },
+    )
+
+    override fun setUp() {
+        contract.collectErrors()                 // before the light project opens
+        super.setUp()
+    }
+
+    override fun tearDown() = RunAll({ super.tearDown() }, { contract.assertNoErrors() }).run()
+
+    fun testErrorsOnPooledThreadsAreSeen() = contract.anErrorLoggedOnAPooledThreadIsSeen()
+    fun testInstalledApart() = contract.thePluginAndItsSiblingsAreInstalledApart()
+    fun testOwnedPackages() = contract.ownedPackagesLoadFromThePlugin()
+    fun testLanguages() = contract.theLanguagesAreThePlugins(project)
+    fun testExecuteChains() = contract.everyExecuteChainKeepsEachPluginsWrapper()
+    fun testRegistrationOrders() = contract.everyRegistrationOrderReachesEachActionOnce(project)
+}
+```
+
+Each check is also a `PluginIsolation` function taking what it reads (`assertInstalledApart`,
+`assertOwnsPackages`, `assertLanguages`, `assertExecuteChains`, `installedCustomizers`,
+`assertEveryRegistrationOrder`), for plugin-specific checks beside the contract, such as a sibling's
+own wrapper class. Checks fail with an `AssertionError`.
+
 ## Lexer restarts
 
 `assertRestartsMatchFullLex(::MyLexer, text)` lexes `text` in full and again from every token
