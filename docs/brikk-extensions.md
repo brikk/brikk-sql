@@ -1951,6 +1951,9 @@ joins the first column of the plan rows.
 `definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris and Trino
 `SHOW CREATE`, DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
 macros rebuilt from `duckdb_functions()`, whose definition says that parameter defaults are not reported.
+Every DuckDB call is qualified as `system.main.`: a user macro named `duckdb_tables` shadows the
+unqualified call and runs (DuckDB 1.5.6 advanced a sequence through it), while the qualified one reads the
+catalog. Macro schemas, names and parameters are quoted, so `"select"("a b")` round-trips.
 
 ## Upstream sync protocol
 

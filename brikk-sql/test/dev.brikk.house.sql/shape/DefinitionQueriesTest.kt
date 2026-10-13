@@ -3,6 +3,7 @@ package dev.brikk.house.sql.shape
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class DefinitionQueriesTest {
     private fun sql(dialect: String, kind: DefinedObject, vararg path: String) = definitionQuery(dialect, kind, path.toList())?.sql
@@ -46,14 +47,20 @@ class DefinitionQueriesTest {
     @Test
     fun duckdbReadsItsCatalogTables() {
         assertEquals(
-            "SELECT sql FROM duckdb_tables() WHERE database_name = 'lake' AND schema_name = 'web' AND table_name = 'it''s'",
+            "SELECT sql FROM system.main.duckdb_tables() WHERE database_name = 'lake' AND schema_name = 'web' AND table_name = 'it''s'",
             sql("duckdb", DefinedObject.TABLE, "lake", "web", "it's"),
         )
         assertEquals(
-            "SELECT sql FROM duckdb_views() WHERE database_name = 'memory' AND schema_name = 'main' AND view_name = 'v' AND NOT internal",
+            "SELECT sql FROM system.main.duckdb_views() WHERE database_name = 'memory' AND schema_name = 'main' AND view_name = 'v' AND NOT internal",
             sql("duckdb", DefinedObject.VIEW, "memory", "main", "v"),
         )
         assertNull(sql("duckdb", DefinedObject.TABLE, "main", "t"), "needs the database")
+        for (kind in listOf(DefinedObject.TABLE, DefinedObject.VIEW, DefinedObject.SEQUENCE, DefinedObject.INDEX, DefinedObject.MACRO)) {
+            val text = checkNotNull(sql("duckdb", kind, "memory", "main", "x"))
+            // A user macro of the same name shadows an unqualified call; every function is the system's.
+            val calls = Regex("""([A-Za-z_.]+)\(""").findAll(text).map { it.groupValues[1] }.toList()
+            assertTrue(calls.isNotEmpty() && calls.all { it.startsWith("system.main.") }, "$kind: $text")
+        }
         assertNull(sql("duckdb", DefinedObject.CATALOG, "lake"))
         assertNull(sql("duckdb", DefinedObject.SCHEMA, "lake", "web"))
         assertNull(sql("postgres", DefinedObject.TABLE, "db", "s", "t"))
@@ -67,12 +74,12 @@ class DefinitionQueriesTest {
             mapOf("function_type" to "macro", "parameters" to "a, b, c", "macro_definition" to "((a + b) + c)"),
         )
         assertEquals(
-            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO web.add(a, b) AS (a + b), (a, b, c) AS ((a + b) + c);",
+            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"web\".\"add\"(a, b) AS (a + b), (a, b, c) AS ((a + b) + c);",
             query.definition(rows),
         )
         val table = checkNotNull(definitionQuery("duckdb", DefinedObject.MACRO, listOf("memory", "My Schema", "rows")))
         assertEquals(
-            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"My Schema\".rows(n) AS TABLE SELECT * FROM \"range\"(n);",
+            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"My Schema\".\"rows\"(n) AS TABLE SELECT * FROM \"range\"(n);",
             table.definition(listOf(mapOf("function_type" to "table_macro", "parameters" to "n", "macro_definition" to "SELECT * FROM \"range\"(n)"))),
         )
         assertNull(query.definition(emptyList()))

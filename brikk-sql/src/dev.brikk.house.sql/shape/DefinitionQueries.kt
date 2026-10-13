@@ -61,20 +61,23 @@ private fun duckdbQuery(kind: DefinedObject, path: List<String>): DefinitionQuer
     val (database, schema, name) = path
     fun literal(value: String) = "'${value.replace("'", "''")}'"
     val where = "database_name = ${literal(database)} AND schema_name = ${literal(schema)}"
+    // Every call is qualified with DuckDB's system namespace: a user macro of the same name shadows an unqualified one.
     fun catalogSql(table: String, nameColumn: String, extra: String = "") =
-        DefinitionQuery("SELECT sql FROM $table() WHERE $where AND $nameColumn = ${literal(name)}$extra") { rows -> rows.firstOrNull()?.get("sql") }
+        DefinitionQuery("SELECT sql FROM $SYSTEM$table() WHERE $where AND $nameColumn = ${literal(name)}$extra") { rows -> rows.firstOrNull()?.get("sql") }
     return when (kind) {
         DefinedObject.TABLE -> catalogSql("duckdb_tables", "table_name")
         DefinedObject.VIEW -> catalogSql("duckdb_views", "view_name", " AND NOT internal")
         DefinedObject.SEQUENCE -> catalogSql("duckdb_sequences", "sequence_name")
         DefinedObject.INDEX -> catalogSql("duckdb_indexes", "index_name")
         DefinedObject.MACRO -> DefinitionQuery(
-            "SELECT function_type, array_to_string(parameters, ', ') AS parameters, macro_definition FROM duckdb_functions() " +
+            "SELECT function_type, " +
+                "${SYSTEM}array_to_string(${SYSTEM}list_transform(parameters, p -> ${SYSTEM}concat('\"', ${SYSTEM}replace(p, '\"', '\"\"'), '\"')), ', ') AS parameters, " +
+                "macro_definition FROM ${SYSTEM}duckdb_functions() " +
                 "WHERE $where AND function_name = ${literal(name)} AND function_type IN ('macro', 'table_macro') ORDER BY function_oid",
         ) { rows ->
             rows.takeIf { it.isNotEmpty() }?.joinToString(
                 ", ",
-                prefix = "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO ${duckdbName(schema)}.${duckdbName(name)}",
+                prefix = "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO ${duckdbQuoted(schema)}.${duckdbQuoted(name)}",
                 postfix = ";",
             ) { row ->
                 val table = if (row["function_type"] == "table_macro") "TABLE " else ""
@@ -85,9 +88,9 @@ private fun duckdbQuery(kind: DefinedObject, path: List<String>): DefinitionQuer
     }
 }
 
-private val PLAIN_NAME = Regex("[a-z_][a-z0-9_]*")
+private const val SYSTEM = "system.main."
 
-private fun duckdbName(name: String): String = if (PLAIN_NAME.matches(name)) name else "\"${name.replace("\"", "\"\"")}\""
+private fun duckdbQuoted(name: String): String = "\"${name.replace("\"", "\"\"")}\""
 
 /**
  * The definition a `SHOW CREATE` returned: the column whose label names it or whose value starts with

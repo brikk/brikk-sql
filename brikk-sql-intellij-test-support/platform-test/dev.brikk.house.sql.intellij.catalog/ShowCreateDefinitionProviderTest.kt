@@ -74,12 +74,34 @@ class ShowCreateDefinitionProviderTest : BasePlatformTestCase() {
         assertTrue("CREATE TABLE o(x INTEGER);" in load(databases.createOrGet("lake").schemas.createOrGet("main").tables.createOrGet("o")))
     }
 
+    /** A user macro named like a catalog function, or like a function the reads use, is never called. */
+    fun testUserMacrosNamedLikeCatalogFunctionsAreNotCalled() {
+        engine.createStatement().use { statement ->
+            statement.execute("CREATE SEQUENCE calls")
+            for (name in listOf("duckdb_tables", "duckdb_views", "duckdb_functions")) {
+                statement.execute("CREATE MACRO $name() AS TABLE SELECT nextval('calls')::VARCHAR AS sql, 'memory' AS database_name, 'web' AS schema_name, 't' AS table_name, 'v' AS view_name, 'add' AS function_name, 'macro' AS function_type, ['a'] AS parameters, '1' AS macro_definition, 0 AS function_oid, false AS internal")
+            }
+            for (name in listOf("array_to_string", "list_transform", "concat", "replace")) statement.execute("CREATE MACRO $name(a, b := 0, c := 0) AS nextval('calls')")
+        }
+        val web = (ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES).root as PgRoot).databases.createOrGet("memory").schemas.createOrGet("web")
+        assertTrue(load(web.tables.createOrGet("t")).contains("CREATE TABLE web.t("))
+        assertTrue(load(web.views.createOrGet("v")).contains("CREATE VIEW web.v AS"))
+        assertTrue(load(web.routines.createOrGet("add")).contains("CREATE MACRO \"web\".\"add\""))
+        engine.createStatement().use { statement ->
+            val error = runCatching { statement.executeQuery("SELECT currval('calls')").use { it.next() } }.exceptionOrNull()
+            assertTrue("the sequence was never advanced: $error", error?.message.orEmpty().contains("not yet defined"))
+        }
+    }
+
     fun testMacrosAreRebuiltWithTheirOverloadsAndSayWhatTheyLeaveOut() {
         val web = (ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES).root as PgRoot).databases.createOrGet("memory").schemas.createOrGet("web")
         val add = load(web.routines.createOrGet("add"))
-        assertTrue(add, add.contains("-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO web.add(a, b) AS (a + b), (a, b, c) AS ((a + b) + c);"))
+        assertTrue(add, add.contains("-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"web\".\"add\"(\"a\", \"b\") AS (a + b), (\"a\", \"b\", \"c\") AS ((a + b) + c);"))
         val rows = load(web.routines.createOrGet("rows"))
-        assertTrue(rows, rows.contains("CREATE MACRO web.rows(n) AS TABLE SELECT * FROM \"range\"(n);"))
+        assertTrue(rows, rows.contains("CREATE MACRO \"web\".\"rows\"(\"n\") AS TABLE SELECT * FROM \"range\"(n);"))
+        engine.createStatement().use { it.execute("CREATE MACRO web.\"select\"(\"a b\", \"c\"\"d\") AS 1") }
+        val quoted = load(web.routines.createOrGet("select"))
+        assertTrue(quoted, quoted.contains("CREATE MACRO \"web\".\"select\"(\"a b\", \"c\"\"d\") AS 1;"))
         engine.createStatement().use { it.execute("DROP MACRO web.add") }
         assertFalse("a macro the server no longer has", "CREATE MACRO" in load(web.routines.createOrGet("add")))
     }
