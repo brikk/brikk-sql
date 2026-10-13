@@ -282,14 +282,14 @@ internal class ScopeEvaluator(
             side == "FULL" -> null
             else -> left
         }
-        if (kept != null) return kept.copy(relation = "")
+        if (kept != null) return kept.copy(relation = "", relationKind = null)
         // COALESCE(left, right) over a FULL join: each side alone supplies the rows the other lacks.
         val nullability = when {
             left?.nullability == Nullability.NULLABLE || right?.nullability == Nullability.NULLABLE -> Nullability.NULLABLE
             left?.nullability == Nullability.NON_NULL && right?.nullability == Nullability.NON_NULL -> Nullability.NON_NULL
             else -> Nullability.UNKNOWN
         }
-        if (left != null && left.source != null && left.source == right?.source) return left.copy(relation = "", nullability = nullability)
+        if (left != null && left.source != null && left.source == right?.source) return left.copy(relation = "", relationKind = null, nullability = nullability)
         // One key in two relations: what both sides say about it still holds.
         return computed(key.name, nullability, "USING", left?.sqlType?.takeIf { it == right?.sqlType })
             .copy(displayType = left?.displayType?.takeIf { it == right?.displayType })
@@ -369,7 +369,7 @@ internal class ScopeEvaluator(
         val label = parts.joinToString(".", transform = ::stored)
         val relation = ScopeRelation(label, RelationKind.TABLE, fact.knowledge, key, fact.provenance)
         reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, fact.knowledge, relation = relation, start = parts.firstOrNull())
-        return Binding(label, true, relation, fact.columns.map { it.visible(key, label) }, path(parts, key))
+        return Binding(label, true, relation, fact.columns.map { it.visible(key, label, RelationKind.TABLE) }, path(parts, key))
     }
 
     private fun tableFunction(node: Table, function: Anonymous, env: Env, lateral: Frame): Binding {
@@ -391,7 +391,7 @@ internal class ScopeEvaluator(
                 if (fact != null) Resolution.RESOLVED else Resolution.UNRESOLVED, relation.knowledge, relation = relation.takeIf { fact != null })
         }
         val label = stored(name, quoted = false)
-        return Binding(label, true, relation.copy(name = label), fact?.columns.orEmpty().map { it.visible(name, label) })
+        return Binding(label, true, relation.copy(name = label), fact?.columns.orEmpty().map { it.visible(name, label, kind) })
     }
 
     private fun cte(name: Identifier?, env: Env): Pair<Cte, Row>? {
@@ -409,7 +409,7 @@ internal class ScopeEvaluator(
         declaration: ScopeRange? = null,
     ): Binding {
         val name = if (synthetic || label == null) "" else stored(label)
-        val columns = deduplicated(row.columns).map { it.copy(relation = name) }
+        val columns = deduplicated(row.columns).map { it.through(name, kind) }
         return Binding(name, name.isNotEmpty(), ScopeRelation(name, kind, row.knowledge, source, declaration = declaration), columns)
     }
 
@@ -419,7 +419,7 @@ internal class ScopeEvaluator(
         val label = alias.thisArg as? Identifier
         val name = label?.let(::stored) ?: binding.name
         val qualifiable = if (label != null) names.positioned(label) else binding.qualifiable
-        val columns = renamedColumns(binding.columns, alias).map { it.copy(relation = if (qualifiable) name else "") }
+        val columns = renamedColumns(binding.columns, alias).map { it.through(if (qualifiable) name else "", binding.relation.kind) }
         val declaration = label?.let(::declared) ?: binding.relation.declaration
         return Binding(name, qualifiable, binding.relation.copy(name = name, declaration = declaration), columns)
     }
@@ -458,7 +458,7 @@ internal class ScopeEvaluator(
     // ------------------------------------------------------------------ projections
 
     private fun star(star: Star, bindings: List<Binding>, merged: List<ScopeColumn>, frame: Frame, env: Env, context: String): Pair<List<ScopeColumn>, Knowledge> {
-        var columns = expandStar(bindings, merged).map { it.copy(relation = "") }
+        var columns = expandStar(bindings, merged).map { it.copy(relation = "", relationKind = null) }
         val knowledge = Frame(bindings, null).absence
         // Modifiers name input columns: references resolve where the star reads.
         val pool = Frame(bindings, null, merged)
@@ -533,7 +533,7 @@ internal class ScopeEvaluator(
         // SET's replacement alias is synthetic; the SET target names the column.
         val declaration = alias?.let(::declared) ?: origins.setTargets[projection.thisArg]?.let { (it.thisArg as? Identifier)?.let(::declared) }
         if (value is Column && value.thisArg is Identifier) {
-            resolved[value]?.let { return it.copy(name = name, relation = "", declaration = declaration ?: it.declaration) }
+            resolved[value]?.let { return it.copy(name = name, relation = "", relationKind = null, declaration = declaration ?: it.declaration) }
         }
         val by = origins.stages[projection] ?: origins.stages[projection.thisArg] ?: origins.stages[value] ?: context
         return ScopeColumn(name, "", ColumnOrigin.COMPUTED, nullabilityOf(value), sqlTypeOf(value), computedBy = by, declaration = declaration)
@@ -695,7 +695,7 @@ internal class ScopeEvaluator(
         return Binding(name, label != null || binding.qualifiable && name.isNotEmpty(),
             ScopeRelation(name, binding.relation.kind, knowledge, binding.relation.source, binding.relation.provenance,
                 label?.let(::declared) ?: binding.relation.declaration),
-            output.map { it.copy(relation = name) })
+            output.map { it.through(name, binding.relation.kind) })
     }
 
     private fun values(node: Values, env: Env): Row {
@@ -920,8 +920,13 @@ internal class ScopeEvaluator(
         return parts.reversed().zip(keys.reversed()).all { (part, name) -> same(part, name, columns = false) }
     }
 
-    private fun ColumnFact.visible(relation: String, label: String) =
-        ScopeColumn(name, label, origin, nullability, sqlType, displayType, ColumnSource(relation, this), provenance = provenance)
+    private fun ColumnFact.visible(relation: String, label: String, kind: RelationKind) =
+        ScopeColumn(name, label, origin, nullability, sqlType, displayType, ColumnSource(relation, this, kind), provenance = provenance)
+            .through(label, kind)
+
+    /** [this] as seen through the relation [name] of [kind], or through none when [name] is empty. */
+    private fun ScopeColumn.through(name: String, kind: RelationKind) =
+        copy(relation = name, relationKind = kind.takeIf { name.isNotEmpty() })
 
     private val canonicalTypes = HashMap<String, String>()
 

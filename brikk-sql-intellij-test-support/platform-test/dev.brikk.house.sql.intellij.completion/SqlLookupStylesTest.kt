@@ -35,6 +35,7 @@ class SqlLookupStylesTest : CompletionTestCase() {
             PIPE_STAGE to SqlLookupStyle(typeText = "PIPE stage", bold = true, case = LookupCase.UPPER),
             PIPE_INPUT_COLUMN to SqlLookupStyle(DatabaseIcons.Col, "PIPE input column", priority = 95.0),
             BRIKK_COLUMN to SqlLookupStyle(SqlLookupIcons.BrikkColumn, priority = 120.0),
+            RELATION_COLUMN to SqlLookupStyle(DatabaseIcons.Col, priority = 110.0),
             CATALOG to SqlLookupStyle(DatabaseIcons.Database, "catalog", priority = 96.0),
             SCHEMA to SqlLookupStyle(DatabaseIcons.Schema, "schema", priority = 96.0),
             TABLE to SqlLookupStyle(DatabaseIcons.Table, "table", priority = 96.0),
