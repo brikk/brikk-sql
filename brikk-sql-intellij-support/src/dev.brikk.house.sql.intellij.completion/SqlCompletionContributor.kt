@@ -9,6 +9,7 @@ import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementDecorator
 import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.database.model.DasRoutine
 import com.intellij.database.util.Case
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
@@ -17,10 +18,12 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.dialects.BuiltinFunction
 import com.intellij.sql.formatter.settings.SqlCodeStyles
 import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
+import com.intellij.sql.psi.SqlResolveResult
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
@@ -58,10 +61,12 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
     }
 
     /**
-     * Keywords that neither [functions] (upper-case names this contributor offered) nor a later
-     * contributor offered; none outside code (a null [position]). Keywords of later contributors are spelled in the same case as these:
-     * the user's SQL code style keyword case if it sets one, else the profile's. A PIPE stage head
-     * gets none of its own: only a stage phrase stands there.
+     * Passes on later contributors' items, dropping the base dialect's builtin-function items for
+     * [functions] (upper-case names this contributor offered from metadata), so each is offered once;
+     * the base dialect's own forms stay. Then keywords that neither [functions] nor a later
+     * contributor offered; none outside code (a null [position]). Keywords of later contributors are
+     * spelled in the same case as these: the user's SQL code style keyword case if it sets one, else
+     * the profile's. A PIPE stage head gets none of its own: only a stage phrase stands there.
      */
     private fun completeKeywords(
         parameters: CompletionParameters,
@@ -74,16 +79,17 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         val style = profile.styles[SqlLookupKind.KEYWORD]
         val codeStyleCase = SqlCodeStyles.getSqlSettings(parameters.originalFile).keywordCase.takeIf { it != Case.MIXED }
         val recased = style.case.takeIf { codeStyleCase == null && it != LookupCase.AS_GIVEN }
-        if (scope == KeywordScope.NONE && recased == null) return
-        val catalog = reads.keywords ?: return
+        val catalog = if (scope != KeywordScope.NONE || recased != null) reads.keywords else null
+        if (catalog == null && functions.isEmpty()) return
         val offered = HashSet(functions)
         result.runRemainingContributors(parameters) { completion ->
             val element = completion.lookupElement
+            if (element.isBaseBuiltin() && element.lookupString.uppercase() in functions) return@runRemainingContributors
             offered += element.lookupString.uppercase()
-            val keyword = recased?.takeIf { element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
+            val keyword = recased?.takeIf { catalog != null && element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
             result.passResult(keyword?.let(completion::withLookupElement) ?: completion)
         }
-        if (scope == KeywordScope.NONE || position == null || position == FunctionPosition.STAGE_HEAD) return
+        if (catalog == null || scope == KeywordScope.NONE || position == null || position == FunctionPosition.STAGE_HEAD) return
         val fallback = if (codeStyleCase == null) style else style.copy(case = LookupCase.AS_GIVEN)
         val sink = result.caseInsensitive()
         for (keyword in catalog.keywords) {
@@ -93,6 +99,17 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
             sink.addElement(fallback.lookup(word, word, style.typeText))
         }
     }
+}
+
+/**
+ * Whether this item, from another contributor, is one of the base dialect's builtin functions: a
+ * prototype, or a resolved routine of the dialect's builtin model (no data source behind it, unlike
+ * an introspected routine).
+ */
+private fun LookupElement.isBaseBuiltin(): Boolean = when (val target = `object`) {
+    is BuiltinFunction.Prototype -> true
+    is SqlResolveResult -> target.element == null && target.targetSymbol?.dasObject is DasRoutine
+    else -> false
 }
 
 /**

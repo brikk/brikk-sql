@@ -148,6 +148,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   `stagePhrases` stands, no functions or metadata keywords are offered.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
+- The contributor offers a function metadata and the base dialect both know once, from metadata: the
+  base dialect's builtin items of that name (prototypes and builtin-model routines, never an
+  introspected routine) are dropped; its own forms, such as ClickHouse combinators, stay.
 - `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
   items (`BuiltinFunction.Prototype` only) that the profile's `builtinFunctionFilter` does not
   keep; null (the default) keeps them all.
