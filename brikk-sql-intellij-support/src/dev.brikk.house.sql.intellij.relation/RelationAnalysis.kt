@@ -150,7 +150,9 @@ internal class MergedFacts(val merged: RelationFacts, private val owners: Map<Pa
             // declares its catalog closed) lists all of its own.
             val catalogs = facts.map { it.second }.filter { it.tables.isNotEmpty() || it.catalog == CatalogKnowledge.CLOSED }.map { it.catalog }
             val catalog = if (catalogs.isNotEmpty() && catalogs.all { it == CatalogKnowledge.CLOSED }) CatalogKnowledge.CLOSED else CatalogKnowledge.OPEN
-            return MergedFacts(RelationFacts(slots, tables, calls, catalog), owners)
+            // Each provider's namespaces, in provider order.
+            val searchPath = facts.flatMap { it.second.searchPath }.distinct()
+            return MergedFacts(RelationFacts(slots, tables, calls, catalog, searchPath), owners)
         }
     }
 }
