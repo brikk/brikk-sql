@@ -51,12 +51,15 @@ class SqlDiagnosticsTest {
     }
 
     @Test
-    fun oneParseErrorIsOneDiagnosticAtItsRange() {
+    fun aStatementReportsItsFirstParseErrorOnly() {
         val sql = "INSERT INTO FUNCTION null('id UInt64') (id SELECT 1"
         val errors = localParseDiagnostics(sql, sql.indices, "clickhouse")
         assertEquals(listOf("Expecting )" to "id"), errors.map { it.message to sql.substring(it.start, it.end) })
+        // Later errors follow the parser's recovery from the first: like an engine, only the first is reported.
+        val cascade = "SELECT FROM WHERE = 1"
+        assertEquals(listOf("WHERE"), localParseDiagnostics(cascade, cascade.indices, "clickhouse").map { cascade.substring(it.start, it.end) })
         val apart = "SELECT f(a b) FROM t"
-        assertEquals(2, localParseDiagnostics(apart, apart.indices, "clickhouse").size, "errors at different ranges stay")
+        assertEquals(1, localParseDiagnostics(apart, apart.indices, "clickhouse").size)
     }
 
     @Test
