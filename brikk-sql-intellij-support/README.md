@@ -650,6 +650,12 @@ first column; `Column`, a labelled column; `FlaggedRow`, the name of the row a f
 Probes sharing SQL run it once; a probe that fails falls through. Without a catalog (and no default)
 the path is unknown; without a schema it is the catalog alone unless `schemaRequired`.
 
+A strategy switches by statement only. The kit runs one itself in a single place, text explain's helper
+(`TextExplainProfile.searchPath`). A dialect whose driver keeps no namespace a statement sets (ClickHouse's
+0.9.8 JDBC over HTTP forgets `USE db` between requests, while `setSchema` holds) keeps the platform's own
+switching instead of delegating to a strategy, as the ClickHouse plugin does; text explain is not run for
+ClickHouse, so no kit helper switches its namespace.
+
 ```kotlin
 // Doris
 CatalogSchemaSearchPath('`', "use {catalog}.{schema}", "use {schema}", "SWITCH {catalog}",
