@@ -60,12 +60,21 @@ internal class RelationAnalysis(
         relation.kind.takeIf { it in PROVIDED }?.let { kind -> relation.source?.let { facts.providerOf(kind, it) } }
 
     /**
-     * Whether [column] is the analysis's to resolve: a fact of a provider the platform does not
-     * resolve itself, seen directly through its slot, table or call; not when a CTE or derived table
-     * passes it on, where the platform resolves the inner reference.
+     * Whether [column], referred to at [offset], is the analysis's to resolve: a fact of a provider
+     * the platform does not resolve itself, seen directly through its slot, table or call. Not when
+     * a CTE or derived table passes it on from an explicit inner reference, which the platform
+     * resolves the outer one through; but when it came through `*`, where the platform has none.
      */
-    fun manages(column: ScopeColumn, offset: Int): Boolean =
-        column.origin != ColumnOrigin.COMPUTED && column.relationKind in PROVIDED && providerOf(column)?.platformResolves == false
+    fun manages(column: ScopeColumn, offset: Int): Boolean {
+        val source = column.source ?: return false
+        if (column.origin == ColumnOrigin.COMPUTED || providerOf(column)?.platformResolves != false) return false
+        if (column.relationKind in PROVIDED) return true
+        if (column.relationKind != RelationKind.CTE && column.relationKind != RelationKind.SUBQUERY) return false
+        val (_, scope) = statementOf(offset) ?: return false
+        return scope.references.none { reference ->
+            reference.kind == ReferenceKind.COLUMN && reference.columns.any { it.source == source && it.relationKind in PROVIDED }
+        }
+    }
 
     fun manages(relation: ScopeRelation): Boolean = providerOf(relation)?.platformResolves == false
 

@@ -117,4 +117,17 @@ class RelationResolveTest : RelationTestCase() {
         assertEmpty(unresolvedIn("SELECT id FROM events() a, events() b"))
         assertTrue(targets("id").isNotEmpty() && targets("id").all { it is DasColumnSymbol })
     }
+
+    fun testColumnsASelectStarPassesOnFromASlotResolve() {
+        enableResolveInspection()
+        registerPgRelations(testRootDisposable)
+        for ((sql, nth) in listOf(
+            "SELECT s.id FROM (SELECT * FROM events()) s" to 0,
+            "WITH c AS (SELECT * FROM events()) SELECT c.id FROM c" to 0,
+            "WITH c AS (SELECT * FROM events()) SELECT id FROM c" to 0,
+        )) {
+            assertEmpty(sql, unresolvedIn(sql))
+            assertTrue(sql, targets("id", nth).single() is DasColumnSymbol)
+        }
+    }
 }

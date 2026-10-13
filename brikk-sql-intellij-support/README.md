@@ -176,8 +176,10 @@ instance and revision. A slot, a table and a call with the same key are differen
 owned by the first provider that supplies it.
 
 A provider's column is *managed* where it is visible directly through that provider's slot, table or
-call (and the provider does not set `platformResolves`). Where a CTE or derived table passes it on, the
-platform resolves the outer reference itself through the inner one, so it gets no symbol of its own.
+call (core's `ScopeColumn.relationKind`; `ColumnSource.kind` picks the provider), and the provider does
+not set `platformResolves`. Where a CTE or derived table passes it on from an explicit inner reference,
+the platform resolves the outer reference through the inner one, so it gets no symbol of its own; where
+it came through `*`, which the platform cannot expand over a provider's relation, it stays managed.
 
 - `ExternalRelationResolveExtension` (`com.intellij.sql.resolveExtension`): light column symbols for
   managed columns, so platform resolve and highlighting see them. One provider column is one symbol,
@@ -208,7 +210,9 @@ platform resolves the outer reference itself through the inner one, so it gets n
 
 Each statement is analyzed on its own and the analysis is cached per file and profile while the
 document revision and every provider's revision stay; nothing is analyzed or cached while a provider
-is pending. Restart the daemon when facts change without an edit. Each consumer acts on exactly its
+is pending. Completion copies are analyzed in their own right (providers are asked about the
+original file). A symbol's equivalence to the provider's declaration asks for its navigation target
+during find usages, so `navigationTarget` should stay cheap. Restart the daemon when facts change without an edit. Each consumer acts on exactly its
 own language.
 
 `DasRelationFacts` (catalog kit) supplies the tables of a file's data source with stored names, so core

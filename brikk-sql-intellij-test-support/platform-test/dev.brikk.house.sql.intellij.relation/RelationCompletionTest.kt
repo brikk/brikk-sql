@@ -92,6 +92,8 @@ class RelationCompletionTest : RelationTestCase() {
             "WITH c AS (SELECT e.id AS key FROM events() e) SELECT c.<caret> FROM c" to "key",
             "SELECT t.<caret> FROM (SELECT e.id FROM events() e) t" to "id",
             "SELECT t.<caret> FROM (SELECT e.id AS key FROM events() e) t" to "key",
+            "WITH c AS (SELECT * FROM events()) SELECT c.<caret> FROM c" to "id",
+            "SELECT s.<caret> FROM (SELECT * FROM events()) s" to "id",
         )) {
             open(text)
             val items = items(name)
