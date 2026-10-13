@@ -179,7 +179,9 @@ registers no-arg subclasses:
   name each origin ("declared column (rel)" with the provider's display type, "relation contract
   (rel)", "computed column (stage or CTE)", "column (table)" with its SQL type) and pick its lookup kind;
   a provider can bring its own (the Brikk helper's "brikk column" with the bricks icon), and a renamed
-  column keeps its origin.
+  column keeps its origin. Where a relation stands, it offers the provider relations the platform does
+  not know (slots, table functions), inserted as core writes them (`src()`); CTEs and a data source's
+  tables stay the platform's items.
 - `ExternalRelationGotoDeclarationHandler`: the provider's target for its columns and relations, or the
   SQL's declaration where the platform resolves nothing (PIPE stages).
 - `ExternalRelationAnnotator`, or `relationDiagnostics(file, profile)` for a `NativeErrorProfile`:

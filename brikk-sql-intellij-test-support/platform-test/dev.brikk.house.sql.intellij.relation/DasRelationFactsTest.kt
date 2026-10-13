@@ -77,6 +77,11 @@ class DasRelationFactsTest : RelationTestCase() {
         assertEquals(1, offered("SELECT o.i<caret> FROM orders o", "id").size)
     }
 
+    fun testADataSourceTableIsLeftToThePlatformsCompletion() {
+        open("SELECT * FROM ord<caret>")
+        assertTrue(myFixture.completeBasic().orEmpty().count { it.lookupString == "orders" } <= 1)
+    }
+
     fun testTheFactsFollowTheModel() {
         assertEmpty(offered("FROM orders |> SELECT <caret>", "added"))
         orders.columns.createOrGet("added").apply { storedType = type("text") }

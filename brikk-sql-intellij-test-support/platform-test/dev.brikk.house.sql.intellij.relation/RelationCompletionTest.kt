@@ -62,6 +62,14 @@ class RelationCompletionTest : RelationTestCase() {
         assertEquals("  computed column (c)", LookupElementPresentation.renderElement(total).tailText)
     }
 
+    fun testASlotIsOfferedWhereARelationStandsAndInsertedAsACall() {
+        open("SELECT * FROM ev<caret>")
+        val item = items("events").single()
+        myFixture.lookup.currentItem = item
+        myFixture.finishLookup(Lookup.NORMAL_SELECT_CHAR)
+        assertEquals("SELECT * FROM events()", myFixture.editor.document.text)
+    }
+
     fun testNothingIsOfferedWhileFactsArePending() {
         pgRelations.fake.pending = true
         assertEmpty(offered("FROM events() |> SELECT <caret>", "id", "kind"))
