@@ -15,6 +15,9 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
 open class PostgresDialect : Dialect() {
 
     override val name: String get() = "postgres"
+
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val havingProjectionAliases: Boolean get() = false
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
     // sqlglot: Postgres.ASCII_ONLY_NORMALIZATION = True

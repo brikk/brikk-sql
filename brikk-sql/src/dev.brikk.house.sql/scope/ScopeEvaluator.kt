@@ -161,7 +161,8 @@ internal class ScopeEvaluator(
                 projections += columns
                 open = worst(open, knowledge)
             } else {
-                expression(projection, from, env)
+                // A lateral alias names an earlier item of the same list, after input columns.
+                expression(projection, if (dialect.lateralColumnAliases) from.with(aliases.toList(), first = false) else from, env)
                 val column = projected(projection, context)
                 projections += column
                 if (column.name.isNotEmpty()) {
@@ -170,9 +171,9 @@ internal class ScopeEvaluator(
                 }
             }
         }
-        expression(select.args["where"] as? Expression, from, env)
+        expression(select.args["where"] as? Expression, from.with(if (dialect.whereProjectionAliases) groupable else emptyList(), first = false), env)
         expression(select.args["group"] as? Expression, from.with(if (dialect.groupByProjectionAliases) groupable else emptyList(), first = false), env)
-        expression(select.args["having"] as? Expression, from.with(aliases, first = false), env)
+        expression(select.args["having"] as? Expression, from.with(if (dialect.havingProjectionAliases) aliases else emptyList(), first = false), env)
         expression(select.args["qualify"] as? Expression, from.with(aliases, first = false), env)
         (select.args["windows"] as? List<*>)?.filterIsInstance<Expression>()?.forEach { expression(it, from, env) }
         (select.args["distinct"] as? Expression)?.let { expression(it, from, env) }

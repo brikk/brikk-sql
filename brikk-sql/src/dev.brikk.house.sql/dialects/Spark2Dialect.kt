@@ -19,6 +19,9 @@ open class Spark2Dialect : HiveDialect() {
 
     override val name: String get() = "spark2"
 
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val groupByProjectionAliases: Boolean get() = true
+
     // sqlglot: Spark2.EXPRESSION_METADATA (sqlglot/typing/spark2.py)
     override val expressionMetadata get() = GeneratedTypingMetadata.SPARK2
 

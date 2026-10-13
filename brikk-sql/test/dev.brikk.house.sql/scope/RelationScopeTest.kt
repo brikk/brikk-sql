@@ -146,11 +146,26 @@ class RelationScopeTest {
     }
 
     @Test
-    fun groupBySeesProjectionAliasesWhereTheDialectDoes() {
-        val sql = "SELECT eventKind AS k, count(*) AS n FROM events() GROUP BY k"
-        assertEquals(id.copy(name = "eventKind").name, analyze(sql).column(sql, "k", 1).columns.single().source?.column?.name)
-        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), analyze(sql, "trino").problems())
-        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), analyze("SELECT count(*) AS n FROM events() GROUP BY n").problems())
+    fun clausesSeeProjectionAliasesWhereTheDialectDoes() {
+        fun problems(sql: String, dialect: String) = analyze(sql, dialect).problems()
+        val grouped = "SELECT eventKind AS k, count(*) AS n FROM events() GROUP BY k"
+        assertEquals(kind, analyze(grouped).column(grouped, "k", 1).columns.single().source?.column)
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems(grouped, "trino"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems(grouped, "hive"))
+        assertEquals(emptyList(), problems(grouped, "spark"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems("SELECT count(*) AS n FROM events() GROUP BY n", "duckdb"))
+        val having = "SELECT id AS k FROM events() GROUP BY id HAVING k > 0"
+        assertEquals(emptyList(), problems(having, "duckdb"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems(having, "postgres"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems(having, "trino"))
+        val where = "SELECT id AS k FROM events() WHERE k > 0"
+        assertEquals(emptyList(), problems(where, "duckdb"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems(where, "postgres"))
+        val lateral = "SELECT id AS k, k + 1 AS j FROM events()"
+        assertEquals(emptyList(), problems(lateral, "duckdb"))
+        assertEquals(emptyList(), problems(lateral, "clickhouse"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems(lateral, "trino"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems("SELECT k + 1 AS j, id AS k FROM events()", "duckdb"))
     }
 
     @Test

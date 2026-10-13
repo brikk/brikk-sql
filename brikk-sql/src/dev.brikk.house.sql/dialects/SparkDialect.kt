@@ -19,6 +19,9 @@ open class SparkDialect : Spark2Dialect() {
 
     override val name: String get() = "spark"
 
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val lateralColumnAliases: Boolean get() = true
+
     // sqlglot: Spark.EXPRESSION_METADATA (sqlglot/typing/spark.py)
     override val expressionMetadata get() = GeneratedTypingMetadata.SPARK
 

@@ -124,8 +124,13 @@ open class Dialect {
     // brikk-native: column names compare case-insensitively even where table names do not (MySQL family).
     internal open val caseInsensitiveColumns: Boolean get() = false
 
-    // brikk-native: GROUP BY may name a projection by its alias (Presto and Trino resolve only input columns).
+    // brikk-native: which clauses may name a projection by its alias, where input columns come first.
+    // GROUP BY: not Presto/Trino or Hive. HAVING: not PostgreSQL or Presto/Trino. WHERE and later
+    // items of the same SELECT list (lateral aliases): DuckDB and ClickHouse, Spark 3.4+ for lateral.
     internal open val groupByProjectionAliases: Boolean get() = true
+    internal open val havingProjectionAliases: Boolean get() = true
+    internal open val whereProjectionAliases: Boolean get() = false
+    internal open val lateralColumnAliases: Boolean get() = false
 
     // brikk-native: a derived table renames repeated output names with `_1`, `_2`, ... suffixes (DuckDB).
     internal open val deduplicatesDerivedColumnNames: Boolean get() = false

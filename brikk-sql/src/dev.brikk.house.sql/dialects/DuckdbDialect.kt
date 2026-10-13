@@ -17,6 +17,11 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
 open class DuckdbDialect : Dialect() {
 
     override val name: String get() = "duckdb"
+
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val whereProjectionAliases: Boolean get() = true
+    override val lateralColumnAliases: Boolean get() = true
+
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.IN_PLACE
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
