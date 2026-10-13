@@ -17,16 +17,23 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiPolyVariantReference
 import com.intellij.psi.PsiReference
 import com.intellij.psi.ResolveState
 import com.intellij.psi.impl.light.LightElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
-import com.intellij.sql.psi.SqlReference
+import com.intellij.sql.psi.SqlAsExpression
+import com.intellij.sql.psi.SqlExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
+import com.intellij.sql.psi.SqlParenthesizedExpression
+import com.intellij.sql.psi.SqlQueryExpression
+import com.intellij.sql.psi.SqlReference
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlScopeProcessor
+import com.intellij.sql.psi.SqlSelectClause
+import com.intellij.sql.psi.SqlSetOperatorExpression
+import com.intellij.sql.psi.SqlStatement
 import com.intellij.sql.psi.impl.SqlResolveExtension
 import com.intellij.util.IncorrectOperationException
 import com.intellij.util.containers.JBIterable
@@ -106,11 +113,14 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
 }
 
 /**
- * Go to declaration for the analysis's references: a provider's navigation target for its columns
- * and relations, also where the platform resolves a column to other provider columns than the
- * analysis (the right side of a LEFT JOIN's USING key, say); where the platform resolves nothing
- * itself (PIPE stages), also a computed column's or relation's declaration in the SQL. Register a
- * no-arg subclass as `gotoDeclarationHandler`.
+ * Go to declaration for every column and relation reference the analysis resolves in the profile's
+ * files, ahead of the platform's resolver: a provider's navigation target for a column with
+ * provenance (through aliases, pass-through relations and merged USING or NATURAL keys, which lead to
+ * the side the analysis names) and for a provider relation; else the declaration in the SQL (an
+ * alias, a CTE or derived table column, a computed PIPE column); the branches' output items for a
+ * set operation's output column, which has no single origin; the USING clause's key for a merged
+ * key no provider column names. Only where the analysis has no answer does the platform's own
+ * resolution navigate. Register a no-arg subclass as `gotoDeclarationHandler`.
  */
 @ApiStatus.Experimental
 public abstract class ExternalRelationGotoDeclarationHandler(private val profile: RelationScopeProfile) : GotoDeclarationHandler {
@@ -118,34 +128,72 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
         val file = sourceElement?.containingFile ?: return null
         val analysis = RelationAnalysis.of(file, profile) ?: return null
         val reference = analysis.referenceAt(analysis.source.textOffset(offset)) ?: return null
-        val platform = file.findReferenceAt(offset)?.let { ref ->
-            if (ref is PsiPolyVariantReference) ref.multiResolve(false).mapNotNull { it.element } else listOfNotNull(ref.resolve())
-        }.orEmpty()
-        val platformResolves = platform.isNotEmpty()
         val targets = when (reference.kind) {
-            ReferenceKind.COLUMN -> reference.columns.mapNotNull { column ->
-                val provider = analysis.providerOf(column)
-                when {
-                    analysis.manages(column, reference.start) -> column.provenance?.let { provider?.navigationTarget(file, it) }
-                    // The platform's resolution names another provider column (a USING key's other side): the analysis's one leads.
-                    column.source != null && platform.any { it is RelationColumnSymbol && it.column.source != column.source } ->
-                        column.provenance?.let { provider?.navigationTarget(file, it) }
-                    platformResolves -> null
-                    else -> column.provenance?.let { provider?.navigationTarget(file, it) } ?: column.declaration?.let { analysis.elementAt(file, it) }
+            ReferenceKind.COLUMN -> reference.columns.flatMap { column ->
+                column.provenance?.let { analysis.providerOf(column)?.navigationTarget(file, it) }?.let { return@flatMap listOf(it) }
+                column.declaration?.let { analysis.elementAt(file, it) }?.let { return@flatMap listOf(it) }
+                when (column.computedBy) {
+                    in SET_OPERATIONS -> setOperationOutputs(file, offset, column.name)
+                    "USING" -> listOfNotNull(analysis.usingKey(file, reference.start, column.name))
+                    else -> emptyList()
                 }
             }
             ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> listOfNotNull(reference.relation?.let { relation ->
-                val provider = analysis.providerOf(relation)
-                when {
-                    analysis.manages(relation) -> relation.provenance?.let { provider?.navigationTarget(file, it) }
-                    platformResolves -> null
-                    else -> relation.provenance?.let { provider?.navigationTarget(file, it) } ?: relation.declaration?.let { analysis.elementAt(file, it) }
-                }
+                relation.provenance?.let { analysis.providerOf(relation)?.navigationTarget(file, it) }
+                    ?: relation.declaration?.let { analysis.elementAt(file, it) }
             })
         }
         return targets.distinct().takeIf { it.isNotEmpty() }?.toTypedArray()
     }
+
+    /**
+     * The items producing output column [name] in each branch of the set operation of the statement
+     * at [offset] of [file], by its position in the first branch.
+     */
+    private fun setOperationOutputs(file: PsiFile, offset: Int, name: String): List<PsiElement> {
+        val statement = PsiTreeUtil.getParentOfType(file.findElementAt(offset), SqlStatement::class.java) ?: return emptyList()
+        val operation = PsiTreeUtil.findChildrenOfType(statement, SqlSetOperatorExpression::class.java)
+            .firstOrNull { PsiTreeUtil.getParentOfType(it, SqlSetOperatorExpression::class.java) == null } ?: return emptyList()
+        val branches = branchesOf(operation).map { it.expressions }
+        val position = branches.firstOrNull()?.indexOfFirst { outputName(it).equals(name, ignoreCase = true) }?.takeIf { it >= 0 } ?: return emptyList()
+        return branches.mapNotNull { items -> items.getOrNull(position)?.let { (it as? SqlAsExpression)?.nameElement ?: it } }
+    }
+
+    private fun branchesOf(expression: SqlExpression): List<SqlSelectClause> = when (expression) {
+        is SqlSetOperatorExpression -> expression.operands.flatMap(::branchesOf)
+        is SqlQueryExpression -> listOfNotNull(expression.selectClause)
+        is SqlParenthesizedExpression -> expression.expression?.let(::branchesOf).orEmpty()
+        else -> emptyList()
+    }
+
+    private fun outputName(item: SqlExpression): String? = when (item) {
+        is SqlAsExpression -> item.name
+        is SqlReferenceExpression -> item.name
+        else -> null
+    }
+
+    private companion object {
+        val SET_OPERATIONS = setOf("UNION", "UNION ALL", "INTERSECT", "INTERSECT ALL", "EXCEPT", "EXCEPT ALL", "MINUS")
+    }
 }
+
+/** The key [name] in a USING clause of the statement holding [start], in the analysis's text. */
+private fun RelationAnalysis.usingKey(file: PsiFile, start: Int, name: String): PsiElement? {
+    val statement = statements.firstOrNull { start in it.first }?.first ?: return null
+    val text = source.text.substring(statement.first, statement.last + 1)
+    for (clause in USING_CLAUSE.findAll(text)) {
+        val keys = clause.groups[1] ?: continue
+        for (key in USING_KEY.findAll(keys.value)) {
+            if (!key.value.trim('`', '"').equals(name, ignoreCase = true)) continue
+            val at = statement.first + keys.range.first + key.range.first
+            return elementAt(file, ScopeRange(at, at + key.value.length))
+        }
+    }
+    return null
+}
+
+private val USING_CLAUSE = Regex("""\bUSING\s*\(([^)]*)\)""", RegexOption.IGNORE_CASE)
+private val USING_KEY = Regex("""[^\s,]+""")
 
 /**
  * Marks the analysis's problems (missing, ambiguous and partial-contract columns, unknown
