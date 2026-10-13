@@ -1942,11 +1942,17 @@ so their data keeps the plain rule.
 `prepareTextExplain(statement, dialect, isBuiltinFunction)` builds the `EXPLAIN` an IDE shows as text,
 or refuses. Only Trino (without ANALYZE) and Doris are explained, and only a single plain query: a
 live Trino 483 creates the table of `EXPLAIN CREATE TABLE ... AS SELECT` (`TextExplainResultTest`),
-while `EXPLAIN INSERT` and `EXPLAIN DROP TABLE` change nothing. Queries reading a table function,
-calling a namespaced routine or a function the caller does not know as a built-in are refused, since
-planning may evaluate them; so is text the core parser cannot read. DuckDB is refused outright: its
+while `EXPLAIN INSERT` and `EXPLAIN DROP TABLE` change nothing (`ExplainableStatements.Queries`, the only
+set until a live engine proves another writes nothing). Anywhere in the query, statements (DML in a CTE,
+`SELECT ... INTO`), routine declarations (Trino `WITH FUNCTION`, which may take a built-in's name), table
+functions, namespaced routine calls and calls whose name as written the caller does not know as a
+built-in are refused, since planning may evaluate them; grammar forms (`CAST`, `EXTRACT`, `CASE`) are not
+calls. Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused, as is
+text the core parser cannot read. A query starting with a parenthesis is explained as a derived table,
+since `EXPLAIN (` opens Trino's options. DuckDB is refused outright: its
 `EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence (DuckDB 1.5.6). `explainPlanText`
-joins the first column of the plan rows.
+joins the first column of the plan rows. `TextExplainResultTest` runs against a live Trino when
+`BRIKK_TRINO_TEST_CONTAINER` names its container, and is skipped otherwise.
 
 `definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris and Trino
 `SHOW CREATE`, DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and

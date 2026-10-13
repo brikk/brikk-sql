@@ -56,6 +56,23 @@ class TextExplainResultTest {
         assertEquals("0", rows(runCatchupEngineSql(container, client, "SELECT count(*) AS n FROM memory.$schema.t")).single()["n"])
     }
 
+    /** Why routine declarations are refused: an inline function takes a built-in's name. */
+    @Test
+    fun liveTrinoInlineFunctionsOverrideBuiltins() {
+        val container = container()
+        val sql = "WITH FUNCTION abs(x bigint) RETURNS bigint RETURN x + 100 SELECT abs(1) AS v"
+        assertEquals("101", rows(runCatchupEngineSql(container, client, sql)).single()["v"])
+        assertIs<ExplainPreparation.Refused>(prepareTextExplain(sql, "trino") { true })
+    }
+
+    /** `EXPLAIN (` opens Trino's options list; a parenthesized query is explained as a derived table. */
+    @Test
+    fun liveTrinoExplainsAParenthesizedQuery() {
+        val container = container()
+        val ready = assertIs<ExplainPreparation.Ready>(prepareTextExplain("(SELECT 1) UNION (SELECT 2)", "trino") { true })
+        assertTrue("Fragment" in runCatchupEngineSql(container, client, ready.sql))
+    }
+
     @Test
     fun liveTrinoShowsDefinitions() {
         val container = container()
