@@ -152,9 +152,11 @@ class LiveProfile(
     override val persistenceId: String? = "live-test",
     override val dbms: Dbms = Dbms.POSTGRES,
     override val refreshDelay: Duration = 100.milliseconds,
+    private val properties: Map<String, String> = emptyMap(),
 ) : LiveCatalogProfile {
     override val productLabel = "Fixture"
     override val metadata = DUCKDB_METADATA
+    override fun connectionProperties(dataSource: LocalDataSource): Map<String, String> = properties
 }
 
 class LiveService(scope: CoroutineScope, override val profile: LiveCatalogProfile, private val directory: Path?) : LiveCatalogService(scope) {

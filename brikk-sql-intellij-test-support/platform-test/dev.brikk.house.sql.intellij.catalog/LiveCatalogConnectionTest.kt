@@ -10,6 +10,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.registerOrReplaceServiceInstance
 import dev.brikk.house.sql.intellij.testing.BackgroundErrors
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -59,6 +60,18 @@ class LiveCatalogConnectionTest : BasePlatformTestCase() {
         val selection = service.selection(dataSource)
         assertInstanceOf(selection.source, CatalogSource.Live::class.java)
         assertTrue(selection.inventory?.functions.orEmpty().any { it.def.name == "duckdb_functions" })
+    }
+
+    /** The profile's driver properties shape the refresh's helper connection (ClickHouse turns compression off), as verification's do. */
+    fun testARefreshConnectsWithTheProfilesDriverProperties() {
+        val threads = CopyOnWriteArrayList<String?>()
+        harvester.answer = { rows ->
+            rows.forEachRow("SELECT current_setting('threads')") { threads += it.string(1) }
+            DuckdbTestHarvester.harvest(rows)
+        }
+        useProfile(LiveProfile(harvester, dbms = dataSource.dbms, properties = mapOf("threads" to "3")))
+        assertInstanceOf(runBlocking { service.refresh(project, dataSource) }, RefreshOutcome.Refreshed::class.java)
+        assertEquals(listOf<String?>("3"), threads.toList())
     }
 
     /** A startup script (the data source's, else its driver's) is for the user's sessions: a refresh's connection runs none. */

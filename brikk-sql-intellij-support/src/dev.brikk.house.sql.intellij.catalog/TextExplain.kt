@@ -4,6 +4,7 @@ import com.intellij.database.Dbms
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.DatabaseConnectionCore
+import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.settings.DatabaseSettings
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
@@ -89,6 +90,12 @@ public interface TextExplainProfile {
 
     /** How long connecting, switching and explaining may take together. */
     public val timeout: Duration get() = 60.seconds
+
+    /**
+     * Driver properties the helper connection to [dataSource] sets over the data source's own and its
+     * URL's ([HelperConnectionPoint]), as for verification; the data source is not changed.
+     */
+    public fun connectionProperties(dataSource: LocalDataSource): Map<String, String> = emptyMap()
 }
 
 /** What [TextExplainService.explain] gives. */
@@ -179,7 +186,7 @@ public abstract class TextExplainService(protected val project: Project, private
      * and harvests skip it. Override to set it up differently.
      */
     protected open suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? {
-        val ref = DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(console.dataSource)).setRequestor(HelperRequestor()).create() ?: return null
+        val ref = DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(console.dataSource, profile.connectionProperties(console.dataSource))).setRequestor(HelperRequestor()).create() ?: return null
         return ref.use { use(it.get()) }
     }
 

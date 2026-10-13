@@ -111,6 +111,13 @@ public interface LiveCatalogProfile {
     public fun identity(dataSource: LocalDataSource): ConnectionIdentity =
         ConnectionIdentity.of(listOf(dbms.name, dataSource.url, dataSource.username))
 
+    /**
+     * Driver properties the refresh's helper connection to [dataSource] sets over the data source's own
+     * and its URL's ([HelperConnectionPoint]), such as turning off a driver's response compression; the
+     * data source is not changed.
+     */
+    public fun connectionProperties(dataSource: LocalDataSource): Map<String, String> = emptyMap()
+
     /** The functions offered without a harvest. */
     public fun baseline(snapshot: MetadataSnapshot): List<FunctionPresentation> = snapshot.completableFunctions()
 }
@@ -267,7 +274,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val identity = profile.identity(dataSource)
         val ref = try {
             // The identity is taken before connecting, so a change while connecting cannot be mislabelled.
-            DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(dataSource)).setRequestor(HelperRequestor()).create()
+            DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(dataSource, profile.connectionProperties(dataSource))).setRequestor(HelperRequestor()).create()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

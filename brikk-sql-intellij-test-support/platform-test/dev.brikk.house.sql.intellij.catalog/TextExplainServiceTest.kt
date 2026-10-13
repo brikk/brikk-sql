@@ -156,6 +156,26 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         assertEmpty(DatabaseConnectionManager.getInstance().activeConnections.filter { it.connectionPoint.dataSource === dataSource })
     }
 
+    /** The profile's driver properties shape the explain helper connection, as verification's do. */
+    fun testTheHelperConnectsWithTheProfilesDriverProperties() {
+        val threads = CopyOnWriteArrayList<String?>()
+        val profile = object : TextExplainProfile by Profile(dataSource.dbms) {
+            override val enabled = true
+            override fun connectionProperties(dataSource: LocalDataSource) = mapOf("threads" to "3")
+        }
+        val service = object : TextExplainService(project, errors.newScope(testRootDisposable)) {
+            override val profile = profile
+
+            override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
+                super.withHelperConnection(console) { connection ->
+                    threads += firstColumn(connection, "SELECT current_setting('threads')").single()?.toString()
+                    use(recordingTrinoContext(connection, CopyOnWriteArrayList()))
+                }
+        }
+        assertEquals(ExplainOutcome.Plan("physical_plan"), runBlocking { service.explain(recording.console, "SELECT count(*) FROM t") })
+        assertEquals(listOf<String?>("3"), threads.toList())
+    }
+
     /** A startup script (the data source's, else its driver's) is for the user's sessions: the explain helper runs none. */
     fun testTheHelperConnectionRunsNoStartupScript() {
         val runs = startupScriptRuns(project, dataSource) {
