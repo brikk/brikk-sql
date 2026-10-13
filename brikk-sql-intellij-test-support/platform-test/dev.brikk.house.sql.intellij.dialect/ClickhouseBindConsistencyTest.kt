@@ -11,7 +11,9 @@ import dev.brikk.house.sql.shape.SqlScriptParameters
 class ClickhouseBindConsistencyTest : BasePlatformTestCase() {
     private fun ide(sql: String): List<Int> {
         myFixture.configureDialect("ClickHouse", sql)
-        return PsiTreeUtil.findChildrenOfType(myFixture.file, SqlParameter::class.java).map { it.textRange.startOffset }.sorted()
+        // From 262 the IDE's grammar reports `{name:Type}` too, as a server-resolved parameter the console does not prompt for.
+        return PsiTreeUtil.findChildrenOfType(myFixture.file, SqlParameter::class.java).filterNot { it.text.startsWith("{") }
+            .map { it.textRange.startOffset }.sorted()
     }
 
     private fun core(sql: String): SqlScriptParameters = SqlScriptParameters.parse(sql, "clickhouse", positional = true)
@@ -29,6 +31,11 @@ class ClickhouseBindConsistencyTest : BasePlatformTestCase() {
             assertEmpty(sql, core(sql).ambiguous)
             assertEquals(sql, ide(sql), coreStarts(sql))
         }
+    }
+
+    fun testServerParametersAreTypedNotBinds() {
+        val occurrence = core("SELECT {name:UInt64}").occurrences.single()
+        assertEquals(ParamStyle.NAMED_TYPED, occurrence.style)
     }
 
     /** Where tokens cannot prove a `?`, core reports it as ambiguous; the IDE calls it a parameter. */
