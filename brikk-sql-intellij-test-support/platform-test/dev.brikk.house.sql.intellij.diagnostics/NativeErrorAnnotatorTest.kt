@@ -82,7 +82,8 @@ val mysqlProfile = TestProfile(mysql, "mysql", "Injected")
 
 class PostgresErrorAnnotator : NativeErrorAnnotator(postgresProfile)
 class MysqlErrorAnnotator : NativeErrorAnnotator(mysqlProfile)
-class PostgresPsiFilter : NativeErrorPsiFilter(postgres)
+class PostgresPsiFilter : NativeErrorPsiFilter(postgresProfile)
+class MysqlPsiFilter : NativeErrorPsiFilter(mysqlProfile)
 
 class NativeErrorAnnotatorTest : BasePlatformTestCase() {
     override fun setUp() {
@@ -104,8 +105,8 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
 
     private val validator get() = postgresProfile.validator as ScriptedValidator
 
-    private fun registerFilter() = project.extensionArea.getExtensionPoint<HighlightErrorFilter>(HighlightErrorFilter.EP_NAME.name)
-        .registerExtension(PostgresPsiFilter(), testRootDisposable)
+    private fun registerFilter(filter: HighlightErrorFilter = PostgresPsiFilter()) =
+        project.extensionArea.getExtensionPoint<HighlightErrorFilter>(HighlightErrorFilter.EP_NAME.name).registerExtension(filter, testRootDisposable)
 
     private var registered = false
 
@@ -181,7 +182,7 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
     }
 
     /** The IDE parser's errors as shown: PostgreSQL's PSI errors, from the platform or reported by the annotator. */
-    private fun psiErrors(): List<HighlightInfo> = myFixture.doHighlighting().filter {
+    private fun psiErrors(): List<HighlightInfo> = highlight().filter {
         it.severity == HighlightSeverity.ERROR && it.description?.startsWith("Engine") != true && it.description != "other annotator"
     }
 
@@ -350,8 +351,10 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertEquals(HighlightSeverity.WARNING, myFixture.doHighlighting().single { it.description == "Engine: no bad here" }.severity)
     }
 
+    private var injectedRegistered = false
+
     /** Opens [hostText], a PostgreSQL file, with every string literal joined into one injected MySQL fragment. */
-    private fun openInjected(hostText: String) {
+    private fun openInjected(hostText: String, frankenstein: Boolean = false) {
         myFixture.configureDialect("PostgreSQL", hostText)
         val manager = InjectedLanguageManager.getInstance(project)
         manager.registerMultiHostInjector(object : MultiHostInjector {
@@ -361,6 +364,7 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
                 if (context != literals.firstOrNull()) return
                 registrar.startInjecting(mysql)
                 for (literal in literals) registrar.addPlace(null, null, literal as PsiLanguageInjectionHost, TextRange(1, literal.textLength - 1))
+                if (frankenstein) registrar.frankensteinInjection(true)
                 registrar.doneInjecting()
             }
 
@@ -368,7 +372,56 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         }, testRootDisposable)
         manager.dropFileCaches(myFixture.file)
         mysqlProfile.injectionHosts = setOf(postgres)
-        annotate(postgres, MysqlErrorAnnotator())
+        if (!injectedRegistered) annotate(postgres, MysqlErrorAnnotator())
+        injectedRegistered = true
+    }
+
+    /** Errors shown in the injected fragment that are neither the engine's nor the host's. */
+    private fun fragmentErrors(): List<Pair<String?, Int>> = highlight()
+        .filter { it.severity == HighlightSeverity.ERROR && it.description?.startsWith("Injected") != true && it.startOffset > 8 }
+        .map { it.description to it.startOffset }
+
+    fun testTheFilterHidesNothingWhileTheAnnotatorDoesNotReport() {
+        open("SELECT 1 FROM t QUALIFY x;")
+        val platform = psiErrors()
+        assertTrue(platform.isNotEmpty())
+        registerFilter()
+        assertEquals(platform.map { it.description to it.startOffset }, psiErrors().map { it.description to it.startOffset })
+    }
+
+    fun testAnInjectedFragmentsPsiErrorsAreReportedOnceAndFollowTheVerdict() {
+        mysqlProfile.validator = ScriptedValidator { VerifyResult.Unavailable("down") }
+        val text = "SELECT 'SELECT 1 FROM t QUALIFY x y';"
+        openInjected(text)
+        val platform = fragmentErrors()
+        assertTrue("MySQL's parser rejects the fragment: $platform", platform.isNotEmpty())
+        mysqlProfile.reportsPsiErrors = true
+        registerFilter(MysqlPsiFilter())
+        assertEquals(platform, fragmentErrors())
+        mysqlProfile.validator = ScriptedValidator { VerifyResult.Accepted }
+        assertEquals(listOf<Pair<String?, Int>>(), fragmentErrors())
+    }
+
+    fun testAFragmentInAnUndeclaredHostKeepsThePlatformsPsiErrors() {
+        val text = "SELECT 'SELECT 1 FROM t QUALIFY x y';"
+        openInjected(text)
+        val platform = fragmentErrors()
+        mysqlProfile.injectionHosts = emptySet()
+        mysqlProfile.reportsPsiErrors = true
+        mysqlProfile.validator = ScriptedValidator { VerifyResult.Accepted }
+        registerFilter(MysqlPsiFilter())
+        assertEquals(platform, fragmentErrors())
+        assertEquals(listOf<String>(), (mysqlProfile.validator as ScriptedValidator).asked)
+    }
+
+    fun testAFrankensteinFragmentIsNotCheckedAndKeepsThePlatformsPsiErrors() {
+        mysqlProfile.validator = ScriptedValidator { VerifyResult.Accepted }
+        openInjected("SELECT 'SELECT 1 FROM t QUALIFY x y bad';", frankenstein = true)
+        val platform = fragmentErrors()
+        mysqlProfile.reportsPsiErrors = true
+        registerFilter(MysqlPsiFilter())
+        assertEquals(platform, fragmentErrors())
+        assertEquals(listOf<String>(), (mysqlProfile.validator as ScriptedValidator).asked)
     }
 
     fun testInjectedSqlIsMarkedAtItsHostText() {

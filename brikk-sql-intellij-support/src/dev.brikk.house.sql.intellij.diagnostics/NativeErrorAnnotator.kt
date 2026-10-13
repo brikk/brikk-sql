@@ -291,13 +291,14 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         }
     }
 
-    /** The fragments of [NativeErrorProfile.language] injected into [host], in text order. */
+    /** The fragments of [NativeErrorProfile.language] injected into [host], in text order, Frankenstein ones left out. */
     private fun injectedFragments(host: PsiFile): List<PsiFile> {
         val manager = InjectedLanguageManager.getInstance(host.project)
         return PsiTreeUtil.findChildrenOfType(host, PsiLanguageInjectionHost::class.java).asSequence()
             .flatMap { manager.getInjectedPsiFiles(it).orEmpty().asSequence() }
             .map { it.first.containingFile }
-            .filter { it.language == profile.language }
+            // A Frankenstein fragment, such as a template with uncertain holes, is not SQL as written.
+            .filter { it.language == profile.language && !manager.isFrankensteinInjection(it) }
             .distinct()
             .toList()
     }
@@ -328,15 +329,27 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
 }
 
 /**
- * Hides the platform's highlighting of [language]'s PSI errors, injected fragments included, because a
- * [NativeErrorAnnotator] with [NativeErrorProfile.reportsPsiErrors] reports them against the engine's
- * verdict. Only PSI error elements are affected, never other inspections or annotators. Register a
- * no-arg subclass as the plugin's `highlightErrorFilter`.
+ * Hides the platform's highlighting of the PSI errors a [NativeErrorAnnotator] over [profile] reports
+ * itself (see [NativeErrorProfile.reportsPsiErrors]): in files of exactly the profile's language,
+ * and in its fragments injected into [NativeErrorProfile.injectionHosts], Frankenstein fragments
+ * excepted. Everything else keeps the platform's handling, as do other inspections and annotators.
+ * The match is exact, unlike `SubstrateErrorFilter`'s `isKindOf`, because the annotator reports only
+ * for exactly its language: a plugin turning `reportsPsiErrors` on replaces its `SubstrateErrorFilter`
+ * with this filter rather than keeping both, and gives each derived language its own profile.
+ * Register a no-arg subclass as the plugin's `highlightErrorFilter`.
  */
 @ApiStatus.Experimental
-public abstract class NativeErrorPsiFilter(private val language: Language) : HighlightErrorFilter() {
-    final override fun shouldHighlightErrorElement(element: PsiErrorElement): Boolean =
-        element.containingFile?.language != language
+public abstract class NativeErrorPsiFilter(private val profile: NativeErrorProfile) : HighlightErrorFilter() {
+    final override fun shouldHighlightErrorElement(element: PsiErrorElement): Boolean {
+        if (!profile.reportsPsiErrors) return true
+        val file = element.containingFile ?: return true
+        if (file.language != profile.language) return true
+        val manager = InjectedLanguageManager.getInstance(file.project)
+        if (!manager.isInjectedFragment(file)) return false
+        if (manager.isFrankensteinInjection(file)) return true
+        val host = manager.getTopLevelFile(file)?.language ?: return true
+        return host == profile.language || host !in profile.injectionHosts
+    }
 }
 
 /** Per profile language: a file's last final outcome, reused by later passes while its dependencies stay. */
