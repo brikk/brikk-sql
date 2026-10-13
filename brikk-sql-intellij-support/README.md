@@ -163,6 +163,42 @@ validator's `verify`; the diagnostics themselves are core's plain data
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
 
+## SQL in host strings (`dev.brikk.house.sql.intellij.host`, experimental)
+
+The mechanics of SQL injected into another language's strings, from abstract entries; a recognizer
+of the host language (the Brikk helper for Kotlin, say) decides what a string is. This layer has no
+host-language dependency and knows nothing about Brikk.
+
+- `HostSqlEntries`: `HostSqlEntry`s in host order (a range of the host element's text, kept as the
+  host's escaper decodes it or replaced by text; a `placeholder` replacement stands for something not
+  known yet) and the `HostSqlTrim`s the host applies at runtime (`Indent`, `Margin(prefix)`), with
+  Kotlin's semantics: trimmed lines join with `\n`, untrimmed text keeps `\r\n`.
+- `HostSqlInjection.layout(host, entries)`: the SQL text (the runtime string), each character's host
+  range, the injection `places` (contiguous origins joined; replacement text as a place's prefix, or
+  the last place's suffix) and the placeholders. Escapes, trims, CRLF and supplementary characters keep
+  exact origins, so annotations on the injected SQL land on the host text that produced it.
+- `HostSqlChannel(id)`, one per plugin (its keys are its own): `perform(registrar, host, claim)` runs a
+  recognizer's `HostSqlClaim` from an injection performer or injector. `Injected` injects (`pending`
+  when placeholders stand for facts not known yet; `inspectionOnly`; `colonBinds`; caller `data`);
+  `Unavailable` claims the string without injecting anything, so no plain SQL injection takes it;
+  `NotClaimed` leaves it. A recognizer that keeps a previous recognition while facts are pending (the
+  Brikk helper's projection) claims `Injected` with `pending` and its interpolations as placeholder
+  entries; one with nothing to show claims `Unavailable`. Unavailable and pending claims schedule one reanalysis per host and PSI
+  modification once indexing is done (injected caches dropped, daemon restarted); a provider whose facts
+  change without a PSI change (shapes generated later) calls `requestReanalysis(file)`. `marker(file)`,
+  `isInspectionOnly`, `isPending` and `parsesColonBinds` answer for injected files: a parser calls
+  `parseColonParameter()` where `parsesColonBinds(file)`.
+- `HostSqlPlaceholderErrorFilter` (`highlightErrorFilter`): parse errors on placeholders are no
+  errors; other errors stay. Placeholder SQL is injected with lenient inspections.
+- `PipeDialect.hostSql` and `RelationScopeProfile.hostSql`: by default PIPE editing is on in the
+  channel's SQL, inspection-only SQL refuses Execute, has no run-to-stage and says so in the preview,
+  and no relation diagnostics run while SQL is pending.
+- `HostSqlLineMarkerProvider` (`codeInsight.lineMarkerProvider` for the host language): a named
+  gutter icon per claimed string, toggled in Settings | Editor | General | Gutter Icons, dimmed while
+  pending or unavailable, with the caller's tooltip. `HostSqlActionBanner`
+  (`editorNotificationProvider`): a banner with a fix link only when the caller reports an action is
+  needed; no routine banner.
+
 ## Relations (`dev.brikk.house.sql.intellij.relation`, experimental)
 
 SQL features over relation facts from any provider, built on core's `RelationScope`
