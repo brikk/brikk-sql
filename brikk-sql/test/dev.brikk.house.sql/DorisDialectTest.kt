@@ -796,4 +796,20 @@ class DorisDialectTest {
             showCreate,
         )
     }
+
+    /** Doris: GROUP_CONCAT([DISTINCT] str[, sep] [ORDER BY ...]); the last argument is the separator with DISTINCT too. */
+    @Test
+    fun groupConcatKeepsItsSeparatorWithDistinct() {
+        for ((sql, expected) in listOf(
+            "SELECT GROUP_CONCAT(DISTINCT v, '|')" to "SELECT GROUP_CONCAT(DISTINCT v, '|')",
+            "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k)" to "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k)",
+            "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k ASC NULLS FIRST, v) FROM t" to "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k ASC, v) FROM t",
+            "SELECT GROUP_CONCAT(v, '|' ORDER BY k DESC NULLS LAST) FROM t" to "SELECT GROUP_CONCAT(v, '|' ORDER BY k DESC) FROM t",
+            "SELECT GROUP_CONCAT(DISTINCT v)" to "SELECT GROUP_CONCAT(DISTINCT v, ',')",
+        )) {
+            val once = dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(sql).sql("doris")
+            assertEquals(expected, once, sql)
+            assertEquals(once, dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(once).sql("doris"), "stable: $sql")
+        }
+    }
 }

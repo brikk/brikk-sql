@@ -1,6 +1,9 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.AddMonths
+import dev.brikk.house.sql.ast.Distinct
+import dev.brikk.house.sql.ast.Order
+import dev.brikk.house.sql.ast.GroupConcat
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.AggregateKeyProperty
 import dev.brikk.house.sql.ast.AggregateTypeColumnConstraint
@@ -1003,6 +1006,7 @@ object DorisParserTables {
                 )
             )
         }
+        put("GROUP_CONCAT", ::buildDorisGroupConcat)
         put("SUBDATE", buildDateDeltaWithIntervalDefaultDay { a -> DateSub(a) })
         put("TO_DATE") { a ->
             TsOrDsToDate(args("this" to seqGet(a, 0), "format" to seqGet(a, 1), "safe" to seqGet(a, 2)))
@@ -1071,3 +1075,22 @@ object DorisParserTables {
     val TYPE_TOKENS: Set<TokenType> =
         MysqlParserTables.TYPE_TOKENS + setOf(TokenType.BITMAP, TokenType.HLL, TokenType.QUANTILE_STATE, TokenType.AGG_STATE)
 }
+
+/**
+ * brikk-native: Doris `GROUP_CONCAT([DISTINCT] str[, sep] [ORDER BY ...])`. The generic path reads
+ * `DISTINCT v, '|'` as one DISTINCT of two expressions; the last is the separator, as without DISTINCT,
+ * and a following ORDER BY moves with it.
+ */
+private fun buildDorisGroupConcat(a: List<Expression?>): Expression {
+    val first = seqGet(a, 0)
+    val order = first as? Order
+    val distinct = (order?.thisArg ?: first) as? Distinct
+    val values = distinct?.expressionsArg.orEmpty()
+    if (distinct == null || seqGet(a, 1) != null || values.size != 2) {
+        return GroupConcat(args("this" to first, "separator" to seqGet(a, 1), "on_overflow" to seqGet(a, 2)))
+    }
+    val value = Distinct(args("expressions" to listOf(values[0])))
+    val separator = values[1] as? Expression
+    return GroupConcat(args("this" to value, "separator" to (order?.let { Order(args("this" to separator, "expressions" to it.expressionsArg)) } ?: separator)))
+}
+
