@@ -17,12 +17,12 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
  */
 // sqlglot: dialects.clickhouse.ClickHouse
 open class ClickhouseDialect : Dialect() {
-    // brikk-native PIPE evidence (ClickHouse 26.7 ran the lowered stages): the lowered CALL and
-    // RENAME do not run; core refuses or blocks NATURAL JOIN, PIVOT and UNPIVOT.
+    // brikk-native PIPE evidence: a ClickHouse 26.7 server ran the lowered stages (the function
+    // catalog and keywords are pinned to a different engine, ClickHouse 26.5.1.1 via chdb). The
+    // lowered CALL and RENAME do not run; core refuses or blocks NATURAL JOIN, PIVOT and UNPIVOT.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf(
         "DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN",
     )
-
 
     override val name: String get() = "clickhouse"
 

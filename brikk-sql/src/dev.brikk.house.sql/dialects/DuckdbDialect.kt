@@ -21,7 +21,6 @@ open class DuckdbDialect : Dialect() {
         "CALL", "DROP", "SET", "RENAME", "PIVOT", "UNPIVOT", "TABLESAMPLE", "UNION", "ASOF JOIN", "NATURAL JOIN", "POSITIONAL JOIN",
     )
 
-
     override val name: String get() = "duckdb"
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.IN_PLACE
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW

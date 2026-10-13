@@ -21,7 +21,6 @@ class DorisDialect : Dialect() {
     // NATURAL JOIN are not in the grammar; core refuses or blocks RENAME, PIVOT, UNPIVOT and TABLESAMPLE.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf("DROP", "SET", "UNION", "ASOF JOIN")
 
-
     override val name: String get() = "doris"
     // sqlglot: inherited MySQL ordering; the Kotlin umbrella does not subclass MySQL.
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE

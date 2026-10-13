@@ -28,7 +28,6 @@ class TrinoDialect : PrestoDialect() {
     // `* REPLACE`, and core refuses or blocks RENAME, PIVOT and UNPIVOT.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf("TABLESAMPLE", "UNION")
 
-
     override val name: String get() = "trino"
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.OMIT
 
