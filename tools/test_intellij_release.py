@@ -52,12 +52,13 @@ class ScopedReleaseTest(unittest.TestCase):
             self.assertIn('version: 0.1.0\n', (self.root / observed).read_text())
         self.assert_restored()
 
-    def test_explicit_core_never_publishes_verifiers(self):
+    def test_explicit_core_publishes_the_verification_api_but_never_engines(self):
         result = self.run_release('--core-version', '0.19.0')
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-metadata', '-m', 'brikk-sql', '-m', 'brikk-sql-intellij-support',
-                          '-m', 'brikk-sql-intellij-test-support'],
-                         json.loads((self.root / 'calls.json').read_text()))
+        calls = json.loads((self.root / 'calls.json').read_text())
+        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-metadata', '-m', 'brikk-sql', '-m', 'brikk-sql-verify-api',
+                          '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-test-support'], calls)
+        self.assertFalse([m for m in calls if m.startswith('brikk-sql-verify-') and m != 'brikk-sql-verify-api'])
         self.assert_restored()
 
     def test_failed_toolchain_restores_templates(self):

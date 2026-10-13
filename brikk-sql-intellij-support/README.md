@@ -132,7 +132,8 @@ validator's `verify`; the diagnostics themselves are core's plain data
   with this one rather than keeping both.
 - A result is applied only at the document revision and text it was computed for, and later passes
   at that revision reuse it. Cancellation propagates unchanged; `debounce` waits for typing to pause
-  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass (a verifier still running is canceled or abandoned and local results show). All off by
+  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass (a
+  verifier still running then is canceled or abandoned, and local results show). All off by
   default.
 - Only files of exactly the profile's language are annotated, so each consumer acts on its own
   dialect. SQL injected into `injectionHosts` languages (register the annotator for each host too;
@@ -605,9 +606,9 @@ python3 tools/publish_intellij_support.py 0.2.0 --core-version 0.20.0
 
 The last command requires the existing Central/signing environment. It publishes
 this module and its test kit, `brikk-sql-intellij-test-support`, at the same version,
-plus core and metadata at `--core-version`, never verify/oracle. Without
-`--core-version`, only a local publication is allowed; it references the core
-snapshot already in Maven Local. The module has independent `0.x` versioning.
+plus core, metadata and `brikk-sql-verify-api` (which support exports) at `--core-version`,
+never a verifier engine or the oracle. Without `--core-version`, only a local publication is
+allowed; it references the core, metadata and verify-api snapshots already in Maven Local. The module has independent `0.x` versioning.
 Temporary release overrides restore on success or failure.
 
 Shared platform contracts run in a real IDE against the test kit:
