@@ -135,8 +135,18 @@ public open class HostSqlChannel(public val id: String) {
     public fun isInspectionOnly(file: PsiFile?): Boolean {
         file ?: return false
         marker(file)?.let { return it.inspectionOnly || it.pending }
-        val host = InjectedLanguageManager.getInstance(file.project).getInjectionHost(file.originalFile) ?: return false
-        return state(host)?.claim.let { it != null && it != HostSqlClaim.NotClaimed } || claimsHost(host)
+        return hostsOf(file.originalFile).any { host -> state(host)?.claim.let { it != null && it != HostSqlClaim.NotClaimed } || claimsHost(host) }
+    }
+
+    /** Every host string [file] is injected into, in order; one injection may join several. */
+    private fun hostsOf(file: PsiFile): List<PsiLanguageInjectionHost> {
+        val manager = InjectedLanguageManager.getInstance(file.project)
+        val first = manager.getInjectionHost(file) ?: return emptyList()
+        val hosts = mutableListOf(first)
+        manager.enumerate(first) { injected, places ->
+            if (injected.containingFile == file) for (place in places) place.host?.let { if (it !in hosts) hosts += it }
+        }
+        return hosts
     }
 
     /** Whether [file] waits for facts; relation diagnostics do not run then. */

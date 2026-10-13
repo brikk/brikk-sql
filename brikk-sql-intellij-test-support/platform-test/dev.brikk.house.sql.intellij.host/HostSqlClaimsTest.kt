@@ -4,6 +4,9 @@ import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProviders
 import com.intellij.codeInsight.daemon.impl.LineMarkersPass
 import com.intellij.codeInsight.highlighting.HighlightErrorFilter
+import com.intellij.database.actions.RunQueryAction
+import com.intellij.database.console.JdbcConsole
+import com.intellij.database.console.JdbcConsoleProvider
 import com.intellij.lang.ExternalLanguageAnnotators
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.lang.injection.InjectedLanguageManager
@@ -13,6 +16,11 @@ import com.intellij.lang.injection.general.Injection
 import com.intellij.lang.injection.general.LanguageInjectionContributor
 import com.intellij.lang.injection.general.LanguageInjectionPerformer
 import com.intellij.lang.injection.general.SimpleInjection
+import com.intellij.openapi.actionSystem.ActionUiKind
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.IconLoader
@@ -22,14 +30,21 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.SyntaxTraverser
+import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlStringLiteralExpression
 import com.intellij.testFramework.DumbModeTestUtils
 import com.intellij.testFramework.PlatformTestUtil
+import dev.brikk.house.sql.intellij.CooperativeExecuteAction
 import dev.brikk.house.sql.intellij.completion.SqlLookupIcons
 import dev.brikk.house.sql.intellij.diagnostics.NativeErrorAnnotator
+import dev.brikk.house.sql.intellij.diagnostics.ScriptedValidator
 import dev.brikk.house.sql.intellij.diagnostics.TestProfile
+import dev.brikk.house.sql.intellij.diagnostics.rejectBad
 import dev.brikk.house.sql.intellij.pipe.FirstStageRule
+import dev.brikk.house.sql.intellij.pipe.PipeExecuteInterceptor
 import dev.brikk.house.sql.intellij.pipe.TestPipeDialect
+import dev.brikk.house.sql.intellij.selectionExecuteOption
 import dev.brikk.house.sql.intellij.testing.HostSqlExecutionContract
 
 /** Claims against other injectors, real reanalysis, placeholders in every report, and the execution guard from the host editor. */
@@ -100,6 +115,45 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         open("SELECT 'SELECT helper', 'SELECT other'")
         assertTrue(channel.isInspectionOnly(checkNotNull(injected(host(0)))))
         assertFalse(channel.isInspectionOnly(checkNotNull(injected(host(1)))))
+    }
+
+    fun testAForeignInjectionJoiningAClaimedStringIsRefusedInEveryExecuteVariant() {
+        // One injection over both strings; only the second is claimed.
+        MultiHostInjector.MULTIHOST_INJECTOR_EP_NAME.getPoint(project).registerExtension(object : MultiHostInjector {
+            override fun getLanguagesToInject(registrar: MultiHostRegistrar, context: PsiElement) {
+                if (InjectedLanguageManager.getInstance(project).isInjectedFragment(context.containingFile)) return
+                val hosts = PsiTreeUtil.findChildrenOfType(context.containingFile, SqlStringLiteralExpression::class.java).map { it as PsiLanguageInjectionHost }
+                if (hosts.firstOrNull() !== context) return
+                registrar.startInjecting(postgres)
+                for (host in hosts) registrar.addPlace("", "", host, TextRange(1, host.textLength - 1))
+                registrar.doneInjecting()
+            }
+
+            override fun elementsToInjectIn() = listOf(SqlStringLiteralExpression::class.java)
+        }, testRootDisposable)
+        claimed = { host -> "guarded" in host.text }
+        open("SELECT 'SELECT * FROM ordinary ', 'WHERE guarded > <caret>0'")
+        val sql = checkNotNull(injected(host(0)))
+        assertTrue(channel.isInspectionOnly(sql))
+        val editor = InjectedLanguageUtil.getInjectedEditorForInjectedFile(myFixture.editor, sql)
+        val dialect = TestPipeDialect("trino", FirstStageRule.AnyQuery, channel)
+        for (variant in 1..4) {
+            val prepared = mutableListOf<String>()
+            // The stock preparation, stopped where it would run the statements in a console.
+            val stock = object : RunQueryAction(if (variant == 4) 1 else variant) {
+                override fun getExecOption() = if (variant == 4) selectionExecuteOption() else super.getExecOption()
+                override fun invokeImpl(e: AnActionEvent, console: JdbcConsole?, info: JdbcConsoleProvider.Info) {
+                    for (statement in info.model.statements()) prepared += statement.text()
+                }
+            }
+            val event = AnActionEvent.createEvent(
+                SimpleDataContext.builder().add(CommonDataKeys.PROJECT, project).add(CommonDataKeys.PSI_FILE, sql)
+                    .add(CommonDataKeys.EDITOR, editor).add(CommonDataKeys.VIRTUAL_FILE, sql.virtualFile).build(),
+                Presentation(), "HostSqlClaimsTest", ActionUiKind.NONE, null,
+            )
+            CooperativeExecuteAction(if (variant == 4) -1 else variant, stock, PipeExecuteInterceptor(dialect), variant == 4).actionPerformed(event)
+            assertEmpty("variant $variant", prepared)
+        }
     }
 
     fun testPendingSqlIsInspectionOnly() {
