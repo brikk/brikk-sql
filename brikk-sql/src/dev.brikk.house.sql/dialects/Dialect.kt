@@ -121,6 +121,15 @@ open class Dialect {
     open val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.USING_LIST
     open val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.MERGED
 
+    // brikk-native: column names compare case-insensitively even where table names do not (MySQL family).
+    internal open val caseInsensitiveColumns: Boolean get() = false
+
+    // brikk-native: GROUP BY may name a projection by its alias (Presto and Trino resolve only input columns).
+    internal open val groupByProjectionAliases: Boolean get() = true
+
+    // brikk-native: a derived table renames repeated output names with `_1`, `_2`, ... suffixes (DuckDB).
+    internal open val deduplicatesDerivedColumnNames: Boolean get() = false
+
     // sqlglot: Dialect.SUPPORTS_STRUCT_STAR_EXPANSION (BigQuery, RisingWave)
     open val supportsStructStarExpansion: Boolean get() = false
 

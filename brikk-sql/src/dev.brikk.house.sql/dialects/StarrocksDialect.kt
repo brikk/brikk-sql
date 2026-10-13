@@ -36,6 +36,9 @@ class StarrocksDialect : Dialect() {
     // sqlglot: StarRocks inherits MySQL.NORMALIZATION_STRATEGY (CASE_SENSITIVE)
     override val normalizationStrategy get() = NormalizationStrategy.CASE_SENSITIVE
 
+    // brikk-native: see Dialect.caseInsensitiveColumns.
+    override val caseInsensitiveColumns: Boolean get() = true
+
     // Version-pinned StarRocks builtin function registry (see brikk-sql-metadata).
     override val functionCatalog: FunctionCatalog get() = STARROCKS_FUNCTION_CATALOG
 

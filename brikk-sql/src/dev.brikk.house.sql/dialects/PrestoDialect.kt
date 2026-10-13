@@ -22,6 +22,9 @@ open class PrestoDialect : Dialect() {
     // sqlglot: Presto.NORMALIZATION_STRATEGY
     override val normalizationStrategy get() = NormalizationStrategy.CASE_INSENSITIVE
 
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val groupByProjectionAliases: Boolean get() = false
+
     override val tokenizerConfig: TokenizerConfig get() = PrestoTokenizerTables.CONFIG
 
     // sqlglot: Presto.TIME_MAPPING = MySQL.TIME_MAPPING

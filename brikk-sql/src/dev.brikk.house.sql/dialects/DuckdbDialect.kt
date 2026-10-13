@@ -26,6 +26,9 @@ open class DuckdbDialect : Dialect() {
     // sqlglot: DuckDB.NORMALIZATION_STRATEGY
     override val normalizationStrategy get() = NormalizationStrategy.CASE_INSENSITIVE
 
+    // brikk-native: see Dialect.deduplicatesDerivedColumnNames.
+    override val deduplicatesDerivedColumnNames: Boolean get() = true
+
     // sqlglot: DuckDB.ASCII_ONLY_NORMALIZATION = True
     override val asciiOnlyNormalization: Boolean get() = true
 
