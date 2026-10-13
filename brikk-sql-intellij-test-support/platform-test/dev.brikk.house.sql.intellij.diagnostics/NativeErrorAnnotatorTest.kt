@@ -36,6 +36,7 @@ import dev.brikk.house.sql.verify.VerifyError
 import dev.brikk.house.sql.verify.VerifyResult
 import java.lang.reflect.Proxy
 import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import org.duckdb.DuckDBDriver
@@ -362,6 +363,37 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
             assertTrue("took ${(System.nanoTime() - started) / 1_000_000} ms", System.nanoTime() - started < 2_000_000_000L)
             assertTrue("$shown", shown.single().second.startsWith("Engine (brikk-sql): "))
         }
+    }
+
+    fun testAnAbandonedVerificationIsNotStartedAgainWhileItRuns() {
+        postgresProfile.localParser = true
+        postgresProfile.budget = 100.milliseconds
+        val active = AtomicInteger()
+        val peak = AtomicInteger()
+        val stubborn = ScriptedValidator {
+            peak.accumulateAndGet(active.incrementAndGet(), ::maxOf)
+            try {
+                // Ignores interrupts and cancellation alike.
+                val until = System.nanoTime() + 1_500_000_000L
+                while (System.nanoTime() < until) {
+                    try { Thread.sleep(10) } catch (_: InterruptedException) {}
+                }
+                VerifyResult.Accepted
+            } finally {
+                active.decrementAndGet()
+            }
+        }
+        postgresProfile.validator = stubborn
+        open("SELECT * FROM t WHERE = 1;")
+        repeat(4) { assertTrue(marks().single().second.startsWith("Engine (brikk-sql): ")) }
+        assertEquals(1, stubborn.asked.size)
+        assertEquals(1, peak.get())
+        // Once it exits, the next pass asks again, and its late answer was never applied.
+        val until = System.nanoTime() + 5_000_000_000L
+        while (active.get() > 0 && System.nanoTime() < until) Thread.sleep(20)
+        postgresProfile.budget = null
+        assertEquals(listOf<Pair<String, String>>(), marks())
+        assertEquals(2, stubborn.asked.size)
     }
 
     fun testTheDebounceWaitsAndEndsOnCancellation() {

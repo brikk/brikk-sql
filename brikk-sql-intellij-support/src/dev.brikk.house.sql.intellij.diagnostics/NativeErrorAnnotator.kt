@@ -36,12 +36,15 @@ import dev.brikk.house.sql.intellij.recoverEditorOperation
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.verify.VerifyResult
+import java.util.Collections
+import java.util.IdentityHashMap
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
 import org.jetbrains.annotations.ApiStatus
 
@@ -95,7 +98,8 @@ public interface NativeErrorProfile {
     /**
      * The time one pass may spend asking the engine. A verification still running when it ends is
      * canceled (or abandoned, if it ignores cancellation), and that statement and the later ones get
-     * no native verdict, so their local results show; the next pass asks again.
+     * no native verdict, so their local results show; the next pass asks again. A validator answers
+     * one call at a time: while an abandoned call still runs, later passes show local results too.
      */
     public val budget: Duration? get() = null
 
@@ -182,6 +186,12 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         internal val diagnostics: List<List<SqlDiagnostic>>,
         internal val reusable: Boolean,
     )
+
+    /** Verifications run here, a few at a time, never on the highlighting thread. */
+    private val executor = AppExecutorUtil.createBoundedApplicationPoolExecutor("${profile.label} native verification", VERIFIERS)
+
+    /** Validators, by instance, with a call running; an abandoned call keeps its validator here until it exits. */
+    private val running: MutableSet<NativeSqlValidator> = Collections.newSetFromMap(Collections.synchronizedMap(IdentityHashMap()))
 
     /** One profile's key, so consumers on one host file keep their own results. */
     private val outcomeKey: Key<Outcome> = OUTCOME_KEYS.computeIfAbsent(profile.language.id) { Key.create("brikk.sql.native.errors.$it") }
@@ -298,7 +308,9 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     private fun ask(validator: NativeSqlValidator, sql: String, deadline: Long?): Asked {
         val text = profile.verificationText(sql)
         if (text.length != sql.length) return Asked(NativeOutcome.NoVerdict("The verification text changed length"), final = true)
-        val attempt = if (deadline == null) recoverEditorOperation { validator.verify(text, null) } else beforeDeadline(deadline) { validator.verify(text, null) }
+        // One call per validator instance: a call an earlier pass gave up on may still be running.
+        if (!running.add(validator)) return Asked(NativeOutcome.NoVerdict("An earlier verification is still running"), final = false)
+        val attempt = runOnce(deadline, release = { running.remove(validator) }) { validator.verify(text, null) }
         val result = (attempt ?: return Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)).getOrElse {
             LOG.warn("The ${profile.label} validator failed on a statement; reporting no verdict for it", it)
             return Asked(NativeOutcome.NoVerdict(it.message ?: "Validator failure"), final = false)
@@ -313,21 +325,42 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     }
 
     /**
-     * [operation] run on a pooled thread under its own indicator, or null when [deadline] passes
-     * first: the indicator is then canceled, and an operation that ignores it is abandoned. The
-     * pass's own cancellation cancels it too and propagates; failures come back as in
-     * [recoverEditorOperation], and fatal errors are rethrown.
+     * [operation] run on [executor] under its own indicator, or null when [deadline] passes first.
+     * Giving up (at the deadline, or when the pass is canceled, which then propagates) cancels the
+     * indicator; an operation that ignores it runs on unread, and [release] runs only when it exits.
+     * Failures come back as in [recoverEditorOperation]; fatal errors and cancellation are rethrown.
      */
-    private fun <T> beforeDeadline(deadline: Long, operation: () -> T): Result<T>? {
+    private fun <T> runOnce(deadline: Long?, release: () -> Unit, operation: () -> T): Result<T>? {
         val indicator = EmptyProgressIndicator()
-        val future = AppExecutorUtil.getAppExecutorService().submit(Callable {
-            ProgressManager.getInstance().runProcess(Computable(operation), indicator)
-        })
+        val abandoned = AtomicBoolean()
+        val future = try {
+            executor.submit(Callable {
+                try {
+                    ProgressManager.getInstance().runProcess(Computable {
+                        // Given up on before it started: the indicator's start cleared the cancellation.
+                        if (abandoned.get()) throw ProcessCanceledException()
+                        operation()
+                    }, indicator)
+                } finally {
+                    release()
+                }
+            })
+        } catch (e: Throwable) {
+            release()
+            throw e
+        }
+        fun abandon() {
+            abandoned.set(true)
+            indicator.cancel()
+        }
         try {
             while (true) {
                 ProgressManager.checkCanceled()
-                val remaining = deadline - System.nanoTime()
-                if (remaining <= 0) break
+                val remaining = deadline?.let { it - System.nanoTime() } ?: WAIT_STEP_NANOS
+                if (remaining <= 0) {
+                    abandon()
+                    return null
+                }
                 try {
                     return Result.success(future.get(minOf(remaining, WAIT_STEP_NANOS), TimeUnit.NANOSECONDS))
                 } catch (_: TimeoutException) {
@@ -339,13 +372,9 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
                 }
             }
         } catch (e: Throwable) {
-            indicator.cancel()
-            future.cancel(true)
+            abandon()
             throw e
         }
-        indicator.cancel()
-        future.cancel(true)
-        return null
     }
 
     /**
@@ -429,6 +458,8 @@ public abstract class NativeErrorPsiFilter(private val profile: NativeErrorProfi
 }
 
 private const val WAIT_STEP_NANOS = 10_000_000L
+
+private const val VERIFIERS = 2
 
 /** Per profile language: a file's last final outcome, reused by later passes while its dependencies stay. */
 private val OUTCOME_KEYS = ConcurrentHashMap<String, Key<NativeErrorAnnotator.Outcome>>()
