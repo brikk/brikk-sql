@@ -14,6 +14,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
+import dev.brikk.house.sql.intellij.catalog.HelperConnectionPoint
 import dev.brikk.house.sql.intellij.catalog.otherRequestor
 import dev.brikk.house.sql.verify.ClickhouseQueryConnection
 import dev.brikk.house.sql.verify.ParseOnlyClickhouseVerifier
@@ -126,6 +127,22 @@ class ClickhouseDataSourceVerificationTest : BasePlatformTestCase() {
         val sql = "SELECT 'ü😀' FRM t"
         val error = (verify(properties, sql) as VerifyResult.Rejected).error
         assertEquals(sql.lastIndexOf('t'), error.offset)
+    }
+
+    /** A URL asking for compression does not override the helper's uncompressed properties (with this driver, the URL wins over properties). */
+    fun testTheHelpersPropertiesWinOverTheUrl() {
+        url ?: return
+        val written = checkNotNull(dataSource.url)
+        dataSource.url = "$written&compress=true"
+        Disposer.register(testRootDisposable) { dataSource.url = written }
+        val user = HelperConnectionPoint(dataSource, UNCOMPRESSED)
+        val session = runBlocking { DatabaseConnectionManager.getInstance().build(project, user).setRequestor(otherRequestor()).create() }
+        checkNotNull(session).use {
+            val result = checkNotNull(verification(UNCOMPRESSED).validator(myFixture.file)).verify("SELECT 1 FROM", null)
+            assertInstanceOf(result, VerifyResult.Rejected::class.java)
+            assertNotNull("a positioned verdict, not an unreadable answer: $result", (result as VerifyResult.Rejected).error.offset)
+        }
+        assertEquals("$written&compress=true", dataSource.url)
     }
 
     /** What the hook is for: this driver's default compressed transport fails on the server's answers. */
