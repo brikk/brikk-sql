@@ -30,7 +30,7 @@ public abstract class HostSqlInjector(
     private val language: Language,
 ) : LanguageInjectionContributor, LanguageInjectionPerformer, DumbAware {
     /**
-     * The recognizer's claim for [host]. Asked once per host, file revision and channel reanalysis,
+     * The recognizer's claim for [host]. Asked once per host, project PSI change and channel reanalysis,
      * however many instances the contributor and performer registrations create.
      */
     protected abstract fun claim(host: PsiLanguageInjectionHost): HostSqlClaim

@@ -4,7 +4,9 @@ import com.intellij.lang.Language
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.lang.injection.general.LanguageInjectionContributor
 import com.intellij.lang.injection.general.LanguageInjectionPerformer
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlStringLiteralExpression
@@ -69,5 +71,29 @@ class HostSqlInjectorTest : BasePlatformTestCase() {
         reanalyze()
         assertNull(contributor.getInjection(host))
         assertNull(injected())
+    }
+
+    fun testAClaimFollowsAChangeInAnotherFile() {
+        // The recognizer reads a constant from another file, as a Kotlin const val interpolated into the string.
+        val constants = myFixture.addFileToProject("Constants.txt", "old_column")
+        recognized = true
+        val withConstant = object : HostSqlInjector(HostSqlChannel("constants"), postgres) {
+            override fun claim(host: PsiLanguageInjectionHost) = HostSqlClaim.Injected(postgres, HostSqlEntries(listOf(
+                HostSqlEntry(TextRange(1, host.textLength - 1), "SELECT " + constants.text),
+            )))
+        }
+        val mysql = checkNotNull(Language.findLanguageByID("MySQL"))
+        LanguageInjectionContributor.INJECTOR_EXTENSION.addExplicitExtension(mysql, withConstant, testRootDisposable)
+        LanguageInjectionPerformer.INJECTOR_EXTENSION.addExplicitExtension(mysql, withConstant, testRootDisposable)
+        recognized = false
+        myFixture.configureDialect("MySQL", "SELECT 'SELECT \${COLS}'")
+        val manager = InjectedLanguageManager.getInstance(project)
+        assertEquals("SELECT old_column", manager.getUnescapedText(checkNotNull(injected()).first().first.containingFile))
+        WriteCommandAction.runWriteCommandAction(project) {
+            val document = checkNotNull(PsiDocumentManager.getInstance(project).getDocument(constants))
+            document.setText("new_column")
+            PsiDocumentManager.getInstance(project).commitDocument(document)
+        }
+        assertEquals("SELECT new_column", manager.getUnescapedText(checkNotNull(injected()).first().first.containingFile))
     }
 }
