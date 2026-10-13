@@ -5,6 +5,7 @@ import com.intellij.database.console.JdbcConsole
 import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.remote.jdbc.RemoteStatement
+import com.intellij.database.settings.DatabaseSettings
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
@@ -121,6 +122,8 @@ public abstract class TextExplainService(protected val project: Project, private
 
     /** Explains [text] as run in [console]. Cancellation propagates, cancelling a running statement. */
     public suspend fun explain(console: JdbcConsole, text: String): ExplainOutcome {
+        // The console would prompt for these; they are resolved with Execute, before any connection.
+        ideParameterPattern(text)?.let { return ExplainOutcome.Refused("The statement has parameters ($it): resolve them with Execute before EXPLAIN.") }
         val ready = when (val prepared = prepare(text)) {
             is ExplainPreparation.Ready -> prepared
             is ExplainPreparation.Refused -> return ExplainOutcome.Refused(prepared.reason)
@@ -138,6 +141,13 @@ public abstract class TextExplainService(protected val project: Project, private
         return withTimeoutOrNull(profile.timeout) { runOnHelper(console, listOfNotNull(namespace) + ready.context, ready.sql) }
             ?: ExplainOutcome.Failed("EXPLAIN did not finish within ${profile.timeout}.")
     }
+
+    /** The first of the IDE's user parameter patterns (Database settings) in force that matches [text]. */
+    private fun ideParameterPattern(text: String): String? =
+        DatabaseSettings.getSettings().userPatterns.patterns.orEmpty()
+            .filter { it.inScripts || it.inLiterals }
+            .firstOrNull { pattern -> runCatching { Regex(pattern.pattern).containsMatchIn(text) }.getOrDefault(false) }
+            ?.pattern
 
     private fun namesOf(path: ObjectPath): List<String> =
         generateSequence(path) { it.parent }.mapNotNull { it.name?.takeIf(String::isNotBlank) }.toList()

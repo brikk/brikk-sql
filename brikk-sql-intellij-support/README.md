@@ -365,7 +365,9 @@ wraps `Console.Jdbc.ExplainPlan` cooperatively: in the profile's consoles it sho
 explains the selection, else the statement at the caret, and says so when there is none; every other
 console keeps the wrapped action (the stock graphical explain, or another plugin's wrapper).
 
-Safety: the statement (PIPE lowered first, unresolved PIPE parameters refused) goes through core's
+Safety: text matching the IDE's own user parameter patterns (Database settings), which the console would
+prompt for, is refused before any connection. The statement (PIPE lowered first, unresolved PIPE parameters
+refused) goes through core's
 `prepareTextExplain`, which explains only a single plain query with no parameters, routine declarations,
 nested statements or table functions, calling only built-in functions by their written names, for Trino
 and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table

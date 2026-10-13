@@ -10,6 +10,8 @@ import com.intellij.database.model.ObjectKind
 import com.intellij.database.remote.jdbc.RemoteConnection
 import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
+import com.intellij.database.settings.DatabaseSettings
+import com.intellij.database.settings.UserPatterns
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.openapi.application.ApplicationManager
@@ -164,6 +166,24 @@ class TextExplainServiceTest : BasePlatformTestCase() {
             .registerExtension(LiveInterceptor(), testRootDisposable)
         assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
         assertEquals(0, harvester.harvests.get())
+    }
+
+    /** The console would prompt for a parameter of the IDE's own patterns: it is refused before any connection. */
+    fun testCustomIdeParameterPatternsAreRefusedBeforeConnecting() {
+        val settings = DatabaseSettings.getSettings()
+        val previous = settings.userPatterns
+        settings.userPatterns = UserPatterns().apply {
+            inScripts = true
+            inLiterals = true
+            patterns = arrayListOf(UserPatterns.ParameterPattern("__(\\w+)__").enabled(true, true))
+        }
+        try {
+            val outcome = explain("SELECT count(*) FROM t WHERE x = '__customer__'")
+            assertTrue(outcome.toString(), (outcome as ExplainOutcome.Refused).reason.contains("__(\\w+)__"))
+            assertEquals(0, opened.get())
+        } finally {
+            settings.userPatterns = previous
+        }
     }
 
     /** Cancelled while the EXPLAIN's statement is being created: the new statement is cancelled and closed, never run. */
