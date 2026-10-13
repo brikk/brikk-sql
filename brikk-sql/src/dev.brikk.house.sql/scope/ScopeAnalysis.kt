@@ -74,7 +74,7 @@ internal fun lowerPipes(statement: Expression, dialect: Dialect, names: SourceNa
                     origins.stages[value] = keyword
                     (assignment.thisArg as? Column)?.let { origins.setTargets[value] = it }
                 }
-                is PipeSetOperation -> names.range(stage)?.let { names.operator(it.first - 1, Int.MAX_VALUE) }?.let { operator ->
+                is PipeSetOperation -> names.range(stage)?.let { names.operatorFrom(it.first) }?.let { operator ->
                     stage.expressionsArg.filterIsInstance<Expression>().forEach { origins.operators[it] = operator }
                 }
                 else -> {}

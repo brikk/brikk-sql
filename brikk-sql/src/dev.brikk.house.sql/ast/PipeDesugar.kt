@@ -79,20 +79,30 @@ private fun desugarNode(node: Expression, counter: PipeCteCounter): Expression {
     return node
 }
 
-/** Desugars nested PipeQueries in arg-insertion order (approximates parse order). */
+/**
+ * Desugars nested PipeQueries in arg-insertion order (approximates parse order). Iterative, so a
+ * long expression chain (thousands of ANDs) does not exhaust the stack; only pipe nesting recurses.
+ */
 private fun desugarChildren(node: Expression, counter: PipeCteCounter) {
-    for ((key, value) in node.args.entries.toList()) {
-        if (value is Expression) {
-            val desugared = desugarNode(value, counter)
-            if (desugared !== value) node.set(key, desugared)
-        } else if (value is List<*>) {
-            for ((i, item) in value.withIndex()) {
-                if (item is Expression) {
-                    val desugared = desugarNode(item, counter)
-                    if (desugared !== item) node.set(key, desugared, index = i)
-                }
-            }
+    class Slot(val node: Expression, val parent: Expression, val key: String, val index: Int?)
+    val pending = ArrayDeque<Slot>()
+    fun pushChildren(parent: Expression) {
+        val children = ArrayList<Slot>()
+        for ((key, value) in parent.args.entries) {
+            if (value is Expression) children += Slot(value, parent, key, null)
+            else if (value is List<*>) value.forEachIndexed { i, item -> if (item is Expression) children += Slot(item, parent, key, i) }
         }
+        for (child in children.asReversed()) pending.addLast(child)
+    }
+    pushChildren(node)
+    while (pending.isNotEmpty()) {
+        val slot = pending.removeLast()
+        if (slot.node !is PipeQuery) {
+            pushChildren(slot.node)
+            continue
+        }
+        val desugared = desugarNode(slot.node, counter)
+        if (slot.index == null) slot.parent.set(slot.key, desugared) else slot.parent.set(slot.key, desugared, index = slot.index)
     }
 }
 

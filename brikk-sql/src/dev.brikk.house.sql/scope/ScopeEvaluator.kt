@@ -107,6 +107,7 @@ internal class ScopeEvaluator(
     class CaretSite(val frame: Frame?, val qualifier: Identifier?)
 
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {
+        // Recursion follows query nesting only, which the parser caps at its bracket depth.
         checkCanceled()
         val scoped = withClause(node, env)
         return when (node) {
@@ -512,14 +513,24 @@ internal class ScopeEvaluator(
 
     // ------------------------------------------------------------------ set operations
 
+    /** A left-deep chain (`a UNION b UNION c ...`) combines branch by branch, without recursing per operator. */
     private fun setOperation(node: SetOperation, env: Env): Row {
-        val left = query(node.left, env)
-        val right = query(node.right, env)
+        val chain = generateSequence(node) { it.left as? SetOperation }.toList().asReversed()
+        var row = query(chain.first().left, env)
+        for (operation in chain) {
+            checkCanceled()
+            val scoped = if (operation === node) env else withClause(operation, env)
+            row = combine(operation, row, query(operation.right, scoped))
+            orderBy(operation, Frame(listOf(anonymous(row)), env.outer), scoped)
+        }
+        return row
+    }
+
+    private fun combine(node: SetOperation, left: Row, right: Row): Row {
         val operator = origins.operators[node.right] ?: operatorRange(node)
         val label = operator?.second ?: node.key.uppercase()
-        val byName = node.args["by_name"] == true
-        val row = when {
-            byName -> byName(node, left, right, label)
+        return when {
+            node.args["by_name"] == true -> byName(node, left, right, label)
             left.knowledge == Knowledge.FULL && right.knowledge == Knowledge.FULL && left.columns.size != right.columns.size -> {
                 operator?.first?.let { span ->
                     diagnostics += ScopeDiagnostic(ScopeProblem.COLUMN_COUNT_MISMATCH, ScopeProblem.COLUMN_COUNT_MISMATCH.severity,
@@ -530,8 +541,6 @@ internal class ScopeEvaluator(
             else -> Row(left.columns.mapIndexed { index, column -> combine(node, column, listOfNotNull(right.columns.getOrNull(index)), label) },
                 worst(left.knowledge, right.knowledge))
         }
-        orderBy(node, Frame(listOf(anonymous(row)), env.outer), env)
-        return row
     }
 
     private fun byName(node: SetOperation, left: Row, right: Row, label: String): Row {
@@ -558,11 +567,7 @@ internal class ScopeEvaluator(
     }
 
     /** The set operator between the branches, `UNION ALL` included, and its text. */
-    private fun operatorRange(node: SetOperation): Pair<IntRange, String>? {
-        val leftEnd = names.end(node.left) ?: return null
-        val rightStart = names.start(node.right) ?: return null
-        return names.operator(leftEnd, rightStart)
-    }
+    private fun operatorRange(node: SetOperation): Pair<IntRange, String>? = names.start(node.right)?.let(names::operatorBefore)
 
     // ------------------------------------------------------------------ pivots
 
@@ -632,23 +637,30 @@ internal class ScopeEvaluator(
 
     // ------------------------------------------------------------------ names
 
-    /** Resolves every column reference in [node], evaluating nested queries with [frame] as their outer scope. */
-    private fun expression(node: Expression?, frame: Frame?, env: Env, hidden: Set<String> = emptySet()) {
-        when (node) {
-            null -> return
-            is Column -> {
-                val identifier = node.thisArg as? Identifier
-                if (identifier != null && (node.args["table"] == null && hidden.any { same(identifier, it) })) return
-                if (identifier != null) column(node, identifier, frame)
-                else if (node.thisArg is Star) frame?.let { qualifiedStar(node, it) }
+    /**
+     * Resolves every column reference in [node], evaluating nested queries with [frame] as their
+     * outer scope. Iterative: a long condition chain must not exhaust the stack.
+     */
+    private fun expression(node: Expression?, frame: Frame?, env: Env) {
+        if (node == null) return
+        val pending = ArrayDeque<Pair<Expression, Set<String>>>()
+        pending.addLast(node to emptySet())
+        while (pending.isNotEmpty()) {
+            val (current, hidden) = pending.removeLast()
+            when (current) {
+                is Column -> {
+                    val identifier = current.thisArg as? Identifier
+                    if (identifier != null && current.args["table"] == null && hidden.any { same(identifier, it) }) continue
+                    if (identifier != null) column(current, identifier, frame)
+                    else if (current.thisArg is Star) frame?.let { qualifiedStar(current, it) }
+                }
+                is Lambda -> {
+                    val parameters = current.expressionsArg.filterIsInstance<Expression>().map { it.name }
+                    (current.thisArg as? Expression)?.let { pending.addLast(it to hidden + parameters) }
+                }
+                is Select, is SetOperation, is Subquery -> query(current, env.withOuter(frame))
+                else -> current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
             }
-            is Lambda -> {
-                val parameters = node.expressionsArg.filterIsInstance<Expression>().map { it.name }
-                expression(node.thisArg as? Expression, frame, env, hidden + parameters)
-            }
-            is Select, is SetOperation -> query(node, env.withOuter(frame))
-            is Subquery -> query(node, env.withOuter(frame))
-            else -> node.iterExpressions().forEach { expression(it, frame, env, hidden) }
         }
     }
 
@@ -834,13 +846,21 @@ internal class SourceNames(private val base: Int, private val tokens: List<dev.b
         ?.let { base + it.start..base + it.end }
 
     fun start(node: Expression): Int? = node.walk().mapNotNull { range(it)?.first }.minOrNull()
-    fun end(node: Expression): Int? = node.walk().mapNotNull { range(it)?.last }.maxOrNull()
 
-    /** The first set operator token after [after] and before [before], with a following ALL or DISTINCT. */
-    fun operator(after: Int, before: Int): Pair<IntRange, String>? {
-        val index = tokens.indexOfFirst { base + it.start > after && base + it.start < before &&
-            it.tokenType in SET_OPERATORS }
-        if (index < 0) return null
+    private val operators = tokens.indices.filter { tokens[it].tokenType in SET_OPERATORS }
+
+    /** The first set operator at or after script offset [from], with a following ALL or DISTINCT. */
+    fun operatorFrom(from: Int): Pair<IntRange, String>? =
+        operators.firstOrNull { base + tokens[it].start >= from }?.let(::operator)
+
+    /** The last set operator before script offset [before]: the one ahead of a set operation's right branch. */
+    fun operatorBefore(before: Int): Pair<IntRange, String>? {
+        val position = operators.binarySearch { (base + tokens[it].start).compareTo(before) }
+        val insertion = if (position >= 0) position else -position - 1
+        return operators.getOrNull(insertion - 1)?.let(::operator)
+    }
+
+    private fun operator(index: Int): Pair<IntRange, String> {
         val first = tokens[index]
         val next = tokens.getOrNull(index + 1)?.takeIf { it.tokenType == dev.brikk.house.sql.parser.TokenType.ALL ||
             it.tokenType == dev.brikk.house.sql.parser.TokenType.DISTINCT }
