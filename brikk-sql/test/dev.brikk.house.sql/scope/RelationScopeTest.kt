@@ -98,13 +98,20 @@ class RelationScopeTest {
     }
 
     @Test
-    fun columnCaseFollowsTheDialect() {
-        assertTrue(analyze("SELECT \"eventkind\" FROM events()", "duckdb").diagnostics.isEmpty())
-        assertTrue(analyze("SELECT `EVENTKIND` FROM events()", "doris").diagnostics.isEmpty())
-        assertTrue(analyze("SELECT EVENTKIND FROM events()", "postgres").diagnostics.isEmpty())
-        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), analyze("SELECT \"eventkind\" FROM events()", "postgres").problems())
-        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), analyze("SELECT EVENTKIND FROM events()", "clickhouse").problems())
-        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), analyze("SELECT E.id FROM events() e", "doris").problems())
+    fun namesCompareAsTheDialectStoresThem() {
+        fun problems(sql: String, dialect: String) = analyze(sql, dialect).problems()
+        assertEquals(emptyList(), problems("SELECT \"EVENTKIND\" FROM events()", "duckdb"))
+        assertEquals(emptyList(), problems("SELECT `EVENTKIND` FROM events()", "doris"))
+        assertEquals(emptyList(), problems("SELECT \"eventKind\" FROM events()", "postgres"))
+        // Unquoted names fold on input in PostgreSQL; a provider's mixed-case name needs quotes.
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems("SELECT eventKind FROM events()", "postgres"))
+        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), problems("SELECT e.id FROM events() AS \"E\"", "postgres"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems("SELECT x.foo FROM (SELECT id AS \"Foo\" FROM events()) x", "postgres"))
+        assertEquals(emptyList(), problems("SELECT x.FOO FROM (SELECT id AS Foo FROM events()) x", "postgres"))
+        // DuckDB folds ASCII letters only.
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems("SELECT \"ä\" FROM (SELECT 1 AS \"Ä\") t", "duckdb"))
+        assertEquals(listOf(ScopeProblem.MISSING_COLUMN), problems("SELECT EVENTKIND FROM events()", "clickhouse"))
+        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), problems("SELECT E.id FROM events() e", "doris"))
     }
 
     @Test

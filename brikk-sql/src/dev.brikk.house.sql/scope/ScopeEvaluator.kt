@@ -236,13 +236,13 @@ internal class ScopeEvaluator(
                 val l = unqualified(leftFrame, identifier)
                 val r = unqualified(rightFrame, identifier)
                 val lookup = when {
-                    l.single != null && r.single != null -> Lookup(listOf(merge(Key(identifier.name, l.single, r.single), join.side)), Knowledge.FULL)
+                    l.single != null && r.single != null -> Lookup(listOf(merge(Key(stored(identifier), l.single, r.single), join.side)), Knowledge.FULL)
                     l.candidates.isEmpty() -> l
                     r.candidates.isEmpty() -> r
                     else -> Lookup(l.candidates + r.candidates, Knowledge.FULL)
                 }
                 record(identifier, null, lookup)
-                Key(identifier.name, l.single, r.single)
+                Key(stored(identifier), l.single, r.single)
             }
         }
         if (join.method != "NATURAL") return emptyList()
@@ -250,7 +250,7 @@ internal class ScopeEvaluator(
         return leftColumns.mapNotNull { l ->
             val r = right.flatMap { it.columns }.filter { same(it.name, l.name) }
             r.singleOrNull()?.let { Key(l.name, l, it) }
-        }.distinctBy { it.name.lowercase() }
+        }.distinctBy { fold(it.name) }
     }
 
     private fun merge(key: Key, side: String): ScopeColumn {
@@ -315,7 +315,7 @@ internal class ScopeEvaluator(
     private fun opaque(node: Expression, lateral: Frame, env: Env): Binding {
         expression(node, lateral, env)
         val columns = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
-        val row = Row(columns.map { computed(it.name, Nullability.UNKNOWN, "SELECT") }, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
+        val row = Row(columns.map { computed(stored(it), Nullability.UNKNOWN, "SELECT") }, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
         return bound(row, null, synthetic = true, kind = RelationKind.FUNCTION, source = null)
     }
 
@@ -338,12 +338,13 @@ internal class ScopeEvaluator(
             if (facts.catalog == CatalogKnowledge.CLOSED) {
                 diagnose(ScopeProblem.UNKNOWN_TABLE, "Unknown table '${parts.joinToString(".") { it.name }}'", parts.firstOrNull() ?: name, name)
             }
-            return Binding(name.name, true, ScopeRelation(name.name, RelationKind.TABLE, knowledge), emptyList())
+            return Binding(stored(name), true, ScopeRelation(stored(name), RelationKind.TABLE, knowledge), emptyList())
         }
         val (key, fact) = match
-        val relation = ScopeRelation(name.name, RelationKind.TABLE, fact.knowledge, key, fact.provenance)
+        val label = stored(name)
+        val relation = ScopeRelation(label, RelationKind.TABLE, fact.knowledge, key, fact.provenance)
         reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, fact.knowledge, relation = relation, start = parts.firstOrNull())
-        return Binding(name.name, true, relation, fact.columns.map { it.visible(key, name.name) })
+        return Binding(label, true, relation, fact.columns.map { it.visible(key, label) })
     }
 
     private fun tableFunction(node: Table, function: Anonymous, env: Env, lateral: Frame): Binding {
@@ -364,17 +365,18 @@ internal class ScopeEvaluator(
             references += ScopeReference(ReferenceKind.TABLE, name, span.first, span.last + 1,
                 if (fact != null) Resolution.RESOLVED else Resolution.UNRESOLVED, relation.knowledge, relation = relation.takeIf { fact != null })
         }
-        return Binding(name, true, relation, fact?.columns.orEmpty().map { it.visible(name, name) })
+        val label = stored(name, quoted = false)
+        return Binding(label, true, relation.copy(name = label), fact?.columns.orEmpty().map { it.visible(name, label) })
     }
 
     private fun cte(name: Identifier?, env: Env): Pair<Cte, Row>? {
         if (name == null) return null
-        val cte = env.ctes.lastOrNull { same(name, it.name.name, columns = false, quotedOther = it.name.quoted) } ?: return null
+        val cte = env.ctes.lastOrNull { same(name, stored(it.name), columns = false) } ?: return null
         return cte to cte.row
     }
 
     private fun bound(row: Row, label: Identifier?, synthetic: Boolean, kind: RelationKind, source: String?): Binding {
-        val name = if (synthetic || label == null) "" else label.name
+        val name = if (synthetic || label == null) "" else stored(label)
         val columns = deduplicated(row.columns).map { it.copy(relation = name) }
         return Binding(name, name.isNotEmpty(), ScopeRelation(name, kind, row.knowledge, source), columns)
     }
@@ -383,7 +385,7 @@ internal class ScopeEvaluator(
 
     private fun relabel(binding: Binding, alias: TableAlias): Binding {
         val label = alias.thisArg as? Identifier
-        val name = label?.name ?: binding.name
+        val name = label?.let(::stored) ?: binding.name
         val qualifiable = if (label != null) names.positioned(label) else binding.qualifiable
         val columns = renamedColumns(binding.columns, alias).map { it.copy(relation = if (qualifiable) name else "") }
         return Binding(name, qualifiable, binding.relation.copy(name = name), columns)
@@ -391,7 +393,7 @@ internal class ScopeEvaluator(
 
     private fun renamedColumns(columns: List<ScopeColumn>, alias: TableAlias): List<ScopeColumn> {
         val names = alias.columns.filterIsInstance<Identifier>()
-        return columns.mapIndexed { index, column -> names.getOrNull(index)?.let { column.copy(name = it.name) } ?: column }
+        return columns.mapIndexed { index, column -> names.getOrNull(index)?.let { column.copy(name = stored(it)) } ?: column }
     }
 
     private fun unknownRelation(name: String, kind: RelationKind) =
@@ -403,12 +405,12 @@ internal class ScopeEvaluator(
     /** DuckDB renames repeated output names of a derived table: the second `id` becomes `id_1`. */
     private fun deduplicated(columns: List<ScopeColumn>): List<ScopeColumn> {
         if (!dialect.deduplicatesDerivedColumnNames) return columns
-        val taken = columns.mapTo(HashSet()) { it.name.lowercase() }
+        val taken = columns.mapTo(HashSet()) { fold(it.name) }
         val seen = HashSet<String>()
         // The next suffix to try per name, so many repeats of one name stay linear.
         val next = HashMap<String, Int>()
         return columns.map { column ->
-            val key = column.name.lowercase()
+            val key = fold(column.name)
             if (column.name.isEmpty() || seen.add(key)) return@map column
             var suffix = next[key] ?: 1
             while ("${key}_$suffix" in taken) suffix++
@@ -443,7 +445,8 @@ internal class ScopeEvaluator(
             val old = (rename.thisArg as? Column)?.thisArg as? Identifier ?: continue
             record(old, null, unqualified(pool, old))
             val index = columns.indexOfFirst { same(old, it.name, columns = true) }
-            if (index >= 0) columns = columns.toMutableList().also { it[index] = it[index].copy(name = rename.alias) }
+            val target = (rename.args["alias"] as? Identifier)?.let(::stored) ?: rename.alias
+            if (index >= 0) columns = columns.toMutableList().also { it[index] = it[index].copy(name = target) }
         }
         return columns to knowledge
     }
@@ -457,7 +460,7 @@ internal class ScopeEvaluator(
         val placed = HashSet<String>()
         for (column in all) {
             val key = merged.firstOrNull { same(it.name, column.name) }
-            if (key == null) out += column else if (placed.add(key.name.lowercase())) out += key
+            if (key == null) out += column else if (placed.add(fold(key.name))) out += key
         }
         return out
     }
@@ -478,7 +481,8 @@ internal class ScopeEvaluator(
     /** A projection's output column: the referenced column, renamed, or a computed one. */
     private fun projected(projection: Expression, context: String): ScopeColumn {
         val value = projection.unwrapped()
-        val name = (projection as? Alias)?.alias ?: value.outputName
+        val name = ((projection as? Alias)?.args?.get("alias") as? Identifier ?: (value as? Column)?.thisArg as? Identifier)
+            ?.let(::stored) ?: (projection as? Alias)?.alias ?: value.outputName
         if (value is Column && value.thisArg is Identifier) {
             resolved[value]?.let { return it.copy(name = name, relation = "") }
         }
@@ -600,10 +604,10 @@ internal class ScopeEvaluator(
                 else -> Nullability.UNKNOWN
             }
             val by = stage ?: "UNPIVOT"
-            val nameColumns = fields.mapNotNull { (it.thisArg as? Expression)?.name?.takeIf(String::isNotEmpty) }
+            val nameColumns = fields.mapNotNull { (it.thisArg as? Identifier)?.let(::stored) ?: (it.thisArg as? Expression)?.name?.takeIf(String::isNotEmpty) }
                 .map { computed(it, Nullability.NON_NULL, by, "VARCHAR") }
             val valueColumns = pivot.expressionsArg.filterIsInstance<Expression>().map {
-                computed(it.name, valueNullability, by, values.map { v -> v.sqlType }.distinct().singleOrNull())
+                computed((it as? Identifier)?.let(::stored) ?: it.name, valueNullability, by, values.map { v -> v.sqlType }.distinct().singleOrNull())
             }
             binding.columns.filterNot { it in values } + nameColumns + valueColumns
         } else {
@@ -616,7 +620,7 @@ internal class ScopeEvaluator(
             val aggregates = pivot.expressionsArg.filterIsInstance<Expression>()
             val by = stage ?: "PIVOT"
             val values = fields.flatMap { field -> field.expressionsArg.filterIsInstance<Expression>() }.map { value ->
-                (value as? Alias)?.alias ?: (value.unwrapped() as? Literal)?.name ?: value.outputName
+                ((value as? Alias)?.args?.get("alias") as? Identifier)?.let(::stored) ?: (value.unwrapped() as? Literal)?.name ?: value.outputName
             }
             val pivoted = values.flatMap { value ->
                 aggregates.map { aggregate ->
@@ -628,7 +632,7 @@ internal class ScopeEvaluator(
             }
             (group ?: binding.columns.filterNot { it in used }) + pivoted
         }
-        val name = label?.name ?: binding.name
+        val name = label?.let(::stored) ?: binding.name
         val knowledge = binding.knowledge
         return Binding(name, label != null || binding.qualifiable && name.isNotEmpty(),
             ScopeRelation(name, binding.relation.kind, knowledge, binding.relation.source, binding.relation.provenance),
@@ -639,7 +643,7 @@ internal class ScopeEvaluator(
         node.expressionsArg.filterIsInstance<Expression>().forEach { expression(it, env.outer, env) }
         // Unnamed VALUES columns get dialect-specific names (col0, _col0, column1): only an alias's names are known.
         val names = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
-        return Row(names.map { computed(it.name, Nullability.UNKNOWN, "VALUES") }, if (names.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
+        return Row(names.map { computed(stored(it), Nullability.UNKNOWN, "VALUES") }, if (names.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
     }
 
     // ------------------------------------------------------------------ names
@@ -662,7 +666,7 @@ internal class ScopeEvaluator(
                     else if (current.thisArg is Star) frame?.let { qualifiedStar(current, it) }
                 }
                 is Lambda -> {
-                    val parameters = current.expressionsArg.filterIsInstance<Expression>().map { it.name }
+                    val parameters = current.expressionsArg.filterIsInstance<Identifier>().map(::stored)
                     (current.thisArg as? Expression)?.let { pending.addLast(it to hidden + parameters) }
                 }
                 is Select, is SetOperation, is Subquery -> query(current, env.withOuter(frame))
@@ -749,7 +753,7 @@ internal class ScopeEvaluator(
             out += current.bindings.flatMap { it.columns }
             out += current.merged
             out += current.aliases.filter { alias ->
-                alias.name.isNotEmpty() && out.none { it == alias || it.name.equals(alias.name, ignoreCase = true) && it.source != null && it.source == alias.source }
+                alias.name.isNotEmpty() && out.none { it == alias || same(it.name, alias.name) && it.source != null && it.source == alias.source }
             }
             current = current.outer
         }
@@ -797,24 +801,35 @@ internal class ScopeEvaluator(
 
     // ------------------------------------------------------------------ identifier rules
 
-    /** Whether [written] names [name]: unquoted names fold, quoted ones compare as the dialect does. */
-    private fun same(written: Identifier, name: String, columns: Boolean = true, quotedOther: Boolean = false): Boolean =
-        same(written.name, written.quoted, name, columns, quotedOther)
+    private val strategy = dialect.normalizationStrategy
 
-    /** Whether two names written in SQL or facts are the same column. */
-    private fun same(left: String, right: String, columns: Boolean = true): Boolean = same(left, false, right, columns, false)
+    private fun folds(columns: Boolean) = strategy == NormalizationStrategy.CASE_INSENSITIVE ||
+        strategy == NormalizationStrategy.CASE_INSENSITIVE_UPPERCASE || columns && dialect.caseInsensitiveColumns
 
-    private fun same(text: String, quoted: Boolean, name: String, columns: Boolean, quotedOther: Boolean): Boolean {
-        if (text == name) return true
-        val strategy = dialect.normalizationStrategy
-        val folding = strategy == NormalizationStrategy.CASE_INSENSITIVE || strategy == NormalizationStrategy.CASE_INSENSITIVE_UPPERCASE ||
-            columns && dialect.caseInsensitiveColumns
-        return when {
-            folding -> text.equals(name, ignoreCase = true)
-            strategy == NormalizationStrategy.CASE_SENSITIVE -> false
-            else -> !quoted && !quotedOther && text.equals(name, ignoreCase = true)
+    private fun fold(text: String, upper: Boolean = false): String = when {
+        dialect.asciiOnlyNormalization -> buildString(text.length) {
+            for (c in text) append(if (upper && c in 'a'..'z') c - 32 else if (!upper && c in 'A'..'Z') c + 32 else c)
         }
+        upper -> text.uppercase()
+        else -> text.lowercase()
     }
+
+    /** The name SQL stores for [identifier]: an unquoted name folds where the dialect folds it on input. */
+    private fun stored(identifier: Identifier): String = stored(identifier.name, identifier.quoted)
+
+    private fun stored(text: String, quoted: Boolean): String = when {
+        quoted -> text
+        strategy == NormalizationStrategy.LOWERCASE -> fold(text)
+        strategy == NormalizationStrategy.UPPERCASE -> fold(text, upper = true)
+        else -> text
+    }
+
+    /** Whether [written] names the stored or provider name [name]. */
+    private fun same(written: Identifier, name: String, columns: Boolean = true): Boolean = same(stored(written), name, columns)
+
+    /** Whether two stored or provider names are the same; only folding dialects ignore case. */
+    private fun same(left: String, right: String, columns: Boolean = true): Boolean =
+        left == right || folds(columns) && fold(left) == fold(right)
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
         val keys = key.split('.')
