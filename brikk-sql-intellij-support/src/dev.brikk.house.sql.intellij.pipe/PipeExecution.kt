@@ -14,12 +14,15 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.PsiManager
 import dev.brikk.house.sql.intellij.EditorSnapshot
 import dev.brikk.house.sql.intellij.ExecuteInterceptor
@@ -49,15 +52,26 @@ import org.jetbrains.annotations.ApiStatus
  */
 /**
  * The files Execute may run SQL of: the event's file and, from a host editor (a Kotlin file, say),
- * the SQL injected at the caret, which the stock action runs in a console.
+ * the SQL injected into every host string the selection intersects or the caret touches (also just
+ * past its closing quote), which the stock action runs in a console.
  */
 internal fun executionFiles(event: AnActionEvent): List<PsiFile> {
-    val file = event.getData(CommonDataKeys.PSI_FILE)
-    val editor = event.getData(CommonDataKeys.EDITOR)
-    val atCaret = if (file != null && editor != null && editor !is EditorWindow) {
-        InjectedLanguageManager.getInstance(file.project).findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
-    } else null
-    return listOfNotNull(file, atCaret).distinct()
+    val file = event.getData(CommonDataKeys.PSI_FILE) ?: return emptyList()
+    val editor = event.getData(CommonDataKeys.EDITOR)?.takeIf { it !is EditorWindow } ?: return listOf(file)
+    return listOf(file) + injectedFiles(file, editor.caretModel.offset, editor.selectionModel)
+}
+
+/** The SQL injected into the host strings of [file] that the selection intersects or [caret] touches. */
+internal fun injectedFiles(file: PsiFile, caret: Int, selection: SelectionModel): List<PsiFile> {
+    val manager = InjectedLanguageManager.getInstance(file.project)
+    val selected = TextRange(selection.selectionStart, selection.selectionEnd).takeIf { selection.hasSelection() }
+    return PsiTreeUtil.findChildrenOfType(file, PsiLanguageInjectionHost::class.java)
+        .filter { host ->
+            val range = host.textRange
+            caret in range.startOffset..range.endOffset || selected?.intersects(range) == true
+        }
+        .flatMap { host -> manager.getInjectedPsiFiles(host).orEmpty().map { it.first.containingFile } }
+        .distinct()
 }
 
 @ApiStatus.Experimental

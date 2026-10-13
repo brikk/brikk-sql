@@ -162,12 +162,14 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         assertTrue(channel.isInspectionOnly(injected()))
     }
 
+    private fun contract() = HostSqlExecutionContract(TestPipeDialect("trino", FirstStageRule.AnyQuery, channel)) {
+        open("SELECT 'FROM t |> WHERE id > <caret>0', 2")
+        myFixture.editor
+    }
+
     fun testExecuteFromTheHostEditorIsRefused() {
         claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
-        HostSqlExecutionContract(TestPipeDialect("trino", FirstStageRule.AnyQuery, channel)) {
-            open("SELECT 'FROM t |> WHERE id > <caret>0'")
-            myFixture.editor
-        }.refusesInspectionOnlySqlFromTheHostEditor()
+        contract().refusesInspectionOnlySqlFromTheHostEditor()
     }
 
     fun testARetryInjectsOnceTheFactsAreThereAndStops() {
