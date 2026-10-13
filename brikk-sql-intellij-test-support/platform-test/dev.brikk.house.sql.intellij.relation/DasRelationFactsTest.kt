@@ -1,0 +1,93 @@
+package dev.brikk.house.sql.intellij.relation
+
+import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.database.Dbms
+import com.intellij.database.dataSource.DatabaseDriverManager
+import com.intellij.database.dataSource.LocalDataSource
+import com.intellij.database.dataSource.LocalDataSourceManager
+import com.intellij.database.dialects.postgres.model.PgLocalTable
+import com.intellij.database.dialects.postgres.model.PgRoot
+import com.intellij.database.model.ModelFactory
+import com.intellij.database.psi.DbPsiFacade
+import com.intellij.database.types.DasSimpleTypeClass
+import com.intellij.database.types.DasType
+import com.intellij.testFramework.RunAll
+import dev.brikk.house.sql.intellij.catalog.DasRelationFacts
+import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
+import java.util.UUID
+
+/** Physical tables of a PostgreSQL data source's model as relation facts: PIPE completion, folding, model changes. */
+class DasRelationFactsTest : RelationTestCase() {
+    private lateinit var source: LocalDataSource
+    private lateinit var orders: PgLocalTable
+
+    private fun type(name: String) = object : DasType {
+        override fun getTypeClass() = DasSimpleTypeClass(name)
+        override fun getDescription() = name
+        override fun getSpecification() = name
+    }
+
+    override fun setUp() {
+        super.setUp()
+        val model = ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES)
+        val schema = (model.root as PgRoot).databases.createOrGet("shop").schemas.createOrGet("public")
+        orders = schema.tables.createOrGet("orders")
+        orders.columns.createOrGet("id").apply { storedType = type("integer"); setNotNull(true) }
+        orders.columns.createOrGet("total").apply { storedType = type("numeric") }
+        schema.tables.createOrGet("Mixed").columns.createOrGet("quoted_only").apply { storedType = type("text") }
+        source = LocalDataSource().apply {
+            name = "relations ${UUID.randomUUID()}"
+            databaseDriver = checkNotNull(DatabaseDriverManager.getInstance().getDriver("postgresql"))
+            url = "jdbc:offline:relations"
+            isAutoSynchronize = false
+            this.model = model
+        }
+        LocalDataSourceManager.getInstance(project).addDataSource(source)
+        DbPsiFacade.getInstance(project).clearCaches()
+        pgRelations.providers = listOf(DasRelationFacts(DialectDataSourceResolver(Dbms.POSTGRES)))
+        registerPgRelations(testRootDisposable)
+    }
+
+    override fun tearDown() {
+        RunAll(
+            { LocalDataSourceManager.getInstance(project).removeDataSource(source) },
+            { DbPsiFacade.getInstance(project).clearCaches() },
+            { super.tearDown() },
+        ).run()
+    }
+
+    private fun offered(text: String, vararg names: String): List<Triple<String, String?, String?>> {
+        open(text)
+        return myFixture.completeBasic().orEmpty().filter { it.lookupString in names }
+            .map { val p = LookupElementPresentation.renderElement(it); Triple(it.lookupString, p.tailText, p.typeText) }
+    }
+
+    fun testPhysicalColumnsFeedPipeCompletionWithTheirSqlTypes() {
+        assertSameElements(offered("FROM shop.public.orders |> SELECT <caret>", "id", "total"),
+            Triple("id", "  column (orders)", "integer"), Triple("total", "  column (orders)", "numeric?"))
+        assertEquals(2, offered("FROM orders |> WHERE <caret>", "id", "total").size)
+    }
+
+    fun testStoredNamesFoldAsPostgresqlFoldsThem() {
+        assertEmpty(offered("FROM mixed |> SELECT <caret>", "quoted_only"))
+        assertEquals(listOf("quoted_only"), offered("FROM \"Mixed\" |> SELECT <caret>", "quoted_only").map { it.first })
+    }
+
+    fun testAColumnIsOfferedOnceInOrdinarySql() {
+        assertEquals(1, offered("SELECT o.i<caret> FROM orders o", "id").size)
+    }
+
+    fun testTheFactsFollowTheModel() {
+        assertEmpty(offered("FROM orders |> SELECT <caret>", "added"))
+        orders.columns.createOrGet("added").apply { storedType = type("text") }
+        DbPsiFacade.getInstance(project).clearCaches()
+        assertEquals(listOf("added"), offered("FROM orders |> SELECT <caret>", "added").map { it.first })
+    }
+
+    fun testAFileWithoutADataSourceHasNoFacts() {
+        LocalDataSourceManager.getInstance(project).removeDataSource(source)
+        DbPsiFacade.getInstance(project).clearCaches()
+        assertEmpty(offered("FROM orders |> SELECT <caret>", "id", "total"))
+        LocalDataSourceManager.getInstance(project).addDataSource(source)
+    }
+}
