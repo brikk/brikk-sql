@@ -107,8 +107,10 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
 
 /**
  * Go to declaration for the analysis's references: a provider's navigation target for its columns
- * and relations; where the platform resolves nothing itself (PIPE stages), also a computed column's
- * or relation's declaration in the SQL. Register a no-arg subclass as `gotoDeclarationHandler`.
+ * and relations, also where the platform resolves a column to other provider columns than the
+ * analysis (the right side of a LEFT JOIN's USING key, say); where the platform resolves nothing
+ * itself (PIPE stages), also a computed column's or relation's declaration in the SQL. Register a
+ * no-arg subclass as `gotoDeclarationHandler`.
  */
 @ApiStatus.Experimental
 public abstract class ExternalRelationGotoDeclarationHandler(private val profile: RelationScopeProfile) : GotoDeclarationHandler {
@@ -116,12 +118,18 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
         val file = sourceElement?.containingFile ?: return null
         val analysis = RelationAnalysis.of(file, profile) ?: return null
         val reference = analysis.referenceAt(analysis.source.textOffset(offset)) ?: return null
-        val platformResolves = file.findReferenceAt(offset)?.let { it is PsiPolyVariantReference && it.multiResolve(false).isNotEmpty() || it.resolve() != null } == true
+        val platform = file.findReferenceAt(offset)?.let { ref ->
+            if (ref is PsiPolyVariantReference) ref.multiResolve(false).mapNotNull { it.element } else listOfNotNull(ref.resolve())
+        }.orEmpty()
+        val platformResolves = platform.isNotEmpty()
         val targets = when (reference.kind) {
             ReferenceKind.COLUMN -> reference.columns.mapNotNull { column ->
                 val provider = analysis.providerOf(column)
                 when {
                     analysis.manages(column, reference.start) -> column.provenance?.let { provider?.navigationTarget(file, it) }
+                    // The platform's resolution names another provider column (a USING key's other side): the analysis's one leads.
+                    column.source != null && platform.any { it is RelationColumnSymbol && it.column.source != column.source } ->
+                        column.provenance?.let { provider?.navigationTarget(file, it) }
                     platformResolves -> null
                     else -> column.provenance?.let { provider?.navigationTarget(file, it) } ?: column.declaration?.let { analysis.elementAt(file, it) }
                 }
