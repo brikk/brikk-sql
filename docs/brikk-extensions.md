@@ -1952,7 +1952,10 @@ built-in's name does not prove the built-in binds: with a routine's schema on it
 483 resolved `abs('text')` to the routine and evaluated it while planning `EXPLAIN`. So `Ready` carries a
 context run first in which only built-ins resolve: Trino `SET PATH system.builtin` (live: then no routine
 resolves, also under EXPLAIN), Doris `SET prefer_udf_over_builtin = false` (not verified on a live Doris),
-and optimizer hints, which may set session variables per query (Doris `SET_VAR`), are refused. Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused, as is
+and optimizer hints, which may set session variables per query (Doris `SET_VAR`, collected anywhere in a
+SELECT), are refused lexically in any position and dialect, as are MySQL-style executable comments.
+Every recorded call name is checked against the catalog whatever node the call became (Doris
+`PARSE_JSON(...)` parses like a `JSON '...'` literal yet calls a UDF); only keyword syntax is exempt. Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused, as is
 text the core parser cannot read. A query starting with a parenthesis is explained as a derived table,
 since `EXPLAIN (` opens Trino's options. DuckDB is refused outright: its
 `EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence (DuckDB 1.5.6). `explainPlanText`

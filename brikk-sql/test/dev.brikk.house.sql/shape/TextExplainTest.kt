@@ -131,11 +131,21 @@ class TextExplainTest {
         assertEquals(listOf("SET prefer_udf_over_builtin = false"), assertIs<ExplainPreparation.Ready>(prepare("SELECT abs(1)", "doris")).context)
     }
 
-    /** A Doris hint sets session variables for its query (SET_VAR(prefer_udf_over_builtin=true)): no hint is explained. */
+    /** Doris collects hints anywhere in a SELECT and SET_VAR sets session variables for it: no hint comment is explained, in any position or dialect. */
     @Test
-    fun hintsAreRefused() {
-        assertTrue("hint" in assertRefused("SELECT /*+ SET_VAR(prefer_udf_over_builtin=true) */ abs(1) FROM t", "doris"))
-        assertTrue("hint" in assertRefused("SELECT /*+ SET_VAR(x=1) */ 1", "doris"))
+    fun hintsAreRefusedWherever() {
+        for (dialect in listOf("doris", "trino")) {
+            for (sql in listOf(
+                "SELECT /*+ SET_VAR(prefer_udf_over_builtin=true) */ abs(1) FROM t",
+                "SELECT abs(/*+ SET_VAR(prefer_udf_over_builtin=true) */ 1)",
+                "SELECT 1 + /*+SET_VAR(x=1)*/ abs(1)",
+                "SELECT abs(1) /*+ SET_VAR(x=1) */",
+                "/*+ SET_VAR(x=1) */ SELECT abs(1)",
+                "WITH c AS (SELECT /*+ SET_VAR(x=1) */ abs(1)) SELECT * FROM c",
+                "SELECT /*! SET_VAR(x=1) */ abs(1)",
+            )) assertTrue("hint" in assertRefused(sql, dialect), "$dialect: $sql")
+            assertReady("EXPLAIN SELECT '/*+ not a hint */' AS s, abs(1) /* + spaced */", "SELECT '/*+ not a hint */' AS s, abs(1) /* + spaced */", dialect)
+        }
     }
 
     @Test

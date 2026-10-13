@@ -127,6 +127,7 @@ fun prepareTextExplain(
         return ExplainPreparation.Refused(UNREADABLE)
     }
     if (parameters) return ExplainPreparation.Refused(PARAMETERS)
+    if (hasHint(sql, dialect)) return ExplainPreparation.Refused(HINT)
     val ast = try {
         Dialects.forName(dialect).parseOne(sql)
     } catch (_: ParseError) {
@@ -196,6 +197,22 @@ private val GRAMMAR_FORMS = setOf(
     Unnest::class, ParseJSON::class, Extract::class, CurrentDate::class, CurrentTimestamp::class,
     JSONArrayContains::class, JSONExtract::class, JSONExtractScalar::class, Soundex::class,
 )
+
+/**
+ * Whether [sql] holds an optimizer hint or executable comment (`/` `*+`, `/` `*!`) anywhere outside literals:
+ * Doris collects hints throughout a SELECT, and `SET_VAR` sets session variables for it.
+ */
+private fun hasHint(sql: String, dialect: String): Boolean {
+    val tokens = try {
+        Dialects.forName(dialect).tokenize(sql)
+    } catch (_: TokenError) {
+        return true
+    }
+    if (tokens.any { it.tokenType == TokenType.HINT }) return true
+    return HINT_OPENERS.findAll(sql).any { match -> tokens.none { match.range.first in it.start..it.end } }
+}
+
+private val HINT_OPENERS = Regex("""/\*[+!]""")
 
 private const val HINT = "The query has an optimizer hint, which may set session variables for it (Doris SET_VAR)."
 
