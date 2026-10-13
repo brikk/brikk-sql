@@ -152,6 +152,22 @@ class RelationScopeTest {
     }
 
     @Test
+    fun columnsSayWhichKindOfRelationTheyAreSeenThroughAndCameFrom() {
+        val input = facts.copy(calls = mapOf("tvf" to RelationFact(listOf(ColumnFact("v")))))
+        val sql = "WITH q AS (SELECT id FROM events()) SELECT e.id, a.id, q.id, d.id, t.v, d.id + 1 AS n " +
+            "FROM events() e, accounts a, q, (SELECT id FROM events()) d, tvf(1) t"
+        val scope = analyze(sql, input = input)
+        fun seen(nth: Int, name: String = "id") = scope.column(sql, name, nth).columns.single().let { it.relationKind to it.source?.kind }
+        assertEquals(RelationKind.SLOT to RelationKind.SLOT, seen(1))
+        assertEquals(RelationKind.TABLE to RelationKind.TABLE, seen(2))
+        assertEquals(RelationKind.CTE to RelationKind.SLOT, seen(3))
+        assertEquals(RelationKind.SUBQUERY to RelationKind.SLOT, seen(4))
+        assertEquals(RelationKind.CALL to RelationKind.CALL, seen(0, "v"))
+        val ordered = "SELECT id + 1 AS n FROM events() ORDER BY n"
+        assertEquals(null, analyze(ordered).column(ordered, "n", 1).columns.single().relationKind)
+    }
+
+    @Test
     fun slotsMatchExactlyAndOnlyWithoutArgumentsOrQualifiers() {
         assertTrue(analyze("SELECT e.nope FROM Events() e").diagnostics.isEmpty())
         assertTrue(analyze("SELECT e.nope FROM events(1) e").diagnostics.isEmpty())
