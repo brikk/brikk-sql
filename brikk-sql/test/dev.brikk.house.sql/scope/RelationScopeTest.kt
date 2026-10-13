@@ -119,6 +119,19 @@ class RelationScopeTest {
     }
 
     @Test
+    fun aSearchPathSuppliesTheComponentsAPartlyQualifiedNameLeavesOut() {
+        fun table(only: String) = RelationFact(listOf(ColumnFact(only, "INTEGER", origin = ColumnOrigin.PHYSICAL_TABLE)))
+        val catalogs = RelationFacts(
+            tables = mapOf("one.sales.orders" to table("one_only"), "two.sales.orders" to table("two_only")),
+            searchPath = listOf("one.sales"),
+        )
+        for (sql in listOf("SELECT  FROM sales.orders", "SELECT  FROM orders")) {
+            assertEquals(listOf("one_only"), RelationScope.complete(sql, "trino", catalogs, 7).items.map { it.name }, sql)
+        }
+        assertEquals(listOf("two_only"), RelationScope.complete("SELECT  FROM sales.orders", "trino", catalogs.copy(searchPath = listOf("two")), 7).items.map { it.name })
+    }
+
+    @Test
     fun qualifiersMatchTheWholeTableName() {
         val two = RelationFacts(tables = mapOf(
             "one.t" to RelationFact(listOf(ColumnFact("id", provenance = "one"))),

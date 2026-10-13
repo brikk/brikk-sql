@@ -922,11 +922,16 @@ internal class ScopeEvaluator(
         return keys.take(keys.size - parts.size) + parts.map(::stored)
     }
 
-    /** Whether the table [key], named by its last [named] parts, lies in [namespace], a dotted prefix as stored. */
+    /**
+     * Whether the table [key], named by its last [named] parts, lies in [namespace], a dotted path as
+     * stored: the namespace supplies the leading components the name leaves out (`one.sales` makes
+     * `sales.orders` `one.sales.orders` and `orders` `one.sales.orders`), or, shorter than those, their
+     * innermost ones (`sales` for `one.sales.orders`).
+     */
     private fun inNamespace(key: String, named: Int, namespace: String): Boolean {
-        val prefix = key.split('.').dropLast(named)
+        val missing = key.split('.').dropLast(named)
         val path = namespace.split('.')
-        return path.size <= prefix.size && prefix.takeLast(path.size) == path
+        return if (missing.size <= path.size) missing == path.take(missing.size) else missing.takeLast(path.size) == path
     }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
