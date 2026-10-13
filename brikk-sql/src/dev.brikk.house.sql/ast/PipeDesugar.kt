@@ -198,7 +198,8 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
         it == null || it == false || (it is List<*> && it.isEmpty())
     }) || (
         query.expressionsArg.all { it is Column && !it.isStar } &&
-            stageColumns.all { it is Column && it in query.expressionsArg }
+            // A qualified name reads an old namespace, which a projection's output no longer has (Q13-C).
+            stageColumns.all { it is Column && it.table.isEmpty() && it in query.expressionsArg }
         )
     val positionalOrder = (query.args["order"] as? Order)?.expressionsArg.orEmpty().any {
         ((it as? Ordered)?.thisArg as? Expression)?.unnest()?.isInt == true

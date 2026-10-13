@@ -80,4 +80,12 @@ class PipeSequentialStagesTest {
         // The SET output is a new row: the old name is gone after it.
         assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), problems("FROM t e |> SET b = 'z' |> WHERE e.a > 1"))
     }
+
+    @Test
+    fun aSelectFirstHeadsOutputHasNoOldQualifiers() {
+        val pipe = "SELECT t.a, t.b FROM t |> WHERE t.a > 1"
+        assertFailsWith<UnsupportedError> { lowered(pipe) }
+        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), problems(pipe))
+        assertEquals("SELECT a, b FROM t WHERE a > 1", lowered("SELECT a, b FROM t |> WHERE a > 1"))
+    }
 }
