@@ -59,6 +59,37 @@ internal class ClickhouseAvailabilityTest {
         }
     }
 
+    /** A connection that opens after the call was canceled is closed at once and runs nothing. */
+    @Test
+    fun aConnectionOpenedAfterCancellingRunsNothing() {
+        val opening = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        val closed = java.util.concurrent.CountDownLatch(1)
+        val queries = AtomicInteger()
+        val late = object : ClickhouseQueryConnection {
+            override fun queryString(sql: String, timeoutSeconds: Int): String? = "SELECT 1".also { queries.incrementAndGet() }
+            override fun cancel() = Unit
+            override fun close() = closed.countDown()
+        }
+        val verifier = ParseOnlyClickhouseVerifier({
+            opening.countDown()
+            // A driver that does not notice the interrupt while it connects.
+            while (true) {
+                try {
+                    release.await()
+                    break
+                } catch (_: InterruptedException) {
+                }
+            }
+            late
+        }, checkCanceled = { if (opening.count == 0L) throw CancellationException("edited") })
+        assertFailsWith<CancellationException> { verifier.verify("SELECT 1") }
+        release.countDown()
+        assertTrue(closed.await(5, java.util.concurrent.TimeUnit.SECONDS), "the late connection was not closed")
+        Thread.sleep(200)
+        assertEquals(0, queries.get(), "the late connection ran a query")
+    }
+
     @Test
     fun anInterruptedCallerCancels() {
         ServerSocket(0).use { server ->

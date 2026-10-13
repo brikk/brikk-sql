@@ -72,10 +72,41 @@ public class ParseOnlyClickhouseVerifier(
         class NoConnection(val reason: String) : Answer
     }
 
+    /**
+     * One call's cancellation, kept: a connection that opens after it is closed at once, and nothing is
+     * submitted after it.
+     */
+    private class Call {
+        private var canceled = false
+        private var connection: ClickhouseQueryConnection? = null
+
+        /** Takes [opened] for this call, or false when the call was canceled first. */
+        @Synchronized
+        fun opened(opened: ClickhouseQueryConnection): Boolean {
+            if (canceled) return false
+            connection = opened
+            return true
+        }
+
+        /** Throws when the call was canceled: checked before each submission. */
+        @Synchronized
+        fun proceed() {
+            if (canceled) throw CancellationException("ClickHouse verification was canceled")
+        }
+
+        /** Cancels the running query on a worker, since a driver's cancel may itself wait on the server. */
+        fun cancel() {
+            val open = synchronized(this) {
+                canceled = true
+                connection
+            } ?: return
+            WORKERS.execute { runCatching { open.cancel() } }
+        }
+    }
+
     /** Opens a connection, asks the server to format the SQL whose UTF-8 is [hex], and closes it; all on a worker. */
     private fun ask(hex: String): Answer {
-        val running = AtomicBoolean()
-        var connection: ClickhouseQueryConnection? = null
+        val call = Call()
         val future: Future<Answer> = WORKERS.submit(Callable {
             val opened = try {
                 connect() ?: return@Callable Answer.NoConnection("ClickHouse verification is unavailable: no ClickHouse data source.")
@@ -83,11 +114,8 @@ public class ParseOnlyClickhouseVerifier(
                 return@Callable Answer.NoConnection("ClickHouse verification is unavailable: the connection failed (${e.reason()}).")
             }
             opened.use {
-                synchronized(running) {
-                    connection = opened
-                    running.set(true)
-                }
-                format(opened, hex)
+                if (!call.opened(opened)) return@Callable Answer.NoConnection("ClickHouse verification was canceled.")
+                format(opened, hex, call)
             }
         })
         try {
@@ -102,25 +130,21 @@ public class ParseOnlyClickhouseVerifier(
             throw e.cause ?: e
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
-            cancel(future, running) { connection }
+            call.cancel()
+            future.cancel(true)
             throw CancellationException("ClickHouse verification was interrupted").apply { initCause(e) }
         } catch (e: Throwable) {
-            cancel(future, running) { connection }
+            call.cancel()
+            future.cancel(true)
             throw e
         }
     }
 
-    /** Cancels the query on a worker, since a driver's cancel may itself wait on the server, and interrupts the call. */
-    private fun cancel(future: Future<*>, running: AtomicBoolean, connection: () -> ClickhouseQueryConnection?) {
-        val open = synchronized(running) { if (running.get()) connection() else null }
-        if (open != null) WORKERS.execute { runCatching { open.cancel() } }
-        future.cancel(true)
-    }
-
-    private fun format(connection: ClickhouseQueryConnection, hex: String): Answer {
+    private fun format(connection: ClickhouseQueryConnection, hex: String, call: Call): Answer {
         val query = "SELECT formatQuery(unhex('$hex'))"
         if (!settingsRefused.get()) {
             try {
+                call.proceed()
                 return Answer.Formatted(connection.queryString("$query SETTINGS readonly = 1, max_execution_time = $timeoutSeconds", timeoutSeconds).orEmpty())
             } catch (e: SQLException) {
                 if (e.serverCode() != READONLY) return Answer.Failed(e)
@@ -128,6 +152,7 @@ public class ParseOnlyClickhouseVerifier(
             }
         }
         return try {
+            call.proceed()
             Answer.Formatted(connection.queryString(query, timeoutSeconds).orEmpty())
         } catch (e: SQLException) {
             Answer.Failed(e)
