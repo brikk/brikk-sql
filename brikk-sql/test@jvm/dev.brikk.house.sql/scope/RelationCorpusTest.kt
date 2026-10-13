@@ -64,12 +64,14 @@ class RelationCorpusTest {
     private fun check(dialect: String) {
         val applicable = cases.filter { case -> case.array("dialects").any { it.jsonPrimitive.content == dialect } }
         val failures = ArrayList<String>()
+        val actuals = LinkedHashMap<String, JsonElement>()
         val report = StringBuilder()
         for (case in applicable) {
             val id = case.string("id")
             for ((axis, expected, actual) in axes(case, dialect)) {
                 if (if (axis in ORDERED || axis.startsWith("order")) expected == actual else matches(expected, actual)) continue
                 failures += "$id/$axis"
+                actuals["$dialect:$id/$axis"] = actual
                 report.append("$id/$axis [${case.string("sql")}]\n  expected $expected\n  actual   $actual\n")
             }
         }
@@ -80,7 +82,12 @@ class RelationCorpusTest {
         println("Relation corpus $dialect: ${applicable.size} cases, ${applicable.count { case -> failures.none { it.startsWith(case.string("id") + "/") } }} pass, " +
             "${failures.size} differing axes, ${disputed.size} disputed")
         assertEquals(disputed.sorted(), failures.sorted(), report.toString())
+        // A disputed axis still has one accepted answer: regressions inside it fail too.
+        File(projectRoot(), "build/relation-corpus/disputed-$dialect.json").writeText(Json.encodeToString(JsonObject.serializer(), JsonObject(actuals)))
+        for ((key, actual) in actuals) assertEquals(accepted[key], actual, "$key differs from its accepted value in $ACCEPTED")
     }
+
+    private val accepted = Json.parseToJsonElement(testResource(ACCEPTED)).jsonObject
 
     private fun axes(case: JsonObject, dialect: String): List<Triple<String, JsonElement, JsonElement>> {
         val sql = case.string("sql")
@@ -232,6 +239,7 @@ class RelationCorpusTest {
     private fun JsonObject.array(key: String) = getValue(key).jsonArray
 
     private companion object {
+        const val ACCEPTED = "relation-corpus/core-disputed-actuals.json"
         val TARGET_FIELDS = setOf("name", "relation", "identity", "navigationId")
         val ORDERED = setOf("coreOrder", "outputOrder", "coreRefusal")
         val PROBLEMS = mapOf(

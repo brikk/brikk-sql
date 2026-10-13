@@ -1,5 +1,7 @@
 package dev.brikk.house.sql.parser
 
+import kotlinx.serialization.Serializable
+
 /** How a native parser or server counts columns within a line. */
 enum class ColumnUnit { UTF16, CODE_POINT }
 
@@ -47,6 +49,7 @@ fun sourceOffset(
 }
 
 /** A 1-based line and a column counted from the line's first column. */
+@Serializable
 data class SourcePosition(val line: Int, val column: Int)
 
 /**

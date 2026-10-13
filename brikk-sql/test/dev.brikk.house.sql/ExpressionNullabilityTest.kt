@@ -1,5 +1,6 @@
 package dev.brikk.house.sql
 
+import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.optimizer.expressionNullability
 import kotlin.test.Test
@@ -10,7 +11,7 @@ class ExpressionNullabilityTest {
     private val verdicts = mapOf("a" to false, "b" to true)
 
     private fun nullable(sql: String) =
-        expressionNullability(Dialects.DUCKDB.parseOne("SELECT $sql").expressionsArg.single() as dev.brikk.house.sql.ast.Expression, Dialects.DUCKDB) {
+        expressionNullability(Dialects.DUCKDB.parseOne("SELECT $sql").expressionsArg.single() as Expression, Dialects.DUCKDB) {
             verdicts[it.name]
         }
 

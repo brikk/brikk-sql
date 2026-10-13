@@ -3,9 +3,12 @@ package dev.brikk.house.sql.scope
 import dev.brikk.house.sql.ast.AggFunc
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
-import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Count
+import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.DataType
+import dev.brikk.house.sql.ast.DenseRank
 import dev.brikk.house.sql.ast.Except
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.From
@@ -13,11 +16,14 @@ import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
 import dev.brikk.house.sql.ast.Intersect
 import dev.brikk.house.sql.ast.Join
-import dev.brikk.house.sql.ast.Lateral
 import dev.brikk.house.sql.ast.Lambda
+import dev.brikk.house.sql.ast.Lateral
 import dev.brikk.house.sql.ast.Literal
+import dev.brikk.house.sql.ast.Ntile
 import dev.brikk.house.sql.ast.Paren
 import dev.brikk.house.sql.ast.Pivot
+import dev.brikk.house.sql.ast.Rank
+import dev.brikk.house.sql.ast.RowNumber
 import dev.brikk.house.sql.ast.Select
 import dev.brikk.house.sql.ast.SetOperation
 import dev.brikk.house.sql.ast.Star
@@ -37,6 +43,8 @@ import dev.brikk.house.sql.optimizer.annotateTypes
 import dev.brikk.house.sql.optimizer.dataTypeFromStr
 import dev.brikk.house.sql.optimizer.expressionNullability
 import dev.brikk.house.sql.parser.ParseError
+import dev.brikk.house.sql.parser.Token
+import dev.brikk.house.sql.parser.TokenType
 import java.util.IdentityHashMap
 
 /** A query's result row; output columns have no relation until a FROM clause names them. */
@@ -524,8 +532,8 @@ internal class ScopeEvaluator(
 
     private fun nullabilityOf(value: Expression): Nullability {
         val window = value as? Window
-        if (window != null && window.thisArg.let { it is dev.brikk.house.sql.ast.RowNumber || it is dev.brikk.house.sql.ast.Rank ||
-                it is dev.brikk.house.sql.ast.DenseRank || it is dev.brikk.house.sql.ast.Ntile }) return Nullability.NON_NULL
+        if (window != null && window.thisArg.let { it is RowNumber || it is Rank ||
+                it is DenseRank || it is Ntile }) return Nullability.NON_NULL
         val verdict = expressionNullability(window?.thisArg as? Expression ?: value, dialect) { column ->
             when (resolved[column]?.nullability) {
                 Nullability.NULLABLE -> true
@@ -552,7 +560,7 @@ internal class ScopeEvaluator(
             }
         }
         val type = annotateTypes(copy, dialect = dialect, overwriteTypes = false).type as? DataType ?: return null
-        return if (type.thisArg == dev.brikk.house.sql.ast.DType.UNKNOWN) null else Dialects.BASE.generate(type)
+        return if (type.thisArg == DType.UNKNOWN) null else Dialects.BASE.generate(type)
     }
 
     private fun aggregated(projection: Any?): Boolean =
@@ -666,7 +674,7 @@ internal class ScopeEvaluator(
             val pivoted = values.flatMap { (value, declaration) ->
                 aggregates.map { aggregate ->
                     val suffix = (aggregate as? Alias)?.alias?.takeIf { aggregates.size > 1 }
-                    val counting = aggregate.unwrapped() is dev.brikk.house.sql.ast.Count
+                    val counting = aggregate.unwrapped() is Count
                     computed(if (suffix == null) value else "${value}_$suffix",
                         if (counting) Nullability.NON_NULL else Nullability.NULLABLE, by).copy(declaration = declaration)
                 }
@@ -937,7 +945,7 @@ private tailrec fun Expression.unwrapped(): Expression {
 }
 
 /** Node positions in script offsets: parse positions shifted by the region's start. */
-internal class SourceNames(private val base: Int, private val tokens: List<dev.brikk.house.sql.parser.Token>) {
+internal class SourceNames(private val base: Int, private val tokens: List<Token>) {
     fun positioned(node: Expression): Boolean = SourceMap.sourcePosOf(node) != null
 
     /** [node]'s own token range, inclusive, in script offsets. */
@@ -961,17 +969,17 @@ internal class SourceNames(private val base: Int, private val tokens: List<dev.b
 
     private fun operator(index: Int): Pair<IntRange, String> {
         val first = tokens[index]
-        val next = tokens.getOrNull(index + 1)?.takeIf { it.tokenType == dev.brikk.house.sql.parser.TokenType.ALL ||
-            it.tokenType == dev.brikk.house.sql.parser.TokenType.DISTINCT }
+        val next = tokens.getOrNull(index + 1)?.takeIf { it.tokenType == TokenType.ALL ||
+            it.tokenType == TokenType.DISTINCT }
         val last = next ?: first
         return (base + first.start..base + last.end) to listOfNotNull(first, next).joinToString(" ") { it.text.uppercase() }
     }
 
     private companion object {
         val SET_OPERATORS = setOf(
-            dev.brikk.house.sql.parser.TokenType.UNION,
-            dev.brikk.house.sql.parser.TokenType.INTERSECT,
-            dev.brikk.house.sql.parser.TokenType.EXCEPT,
+            TokenType.UNION,
+            TokenType.INTERSECT,
+            TokenType.EXCEPT,
         )
     }
 }

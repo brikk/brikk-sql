@@ -1,0 +1,1531 @@
+{
+ "doris:aggregate-group-expression-alias/completion@79": [
+  {
+   "name": "bucket",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  },
+  {
+   "name": "n",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": "BIGINT",
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  }
+ ],
+ "doris:aggregate-group-expression-alias/scope@79": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "bucket",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   },
+   {
+    "name": "n",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": "BIGINT",
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   }
+  ]
+ },
+ "doris:pipe-call-unknown-output/scope@47": {
+  "position": "COLUMN",
+  "knowledge": "UNKNOWN",
+  "columns": []
+ },
+ "doris:pipe-distinct/completion@32": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "doris:pipe-distinct/references": [
+  {
+   "start": 32,
+   "end": 34,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "doris:pipe-distinct/scope@32": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "doris:pipe-limit/completion@31": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "doris:pipe-limit/references": [
+  {
+   "start": 31,
+   "end": 33,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "doris:pipe-limit/scope@31": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "doris:pipe-offset/completion@32": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "doris:pipe-offset/references": [
+  {
+   "start": 32,
+   "end": 34,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "doris:pipe-offset/scope@32": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "doris:portable-group-expression/completion@60": [
+  {
+   "name": "event_kind",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "price",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "doris:portable-group-expression/scope@60": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "price",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "doris:quoted-source-alias/completion@19": [],
+ "doris:quoted-source-alias/navigation": [
+  {
+   "start": 19,
+   "end": 21,
+   "targets": []
+  }
+ ],
+ "doris:quoted-source-alias/references": [
+  {
+   "start": 19,
+   "end": 21,
+   "targets": [
+    "absent"
+   ]
+  }
+ ],
+ "doris:quoted-source-alias/scope@19": {
+  "position": "OTHER",
+  "knowledge": "NONE",
+  "columns": []
+ },
+ "doris:unpivot-include-nulls/completion@102": [
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "metric",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": "VARCHAR",
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  },
+  {
+   "name": "value",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": null,
+   "identity": "computed"
+  }
+ ],
+ "doris:unpivot-include-nulls/scope@102": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "metric",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": "VARCHAR",
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   },
+   {
+    "name": "value",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": null,
+    "identity": "computed"
+   }
+  ]
+ },
+ "duckdb:aggregate-group-expression-alias/completion@79": [
+  {
+   "name": "bucket",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  },
+  {
+   "name": "n",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": "BIGINT",
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  }
+ ],
+ "duckdb:aggregate-group-expression-alias/scope@79": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "bucket",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   },
+   {
+    "name": "n",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": "BIGINT",
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   }
+  ]
+ },
+ "duckdb:pipe-call-unknown-output/scope@47": {
+  "position": "COLUMN",
+  "knowledge": "UNKNOWN",
+  "columns": []
+ },
+ "duckdb:pipe-distinct/completion@32": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "duckdb:pipe-distinct/references": [
+  {
+   "start": 32,
+   "end": 34,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "duckdb:pipe-distinct/scope@32": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "duckdb:pipe-limit/completion@31": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "duckdb:pipe-limit/references": [
+  {
+   "start": 31,
+   "end": 33,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "duckdb:pipe-limit/scope@31": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "duckdb:pipe-offset/completion@32": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "duckdb:pipe-offset/references": [
+  {
+   "start": 32,
+   "end": 34,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "duckdb:pipe-offset/scope@32": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "duckdb:portable-group-expression/completion@60": [
+  {
+   "name": "event_kind",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "price",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "src",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "duckdb:portable-group-expression/scope@60": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "price",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "src",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "duckdb:unpivot-include-nulls/completion@102": [
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "metric",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": "VARCHAR",
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  },
+  {
+   "name": "value",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": null,
+   "identity": "computed"
+  }
+ ],
+ "duckdb:unpivot-include-nulls/scope@102": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "metric",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": "VARCHAR",
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   },
+   {
+    "name": "value",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": null,
+    "identity": "computed"
+   }
+  ]
+ },
+ "trino:aggregate-group-expression-alias/completion@79": [
+  {
+   "name": "bucket",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  },
+  {
+   "name": "n",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": "BIGINT",
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  }
+ ],
+ "trino:aggregate-group-expression-alias/scope@79": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "bucket",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   },
+   {
+    "name": "n",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": "BIGINT",
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   }
+  ]
+ },
+ "trino:pipe-call-unknown-output/scope@47": {
+  "position": "COLUMN",
+  "knowledge": "UNKNOWN",
+  "columns": []
+ },
+ "trino:pipe-distinct/completion@32": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "trino:pipe-distinct/references": [
+  {
+   "start": 32,
+   "end": 34,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "trino:pipe-distinct/scope@32": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "trino:pipe-limit/completion@31": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "trino:pipe-limit/references": [
+  {
+   "start": 31,
+   "end": 33,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "trino:pipe-limit/scope@31": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "trino:pipe-offset/completion@32": [
+  {
+   "name": "event_kind",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "demo.EventKind",
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": "decl:src.event_kind",
+   "identity": "src.event_kind"
+  },
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "price",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.price",
+   "identity": "src.price"
+  },
+  {
+   "name": "qty",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Int",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.qty",
+   "identity": "src.qty"
+  }
+ ],
+ "trino:pipe-offset/references": [
+  {
+   "start": 32,
+   "end": 34,
+   "targets": [
+    {
+     "name": "id",
+     "relation": "",
+     "navigationId": "decl:src.id",
+     "identity": "src.id"
+    }
+   ]
+  }
+ ],
+ "trino:pipe-offset/scope@32": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "event_kind",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "demo.EventKind",
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": "decl:src.event_kind",
+    "identity": "src.event_kind"
+   },
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "price",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.price",
+    "identity": "src.price"
+   },
+   {
+    "name": "qty",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Int",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.qty",
+    "identity": "src.qty"
+   }
+  ]
+ },
+ "trino:pipe-star-join-duplicate-key/navigation": [
+  {
+   "start": 68,
+   "end": 70,
+   "targets": [
+    "decl:rhs.id",
+    "decl:src.id"
+   ]
+  }
+ ],
+ "trino:unpivot-include-nulls/completion@102": [
+  {
+   "name": "id",
+   "relation": "",
+   "origin": "KOTLIN_RELATION",
+   "kotlinType": "kotlin.Long",
+   "sqlType": null,
+   "nullability": "NON_NULL",
+   "navigationId": "decl:src.id",
+   "identity": "src.id"
+  },
+  {
+   "name": "metric",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": "VARCHAR",
+   "nullability": "NON_NULL",
+   "navigationId": null,
+   "identity": "computed"
+  },
+  {
+   "name": "value",
+   "relation": "",
+   "origin": "COMPUTED",
+   "kotlinType": null,
+   "sqlType": null,
+   "nullability": "NULLABLE",
+   "navigationId": null,
+   "identity": "computed"
+  }
+ ],
+ "trino:unpivot-include-nulls/scope@102": {
+  "position": "COLUMN",
+  "knowledge": "FULL",
+  "columns": [
+   {
+    "name": "id",
+    "relation": "",
+    "origin": "KOTLIN_RELATION",
+    "kotlinType": "kotlin.Long",
+    "sqlType": null,
+    "nullability": "NON_NULL",
+    "navigationId": "decl:src.id",
+    "identity": "src.id"
+   },
+   {
+    "name": "metric",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": "VARCHAR",
+    "nullability": "NON_NULL",
+    "navigationId": null,
+    "identity": "computed"
+   },
+   {
+    "name": "value",
+    "relation": "",
+    "origin": "COMPUTED",
+    "kotlinType": null,
+    "sqlType": null,
+    "nullability": "NULLABLE",
+    "navigationId": null,
+    "identity": "computed"
+   }
+  ]
+ }
+}
