@@ -41,7 +41,7 @@ public abstract class ShowCreateDefinitionProvider(
             ProgressManager.checkCanceled()
             val query = query(obj) ?: continue
             val definition = try {
-                query.definition(connection.queryRows(query.sql, MAX_ROWS)).orEmpty()
+                query.definition(connection.queryRows(query.sql, MAX_ROWS, listColumns = query.listColumns)).orEmpty()
             } catch (e: Exception) {
                 if (e is ControlFlowException || e is CancellationException) throw e
                 consumer.consume(obj, e)

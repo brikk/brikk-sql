@@ -6,14 +6,16 @@ import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
 
 /**
  * Runs [sql] over this connection and returns at most [maxRows] rows, each by lower-case column label in
- * column order. [onStatement] sees the statement while it runs, so a caller can cancel it. Failures throw.
+ * column order: strings, and lists of strings for [listColumns]. [onStatement] sees the statement while
+ * it runs, so a caller can cancel it. Failures throw.
  */
 internal fun DatabaseConnectionCore.queryRows(
     sql: String,
     maxRows: Int,
     queryTimeoutSeconds: Int = 0,
+    listColumns: Set<String> = emptySet(),
     onStatement: (RemoteStatement?) -> Unit = {},
-): List<Map<String, String?>> {
+): List<Map<String, Any?>> {
     val statement = JdbcNativeUtil.computeRemote { remoteConnection.createStatement() } ?: error("No statement")
     onStatement(statement)
     try {
@@ -24,7 +26,16 @@ internal fun DatabaseConnectionCore.queryRows(
             val labels = (1..meta.columnCount).map { meta.getColumnLabel(it).orEmpty().lowercase() }
             return buildList {
                 while (size < maxRows && result.next()) {
-                    add(LinkedHashMap<String, String?>().apply { labels.forEachIndexed { index, label -> putIfAbsent(label, result.getString(index + 1)) } })
+                    add(LinkedHashMap<String, Any?>().apply {
+                        labels.forEachIndexed { index, label ->
+                            val value: Any? = if (label in listColumns) {
+                                (result.getArray(index + 1)?.array as? Array<*>)?.map { it?.toString() }
+                            } else {
+                                result.getString(index + 1)
+                            }
+                            putIfAbsent(label, value)
+                        }
+                    })
                 }
             }
         } finally {

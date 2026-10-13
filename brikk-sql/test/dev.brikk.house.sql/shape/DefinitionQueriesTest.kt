@@ -57,9 +57,10 @@ class DefinitionQueriesTest {
         assertNull(sql("duckdb", DefinedObject.TABLE, "main", "t"), "needs the database")
         for (kind in listOf(DefinedObject.TABLE, DefinedObject.VIEW, DefinedObject.SEQUENCE, DefinedObject.INDEX, DefinedObject.MACRO)) {
             val text = checkNotNull(sql("duckdb", kind, "memory", "main", "x"))
-            // A user macro of the same name shadows an unqualified call; every function is the system's.
+            // A user macro shadows an unqualified call, and DuckDB's own macros call others: only one qualified built-in table function is called.
             val calls = Regex("""([A-Za-z_.]+)\(""").findAll(text).map { it.groupValues[1] }.toList()
-            assertTrue(calls.isNotEmpty() && calls.all { it.startsWith("system.main.") }, "$kind: $text")
+            assertEquals(1, calls.size, "$kind: $text")
+            assertTrue(calls.single().matches(Regex("system\\.main\\.duckdb_(tables|views|sequences|indexes|functions)")), "$kind: $text")
         }
         assertNull(sql("duckdb", DefinedObject.CATALOG, "lake"))
         assertNull(sql("duckdb", DefinedObject.SCHEMA, "lake", "web"))
@@ -70,17 +71,17 @@ class DefinitionQueriesTest {
     fun duckdbMacrosAreRebuiltWithTheirOverloads() {
         val query = checkNotNull(definitionQuery("duckdb", DefinedObject.MACRO, listOf("memory", "web", "add")))
         val rows = listOf(
-            mapOf("function_type" to "macro", "parameters" to "a, b", "macro_definition" to "(a + b)"),
-            mapOf("function_type" to "macro", "parameters" to "a, b, c", "macro_definition" to "((a + b) + c)"),
+            mapOf("function_type" to "macro", "parameters" to listOf("a", "b"), "macro_definition" to "(a + b)"),
+            mapOf("function_type" to "macro", "parameters" to listOf("a", "b, c", "d\"e"), "macro_definition" to "((a + b) + c)"),
         )
         assertEquals(
-            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"web\".\"add\"(a, b) AS (a + b), (a, b, c) AS ((a + b) + c);",
+            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"web\".\"add\"(\"a\", \"b\") AS (a + b), (\"a\", \"b, c\", \"d\"\"e\") AS ((a + b) + c);",
             query.definition(rows),
         )
         val table = checkNotNull(definitionQuery("duckdb", DefinedObject.MACRO, listOf("memory", "My Schema", "rows")))
         assertEquals(
-            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"My Schema\".\"rows\"(n) AS TABLE SELECT * FROM \"range\"(n);",
-            table.definition(listOf(mapOf("function_type" to "table_macro", "parameters" to "n", "macro_definition" to "SELECT * FROM \"range\"(n)"))),
+            "-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"My Schema\".\"rows\"(\"n\") AS TABLE SELECT * FROM \"range\"(n);",
+            table.definition(listOf(mapOf("function_type" to "table_macro", "parameters" to listOf("n"), "macro_definition" to "SELECT * FROM \"range\"(n)"))),
         )
         assertNull(query.definition(emptyList()))
     }

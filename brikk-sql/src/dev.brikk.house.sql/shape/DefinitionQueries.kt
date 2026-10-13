@@ -5,11 +5,16 @@ enum class DefinedObject { CATALOG, SCHEMA, TABLE, VIEW, MATERIALIZED_VIEW, MACR
 
 /**
  * One catalog read for an object's definition: run [sql], then [definition] shapes its rows. Every
- * query only reads the catalog (`SHOW CREATE ...`, DuckDB's `duckdb_*()` tables); none runs user code.
+ * query only reads the catalog (`SHOW CREATE ...`, DuckDB's built-in `duckdb_*()` table functions) and
+ * calls no other function, so none runs user code. [listColumns] are read as lists of strings.
  */
-class DefinitionQuery internal constructor(val sql: String, private val shape: (List<Map<String, String?>>) -> String?) {
-    /** The definition in [rows] (lower-case column labels to values), or null when they hold none. */
-    fun definition(rows: List<Map<String, String?>>): String? = shape(rows)
+class DefinitionQuery internal constructor(
+    val sql: String,
+    val listColumns: Set<String> = emptySet(),
+    private val shape: (List<Map<String, Any?>>) -> String?,
+) {
+    /** The definition in [rows] (lower-case column labels to strings, or lists of strings for [listColumns]), or null when they hold none. */
+    fun definition(rows: List<Map<String, Any?>>): String? = shape(rows)
 }
 
 /**
@@ -39,7 +44,7 @@ private fun dorisQuery(kind: DefinedObject, path: List<String>): DefinitionQuery
         }
         else -> null
     } ?: return null
-    return DefinitionQuery(sql, ::showCreateDefinition)
+    return DefinitionQuery(sql, shape = ::showCreateDefinition)
 }
 
 private fun trinoQuery(kind: DefinedObject, path: List<String>): DefinitionQuery? {
@@ -52,7 +57,7 @@ private fun trinoQuery(kind: DefinedObject, path: List<String>): DefinitionQuery
     }
     if (path.size != size) return null
     return DefinitionQuery("SHOW CREATE $type ${path.joinToString(".") { "\"${it.replace("\"", "\"\"")}\"" }}") { rows ->
-        rows.firstOrNull()?.values?.firstOrNull()
+        rows.firstOrNull()?.values?.firstOrNull() as? String
     }
 }
 
@@ -61,19 +66,19 @@ private fun duckdbQuery(kind: DefinedObject, path: List<String>): DefinitionQuer
     val (database, schema, name) = path
     fun literal(value: String) = "'${value.replace("'", "''")}'"
     val where = "database_name = ${literal(database)} AND schema_name = ${literal(schema)}"
-    // Every call is qualified with DuckDB's system namespace: a user macro of the same name shadows an unqualified one.
+    // A user macro of the same name shadows an unqualified call, and DuckDB's own macros (its array_to_string)
+    // call others unqualified: only built-in table functions are called, qualified, and the rest is shaped here.
     fun catalogSql(table: String, nameColumn: String, extra: String = "") =
-        DefinitionQuery("SELECT sql FROM $SYSTEM$table() WHERE $where AND $nameColumn = ${literal(name)}$extra") { rows -> rows.firstOrNull()?.get("sql") }
+        DefinitionQuery("SELECT sql FROM $SYSTEM$table() WHERE $where AND $nameColumn = ${literal(name)}$extra") { rows -> rows.firstOrNull()?.get("sql") as? String }
     return when (kind) {
         DefinedObject.TABLE -> catalogSql("duckdb_tables", "table_name")
         DefinedObject.VIEW -> catalogSql("duckdb_views", "view_name", " AND NOT internal")
         DefinedObject.SEQUENCE -> catalogSql("duckdb_sequences", "sequence_name")
         DefinedObject.INDEX -> catalogSql("duckdb_indexes", "index_name")
         DefinedObject.MACRO -> DefinitionQuery(
-            "SELECT function_type, " +
-                "${SYSTEM}array_to_string(${SYSTEM}list_transform(parameters, p -> ${SYSTEM}concat('\"', ${SYSTEM}replace(p, '\"', '\"\"'), '\"')), ', ') AS parameters, " +
-                "macro_definition FROM ${SYSTEM}duckdb_functions() " +
+            "SELECT function_type, parameters, macro_definition FROM ${SYSTEM}duckdb_functions() " +
                 "WHERE $where AND function_name = ${literal(name)} AND function_type IN ('macro', 'table_macro') ORDER BY function_oid",
+            listColumns = setOf("parameters"),
         ) { rows ->
             rows.takeIf { it.isNotEmpty() }?.joinToString(
                 ", ",
@@ -81,7 +86,8 @@ private fun duckdbQuery(kind: DefinedObject, path: List<String>): DefinitionQuer
                 postfix = ";",
             ) { row ->
                 val table = if (row["function_type"] == "table_macro") "TABLE " else ""
-                "(${row["parameters"].orEmpty()}) AS $table${row["macro_definition"].orEmpty()}"
+                val parameters = (row["parameters"] as? List<*>).orEmpty().joinToString(", ") { duckdbQuoted(it.toString()) }
+                "($parameters) AS $table${row["macro_definition"] as? String ?: ""}"
             }
         }
         else -> null
@@ -96,10 +102,10 @@ private fun duckdbQuoted(name: String): String = "\"${name.replace("\"", "\"\"")
  * The definition a `SHOW CREATE` returned: the column whose label names it or whose value starts with
  * `CREATE`, else the second column (Doris returns the name first), else the first value.
  */
-private fun showCreateDefinition(rows: List<Map<String, String?>>): String? {
+private fun showCreateDefinition(rows: List<Map<String, Any?>>): String? {
     val row = rows.firstOrNull() ?: return null
-    val values = row.entries.mapNotNull { (label, value) -> value?.trim()?.takeIf(String::isNotEmpty)?.let { label to it } }
+    val values = row.entries.mapNotNull { (label, value) -> (value as? String)?.trim()?.takeIf(String::isNotEmpty)?.let { label to it } }
     return values.firstOrNull { (label, value) -> "create" in label || value.startsWith("CREATE ", ignoreCase = true) }?.second
-        ?: row.values.elementAtOrNull(1)?.trim()?.takeIf(String::isNotEmpty)
+        ?: (row.values.elementAtOrNull(1) as? String)?.trim()?.takeIf(String::isNotEmpty)
         ?: values.firstOrNull()?.second
 }

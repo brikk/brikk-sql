@@ -345,8 +345,9 @@ takes the dbms the platform passes):
 server's catalog with core's `definitionQuery`: Doris and Trino `SHOW CREATE` (Doris shows an external
 catalog's view as a table), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`,
 `duckdb_indexes()` and macros rebuilt from `duckdb_functions()` with their overloads (DuckDB does not
-report parameter defaults; the definition says so). DuckDB's catalog functions are always called as
-`system.main.` functions, so a user macro of the same name never runs. `kinds` maps model kinds to `DefinedObject`s; a path is
+report parameter defaults; the definition says so). Each DuckDB read calls one built-in table function,
+qualified as `system.main.`, and nothing else (DuckDB's own helpers are macros calling others unqualified),
+so no user macro runs; macro parameters are read as a list and quoted here. `kinds` maps model kinds to `DefinedObject`s; a path is
 the object's ancestors of the namespace `levels`, top first, then its name. The queries only read the
 catalog, over the connection the platform hands over for loading sources. Register a no-arg subclass as
 `<definitionProvider dbms="X">`, for example

@@ -199,9 +199,9 @@ public abstract class TextExplainService(protected val project: Project, private
                     proceed()
                     namespace?.let { connection.executeStatement(it, seconds, register) }
                     proceed()
-                    val rows = connection.queryRows(sql, MAX_PLAN_ROWS, seconds, register)
+                    val rows = connection.queryRows(sql, MAX_PLAN_ROWS, seconds, onStatement = register)
                     proceed()
-                    ExplainOutcome.Plan(explainPlanText(rows.map { it.values.firstOrNull() }))
+                    ExplainOutcome.Plan(explainPlanText(rows.map { it.values.firstOrNull() as? String }))
                 }
             } catch (e: Exception) {
                 if (e is ControlFlowException || e is CancellationException) throw e

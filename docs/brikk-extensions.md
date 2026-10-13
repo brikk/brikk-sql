@@ -1957,9 +1957,11 @@ joins the first column of the plan rows. `TextExplainResultTest` runs against a 
 `definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris and Trino
 `SHOW CREATE`, DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
 macros rebuilt from `duckdb_functions()`, whose definition says that parameter defaults are not reported.
-Every DuckDB call is qualified as `system.main.`: a user macro named `duckdb_tables` shadows the
-unqualified call and runs (DuckDB 1.5.6 advanced a sequence through it), while the qualified one reads the
-catalog. Macro schemas, names and parameters are quoted, so `"select"("a b")` round-trips.
+Every DuckDB read calls one built-in table function, qualified as `system.main.`, and no other function: a
+user macro named `duckdb_tables` shadows the unqualified call and runs (DuckDB 1.5.6 advanced a sequence
+through it), and DuckDB's own `system.main.array_to_string` is a macro that calls `list_aggr` unqualified, so
+a user `list_aggr` ran even through the qualified helper. A macro's parameters are read as a list column and
+quoted here, so `"select"("a b", "c, d")` round-trips.
 
 ## Upstream sync protocol
 
