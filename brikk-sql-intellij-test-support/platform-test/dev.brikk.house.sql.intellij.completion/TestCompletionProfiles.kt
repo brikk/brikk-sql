@@ -17,6 +17,7 @@ import com.intellij.sql.psi.SqlLanguage
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture
+import dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA
 import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DialectMetadata
@@ -79,16 +80,18 @@ class TestCompletionProfile(override val metadata: DialectMetadata) : SqlComplet
 val duckdbProfile = TestCompletionProfile(DUCKDB_METADATA)
 val dorisProfile = TestCompletionProfile(DORIS_METADATA)
 val trinoProfile = TestCompletionProfile(TRINO_METADATA)
+val clickhouseProfile = TestCompletionProfile(CLICKHOUSE_METADATA)
 
 class DuckdbCompletion : SqlCompletionContributor(duckdbProfile)
 class DorisCompletion : SqlCompletionContributor(dorisProfile)
 class TrinoCompletion : SqlCompletionContributor(trinoProfile)
+class ClickhouseCompletion : SqlCompletionContributor(clickhouseProfile)
 
 /** Completion fixture with the chosen contributor registered first for the file's language; lookups never auto-insert. */
 abstract class CompletionTestCase : BasePlatformTestCase() {
     override fun setUp() {
         super.setUp()
-        listOf(duckdbProfile, dorisProfile, trinoProfile).forEach(TestCompletionProfile::reset)
+        listOf(duckdbProfile, dorisProfile, trinoProfile, clickhouseProfile).forEach(TestCompletionProfile::reset)
         val settings = CodeInsightSettings.getInstance()
         val autocomplete = settings.AUTOCOMPLETE_ON_CODE_COMPLETION
         settings.AUTOCOMPLETE_ON_CODE_COMPLETION = false

@@ -83,14 +83,15 @@ class SqlNativeKeywordCaseTest : CompletionTestCase() {
 
     /** A column and a platform function named like keywords keep their names and insertion. */
     fun testNonKeywordItemsAreUnchanged() {
-        trinoProfile.keywordCatalog = KeywordCatalog(listOf(KeywordDef("SELECT"), KeywordDef("AMOUNT"), KeywordDef("ABS")))
+        trinoProfile.keywordCatalog = KeywordCatalog(listOf(KeywordDef("SELECT"), KeywordDef("AMOUNT"), KeywordDef("BIN")))
         val column = "WITH t AS (SELECT 1 AS amount) SELECT amo<caret> FROM t"
         val native = acceptIn(column, LookupCase.AS_GIVEN) { it.lookupString == "amount" }
         assertEquals("WITH t AS (SELECT 1 AS amount) SELECT amount<caret> FROM t", native)
         assertEquals(native, acceptIn(column, LookupCase.UPPER) { it.lookupString == "amount" })
-        val platformFunction = { item: LookupElement -> item.lookupString.equals("abs", ignoreCase = true) && item.`object` !is FunctionPresentation }
-        val nativeFunction = acceptIn("SELECT ab<caret>", LookupCase.AS_GIVEN, "MySQL", platformFunction)
-        assertEquals("SELECT abs(<caret>)", nativeFunction)
-        assertEquals(nativeFunction, acceptIn("SELECT ab<caret>", LookupCase.UPPER, "MySQL", platformFunction))
+        // A base-dialect function metadata lacks; one it has is offered once, from metadata.
+        val platformFunction = { item: LookupElement -> item.lookupString.equals("bin", ignoreCase = true) && item.`object` !is FunctionPresentation }
+        val nativeFunction = acceptIn("SELECT bi<caret>", LookupCase.AS_GIVEN, "MySQL", platformFunction)
+        assertEquals("SELECT bin(<caret>)", nativeFunction)
+        assertEquals(nativeFunction, acceptIn("SELECT bi<caret>", LookupCase.UPPER, "MySQL", platformFunction))
     }
 }

@@ -283,3 +283,26 @@ fun pipeStageKeywords(dialect: String): List<String> {
     }
     return parser.pipeStageTransformOperators.toList() + joins + setOperations
 }
+
+/**
+ * brikk-native: the [pipeStageKeywords] of [dialect] that its engine runs as core lowers them
+ * ([dev.brikk.house.sql.dialects.Dialect.pipeRunnableStages]), in their order; all of them for a
+ * dialect without recorded evidence.
+ */
+fun pipeRunnableStageKeywords(dialect: String): List<String> {
+    val parsed = pipeStageKeywords(dialect)
+    val runnable = Dialects.forName(dialect).pipeRunnableStages ?: return parsed
+    return parsed.filter { it in runnable }
+}
+
+/**
+ * Stage phrases every engine with recorded evidence ran as lowered (Trino 483, DuckDB 1.5.6 and
+ * ClickHouse 26.7 executed them; the Doris 4.1.4 FE parser accepted them). STRAIGHT_JOIN is left
+ * out everywhere: no engine parses `a STRAIGHT_JOIN b`.
+ */
+internal val PIPE_STAGES_RUN_EVERYWHERE: Set<String> = setOf(
+    "AGGREGATE", "AS", "DISTINCT", "EXTEND", "LIMIT", "OFFSET", "ORDER BY", "SELECT", "WHERE", "WINDOW",
+    "JOIN", "INNER JOIN", "CROSS JOIN", "LEFT JOIN", "LEFT OUTER JOIN", "RIGHT JOIN", "RIGHT OUTER JOIN",
+    "FULL JOIN", "FULL OUTER JOIN", "SEMI JOIN", "ANTI JOIN",
+    "UNION ALL", "UNION DISTINCT", "INTERSECT", "INTERSECT ALL", "INTERSECT DISTINCT", "EXCEPT", "EXCEPT ALL", "EXCEPT DISTINCT",
+)

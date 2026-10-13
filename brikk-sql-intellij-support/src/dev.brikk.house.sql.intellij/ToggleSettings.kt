@@ -4,6 +4,9 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.SerializablePersistentStateComponent
+import com.intellij.openapi.components.State
+import com.intellij.openapi.components.StoragePathMacros
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -16,7 +19,8 @@ import org.jetbrains.annotations.ApiStatus
 /**
  * A persisted project switch for a feature of [language]. Changing it reparses that language's
  * files, including those open only in non-file editors, and restarts highlighting. The concrete
- * class carries `@Service` and `@State`.
+ * class carries `@Service` and `@State(name = "...", storages = [Storage(ToggleSettings.STORAGE)])`:
+ * every plugin's switch lives in the project's workspace file, and another storage is reported.
  */
 @ApiStatus.Experimental
 public abstract class ToggleSettings(private val project: Project, private val language: Language) :
@@ -41,6 +45,10 @@ public abstract class ToggleSettings(private val project: Project, private val l
 
     final override fun initializeComponent() {
         initialized = true
+        val storages = javaClass.getAnnotation(State::class.java)?.storages?.map { it.value } ?: return
+        if (storages != listOf(STORAGE)) {
+            thisLogger().error("${javaClass.name} must be stored in ToggleSettings.STORAGE ($STORAGE), not $storages")
+        }
     }
 
     final override fun loadState(state: Options) {
@@ -48,6 +56,11 @@ public abstract class ToggleSettings(private val project: Project, private val l
         super.loadState(state)
         // Initial loading can happen while a parser requests this service.
         if (initialized && changed) changed(state.enabled)
+    }
+
+    public companion object {
+        /** Where every toggle is stored: the project's workspace file, per user and not shared through VCS. */
+        public const val STORAGE: String = StoragePathMacros.WORKSPACE_FILE
     }
 
     private fun changed(enabled: Boolean) {
