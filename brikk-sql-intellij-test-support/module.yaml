@@ -16,7 +16,7 @@ settings:
     # This classpath replaces the toolchain's, so it repeats the module dependencies' outputs.
     # The test framework jars are compile-only: consumers' test runtimes provide their IDE's copy.
     freeCompilerArgs:
-      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/intellij-sql-api/test-framework/test-framework.jar:build/intellij-sql-api/test-framework/test-framework-core.jar:build/intellij-sql-api/test-framework/test-framework-common.jar:build/artifacts/CompiledJvmArtifact/brikk-sql-intellij-supportjvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-metadatajvm/kotlin-output
+      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/intellij-sql-api/test-framework/test-framework.jar:build/intellij-sql-api/test-framework/test-framework-core.jar:build/intellij-sql-api/test-framework/test-framework-common.jar:build/artifacts/CompiledJvmArtifact/brikk-sql-intellij-supportjvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-metadatajvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-verify-apijvm/kotlin-output
       - -Xexplicit-api=strict
   publishing:
     artifactId: brikk-sql-intellij-test-support
