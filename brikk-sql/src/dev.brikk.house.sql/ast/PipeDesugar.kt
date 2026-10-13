@@ -209,7 +209,7 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
             listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null } ||
                 (stage is PipeSelect && (!directProjection || positionalOrder)) ||
                 (stage is PipeWhere && !directProjection)
-            ) || stage is PipeOrderBy && !directProjection) {
+            ) || stage is PipeOrderBy && (!directProjection || query.args["limit"] != null || query.args["offset"] != null)) {
         query = pipeInputCte(query, stage, counter)
     }
     if (needsWholeRows(query, stage)) query = wholeRowInput(query, counter)
