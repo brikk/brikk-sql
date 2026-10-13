@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.psi.PsiFile
 import com.intellij.sql.dialects.SqlLanguageDialect
@@ -81,6 +82,22 @@ class RelationNativeAdapterFeaturesTest : RelationTestCase() {
         setSqlDialectMapping(project, file, mysql as SqlLanguageDialect, testRootDisposable)
         myFixture.configureFromExistingVirtualFile(file)
         check(myFixture.file.language == mysql)
+    }
+
+    /**
+     * Disabled (no `test` prefix): platform SqlJoinExpressionImpl USING-key merge depends on nested
+     * resolve; reproduces with the MySQL native adapter alone. Rename to run it.
+     */
+    fun disabledTestHighlightingAJoinUsingResolvesIdempotently() {
+        installNativeSlotTyping(testRootDisposable, mysqlRelations)
+        mysqlRelations.fake.facts = slots
+        enableResolveInspection()
+        openMysql("SELECT q.id FROM (SELECT id FROM src() s JOIN rhs() USING (id)) q")
+        // The light fixture fails the test on the Non-idempotent computation error the resolve cache logs.
+        repeat(3) {
+            DaemonCodeAnalyzer.getInstance(project).restart()
+            myFixture.doHighlighting()
+        }
     }
 
     fun testALeftJoinsUsingKeyLeadsToTheLeftSide() {
