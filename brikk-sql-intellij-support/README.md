@@ -158,6 +158,42 @@ validator's `verify`; the diagnostics themselves are core's plain data
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
 
+## Relations (`dev.brikk.house.sql.intellij.relation`, experimental)
+
+SQL features over relation facts from any provider, built on core's `RelationScope`
+(`dev.brikk.house.sql.scope`); this layer knows nothing about Brikk. A provider implements
+`ExternalRelationFacts`: copied core `RelationFacts` (slots, tables, table-function calls) for a file or
+injected fragment with a revision, or `Pending`; optionally navigation by a fact's provenance, labels,
+and `platformResolves` for relations the platform resolves itself. A plugin implements one
+`RelationScopeProfile` (language, core dialect, providers in precedence order, labels, styles) and
+registers no-arg subclasses:
+
+- `ExternalRelationResolveExtension` (`com.intellij.sql.resolveExtension`): light column symbols for
+  provider columns the analysis resolves, so platform resolve and highlighting see them.
+- `ExternalRelationInspectionSuppressor` (`com.intellij.sql.inspectionSuppressorDelegate`): hides the
+  resolve inspection only on references the analysis decides (resolved or ambiguous provider columns,
+  absent columns it reports itself, provider relations such as a slot call); never other inspections.
+- `ExternalRelationCompletionContributor` (`order="first"`): create-or-decorate. Another
+  contributor's item for a visible column is decorated, only columns without one are created; nothing
+  is offered twice and same-named columns of different relations stay distinct. `RelationColumnLabels`
+  name each origin ("declared column (rel)" with the provider's display type, "relation contract
+  (rel)", "computed column (stage or CTE)", "column (table)" with its SQL type) and pick its lookup kind;
+  a provider can bring its own (the Brikk helper's "brikk column" with the bricks icon), and a renamed
+  column keeps its origin.
+- `ExternalRelationGotoDeclarationHandler`: the provider's target for its columns and relations, or the
+  SQL's declaration where the platform resolves nothing (PIPE stages).
+- `ExternalRelationAnnotator`, or `relationDiagnostics(file, profile)` for a `NativeErrorProfile`:
+  missing, ambiguous, partial-contract, unknown-qualifier, unknown-table and PIPE_UNSUPPORTED problems
+  at exact ranges, injected fragments included.
+
+Each statement is analyzed on its own and the analysis is cached per profile while the document
+revision, text and every provider's revision stay; nothing is analyzed or cached while a provider is
+pending. Restart the daemon when facts change without an edit. Each consumer acts on exactly its own
+language. `DasRelationFacts` (catalog kit) supplies the tables of a file's data source with stored names,
+so core folds unquoted names as the dialect does. `RelationTableTypes.of(call, profile)` is the
+optional native adapter: a plugin's function-call element returns it as its type, so ordinary SQL over a
+slot gets the platform's resolve, rename and find usages.
+
 ## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
 
 A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; optional
