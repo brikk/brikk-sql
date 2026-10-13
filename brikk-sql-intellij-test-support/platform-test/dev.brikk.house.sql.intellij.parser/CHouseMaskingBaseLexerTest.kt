@@ -17,7 +17,7 @@ import dev.brikk.house.sql.intellij.testing.assertRestartsMatchFullLex
 import dev.brikk.house.sql.intellij.testing.lexAll
 
 /** A plugin's rule for the clause the platform grammar lacks: `PARTITION BY <expr>` after `INSERT INTO [TABLE] FUNCTION`, masked as a comment. */
-class PartitionMaskingLexer : MaskingSqlLexer(CHouseLexer()) {
+class PartitionMaskingLexer : MaskingSqlLexer(CHouseLexer(), keepParameters = true) {
     private var functionInsert = false
 
     override fun resetStatement() {

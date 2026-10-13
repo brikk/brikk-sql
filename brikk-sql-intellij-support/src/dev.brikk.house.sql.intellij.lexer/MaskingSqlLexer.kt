@@ -29,7 +29,15 @@ import org.jetbrains.annotations.ApiStatus
  * its bits, as [LookAheadLexer] hands its base only the low 16.
  */
 @ApiStatus.Experimental
-public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTargetMask? = null) : LookAheadLexer(base) {
+public abstract class MaskingSqlLexer(
+    base: Lexer,
+    private val castMask: CastTargetMask? = null,
+    /**
+     * Whether IDE `:name` binds inside a span masked as a comment stay `:` and name tokens, so the
+     * grammar (or a lenient fallback) makes them parameters the console prompts for and substitutes.
+     */
+    private val keepParameters: Boolean = false,
+) : LookAheadLexer(base) {
     /** Open parentheses of passed-through tokens in this statement. */
     protected var parenDepth: Int = 0
         private set
@@ -43,6 +51,9 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
         private set
 
     private val castDepths = ArrayDeque<Int>()
+
+    /** Where the current lookahead began: the start of a span no token of it precedes. */
+    private var lookAheadStart = 0
     private var fresh = true
     private var restartable = true
 
@@ -96,6 +107,7 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
     }
 
     final override fun lookAhead(baseLexer: Lexer) {
+        lookAheadStart = baseLexer.tokenStart
         restartable = fresh
         if (fresh && starts.lastOrNull().let { it == null || it.offset < baseLexer.tokenStart }) {
             starts.add(FreshPoint(baseLexer.tokenStart, baseLexer.state))
@@ -232,8 +244,20 @@ public abstract class MaskingSqlLexer(base: Lexer, private val castMask: CastTar
 
     /** Emits the text consumed since the last emitted token as one [type] token, noting [note] if given. */
     protected fun span(base: Lexer, type: IElementType, note: String?) {
-        addToken(base.tokenStart, type)
+        if (keepParameters && type == SqlTokens.SQL_BLOCK_COMMENT) maskKeepingParameters(base.tokenStart) else addToken(base.tokenStart, type)
         note?.let(::note)
+    }
+
+    /** Masks up to [end] as comments around the `:name` binds in code, which stay `:` and name tokens. */
+    private fun maskKeepingParameters(end: Int) {
+        var from = if (cacheSize > 0) getCachedOffset(cacheSize - 1) else lookAheadStart
+        for (bind in colonBinds(bufferSequence, from, end)) {
+            if (bind.first > from) addToken(bind.first, SqlTokens.SQL_BLOCK_COMMENT)
+            addToken(bind.first + 1, SqlTokens.SQL_COLON)
+            addToken(bind.last + 1, SqlTokens.SQL_IDENT)
+            from = bind.last + 1
+        }
+        if (end > from) addToken(end, SqlTokens.SQL_BLOCK_COMMENT)
     }
 
     /** Masks [count] words as one comment; context never sees them. */
@@ -426,6 +450,37 @@ public data class CastTargetMask(
 }
 
 private fun Char.isWordPart(): Boolean = isLetterOrDigit() || this == '_'
+
+/**
+ * The `:name` binds in `[start, end)` of [text], skipping quoted text and comments: a `:` that no
+ * `:` or word character touches on its left, directly followed by a name (`a::Int8` is a cast).
+ */
+private fun colonBinds(text: CharSequence, start: Int, end: Int): List<IntRange> = buildList {
+    var at = start
+    while (at < end) {
+        val c = text[at]
+        when {
+            c == '\'' || c == '"' || c == '`' -> {
+                at++
+                while (at < end && text[at] != c) at += if (text[at] == '\\') 2 else 1
+                at++
+            }
+            c == '-' && text.getOrNull(at + 1) == '-' -> while (at < end && text[at] != '\n') at++
+            c == '/' && text.getOrNull(at + 1) == '*' -> {
+                val close = text.indexOf("*/", at + 2)
+                at = if (close < 0 || close >= end) end else close + 2
+            }
+            c == ':' && text.getOrNull(at - 1)?.let { it == ':' || it.isWordPart() } != true &&
+                text.getOrNull(at + 1)?.let { it.isLetter() || it == '_' } == true -> {
+                var nameEnd = at + 2
+                while (nameEnd < end && text[nameEnd].isWordPart()) nameEnd++
+                add(at until nameEnd)
+                at = nameEnd
+            }
+            else -> at++
+        }
+    }
+}
 
 private fun isWordAt(buffer: CharSequence, offset: Int, word: String): Boolean =
     offset + word.length <= buffer.length &&

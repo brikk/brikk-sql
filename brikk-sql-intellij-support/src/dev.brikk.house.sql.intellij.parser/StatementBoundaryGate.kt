@@ -21,7 +21,11 @@ import org.jetbrains.annotations.ApiStatus
  * shared with the lexer's pass over the same text.
  */
 @ApiStatus.Experimental
-public class StatementBoundaryGate(private val coreDialect: String) {
+public class StatementBoundaryGate(
+    private val coreDialect: String,
+    /** Whether a lenient statement makes `:name` binds parameters, as the dialect's IDE binds. */
+    private val colonParameters: Boolean = false,
+) {
     private var text: CharSequence? = null
     private var statements: CoreStatements? = null
 
@@ -58,7 +62,8 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         val stop = builder.currentOffset
         val erred = builder.platformBuilder()?.hasErrorsAfter(marker) ?: true
         val reached = builder.consumedEnd() <= end && stop >= end
-        if (reached) {
+        // A bind kept in a masked span (`MaskingSqlLexer(keepParameters)`) is no grammar's: only a lenient statement makes it a parameter.
+        if (reached && !(colonParameters && erred && builder.hasMaskedBindSince(start))) {
             marker.drop()
             return parsed
         }
@@ -69,7 +74,9 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         }
         marker.rollbackTo()
         val statement = builder.mark()
-        while (!builder.eof() && builder.currentOffset < end) builder.advanceLenient()
+        while (!builder.eof() && builder.currentOffset < end) {
+            if (!colonParameters || !builder.parseColonParameter(named = true)) builder.advanceLenient()
+        }
         statement.done(type)
         return true
     }
@@ -99,6 +106,24 @@ public class StatementBoundaryGate(private val coreDialect: String) {
             splitAt = -1
         }
         return known.rangeAt(builder.currentOffset)
+    }
+}
+
+/**
+ * Whether a `:name` bind follows a masked span (a comment token without comment syntax, as
+ * `MaskingSqlLexer` emits) between [start] and the current token.
+ */
+private fun PsiBuilder.hasMaskedBindSince(start: Int): Boolean {
+    var step = -1
+    while (true) {
+        rawLookup(step) ?: return false
+        val tokenStart = rawTokenTypeStart(step)
+        if (tokenStart < start) return false
+        if (rawLookup(step) == SqlTokens.SQL_COLON && rawLookup(step + 1) == SqlTokens.SQL_IDENT && rawLookup(step - 1) == SqlTokens.SQL_BLOCK_COMMENT) {
+            val mask = originalText.subSequence(rawTokenTypeStart(step - 1), tokenStart)
+            if (!mask.startsWith("/*")) return true
+        }
+        step--
     }
 }
 
