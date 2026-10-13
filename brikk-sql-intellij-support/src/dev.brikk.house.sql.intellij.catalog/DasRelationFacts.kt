@@ -18,6 +18,7 @@ import dev.brikk.house.sql.scope.Nullability
 import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -26,26 +27,34 @@ import org.jetbrains.annotations.ApiStatus
  * as stored, so core folds an unquoted SQL name the way the dialect does (PostgreSQL's lower case),
  * and columns with their SQL type and nullability. The platform resolves these tables itself, so
  * they serve the analysis only (completion, PIPE stages, diagnostics). The catalog stays open: the
- * model may lack tables. Facts are copies, rebuilt when the data source's model changes; a file
- * without a data source has none.
+ * model may lack tables, and a table without columns in it (never introspected to that level)
+ * proves no column absent. Facts are copies, rebuilt when the data source's model changes; a file
+ * without a data source has none, and each data source and model state has its own revision.
  */
 @ApiStatus.Experimental
 public class DasRelationFacts(private val resolver: DialectDataSourceResolver) : ExternalRelationFacts {
-    private val built = ConcurrentHashMap<String, Pair<Long, RelationFacts>>()
+    private val built = ConcurrentHashMap<String, Built>()
+    private val revisions = AtomicLong()
+
+    /** One data source's facts at its model's [modification] count, numbered [revision] among all builds. */
+    private class Built(val modification: Long, val revision: Long, val facts: RelationFacts)
 
     override val platformResolves: Boolean get() = true
 
     override fun facts(file: PsiFile): RelationFactsResult? = recoverEditorOperation {
         val dataSource = dataSource(file) ?: return@recoverEditorOperation null
-        val revision = dataSource.modificationTracker.modificationCount
-        val facts = built[dataSource.uniqueId]?.takeIf { it.first == revision }?.second
-            ?: copy(dataSource).also { built[dataSource.uniqueId] = revision to it }
-        RelationFactsResult.Available(facts, revision)
+        val modification = dataSource.modificationTracker.modificationCount
+        val current = built[dataSource.uniqueId]?.takeIf { it.modification == modification }
+            ?: Built(modification, revisions.incrementAndGet(), copy(dataSource)).also { fresh ->
+                built.keys.retainAll(DbPsiFacade.getInstance(file.project).dataSources.mapTo(HashSet()) { it.uniqueId })
+                built[dataSource.uniqueId] = fresh
+            }
+        RelationFactsResult.Available(current.facts, current.revision)
     }.getOrNull()
 
     override fun navigationTarget(file: PsiFile, provenance: String): PsiElement? = recoverEditorOperation {
         val dataSource = dataSource(file) ?: return@recoverEditorOperation null
-        val table = DasUtil.getTables(dataSource).firstOrNull { provenance == path(it) || provenance.startsWith(path(it) + COLUMN) }
+        val table = DasUtil.getTables(dataSource).firstOrNull { provenance == dasTablePath(it) || provenance.startsWith(dasTablePath(it) + COLUMN) }
             ?: return@recoverEditorOperation null
         val target: DasObject = provenance.substringAfter(COLUMN, "").takeIf { it.isNotEmpty() }
             ?.let { name -> DasUtil.getColumns(table).firstOrNull { it.name == name } } ?: table
@@ -58,7 +67,7 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
     private fun copy(dataSource: DbDataSource): RelationFacts {
         val tables = LinkedHashMap<String, RelationFact>()
         for (table in DasUtil.getTables(dataSource)) {
-            val key = path(table)
+            val key = dasTablePath(table)
             val columns = DasUtil.getColumns(table).map { column ->
                 ColumnFact(
                     name = column.name,
@@ -68,16 +77,17 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
                     provenance = key + COLUMN + column.name,
                 )
             }.toList()
-            tables.putIfAbsent(key, RelationFact(columns, Knowledge.FULL, provenance = key))
+            tables.putIfAbsent(key, RelationFact(columns, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL, provenance = key))
         }
         return RelationFacts(tables = tables, catalog = CatalogKnowledge.OPEN)
     }
-
-    private fun path(table: DasTable): String =
-        listOf(DasUtil.getCatalog(table), DasUtil.getSchema(table), table.name).filter { it.isNotBlank() }.joinToString(".")
 
     private companion object {
         /** Separates a column's name from its table's path in a provenance id. */
         const val COLUMN = "#"
     }
 }
+
+/** [table]'s key in relation facts: its catalog, schema and name as stored, as far as the model has them. */
+internal fun dasTablePath(table: DasTable): String =
+    listOf(DasUtil.getCatalog(table), DasUtil.getSchema(table), table.name).filter { it.isNotBlank() }.joinToString(".")

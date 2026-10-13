@@ -2,6 +2,9 @@ package dev.brikk.house.sql.intellij.relation
 
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionContributorEP
+import com.intellij.codeInsight.completion.CompletionParameters
+import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageAnnotators
@@ -9,6 +12,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
@@ -74,4 +78,22 @@ fun registerPgRelations(until: Disposable, resolve: Boolean = true, suppressor: 
     LanguageAnnotators.INSTANCE.addExplicitExtension(postgres, PgRelationAnnotator(), until)
     val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test"), PgRelationCompletion::class.java.classLoader)
     CompletionContributor.EP.point.registerExtension(CompletionContributorEP(postgres.id, PgRelationCompletion::class.java.name, plugin), LoadingOrder.FIRST, until)
+}
+
+/** Another contributor offering the item a test puts on the file, after the relation contributor. */
+class OtherCompletion : CompletionContributor() {
+    override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
+        parameters.originalFile.getUserData(ITEM)?.let(result::addElement)
+    }
+
+    companion object {
+        val ITEM = Key.create<LookupElement>("relation.test.other.item")
+
+        /** Offers [item] in [file]'s completion until [until] ends. */
+        fun offer(file: PsiFile, item: LookupElement, until: Disposable) {
+            file.putUserData(ITEM, item)
+            val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test.other"), OtherCompletion::class.java.classLoader)
+            CompletionContributor.EP.point.registerExtension(CompletionContributorEP(postgres.id, OtherCompletion::class.java.name, plugin), LoadingOrder.LAST, until)
+        }
+    }
 }
