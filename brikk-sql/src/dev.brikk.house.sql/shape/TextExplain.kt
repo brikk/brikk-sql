@@ -125,7 +125,9 @@ fun prepareTextExplain(
         }
     }
     for (node in ast.findAll(Expression::class)) refusal(node, sql, dialect, isBuiltinFunction)?.let { return ExplainPreparation.Refused(it) }
-    return ExplainPreparation.Ready(if (sql.startsWith("(")) "EXPLAIN SELECT * FROM ($sql) AS explained" else "EXPLAIN $sql")
+    // Decided on the first token, so leading comments do not hide the parenthesis; a trailing line comment ends before the wrapper closes.
+    val parenthesized = Dialects.forName(dialect).tokenize(sql).firstOrNull()?.tokenType == TokenType.L_PAREN
+    return ExplainPreparation.Ready(if (parenthesized) "EXPLAIN SELECT * FROM ($sql\n) AS explained" else "EXPLAIN $sql")
 }
 
 /** Why [node] of the query [sql] must not be planned, or null. */

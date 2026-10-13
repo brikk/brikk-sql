@@ -121,8 +121,10 @@ class TextExplainTest {
     /** `EXPLAIN (` opens Trino's options list, so a query starting with a parenthesis is explained as a derived table. */
     @Test
     fun parenthesizedQueriesAreWrapped() {
-        assertReady("EXPLAIN SELECT * FROM ((SELECT 1)) AS explained", "(SELECT 1)")
-        assertReady("EXPLAIN SELECT * FROM ((SELECT 1) UNION (SELECT 2)) AS explained", "(SELECT 1) UNION (SELECT 2)", "doris")
+        assertReady("EXPLAIN SELECT * FROM ((SELECT 1)\n) AS explained", "(SELECT 1)")
+        assertReady("EXPLAIN SELECT * FROM ((SELECT 1) UNION (SELECT 2)\n) AS explained", "(SELECT 1) UNION (SELECT 2)", "doris")
+        assertReady("EXPLAIN SELECT * FROM (/* c */ -- d\n(SELECT 1)\n) AS explained", "/* c */ -- d\n(SELECT 1)")
+        assertReady("EXPLAIN SELECT * FROM ((SELECT 1) -- trailing\n) AS explained", "(SELECT 1) -- trailing")
     }
 
     @Test
