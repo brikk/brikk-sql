@@ -403,11 +403,17 @@ internal class ScopeEvaluator(
     /** DuckDB renames repeated output names of a derived table: the second `id` becomes `id_1`. */
     private fun deduplicated(columns: List<ScopeColumn>): List<ScopeColumn> {
         if (!dialect.deduplicatesDerivedColumnNames) return columns
-        val taken = HashSet<String>()
+        val taken = columns.mapTo(HashSet()) { it.name.lowercase() }
+        val seen = HashSet<String>()
+        // The next suffix to try per name, so many repeats of one name stay linear.
+        val next = HashMap<String, Int>()
         return columns.map { column ->
-            if (column.name.isEmpty() || taken.add(column.name.lowercase())) return@map column
-            var suffix = 1
-            while (!taken.add("${column.name}_$suffix".lowercase())) suffix++
+            val key = column.name.lowercase()
+            if (column.name.isEmpty() || seen.add(key)) return@map column
+            var suffix = next[key] ?: 1
+            while ("${key}_$suffix" in taken) suffix++
+            next[key] = suffix + 1
+            taken += "${key}_$suffix"
             column.copy(name = "${column.name}_$suffix")
         }
     }

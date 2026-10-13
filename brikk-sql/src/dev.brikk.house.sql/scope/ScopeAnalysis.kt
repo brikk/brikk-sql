@@ -38,7 +38,10 @@ internal class ParsedRegion(val tokens: List<Token>, val statements: List<Expres
 internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Unit): ParsedRegion? {
     val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(text, checkCanceled)
     if (lexed.failureOffset != null) return null
-    val parser = dialect.parser(ErrorLevel.IMMEDIATE).apply { captureSourceRanges = true }
+    val parser = dialect.parser(ErrorLevel.IMMEDIATE).apply {
+        captureSourceRanges = true
+        this.checkCanceled = checkCanceled
+    }
     val statements = try {
         parser.parse(lexed.tokens, text)
     } catch (_: ParseError) {
@@ -51,7 +54,14 @@ internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Un
 }
 
 /** Lowers [statement]'s pipes the way execution does, leniently, recording what moved where. */
-internal fun lowerPipes(statement: Expression, dialect: Dialect, names: SourceNames, text: String, base: Int): Pair<Expression, PipeOrigins> {
+internal fun lowerPipes(
+    statement: Expression,
+    dialect: Dialect,
+    names: SourceNames,
+    text: String,
+    base: Int,
+    checkCanceled: () -> Unit,
+): Pair<Expression, PipeOrigins> {
     val origins = PipeOrigins()
     for (pipe in statement.findAll<PipeQuery>().toList()) {
         // Execution reads a SELECT-first head's rows, merging a later stage into the head only where
@@ -80,7 +90,8 @@ internal fun lowerPipes(statement: Expression, dialect: Dialect, names: SourceNa
             }
         }
     }
-    return desugarPipes(statement, dialect, copy = false) { stage, message -> origins.refusals += stage to message } to origins
+    val lowered = desugarPipes(statement, dialect, copy = false, refused = { stage, message -> origins.refusals += stage to message }, checkCanceled)
+    return lowered to origins
 }
 
 private fun Select.isPlainStar(): Boolean {
@@ -116,7 +127,7 @@ internal class ScopeAnalysis(
         var output: RelationFact? = null
         for (statement in parsed.statements) {
             val (lowered, origins) = try {
-                lowerPipes(statement, dialect, names, text, range.first)
+                lowerPipes(statement, dialect, names, text, range.first, checkCanceled)
             } catch (_: UnsupportedError) {
                 continue
             }
@@ -175,7 +186,7 @@ internal class CaretCompletion(
         val names = SourceNames(range.first, parsed.tokens)
         for (statement in parsed.statements) {
             val (lowered, origins) = try {
-                lowerPipes(statement, dialect, names, marked, range.first)
+                lowerPipes(statement, dialect, names, marked, range.first, checkCanceled)
             } catch (_: UnsupportedError) {
                 continue
             }

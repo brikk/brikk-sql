@@ -1,5 +1,7 @@
 package dev.brikk.house.sql.scope
 
+import dev.brikk.house.sql.ast.desugarPipes
+import dev.brikk.house.sql.dialects.Dialects
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -35,10 +37,28 @@ class RelationScopeScalingTest {
         " |> WHERE c${it % 50 + 1} > $it |> EXTEND c${it % 50 + 1} + 1 AS e$it"
     }
 
+    /** Every WHERE after a LIMIT is an input boundary, checked against the CTE chain before it. */
+    private fun boundaries(scale: Int) = "FROM src() s" + (1..75 * scale).joinToString("") { " |> LIMIT ${1000 - it} |> WHERE c1 > $it" }
+
+    private fun repeated(scale: Int) = "SELECT * FROM (SELECT " + (1..4_000 * scale).joinToString { "c1" } + " FROM src()) x"
+
     @Test
     fun analysisIsLinear() {
         assertLinear("wide statement", ::wide) { RelationScope.analyze(it, "duckdb", facts) }
         assertLinear("deep pipe", ::deep) { RelationScope.analyze(it, "duckdb", facts) }
+        assertLinear("pipe boundaries", ::boundaries) { RelationScope.analyze(it, "duckdb", facts) }
+        assertLinear("repeated names", ::repeated) { RelationScope.analyze(it, "duckdb", facts) }
+    }
+
+    @Test
+    fun parsingAndLoweringCheckCancellation() {
+        val text = boundaries(4)
+        var parsing = 0
+        val region = checkNotNull(parseRegion(text, Dialects.DUCKDB) { parsing++ })
+        assertTrue(parsing > region.tokens.size / 1024, "$parsing checks for ${region.tokens.size} tokens")
+        var lowering = 0
+        desugarPipes(region.statements.single(), Dialects.DUCKDB, copy = false, refused = { _, _ -> }) { lowering++ }
+        assertTrue(lowering >= 600, "$lowering checks for 600 stages")
     }
 
     @Test

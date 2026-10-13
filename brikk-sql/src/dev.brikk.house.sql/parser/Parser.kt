@@ -986,7 +986,11 @@ open class Parser(
      */
     protected fun selectStar(): Expression = Star().updatePositions(1, 1, 0, 0)
 
+    /** Called every few hundred tokens; whatever it throws (an editor's cancellation) propagates. */
+    internal var checkCanceled: () -> Unit = {}
+
     protected fun advance(times: Int = 1) {
+        if (index and 511 == 0) checkCanceled()
         val newIndex = index + times
         index = newIndex
         currToken = if (newIndex < tokensSize) tokens[newIndex] else SENTINEL

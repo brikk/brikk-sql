@@ -67,11 +67,12 @@ internal fun desugarPipes(
     dialect: Dialect,
     copy: kotlin.Boolean,
     refused: ((stage: Expression, message: String) -> Unit)?,
+    checkCanceled: () -> Unit = {},
 ): Expression {
     val root = if (copy) expression.copy() else expression
     // sqlglot: Parser._pipe_cte_counter (per-statement)
     val counter = PipeCteCounter(root.findAll(Table::class, TableAlias::class)
-        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect, refused)
+        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect, refused, checkCanceled)
     return desugarNode(root, counter)
 }
 
@@ -79,6 +80,7 @@ private class PipeCteCounter(
     val takenNames: kotlin.collections.Set<String>,
     val dialect: Dialect,
     val refused: ((Expression, String) -> Unit)?,
+    val checkCanceled: () -> Unit,
 ) {
     var n: Int = 0
     val lenient: kotlin.Boolean get() = refused != null
@@ -106,7 +108,9 @@ private fun desugarChildren(node: Expression, counter: PipeCteCounter) {
         for (child in children.asReversed()) pending.addLast(child)
     }
     pushChildren(node)
+    var visited = 0
     while (pending.isNotEmpty()) {
+        if (++visited % 1024 == 0) counter.checkCanceled()
         val slot = pending.removeLast()
         if (slot.node !is PipeQuery) {
             pushChildren(slot.node)
@@ -130,6 +134,7 @@ private fun desugarPipeQuery(pipeQuery: PipeQuery, counter: PipeCteCounter): Exp
     }
 
     for (stage in pipeQuery.expressionsArg) {
+        counter.checkCanceled()
         stage as Expression
         // A stage's nested subpipelines were parsed (and therefore numbered) before the
         // stage's own CTEs — desugar them first to reproduce sqlglot's __tmpN order.
@@ -569,7 +574,15 @@ private fun pipeInputBoundary(query: Expression, stage: Expression, counter: Pip
 }
 
 private fun pipeScope(expression: Expression, dialect: Dialect): Scope {
-    val analysis = normalizeIdentifiers(expression.copy(), dialect = dialect)
+    // Namespaces come from the query's own clauses: copying its hoisted CTE chain as well would make
+    // every boundary of a long pipe cost the whole chain.
+    val ctes = expression.args["with_"] as? With
+    val analysis = try {
+        ctes?.let { expression.set("with_", null) }
+        normalizeIdentifiers(expression.copy(), dialect = dialect)
+    } finally {
+        ctes?.let { expression.set("with_", it) }
+    }
     // Pipe AS uses From(TableAlias) as a CTE reference, including inside scalar
     // stages. Adapt both input and consumer analysis without changing the public AST.
     for (from in analysis.findAll<From>()) {

@@ -17,7 +17,7 @@ class PipeLenientLoweringTest {
     private fun strict(sql: String) = duckdb.generate(desugarPipes(duckdb.parseOne(sql), duckdb))
 
     private fun lenient(sql: String, refusals: MutableList<String> = ArrayList()) =
-        duckdb.generate(desugarPipes(duckdb.parseOne(sql), duckdb, copy = true) { _, message -> refusals += message })
+        duckdb.generate(desugarPipes(duckdb.parseOne(sql), duckdb, copy = true, refused = { _, message -> refusals += message }))
 
     @Test
     fun anUnaliasedInputLosesItsQualifierAcrossABoundary() {
