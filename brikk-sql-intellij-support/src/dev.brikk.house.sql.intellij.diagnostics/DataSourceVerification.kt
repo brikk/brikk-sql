@@ -22,7 +22,6 @@ import dev.brikk.house.sql.intellij.pipe.ValidationTiming
 import dev.brikk.house.sql.verify.SqlVerifier
 import java.lang.ref.WeakReference
 import java.sql.SQLException
-import java.util.Collections
 import java.util.Objects
 import java.util.Properties
 import java.util.WeakHashMap
@@ -54,15 +53,24 @@ public class DataSourceVerification(
     private val connectionProperties: (LocalDataSource) -> Map<String, String> = { emptyMap() },
     private val verifierFor: (connect: () -> DataSourceQueryConnection?) -> SqlVerifier,
 ) {
-    private val validators: MutableMap<LocalDataSource, NativeSqlValidator> = Collections.synchronizedMap(WeakHashMap())
+    /** Each data source's validator, with the login and address it was made for. */
+    private val validators = WeakHashMap<LocalDataSource, Pair<Int, NativeSqlValidator>>()
 
-    /** The validator for [file]'s data source; null when none serves it, so only local checks run. */
+    /**
+     * The validator for [file]'s data source; null when none serves it, so only local checks run. A
+     * changed URL, user or added properties gets a new one, since a verifier may remember what the
+     * server allowed (such as query settings).
+     */
     public fun validator(file: PsiFile): NativeSqlValidator? {
         val dataSource = resolver.resolve(file).dataSource ?: return null
+        val properties = connectionProperties(dataSource)
+        val login = Objects.hash(dataSource.url, dataSource.username, properties)
         val project = WeakReference(file.project)
         val source = WeakReference(dataSource)
-        return validators.getOrPut(dataSource) {
-            NativeSqlValidator.of(verifierFor { openHelper(project.get(), source.get()) }, timing)
+        return synchronized(validators) {
+            validators[dataSource]?.takeIf { it.first == login }?.second
+                ?: NativeSqlValidator.of(verifierFor { openHelper(project.get(), source.get()) }, timing)
+                    .also { validators[dataSource] = login to it }
         }
     }
 

@@ -4,6 +4,7 @@ import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.DatabaseDriverImpl
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
@@ -141,6 +142,19 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
 
     fun testTheValidatorIsOnePerDataSource() {
         assertSame(verification.validator(myFixture.file), verification.validator(myFixture.file))
+        val validators = (1..8).map { CompletableFuture.supplyAsync { runReadAction { verification.validator(myFixture.file) } } }.map { it.get(30, TimeUnit.SECONDS) }
+        assertEquals("one validator, even when asked at once", 1, validators.toSet().size)
+    }
+
+    /** A verifier remembers what the server allowed (its settings); a changed login or address starts a new one. */
+    fun testAChangedLoginOrAddressGetsANewValidator() {
+        val first = verification.validator(myFixture.file)
+        val user = dataSource.username
+        dataSource.username = "someone-else"
+        Disposer.register(testRootDisposable) { dataSource.username = user }
+        val second = verification.validator(myFixture.file)
+        assertNotSame(first, second)
+        assertSame(second, verification.validator(myFixture.file))
     }
 
     fun testTheCountChangesWithTheConnectionAndTheDataSourceNotWithHelpers() {
