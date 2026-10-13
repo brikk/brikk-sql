@@ -121,6 +121,25 @@ internal class ClickhouseAvailabilityTest {
         assertEquals(VerifyError("Syntax error without a position"), syntaxError(sql, "Syntax error without a position"))
     }
 
+    /** The server's echo of the rest of the query ends where the statement says, whatever the token or text holds. */
+    @Test
+    fun theMessageAfterTheEchoIsKept() {
+        val unmatched = syntaxError(
+            "SELECT 1 FROM t WHERE (a = 1)) x",
+            "Syntax error: failed at position 30 ()): ) x. Unmatched parentheses: ')' at position 30 has no matching opening bracket",
+        )
+        assertEquals(VerifyError("Syntax error at ): Unmatched parentheses: ')' at position 30 has no matching opening bracket", 1, 30, 29, 30), unmatched)
+        val dotted = syntaxError("SELECT 1 FRM t. Expected one", "Syntax error: failed at position 14 (t): t. Expected one. Expected one of: token, Comma")
+        assertEquals("Syntax error at t: Expected one of: token, Comma", dotted.message)
+        val long = "SELECT 1 FRM t WHERE " + (0 until 60).joinToString(" AND ") { "col$it = $it" }
+        val cut = syntaxError(long, "Syntax error: failed at position 14 (t): ${long.substring(13, 113)}... Expected one of: token")
+        assertEquals(VerifyError("Syntax error at t: Expected one of: token", 1, 14, 13, 14), cut)
+        val multiline = syntaxError("SELECT 1 FRM t\nWHERE a = 1. 2", "Syntax error: failed at position 14 (t) (line 1, col 14): t\nWHERE a = 1. 2. Expected one of: token")
+        assertEquals("Syntax error at t: Expected one of: token", multiline.message)
+        val end = syntaxError("SELECT (1", "Syntax error: failed at position 10 (end of query): (1. Unmatched parentheses: '(' at position 8 is never closed")
+        assertEquals(VerifyError("Syntax error at the end of the query: Unmatched parentheses: '(' at position 8 is never closed", 1, 10, 9), end)
+    }
+
     /** The 0.9.8 driver's compressed transport turns the server's message into this: no verdict. */
     @Test
     fun anUnreadableServerMessageIsNoVerdict() {

@@ -265,22 +265,55 @@ private fun Throwable.reason(): String = message?.lineSequence()?.firstOrNull()?
 private val CODE_IN = Regex("""Code: (\d+)\. """)
 
 /**
- * A syntax error from ClickHouse's [detail] (`Syntax error: failed at position N (token) ...: rest.
- * Expected ...`), positioned in [sql] at its 1-based UTF-8 byte position and spanning the token
- * when the text there is the token.
+ * A syntax error from ClickHouse's [detail], `Syntax error: failed at position N (token)[ (line L,
+ * col C)]: <the rest of the query from there, cut with "...">. <message>`, positioned in [sql] at its
+ * 1-based UTF-8 byte position and spanning the token when the text there is the token. The message
+ * after the echo is kept (`Expected one of: ...`, `Unmatched parentheses: ...`); the echo is found from
+ * [sql] itself, so dots or parentheses in the token or the text do not split it.
  */
 internal fun syntaxError(sql: String, detail: String): VerifyError {
-    val match = POSITION.find(detail)
-        ?: return VerifyError(detail)
+    val match = POSITION.find(detail) ?: return VerifyError(detail)
     val head = detail.substring(0, match.range.first).trimEnd().removeSuffix(":")
     val token = match.groupValues[2]
-    val expected = detail.indexOf(". Expected ", match.range.last).takeIf { it >= 0 }?.let { detail.substring(it + 2) }
-    val atToken = if (token == "end of query") "at the end of the query" else "at $token"
-    val message = listOfNotNull("$head $atToken", expected).joinToString(": ")
     val byte = match.groupValues[1].toInt() - 1
-    val located = VerifyError.atUtf8Byte(sql, message, byte)
-    val offset = located.offset ?: return located
-    return if (token != "end of query" && sql.startsWith(token, offset)) located.copy(endOffset = offset + token.length) else located
+    val located = VerifyError.atUtf8Byte(sql, "", byte)
+    val atToken = if (token == "end of query") "at the end of the query" else "at $token"
+    val message = listOfNotNull("$head $atToken", afterEcho(detail.substring(match.range.last + 1), located.offset?.let(sql::substring), sql))
+        .joinToString(": ")
+    val offset = located.offset ?: return VerifyError(message)
+    val end = if (token != "end of query" && sql.startsWith(token, offset)) offset + token.length else null
+    return VerifyError.atOffset(sql, message, offset, end)
+}
+
+/**
+ * The message after the server's [echo] of the query. The echo is normally [rest], the text from the
+ * error on (null when the position fell outside [sql]), cut with `...` when long; at the end of the
+ * query it is the last expression. Failing those, it ends at the first `. ` (or `... `) whose text
+ * before occurs in [sql].
+ */
+private fun afterEcho(echo: String, rest: String?, sql: String): String? {
+    val after = when {
+        rest != null && echo.startsWith("$rest. ") -> rest.length + 2
+        rest != null && echo == rest -> return null
+        else -> separators(echo).firstOrNull { (at, _) ->
+            val before = echo.substring(0, at)
+            rest != null && rest.startsWith(before) && echo.startsWith("$before... ") && at > 0
+        }?.let { (at, length) -> at + length }
+            ?: separators(echo).firstOrNull { (at, _) -> echo.substring(0, at).let { it.isNotEmpty() && it in sql } }?.let { (at, length) -> at + length }
+    }
+    return after?.let { echo.substring(it).trim().removeSuffix(".").ifEmpty { null } }
+}
+
+/** Where `... ` and `. ` occur in [text], as (offset, length) pairs in order. */
+private fun separators(text: String): List<Pair<Int, Int>> = buildList {
+    var at = 0
+    while (at < text.length) {
+        when {
+            text.startsWith("... ", at) -> add(at to 4)
+            text.startsWith(". ", at) -> add(at to 2)
+        }
+        at++
+    }
 }
 
 /**
@@ -310,7 +343,7 @@ internal fun hasInlineData(sql: String): Boolean {
     return lexed.failureOffset != null && insertDepth != null
 }
 
-private val POSITION = Regex("""failed at position (\d+) \(((?:[^()]|\([^()]*\))*)\)(?: \(line \d+, col \d+\))?""")
+private val POSITION = Regex("""failed at position (\d+) \((.*?)\)(?: \(line \d+, col \d+\))?: """, RegexOption.DOT_MATCHES_ALL)
 
 
 private fun ByteArray.toHex(): String {

@@ -57,6 +57,17 @@ internal class ClickhousePositionsTest {
     }
 
     @Test
+    fun parenthesisErrorsKeepTheirPositionAndMessage() {
+        val sql = "SELECT 'é' FROM t WHERE (a = 1)) x"
+        val error = rejected(sql)
+        assertEquals(sql.lastIndexOf(')'), error.offset)
+        assertEquals(sql.lastIndexOf(')') + 1, error.endOffset)
+        assertTrue(error.message.startsWith("Syntax error at ): Unmatched parentheses:"), error.message)
+        val dotted = rejected("SELECT 1 FRM t. Expected one")
+        assertTrue(dotted.message.startsWith("Syntax error at t: Expected one of:"), dotted.message)
+    }
+
+    @Test
     fun anExpressionIsPositionedInTheFragment() {
         val error = assertIs<VerifyResult.Rejected>(verifier.verifyExpression("plus(1, , 2)")).error
         assertEquals(8, error.offset)
