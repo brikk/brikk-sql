@@ -132,7 +132,7 @@ validator's `verify`; the diagnostics themselves are core's plain data
   with this one rather than keeping both.
 - A result is applied only at the document revision and text it was computed for, and later passes
   at that revision reuse it. Cancellation propagates unchanged; `debounce` waits for typing to pause
-  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass. All off by
+  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass (a verifier still running is canceled or abandoned and local results show). All off by
   default.
 - Only files of exactly the profile's language are annotated, so each consumer acts on its own
   dialect. SQL injected into `injectionHosts` languages (register the annotator for each host too;

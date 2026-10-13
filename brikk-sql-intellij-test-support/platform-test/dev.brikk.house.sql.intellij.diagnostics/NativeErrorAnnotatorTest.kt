@@ -309,6 +309,24 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertEquals(listOf<String>(), validator.asked)
     }
 
+    fun testASlowEngineIsCutOffAtTheBudgetAndLocalResultsShow() {
+        postgresProfile.localParser = true
+        postgresProfile.budget = 300.milliseconds
+        val text = "SELECT * FROM t WHERE = 1;"
+        // One verifier ignores cancellation and is abandoned; the other stops when canceled.
+        for (slow in listOf<(String) -> VerifyResult>(
+            { Thread.sleep(3_000); VerifyResult.Accepted },
+            { while (true) { ProgressManager.checkCanceled(); Thread.sleep(5) }; @Suppress("UNREACHABLE_CODE") VerifyResult.Accepted },
+        )) {
+            postgresProfile.validator = ScriptedValidator(slow)
+            open(text)
+            val started = System.nanoTime()
+            val shown = marks()
+            assertTrue("took ${(System.nanoTime() - started) / 1_000_000} ms", System.nanoTime() - started < 2_000_000_000L)
+            assertTrue("$shown", shown.single().second.startsWith("Engine (brikk-sql): "))
+        }
+    }
+
     fun testTheDebounceWaitsAndEndsOnCancellation() {
         postgresProfile.debounce = 300.milliseconds
         open("SELECT bad;")

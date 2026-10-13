@@ -8,8 +8,11 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
@@ -18,6 +21,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.TimeoutUtil
+import com.intellij.util.concurrency.AppExecutorUtil
 import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.DiagnosticSource
 import dev.brikk.house.sql.diagnostics.NativeError
@@ -33,7 +37,12 @@ import dev.brikk.house.sql.intellij.recoverEditorOperation
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.verify.VerifyResult
+import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.time.Duration
 import org.jetbrains.annotations.ApiStatus
 
@@ -77,10 +86,18 @@ public interface NativeErrorProfile {
     /** A statement (with [VerificationUnit.File], the file) longer than this, in UTF-16 units, is not checked. */
     public val sizeCap: Int? get() = null
 
-    /** How long verification waits before asking the engine; an edit cancels the pass, so it waits for typing to pause. */
+    /**
+     * How long verification waits before asking the engine; an edit cancels the pass, so it waits
+     * for typing to pause. The platform runs a file's external annotators one after another, so the
+     * waits of several consumers on one file add up: keep it [Duration.ZERO] unless asking is costly.
+     */
     public val debounce: Duration get() = Duration.ZERO
 
-    /** The time one pass may spend asking the engine; later statements get no native verdict. */
+    /**
+     * The time one pass may spend asking the engine. A verification still running when it ends is
+     * canceled (or abandoned, if it ignores cancellation), and that statement and the later ones get
+     * no native verdict, so their local results show; the next pass asks again.
+     */
     public val budget: Duration? get() = null
 
     /** [sql] as the engine verifies it, of the same length, such as with binds masked. */
@@ -256,7 +273,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             val asked = when {
                 validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
                 deadline != null && System.nanoTime() > deadline -> Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)
-                else -> ask(validator, script.substring(range.first, range.last + 1))
+                else -> ask(validator, script.substring(range.first, range.last + 1), deadline)
             }
             final = final && asked.final
             val native = asked.outcome
@@ -275,10 +292,11 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     /** An engine's [outcome]; not [final] when asking again could give a verdict (an unavailable engine, a failure, the budget). */
     private class Asked(val outcome: NativeOutcome, val final: Boolean)
 
-    private fun ask(validator: NativeSqlValidator, sql: String): Asked {
+    private fun ask(validator: NativeSqlValidator, sql: String, deadline: Long?): Asked {
         val text = profile.verificationText(sql)
         if (text.length != sql.length) return Asked(NativeOutcome.NoVerdict("The verification text changed length"), final = true)
-        val result = recoverEditorOperation { validator.verify(text, null) }.getOrElse {
+        val attempt = if (deadline == null) recoverEditorOperation { validator.verify(text, null) } else beforeDeadline(deadline) { validator.verify(text, null) }
+        val result = (attempt ?: return Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)).getOrElse {
             LOG.warn("The ${profile.label} validator failed on a statement; reporting no verdict for it", it)
             return Asked(NativeOutcome.NoVerdict(it.message ?: "Validator failure"), final = false)
         }
@@ -289,6 +307,42 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             is VerifyResult.Unverified -> Asked(NativeOutcome.NoVerdict(result.reason), final = true)
             is VerifyResult.Unavailable -> Asked(NativeOutcome.NoVerdict(result.reason), final = false)
         }
+    }
+
+    /**
+     * [operation] run on a pooled thread under its own indicator, or null when [deadline] passes
+     * first: the indicator is then canceled, and an operation that ignores it is abandoned. The
+     * pass's own cancellation cancels it too and propagates; failures come back as in
+     * [recoverEditorOperation], and fatal errors are rethrown.
+     */
+    private fun <T> beforeDeadline(deadline: Long, operation: () -> T): Result<T>? {
+        val indicator = EmptyProgressIndicator()
+        val future = AppExecutorUtil.getAppExecutorService().submit(Callable {
+            ProgressManager.getInstance().runProcess(Computable(operation), indicator)
+        })
+        try {
+            while (true) {
+                ProgressManager.checkCanceled()
+                val remaining = deadline - System.nanoTime()
+                if (remaining <= 0) break
+                try {
+                    return Result.success(future.get(minOf(remaining, WAIT_STEP_NANOS), TimeUnit.NANOSECONDS))
+                } catch (_: TimeoutException) {
+                    continue
+                } catch (e: ExecutionException) {
+                    val cause = e.cause ?: e
+                    if (cause is Error || cause is ProcessCanceledException || cause is CancellationException) throw cause
+                    return Result.failure(cause)
+                }
+            }
+        } catch (e: Throwable) {
+            indicator.cancel()
+            future.cancel(true)
+            throw e
+        }
+        indicator.cancel()
+        future.cancel(true)
+        return null
     }
 
     /**
@@ -370,6 +424,8 @@ public abstract class NativeErrorPsiFilter(private val profile: NativeErrorProfi
         return host == profile.language || host !in profile.injectionHosts
     }
 }
+
+private const val WAIT_STEP_NANOS = 10_000_000L
 
 /** Per profile language: a file's last final outcome, reused by later passes while its dependencies stay. */
 private val OUTCOME_KEYS = ConcurrentHashMap<String, Key<NativeErrorAnnotator.Outcome>>()
