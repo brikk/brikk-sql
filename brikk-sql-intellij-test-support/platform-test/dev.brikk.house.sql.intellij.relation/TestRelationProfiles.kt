@@ -1,9 +1,14 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.codeInsight.completion.CompletionContributor
+import com.intellij.codeInsight.completion.CompletionContributorEP
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.extensions.DefaultPluginDescriptor
+import com.intellij.openapi.extensions.LoadingOrder
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
@@ -58,6 +63,7 @@ class PgRelationResolve : ExternalRelationResolveExtension(pgRelations)
 class PgRelationSuppressor : ExternalRelationInspectionSuppressor(pgRelations)
 class PgRelationGoto : ExternalRelationGotoDeclarationHandler(pgRelations)
 class PgRelationAnnotator : ExternalRelationAnnotator(pgRelations)
+class PgRelationCompletion : ExternalRelationCompletionContributor(pgRelations)
 class MysqlRelationAnnotator : ExternalRelationAnnotator(mysqlRelations)
 
 /** Registers every feature of [pgRelations] until [until] ends. */
@@ -66,4 +72,6 @@ fun registerPgRelations(until: Disposable, resolve: Boolean = true, suppressor: 
     if (suppressor) SqlInspectionSuppressorDelegate.EP_NAME.point.registerExtension(PgRelationSuppressor(), until)
     GotoDeclarationHandler.EP_NAME.point.registerExtension(PgRelationGoto(), until)
     LanguageAnnotators.INSTANCE.addExplicitExtension(postgres, PgRelationAnnotator(), until)
+    val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test"), PgRelationCompletion::class.java.classLoader)
+    CompletionContributor.EP.point.registerExtension(CompletionContributorEP(postgres.id, PgRelationCompletion::class.java.name, plugin), LoadingOrder.FIRST, until)
 }
