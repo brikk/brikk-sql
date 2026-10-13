@@ -19,8 +19,10 @@ import org.jetbrains.annotations.ApiStatus
 public object RelationTableTypes {
     /**
      * The table type of [call] when it is a slot (an unqualified call without arguments in a FROM
-     * position) of a provider's relation in [profile]; null otherwise, and while facts are pending,
-     * so the platform's own typing applies. Column types stay unknown: a display type proves no SQL type.
+     * position) of a provider's relation in [profile]; null otherwise, so the platform's own typing
+     * applies. While facts are pending, and under write access (a rename), where providers are never
+     * asked, it is the type of the last analysis of unchanged SQL, else null. Column types stay
+     * unknown: a display type proves no SQL type.
      *
      * Each column's element is the column's symbol, as the resolve extension gives it: equivalent to
      * the provider's navigation target for the column, so the platform's find usages and rename of
@@ -32,7 +34,7 @@ public object RelationTableTypes {
         if (!call.parameterList?.expressionList.isNullOrEmpty() || call.nameElement?.qualifierExpression != null) return null
         val name = call.nameElement?.name ?: return null
         val file = call.containingFile ?: return null
-        val analysis = RelationAnalysis.of(file, profile) ?: return null
+        val analysis = RelationAnalysis.of(file, profile, lastKnown = true) ?: return null
         val provider = analysis.facts.providerOf(RelationKind.SLOT, name)?.takeUnless { it.platformResolves } ?: return null
         val relation = analysis.facts.merged.slots[name] ?: return null
         val fallback = relation.provenance?.let { provider.navigationTarget(file, it) } ?: call

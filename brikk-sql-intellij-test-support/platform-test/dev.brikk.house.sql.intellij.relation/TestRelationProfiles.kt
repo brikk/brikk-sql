@@ -9,6 +9,7 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.openapi.extensions.PluginId
@@ -32,8 +33,20 @@ class FakeFacts(
     override var labels: RelationColumnLabels? = null,
 ) : ExternalRelationFacts {
     var targets: (PsiFile, String) -> PsiElement? = { _, _ -> null }
-    override fun facts(file: PsiFile): RelationFactsResult =
-        if (pending) RelationFactsResult.Pending("waiting") else RelationFactsResult.Available(facts, revision)
+
+    /** Fails a call under write access, as a provider that must not analyze there would. */
+    var refusesWriteAccess: Boolean = false
+
+    /** Calls under write access, refused or not. */
+    var writeAccessCalls: Int = 0
+
+    override fun facts(file: PsiFile): RelationFactsResult {
+        if (ApplicationManager.getApplication().isWriteAccessAllowed) {
+            writeAccessCalls++
+            check(!refusesWriteAccess) { "Relation facts asked for under write access" }
+        }
+        return if (pending) RelationFactsResult.Pending("waiting") else RelationFactsResult.Available(facts, revision)
+    }
     override fun navigationTarget(file: PsiFile, provenance: String) = targets(file, provenance)
 
     companion object {

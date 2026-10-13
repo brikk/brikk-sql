@@ -312,7 +312,10 @@ it came through `*`, which the platform cannot expand over a provider's relation
 
 Each statement is analyzed on its own and the analysis is cached per file and profile while the
 document revision and every provider's revision stay; nothing is analyzed or cached while a provider
-is pending. Completion copies are analyzed in their own right (providers are asked about the
+is pending. Providers are never asked under write access (a rename): nothing is analyzed or cached
+then. There, and while a provider is pending, the native adapter and the resolve extension keep the
+file's last analysis if its text is unchanged, else give nothing, so a rename through the adapter
+completes. Completion copies are analyzed in their own right (providers are asked about the
 original file). A symbol's equivalence to the provider's declaration asks for its navigation target
 during find usages, so `navigationTarget` should stay cheap. Restart the daemon when facts change without an edit. Each consumer acts on exactly its
 own language.

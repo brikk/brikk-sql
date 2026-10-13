@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.UserDataHolderEx
@@ -86,19 +87,24 @@ internal class RelationAnalysis(
         /**
          * The analysis of [file] for [profile], reused while the document revision and every
          * provider's revision stay; null for another language or while a provider is pending.
-         * Providers are asked about the original of a completion copy.
+         * Providers are asked about the original of a completion copy, and never under write access
+         * (a rename, say): nothing is analyzed or cached then. There, and while a provider is pending,
+         * [lastKnown] callers (PSI typing and resolve, which a rename must not lose) get the file's
+         * last analysis if its text is unchanged.
          */
-        fun of(file: PsiFile, profile: RelationScopeProfile): RelationAnalysis? {
+        fun of(file: PsiFile, profile: RelationScopeProfile, lastKnown: Boolean = false): RelationAnalysis? {
             if (file.language != profile.language) return null
             // A completion copy has no document; its own stamp changes with its text.
             val stamp = PsiDocumentManager.getInstance(file.project).getDocument(file)?.modificationStamp ?: file.modificationStamp
-            val results = profile.providers.mapNotNull { provider -> provider.facts(file.originalFile)?.let { provider to it } }
-            if (results.any { it.second is RelationFactsResult.Pending }) return null
-            val available = results.map { (provider, result) -> provider to (result as RelationFactsResult.Available) }
-            val revision = Revision(stamp, profile.dialect, available.map { it.first to it.second.revision })
             val cache = file.getUserData(CACHE)
                 ?: (file as? UserDataHolderEx)?.putUserDataIfAbsent(CACHE, ConcurrentHashMap())
                 ?: ConcurrentHashMap<RelationScopeProfile, Cached>().also { file.putUserData(CACHE, it) }
+            val last = { if (lastKnown) cache[profile]?.takeIf { it.revision.stamp == stamp }?.analysis else null }
+            if (ApplicationManager.getApplication().isWriteAccessAllowed) return last()
+            val results = profile.providers.mapNotNull { provider -> provider.facts(file.originalFile)?.let { provider to it } }
+            if (results.any { it.second is RelationFactsResult.Pending }) return last()
+            val available = results.map { (provider, result) -> provider to (result as RelationFactsResult.Available) }
+            val revision = Revision(stamp, profile.dialect, available.map { it.first to it.second.revision })
             cache[profile]?.takeIf { it.revision == revision }?.let { return it.analysis }
             val source = PipeText.of(file)
             val facts = MergedFacts.of(available.map { it.first to it.second.facts })
