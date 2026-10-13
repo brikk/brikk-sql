@@ -36,6 +36,7 @@ import dev.brikk.house.sql.generator.SourceMap
 import dev.brikk.house.sql.optimizer.annotateTypes
 import dev.brikk.house.sql.optimizer.dataTypeFromStr
 import dev.brikk.house.sql.optimizer.expressionNullability
+import dev.brikk.house.sql.parser.ParseError
 import java.util.IdentityHashMap
 
 /** A query's result row; output columns have no relation until a FROM clause names them. */
@@ -525,7 +526,11 @@ internal class ScopeEvaluator(
         val copy = value.copy()
         for ((original, typed) in value.walk().zip(copy.walk())) {
             val sqlType = (original as? Column)?.let { resolved[it]?.sqlType } ?: continue
-            typed.typeSlot = dataTypeFromStr(sqlType, dialect)
+            typed.typeSlot = try {
+                dataTypeFromStr(sqlType, dialect)
+            } catch (_: ParseError) {
+                continue
+            }
         }
         val type = annotateTypes(copy, dialect = dialect, overwriteTypes = false).type as? DataType ?: return null
         return if (type.thisArg == dev.brikk.house.sql.ast.DType.UNKNOWN) null else Dialects.BASE.generate(type)
@@ -586,7 +591,7 @@ internal class ScopeEvaluator(
         }
         if (first.source != null && all.all { it.source == first.source }) return first.copy(nullability = nullability)
         return ScopeColumn(first.name, "", ColumnOrigin.COMPUTED, nullability,
-            all.map { it.sqlType }.distinct().singleOrNull(), computedBy = label)
+            all.map { it.sqlType?.let(::canonical) }.distinct().singleOrNull(), computedBy = label)
     }
 
     /** The set operator between the branches, `UNION ALL` included, and its text. */
@@ -619,7 +624,7 @@ internal class ScopeEvaluator(
             val nameColumns = fields.mapNotNull { (it.thisArg as? Identifier)?.let(::stored) ?: (it.thisArg as? Expression)?.name?.takeIf(String::isNotEmpty) }
                 .map { computed(it, Nullability.NON_NULL, by, "VARCHAR") }
             val valueColumns = pivot.expressionsArg.filterIsInstance<Expression>().map {
-                computed((it as? Identifier)?.let(::stored) ?: it.name, valueNullability, by, values.map { v -> v.sqlType }.distinct().singleOrNull())
+                computed((it as? Identifier)?.let(::stored) ?: it.name, valueNullability, by, values.map { v -> v.sqlType?.let(::canonical) }.distinct().singleOrNull())
             }
             binding.columns.filterNot { it in values } + nameColumns + valueColumns
         } else {
@@ -868,6 +873,17 @@ internal class ScopeEvaluator(
 
     private fun ColumnFact.visible(relation: String, label: String) =
         ScopeColumn(name, label, origin, nullability, sqlType, displayType, ColumnSource(relation, this), provenance = provenance)
+
+    private val canonicalTypes = HashMap<String, String>()
+
+    /** A SQL type in the spelling computed types use, so a fact's and a computed type compare; unparsable text stays as given. */
+    private fun canonical(sqlType: String): String = canonicalTypes.getOrPut(sqlType) {
+        try {
+            Dialects.BASE.generate(dataTypeFromStr(sqlType, dialect))
+        } catch (_: ParseError) {
+            sqlType
+        }
+    }
 
     private fun computed(name: String, nullability: Nullability, by: String, sqlType: String? = null) =
         ScopeColumn(name, "", ColumnOrigin.COMPUTED, nullability, sqlType, computedBy = by)

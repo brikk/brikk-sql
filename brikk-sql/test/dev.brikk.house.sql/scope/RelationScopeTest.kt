@@ -121,6 +121,14 @@ class RelationScopeTest {
     }
 
     @Test
+    fun factTypesAndComputedTypesShareOneSpelling() {
+        val input = RelationFacts(slots = mapOf("n" to RelationFact(listOf(ColumnFact("id", "int4"), ColumnFact("odd", "not a type")))))
+        val union = analyze("SELECT id FROM n() UNION ALL SELECT id + 1 FROM n()", "postgres", input).output
+        assertEquals("INT", union?.columns?.single()?.sqlType)
+        assertEquals("not a type", analyze("SELECT odd FROM n()", "postgres", input).output?.columns?.single()?.sqlType)
+    }
+
+    @Test
     fun slotsMatchExactlyAndOnlyWithoutArgumentsOrQualifiers() {
         assertTrue(analyze("SELECT e.nope FROM Events() e").diagnostics.isEmpty())
         assertTrue(analyze("SELECT e.nope FROM events(1) e").diagnostics.isEmpty())
