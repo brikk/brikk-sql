@@ -1980,8 +1980,10 @@ since `EXPLAIN (` opens Trino's options. DuckDB is refused outright: its
 joins the first column of the plan rows. `TextExplainResultTest` runs against a live Trino when
 `BRIKK_TRINO_TEST_CONTAINER` names its container, and is skipped otherwise.
 
-`definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris and Trino
-`SHOW CREATE`, DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
+`definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris, Trino and ClickHouse
+`SHOW CREATE` (ClickHouse with `[database, name]` quoted as its core dialect quotes identifiers; a
+materialized view through `SHOW CREATE TABLE`, since ClickHouse 26.9 rejects `SHOW CREATE MATERIALIZED VIEW`;
+`DefinedObject.DICTIONARY` through `SHOW CREATE DICTIONARY`), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
 macros rebuilt from `duckdb_functions()`, whose definition says that parameter defaults are not reported.
 Every DuckDB read calls one built-in table function, qualified as `system.main.`, and no other function: a
 user macro named `duckdb_tables` shadows the unqualified call and runs (DuckDB 1.5.6 advanced a sequence

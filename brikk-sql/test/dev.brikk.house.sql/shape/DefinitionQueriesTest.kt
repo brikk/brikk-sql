@@ -31,6 +31,35 @@ class DefinitionQueriesTest {
         assertNull(query.definition(emptyList()))
     }
 
+    /** ClickHouse's SHOW CREATE forms, checked on ClickHouse 26.9: a materialized view is shown as a table (SHOW CREATE MATERIALIZED VIEW is rejected). */
+    @Test
+    fun clickhouseShowsCreateInItsOwnForms() {
+        assertEquals("SHOW CREATE TABLE \"db\".\"t\"", sql("clickhouse", DefinedObject.TABLE, "db", "t"))
+        assertEquals("SHOW CREATE VIEW \"db\".\"v\"", sql("clickhouse", DefinedObject.VIEW, "db", "v"))
+        assertEquals("SHOW CREATE TABLE \"db\".\"mv\"", sql("clickhouse", DefinedObject.MATERIALIZED_VIEW, "db", "mv"))
+        assertEquals("SHOW CREATE DICTIONARY \"db\".\"d\"", sql("clickhouse", DefinedObject.DICTIONARY, "db", "d"))
+        assertEquals("SHOW CREATE DATABASE \"db\"", sql("clickhouse", DefinedObject.SCHEMA, "db"))
+        assertNull(sql("clickhouse", DefinedObject.TABLE, "t"), "needs the database")
+        assertNull(sql("clickhouse", DefinedObject.TABLE, "c", "db", "t"))
+        assertNull(sql("clickhouse", DefinedObject.MACRO, "db", "m"))
+        assertNull(sql("doris", DefinedObject.DICTIONARY, "db", "d"))
+        val query = checkNotNull(definitionQuery("clickhouse", DefinedObject.TABLE, listOf("db", "t")))
+        assertEquals("CREATE TABLE db.t\n(\n    `x` UInt64\n)", query.definition(listOf(mapOf("statement" to "CREATE TABLE db.t\n(\n    `x` UInt64\n)"))))
+        assertNull(query.definition(emptyList()))
+    }
+
+    /** Each path part is quoted as core's ClickHouse dialect quotes an identifier, so it reads back as written. */
+    @Test
+    fun clickhouseQuotesEachPartThroughCore() {
+        for (name in listOf("we\"ird", "back`tick", "dot.ted", "back\\slash", "ünï")) {
+            val query = checkNotNull(sql("clickhouse", DefinedObject.TABLE, name, name))
+            val table = dev.brikk.house.sql.dialects.Dialects.forName("clickhouse").parseOne("SELECT * FROM " + query.removePrefix("SHOW CREATE TABLE "))
+                .find(dev.brikk.house.sql.ast.Table::class)
+            assertEquals(name, checkNotNull(table).name, query)
+            assertEquals(name, (table.args["db"] as dev.brikk.house.sql.ast.Expression).name, query)
+        }
+    }
+
     @Test
     fun trinoShowsCreateFullyQualified() {
         assertEquals("SHOW CREATE TABLE \"memory\".\"s\".\"t\"", sql("trino", DefinedObject.TABLE, "memory", "s", "t"))

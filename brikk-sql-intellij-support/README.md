@@ -571,8 +571,9 @@ takes the dbms the platform passes):
 ### Object definitions
 
 `ShowCreateDefinitionProvider(dialect, kinds, levels)` gives the platform an object's source from the
-server's catalog with core's `definitionQuery`: Doris and Trino `SHOW CREATE` (Doris shows an external
-catalog's view as a table), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`,
+server's catalog with core's `definitionQuery`: Doris, Trino and ClickHouse `SHOW CREATE` (Doris shows an external
+catalog's view as a table, ClickHouse a materialized view; ClickHouse also has `DefinedObject.DICTIONARY`,
+which a plugin maps to whichever of its model's objects are dictionaries), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`,
 `duckdb_indexes()` and macros rebuilt from `duckdb_functions()` with their overloads (DuckDB does not
 report parameter defaults; the definition says so). Each DuckDB read calls one built-in table function,
 qualified as `system.main.`, and nothing else (DuckDB's own helpers are macros calling others unqualified),

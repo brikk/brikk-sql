@@ -15,6 +15,12 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.catalog.HelperConnectionPoint
+import com.intellij.database.Dbms
+import com.intellij.database.dialects.clickhouse.model.CHouseRoot
+import com.intellij.database.model.ObjectKind
+import com.intellij.database.model.ModelFactory
+import dev.brikk.house.sql.intellij.catalog.ShowCreateDefinitionProvider
+import dev.brikk.house.sql.shape.DefinedObject
 import dev.brikk.house.sql.intellij.catalog.otherRequestor
 import dev.brikk.house.sql.verify.ClickhouseQueryConnection
 import dev.brikk.house.sql.verify.ParseOnlyClickhouseVerifier
@@ -143,6 +149,43 @@ class ClickhouseDataSourceVerificationTest : BasePlatformTestCase() {
             assertNotNull("a positioned verdict, not an unreadable answer: $result", (result as VerifyResult.Rejected).error.offset)
         }
         assertEquals("$written&compress=true", dataSource.url)
+    }
+
+    /** Core's ClickHouse definition queries, run through the shared provider on a real server, show each kind's definition. */
+    fun testDefinitionsComeFromTheServersShowCreate() {
+        val url = url ?: return
+        val db = "defs_${UUID.randomUUID().toString().replace("-", "")}"
+        admin(url, "CREATE DATABASE $db")
+        Disposer.register(testRootDisposable) { admin(url, "DROP DATABASE IF EXISTS $db") }
+        for (sql in listOf(
+            "CREATE TABLE $db.`we\"ird` (id UInt64) ENGINE = MergeTree ORDER BY id",
+            "CREATE VIEW $db.v AS SELECT id FROM $db.`we\"ird`",
+            "CREATE MATERIALIZED VIEW $db.mv ENGINE = MergeTree ORDER BY id AS SELECT id FROM $db.`we\"ird`",
+            "CREATE DICTIONARY $db.d (id UInt64, name String) PRIMARY KEY id SOURCE(NULL()) LAYOUT(FLAT()) LIFETIME(0)",
+            "GRANT SHOW ON $db.* TO $user",
+        )) admin(url, sql)
+        val session = runBlocking { DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(dataSource, UNCOMPRESSED)).setRequestor(otherRequestor()).create() }
+        val root = ModelFactory.BLACK_HOLE.createModel(Dbms.CLICKHOUSE).root as CHouseRoot
+        val schema = root.schemas.createOrGet(db)
+        val objects = object : ShowCreateDefinitionProvider("clickhouse", mapOf(
+            ObjectKind.SCHEMA to DefinedObject.SCHEMA, ObjectKind.TABLE to DefinedObject.TABLE,
+            ObjectKind.VIEW to DefinedObject.VIEW, ObjectKind.MAT_VIEW to DefinedObject.MATERIALIZED_VIEW,
+        ), listOf(ObjectKind.SCHEMA)) {}
+        // The stock model has no dictionary kind: a plugin decides which of its objects are dictionaries.
+        val dictionaries = object : ShowCreateDefinitionProvider("clickhouse", mapOf(ObjectKind.TABLE to DefinedObject.DICTIONARY), listOf(ObjectKind.SCHEMA)) {}
+        checkNotNull(session).use { ref ->
+            for ((provider, obj, expected) in listOf(
+                Triple(objects, schema.tables.createOrGet("we\"ird"), "CREATE TABLE $db.`we\"ird`"),
+                Triple(objects, schema.views.createOrGet("v"), "CREATE VIEW $db.v"),
+                Triple(objects, schema.matViews.createOrGet("mv"), "CREATE MATERIALIZED VIEW $db.mv"),
+                Triple(dictionaries, schema.tables.createOrGet("d"), "CREATE DICTIONARY $db.d"),
+                Triple(objects, schema, "CREATE DATABASE $db"),
+            )) {
+                val sources = StringBuilder()
+                provider.load(listOf(obj), ref.get(), sources)
+                assertTrue("${obj.name}: $sources", sources.toString().trimStart().startsWith(expected))
+            }
+        }
     }
 
     /** What the hook is for: this driver's default compressed transport fails on the server's answers. */

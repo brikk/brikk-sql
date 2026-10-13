@@ -1,7 +1,11 @@
 package dev.brikk.house.sql.shape
 
+import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.args
+import dev.brikk.house.sql.dialects.sql
+
 /** The kinds of objects whose definitions [definitionQuery] reads. */
-enum class DefinedObject { CATALOG, SCHEMA, TABLE, VIEW, MATERIALIZED_VIEW, MACRO, SEQUENCE, INDEX }
+enum class DefinedObject { CATALOG, SCHEMA, TABLE, VIEW, MATERIALIZED_VIEW, MACRO, SEQUENCE, INDEX, DICTIONARY }
 
 /**
  * One catalog read for an object's definition: run [sql], then [definition] shapes its rows. Every
@@ -23,13 +27,29 @@ class DefinitionQuery internal constructor(
  * optional, and a view in an external catalog is shown as a table, as Doris requires), Trino
  * (`SHOW CREATE`, fully qualified) and DuckDB (`[database, schema, name]` from `duckdb_tables()`,
  * `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and macros rebuilt from `duckdb_functions()`,
- * which does not report parameter defaults; the definition says so).
+ * which does not report parameter defaults; the definition says so), and ClickHouse (`SHOW CREATE` with
+ * `[database, name]`, each part quoted as its core dialect quotes identifiers; a materialized view is
+ * shown as a table, since ClickHouse rejects `SHOW CREATE MATERIALIZED VIEW`).
  */
 fun definitionQuery(dialect: String, kind: DefinedObject, path: List<String>): DefinitionQuery? = when (dialect) {
     "doris" -> dorisQuery(kind, path)
     "trino" -> trinoQuery(kind, path)
     "duckdb" -> duckdbQuery(kind, path)
+    "clickhouse" -> clickhouseQuery(kind, path)
     else -> null
+}
+
+private fun clickhouseQuery(kind: DefinedObject, path: List<String>): DefinitionQuery? {
+    val (type, size) = when (kind) {
+        DefinedObject.SCHEMA -> "DATABASE" to 1
+        DefinedObject.TABLE, DefinedObject.MATERIALIZED_VIEW -> "TABLE" to 2
+        DefinedObject.VIEW -> "VIEW" to 2
+        DefinedObject.DICTIONARY -> "DICTIONARY" to 2
+        else -> return null
+    }
+    if (path.size != size) return null
+    val names = path.joinToString(".") { Identifier(args("this" to it, "quoted" to true)).sql("clickhouse") }
+    return DefinitionQuery("SHOW CREATE $type $names", shape = ::showCreateDefinition)
 }
 
 private fun dorisQuery(kind: DefinedObject, path: List<String>): DefinitionQuery? {
