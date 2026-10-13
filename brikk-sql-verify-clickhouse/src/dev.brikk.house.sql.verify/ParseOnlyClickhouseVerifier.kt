@@ -319,7 +319,7 @@ private fun separators(text: String): List<Pair<Int, Int>> = buildList {
 
 /**
  * Whether [sql], read with core's ClickHouse tokens, holds an INSERT whose rows follow as inline data:
- * a `VALUES` before the INSERT's query, or a `FORMAT`, after an `INSERT` at its parenthesis depth (also under `EXPLAIN`),
+ * a `VALUES` or `FORMAT` before the INSERT's query, after an `INSERT` at its parenthesis depth (also under `EXPLAIN`),
  * or inline data core already separated. Strings and comments never count; text core cannot
  * tokenize counts when it holds an `INSERT`.
  */
@@ -335,9 +335,9 @@ internal fun hasInlineData(sql: String): Boolean {
             TokenType.R_PAREN -> depth--
             TokenType.INSERT -> if (insertDepth == null) insertDepth = depth
             TokenType.SELECT, TokenType.WITH -> if (insertDepth == depth) query = true
-            // After the INSERT's query, `values(...)` is a table function; FORMAT still names the data's format (`input()`).
-            TokenType.VALUES -> if (insertDepth == depth && !query) return true
-            TokenType.FORMAT -> if (insertDepth == depth) return true
+            // After the INSERT's query, `values(...)` is a table function, and a FORMAT has data only when the
+            // query reads it (`input()`), which core separates as INSERT_DATA.
+            TokenType.VALUES, TokenType.FORMAT -> if (insertDepth == depth && !query) return true
             else -> Unit
         }
     }

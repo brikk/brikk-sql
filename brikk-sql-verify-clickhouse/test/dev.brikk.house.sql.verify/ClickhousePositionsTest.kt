@@ -54,6 +54,8 @@ internal class ClickhousePositionsTest {
         assertIs<VerifyResult.Unverified>(verifier.verify("EXPLAIN AST INSERT INTO t VALUES (1), (2"))
         assertIs<VerifyResult.Unverified>(verifier.verify("INSERT INTO t VALUES (1), (2"))
         assertEquals(VerifyResult.Accepted, verifier.verify("INSERT INTO t SELECT 'x FORMAT y'"))
+        assertEquals(VerifyResult.Accepted, verifier.verify("INSERT INTO t SELECT 1 FORMAT TSV"))
+        assertIs<VerifyResult.Unverified>(verifier.verify("INSERT INTO t SELECT a FROM input('a UInt8') FORMAT TSV\n1\n"))
     }
 
     @Test

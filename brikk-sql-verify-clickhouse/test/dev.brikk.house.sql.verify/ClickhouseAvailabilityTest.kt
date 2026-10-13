@@ -209,6 +209,7 @@ internal class ClickhouseAvailabilityTest {
         for (sql in listOf(
             "INSERT INTO t SELECT 'x FORMAT y'", "INSERT INTO t SELECT * FROM values('a UInt8', 1)", "SELECT 1 FORMAT JSON",
             "SELECT 'INSERT INTO t VALUES'", "INSERT INTO t SELECT 1 -- VALUES (1)",
+            "INSERT INTO t SELECT 1 FORMAT TSV", "INSERT INTO t SELECT * FROM s FORMAT JSONEachRow", "INSERT INTO t WITH 1 AS a SELECT a FORMAT CSV",
         )) assertFalse(hasInlineData(sql), sql)
     }
 }

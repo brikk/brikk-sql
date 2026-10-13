@@ -19,7 +19,8 @@ verifier.verify("SELECT 'ü' FRM t") // Rejected: "Syntax error at t: Expected o
 - **INSERT data.** The server parses an INSERT's header only; `VALUES` rows and `FORMAT` data are read
   when it runs (`INSERT INTO t VALUES (1), (2` formats as `INSERT INTO t FORMAT Values`). An accepted
   INSERT with inline data is `Unverified`, decided from core's ClickHouse tokens of the SQL (a `VALUES`
-  before the INSERT's query or a `FORMAT`, also under `EXPLAIN`), so text in strings never counts.
+  or `FORMAT` before the INSERT's query, or data core separates after one that reads `input()`, also
+  under `EXPLAIN`), so text in strings never counts.
 - **Cancellation.** `checkCanceled` is polled while the server works; what it throws cancels the
   query (on a worker: a JDBC cancel may itself wait on the server) and propagates. An interrupted
   caller gets a `CancellationException`. Calls are not single-flight.
