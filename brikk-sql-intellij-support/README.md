@@ -23,8 +23,9 @@ no internal-API annotation.
   `CANCEL`, ...) around whatever is registered under them, so plugins chain instead of replacing
   one another with `overrides="true"`. Its `ActionInterceptor` claims its own events (`update`:
   true shows, false hides, null leaves it to the wrapped action; `perform` returns `DECLINED` to
-  run the wrapped action, or runs it itself through `delegate`, as Doris's cancel runs the stock
-  cancel first, and returns `HANDLED`). Register a subclass as `dynamicActionConfigurationCustomizer`;
+  run the wrapped action, or `HANDLED`, having run it itself through `delegate` or not: Doris's
+  cancel would cancel on the client, then `KILL QUERY` on the server, and run the stock cancel only as
+  a fallback. `delegate` runs at most once, during `perform`, as the event is not valid afterwards). Register a subclass as `dynamicActionConfigurationCustomizer`;
   ids the IDE lacks are skipped, and unloading beneath a peer detaches as for Execute.
 - `EditorSnapshot`: refuse stale document identity/revisions, including edit/revert,
   with `SqlExecutionRefusal`. Cancellation propagates unchanged. `captureAfterSave`
