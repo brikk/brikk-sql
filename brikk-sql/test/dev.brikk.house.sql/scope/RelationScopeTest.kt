@@ -90,6 +90,23 @@ class RelationScopeTest {
     }
 
     @Test
+    fun qualifiersMatchTheWholeTableName() {
+        val two = RelationFacts(tables = mapOf(
+            "one.t" to RelationFact(listOf(ColumnFact("id", provenance = "one"))),
+            "two.t" to RelationFact(listOf(ColumnFact("id", provenance = "two"))),
+            "db.v" to RelationFact(listOf(ColumnFact("a"))),
+        ))
+        val sql = "SELECT two.t.id, one.t.id, t.id FROM one.t CROSS JOIN two.t"
+        val scope = analyze(sql, input = two)
+        assertEquals("two", scope.column(sql, "id").columns.single().provenance)
+        assertEquals("one", scope.column(sql, "id", 1).columns.single().provenance)
+        assertEquals(Resolution.AMBIGUOUS, scope.column(sql, "id", 2).resolution)
+        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), analyze("SELECT other.v.a FROM db.v", input = two).problems())
+        assertEquals(emptyList(), analyze("SELECT db.v.a, v.a FROM v", input = two).problems())
+        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), analyze("SELECT db.v.a FROM db.v x", input = two).problems())
+    }
+
+    @Test
     fun slotsMatchExactlyAndOnlyWithoutArgumentsOrQualifiers() {
         assertTrue(analyze("SELECT e.nope FROM Events() e").diagnostics.isEmpty())
         assertTrue(analyze("SELECT e.nope FROM events(1) e").diagnostics.isEmpty())

@@ -48,6 +48,9 @@ internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Un
         return null
     } catch (_: TokenError) {
         return null
+    } catch (_: StackOverflowError) {
+        // The parser recurses per bracket; on a small thread stack its nesting cap may not be reached first.
+        return null
     }
     checkCanceled()
     return ParsedRegion(lexed.tokens, statements.filterNotNull().filterNot { it is Semicolon })
@@ -217,13 +220,14 @@ internal class CaretCompletion(
     private fun candidates(evaluator: ScopeEvaluator, site: ScopeEvaluator.CaretSite): Pair<List<ScopeColumn>, Knowledge> {
         val frame = site.frame ?: return emptyList<ScopeColumn>() to Knowledge.UNKNOWN
         val qualifier = site.qualifier
-        if (qualifier == null) {
+        if (qualifier.isEmpty()) {
             val absence = generateSequence(frame) { it.outer }.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.absence) }
             return evaluator.visible(frame) to absence
         }
-        evaluator.findBinding(frame, qualifier)?.let { return it.columns to it.knowledge }
+        val bindings = evaluator.findBindings(frame, qualifier)
+        if (bindings.isNotEmpty()) return bindings.flatMap { it.columns } to bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }
         // A struct's fields are beyond the facts; an unknown qualifier names nothing, unless an open relation may hold the struct.
-        val field = evaluator.unqualified(frame, qualifier)
+        val field = evaluator.unqualified(frame, qualifier.first())
         return emptyList<ScopeColumn>() to if (field.candidates.isNotEmpty()) Knowledge.UNKNOWN else field.knowledge
     }
 

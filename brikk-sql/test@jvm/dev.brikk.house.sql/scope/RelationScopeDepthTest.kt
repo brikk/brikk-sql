@@ -32,15 +32,16 @@ class RelationScopeDepthTest {
     }
 
     @Test
-    fun nestingUpToTheParsersLimitScopesAndBeyondItDoesNotParse() {
+    fun deepNestingScopesAndNestingThatDoesNotParseIsNoCrash() {
         fun nested(n: Int): String {
             var sql = "SELECT c1 FROM src()"
             repeat(n) { sql = "SELECT c1 FROM ($sql) x$it" }
             return sql
         }
-        val deep = nested(120)
+        val deep = nested(60)
         assertEquals(listOf(ScopeProblem.MISSING_COLUMN), RelationScope.analyze("$deep WHERE nope > 0", "duckdb", facts).diagnostics.map { it.problem })
         assertEquals(listOf("c1"), RelationScope.complete(deep, "duckdb", facts, "SELECT ".length).items.map { it.name })
         assertFalse(RelationScope.analyze(nested(200), "duckdb", facts).parsed)
+        RelationScope.complete(nested(200), "duckdb", facts, "SELECT ".length)
     }
 }

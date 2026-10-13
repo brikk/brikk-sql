@@ -47,6 +47,8 @@ internal class Binding(
     val qualifiable: Boolean,
     val relation: ScopeRelation,
     val columns: List<ScopeColumn>,
+    /** The stored names a qualifier may spell it with, last part last: `db.t` for an unaliased table. */
+    val path: List<String> = listOf(name),
 ) {
     val knowledge: Knowledge get() = relation.knowledge
 }
@@ -105,7 +107,7 @@ internal class ScopeEvaluator(
     var caret: CaretSite? = null
         private set
 
-    class CaretSite(val frame: Frame?, val qualifier: Identifier?)
+    class CaretSite(val frame: Frame?, val qualifier: List<Identifier>)
 
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {
         // Recursion follows query nesting only, which the parser caps at its bracket depth.
@@ -153,7 +155,7 @@ internal class ScopeEvaluator(
             checkCanceled()
             val star = projection as? Star ?: (projection as? Column)?.thisArg as? Star
             if (star != null) {
-                val bindings = if (projection is Column) listOfNotNull(qualifiedStar(projection, from)) else from.bindings
+                val bindings = if (projection is Column) qualifiedStar(projection, from) else from.bindings
                 val (columns, knowledge) = if (projection is Column && bindings.isEmpty()) emptyList<ScopeColumn>() to Knowledge.UNKNOWN
                     else star(star, bindings, if (projection is Column) emptyList() else from.merged, from, env, context)
                 projections += columns
@@ -338,13 +340,13 @@ internal class ScopeEvaluator(
             if (facts.catalog == CatalogKnowledge.CLOSED) {
                 diagnose(ScopeProblem.UNKNOWN_TABLE, "Unknown table '${parts.joinToString(".") { it.name }}'", parts.firstOrNull() ?: name, name)
             }
-            return Binding(stored(name), true, ScopeRelation(stored(name), RelationKind.TABLE, knowledge), emptyList())
+            return Binding(stored(name), true, ScopeRelation(stored(name), RelationKind.TABLE, knowledge), emptyList(), parts.map(::stored))
         }
         val (key, fact) = match
         val label = stored(name)
         val relation = ScopeRelation(label, RelationKind.TABLE, fact.knowledge, key, fact.provenance)
         reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, fact.knowledge, relation = relation, start = parts.firstOrNull())
-        return Binding(label, true, relation, fact.columns.map { it.visible(key, label) })
+        return Binding(label, true, relation, fact.columns.map { it.visible(key, label) }, path(parts, key))
     }
 
     private fun tableFunction(node: Table, function: Anonymous, env: Env, lateral: Frame): Binding {
@@ -400,7 +402,7 @@ internal class ScopeEvaluator(
         Binding(name, name.isNotEmpty(), ScopeRelation(name, kind, Knowledge.UNKNOWN), emptyList())
 
     private fun nullable(binding: Binding) =
-        Binding(binding.name, binding.qualifiable, binding.relation, binding.columns.map { it.copy(nullability = Nullability.NULLABLE) })
+        Binding(binding.name, binding.qualifiable, binding.relation, binding.columns.map { it.copy(nullability = Nullability.NULLABLE) }, binding.path)
 
     /** DuckDB renames repeated output names of a derived table: the second `id` becomes `id_1`. */
     private fun deduplicated(columns: List<ScopeColumn>): List<ScopeColumn> {
@@ -465,17 +467,25 @@ internal class ScopeEvaluator(
         return out
     }
 
-    private fun qualifiedStar(column: Column, frame: Frame): Binding? {
-        val qualifier = column.args["table"] as? Identifier ?: return null
-        val binding = findBinding(frame, qualifier)
-        if (binding == null) {
-            val absence = unqualified(frame, qualifier).knowledge
-            reference(ReferenceKind.QUALIFIER, qualifier, Resolution.UNRESOLVED, absence)
-            if (absence == Knowledge.FULL) diagnose(ScopeProblem.UNKNOWN_QUALIFIER, "Unknown relation '${qualifier.name}'", qualifier, qualifier)
+    private fun qualifiedStar(column: Column, frame: Frame): List<Binding> {
+        val qualifier = column.qualifier()
+        val last = qualifier.lastOrNull() ?: return emptyList()
+        val bindings = findBindings(frame, qualifier)
+        if (bindings.isEmpty()) {
+            val absence = unqualified(frame, qualifier.first()).knowledge
+            reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, absence, start = qualifier.first())
+            if (absence == Knowledge.FULL) diagnose(ScopeProblem.UNKNOWN_QUALIFIER, "Unknown relation '${qualifier.joinToString(".") { it.name }}'", qualifier.first(), last)
         } else {
-            reference(ReferenceKind.QUALIFIER, qualifier, Resolution.RESOLVED, binding.knowledge, relation = binding.relation)
+            qualify(qualifier, bindings)
         }
-        return binding
+        return bindings
+    }
+
+    /** A qualifier's reference: its relation, or every one it could mean. */
+    private fun qualify(qualifier: List<Identifier>, bindings: List<Binding>) {
+        val single = bindings.singleOrNull()
+        reference(ReferenceKind.QUALIFIER, qualifier.last(), if (single != null) Resolution.RESOLVED else Resolution.AMBIGUOUS,
+            bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }, relation = single?.relation, start = qualifier.first())
     }
 
     /** A projection's output column: the referenced column, renamed, or a computed one. */
@@ -677,40 +687,47 @@ internal class ScopeEvaluator(
 
     private fun column(node: Column, identifier: Identifier, frame: Frame?) {
         if (++resolutions % 256 == 0) checkCanceled()
-        val qualifier = node.args["table"] as? Identifier
+        val qualifier = node.qualifier()
         if (caretMarker != null && caretMarker in identifier.name) {
             // Lowering may place the caret's node twice (an AGGREGATE grouping also projects); the first is where it was written.
             if (caret == null) caret = CaretSite(frame, qualifier)
             return
         }
-        if (qualifier == null) {
+        if (qualifier.isEmpty()) {
             record(identifier, node, frame?.let { unqualified(it, identifier) } ?: Lookup(emptyList(), Knowledge.UNKNOWN))
             return
         }
-        if (caretMarker != null && caretMarker in qualifier.name) return
-        val binding = frame?.let { findBinding(it, qualifier) }
-        if (binding != null) {
-            reference(ReferenceKind.QUALIFIER, qualifier, Resolution.RESOLVED, binding.knowledge, relation = binding.relation)
-            record(identifier, node, Lookup(binding.columns.filter { same(identifier, it.name, columns = true) }, binding.knowledge))
+        if (caretMarker != null && qualifier.any { caretMarker in it.name }) return
+        val bindings = frame?.let { findBindings(it, qualifier) }.orEmpty()
+        if (bindings.isNotEmpty()) {
+            qualify(qualifier, bindings)
+            val candidates = bindings.flatMap { binding -> binding.columns.filter { same(identifier, it.name, columns = true) } }
+            record(identifier, node, Lookup(candidates, bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }))
             return
         }
-        val field = frame?.let { unqualified(it, qualifier) } ?: Lookup(emptyList(), Knowledge.UNKNOWN)
+        val first = qualifier.first()
+        val last = qualifier.last()
+        val field = frame?.let { unqualified(it, first) } ?: Lookup(emptyList(), Knowledge.UNKNOWN)
         if (field.candidates.isNotEmpty()) {
             // A struct field: the qualifier is a column, the field is beyond what facts describe.
-            record(qualifier, null, field)
+            record(first, null, field)
             record(identifier, null, Lookup(emptyList(), Knowledge.UNKNOWN))
             return
         }
         if (field.knowledge != Knowledge.FULL) {
             // It may be a struct column of a relation whose columns are not all known.
-            reference(ReferenceKind.QUALIFIER, qualifier, Resolution.UNRESOLVED, field.knowledge)
+            reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, field.knowledge, start = first)
             record(identifier, null, Lookup(emptyList(), Knowledge.UNKNOWN))
             return
         }
-        reference(ReferenceKind.QUALIFIER, qualifier, Resolution.UNRESOLVED, Knowledge.FULL)
-        diagnose(ScopeProblem.UNKNOWN_QUALIFIER, "Unknown relation '${qualifier.name}'", qualifier, qualifier)
+        reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, Knowledge.FULL, start = first)
+        diagnose(ScopeProblem.UNKNOWN_QUALIFIER, "Unknown relation '${qualifier.joinToString(".") { it.name }}'", first, last)
         record(identifier, null, Lookup(emptyList(), Knowledge.FULL), report = false)
     }
+
+    /** A column's qualifier parts, outermost first: `catalog.db.t`. */
+    private fun Column.qualifier(): List<Identifier> =
+        listOf("catalog", "db", "table").mapNotNull { args[it] as? Identifier }
 
     class Lookup(val candidates: List<ScopeColumn>, val knowledge: Knowledge) {
         val single: ScopeColumn? get() = candidates.singleOrNull()
@@ -736,13 +753,17 @@ internal class ScopeEvaluator(
         return if (frame.aliasesFirst) emptyList() else frame.aliases.matching()
     }
 
-    fun findBinding(frame: Frame, qualifier: Identifier): Binding? {
+    /** The relations [qualifier] names in the nearest frame that has one: a suffix of their path, part by part. */
+    fun findBindings(frame: Frame, qualifier: List<Identifier>): List<Binding> {
         var current: Frame? = frame
         while (current != null) {
-            current.bindings.firstOrNull { it.qualifiable && same(qualifier, it.name, columns = false) }?.let { return it }
+            current.bindings.filter { binding ->
+                binding.qualifiable && binding.path.size >= qualifier.size &&
+                    binding.path.takeLast(qualifier.size).zip(qualifier).all { (part, written) -> same(written, part, columns = false) }
+            }.takeIf { it.isNotEmpty() }?.let { return it }
             current = current.outer
         }
-        return null
+        return emptyList()
     }
 
     /** Every column an unqualified name could reach in [frame], nearest first. */
@@ -830,6 +851,12 @@ internal class ScopeEvaluator(
     /** Whether two stored or provider names are the same; only folding dialects ignore case. */
     private fun same(left: String, right: String, columns: Boolean = true): Boolean =
         left == right || folds(columns) && fold(left) == fold(right)
+
+    /** A table's qualifying path: as written, completed by the catalog key's leading parts. */
+    private fun path(parts: List<Identifier>, key: String): List<String> {
+        val keys = key.split('.')
+        return keys.take(keys.size - parts.size) + parts.map(::stored)
+    }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
         val keys = key.split('.')
