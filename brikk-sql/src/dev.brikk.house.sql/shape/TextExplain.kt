@@ -149,19 +149,25 @@ fun prepareTextExplain(
 /** Why [node] of the query [sql] must not be planned, or null. */
 private fun refusal(node: Expression, sql: String, dialect: String, isBuiltinFunction: (String) -> Boolean): String? = when {
     node::class in STATEMENTS -> "The query holds a statement (${node.key.uppercase()}), which EXPLAIN may run."
-    node is Hint -> "The query has an optimizer hint, which may set session variables for it (Doris SET_VAR)."
+    node is Hint -> HINT
     node is FunctionSpecification || node is UserDefinedFunction -> "The query declares a routine, which the engine may run while planning."
     node is Placeholder || node is Parameter -> PARAMETERS
     node is Table && node.args["this"] is Func -> "The query reads a table function, which the engine may run while planning: ${node.sql(dialect)}"
     node is Func && node.parent is Dot -> "The query calls a routine, which the engine may run while planning: ${node.sql(dialect)}"
-    node is Func -> when (val name = writtenName(node, sql)) {
-        null -> if (isGrammarForm(node) || isSynthesized(node)) null else "The query calls a function whose name is not known: ${node.sql(dialect)}"
-        else -> if (isGrammarForm(node) || isBuiltinFunction(name)) null else "The query calls $name, which is not a built-in function the engine is known to plan safely."
+    // Whatever node a call became, its name is checked: Doris PARSE_JSON(...) parses as JSON '...' does, yet calls a UDF.
+    else -> when (val name = writtenName(node, sql)) {
+        null -> if (node !is Func || isGrammarForm(node) || isSynthesized(node)) null else "The query calls a function whose name is not known: ${node.sql(dialect)}"
+        else -> if (name.uppercase() in KEYWORD_SYNTAX || isBuiltinFunction(name)) null else "The query calls $name, which is not a built-in function the engine is known to plan safely."
     }
-    else -> null
 }
 
-/** Operators, literals and keyword forms that are no function a user could define (`a AND b`, `TIMESTAMP '...'`, `CASE`, `ARRAY[...]`). */
+/** Names of keyword syntax the parser records like a call's, but which no function provides (`CASE ... END`, `CAST(x AS t)`, `ARRAY[...]`). */
+private val KEYWORD_SYNTAX = setOf(
+    "CASE", "CAST", "TRY_CAST", "EXTRACT", "ARRAY", "ROW", "INTERVAL", "DATE", "TIME", "TIMESTAMP",
+    "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "LOCALTIME", "LOCALTIMESTAMP",
+)
+
+/** Nodes without a recorded name that are no function a user could define: operators and literals (`a AND b`, `TIMESTAMP '...'`, `JSON '...'`). */
 private fun isGrammarForm(node: Expression): Boolean = node is Cast || node::class in GRAMMAR_FORMS
 
 /** A node a parser built for a named call, as Doris `TO_DAYS(x)` becomes `(DateDiff(TsOrDsToDate(x), ...) + 1)`: part of that call. */
@@ -190,6 +196,8 @@ private val GRAMMAR_FORMS = setOf(
     Unnest::class, ParseJSON::class, Extract::class, CurrentDate::class, CurrentTimestamp::class,
     JSONArrayContains::class, JSONExtract::class, JSONExtractScalar::class, Soundex::class,
 )
+
+private const val HINT = "The query has an optimizer hint, which may set session variables for it (Doris SET_VAR)."
 
 private val STATEMENTS = setOf(
     Insert::class, Update::class, Delete::class, Merge::class, Create::class, Drop::class, Alter::class, Command::class,

@@ -91,6 +91,24 @@ class TextExplainTest {
         }
     }
 
+    /**
+     * A recorded name is checked whatever node the parser built for it: Doris has no built-in `parse_json`
+     * and falls back to a UDF of that name, though `PARSE_JSON(...)` parses into the same node as `JSON '...'`.
+     */
+    @Test
+    fun recordedNamesAreCheckedWhateverNodeTheyBecome() {
+        val none: (String) -> Boolean = { false }
+        for ((dialect, sql) in listOf(
+            "doris" to "SELECT PARSE_JSON('{}')",
+            "doris" to "SELECT TO_DAYS(x) FROM t",
+            "doris" to "SELECT ARRAY_SUM([1])",
+            "trino" to "SELECT JSON_PARSE('{}')",
+            "trino" to "SELECT approx_percentile(x, 0.5) FROM t",
+            "trino" to "SELECT regexp_like(s, 'a') FROM t",
+        )) assertIs<ExplainPreparation.Refused>(prepareTextExplain(sql, dialect, isBuiltinFunction = none), "$dialect: $sql")
+        assertIs<ExplainPreparation.Ready>(prepareTextExplain("SELECT JSON '{}'", "trino", isBuiltinFunction = none), "a JSON literal calls nothing")
+    }
+
     /** Operators, literals and keyword forms, and nodes a parser synthesizes inside a named call, are not calls of their own. */
     @Test
     fun grammarFormsAndSynthesizedNodesNeedNoName() {
