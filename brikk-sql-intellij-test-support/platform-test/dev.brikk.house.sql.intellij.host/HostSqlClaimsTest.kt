@@ -215,4 +215,23 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         placeholder(")(")
         assertEmpty(verifierReports())
     }
+
+    fun testTheGutterIconIsDimmedWhileIndexing() {
+        val markers = object : HostSqlLineMarkerProvider(channel, "Claimed SQL strings", SqlLookupIcons.BrikkColumn) {
+            override fun tooltip(state: HostSqlState) = "SQL string"
+        }
+        LineMarkerProviders.getInstance().addExplicitExtension(mysql, markers, testRootDisposable)
+        IconLoader.activate()
+        Disposer.register(testRootDisposable, IconLoader::deactivate)
+        claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
+        open("SELECT 'SELECT 1'")
+        assertEquals(listOf(false), myFixture.findAllGutters().filter { it.tooltipText == "SQL string" }.map { it.icon != SqlLookupIcons.BrikkColumn })
+        DumbModeTestUtils.runInDumbModeSynchronously(project) {
+            assertTrue(markers in LineMarkersPass.getMarkerProviders(mysql, project))
+            // The daemon waits for indexing in tests; the provider is asked directly.
+            val infos = mutableListOf<LineMarkerInfo<*>>()
+            markers.collectSlowLineMarkers(SyntaxTraverser.psiTraverser(myFixture.file).filter { it.firstChild == null }.toList(), infos)
+            assertEquals(listOf(true), infos.map { it.icon != SqlLookupIcons.BrikkColumn })
+        }
+    }
 }

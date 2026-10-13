@@ -6,6 +6,7 @@ import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.VirtualFile
@@ -21,16 +22,16 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * A gutter icon on each host string [channel] claims, named [name] in Settings | Editor | General |
- * Gutter Icons so users can turn it off. Pending and unavailable strings show the icon dimmed. The
- * tooltip is the caller's. Register a no-arg subclass as a `codeInsight.lineMarkerProvider` for the
- * host language.
+ * Gutter Icons so users can turn it off. Pending and unavailable strings, and every string while the
+ * IDE indexes, show the icon dimmed. The tooltip is the caller's. Register a no-arg subclass as a
+ * `codeInsight.lineMarkerProvider` for the host language.
  */
 @ApiStatus.Experimental
 public abstract class HostSqlLineMarkerProvider(
     private val channel: HostSqlChannel,
     private val name: String,
     private val icon: Icon,
-) : LineMarkerProviderDescriptor() {
+) : LineMarkerProviderDescriptor(), DumbAware {
     /** The tooltip of a claimed host string in [state]. */
     protected abstract fun tooltip(state: HostSqlState): String
 
@@ -38,15 +39,20 @@ public abstract class HostSqlLineMarkerProvider(
 
     final override fun getIcon(): Icon = icon
 
-    final override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
-        if (element.firstChild != null) return null
-        val host = hostStartingAt(element) ?: return null
-        // Injection is lazy: inject the host now, so its state is current.
-        InjectedLanguageManager.getInstance(host.project).getInjectedPsiFiles(host)
-        val state = channel.state(host) ?: return null
-        val dimmed = state.claim is HostSqlClaim.Unavailable || (state.claim as? HostSqlClaim.Injected)?.pending == true
-        val text = tooltip(state)
-        return LineMarkerInfo(element, element.textRange, if (dimmed) IconLoader.getDisabledIcon(icon) else icon, { text }, null, GutterIconRenderer.Alignment.LEFT) { text }
+    // Markers need the host's injection, which is not cheap: they are all slow ones.
+    final override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? = null
+
+    final override fun collectSlowLineMarkers(elements: List<PsiElement>, result: MutableCollection<in LineMarkerInfo<*>>) {
+        for (element in elements) {
+            if (element.firstChild != null) continue
+            val host = hostStartingAt(element) ?: continue
+            InjectedLanguageManager.getInstance(host.project).getInjectedPsiFiles(host)
+            val state = channel.state(host) ?: continue
+            val dimmed = DumbService.isDumb(host.project) || state.claim is HostSqlClaim.Unavailable ||
+                (state.claim as? HostSqlClaim.Injected)?.pending == true
+            val text = tooltip(state)
+            result += LineMarkerInfo(element, element.textRange, if (dimmed) IconLoader.getDisabledIcon(icon) else icon, { text }, null, GutterIconRenderer.Alignment.LEFT) { text }
+        }
     }
 
     /** The injection host whose first leaf [leaf] is. */
