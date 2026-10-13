@@ -5921,6 +5921,7 @@ open class Parser(
         val local = matchTextSeq("LOCAL")
         var alternative: String? = null
         var isFunction: kotlin.Boolean? = null
+        var functionPartition: Expression? = null
 
         var this_: Expression?
         if (matchTextSeq("DIRECTORY")) {
@@ -5949,7 +5950,18 @@ open class Parser(
             match(TokenType.TABLE)
             isFunction = match(TokenType.FUNCTION)
 
-            this_ = if (isFunction) parseFunction() else parseInsertTable()
+            this_ = if (isFunction) {
+                // ClickHouse: FUNCTION tf(...) [PARTITION BY expr [AS alias]] [(columns)]; the column list follows the partition.
+                val function = parseFunction()
+                if (match(TokenType.PARTITION_BY)) {
+                    val partition = parseDisjunction()
+                    val named = if (match(TokenType.ALIAS)) expression(Alias(args("this" to partition, "alias" to parseIdVar(anyToken = true)))) else partition
+                    functionPartition = expression(PartitionedByProperty(args("this" to named)))
+                }
+                tryParse({ parseSchema(function) }) ?: function
+            } else {
+                parseInsertTable()
+            }
         }
 
         // MySQL's INSERT ... SET is normalized into INSERT ... (cols) VALUES (vals).
@@ -6014,7 +6026,7 @@ open class Parser(
                     "exists" to exists,
                     "where" to replaceWhere,
                     "using" to replaceUsing,
-                    "partition" to (if (match(TokenType.PARTITION_BY)) parsePartitionedBy() else false),
+                    "partition" to (functionPartition ?: if (match(TokenType.PARTITION_BY)) parsePartitionedBy() else false),
                     "settings" to (if (matchTextSeq("SETTINGS")) parseSettingsProperty() else false),
                     "default" to matchTextSeq("DEFAULT", "VALUES"),
                     "expression" to (setValues ?: parseDerivedTableValues(allowValueSynonym = true) ?: parseDdlSelect()),

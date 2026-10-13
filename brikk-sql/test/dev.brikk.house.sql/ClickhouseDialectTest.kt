@@ -104,4 +104,33 @@ class ClickhouseDialectTest {
             assertEquals(sql, roundTrip(sql))
         }
     }
+
+    /**
+     * ClickHouse ParserInsertQuery: `INSERT INTO [TABLE] FUNCTION tf(...) [PARTITION BY expr [AS alias]]
+     * [(columns)] [SETTINGS ...] VALUES | FORMAT | SELECT`; the column list follows the partition.
+     */
+    @Test
+    fun insertIntoFunctionTakesAPartitionThenAColumnList() {
+        for (sql in listOf(
+            "INSERT INTO FUNCTION null('id UInt64') (id) SELECT 1",
+            "INSERT INTO FUNCTION null('id UInt64, ts DateTime') PARTITION BY toYYYYMM(ts) (id, ts) SELECT id, ts FROM events",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a % 10 (a, b) SELECT 1, 2",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY cityHash64(a) AS p (a, b) SELECT 1, 2",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a % 10 (a) SETTINGS s3_truncate_on_insert = 1 SELECT 1",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a SELECT 1",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a % 10 SETTINGS s3_truncate_on_insert = 1 SELECT 1",
+        )) assertEquals(sql, roundTrip(sql), sql)
+        assertEquals("INSERT INTO FUNCTION remote('h', db.t) (a, b) SELECT 1, 2", roundTrip("INSERT INTO TABLE FUNCTION remote('h', db.t) (a, b) SELECT 1, 2"))
+        // A subquery in parentheses is the data, not a column list.
+        assertEquals(
+            "INSERT INTO FUNCTION null('id UInt64') PARTITION BY a % 10 (SELECT 1)",
+            roundTrip("INSERT INTO FUNCTION null('id UInt64') PARTITION BY a % 10 (SELECT 1)"),
+        )
+        // The plugin's IDE bind shape: :prefix is read as a parameter, and the columns stay columns.
+        val bound = parseOne(
+            "INSERT INTO FUNCTION null('id UInt64, ts DateTime') PARTITION BY concat(:prefix, toString(ts)) (id, ts) SELECT id, ts FROM events",
+            "clickhouse",
+        )
+        assertEquals(listOf("id", "ts"), (bound.args["this"] as dev.brikk.house.sql.ast.Schema).expressionsArg.map { (it as dev.brikk.house.sql.ast.Expression).sql("clickhouse") })
+    }
 }

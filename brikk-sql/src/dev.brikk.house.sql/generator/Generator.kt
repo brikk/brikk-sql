@@ -1875,7 +1875,16 @@ open class Generator(
         if (alternative.isNotEmpty()) alternative = " OR $alternative"
         val ignore = if (expression.args["ignore"] == true) " IGNORE" else ""
         if (expression.args["is_function"] == true) thisKeyword = "$thisKeyword FUNCTION"
-        val thisSql = "$thisKeyword ${sql(expression, "this")}"
+        var partitionBy = sql(expression, "partition")
+        if (partitionBy.isNotEmpty()) partitionBy = " $partitionBy"
+        val target = expression.args["this"]
+        // ClickHouse: a table function's column list follows its PARTITION BY.
+        val thisSql = if (expression.args["is_function"] == true && target is Schema && partitionBy.isNotEmpty()) {
+            val columns = sql(Schema(args("expressions" to target.expressionsArg)))
+            "$thisKeyword ${sql(target, "this")}$partitionBy $columns".also { partitionBy = "" }
+        } else {
+            "$thisKeyword ${sql(expression, "this")}"
+        }
 
         val exists = if (expression.args["exists"] == true) " IF EXISTS" else ""
         var where = sql(expression, "where")
@@ -1893,8 +1902,6 @@ open class Generator(
             "$returning$expressionSql$onConflict"
         }
 
-        var partitionBy = sql(expression, "partition")
-        if (partitionBy.isNotEmpty()) partitionBy = " $partitionBy"
         var settings = sql(expression, "settings")
         if (settings.isNotEmpty()) settings = " $settings"
 
