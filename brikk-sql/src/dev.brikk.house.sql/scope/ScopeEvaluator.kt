@@ -354,7 +354,15 @@ internal class ScopeEvaluator(
             }
         }
         val parts = node.parts.filterIsInstance<Identifier>()
-        val match = facts.tables.entries.firstOrNull { (key, _) -> sameTable(key, parts) }
+        val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }
+        val match = matches.singleOrNull()
+            ?: facts.searchPath.firstNotNullOfOrNull { namespace -> matches.singleOrNull { (key, _) -> inNamespace(key, parts.size, namespace) } }
+        if (match == null && matches.size > 1) {
+            // Several tables answer to the name and the search path picks none: which one is unknown.
+            reference(ReferenceKind.TABLE, name, Resolution.AMBIGUOUS, Knowledge.UNKNOWN, start = parts.firstOrNull())
+            val label = parts.joinToString(".", transform = ::stored)
+            return Binding(label, true, ScopeRelation(label, RelationKind.TABLE, Knowledge.UNKNOWN), emptyList(), parts.map(::stored))
+        }
         if (match == null) {
             val knowledge = Knowledge.UNKNOWN
             reference(ReferenceKind.TABLE, name, Resolution.UNRESOLVED, knowledge, start = parts.firstOrNull())
@@ -912,6 +920,13 @@ internal class ScopeEvaluator(
     private fun path(parts: List<Identifier>, key: String): List<String> {
         val keys = key.split('.')
         return keys.take(keys.size - parts.size) + parts.map(::stored)
+    }
+
+    /** Whether the table [key], named by its last [named] parts, lies in [namespace], a dotted prefix as stored. */
+    private fun inNamespace(key: String, named: Int, namespace: String): Boolean {
+        val prefix = key.split('.').dropLast(named)
+        val path = namespace.split('.')
+        return path.size <= prefix.size && prefix.takeLast(path.size) == path
     }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {

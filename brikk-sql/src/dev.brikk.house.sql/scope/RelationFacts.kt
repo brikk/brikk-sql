@@ -76,6 +76,10 @@ enum class CatalogKnowledge {
  *   dialect's identifier rules, the last parts of a qualified name included.
  * - [calls]: the outputs of table functions, matched exactly like slots, called with any
  *   arguments, in `FROM` or a pipe `CALL`.
+ * - [searchPath]: the namespaces a partly qualified table name is looked up in, in order, each a
+ *   dotted key prefix as stored (`shop.b_db`), such as a console's current schema. A name several
+ *   tables match takes the one in the first namespace holding exactly one; when none does, the table
+ *   is ambiguous: unknown, never the first match and never reported as missing.
  */
 @Serializable
 data class RelationFacts(
@@ -83,4 +87,5 @@ data class RelationFacts(
     val tables: Map<String, RelationFact> = emptyMap(),
     val calls: Map<String, RelationFact> = emptyMap(),
     val catalog: CatalogKnowledge = CatalogKnowledge.OPEN,
+    val searchPath: List<String> = emptyList(),
 )

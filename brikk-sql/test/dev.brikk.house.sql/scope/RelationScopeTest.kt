@@ -95,6 +95,30 @@ class RelationScopeTest {
     }
 
     @Test
+    fun aNameSeveralTablesAnswerToIsLookedUpInTheSearchPath() {
+        fun table(only: String) = RelationFact(listOf(
+            ColumnFact("id", "INTEGER", origin = ColumnOrigin.PHYSICAL_TABLE), ColumnFact(only, "INTEGER", origin = ColumnOrigin.PHYSICAL_TABLE),
+        ))
+        val two = RelationFacts(tables = mapOf("shop.a_db.orders" to table("a_only"), "shop.b_db.orders" to table("b_only")), catalog = CatalogKnowledge.CLOSED)
+        fun problems(sql: String, vararg path: String) =
+            RelationScope.analyze(sql, "postgres", two.copy(searchPath = path.toList())).diagnostics.map { sql.substring(it.start, it.end) }
+        assertEquals(emptyList(), problems("SELECT b_only FROM orders", "shop.b_db"))
+        assertEquals(listOf("a_only"), problems("SELECT a_only FROM orders", "shop.b_db"))
+        assertEquals(listOf("b_only"), problems("SELECT b_only FROM orders", "a_db"))
+        // The first namespace holding the table decides; one holding neither is skipped.
+        assertEquals(emptyList(), problems("SELECT b_only FROM orders", "other", "b_db", "a_db"))
+        // No namespace picks one: neither a first match nor a missing table, just unknown.
+        assertEquals(emptyList(), problems("SELECT b_only, a_only, nope FROM orders"))
+        val ambiguous = RelationScope.analyze("SELECT id FROM orders", "postgres", two).references.single { it.kind == ReferenceKind.TABLE }
+        assertEquals(Resolution.AMBIGUOUS, ambiguous.resolution)
+        assertEquals(Knowledge.UNKNOWN, ambiguous.knowledge)
+        // A qualified name needs no search path.
+        assertEquals(emptyList(), problems("SELECT a_only FROM a_db.orders", "shop.b_db"))
+        val completion = RelationScope.complete("SELECT  FROM orders", "postgres", two.copy(searchPath = listOf("shop.a_db")), 7)
+        assertEquals(listOf("id", "a_only"), completion.items.map { it.name })
+    }
+
+    @Test
     fun qualifiersMatchTheWholeTableName() {
         val two = RelationFacts(tables = mapOf(
             "one.t" to RelationFact(listOf(ColumnFact("id", provenance = "one"))),
