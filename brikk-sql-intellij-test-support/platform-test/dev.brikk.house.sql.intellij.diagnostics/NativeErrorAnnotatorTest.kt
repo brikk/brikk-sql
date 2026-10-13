@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.diagnostics
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.codeInsight.highlighting.HighlightErrorFilter
 import com.intellij.lang.Language
@@ -65,6 +66,8 @@ class TestProfile(
     override var debounce: Duration = Duration.ZERO
     override var budget: Duration? = null
     var extra: List<SqlDiagnostic> = emptyList()
+    var revision = 0L
+    override fun modificationCount(file: PsiFile) = revision
     var custom: (String, SqlStatementRange) -> List<SqlDiagnostic>? = { _, _ -> null }
     override fun validator(file: PsiFile) = validator
     override fun fileDiagnostics(file: PsiFile, script: String) = extra
@@ -94,6 +97,7 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
             profile.debounce = Duration.ZERO
             profile.budget = null
             profile.extra = emptyList()
+            profile.revision = 0
             profile.custom = { _, _ -> null }
         }
     }
@@ -105,6 +109,11 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
 
     private var registered = false
 
+    private fun highlight(): List<HighlightInfo> {
+        DaemonCodeAnalyzer.getInstance(project).restart()
+        return myFixture.doHighlighting()
+    }
+
     private fun annotate(language: Language, annotator: NativeErrorAnnotator) =
         ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(language, annotator, testRootDisposable)
 
@@ -114,8 +123,8 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         registered = true
     }
 
-    /** The engine's diagnostics, as the text they mark and their message. */
-    private fun marks(prefix: String = "Engine"): List<Pair<String, String>> = myFixture.doHighlighting()
+    /** The engine's diagnostics, as the text they mark and their message, from a fresh pass as a plugin's restart gives. */
+    private fun marks(prefix: String = "Engine"): List<Pair<String, String>> = highlight()
         .filter { it.description?.startsWith(prefix) == true }
         .map { myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset)) to it.description }
 
@@ -207,6 +216,39 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         }, testRootDisposable)
         val shown = myFixture.doHighlighting().filter { it.severity == HighlightSeverity.ERROR }
         assertEquals(listOf("other annotator"), shown.map { it.description })
+    }
+
+    fun testASecondPassAtTheSameRevisionReusesTheVerdicts() {
+        open("SELECT bad;")
+        assertEquals(listOf("bad" to "Engine: no bad here"), marks())
+        assertEquals(listOf("bad" to "Engine: no bad here"), marks())
+        assertEquals(1, validator.asked.size)
+        // A changed dependency asks again: the profile's count, then a new validator instance.
+        postgresProfile.revision++
+        marks()
+        assertEquals(2, validator.asked.size)
+        val replacement = ScriptedValidator(::rejectBad)
+        postgresProfile.validator = replacement
+        marks()
+        assertEquals(1, replacement.asked.size)
+    }
+
+    fun testAnUnavailableEngineIsAskedAgain() {
+        var available = false
+        postgresProfile.validator = ScriptedValidator { if (available) rejectBad(it) else VerifyResult.Unavailable("connecting") }
+        open("SELECT bad;")
+        assertEquals(listOf<Pair<String, String>>(), marks())
+        available = true
+        assertEquals(listOf("bad" to "Engine: no bad here"), marks())
+        assertEquals(2, validator.asked.size)
+    }
+
+    fun testFileDiagnosticsAreReadOnEveryPass() {
+        open("SELECT 1;")
+        assertEquals(listOf<Pair<String, String>>(), marks())
+        postgresProfile.extra = listOf(SqlDiagnostic(DiagnosticSeverity.ERROR, "Engine (server): failed", 0, 6, DiagnosticSource.OTHER))
+        assertEquals(listOf("SELECT" to "Engine (server): failed"), marks())
+        assertEquals(1, validator.asked.size)
     }
 
     fun testAResultIsAppliedOnlyToItsRevision() {
@@ -352,6 +394,10 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         annotate(com.intellij.sql.psi.SqlLanguage.INSTANCE, object : NativeErrorAnnotator(TestProfile(com.intellij.sql.psi.SqlLanguage.INSTANCE, "postgres", "Base")) {})
         val infos = myFixture.doHighlighting().filter { it.description?.contains("no bad here") == true }
         assertSameElements(infos.map { it.description to it.startOffset }, "Engine: no bad here" to 7, "Injected: no bad here" to 20)
+        // Each consumer keeps its own results on the shared host file.
+        highlight()
+        assertEquals(1, validator.asked.size)
+        assertEquals(1, (mysqlProfile.validator as ScriptedValidator).asked.size)
     }
 
     fun testARealDuckdbVerifierEndToEnd() {

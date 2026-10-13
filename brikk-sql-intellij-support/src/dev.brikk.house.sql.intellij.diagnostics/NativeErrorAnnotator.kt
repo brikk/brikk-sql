@@ -33,6 +33,7 @@ import dev.brikk.house.sql.intellij.recoverEditorOperation
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.verify.VerifyResult
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration
 import org.jetbrains.annotations.ApiStatus
 
@@ -91,8 +92,19 @@ public interface NativeErrorProfile {
      */
     public fun statementDiagnostics(script: String, statement: SqlStatementRange): List<SqlDiagnostic>? = null
 
-    /** Diagnostics read with [file]'s PSI (a fragment, when injected), such as the last server error, positioned in [script]. */
+    /**
+     * Diagnostics read with [file]'s PSI (a fragment, when injected), such as the last server error,
+     * positioned in [script]. Read again whenever results are applied, so they change without an edit.
+     */
     public fun fileDiagnostics(file: PsiFile, script: String): List<SqlDiagnostic> = emptyList()
+
+    /**
+     * A count that changes whenever anything but [file]'s text can change its verdicts: settings, a
+     * connection, a newly available engine or data source. A result is reused only while it, the
+     * text and [validator]'s instance stay the same. Restart the daemon for the file when it changes,
+     * so that a pass runs.
+     */
+    public fun modificationCount(file: PsiFile): Long = 0
 
     /** The message shown for [diagnostic]. */
     public fun message(diagnostic: SqlDiagnostic): String = when (diagnostic.source) {
@@ -130,22 +142,33 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         internal val cached: Outcome?,
     )
 
+    /** What a source's verdicts depend on besides the document revision; the validator counts by instance. */
+    internal data class Dependencies(val script: String, val validator: NativeSqlValidator?, val revision: Long)
+
     /** One SQL text: [fragment] is its injected file, or null for the annotated file itself. */
     internal class Source(
         val fragment: PsiFile?,
-        val script: String,
-        val validator: NativeSqlValidator?,
-        val fileDiagnostics: List<SqlDiagnostic>,
+        val dependencies: Dependencies,
         val psiErrors: List<SqlDiagnostic>,
-    )
+    ) {
+        val script: String get() = dependencies.script
+        val validator: NativeSqlValidator? get() = dependencies.validator
+    }
 
-    /** One pass's diagnostics per source, for the revision of its [Snapshot]. */
+    /**
+     * One pass's diagnostics per source, for the revision of its [Snapshot]. It is [reusable] when
+     * every verdict is final: none was left out for an unavailable engine, a failure or the budget.
+     */
     public class Outcome internal constructor(
         internal val profile: NativeErrorProfile,
         internal val stamp: Long,
-        internal val scripts: List<String>,
+        internal val dependencies: List<Dependencies>,
         internal val diagnostics: List<List<SqlDiagnostic>>,
+        internal val reusable: Boolean,
     )
+
+    /** One profile's key, so consumers on one host file keep their own results. */
+    private val outcomeKey: Key<Outcome> = OUTCOME_KEYS.computeIfAbsent(profile.language.id) { Key.create("brikk.sql.native.errors.$it") }
 
     // Validating matters most where the file's PSI already has errors.
     final override fun collectInformation(file: PsiFile, editor: Editor, hasErrors: Boolean): Snapshot? = collectInformation(file)
@@ -159,12 +182,14 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         val stamp = PsiDocumentManager.getInstance(file.project).getDocument(file)?.modificationStamp ?: return null
         val texts = fragments.map { PipeText.of(it ?: file) }
         if (texts.all { it.text.isBlank() }) return null
-        file.getUserData(OUTCOME)?.takeIf { it.profile === profile && it.stamp == stamp && it.scripts == texts.map(PipeText::text) }
-            ?.let { return Snapshot(stamp, emptyList(), it) }
-        val sources = fragments.zip(texts) { fragment, text ->
+        val dependencies = fragments.zip(texts) { fragment, text ->
             val sqlFile = fragment ?: file
-            Source(fragment, text.text, profile.validator(sqlFile), profile.fileDiagnostics(sqlFile, text.text),
-                if (profile.reportsPsiErrors) psiErrors(text) else emptyList())
+            Dependencies(text.text, profile.validator(sqlFile), profile.modificationCount(sqlFile))
+        }
+        file.getUserData(outcomeKey)?.takeIf { it.profile === profile && it.stamp == stamp && it.dependencies == dependencies }
+            ?.let { return Snapshot(stamp, emptyList(), it) }
+        val sources = fragments.indices.map { index ->
+            Source(fragments[index], dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList())
         }
         return Snapshot(stamp, sources, null)
     }
@@ -174,8 +199,8 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         snapshot.cached?.let { return it }
         if (profile.debounce.isPositive() && snapshot.sources.any { it.validator != null }) pause(profile.debounce)
         val deadline = profile.budget?.let { System.nanoTime() + it.inWholeNanoseconds }
-        val diagnostics = snapshot.sources.map { check(it, deadline) }
-        return Outcome(profile, snapshot.stamp, snapshot.sources.map(Source::script), diagnostics)
+        val checks = snapshot.sources.map { check(it, deadline) }
+        return Outcome(profile, snapshot.stamp, snapshot.sources.map(Source::dependencies), checks.map { it.diagnostics }, checks.all { it.final })
     }
 
     final override fun apply(file: PsiFile, annotationResult: Outcome?, holder: AnnotationHolder) {
@@ -185,32 +210,37 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         if (document.modificationStamp != outcome.stamp) return
         val fragments = if (file.language == profile.language) listOf(null) else injectedFragments(file)
         val texts = fragments.map { PipeText.of(it ?: file) }
-        if (texts.map(PipeText::text) != outcome.scripts) return
-        file.putUserData(OUTCOME, outcome)
+        if (texts.map(PipeText::text) != outcome.dependencies.map(Dependencies::script)) return
+        file.putUserData(outcomeKey, outcome.takeIf { it.reusable })
         val manager = InjectedLanguageManager.getInstance(file.project)
-        val annotated = HashSet<TextRange>()
+        val annotated = HashSet<Pair<TextRange, String>>()
         for ((index, diagnostics) in outcome.diagnostics.withIndex()) {
             val fragment = fragments[index]
-            for (diagnostic in diagnostics) {
+            for (diagnostic in diagnostics + profile.fileDiagnostics(fragment ?: file, texts[index].text)) {
                 val local = texts[index].fileRange(diagnostic.start, diagnostic.end) ?: continue
                 val range = (if (fragment == null) local else manager.injectedToHost(fragment, local)).takeIf { it.endOffset <= file.textLength && !it.isEmpty } ?: continue
-                if (!annotated.add(range)) continue
+                val message = profile.message(diagnostic)
+                if (!annotated.add(range to message)) continue
                 val severity = if (diagnostic.severity == DiagnosticSeverity.WARNING) HighlightSeverity.WARNING else HighlightSeverity.ERROR
-                holder.newAnnotation(severity, profile.message(diagnostic)).range(range).create()
+                holder.newAnnotation(severity, message).range(range).create()
             }
         }
     }
 
-    /** The diagnostics of one source, positioned in its script. */
-    private fun check(source: Source, deadline: Long?): List<SqlDiagnostic> {
+    /** A source's diagnostics, positioned in its script, and whether every verdict in them is final. */
+    private class Check(val diagnostics: List<SqlDiagnostic>, val final: Boolean)
+
+    /** The diagnostics of one source. */
+    private fun check(source: Source, deadline: Long?): Check {
         val script = source.script
         val statements = when (profile.unit) {
             VerificationUnit.Statement -> SqlScriptSnapshot.parse(script, profile.dialect, ProgressManager::checkCanceled).statements
             VerificationUnit.File -> listOf(SqlStatementRange(0, script.length, hasSql = script.isNotBlank(), hasPipe = false))
         }
         val validator = source.validator
-        val diagnostics = ArrayList(source.fileDiagnostics)
+        val diagnostics = ArrayList<SqlDiagnostic>()
         val psiErrors = source.psiErrors.toMutableList()
+        var final = true
         for (statement in statements) {
             ProgressManager.checkCanceled()
             val inStatement = psiErrors.filter { it.start >= statement.start && it.start < statement.end }
@@ -223,15 +253,17 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             if (profile.sizeCap?.let { range.last + 1 - range.first > it } == true) continue
             psiErrors -= inStatement.toSet()
             val local = inStatement + if (profile.localParser) localDiagnostics(script, range) else emptyList()
-            val native = when {
-                validator == null -> NativeOutcome.NoVerdict("No native validator")
-                deadline != null && System.nanoTime() > deadline -> NativeOutcome.NoVerdict("Verification budget spent")
-                else -> nativeOutcome(validator, script.substring(range.first, range.last + 1))
+            val asked = when {
+                validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
+                deadline != null && System.nanoTime() > deadline -> Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)
+                else -> ask(validator, script.substring(range.first, range.last + 1))
             }
+            final = final && asked.final
+            val native = asked.outcome
             diagnostics += combineStatementDiagnostics(script, range, local, native, validator?.advisory == true).diagnostics
         }
         // The IDE parser's errors outside every checked statement have no verdict to answer them.
-        return (diagnostics + psiErrors).distinctByRange()
+        return Check((diagnostics + psiErrors).distinctByRange(), final)
     }
 
     private fun localDiagnostics(script: String, range: IntRange): List<SqlDiagnostic> =
@@ -240,18 +272,22 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             emptyList()
         }
 
-    private fun nativeOutcome(validator: NativeSqlValidator, sql: String): NativeOutcome {
+    /** An engine's [outcome]; not [final] when asking again could give a verdict (an unavailable engine, a failure, the budget). */
+    private class Asked(val outcome: NativeOutcome, val final: Boolean)
+
+    private fun ask(validator: NativeSqlValidator, sql: String): Asked {
         val text = profile.verificationText(sql)
-        if (text.length != sql.length) return NativeOutcome.NoVerdict("The verification text changed length")
+        if (text.length != sql.length) return Asked(NativeOutcome.NoVerdict("The verification text changed length"), final = true)
         val result = recoverEditorOperation { validator.verify(text, null) }.getOrElse {
             LOG.warn("The ${profile.label} validator failed on a statement; reporting no verdict for it", it)
-            return NativeOutcome.NoVerdict(it.message ?: "Validator failure")
+            return Asked(NativeOutcome.NoVerdict(it.message ?: "Validator failure"), final = false)
         }
         return when (result) {
-            VerifyResult.Accepted -> NativeOutcome.Accepted
-            is VerifyResult.Rejected -> NativeOutcome.Rejected(result.errors.map { NativeError(it.message, it.offset, it.endOffset, it.line, it.column) })
-            is VerifyResult.Unverified -> NativeOutcome.NoVerdict(result.reason)
-            is VerifyResult.Unavailable -> NativeOutcome.NoVerdict(result.reason)
+            VerifyResult.Accepted -> Asked(NativeOutcome.Accepted, final = true)
+            is VerifyResult.Rejected ->
+                Asked(NativeOutcome.Rejected(result.errors.map { NativeError(it.message, it.offset, it.endOffset, it.line, it.column) }), final = true)
+            is VerifyResult.Unverified -> Asked(NativeOutcome.NoVerdict(result.reason), final = true)
+            is VerifyResult.Unavailable -> Asked(NativeOutcome.NoVerdict(result.reason), final = false)
         }
     }
 
@@ -303,7 +339,7 @@ public abstract class NativeErrorPsiFilter(private val language: Language) : Hig
         element.containingFile?.language != language
 }
 
-/** The last applied outcome of a file, reused by later passes at the same revision. */
-private val OUTCOME = Key.create<NativeErrorAnnotator.Outcome>("brikk.sql.native.errors")
+/** Per profile language: a file's last final outcome, reused by later passes while its dependencies stay. */
+private val OUTCOME_KEYS = ConcurrentHashMap<String, Key<NativeErrorAnnotator.Outcome>>()
 
 private val LOG = logger<NativeErrorAnnotator>()
