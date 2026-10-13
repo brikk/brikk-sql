@@ -56,4 +56,12 @@ class PipeSequentialStagesTest {
         assertEquals("WITH __tmp1 AS (SELECT * FROM t JOIN u ON TRUE LIMIT 1) SELECT * FROM __tmp1 JOIN y ON TRUE",
             lowered("FROM t |> JOIN u ON true |> LIMIT 1 |> JOIN y ON true"))
     }
+
+    @Test
+    fun aJoinAfterWhereJoinsTheFilteredRows() {
+        assertEquals("WITH __tmp1 AS (SELECT * FROM t AS e WHERE e.a > 1) SELECT * FROM __tmp1 AS e FULL JOIN u AS r ON e.a = r.a",
+            lowered("FROM t e |> WHERE e.a > 1 |> FULL JOIN u r ON e.a = r.a"))
+        // Merged, the unqualified a would meet u's a.
+        assertEquals(emptyList(), problems("FROM t |> WHERE a > 1 |> JOIN u ON t.a = u.a"))
+    }
 }

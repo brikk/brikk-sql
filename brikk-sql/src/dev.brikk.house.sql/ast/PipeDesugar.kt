@@ -619,20 +619,22 @@ private fun Expression.isPlainStar(): kotlin.Boolean {
  * brikk extension: whether [stage], which rewrites [query]'s projection or FROM clause in place,
  * must instead read [query]'s finished rows: after a projection that is not a plain `*` (a
  * SELECT-first head, a SET or DROP star), or after clauses that would otherwise apply later
- * (an aggregate or window over a LIMIT, a JOIN after DISTINCT, a PIVOT after WHERE).
+ * (an aggregate or window over a LIMIT, a JOIN after DISTINCT or WHERE, a PIVOT after WHERE).
+ * A WHERE merged below a JOIN would filter the joined rows: an outer join's null-extended rows
+ * are lost, and the condition's unqualified names may meet the joined relation's.
  */
 private fun needsWholeRows(query: Expression, stage: Expression): kotlin.Boolean {
     val shaped = listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null }
     return when (stage) {
         is PipeExtend -> !query.isPlainStar() || query.args["distinct"] != null
-        is PipeWindow, is PipeAggregate, is PipeJoin -> !query.isPlainStar() || shaped
+        is PipeWindow, is PipeAggregate -> !query.isPlainStar() || shaped
+        is PipeJoin -> !query.isPlainStar() || shaped || query.args["where"] != null
         is PipePivot, is PipeUnpivot -> !query.isPlainStar() || shaped || query.args["where"] != null ||
             !(query.args["joins"] as? List<*>).isNullOrEmpty() || !(query.args["laterals"] as? List<*>).isNullOrEmpty()
         else -> false
     }
 }
 
-/** [query]'s rows behind a CTE; a single aliased source of a plain `*` keeps its alias, as a WHERE boundary does. */
 private fun wholeRowInput(query: Expression, stage: Expression, counter: PipeCteCounter): Select {
     val namespace = keptNamespace(query, stage, counter)
     val outer = buildPipeCte(query, listOf(Star()), counter)
