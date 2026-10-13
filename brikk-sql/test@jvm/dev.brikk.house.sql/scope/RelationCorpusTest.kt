@@ -1,6 +1,9 @@
 package dev.brikk.house.sql.scope
 
+import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.generator.UnsupportedError
+import dev.brikk.house.sql.optimizer.dataTypeFromStr
+import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.projectRoot
 import dev.brikk.house.sql.testResource
 import dev.brikk.house.sql.shape.ColumnShape
@@ -25,13 +28,14 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The relation acceptance corpus v2.1 (cases.jsonl and facts.json, copied unchanged from the
- * DuckDB plugin's src/test/resources/relation-corpus at f0c6488, kept out of testResources' sqlglot
+ * The relation acceptance corpus v2.2 (cases.jsonl and facts.json, copied unchanged from the
+ * DuckDB plugin's src/test/resources/relation-corpus at 13ad2d5, kept out of testResources' sqlglot
  * fixture pin check) against [RelationScope], for
  * every dialect each case is tagged with. Facts are copied as [RelationFacts]; observed results
- * are compared per axis exactly like the plugin harness: references, navigation, diagnostics,
+ * are compared per axis like the plugin harness, SQL types as types (INT is INTEGER): references, navigation, diagnostics,
  * caret scope and order, completion (the scope filtered by the typed prefix), core's output
- * order and pipe refusals. [DISPUTED] lists the expectations this analysis disagrees with and why.
+ * order, pipe refusals and declaration ranges; RelationCorpusExecutionTest (brikk-sql-verify) runs the
+ * coreExecution cases on DuckDB. [DISPUTES] lists the expectations this analysis disagrees with and why.
  */
 class RelationCorpusTest {
 
@@ -60,6 +64,7 @@ class RelationCorpusTest {
     @Test fun duckdb() = check("duckdb")
     @Test fun trino() = check("trino")
     @Test fun doris() = check("doris")
+    @Test fun postgres() = check("postgres")
 
     private fun check(dialect: String) {
         val applicable = cases.filter { case -> case.array("dialects").any { it.jsonPrimitive.content == dialect } }
@@ -132,6 +137,17 @@ class RelationCorpusTest {
                 sorted((caret["completionColumns"] ?: caret.getValue("columns")).jsonArray.map(::expectedColumn)),
                 sorted(scope.filter { it.name.startsWith(prefix, ignoreCase = true) }.map(::observed)))
         }
+        case["declarationRanges"]?.jsonArray?.map { it.jsonObject }?.let { declarations ->
+            axes += Triple("declarations",
+                JsonArray(declarations.map { declaration(it, it.array("targets").map { target -> target.jsonObject.int("start") to target.jsonObject.int("end") }) }),
+                JsonArray(declarations.map { expected ->
+                    val found = analysis.references.filter { it.start == expected.int("start") && it.end == expected.int("end") }
+                    declaration(expected, found.mapNotNull { reference ->
+                        (if (reference.kind == ReferenceKind.COLUMN) reference.columns.singleOrNull()?.declaration else reference.relation?.declaration)
+                            ?.let { it.start to it.end }
+                    }.distinct())
+                }))
+        }
         case["coreOrder"]?.let { order ->
             val inputs = ShapeCatalog(emptyMap(), case.getValue("relations").jsonObject.mapValues { (_, fact) ->
                 Shape(shapes.getValue(fact.jsonPrimitive.content).jsonObject.array("columns").map { key ->
@@ -177,7 +193,7 @@ class RelationCorpusTest {
         return column(
             override(2, "name"), tuple[1], JsonPrimitive(origin), column.getValue("kotlinType"),
             // A computed column's SQL type is asserted only where the corpus states one.
-            if (origin == "COMPUTED" && sqlType == JsonNull) JsonPrimitive("*") else sqlType,
+            if (origin == "COMPUTED" && sqlType == JsonNull) JsonPrimitive("*") else type(sqlType.jsonPrimitive.contentOrNull),
             override(3, "nullability"), override(5, "navigationId"),
             if (origin == "COMPUTED") JsonPrimitive("computed") else override(6, "identity"),
         )
@@ -187,7 +203,7 @@ class RelationCorpusTest {
         val origin = if (column.origin == ColumnOrigin.DECLARED) "KOTLIN_RELATION" else column.origin.name
         return column(
             JsonPrimitive(column.name), JsonPrimitive(column.relation), JsonPrimitive(origin), nullable(column.displayType),
-            nullable(column.sqlType), JsonPrimitive(column.nullability.name), nullable(column.provenance),
+            type(column.sqlType), JsonPrimitive(column.nullability.name), nullable(column.provenance),
             JsonPrimitive(column.source?.column?.let { identities[it] ?: "unmapped ${it.name}" } ?: "computed"),
         )
     }
@@ -215,6 +231,11 @@ class RelationCorpusTest {
         "targets" to JsonArray(targets.distinct().sorted().map(::JsonPrimitive)),
     ))
 
+    private fun declaration(expected: JsonObject, targets: List<Pair<Int, Int>>) = JsonObject(linkedMapOf(
+        "start" to expected.getValue("start"), "end" to expected.getValue("end"),
+        "targets" to JsonArray(targets.sortedBy { it.first }.map { (start, end) -> JsonArray(listOf(JsonPrimitive(start), JsonPrimitive(end))) }),
+    ))
+
     private fun diagnostic(kind: String, start: Int, end: Int) =
         JsonObject(linkedMapOf("kind" to JsonPrimitive(kind), "start" to JsonPrimitive(start), "end" to JsonPrimitive(end)))
 
@@ -233,6 +254,15 @@ class RelationCorpusTest {
     private fun sorted(values: Collection<JsonElement>) = JsonArray(values.sortedBy(JsonElement::toString))
 
     private fun nullable(value: String?): JsonElement = value?.let(::JsonPrimitive) ?: JsonNull
+
+    /** SQL types compare as types: INT and INTEGER, or the engine's VARCHAR and core's spelling, are one type. */
+    private fun type(sqlType: String?): JsonElement = nullable(sqlType?.let {
+        try {
+            Dialects.BASE.generate(dataTypeFromStr(it))
+        } catch (_: ParseError) {
+            it
+        }
+    })
     private fun JsonObject.string(key: String) = getValue(key).jsonPrimitive.content
     private fun JsonObject.stringOrNull(key: String) = this[key]?.jsonPrimitive?.contentOrNull
     private fun JsonObject.int(key: String) = getValue(key).jsonPrimitive.int
@@ -241,7 +271,7 @@ class RelationCorpusTest {
     private companion object {
         const val ACCEPTED = "relation-corpus/core-disputed-actuals.json"
         val TARGET_FIELDS = setOf("name", "relation", "identity", "navigationId")
-        val ORDERED = setOf("coreOrder", "outputOrder", "coreRefusal")
+        val ORDERED = setOf("coreOrder", "outputOrder", "coreRefusal", "declarations")
         val PROBLEMS = mapOf(
             ScopeProblem.MISSING_COLUMN to "MISSING",
             ScopeProblem.PARTIAL_CONTRACT to "PARTIAL_CONTRACT",
@@ -253,31 +283,7 @@ class RelationCorpusTest {
 
         class Dispute(val dialects: Set<String>, val axes: List<String>, val reason: String)
 
-        private val ALL = setOf("duckdb", "trino", "doris")
-
         /** Expectations this analysis disagrees with, and why; each axis must differ exactly as listed. */
-        val DISPUTES = listOf(
-            Dispute(ALL, listOf("references", "scope@31", "completion@31").map { "pipe-limit/$it" } +
-                listOf("references", "scope@32", "completion@32").flatMap { listOf("pipe-offset/$it", "pipe-distinct/$it") },
-                "The columns are expected through `src`, a qualifier the *-unaliased-qualifier-refused cases reject at the same " +
-                    "place (UNKNOWN_QUALIFIER, as core refuses it): a relation that cannot qualify is not visible. Once the unaliased " +
-                    "input namespace is not kept across the boundary, the row is anonymous, as after |> SELECT *."),
-            Dispute(ALL, listOf("pipe-call-unknown-output/scope@47"),
-                "PARTIAL claims known columns of `t`; an unknown table function's output is UNKNOWN, as slot-arguments " +
-                    "(`src(1) e`) expects for the same situation in FROM."),
-            Dispute(ALL, listOf("scope@79", "completion@79").map { "aggregate-group-expression-alias/$it" } +
-                listOf("scope@102", "completion@102").map { "unpivot-include-nulls/$it" },
-                "Not modelled: INTEGER for `price+qty` and for the UNPIVOT value of price and qty is the native engine's type; " +
-                    "the facts give price and qty no SQL type (only kotlin.Int), and no SQL type is inferred from a display type."),
-            Dispute(setOf("duckdb", "doris"), listOf("scope@60", "completion@60").map { "portable-group-expression/$it" },
-                "At the same caret, ordinary-group-alias lists the alias `kind` for DuckDB and Doris, whose GROUP BY sees " +
-                    "projection aliases; one inventory cannot both list and omit it. Trino, where GROUP BY cannot, passes."),
-            Dispute(setOf("doris"), listOf("references", "navigation", "scope@19", "completion@19").map { "quoted-source-alias/$it" },
-                "Doris reads double quotes as a string literal (MySQL rules without ANSI_QUOTES), so `\"Odd Alias\".id` is no " +
-                    "qualified column; core's Doris dialect generates it back as 'Odd Alias'.id."),
-            Dispute(setOf("trino"), listOf("pipe-star-join-duplicate-key/navigation"),
-                "An ambiguous reference offers the chooser over its candidates, as join-ambiguous and self-join-same-slot " +
-                    "expect; this case states no navigationTargets, so the expectation derives none from its empty targets."),
-        )
+        val DISPUTES = emptyList<Dispute>()
     }
 }
