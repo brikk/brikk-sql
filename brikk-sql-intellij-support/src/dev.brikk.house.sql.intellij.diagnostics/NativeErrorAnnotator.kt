@@ -217,7 +217,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         for ((index, diagnostics) in outcome.diagnostics.withIndex()) {
             val fragment = fragments[index]
             for (diagnostic in diagnostics + profile.fileDiagnostics(fragment ?: file, texts[index].text)) {
-                val local = texts[index].fileRange(diagnostic.start, diagnostic.end) ?: continue
+                val local = texts[index].fileRange(diagnostic.start, diagnostic.end) ?: editableRange(texts[index], diagnostic.start) ?: continue
                 val range = (if (fragment == null) local else manager.injectedToHost(fragment, local)).takeIf { it.endOffset <= file.textLength && !it.isEmpty } ?: continue
                 val message = profile.message(diagnostic)
                 if (!annotated.add(range to message)) continue
@@ -289,6 +289,25 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             is VerifyResult.Unverified -> Asked(NativeOutcome.NoVerdict(result.reason), final = true)
             is VerifyResult.Unavailable -> Asked(NativeOutcome.NoVerdict(result.reason), final = false)
         }
+    }
+
+    /**
+     * For an error at [start] of [source]'s text that lies wholly outside the editable parts of its
+     * injected fragment, such as in a prefix, suffix or template hole: one code point of the nearest
+     * editable part, the following one, else the last. Never drops the error while an editable part exists.
+     */
+    private fun editableRange(source: PipeText, start: Int): TextRange? {
+        val fragment = source.file
+        val manager = InjectedLanguageManager.getInstance(fragment.project)
+        if (!manager.isInjectedFragment(fragment)) return null
+        val point = manager.mapUnescapedOffsetToInjected(fragment, start)
+        val editable = manager.intersectWithAllEditableFragments(fragment, TextRange(0, fragment.textLength)).filterNot { it.isEmpty }
+        val text = fragment.text
+        editable.firstOrNull { it.startOffset >= point }?.let { following ->
+            return TextRange(following.startOffset, minOf(text.offsetByCodePoints(following.startOffset, 1), following.endOffset))
+        }
+        val last = editable.lastOrNull() ?: return null
+        return TextRange(maxOf(text.offsetByCodePoints(last.endOffset, -1), last.startOffset), last.endOffset)
     }
 
     /** The fragments of [NativeErrorProfile.language] injected into [host], in text order, Frankenstein ones left out. */

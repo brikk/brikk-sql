@@ -354,7 +354,7 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
     private var injectedRegistered = false
 
     /** Opens [hostText], a PostgreSQL file, with every string literal joined into one injected MySQL fragment. */
-    private fun openInjected(hostText: String, frankenstein: Boolean = false) {
+    private fun openInjected(hostText: String, frankenstein: Boolean = false, prefix: String? = null, suffix: String? = null) {
         myFixture.configureDialect("PostgreSQL", hostText)
         val manager = InjectedLanguageManager.getInstance(project)
         manager.registerMultiHostInjector(object : MultiHostInjector {
@@ -363,7 +363,7 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
                 val literals = PsiTreeUtil.findChildrenOfType(context.containingFile, SqlStringLiteralExpression::class.java).toList()
                 if (context != literals.firstOrNull()) return
                 registrar.startInjecting(mysql)
-                for (literal in literals) registrar.addPlace(null, null, literal as PsiLanguageInjectionHost, TextRange(1, literal.textLength - 1))
+                for (literal in literals) registrar.addPlace(prefix, suffix, literal as PsiLanguageInjectionHost, TextRange(1, literal.textLength - 1))
                 if (frankenstein) registrar.frankensteinInjection(true)
                 registrar.doneInjecting()
             }
@@ -438,6 +438,15 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         }
         openInjected("SELECT E'SELECT \\'x';")
         assertEquals(listOf("\\'" to "Injected: on quote"), marks("Injected"))
+    }
+
+    fun testAnErrorInAPrefixOrSuffixMarksTheNearestEditableText() {
+        for ((word, expected) in listOf("SELECT" to "c", "FROM" to "d")) {
+            mysqlProfile.validator = ScriptedValidator { sql -> VerifyResult.Rejected(VerifyError.atOffset(sql, "outside", sql.indexOf(word), sql.indexOf(word) + word.length)) }
+            openInjected("SELECT 'col bad';", prefix = "SELECT ", suffix = " FROM t")
+            assertEquals(word, listOf(expected to "Injected: outside"), marks("Injected"))
+            assertEquals(listOf("SELECT col bad FROM t"), (mysqlProfile.validator as ScriptedValidator).asked)
+        }
     }
 
     fun testEachConsumerActsOnlyOnItsOwnLanguageAndEachRangeOnce() {
