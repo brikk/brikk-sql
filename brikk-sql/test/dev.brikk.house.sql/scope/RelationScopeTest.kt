@@ -256,6 +256,41 @@ class RelationScopeTest {
     }
 
     @Test
+    fun completionReplacesTheWholeIdentifierInItsQuoting() {
+        fun at(sql: String, dialect: String = "duckdb") =
+            RelationScope.complete(sql.replace("<caret>", ""), dialect, facts, sql.indexOf("<caret>"))
+        val quoted = at("SELECT \"ev<caret>\" FROM events()", "postgres")
+        assertEquals("ev", quoted.prefix)
+        assertEquals("\"ev\"".length, quoted.end - quoted.start)
+        assertEquals(listOf("\"id\"", "\"eventKind\""), quoted.items.map { it.insertText })
+        val open = at("SELECT \"ev<caret> FROM events()", "postgres")
+        assertEquals("ev", open.prefix)
+        assertEquals(listOf("id", "eventKind"), open.items.map { it.name })
+        val middle = at("SELECT i<caret>d FROM events()")
+        assertEquals("i", middle.prefix)
+        assertEquals("SELECT ".length to "SELECT id".length, middle.start to middle.end)
+    }
+
+    @Test
+    fun completionKnowsCommentsAndStringsByTheDialectsLexing() {
+        fun at(sql: String, dialect: String) = RelationScope.complete(sql.replace("<caret>", ""), dialect, facts, sql.indexOf("<caret>")).position
+        assertEquals(PositionKind.COMMENT, at("SELECT 1 # <caret>\nFROM events()", "mysql"))
+        assertEquals(PositionKind.COMMENT, at("SELECT /* a /* b */ <caret> */ id FROM events()", "postgres"))
+        assertEquals(PositionKind.COMMENT, at("SELECT /* <caret>", "duckdb"))
+        assertEquals(PositionKind.STRING, at("SELECT 'a<caret>", "duckdb"))
+        assertEquals(PositionKind.COLUMN, at("SELECT <caret> FROM events() # x", "mysql"))
+    }
+
+    @Test
+    fun droppedRenamedAndExcludedColumnsComplete() {
+        fun at(sql: String) = RelationScope.complete(sql.replace("<caret>", ""), "duckdb", facts, sql.indexOf("<caret>")).items.map { it.name }
+        assertEquals(listOf("id", "eventKind"), at("FROM events() |> DROP <caret>"))
+        assertEquals(listOf("id", "eventKind"), at("FROM events() |> RENAME <caret>"))
+        assertEquals(listOf("id", "eventKind"), at("FROM events() |> RENAME id AS k, <caret>"))
+        assertEquals(listOf("id", "eventKind"), at("SELECT * EXCLUDE (<caret>) FROM events()"))
+    }
+
+    @Test
     fun completionRecoversFromIncompleteInput() {
         fun at(sql: String, caret: String = "<caret>") = RelationScope.complete(sql.replace(caret, ""), "duckdb", facts, sql.indexOf(caret))
         assertEquals(listOf("id", "eventKind"), at("SELECT CASE WHEN <caret> FROM events()").items.map { it.name })
@@ -263,7 +298,7 @@ class RelationScopeTest {
         assertEquals(listOf("id", "eventKind"), at("SELECT * FROM events() WHERE id = <caret> AND").items.map { it.name })
         assertEquals(PositionKind.RELATION, at("SELECT * FROM <caret>").position)
         assertEquals(PositionKind.STRING, at("SELECT '<caret>' FROM events()").position)
-        assertEquals(PositionKind.STRING, at("SELECT 1 -- <caret>\nFROM events()").position)
+        assertEquals(PositionKind.COMMENT, at("SELECT 1 -- <caret>\nFROM events()").position)
         assertEquals(PositionKind.OTHER, at("FROM events() |> WH<caret>").position)
         assertNull(at("FROM events() |> WH<caret>").knowledge)
     }

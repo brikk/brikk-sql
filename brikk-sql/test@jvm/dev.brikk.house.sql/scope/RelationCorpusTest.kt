@@ -120,7 +120,7 @@ class RelationCorpusTest {
             if (caret.string("order") == "SIGNIFICANT") axes += Triple("order@$offset",
                 JsonArray(caret.array("columns").map { JsonPrimitive(expectedColumn(it).string("name")) }),
                 JsonArray(scope.map { JsonPrimitive(it.name) }))
-            val prefix = sql.substring(completion.start, completion.end)
+            val prefix = completion.prefix
             axes += Triple("completion@$offset",
                 sorted((caret["completionColumns"] ?: caret.getValue("columns")).jsonArray.map(::expectedColumn)),
                 sorted(scope.filter { it.name.startsWith(prefix, ignoreCase = true) }.map(::observed)))

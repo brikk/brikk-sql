@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Ordered
 import dev.brikk.house.sql.ast.PipeAggregate
+import dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE
 import dev.brikk.house.sql.ast.PipeExtend
 import dev.brikk.house.sql.ast.PipePivot
 import dev.brikk.house.sql.ast.PipeQuery
@@ -179,17 +180,24 @@ internal class CaretCompletion(
     private val text = script.substring(range.first, range.last + 1)
     private val caret = offset - range.first
 
+    /** What the caret is in: the identifier it edits (its replace range and typed prefix), or why there is none. */
+    private sealed interface Edit {
+        class Name(val marked: String, val start: Int, val end: Int, val prefix: String, val quoted: Boolean) : Edit
+        class Elsewhere(val kind: PositionKind) : Edit
+    }
+
     fun complete(): ScopeCompletion {
-        var start = caret
-        while (start > 0 && (text[start - 1].isLetterOrDigit() || text[start - 1] == '_' || text[start - 1] == '$')) start--
-        fun none(kind: PositionKind) = ScopeCompletion(kind, null, range.first + start, offset, emptyList())
-        if (insideLiteralOrComment()) return none(PositionKind.STRING)
-        val marked = text.substring(0, caret) + MARKER + text.substring(caret)
-        val parsed = recover(marked) ?: return none(PositionKind.OTHER)
+        val edit = edit()
+        if (edit is Edit.Elsewhere) return ScopeCompletion(edit.kind, null, offset, offset, "", emptyList())
+        edit as Edit.Name
+        val start = range.first + edit.start
+        val end = range.first + edit.end
+        fun none(kind: PositionKind) = ScopeCompletion(kind, null, start, end, edit.prefix, emptyList())
+        val parsed = recover(edit.marked) ?: return none(PositionKind.OTHER)
         val names = SourceNames(range.first, parsed.tokens)
         for (statement in parsed.statements) {
             val (lowered, origins) = try {
-                lowerPipes(statement, dialect, names, marked, range.first, checkCanceled)
+                lowerPipes(statement, dialect, names, edit.marked, range.first, checkCanceled)
             } catch (_: UnsupportedError) {
                 continue
             }
@@ -207,14 +215,38 @@ internal class CaretCompletion(
             // Outside any query the marker is a word being typed, not a column.
             if (queries.isEmpty()) return none(PositionKind.OTHER)
             queries.forEach { evaluator.query(it, Env(emptyList(), null)) }
-            val site = evaluator.caret ?: return ScopeCompletion(kind, Knowledge.UNKNOWN, range.first + start, offset, emptyList())
+            val site = evaluator.caret ?: return ScopeCompletion(kind, Knowledge.UNKNOWN, start, end, edit.prefix, emptyList())
             val (found, absence) = candidates(evaluator, site)
             // Pipe lowering may also project the marker itself, as an AGGREGATE grouping does.
             val columns = found.filterNot { MARKER in it.name }
             val knowledge = if (absence != Knowledge.FULL && columns.isNotEmpty()) Knowledge.PARTIAL else absence
-            return ScopeCompletion(kind, knowledge, range.first + start, offset, columns.map { item(it, range.first + start) })
+            return ScopeCompletion(kind, knowledge, start, end, edit.prefix, columns.map { item(it, start, end, edit.quoted) })
         }
         return none(PositionKind.OTHER)
+    }
+
+    /**
+     * Places the marker at the caret and reads, from the dialect's own lexing, what it landed in:
+     * a word or quoted identifier (replaced whole), a string literal, or a comment.
+     */
+    private fun edit(): Edit {
+        val marked = text.substring(0, caret) + MARKER + text.substring(caret)
+        val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(marked, checkCanceled)
+        val token = lexed.tokens.firstOrNull { MARKER in it.text && it.start <= caret && caret <= it.end }
+        if (token == null) {
+            val failure = lexed.failureOffset?.takeIf { it <= caret } ?: return Edit.Elsewhere(PositionKind.COMMENT)
+            val closer = dialect.tokenizerConfig.identifiers[marked[failure]]
+                ?: return Edit.Elsewhere(if (marked.startsWith("--", failure) || marked.startsWith("/*", failure) ||
+                    marked[failure] == '#') PositionKind.COMMENT else PositionKind.STRING)
+            // An identifier whose closing quote is not typed yet.
+            val closed = text.substring(0, caret) + MARKER + closer + text.substring(caret)
+            return Edit.Name(closed, failure, caret, text.substring(failure + 1, caret), quoted = true)
+        }
+        if (token.tokenType == TokenType.STRING || token.tokenType.name.endsWith("_STRING")) return Edit.Elsewhere(PositionKind.STRING)
+        val quoted = token.tokenType == TokenType.IDENTIFIER && marked[token.start] in dialect.tokenizerConfig.identifiers
+        val end = token.end + 1 - MARKER.length
+        val prefix = text.substring(if (quoted) token.start + 1 else token.start, caret)
+        return Edit.Name(marked, token.start, end, prefix, quoted)
     }
 
     private fun candidates(evaluator: ScopeEvaluator, site: ScopeEvaluator.CaretSite): Pair<List<ScopeColumn>, Knowledge> {
@@ -231,46 +263,49 @@ internal class CaretCompletion(
         return emptyList<ScopeColumn>() to if (field.candidates.isNotEmpty()) Knowledge.UNKNOWN else field.knowledge
     }
 
-    private fun item(column: ScopeColumn, start: Int): CompletionItem {
+    private fun item(column: ScopeColumn, start: Int, end: Int, quoted: Boolean): CompletionItem {
         val relation = column.source?.relation ?: column.relation
         val detail = when (column.origin) {
             ColumnOrigin.COMPUTED -> "computed column (${column.computedBy ?: "SELECT"})"
             ColumnOrigin.RELATION_CONTRACT -> "relation contract ($relation)"
             ColumnOrigin.DECLARED, ColumnOrigin.PHYSICAL_TABLE -> "column ($relation)"
         }
-        return CompletionItem(column.name, CompletionKind.COLUMN, insertText(column.name), start, offset, detail,
+        return CompletionItem(column.name, CompletionKind.COLUMN, insertText(column.name, quoted), start, end, detail,
             column.displayType ?: column.sqlType, column)
     }
 
-    /** The name as SQL must spell it: quoted unless a bare identifier reads back as the same column. */
-    private fun insertText(name: String): String {
-        val bare = dev.brikk.house.sql.ast.SAFE_IDENTIFIER_RE.matches(name) &&
+    /** The name as SQL must spell it: quoted where it was or unless a bare identifier reads back as the same column. */
+    private fun insertText(name: String, quoted: Boolean): String {
+        val bare = !quoted && SAFE_IDENTIFIER_RE.matches(name) &&
             (dialect.caseInsensitiveColumns || !dialect.caseSensitive(name)) &&
             Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(name).tokens.singleOrNull()?.tokenType == TokenType.VAR
         return dialect.generate(Identifier(args("this" to name, "quoted" to !bare)))
     }
 
-    private fun insideLiteralOrComment(): Boolean {
-        val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(text, checkCanceled)
-        if (lexed.failureOffset != null && caret > lexed.failureOffset) return true
-        val token = lexed.tokens.firstOrNull { it.start < caret && caret <= it.end }
-        if (token != null && (token.tokenType == TokenType.STRING || token.tokenType.name.endsWith("_STRING"))) return true
-        val previous = lexed.tokens.lastOrNull { it.end < caret }
-        val gap = text.substring(previous?.end?.plus(1) ?: 0, caret)
-        val line = gap.lastIndexOf("--")
-        return line >= 0 && '\n' !in gap.substring(line) || gap.lastIndexOf("/*") > gap.lastIndexOf("*/")
-    }
-
     private fun recover(marked: String): ParsedRegion? {
         parseRegion(marked, dialect, checkCanceled)?.let { return it }
         val tokens = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(marked, checkCanceled).tokens
+        val at = tokens.indexOfFirst { MARKER in it.text }.takeIf { it >= 0 } ?: return null
+        val markerEnd = tokens[at].end + 1
         parseRegion(balanced(marked, tokens), dialect, checkCanceled)?.let { return it }
-        blanked(marked, tokens)?.let { blank ->
+        // A RENAME source needs its target before the stage parses.
+        if (stageOf(tokens, at) == "RENAME") {
+            val renamed = marked.substring(0, markerEnd) + " AS $TARGET" + marked.substring(markerEnd)
+            parseRegion(balanced(renamed, Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(renamed, checkCanceled).tokens), dialect, checkCanceled)
+                ?.let { return it }
+        }
+        blanked(marked, tokens, at)?.let { blank ->
             val blankTokens = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(blank, checkCanceled).tokens
             parseRegion(balanced(blank, blankTokens), dialect, checkCanceled)?.let { return it }
         }
-        val cut = marked.substring(0, caret + MARKER.length)
-        return parseRegion(balanced(cut, tokens.filter { it.start < cut.length }), dialect, checkCanceled)
+        val cut = marked.substring(0, markerEnd)
+        return parseRegion(balanced(cut, tokens.take(at + 1)), dialect, checkCanceled)
+    }
+
+    /** The keyword of the pipe stage holding token [at], if it is in one. */
+    private fun stageOf(tokens: List<Token>, at: Int): String? {
+        val pipe = (at - 1 downTo 0).firstOrNull { tokens[it].tokenType == TokenType.PIPE_GT } ?: return null
+        return tokens.getOrNull(pipe + 1)?.text?.uppercase()
     }
 
     /** [text] with its open brackets closed. */
@@ -286,8 +321,7 @@ internal class CaretCompletion(
     }
 
     /** [marked] with the clause around the marker reduced to the marker: the scope depends on the clause, not its expression. */
-    private fun blanked(marked: String, tokens: List<Token>): String? {
-        val at = tokens.indexOfFirst { MARKER in it.text }.takeIf { it >= 0 } ?: return null
+    private fun blanked(marked: String, tokens: List<Token>, at: Int): String? {
         var depth = 0
         var start = -1
         var index = at - 1
@@ -326,6 +360,7 @@ internal class CaretCompletion(
 
     private companion object {
         const val MARKER = "brikk_caret_7f3a"
+        const val TARGET = "brikk_target_7f3a"
 
         val QUERY_STARTS = setOf(TokenType.SELECT, TokenType.FROM, TokenType.WITH)
         val CLAUSE_STARTS = setOf(

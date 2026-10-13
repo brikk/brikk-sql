@@ -447,6 +447,7 @@ internal class ScopeEvaluator(
         val pool = Frame(bindings, null, merged)
         for (except in (star.args["except_"] as? List<*>).orEmpty().filterIsInstance<Expression>()) {
             val identifier = (except as? Column)?.thisArg as? Identifier ?: except as? Identifier ?: continue
+            if (atCaret(identifier, pool)) continue
             record(identifier, null, unqualified(pool, identifier))
             columns = columns.filterNot { same(identifier, it.name, columns = true) }
         }
@@ -461,6 +462,7 @@ internal class ScopeEvaluator(
         }
         for (rename in (star.args["rename"] as? List<*>).orEmpty().filterIsInstance<Alias>()) {
             val old = (rename.thisArg as? Column)?.thisArg as? Identifier ?: continue
+            if (atCaret(old, pool)) continue
             record(old, null, unqualified(pool, old))
             val index = columns.indexOfFirst { same(old, it.name, columns = true) }
             val target = rename.args["alias"] as? Identifier
@@ -715,14 +717,18 @@ internal class ScopeEvaluator(
         }
     }
 
+    /** Records the caret's site if [identifier] is the marker. */
+    private fun atCaret(identifier: Identifier, frame: Frame?, qualifier: List<Identifier> = emptyList()): Boolean {
+        if (caretMarker == null || caretMarker !in identifier.name) return false
+        // Lowering may place the caret's node twice (an AGGREGATE grouping also projects); the first is where it was written.
+        if (caret == null) caret = CaretSite(frame, qualifier)
+        return true
+    }
+
     private fun column(node: Column, identifier: Identifier, frame: Frame?) {
         if (++resolutions % 256 == 0) checkCanceled()
         val qualifier = node.qualifier()
-        if (caretMarker != null && caretMarker in identifier.name) {
-            // Lowering may place the caret's node twice (an AGGREGATE grouping also projects); the first is where it was written.
-            if (caret == null) caret = CaretSite(frame, qualifier)
-            return
-        }
+        if (atCaret(identifier, frame, qualifier)) return
         if (qualifier.isEmpty()) {
             record(identifier, node, frame?.let { unqualified(it, identifier) } ?: Lookup(emptyList(), Knowledge.UNKNOWN))
             return

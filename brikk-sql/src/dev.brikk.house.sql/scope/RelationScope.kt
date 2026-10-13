@@ -123,7 +123,7 @@ data class ScopeDiagnostic(
 }
 
 @Serializable
-enum class PositionKind { COLUMN, QUALIFIER, RELATION, STRING, OTHER }
+enum class PositionKind { COLUMN, QUALIFIER, RELATION, STRING, COMMENT, OTHER }
 
 @Serializable
 enum class CompletionKind { COLUMN }
@@ -143,8 +143,9 @@ data class CompletionItem(
 
 /**
  * What a caret can complete: the [position] it is in, and at a column position the columns
- * visible there ([items], all of them: clients filter by the typed prefix `[start, end)`) and how
- * much the scope knew. [knowledge] is null at other positions.
+ * visible there ([items], all of them: clients filter by [prefix], the name typed before the
+ * caret without its opening quote) and how much the scope knew. Items replace the whole
+ * identifier at the caret, `[start, end)`, quotes included. [knowledge] is null at other positions.
  */
 @Serializable
 data class ScopeCompletion(
@@ -152,6 +153,7 @@ data class ScopeCompletion(
     val knowledge: Knowledge?,
     val start: Int,
     val end: Int,
+    val prefix: String,
     val items: List<CompletionItem>,
 )
 
