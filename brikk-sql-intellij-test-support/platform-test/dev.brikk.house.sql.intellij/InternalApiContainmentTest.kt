@@ -52,6 +52,55 @@ class InternalApiContainmentTest : TestCase() {
         assertTrue("missed: ${missed.keys.map { it.simpleName }}", missed.isEmpty())
     }
 
+    /**
+     * Support needs no Kotlin IDE plugin (support README): no class of it or of its analysis API
+     * (`org.jetbrains.kotlin.*`; the standard library is `kotlin.*`) is referenced, not even by name.
+     */
+    fun testNoKotlinPluginClassIsReferenced() {
+        val uses = supportClasses().mapValues { kotlinPluginReferences(it.value) }.filterValues { it.isNotEmpty() }
+        assertTrue(uses.entries.joinToString("\n") { "${it.key} -> ${it.value}" }, uses.isEmpty())
+    }
+
+    /** A Kotlin plugin type in a support class's copy, a class name used reflectively and an analysis API type are each found. */
+    fun testKotlinPluginReferencesAreCaught() {
+        val annotator = supportClasses().getValue("dev.brikk.house.sql.intellij.diagnostics.NativeErrorAnnotator")
+        assertEquals(emptySet<String>(), kotlinPluginReferences(annotator))
+        val renamed = ClassWriter(0).also { writer ->
+            val rename = object : Remapper() {
+                override fun map(internalName: String) = if (internalName == "com/intellij/psi/PsiFile") "org/jetbrains/kotlin/psi/KtFile" else internalName
+            }
+            ClassReader(annotator).accept(ClassRemapper(writer, rename), 0)
+        }.toByteArray()
+        assertEquals(setOf("org.jetbrains.kotlin.psi.KtFile"), kotlinPluginReferences(renamed))
+        val generated = ClassWriter(ClassWriter.COMPUTE_MAXS).apply {
+            visit(Opcodes.V21, Opcodes.ACC_PUBLIC, "dev/brikk/house/sql/intellij/Scratch", null, "java/lang/Object", null)
+            visitField(Opcodes.ACC_PRIVATE, "session", "Lorg/jetbrains/kotlin/analysis/api/KaSession;", null, null).visitEnd()
+            visitMethod(Opcodes.ACC_PUBLIC or Opcodes.ACC_STATIC, "language", "()Ljava/lang/Class;", null, null).apply {
+                visitCode()
+                visitLdcInsn("org.jetbrains.kotlin.idea.KotlinLanguage")
+                visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Class", "forName", "(Ljava/lang/String;)Ljava/lang/Class;", false)
+                visitInsn(Opcodes.ARETURN)
+                visitMaxs(0, 0)
+                visitEnd()
+            }
+            visitEnd()
+        }.toByteArray()
+        assertEquals(setOf("org.jetbrains.kotlin.analysis.api.KaSession", "org.jetbrains.kotlin.idea.KotlinLanguage"), kotlinPluginReferences(generated))
+    }
+
+    /** The Kotlin plugin classes [bytes] references, as types anywhere or as class names in its constants. */
+    private fun kotlinPluginReferences(bytes: ByteArray): Set<String> {
+        val found = sortedSetOf<String>()
+        val recorder = object : Remapper() {
+            override fun map(internalName: String): String = internalName.also { if (it.startsWith(KOTLIN_PLUGIN)) found += it.replace('/', '.') }
+            override fun mapValue(value: Any?): Any? = super.mapValue(value).also {
+                if (value is String && value.replace('/', '.').startsWith(KOTLIN_PLUGIN.replace('/', '.'))) found += value.replace('/', '.')
+            }
+        }
+        ClassReader(bytes).accept(ClassRemapper(ClassWriter(0), recorder), 0)
+        return found
+    }
+
     private fun supportClasses(): Map<String, ByteArray> {
         val anchor = GenericJdbcIntrospectorGate::class.java
         val url = checkNotNull(anchor.getResource("${anchor.simpleName}.class"))
@@ -168,6 +217,7 @@ class InternalApiContainmentTest : TestCase() {
 
     private companion object {
         const val CATALOG_KIT = "dev.brikk.house.sql.intellij.catalog."
+        const val KOTLIN_PLUGIN = "org/jetbrains/kotlin/"
         val INTERNAL = setOf("Lorg/jetbrains/annotations/ApiStatus\$Internal;", "Lcom/intellij/openapi/util/IntellijInternalApi;")
         val DOCUMENTED = setOf("com.intellij.database.introspection.DBIntrospector\$Factory")
     }

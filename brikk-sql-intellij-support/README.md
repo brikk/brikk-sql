@@ -739,7 +739,9 @@ full, signatures, method bodies, lambdas and annotation values, and fails if a c
 references a class, enclosing class or package annotated `@ApiStatus.Internal` or
 `@IntellijInternalApi`, or a member so annotated or declared by such a class (found through the
 owner's supertypes). It also fails if the kit's internal API differs from the test's own list, which
-this table mirrors.
+this table mirrors. The same test keeps the library free of the Kotlin IDE plugin: it fails on any
+reference to `org.jetbrains.kotlin.*` (the plugin, its PSI and the analysis API; the standard library
+is `kotlin.*`), as a type anywhere or as a class name in a constant (`Class.forName`).
 
 `isBuiltinCatalogObject` (catalog kit) reads `BasicElement.getModel`, `BasicModModel.getTextStorage`
 and `DataSourceSnapshotManager.MINICAT_STORAGE`, the platform's own test for a builtin resolve result
