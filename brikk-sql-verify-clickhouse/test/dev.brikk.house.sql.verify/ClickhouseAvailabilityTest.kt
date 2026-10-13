@@ -160,6 +160,14 @@ internal class ClickhouseAvailabilityTest {
         }
     }
 
+    @Test
+    fun statementLimitsAreUnverified() {
+        for (code in listOf(159, 167, 168, 306, 718)) {
+            val failure = SQLException("Code: $code. DB::Exception: limit: In scope SELECT formatQuery(unhex('53')). (LIMIT)")
+            assertIs<VerifyResult.Unverified>(ParseOnlyClickhouseVerifier({ FailingConnection(failure) }).verify("SELECT 1"), "code $code")
+        }
+    }
+
     private class FailingConnection(private val failure: SQLException) : ClickhouseQueryConnection {
         override fun queryString(sql: String, timeoutSeconds: Int): String? = throw failure
         override fun cancel() = Unit

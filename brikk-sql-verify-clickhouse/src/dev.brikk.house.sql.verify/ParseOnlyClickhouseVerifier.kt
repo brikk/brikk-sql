@@ -188,8 +188,8 @@ public class ParseOnlyClickhouseVerifier(
         const val UNKNOWN_FUNCTION = 46
         const val READONLY = 164
 
-        /** Errors this statement causes without being invalid: TIMEOUT_EXCEEDED, TOO_DEEP_AST, TOO_BIG_AST, TOO_DEEP_RECURSION. */
-        val STATEMENT_LIMITS = setOf(159, 167, 168, 306)
+        /** Errors this statement causes without being invalid: TIMEOUT_EXCEEDED, TOO_DEEP_AST, TOO_BIG_AST, TOO_DEEP_RECURSION, TOO_SLOW_PARSING. */
+        val STATEMENT_LIMITS = setOf(159, 167, 168, 306, 718)
         const val POLL_MILLIS = 20L
 
         /** Keeps the query under ClickHouse's default `max_query_size` (256 KiB). */
