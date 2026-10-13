@@ -192,8 +192,10 @@ host-language dependency and knows nothing about Brikk.
   performs it, so a claimed string (injected or unavailable) gets no other contributor's SQL, such as an
   `@Language` annotation's or a configured injection; it is dumb-aware, so this holds while indexing.
   Injectors outside that mechanism (a `multiHostInjector`) cannot be kept off: SQL they put into a
-  string is inspection-only when the channel's last claim of the host claimed it, or when
-  `claimsHost(host)`, which a plugin overrides to ask its recognizer, says so.
+  string is inspection-only when any host string it joins was claimed by the channel's last claim of
+  that host, or by `claimsHost(host)`, which a plugin overrides to ask its recognizer. Each host's claim
+  is asked once and shared by the contributor and performer (even as separate instances) until the
+  host's file changes or the channel reanalyzes, negative claims included.
 - Retries: unavailable and pending claims schedule one reanalysis per file and file revision once
   indexing is done; it drops PSI caches (injection results are cached until PSI changes) and the file's
   injected documents, and restarts its highlighting. A provider whose facts change without an edit
@@ -205,7 +207,8 @@ host-language dependency and knows nothing about Brikk.
 - Placeholders are never errors: `HostSqlPlaceholderErrorFilter` (`highlightErrorFilter`) hides parse
   errors overlapping a placeholder or, when empty, standing before one; other errors stay (`${x})` keeps
   its `)`). Placeholder SQL gets lenient inspections. `NativeErrorProfile.hostSql` verifies no statement
-  holding a placeholder and reports no diagnostic a placeholder causes; `RelationScopeProfile.hostSql`
+  holding a placeholder with the engine (local parsing still runs), reports no diagnostic a placeholder
+  causes, and treats placeholder changes like text changes for its cached outcomes; `RelationScopeProfile.hostSql`
   runs no relation diagnostics while SQL is pending.
 - `PipeDialect.hostSql`: PIPE editing is on in the channel's SQL; inspection-only SQL refuses Execute,
   also from the host's editor with the caret in the SQL (the stock action would run it in a console),
