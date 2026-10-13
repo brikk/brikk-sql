@@ -18,6 +18,9 @@ enum class DiagnosticSource {
     /** brikk-sql's parser for the dialect: offline and immediate, but it may reject what the engine accepts. */
     LOCAL_PARSER,
 
+    /** The editor's own parser, such as an IDE's syntax tree; local like [LOCAL_PARSER]. */
+    EDITOR_PARSER,
+
     /** The engine's own parser or server. */
     NATIVE,
 
@@ -105,7 +108,8 @@ fun localParseDiagnostics(script: String, range: IntRange, dialect: String): Lis
 }
 
 /**
- * Combines [local] parser diagnostics with the engine's [native] outcome for the SQL verified at
+ * Combines [local] parser diagnostics ([DiagnosticSource.LOCAL_PARSER] or
+ * [DiagnosticSource.EDITOR_PARSER]) with the engine's [native] outcome for the SQL verified at
  * [range] of [script]: a rejection shows the engine's errors (in [nativeSeverity]) instead of the
  * local ones, an acceptance clears the local ones as false positives, and no verdict leaves the
  * local ones alone.

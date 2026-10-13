@@ -108,6 +108,38 @@ Foreign wrappers are traversed through platform `ActionWithDelegate`, never a ca
 to another plugin's private helper copy. Unloading beneath a peer detaches the
 wrapper but may retain its classloader until restart.
 
+## Native errors (`dev.brikk.house.sql.intellij.diagnostics`, experimental)
+
+A plugin implements one `NativeErrorProfile` (language, core dialect, label, `validator(file)`) and
+registers a no-arg `NativeErrorAnnotator` subclass as the language's `externalAnnotator`. Each
+statement of core's statement ranges (or, with `VerificationUnit.File`, the whole text) goes to the
+validator's `verify`; the diagnostics themselves are core's plain data
+(`dev.brikk.house.sql.diagnostics`), so an LSP server can reuse them.
+
+- The engine decides where it gives a verdict. A rejection is marked at the engine's UTF-16
+  position (across the token, or one code point); an acceptance clears the local parsers' errors in
+  that statement; `Unverified`, `Unavailable`, a failed validator or no validator give no verdict,
+  never "clean", and leave the local errors. An advisory validator's rejections are warnings.
+- Local parsers, off by default: `localParser` reports brikk-sql's parser errors;
+  `reportsPsiErrors` reports the IDE parser's PSI errors through the same rule (register a
+  `NativeErrorPsiFilter` so the platform does not also show them; it hides only PSI error elements
+  of that language, never other inspections or annotators).
+- A result is applied only at the document revision and text it was computed for, and later passes
+  at that revision reuse it. Cancellation propagates unchanged; `debounce` waits for typing to pause
+  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass. All off by
+  default.
+- Only files of exactly the profile's language are annotated, so each consumer acts on its own
+  dialect. SQL injected into `injectionHosts` languages (register the annotator for each host too;
+  external annotators do not run on fragments) is read unescaped, every fragment of a file, and
+  marked at its host text, cut to editable parts; one range is marked once.
+- Hooks: `statementDiagnostics` replaces a statement's check (PIPE lowering, Brikk templates),
+  `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
+  masks binds at equal length, `message` formats.
+
+`NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
+without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
+verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
+
 ## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
 
 A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; optional
