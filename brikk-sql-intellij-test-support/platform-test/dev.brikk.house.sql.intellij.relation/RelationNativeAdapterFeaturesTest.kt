@@ -135,6 +135,9 @@ class RelationNativeAdapterFeaturesTest : RelationTestCase() {
         // UNION ALL's output has no single origin: both branches' items.
         val union = "SELECT id FROM src() UNION ALL SELECT id FROM rhs() ORDER BY id"
         assertEquals(listOf("sql@7", "sql@${union.indexOf("id", 30)}"), navigation(union, "id", 2))
+        // Of two derived tables over set operations, a column leads to its own table's branches.
+        val two = "SELECT x.id, y.id FROM (SELECT id FROM src() UNION ALL SELECT id FROM rhs()) x, (SELECT code AS id FROM rhs() UNION ALL SELECT kind FROM src()) y"
+        assertEquals(listOf("sql@${two.indexOf("code AS id") + 8}", "sql@${two.indexOf("kind FROM")}"), navigation(two, "id", 1))
         // A FULL JOIN's merged key, which no provider column names, leads to the USING key.
         val full = "SELECT q.id FROM (SELECT id FROM src() FULL JOIN rhs() USING (id)) q"
         assertEquals(listOf("sql@${full.lastIndexOf("id")}"), navigation(full, "id"))

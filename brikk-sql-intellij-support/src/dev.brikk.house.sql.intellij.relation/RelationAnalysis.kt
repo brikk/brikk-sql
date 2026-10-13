@@ -45,6 +45,9 @@ internal class RelationAnalysis(
     /** Whether the analysis reports a problem on exactly `[start, end)`. */
     fun diagnoses(start: Int, end: Int): Boolean = (start to end) in diagnosed
 
+    /** The references of the statement holding [offset] of the text. */
+    fun statementReferences(offset: Int): List<ScopeReference> = statementOf(offset)?.second?.references.orEmpty()
+
     /** The innermost reference covering [offset] of the text, or the one ending there. */
     fun referenceAt(offset: Int): ScopeReference? = statementOf(offset)?.second?.referenceAt(offset)
 

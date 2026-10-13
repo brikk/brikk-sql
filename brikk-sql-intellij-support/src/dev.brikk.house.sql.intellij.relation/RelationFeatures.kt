@@ -41,6 +41,7 @@ import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.scope.Nullability
 import dev.brikk.house.sql.scope.ReferenceKind
+import dev.brikk.house.sql.scope.RelationKind
 import dev.brikk.house.sql.scope.Resolution
 import dev.brikk.house.sql.scope.ScopeColumn
 import dev.brikk.house.sql.scope.ScopeRange
@@ -133,7 +134,7 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
                 column.provenance?.let { analysis.providerOf(column)?.navigationTarget(file, it) }?.let { return@flatMap listOf(it) }
                 column.declaration?.let { analysis.elementAt(file, it) }?.let { return@flatMap listOf(it) }
                 when (column.computedBy) {
-                    in SET_OPERATIONS -> setOperationOutputs(file, offset, column.name)
+                    in SET_OPERATIONS -> setOperationOutputs(owningSetOperation(file, analysis, column, offset), column.name)
                     "USING" -> listOfNotNull(analysis.usingKey(file, reference.start, column.name))
                     else -> emptyList()
                 }
@@ -147,13 +148,30 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
     }
 
     /**
-     * The items producing output column [name] in each branch of the set operation of the statement
-     * at [offset] of [file], by its position in the first branch.
+     * The set operation whose output [column], referred to at [offset], is: the one a derived table or
+     * CTE the column is seen through declares, else the nearest one around the reference.
      */
-    private fun setOperationOutputs(file: PsiFile, offset: Int, name: String): List<PsiElement> {
-        val statement = PsiTreeUtil.getParentOfType(file.findElementAt(offset), SqlStatement::class.java) ?: return emptyList()
-        val operation = PsiTreeUtil.findChildrenOfType(statement, SqlSetOperatorExpression::class.java)
-            .firstOrNull { PsiTreeUtil.getParentOfType(it, SqlSetOperatorExpression::class.java) == null } ?: return emptyList()
+    private fun owningSetOperation(file: PsiFile, analysis: RelationAnalysis, column: ScopeColumn, offset: Int): SqlSetOperatorExpression? {
+        val owner = column.relationKind?.takeIf { it == RelationKind.SUBQUERY || it == RelationKind.CTE }?.let { kind ->
+            analysis.statementReferences(analysis.source.textOffset(offset)).asSequence().filter { it.kind != ReferenceKind.COLUMN }.mapNotNull { it.relation }
+                .firstOrNull { it.kind == kind && it.name == column.relation }?.declaration?.let { analysis.elementAt(file, it) } ?: return null
+        }
+        var element: PsiElement? = owner ?: file.findElementAt(offset)
+        while (element != null && element !is PsiFile) {
+            outermostSetOperation(element)?.let { return it }
+            if (element is SqlStatement) return null
+            element = element.parent
+        }
+        return null
+    }
+
+    private fun outermostSetOperation(scope: PsiElement): SqlSetOperatorExpression? = scope as? SqlSetOperatorExpression
+        ?: PsiTreeUtil.findChildrenOfType(scope, SqlSetOperatorExpression::class.java)
+            .firstOrNull { PsiTreeUtil.getParentOfType(it, SqlSetOperatorExpression::class.java, true, SqlStatement::class.java)?.let { outer -> !PsiTreeUtil.isAncestor(scope, outer, false) } != false }
+
+    /** The items producing output column [name] in each branch of [operation], by its position in the first branch. */
+    private fun setOperationOutputs(operation: SqlSetOperatorExpression?, name: String): List<PsiElement> {
+        operation ?: return emptyList()
         val branches = branchesOf(operation).map { it.expressions }
         val position = branches.firstOrNull()?.indexOfFirst { outputName(it).equals(name, ignoreCase = true) }?.takeIf { it >= 0 } ?: return emptyList()
         return branches.mapNotNull { items -> items.getOrNull(position)?.let { (it as? SqlAsExpression)?.nameElement ?: it } }
