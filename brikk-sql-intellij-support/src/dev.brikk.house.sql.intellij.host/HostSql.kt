@@ -6,7 +6,7 @@ import com.intellij.lang.Language
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
@@ -14,8 +14,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiErrorElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLanguageInjectionHost
+import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
-import com.intellij.psi.util.PsiModificationTracker
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import org.jetbrains.annotations.ApiStatus
 
@@ -150,43 +150,46 @@ public open class HostSqlChannel(public val id: String) {
         marker(file)?.placeholders?.any { it.startOffset <= end && start <= it.endOffset } == true
 
     /**
-     * Schedules one reanalysis of [host]'s file once indexing is done: injected caches are dropped and
-     * the daemon restarted. At most one per host and PSI modification count; facts that change without
-     * a PSI change call [requestReanalysis].
+     * Schedules one reanalysis of [host]'s file once indexing is done (see [reanalyze]). At most one
+     * per file and file revision, so a reanalysis that claims the same string unavailable again does
+     * not loop; facts that change without an edit call [requestReanalysis].
      */
     public fun scheduleRetry(host: PsiElement) {
-        val project = host.project
-        val revision = PsiModificationTracker.getInstance(project).modificationCount
-        if (host.getUserData(retryKey) == revision) return
-        host.putUserData(retryKey, revision)
-        val pointer = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(host)
+        val file = host.containingFile ?: return
+        val revision = file.modificationStamp
+        if (file.getUserData(retryKey) == revision) return
+        file.putUserData(retryKey, revision)
+        later(file)
+    }
+
+    /**
+     * Reanalyzes [file] (a host file, or SQL injected into one) now, or once indexing is done: for a
+     * provider that learns its facts changed without an edit, such as shapes generated later. Never
+     * call it while computing facts (a relation provider's `facts`, a claim): it would
+     * reanalyze again and again.
+     */
+    public fun requestReanalysis(file: PsiFile) {
+        later(InjectedLanguageManager.getInstance(file.project).getTopLevelFile(file) ?: file)
+    }
+
+    private fun later(file: PsiFile) {
+        val project = file.project
+        val pointer = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(file)
         ApplicationManager.getApplication().invokeLater({
             DumbService.getInstance(project).runWhenSmart {
-                ReadAction.run<RuntimeException> {
-                    pointer.element?.containingFile?.let(::reanalyze)
-                }
+                runReadAction { pointer.element?.let(::reanalyze) }
             }
         }, project.disposed)
     }
 
     /**
-     * Reanalyzes [file] (a host file, or SQL injected into one) now, or once indexing is done: for a
-     * provider that learns its facts changed without a PSI change, such as shapes generated later.
+     * Recomputes [file]'s injections and restarts its highlighting. Injection results are cached
+     * until PSI changes, so the PSI caches are dropped, not only the file's injected documents.
      */
-    public fun requestReanalysis(file: PsiFile) {
-        val host = InjectedLanguageManager.getInstance(file.project).getTopLevelFile(file) ?: file
-        val pointer = SmartPointerManager.getInstance(file.project).createSmartPsiElementPointer(host)
-        ApplicationManager.getApplication().invokeLater({
-            DumbService.getInstance(file.project).runWhenSmart {
-                ReadAction.run<RuntimeException> { pointer.element?.let(::reanalyze) }
-            }
-        }, file.project.disposed)
-    }
-
-    /** Drops [file]'s injections and restarts its highlighting. */
     protected open fun reanalyze(file: PsiFile) {
+        PsiManager.getInstance(file.project).dropPsiCaches()
         InjectedLanguageManager.getInstance(file.project).dropFileCaches(file)
-        DaemonCodeAnalyzer.getInstance(file.project).restart(file)
+        DaemonCodeAnalyzer.getInstance(file.project).restart(file, "$id host SQL reanalysis")
     }
 }
 

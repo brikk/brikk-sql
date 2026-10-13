@@ -115,4 +115,54 @@ class HostSqlClaimsTest : HostSqlTestCase() {
             myFixture.editor
         }.refusesInspectionOnlySqlFromTheHostEditor()
     }
+
+    fun testARetryInjectsOnceTheFactsAreThereAndStops() {
+        var available = false
+        claim = { host -> if (available) HostSqlClaim.Injected(postgres, content(host)) else HostSqlClaim.Unavailable("pending") }
+        open("SELECT 'SELECT 1'")
+        assertNull(injected())
+        available = true
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        assertEquals(1, reanalyses)
+        assertNotNull(injected())
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        assertEquals(1, reanalyses)
+    }
+
+    fun testAStillUnavailableStringDoesNotLoop() {
+        claim = { HostSqlClaim.Unavailable("pending") }
+        open("SELECT 'SELECT 1'")
+        repeat(8) {
+            assertNull(injected())
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        }
+        assertEquals(1, reanalyses)
+    }
+
+    fun testARequestedReanalysisReplacesTheSql() {
+        var value = "1"
+        claim = { host -> HostSqlClaim.Injected(postgres, HostSqlEntries(listOf(HostSqlEntry(TextRange(1, host.textLength - 1), "SELECT $value")))) }
+        open("SELECT 'SELECT 0'")
+        val manager = InjectedLanguageManager.getInstance(project)
+        assertEquals("SELECT 1", manager.getUnescapedText(checkNotNull(injected())))
+        value = "2"
+        channel.requestReanalysis(myFixture.file)
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        assertEquals("SELECT 2", manager.getUnescapedText(checkNotNull(injected())))
+    }
+
+    fun testHostsOfOneFileShareARetryAndEachRevisionGetsOne() {
+        claim = { HostSqlClaim.Unavailable("pending") }
+        open("SELECT 'SELECT 1', 'SELECT 2', 'SELECT 3'")
+        (0..2).forEach { injected(host(it)) }
+        DumbModeTestUtils.runInDumbModeSynchronously(project) {
+            repeat(3) {
+                WriteCommandAction.runWriteCommandAction(project) { myFixture.editor.document.insertString(0, " ") }
+                PsiDocumentManager.getInstance(project).commitAllDocuments()
+                (0..2).forEach { channel.scheduleRetry(host(it)) }
+            }
+        }
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        assertEquals("the first revision's and three edits'", 4, reanalyses)
+    }
 }
