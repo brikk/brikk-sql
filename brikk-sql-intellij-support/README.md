@@ -17,7 +17,15 @@ no internal-API annotation.
 - `CooperativeExecuteAction` and `ExecuteInterceptor`: preserve live options,
   presentation and captured-predecessor delegation. Only `DECLINED` delegates.
 - `CooperativeExecutePromoter`: promote the underlying database action via the
-  public registered promoter, then map back to the installed wrapper.
+  public registered promoter, then map back to the installed wrapper (Execute and
+  `CooperativeAction` wrappers alike).
+- `CooperativeActionConfiguration` (experimental): wraps any action ids (`EXPLAIN_PLAN`,
+  `CANCEL`, ...) around whatever is registered under them, so plugins chain instead of replacing
+  one another with `overrides="true"`. Its `ActionInterceptor` claims its own events (`update`:
+  true shows, false hides, null leaves it to the wrapped action; `perform` returns `DECLINED` to
+  run the wrapped action, or runs it itself through `delegate`, as Doris's cancel runs the stock
+  cancel first, and returns `HANDLED`). Register a subclass as `dynamicActionConfigurationCustomizer`;
+  ids the IDE lacks are skipped, and unloading beneath a peer detaches as for Execute.
 - `EditorSnapshot`: refuse stale document identity/revisions, including edit/revert,
   with `SqlExecutionRefusal`. Cancellation propagates unchanged. `captureAfterSave`
   pins the revision after a save that resets the stamp, refusing edits made before it.

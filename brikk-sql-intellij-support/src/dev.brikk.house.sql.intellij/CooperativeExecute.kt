@@ -66,19 +66,24 @@ public abstract class CooperativeExecuteConfiguration : DynamicActionConfigurati
     }
 }
 
-/** Foreign helper copies are traversed through the platform contract, never cast. */
+private fun AnAction.isCooperative() = this is CooperativeExecuteAction || this is CooperativeAction
+
+/**
+ * Lets the database promoter rank this plugin's cooperative wrappers (Execute and [CooperativeAction])
+ * as the actions they wrap. Foreign helper copies are traversed through the platform contract, never cast.
+ */
 public open class CooperativeExecutePromoter : ActionPromoter {
     override fun promote(actions: List<AnAction>, context: DataContext): List<AnAction> {
         var ours = false
         val delegates = actions.map { action ->
             var current = action
-            var containsUs = current is CooperativeExecuteAction
+            var containsUs = current.isCooperative()
             val seen = Collections.newSetFromMap(IdentityHashMap<AnAction, Boolean>())
             while (seen.add(current)) {
                 val next = (current as? ActionWithDelegate<*>)?.delegate as? AnAction ?: break
                 if (next in seen) break
                 current = next
-                containsUs = containsUs || current is CooperativeExecuteAction
+                containsUs = containsUs || current.isCooperative()
             }
             ours = ours || containsUs
             if (containsUs) current else action
