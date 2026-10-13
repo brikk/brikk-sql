@@ -3,7 +3,6 @@ package dev.brikk.house.sql.intellij.diagnostics
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.database.dataSource.DatabaseConnection
 import com.intellij.database.dataSource.DatabaseConnectionManager
-import com.intellij.database.dataSource.DatabaseConnectionPoint
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.remote.jdbc.RemoteStatement
@@ -15,6 +14,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
+import dev.brikk.house.sql.intellij.catalog.HelperConnectionPoint
 import dev.brikk.house.sql.intellij.catalog.HelperRequestor
 import dev.brikk.house.sql.intellij.catalog.queryRows
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
@@ -23,7 +23,6 @@ import dev.brikk.house.sql.verify.SqlVerifier
 import java.lang.ref.WeakReference
 import java.sql.SQLException
 import java.util.Objects
-import java.util.Properties
 import java.util.WeakHashMap
 import java.util.concurrent.CancellationException
 import org.jetbrains.annotations.ApiStatus
@@ -82,25 +81,11 @@ public class DataSourceVerification(
 
     private fun openHelper(project: Project?, dataSource: LocalDataSource?): DataSourceQueryConnection? {
         if (project == null || project.isDisposed || dataSource == null || !isUserConnected(dataSource)) return null
-        val builder = DatabaseConnectionManager.getInstance().build(project, VerificationPoint(dataSource, connectionProperties(dataSource)))
+        val builder = DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(dataSource, connectionProperties(dataSource)))
             .setRequestor(HelperRequestor()).setAskPassword(false)
         // Verifiers open connections on their own workers, usually outside any progress indicator; one there cancels.
         val ref = runBlockingMaybeCancellable { builder.create() } ?: return null
         return DataSourceQueryConnection(ref)
-    }
-}
-
-/**
- * [point] as a verification connects to it: without its startup script (the data source's and its
- * driver's), which is for the user's sessions and would run again on every verification connection,
- * and with [properties] over its driver properties. Its data source stays [point]'s, unchanged.
- */
-private class VerificationPoint(point: DatabaseConnectionPoint, private val properties: Map<String, String>) : DatabaseConnectionPoint.Adapter(point) {
-    override fun getInitScript(): String? = null
-
-    override fun getConnectionProperties(): Properties = Properties().also { shaped ->
-        super.getConnectionProperties()?.let(shaped::putAll)
-        shaped.putAll(properties)
     }
 }
 

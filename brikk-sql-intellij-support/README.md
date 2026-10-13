@@ -165,7 +165,10 @@ are the profile's two methods. One validator per data source wraps the verifier,
 opens a separate short-lived helper connection (`DataSourceQueryConnection`: `queryString`, `cancel`,
 `close`), never the console's session, running no startup script, with the driver properties the
 optional `connectionProperties(dataSource)` adds over the data source's (the data source is not
-changed), never asking for a password, and only while the user has the data source connected; otherwise it gives null, which the verifier reports as `Unavailable`. The count
+changed), never asking for a password, and only while the user has the data source connected; otherwise it gives null, which the verifier reports as `Unavailable`.
+All of this library's helper connections (verification, refresh, text explain) connect through
+`HelperConnectionPoint(point, properties)`, which drops the data source's and driver's startup script
+(an `INSERT` there would run on every helper) and adds driver properties; a plugin's own helper can use it too. The count
 changes with the data source (identity, URL, user) and its connected state; register
 `VerificationConnectionListener` as an application listener of
 `com.intellij.database.dataSource.DatabaseConnectionManager$Listener` so connecting and disconnecting
@@ -529,7 +532,7 @@ nested statements or table functions, calling only built-in functions by their w
 and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
 function arguments (`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence). It runs on a new
 helper connection to the console's data source, never the console's session, so the session's
-transaction, settings and namespace stay as they are, and harvests skip it. The helper first switches to
+transaction, settings and namespace stay as they are; it runs no startup script, and harvests skip it. The helper first switches to
 the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), then runs core's
 built-in-only context (Trino `SET PATH system.builtin`; Doris `SET prefer_udf_over_builtin = false`, unverified
 live), since a built-in's name alone does not prove the built-in binds; a
@@ -640,7 +643,7 @@ When harvests run (`HarvestTrigger`): `ONCE_PER_SESSION` (default: the first con
 in an IDE session), `EVERY_CONSOLE_CONNECT` (every console connection, other connections only while no
 live harvest exists), `ON_REFRESH`. Connections of the profile's dbms or its registry aliases count.
 The interceptor skips the helper connections refreshes open, so a refresh harvests once.
-`refresh(project, dataSource)` harvests over a helper connection. `refresh(project, session)` harvests
+`refresh(project, dataSource)` harvests over a helper connection, which runs no startup script. `refresh(project, session)` harvests
 over a console session's own connection, so it also reads what the session loaded implicitly (DuckDB
 autoload): the harvest is queued on the session as a request and runs on its engine's thread, and both
 the shared inventory and the session's facts are recorded and returned (`RefreshOutcome.Refreshed.session`,

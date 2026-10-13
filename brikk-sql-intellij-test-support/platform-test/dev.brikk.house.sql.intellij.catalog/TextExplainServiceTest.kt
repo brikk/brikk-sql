@@ -156,6 +156,14 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         assertEmpty(DatabaseConnectionManager.getInstance().activeConnections.filter { it.connectionPoint.dataSource === dataSource })
     }
 
+    /** A startup script (the data source's, else its driver's) is for the user's sessions: the explain helper runs none. */
+    fun testTheHelperConnectionRunsNoStartupScript() {
+        val runs = startupScriptRuns(project, dataSource) {
+            assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
+        }
+        assertEquals("the startup INSERT ran on the explain helper (own, driver's)", listOf(0, 0), runs)
+    }
+
     /** The live catalog skips the helper connection: explaining never harvests. */
     fun testTheHelperConnectionIsNotHarvested() {
         val harvester = CountingHarvester()

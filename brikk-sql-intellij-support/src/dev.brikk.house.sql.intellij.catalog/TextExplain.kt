@@ -175,10 +175,11 @@ public abstract class TextExplainService(protected val project: Project, private
 
     /**
      * Runs [use] on a new helper connection to [console]'s data source and closes it afterwards; null when
-     * none opens. The connection is never the console's, and harvests skip it. Override to set it up differently.
+     * none opens. The connection is never the console's, runs no startup script ([HelperConnectionPoint]),
+     * and harvests skip it. Override to set it up differently.
      */
     protected open suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? {
-        val ref = DatabaseConnectionManager.getInstance().build(project, console.dataSource).setRequestor(HelperRequestor()).create() ?: return null
+        val ref = DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(console.dataSource)).setRequestor(HelperRequestor()).create() ?: return null
         return ref.use { use(it.get()) }
     }
 

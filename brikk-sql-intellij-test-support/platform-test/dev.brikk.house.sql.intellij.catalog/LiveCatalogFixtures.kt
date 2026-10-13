@@ -199,6 +199,35 @@ fun <T> withIdeConnection(project: Project, dataSource: LocalDataSource, request
         .let { checkNotNull(it) { "No connection" } }.use { use(it.get()) }
 
 /**
+ * How many rows [helper] inserted through [dataSource]'s startup script, set first as the data source's
+ * own and then as its driver's, while the user has [dataSource] connected (the user's connection opened
+ * before either was set, so it ran neither). A helper connection should run neither: both counts are 0.
+ */
+fun startupScriptRuns(project: Project, dataSource: LocalDataSource, helper: () -> Unit): List<Int> {
+    val driver = dataSource.databaseDriver as DatabaseDriverImpl
+    val table = "startup_counter_${UUID.randomUUID().toString().replace("-", "")}"
+    return withIdeConnection(project, dataSource, otherRequestor()) { user ->
+        user.remoteConnection.createStatement().execute("CREATE TABLE $table (n INTEGER)")
+        listOf("INSERT INTO $table VALUES (1)" to null, null to "INSERT INTO $table VALUES (2)").map { (own, drivers) ->
+            dataSource.initScript = own
+            driver.initScript = drivers
+            try {
+                helper()
+                val rows = user.remoteConnection.createStatement().executeQuery("SELECT count(*) FROM $table")
+                rows.next()
+                rows.getInt(1).also {
+                    rows.close()
+                    user.remoteConnection.createStatement().execute("DELETE FROM $table")
+                }
+            } finally {
+                dataSource.initScript = null
+                driver.initScript = null
+            }
+        }
+    }
+}
+
+/**
  * [connection] as a remote driver may behave: a running query ignores query timeouts and interrupts of
  * the waiting thread, and ends only when it completes or its statement is cancelled.
  */

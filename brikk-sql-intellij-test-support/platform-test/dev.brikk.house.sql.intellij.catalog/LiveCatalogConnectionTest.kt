@@ -61,6 +61,14 @@ class LiveCatalogConnectionTest : BasePlatformTestCase() {
         assertTrue(selection.inventory?.functions.orEmpty().any { it.def.name == "duckdb_functions" })
     }
 
+    /** A startup script (the data source's, else its driver's) is for the user's sessions: a refresh's connection runs none. */
+    fun testARefreshRunsNoStartupScript() {
+        val runs = startupScriptRuns(project, dataSource) {
+            assertInstanceOf(runBlocking { service.refresh(project, dataSource) }, RefreshOutcome.Refreshed::class.java)
+        }
+        assertEquals("the startup INSERT ran on the refresh's connection (own, driver's)", listOf(0, 0), runs)
+    }
+
     fun testANewConnectionHarvestsOncePerSessionThroughTheInterceptor() {
         withIdeConnection(project, dataSource, otherRequestor()) { }
         assertEquals(1, harvester.harvests.get())

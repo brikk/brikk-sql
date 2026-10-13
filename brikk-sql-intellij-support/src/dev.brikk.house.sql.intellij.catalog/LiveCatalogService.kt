@@ -257,8 +257,9 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     }
 
     /**
-     * Harvests [dataSource] over a helper connection of its own, which the interceptor skips, and stores
-     * the shared inventory; console sessions' facts stay. Cancellation propagates.
+     * Harvests [dataSource] over a helper connection of its own, which the interceptor skips and which
+     * runs no startup script ([HelperConnectionPoint]), and stores the shared inventory; console
+     * sessions' facts stay. Cancellation propagates.
      */
     public suspend fun refresh(project: Project, dataSource: LocalDataSource): RefreshOutcome {
         val profile = profile
@@ -266,7 +267,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val identity = profile.identity(dataSource)
         val ref = try {
             // The identity is taken before connecting, so a change while connecting cannot be mislabelled.
-            DatabaseConnectionManager.getInstance().build(project, dataSource).setRequestor(HelperRequestor()).create()
+            DatabaseConnectionManager.getInstance().build(project, HelperConnectionPoint(dataSource)).setRequestor(HelperRequestor()).create()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
