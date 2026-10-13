@@ -30,6 +30,7 @@ import dev.brikk.house.sql.intellij.diagnostics.NativeErrorAnnotator
 import dev.brikk.house.sql.intellij.diagnostics.TestProfile
 import dev.brikk.house.sql.intellij.pipe.FirstStageRule
 import dev.brikk.house.sql.intellij.pipe.TestPipeDialect
+import dev.brikk.house.sql.intellij.testing.HostSqlExecutionContract
 
 /** Claims against other injectors, real reanalysis, placeholders in every report, and the execution guard from the host editor. */
 class HostSqlClaimsTest : HostSqlTestCase() {
@@ -105,5 +106,13 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         claim = { host -> HostSqlClaim.Injected(postgres, content(host), pending = true, inspectionOnly = false) }
         open("SELECT 'FROM t |> SELECT *'")
         assertTrue(channel.isInspectionOnly(injected()))
+    }
+
+    fun testExecuteFromTheHostEditorIsRefused() {
+        claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
+        HostSqlExecutionContract(TestPipeDialect("trino", FirstStageRule.AnyQuery, channel)) {
+            open("SELECT 'FROM t |> WHERE id > <caret>0'")
+            myFixture.editor
+        }.refusesInspectionOnlySqlFromTheHostEditor()
     }
 }

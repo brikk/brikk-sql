@@ -7,6 +7,8 @@ import com.intellij.database.model.ObjectKind
 import com.intellij.database.script.ScriptModel
 import com.intellij.database.script.translator.TranslateException
 import com.intellij.database.settings.DatabaseSettings
+import com.intellij.injected.editor.EditorWindow
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -45,11 +47,23 @@ import org.jetbrains.annotations.ApiStatus
  * raw SQL. Destination identity is captured before preparation and rechecked before submission; the
  * edited document is pinned after the stock save. Refusals are notified, cancellation propagates.
  */
+/**
+ * The files Execute may run SQL of: the event's file and, from a host editor (a Kotlin file, say),
+ * the SQL injected at the caret, which the stock action runs in a console.
+ */
+internal fun executionFiles(event: AnActionEvent): List<PsiFile> {
+    val file = event.getData(CommonDataKeys.PSI_FILE)
+    val editor = event.getData(CommonDataKeys.EDITOR)
+    val atCaret = if (file != null && editor != null && editor !is EditorWindow) {
+        InjectedLanguageManager.getInstance(file.project).findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
+    } else null
+    return listOfNotNull(file, atCaret).distinct()
+}
+
 @ApiStatus.Experimental
 public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteInterceptor {
     override fun execute(event: AnActionEvent, option: DatabaseSettings.ExecOption): ExecutionClaim {
-        val file = event.getData(CommonDataKeys.PSI_FILE)
-        if (file != null && dialect.isInspectionHost(file)) {
+        if (executionFiles(event).any(dialect::isInspectionHost)) {
             dialect.notifyRefusal(event.project, INSPECTION_HOST, NotificationType.WARNING)
             return ExecutionClaim.HANDLED
         }
