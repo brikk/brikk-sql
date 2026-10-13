@@ -198,10 +198,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         val stamp = PsiDocumentManager.getInstance(file.project).getDocument(file)?.modificationStamp ?: return null
         val texts = fragments.map { PipeText.of(it ?: file) }
         if (texts.all { it.text.isBlank() }) return null
-        val dependencies = fragments.zip(texts) { fragment, text ->
-            val sqlFile = fragment ?: file
-            Dependencies(text.text, profile.validator(sqlFile), profile.modificationCount(sqlFile))
-        }
+        val dependencies = dependencies(file, fragments, texts)
         file.getUserData(outcomeKey)?.takeIf { it.profile === profile && it.stamp == stamp && it.dependencies == dependencies }
             ?.let { return Snapshot(stamp, emptyList(), it) }
         val sources = fragments.indices.map { index ->
@@ -226,7 +223,8 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         if (document.modificationStamp != outcome.stamp) return
         val fragments = if (file.language == profile.language) listOf(null) else injectedFragments(file)
         val texts = fragments.map { PipeText.of(it ?: file) }
-        if (texts.map(PipeText::text) != outcome.dependencies.map(Dependencies::script)) return
+        // So does a settings, connection or validator change: the restart it needs only schedules a new pass.
+        if (dependencies(file, fragments, texts) != outcome.dependencies) return
         file.putUserData(outcomeKey, outcome.takeIf { it.reusable })
         val manager = InjectedLanguageManager.getInstance(file.project)
         val annotated = HashSet<Triple<TextRange, DiagnosticSeverity, String>>()
@@ -242,6 +240,12 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             }
         }
     }
+
+    private fun dependencies(file: PsiFile, fragments: List<PsiFile?>, texts: List<PipeText>): List<Dependencies> =
+        fragments.zip(texts) { fragment, text ->
+            val sqlFile = fragment ?: file
+            Dependencies(text.text, profile.validator(sqlFile), profile.modificationCount(sqlFile))
+        }
 
     /** A source's diagnostics, positioned in its script, and whether every verdict in them is final. */
     private class Check(val diagnostics: List<SqlDiagnostic>, val final: Boolean)

@@ -287,6 +287,18 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertEquals(listOf<String>(), recorded(annotator, outcome))
     }
 
+    fun testAResultIsAppliedOnlyWhileItsDependenciesStay() {
+        open("SELECT bad;")
+        val annotator = PostgresErrorAnnotator()
+        val outcome = annotator.doAnnotate(annotator.collectInformation(myFixture.file))
+        postgresProfile.revision++
+        assertEquals(listOf<String>(), recorded(annotator, outcome))
+        postgresProfile.revision--
+        assertEquals(listOf("no bad here"), recorded(annotator, outcome))
+        postgresProfile.validator = ScriptedValidator(::rejectBad)
+        assertEquals(listOf<String>(), recorded(annotator, outcome))
+    }
+
     /** Messages [annotator] creates when applying [outcome] to the current file. */
     private fun recorded(annotator: NativeErrorAnnotator, outcome: NativeErrorAnnotator.Outcome?): List<String> {
         val messages = mutableListOf<String>()

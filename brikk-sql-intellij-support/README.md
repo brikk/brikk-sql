@@ -130,16 +130,17 @@ validator's `verify`; the diagnostics themselves are core's plain data
   `injectionHosts`), never other inspections or annotators. Its match is exact where
   `SubstrateErrorFilter` uses `isKindOf`; a plugin turning the option on replaces that filter
   with this one rather than keeping both.
-- A result is applied only at the document revision and text it was computed for, and later passes
-  at that revision reuse it. Cancellation propagates unchanged; `debounce` waits for typing to pause
+- A result is applied only while its document revision, text, validator instance and the profile's
+  `modificationCount` are unchanged, and later passes reuse it then. Cancellation propagates unchanged; `debounce` waits for typing to pause
   (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass (a
   verifier still running then is canceled or abandoned, and local results show). All off by
   default.
 - Only files of exactly the profile's language are annotated, so each consumer acts on its own
   dialect. SQL injected into `injectionHosts` languages (register the annotator for each host too;
   external annotators do not run on fragments) is read unescaped, every fragment of a file, and
-  marked at its host text, cut to editable parts; only equal diagnostics count as duplicates. Frankenstein fragments
-  (templates with uncertain holes) are not checked and keep the platform's handling.
+  marked at its host text, cut to editable parts; only equal diagnostics count as duplicates.
+  Frankenstein fragments (templates with uncertain holes) are not checked and keep the platform's
+  handling.
 - Hooks: `statementDiagnostics` replaces a statement's check (PIPE lowering, Brikk templates),
   `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
   masks binds at equal length, `message` formats.
