@@ -104,6 +104,7 @@ class RelationScopeTest {
         val sql = "SELECT two.t.id, one.t.id, t.id FROM one.t CROSS JOIN two.t"
         val scope = analyze(sql, input = two)
         assertEquals("two", scope.column(sql, "id").columns.single().provenance)
+        assertEquals("two.t", scope.column(sql, "id").columns.single().relation)
         assertEquals("one", scope.column(sql, "id", 1).columns.single().provenance)
         assertEquals(Resolution.AMBIGUOUS, scope.column(sql, "id", 2).resolution)
         assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), analyze("SELECT other.v.a FROM db.v", input = two).problems())
@@ -123,6 +124,9 @@ class RelationScopeTest {
         assertEquals(Nullability.NON_NULL, key(Nullability.NON_NULL, Nullability.NON_NULL))
         assertEquals(Nullability.NULLABLE, key(Nullability.NON_NULL, Nullability.NULLABLE))
         assertEquals(Nullability.UNKNOWN, key(Nullability.NON_NULL, Nullability.UNKNOWN))
+        val typed = RelationFacts(slots = listOf("a", "b").associateWith { RelationFact(listOf(ColumnFact("id", "BIGINT", "kotlin.Long"))) })
+        val merged = checkNotNull(analyze("SELECT id FROM a() FULL JOIN b() USING (id)", input = typed).output).columns.single()
+        assertEquals("BIGINT" to "kotlin.Long", merged.sqlType to merged.displayType)
     }
 
     @Test
@@ -293,6 +297,20 @@ class RelationScopeTest {
         assertEquals(listOf("id", "eventKind"), at("FROM events() |> RENAME <caret>"))
         assertEquals(listOf("id", "eventKind"), at("FROM events() |> RENAME id AS k, <caret>"))
         assertEquals(listOf("id", "eventKind"), at("SELECT * EXCLUDE (<caret>) FROM events()"))
+    }
+
+    @Test
+    fun relationPositionsOfferCtesTablesSlotsAndTableFunctions() {
+        val input = facts.copy(calls = mapOf("read_rows" to RelationFact(knowledge = Knowledge.UNKNOWN)))
+        fun at(sql: String) = RelationScope.complete(sql.replace("<caret>", ""), "duckdb", input, sql.indexOf("<caret>"))
+        val from = at("WITH recent AS (SELECT id FROM events()) SELECT * FROM recent r JOIN <caret>")
+        assertEquals(PositionKind.RELATION, from.position)
+        assertEquals(listOf("recent", "db.accounts", "events()", "partial()", "unknown()", "read_rows()"), from.items.map { it.insertText })
+        assertEquals(listOf(RelationKind.CTE, RelationKind.TABLE, RelationKind.SLOT, RelationKind.SLOT, RelationKind.SLOT, RelationKind.CALL),
+            from.items.map { it.relation?.kind })
+        assertTrue(from.items.all { it.kind == CompletionKind.RELATION && it.column == null })
+        assertEquals(listOf("accounts"), at("SELECT * FROM db.<caret>").items.map { it.insertText })
+        assertEquals(listOf("db.accounts", "events()", "partial()", "unknown()", "read_rows()"), at("SELECT * FROM ev<caret>").items.map { it.insertText })
     }
 
     @Test

@@ -209,12 +209,17 @@ internal class CaretCompletion(
                 parent is Table -> PositionKind.RELATION
                 else -> PositionKind.OTHER
             }
-            if (kind != PositionKind.COLUMN) return none(kind)
+            if (kind != PositionKind.COLUMN && kind != PositionKind.RELATION) return none(kind)
             val evaluator = ScopeEvaluator(dialect, facts, names, origins, checkCanceled, MARKER)
             val queries = if (lowered.isQuery()) listOf(lowered) else lowered.outermostQueries()
             // Outside any query the marker is a word being typed, not a column.
             if (queries.isEmpty()) return none(PositionKind.OTHER)
             queries.forEach { evaluator.query(it, Env(emptyList(), null)) }
+            if (kind == PositionKind.RELATION) {
+                val table = parent as Table
+                val qualifier = listOf("catalog", "db").mapNotNull { (table.args[it] as? Identifier)?.name }
+                return ScopeCompletion(kind, null, start, end, edit.prefix, relations(evaluator.caretCtes.orEmpty(), qualifier, start, end, edit.quoted))
+            }
             val site = evaluator.caret ?: return ScopeCompletion(kind, Knowledge.UNKNOWN, start, end, edit.prefix, emptyList())
             val (found, absence) = candidates(evaluator, site)
             // Pipe lowering may also project the marker itself, as an AGGREGATE grouping does.
@@ -263,6 +268,35 @@ internal class CaretCompletion(
         return emptyList<ScopeColumn>() to if (field.candidates.isNotEmpty()) Knowledge.UNKNOWN else field.knowledge
     }
 
+    /**
+     * What a FROM item may name: CTEs in scope and the facts' tables, slots and table functions;
+     * after a qualifier, the tables under it, inserted without it.
+     */
+    private fun relations(ctes: List<Cte>, qualifier: List<String>, start: Int, end: Int, quoted: Boolean): List<CompletionItem> {
+        fun relation(name: String, kind: RelationKind, fact: RelationFact?, source: String?, declaration: ScopeRange? = null) =
+            ScopeRelation(name, kind, fact?.knowledge ?: Knowledge.FULL, source, fact?.provenance, declaration)
+        val tables = facts.tables.mapNotNull { (key, fact) ->
+            val parts = key.split('.')
+            if (parts.size <= qualifier.size || parts.take(qualifier.size).zip(qualifier).any { (a, b) -> !a.equals(b, ignoreCase = true) }) return@mapNotNull null
+            val name = parts.drop(qualifier.size).joinToString(".")
+            CompletionItem(name, CompletionKind.RELATION, parts.drop(qualifier.size).joinToString(".") { insertText(it, quoted, columns = false) },
+                start, end, "table", null, relation = relation(name, RelationKind.TABLE, fact, key))
+        }
+        if (qualifier.isNotEmpty()) return tables
+        val visible = ctes.asReversed().distinctBy { it.name.name.lowercase() }.map { cte ->
+            CompletionItem(cte.name.name, CompletionKind.RELATION, insertText(cte.name.name, quoted, columns = false), start, end, "CTE", null,
+                relation = ScopeRelation(cte.name.name, RelationKind.CTE, cte.row.knowledge, cte.name.name))
+        }
+        // Slot and function keys are exact provider names, inserted as calls.
+        val slots = facts.slots.map { (key, fact) ->
+            CompletionItem(key, CompletionKind.RELATION, "$key()", start, end, "slot", null, relation = relation(key, RelationKind.SLOT, fact, key))
+        }
+        val calls = facts.calls.map { (key, fact) ->
+            CompletionItem(key, CompletionKind.RELATION, "$key()", start, end, "table function", null, relation = relation(key, RelationKind.CALL, fact, key))
+        }
+        return visible + tables + slots.takeUnless { quoted }.orEmpty() + calls.takeUnless { quoted }.orEmpty()
+    }
+
     private fun item(column: ScopeColumn, start: Int, end: Int, quoted: Boolean): CompletionItem {
         val relation = column.source?.relation ?: column.relation
         val detail = when (column.origin) {
@@ -275,9 +309,9 @@ internal class CaretCompletion(
     }
 
     /** The name as SQL must spell it: quoted where it was or unless a bare identifier reads back as the same column. */
-    private fun insertText(name: String, quoted: Boolean): String {
+    private fun insertText(name: String, quoted: Boolean, columns: Boolean = true): String {
         val bare = !quoted && SAFE_IDENTIFIER_RE.matches(name) &&
-            (dialect.caseInsensitiveColumns || !dialect.caseSensitive(name)) &&
+            (columns && dialect.caseInsensitiveColumns || !dialect.caseSensitive(name)) &&
             Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(name).tokens.singleOrNull()?.tokenType == TokenType.VAR
         return dialect.generate(Identifier(args("this" to name, "quoted" to !bare)))
     }
