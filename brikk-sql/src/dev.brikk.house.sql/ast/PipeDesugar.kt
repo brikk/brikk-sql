@@ -212,7 +212,7 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
             ) || stage is PipeOrderBy && (!directProjection || query.args["limit"] != null || query.args["offset"] != null)) {
         query = pipeInputCte(query, stage, counter)
     }
-    if (needsWholeRows(query, stage)) query = wholeRowInput(query, counter)
+    if (needsWholeRows(query, stage)) query = wholeRowInput(query, stage, counter)
     return when (stage) {
         // sqlglot: Parser._parse_pipe_syntax_select
         is PipeSelect -> {
@@ -446,11 +446,23 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
 }
 
 /** The input namespace a boundary preserves and the ranking order DISTINCT ON keeps, or why it cannot. */
-private fun pipeInputBoundary(query: Expression, stage: Expression, counter: PipeCteCounter): Pair<Identifier?, Expression?> {
+/**
+ * [references] holds the stage's column references that must still resolve past the boundary.
+ * With [wholeRows] (a stage reading whole rows: JOIN, AGGREGATE, EXTEND, ...) the input may span
+ * several sources or repeat a name: only a qualifier the boundary cannot keep is refused.
+ */
+private fun pipeInputBoundary(
+    query: Expression,
+    stage: Expression,
+    counter: PipeCteCounter,
+    references: Expression = stage,
+    wholeRows: kotlin.Boolean = false,
+): Pair<Identifier?, Expression?> {
     val operation = when (stage) {
         is PipeWhere -> "WHERE"
         is PipeOrderBy -> "ORDER BY"
-        else -> "SELECT/DISTINCT"
+        is PipeSelect, is PipeDistinct -> "SELECT/DISTINCT"
+        else -> stage::class.simpleName.orEmpty().removePrefix("Pipe").uppercase()
     }
     fun bindingName(identifier: kotlin.Any?): String? = (identifier as? Identifier)?.let {
         normalizeIdentifiers(it.copy(), dialect = counter.dialect).name
@@ -467,10 +479,10 @@ private fun pipeInputBoundary(query: Expression, stage: Expression, counter: Pip
         throw UnsupportedError("Cannot preserve pipe input namespaces: ${error.message}")
     }
     val singleRowset = rowsetName != null
-    if (!singleRowset && hasStar) {
+    if (!singleRowset && hasStar && !wholeRows) {
         throw UnsupportedError("Cannot preserve a pipe $operation input boundary over multiple or unresolved source namespaces and stars; project uniquely named input columns first")
     }
-    if (!hasStar && (projections.any { it.outputName.isEmpty() } ||
+    if (!wholeRows && !hasStar && (projections.any { it.outputName.isEmpty() } ||
             projections.map { it.outputName.lowercase() }.toSet().size != projections.size)) {
         throw UnsupportedError("Pipe $operation input boundaries require uniquely named input columns; add explicit aliases")
     }
@@ -492,7 +504,7 @@ private fun pipeInputBoundary(query: Expression, stage: Expression, counter: Pip
     // qualified physical table case but folds alias/column identifiers separately.
     val scopedSource = (inputScope.expression.args["from_"] as? From)?.thisArg as? Expression
     val namespace = sourceAlias.takeIf { singleRowset && wholeRowset && scopedSource?.aliasOrName == rowsetName }
-    val stageScope = pipeScope(Select(args("expressions" to listOf(stage.copy()))), counter.dialect)
+    val stageScope = pipeScope(Select(args("expressions" to listOf(references.copy()))), counter.dialect)
     val stageAnalysis = stageScope.expression.expressionsArg.single() as Expression
     val stageColumns = mutableListOf<Column>()
     // Scope.columns omits child-CTE correlations and stars. Inspect direct
@@ -621,16 +633,35 @@ private fun needsWholeRows(query: Expression, stage: Expression): kotlin.Boolean
 }
 
 /** [query]'s rows behind a CTE; a single aliased source of a plain `*` keeps its alias, as a WHERE boundary does. */
-private fun wholeRowInput(query: Expression, counter: PipeCteCounter): Select {
-    val source = (query.args["from_"] as? From)?.thisArg as? Expression
-    val alias = (source?.args?.get("alias") as? TableAlias)?.thisArg as? Identifier
-    val single = query.isPlainStar() && (query.args["joins"] as? List<*>).isNullOrEmpty() &&
-        (query.args["laterals"] as? List<*>).isNullOrEmpty()
+private fun wholeRowInput(query: Expression, stage: Expression, counter: PipeCteCounter): Select {
+    val namespace = keptNamespace(query, stage, counter)
     val outer = buildPipeCte(query, listOf(Star()), counter)
-    if (single && alias != null) {
-        ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to alias.copy())))
-    }
+    if (namespace != null) ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
     return outer
+}
+
+/**
+ * The namespace a whole-row boundary before [stage] keeps, by WHERE's rule (a single source,
+ * aliased or a bare table, read whole); a stage qualifying by any other old namespace is refused,
+ * or in a lenient lowering loses it.
+ */
+private fun keptNamespace(query: Expression, stage: Expression, counter: PipeCteCounter): Identifier? = try {
+    pipeInputBoundary(query, stage, counter, references = stageReferences(stage), wholeRows = true).first
+} catch (e: UnsupportedError) {
+    if (!counter.lenient) throw e
+    null
+}
+
+/** The part of [stage] whose columns read the stage's input: a JOIN's condition, without the joined relation's own columns. */
+private fun stageReferences(stage: Expression): Expression {
+    val join = (stage as? PipeJoin)?.thisArg as? Join ?: return stage
+    val condition = (join.args["on"] as? Expression)?.copy() ?: return Null()
+    val joined = (join.thisArg as? Expression)?.aliasOrName?.lowercase()
+    if (condition is Column) return if (condition.table.lowercase() == joined) Null() else condition
+    for (column in condition.findAll<Column>().toList()) {
+        if (column.table.isNotEmpty() && column.table.lowercase() == joined) column.replace(Null())
+    }
+    return condition
 }
 
 /** Slices change rows, not scopes: a lenient lowering keeps a slice it cannot compose as written. */
