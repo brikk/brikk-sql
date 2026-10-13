@@ -52,7 +52,7 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
         val psiReference: PsiReference = reference
         val element = psiReference.element
         val file = element.containingFile ?: return true
-        val analysis = RelationAnalysis.of(file, profile) ?: return true
+        val analysis = RelationAnalysis.of(file, profile, lastKnown = true) ?: return true
         val start = analysis.source.textOffset(element.textRange.startOffset + psiReference.rangeInElement.startOffset)
         val scoped = analysis.referenceAt(start)?.takeIf { it.kind == ReferenceKind.COLUMN && it.start == start } ?: return true
         for (column in scoped.columns) {

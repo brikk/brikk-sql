@@ -5,9 +5,11 @@ import com.intellij.database.types.DasTypeSystemBase
 import com.intellij.lang.LanguageParserDefinitions
 import com.intellij.lang.PsiParser
 import com.intellij.lexer.Lexer
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.fileTypes.PlainTextLanguage
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiNamedElement
@@ -114,6 +116,30 @@ class RelationNativeAdapterTest : RelationTestCase() {
         openInProject("SELECT e.id FROM events() e")
         myFixture.renameElement(checkNotNull(declarations["id"]), "key")
         assertEquals("SELECT e.key FROM events() e", myFixture.editor.document.text)
+    }
+
+    fun testRenamingNeverAsksForFactsUnderWriteAccess() {
+        openInProject("SELECT e.id, e.kind FROM events() e WHERE e.id > 0")
+        pgRelations.fake.refusesWriteAccess = true
+        myFixture.renameElement(checkNotNull(declarations["id"]), "key")
+        assertEquals("SELECT e.key, e.kind FROM events() e WHERE e.key > 0", myFixture.editor.document.text)
+        assertEquals(0, pgRelations.fake.writeAccessCalls)
+        // Find usages of the other declaration still works afterwards.
+        assertEquals(1, ReferencesSearch.search(checkNotNull(declarations["kind"])).findAll().count { it.element.containingFile == myFixture.file })
+    }
+
+    fun testPendingFactsKeepTheLastTypeOfUnchangedSql() {
+        open("SELECT e.id FROM events() e")
+        val call = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlFunctionCallExpressionImpl::class.java).single()
+        val known = checkNotNull(RelationTableTypes.of(call, pgRelations))
+        pgRelations.fake.pending = true
+        assertEquals(known.columnCount, RelationTableTypes.of(call, pgRelations)?.columnCount)
+        assertEquals(declarations["id"], resolved("id")?.navigationElement)
+        // Changed SQL has no last analysis to fall back to.
+        WriteCommandAction.runWriteCommandAction(project) { myFixture.editor.document.insertString(0, " ") }
+        PsiDocumentManager.getInstance(project).commitAllDocuments()
+        val changed = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlFunctionCallExpressionImpl::class.java).single()
+        assertNull(RelationTableTypes.of(changed, pgRelations))
     }
 
     fun testWithoutADeclarationAColumnLeadsToTheCall() {
