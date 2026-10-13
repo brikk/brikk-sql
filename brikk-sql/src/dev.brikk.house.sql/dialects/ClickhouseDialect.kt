@@ -32,6 +32,7 @@ open class ClickhouseDialect : Dialect() {
 
     // sqlglot: ClickHouseParser._parse_query_parameter
     override val typedQueryParameters: Boolean get() = true
+    override val questionMarkTernary: Boolean get() = true
 
     // sqlglot: ClickHouse.FORCE_EARLY_ALIAS_REF_EXPANSION
     override val forceEarlyAliasRefExpansion: Boolean get() = true

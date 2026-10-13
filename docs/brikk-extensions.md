@@ -1880,6 +1880,14 @@ core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the Cl
 generator instead reuses the authored text while the parsed placeholder is unchanged, so
 lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
 
+ClickHouse's `?` is also the ternary operator (`cond ? a : b`), so editor discovery
+(`SqlScriptParameters.parse(text, dialect, positional = true)`) tells them apart by tokens as the
+IDE's ClickHouse grammar does (`Dialect.questionMarkTernary`): a `?` after a complete operand opens a
+ternary, the `:` after a complete operand closing it is never a bind (`x ? y :z`), and `?` or `:name`
+in operand position stay binds. A `?` tokens cannot prove (a ternary never closed, an empty middle)
+is reported as `ambiguous`; the IDE calls it a parameter. One known divergence: for a bind opening a
+ternary's middle (`x ? :p : ?`), the IDE also takes the ternary `?` for a parameter.
+
 ## 55. Executable refusal for pipe stages the target rejects
 
 Executable lowering (`toExecutable`, `toStandardSql`, source-preserving lowering and so

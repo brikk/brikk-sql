@@ -47,7 +47,8 @@ fun maskNamedParameters(sql: String, dialect: String): String {
  * completion, never as execution input (that is [parseParameterOccurrences]). Occurrences are
  * found only before the first lexical failure ([failureOffset], as in [SqlScriptSnapshot]),
  * so an unterminated string, comment or quoted identifier never yields a phantom bind.
- * Offsets are UTF-16, half-open.
+ * Offsets are UTF-16, half-open. [ambiguous] holds the `?` tokens cannot prove to be a bind or
+ * an operator (see [parse]).
  */
 data class SqlScriptParameters(
     val text: String,
@@ -55,6 +56,7 @@ data class SqlScriptParameters(
     val occurrences: List<ParameterOccurrence>,
     val failureOffset: Int? = null,
     val error: String? = null,
+    val ambiguous: List<SyntacticRange> = emptyList(),
 ) {
     companion object {
         /**
@@ -76,13 +78,26 @@ data class SqlScriptParameters(
          *
          * Where the dialect has typed server parameters (ClickHouse), each `{name:Type}` is
          * reported as [ParamStyle.NAMED_TYPED] over its whole braces, for callers to skip.
+         *
+         * With [positional], each `?` bind is reported too, as [ParamStyle.POSITIONAL] without a name.
+         * Where `?` is also the ternary operator (ClickHouse `cond ? a : b`, as the IDE's ClickHouse
+         * grammar reads it), a `?` after a complete operand is the operator and opens a ternary,
+         * and a `:` after a complete operand closes the nearest open one in the same brackets and is
+         * never a bind (`x ? y :z`); a `?` or `:name` in operand position stays a bind (`x ? ? : :c`).
+         * A `?` that tokens cannot prove is reported in [ambiguous] and not as a bind: a ternary
+         * left open at its statement's or brackets' end (`SELECT x ?`), or one with an empty middle
+         * (`x ?:y`); the IDE calls such a `?` a parameter. Ternaries are told apart without
+         * [positional] too, so their colons are never reported as binds.
          */
-        fun parse(text: String, dialect: String, checkCanceled: () -> Unit = {}): SqlScriptParameters {
+        fun parse(text: String, dialect: String, checkCanceled: () -> Unit = {}): SqlScriptParameters = parse(text, dialect, false, checkCanceled)
+
+        /** [parse], with each `?` bind reported when [positional]. */
+        fun parse(text: String, dialect: String, positional: Boolean, checkCanceled: () -> Unit = {}): SqlScriptParameters {
             val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text, checkCanceled)
             val source = Dialects.forName(dialect)
             val typeTokens = if (source.typedQueryParameters) source.parser().typeTokens else null
-            val binds = colonBinds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, checkCanceled)
-            return SqlScriptParameters(text, dialect, binds, lexed.failureOffset, lexed.error)
+            val found = binds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, source.questionMarkTernary, positional, checkCanceled)
+            return SqlScriptParameters(text, dialect, found.first, lexed.failureOffset, lexed.error, if (positional) found.second else emptyList())
         }
 
         private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE, RANGE }
@@ -96,6 +111,7 @@ data class SqlScriptParameters(
             private val counts = IntArray(Bracket.entries.size)
 
             val innermost: Open? get() = stack.lastOrNull()
+            val depth: Int get() = stack.size
             val inType: Boolean get() = counts[Bracket.TYPE.ordinal] > 0
 
             fun push(kind: Bracket) {
@@ -147,24 +163,46 @@ data class SqlScriptParameters(
                 SyntacticRange(name.start, name.end + 1)) to close
         }
 
-        private fun colonBinds(
+        private fun binds(
             text: String,
             tokens: List<Token>,
             typeTokens: Set<TokenType>?,
             halfOpenRanges: Boolean,
+            ternary: Boolean,
+            positional: Boolean,
             checkCanceled: () -> Unit,
-        ): List<ParameterOccurrence> {
+        ): Pair<List<ParameterOccurrence>, List<SyntacticRange>> {
             val open = OpenBrackets()
             val binds = ArrayList<ParameterOccurrence>()
+            val ambiguous = ArrayList<SyntacticRange>()
+            // Each open ternary's `?` with the bracket depth it stands at.
+            val ternaries = ArrayList<Pair<Token, Int>>()
             var bindNameEnd = -1
             var skipThrough = -1
             fun endsOperand(previous: Token?) = previous != null && (previous.tokenType in OPERAND_ENDS || previous.end == bindNameEnd)
+            fun leaveTernaries(depth: Int) {
+                while (ternaries.isNotEmpty() && ternaries.last().second > depth) {
+                    val question = ternaries.removeAt(ternaries.lastIndex).first
+                    ambiguous += SyntacticRange(question.start, question.end + 1)
+                }
+            }
             for ((index, token) in tokens.withIndex()) {
                 if (index and 1023 == 1023) checkCanceled()
                 if (index <= skipThrough) continue
                 val previous = tokens.getOrNull(index - 1)
                 when (token.tokenType) {
-                    TokenType.SEMICOLON -> open.clear()
+                    TokenType.SEMICOLON -> {
+                        leaveTernaries(-1)
+                        open.clear()
+                    }
+                    TokenType.PLACEHOLDER -> if (token.text == "?") {
+                        if (ternary && endsOperand(previous)) {
+                            ternaries += token to open.depth
+                        } else {
+                            if (positional) binds += ParameterOccurrence(null, ParamStyle.POSITIONAL, SyntacticRange(token.start, token.end + 1), null)
+                            bindNameEnd = token.end
+                        }
+                    }
                     TokenType.L_PAREN -> open.push(Bracket.PAREN)
                     TokenType.L_BRACKET -> open.push(when {
                         halfOpenRanges && previous?.tokenType == TokenType.VALUES -> Bracket.RANGE
@@ -182,11 +220,30 @@ data class SqlScriptParameters(
                         open.push(Bracket.TYPE)
                     }
                     TokenType.GT -> if (open.innermost?.kind == Bracket.TYPE) open.close(Bracket.TYPE)
-                    TokenType.R_PAREN -> open.close(Bracket.PAREN, Bracket.RANGE)
-                    TokenType.R_BRACKET -> open.close(Bracket.ARRAY, Bracket.SUBSCRIPT)
-                    TokenType.R_BRACE -> open.close(Bracket.MAP)
+                    TokenType.R_PAREN -> {
+                        open.close(Bracket.PAREN, Bracket.RANGE)
+                        leaveTernaries(open.depth)
+                    }
+                    TokenType.R_BRACKET -> {
+                        open.close(Bracket.ARRAY, Bracket.SUBSCRIPT)
+                        leaveTernaries(open.depth)
+                    }
+                    TokenType.R_BRACE -> {
+                        open.close(Bracket.MAP)
+                        leaveTernaries(open.depth)
+                    }
                     TokenType.COMMA -> open.innermost?.takeIf { it.kind == Bracket.MAP }?.colonSeen = false
                     TokenType.COLON -> {
+                        val pending = ternaries.lastOrNull()?.takeIf { it.second == open.depth }
+                        val next = tokens.getOrNull(index + 1)
+                        val startsBind = next != null && next.start == token.end + 1 && text.getOrNull(token.start - 1) != ':' &&
+                            PARAMETER_NAME.matchAt(text, next.start) != null
+                        if (pending != null && (endsOperand(previous) || previous === pending.first && !startsBind)) {
+                            // The ternary's colon; an empty middle (`x ? : y`) is not proven either way.
+                            ternaries.removeAt(ternaries.lastIndex)
+                            if (previous === pending.first) ambiguous += SyntacticRange(pending.first.start, pending.first.end + 1)
+                            continue
+                        }
                         val innermost = open.innermost
                         val syntax = when {
                             open.inType -> true
@@ -210,7 +267,8 @@ data class SqlScriptParameters(
                     else -> {}
                 }
             }
-            return binds
+            leaveTernaries(-1)
+            return binds to ambiguous
         }
 
         // A fused multiword keyword (`double precision`) binds only its first word.
