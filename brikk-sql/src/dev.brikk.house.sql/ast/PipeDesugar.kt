@@ -336,11 +336,15 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
                     )
                 ) as Expression
             }
+            // New values may read the input by its name: FROM t e |> SET a = e.a + 1.
+            val namespace = if (stage.findAll<Column>().any { it.table.isNotEmpty() }) keptNamespace(query, stage, counter) else null
             buildPipeCte(
                 query,
                 listOf(Star(args("replace" to replaceList.toMutableList()))),
                 counter,
-            )
+            ).also { replaced ->
+                if (namespace != null) ((replaced.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
+            }
         }
 
         // googlesql: pipe DROP (docs/pipe-syntax.md ~713) — NO sqlglot counterpart.

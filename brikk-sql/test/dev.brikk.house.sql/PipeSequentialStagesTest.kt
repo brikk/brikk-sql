@@ -71,4 +71,13 @@ class PipeSequentialStagesTest {
             lowered("FROM t |> LIMIT 3 |> EXTEND row_number() OVER (ORDER BY a) AS rn"))
         assertEquals("WITH __tmp1 AS (SELECT *, a + 1 AS x FROM t LIMIT 3) SELECT * FROM __tmp1", lowered("FROM t |> LIMIT 3 |> EXTEND a + 1 AS x"))
     }
+
+    @Test
+    fun setValuesReadTheInputByItsName() {
+        assertEquals("WITH __tmp1 AS (SELECT * FROM t AS e), __tmp2 AS (SELECT * REPLACE (e.a + 1 AS a) FROM __tmp1 AS e) SELECT * FROM __tmp2 WHERE a > 2",
+            lowered("FROM t e |> SET a = e.a + 1 |> WHERE a > 2"))
+        assertEquals(emptyList(), problems("FROM t |> SET a = t.a + 1 |> WHERE a > 2"))
+        // The SET output is a new row: the old name is gone after it.
+        assertEquals(listOf(ScopeProblem.UNKNOWN_QUALIFIER), problems("FROM t e |> SET b = 'z' |> WHERE e.a > 1"))
+    }
 }
