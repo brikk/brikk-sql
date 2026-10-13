@@ -45,3 +45,37 @@ fun sourceOffset(
         }
     }
 }
+
+/** A 1-based line and a column counted from the line's first column. */
+data class SourcePosition(val line: Int, val column: Int)
+
+/**
+ * brikk-native: the line and column of the UTF-16 [offset] in [text], the inverse of
+ * [sourceOffset]: an LSP position is `sourcePosition(text, offset, firstColumn = 0)` with the
+ * line made 0-based. Lines break at LF; an offset inside a surrogate pair counts as its code
+ * point's start in [ColumnUnit.CODE_POINT].
+ */
+fun sourcePosition(text: String, offset: Int, unit: ColumnUnit = ColumnUnit.UTF16, firstColumn: Int = 1): SourcePosition {
+    require(offset in 0..text.length) { "Offset $offset is outside the text" }
+    var line = 1
+    var lineStart = 0
+    for (index in 0 until offset) if (text[index] == '\n') {
+        line++
+        lineStart = index + 1
+    }
+    val column = when (unit) {
+        ColumnUnit.UTF16 -> offset - lineStart
+        ColumnUnit.CODE_POINT -> {
+            var count = 0
+            var index = lineStart
+            while (index < offset) {
+                val width = if (text[index].isHighSurrogate() && index + 1 < text.length && text[index + 1].isLowSurrogate()) 2 else 1
+                if (index + width > offset) break
+                index += width
+                count++
+            }
+            count
+        }
+    }
+    return SourcePosition(line, firstColumn + column)
+}
