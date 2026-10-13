@@ -29,7 +29,7 @@ cd "$(dirname "$0")"
 SQL_MODULES=(
   brikk-sql brikk-sql-metadata
   brikk-sql-verify-api brikk-sql-verify-trino brikk-sql-verify-duckdb brikk-sql-verify-doris
-  brikk-sql-verify-shardingsphere brikk-sql-verify
+  brikk-sql-verify-shardingsphere brikk-sql-verify-clickhouse brikk-sql-verify
   brikk-sql-oracle
 )
 

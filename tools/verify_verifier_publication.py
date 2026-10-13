@@ -25,6 +25,8 @@ ARTIFACTS = {
     'brikk-sql-verify-duckdb': [API, ('org.duckdb', 'duckdb_jdbc'), STDLIB],
     'brikk-sql-verify-doris': [API, ('org.antlr', 'antlr4-runtime'), STDLIB],
     'brikk-sql-verify-shardingsphere': [API, *SHARDINGSPHERE, STDLIB],
+    # The user's own server and driver: no driver dependency.
+    'brikk-sql-verify-clickhouse': [API, STDLIB],
     'brikk-sql-verify': [API, *[(GROUP, engine) for engine in ENGINES], STDLIB],
 }
 NS = {'m': 'http://maven.apache.org/POM/4.0.0'}

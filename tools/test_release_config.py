@@ -94,7 +94,7 @@ class ReleaseLauncherTest(unittest.TestCase):
         self.assertEqual(["task"] + [f":{module}:publishToMavenCentral" for module in (
             "brikk-sql", "brikk-sql-metadata",
             "brikk-sql-verify-api", "brikk-sql-verify-trino", "brikk-sql-verify-duckdb", "brikk-sql-verify-doris",
-            "brikk-sql-verify-shardingsphere", "brikk-sql-verify",
+            "brikk-sql-verify-shardingsphere", "brikk-sql-verify-clickhouse", "brikk-sql-verify",
             "brikk-sql-oracle",
         )], (self.root / "observed-args.txt").read_text().splitlines())
 
