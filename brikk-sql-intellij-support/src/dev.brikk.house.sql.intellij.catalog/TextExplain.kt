@@ -200,10 +200,10 @@ public abstract class TextExplainService(protected val project: Project, private
                     val seconds = profile.timeout.inWholeSeconds.toInt().coerceAtLeast(1)
                     for (statement in setup) {
                         proceed()
-                        connection.executeStatement(statement, seconds, register)
+                        connection.executeStatement(statement, seconds, register, cancelled::get)
                     }
                     proceed()
-                    val rows = connection.queryRows(sql, MAX_PLAN_ROWS, seconds, onStatement = register)
+                    val rows = connection.queryRows(sql, MAX_PLAN_ROWS, seconds, onStatement = register, isCancelled = cancelled::get)
                     proceed()
                     ExplainOutcome.Plan(explainPlanText(rows.map { it.values.firstOrNull() as? String }))
                 }

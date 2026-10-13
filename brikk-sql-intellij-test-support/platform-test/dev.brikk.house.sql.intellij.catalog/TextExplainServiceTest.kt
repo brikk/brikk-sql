@@ -36,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /**
  * Text explain against a real DuckDB data source through the IDE's driver process. The profile explains
@@ -163,6 +164,53 @@ class TextExplainServiceTest : BasePlatformTestCase() {
             .registerExtension(LiveInterceptor(), testRootDisposable)
         assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
         assertEquals(0, harvester.harvests.get())
+    }
+
+    /** Cancelled while the EXPLAIN's statement is being created: the new statement is cancelled and closed, never run. */
+    fun testCancellingWhileTheStatementIsCreatedRunsNothing() {
+        val creating = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val created = AtomicInteger()
+        val cancels = AtomicInteger()
+        val queries = AtomicInteger()
+        fun <T> proxy(type: Class<T>, call: (String) -> Any?): T =
+            type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, _ -> call(method.name) })
+        val remote = proxy(RemoteConnection::class.java) { name ->
+            check(name == "createStatement") { name }
+            // The setup's statements first (the namespace switch and the context), then the EXPLAIN's.
+            if (created.incrementAndGet() == 3) {
+                creating.countDown()
+                while (release.count > 0) try {
+                    release.await(5, TimeUnit.SECONDS)
+                } catch (_: InterruptedException) {
+                }
+            }
+            proxy(RemoteStatement::class.java) { operation ->
+                when (operation) {
+                    "setQueryTimeout", "close" -> null
+                    "cancel" -> cancels.incrementAndGet().let { null }
+                    "execute" -> false
+                    "executeQuery" -> queries.incrementAndGet().let { error("EXPLAIN ran after cancelling") }
+                    else -> error(operation)
+                }
+            }
+        }
+        val connection = proxy(DatabaseConnectionCore::class.java) { name -> if (name == "getRemoteConnection") remote else error(name) }
+        val service = object : Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms)) {
+            override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T = use(connection)
+        }
+        runBlocking {
+            val running = launch(Dispatchers.Default) { service.explain(recording.console, "SELECT count(*) FROM t") }
+            try {
+                assertTrue(withContext(Dispatchers.IO) { creating.await(30, TimeUnit.SECONDS) })
+                running.cancel()
+            } finally {
+                release.countDown()
+                running.join()
+            }
+        }
+        assertEquals("the new statement is cancelled", 1, cancels.get())
+        assertEquals(0, queries.get())
     }
 
     /**

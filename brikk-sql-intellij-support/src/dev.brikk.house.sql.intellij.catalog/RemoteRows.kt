@@ -3,11 +3,13 @@ package dev.brikk.house.sql.intellij.catalog
 import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Runs [sql] over this connection and returns at most [maxRows] rows, each by lower-case column label in
  * column order: strings, and lists of strings for [listColumns]. [onStatement] sees the statement while
- * it runs, so a caller can cancel it. Failures throw.
+ * it runs, so a caller can cancel it; a statement created once [isCancelled] holds is closed, never run.
+ * Failures throw.
  */
 internal fun DatabaseConnectionCore.queryRows(
     sql: String,
@@ -15,10 +17,12 @@ internal fun DatabaseConnectionCore.queryRows(
     queryTimeoutSeconds: Int = 0,
     listColumns: Set<String> = emptySet(),
     onStatement: (RemoteStatement?) -> Unit = {},
+    isCancelled: () -> Boolean = { false },
 ): List<Map<String, Any?>> {
     val statement = JdbcNativeUtil.computeRemote { remoteConnection.createStatement() } ?: error("No statement")
     onStatement(statement)
     try {
+        if (isCancelled()) throw CancellationException("Cancelled before $sql")
         if (queryTimeoutSeconds > 0) JdbcNativeUtil.performSafe { statement.setQueryTimeout(queryTimeoutSeconds) }
         val result = JdbcNativeUtil.computeRemote { statement.executeQuery(sql) } ?: error("No result for $sql")
         try {
@@ -47,11 +51,17 @@ internal fun DatabaseConnectionCore.queryRows(
     }
 }
 
-/** Runs [sql], which returns no rows (such as `USE`), over this connection; [onStatement] as for [queryRows]. Failures throw. */
-internal fun DatabaseConnectionCore.executeStatement(sql: String, queryTimeoutSeconds: Int = 0, onStatement: (RemoteStatement?) -> Unit = {}) {
+/** Runs [sql], which returns no rows (such as `USE`), over this connection; [onStatement] and [isCancelled] as for [queryRows]. Failures throw. */
+internal fun DatabaseConnectionCore.executeStatement(
+    sql: String,
+    queryTimeoutSeconds: Int = 0,
+    onStatement: (RemoteStatement?) -> Unit = {},
+    isCancelled: () -> Boolean = { false },
+) {
     val statement = JdbcNativeUtil.computeRemote { remoteConnection.createStatement() } ?: error("No statement")
     onStatement(statement)
     try {
+        if (isCancelled()) throw CancellationException("Cancelled before $sql")
         if (queryTimeoutSeconds > 0) JdbcNativeUtil.performSafe { statement.setQueryTimeout(queryTimeoutSeconds) }
         JdbcNativeUtil.computeRemote { statement.execute(sql) }
     } finally {
