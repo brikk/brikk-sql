@@ -25,6 +25,29 @@ internal class VerifyResultTest {
     }
 
     @Test
+    fun utf8ByteOffsetsBecomeUtf16RangesAcrossCrlfLines() {
+        // ü is 2 UTF-8 bytes and 1 UTF-16 unit; 😀 is 4 bytes and 2 units.
+        val text = "SELECT 'ü😀'\r\nFRM t"
+        val t = text.indexOf(" t") + 1
+        val byte = text.substring(0, t).toByteArray(Charsets.UTF_8).size
+        assertEquals(
+            VerifyError("bad", line = 2, column = 5, offset = t, endOffset = t + 1),
+            VerifyError.atUtf8Byte(text, "bad", byte, byte + 1),
+        )
+        val end = text.toByteArray(Charsets.UTF_8).size
+        assertEquals(VerifyError("bad", line = 2, column = 6, offset = text.length), VerifyError.atUtf8Byte(text, "bad", end))
+    }
+
+    @Test
+    fun utf8ByteOffsetsInsideACharacterOrOutsideTheTextAreDropped() {
+        val text = "SELECT 'ü'"
+        assertEquals(VerifyError("bad"), VerifyError.atUtf8Byte(text, "bad", 9))
+        assertEquals(VerifyError("bad"), VerifyError.atUtf8Byte(text, "bad", 12))
+        assertEquals(VerifyError("bad"), VerifyError.atUtf8Byte(text, "bad", -1))
+        assertEquals(VerifyError("bad", line = 1, column = 8, offset = 7), VerifyError.atUtf8Byte(text, "bad", 7, endByte = 9))
+    }
+
+    @Test
     fun positionsOutsideTheTextAreDropped() {
         assertEquals(VerifyError("bad"), VerifyError.at("SELECT 1", "bad", 2, 1))
         assertEquals(VerifyError("bad"), VerifyError.at("SELECT 1", "bad", 1, 20))
