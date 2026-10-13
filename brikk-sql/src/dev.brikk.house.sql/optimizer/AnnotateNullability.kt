@@ -106,9 +106,20 @@ fun annotateNullability(
     return NullabilityResult(pass.map, pass.scopeOutputs)
 }
 
+/**
+ * The nullability of a standalone [expression] under this pass's rules, with each column's
+ * verdict from [column] (true nullable, false not null, null unknown) instead of a scope.
+ */
+internal fun expressionNullability(expression: Expression, dialect: Dialect, column: (Column) -> Boolean?): Boolean? {
+    val pass = NullabilityAnnotator(ShapeCatalog.EMPTY, dialect, column)
+    pass.visitTree(expression, scope = null)
+    return pass.map[expression]
+}
+
 private class NullabilityAnnotator(
     private val inputs: ShapeCatalog,
     private val dialect: Dialect,
+    private val column: ((Column) -> Boolean?)? = null,
 ) {
     val map = java.util.IdentityHashMap<Expression, Boolean>()
 
@@ -193,7 +204,7 @@ private class NullabilityAnnotator(
             is Exists -> false
 
             // --- column references ---
-            is Column -> columnNullability(node)
+            is Column -> if (column != null) column(node) else columnNullability(node)
 
             // --- CAST / TRY_CAST ---
             // TryCast must precede Cast (TryCast is a subclass of Cast).
