@@ -46,7 +46,9 @@ no internal-API annotation.
   PIPE stage input columns, and `createOrDecorate`, which decorates the first of other
   contributors' items matched to each visible column and creates the columns no item matched.
 - `ToggleSettings` and `ToggleConfigurable`: a persisted project switch that reparses
-  its language's files, and its settings page with a `-D<property>=false` veto.
+  its language's files, and its settings page with a `-D<property>=false` veto. Store it in
+  `ToggleSettings.STORAGE` (the workspace file): `@State(name = "...", storages = [Storage(ToggleSettings.STORAGE)])`;
+  another storage is reported as an error.
 - `notifyEscaped`: plain-text notifications. `FileBanner` and `FileBannerProvider`:
   per-file editor banners scoped to their project.
 
@@ -73,8 +75,9 @@ registers no-arg subclasses:
   Items take the `PIPE_STAGE` (UPPER, bold, "PIPE stage") and `PIPE_INPUT_COLUMN` rows of the
   `SqlLookupStyles` the contributor is given (`DEFAULT` unless the plugin passes its own).
   Both read the profile's `stagePhrases`, by default `pipeStagePhrases(dialect)`: the phrases core
-  parses for the dialect that core lowers and the engine runs as lowered (recorded for Trino, DuckDB,
-  Doris and ClickHouse; other dialects get every parsed phrase).
+  parses for the dialect that core lowers and the engine runs as lowered: core's
+  `pipeRunnableStageKeywords`, from the evidence each core dialect records in `pipeRunnableStages`
+  (Trino, DuckDB, Doris and ClickHouse; other dialects get every parsed phrase).
 
 `lower` turns one statement into `PipeTranslation` over core `lowerForExecution`,
 also refusing what the profile's statement ranges refuse, and applies the optional
@@ -152,7 +155,9 @@ validator's `verify`; the diagnostics themselves are core's plain data
   handling.
 - Hooks: `statementDiagnostics` replaces a statement's check (PIPE lowering, Brikk templates),
   `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
-  masks binds at equal length, `message` formats.
+  masks binds at equal length, `message` formats. Each gets the file (the injected fragment, when
+  injected), so its answer can vary by file; `statementDiagnostics` and `verificationText` run off
+  the PSI and read only the file's identity, project and user data.
 
 `NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
@@ -190,6 +195,10 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   `stagePhrases` stands, no functions or metadata keywords are offered.
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
+- The contributor offers a function metadata and the base dialect both know once, from metadata: the
+  base dialect's builtin items of that name (prototypes, and routines of the platform's builtin
+  catalog, `isBuiltinCatalogObject`) are dropped; a data source's or the user's routine of the same
+  name stays, and so do the base dialect's own forms, such as ClickHouse combinators.
 - `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
   items (`BuiltinFunction.Prototype` only) that the profile's `builtinFunctionFilter` does not
   keep; null (the default) keeps them all.
@@ -201,7 +210,13 @@ dark variant: `WindowFunction` ("W" in the function circle, the WINDOW row) and 
 laid 2-1-2, the BRIKK_COLUMN row). `nativeKinds` maps engine-native function kinds
 (`FunctionPresentation.nativeKind`, such as DuckDB macros) to their own rows. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
-the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
+the autopopup gate (`ExpressionPositions`; explicit completion always offers functions). The
+qualifier, the token before the name and whether it stands in code are read from the core dialect's
+tokens of the source (core's `SqlNameContext`, whose tokens also decide the function position), so
+PIPE text and lenient statements get the qualifier, strings, comments and inline data get no
+functions or keywords, and spans the dialect's lexer masks complete as code. A lexical failure before
+the name (an unterminated string, quoted name or comment) leaves everything after it outside code,
+so the rest of the file gets no functions or keywords until it is closed.
 
 `SelectAliasResolveExtension(dbms, clauses)` (`dev.brikk.house.sql.intellij.psi`, experimental):
 unqualified references in the given clauses (default HAVING, GROUP BY, ORDER BY) of a query in
@@ -224,7 +239,14 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   never sees a lexer that lost its context: an edit relexes its own statement, nothing before.
   States stay non-negative, as the console's parameter preprocessing requires; the base lexer's
   state must fit 15 bits.
-  Restoring a saved position relexes from its statement's start. A routine body still unbalanced
+  Restoring a saved position relexes from its statement's start. With `parameterDialect`, the IDE `:name` binds core's
+  parameter discovery finds in a span masked as a comment (never in the dialect's comments or strings)
+  stay a `KEPT_BIND_COLON` and a name token, so they remain parameters: a `StatementBoundaryGate`
+  makes a statement whose grammar fails on a kept bind lenient, and parses kept binds (and, in a
+  `CHouseFamilyParser`, every `:name` bind) as named parameters. Known limitation: such a statement
+  loses the grammar's structured PSI (a ClickHouse `INSERT ... PARTITION BY concat(:prefix, ...)
+  SELECT ...` becomes one lenient statement); a clause-level parse keeping the INSERT and SELECT
+  structure would be the better answer. A routine body still unbalanced
   at the end of the text ends before its first `;`, so later statements keep their tokens.
 - `StatementBoundedSqlLexer(baseFactory, coreDialect)` (`lexer`): lexes each statement of core's
   script ranges on its own with a fresh start of the base lexer, so no token runs past its
@@ -267,7 +289,9 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   collapsed spans token by token with the core tokenizer, in the colors the file's highlighter
   gives the same platform token kinds. Genuine comments, quoted strings (`E'..'`, `$$..$$`) and
   identifiers are never touched; comments inside a span keep comment colors.
-- `SubstrateErrorFilter(language)`: hides the substrate grammar's parse errors in the dialect.
+- `SubstrateErrorFilter(language, scope = ALL)`: hides the substrate grammar's parse errors in the dialect;
+  `SubstrateErrors.LENIENT_ONLY`, for a stock substrate whose errors are the dialect's (ClickHouse), hides
+  only those inside lenient fallback statements.
 - `SqlDialectQuoteHandler(EnterInString)`: Enter in a quoted string inserts a newline or splits
   it with `||`; collapsed spans are never split.
 - `KeywordOverlayHighlighterFactory(dialect, keywords)`: the dialect's SQL highlighter factory
@@ -617,6 +641,10 @@ references a class, enclosing class or package annotated `@ApiStatus.Internal` o
 `@IntellijInternalApi`, or a member so annotated or declared by such a class (found through the
 owner's supertypes). It also fails if the kit's internal API differs from the test's own list, which
 this table mirrors.
+
+`isBuiltinCatalogObject` (catalog kit) reads `BasicElement.getModel`, `BasicModModel.getTextStorage`
+and `DataSourceSnapshotManager.MINICAT_STORAGE`, the platform's own test for a builtin resolve result
+(`SqlResolveResultImpl`): Database Tools implementation classes without an internal-API annotation.
 
 Auto-introspection's sync seams carry no internal-API annotation on IDEA 261.25134.95, 262.8665.81
 and 263.5701.42 (the containment test runs on each), but they are Database Tools implementation

@@ -5,6 +5,7 @@ import dev.brikk.house.sql.metadata.DORIS_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.parser.DorisTokenizerTables
 import dev.brikk.house.sql.parser.ErrorLevel
+import dev.brikk.house.sql.parser.PIPE_STAGES_RUN_EVERYWHERE
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
@@ -16,6 +17,9 @@ import dev.brikk.house.sql.parser.TokenizerConfig
  */
 // sqlglot: dialects.doris.Doris
 class DorisDialect : Dialect() {
+    // brikk-native PIPE evidence (the Doris 4.1.4 FE parser accepted the lowered stages): CALL and
+    // NATURAL JOIN are not in the grammar; core refuses or blocks RENAME, PIVOT, UNPIVOT and TABLESAMPLE.
+    override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf("DROP", "SET", "UNION", "ASOF JOIN")
 
     override val name: String get() = "doris"
     // sqlglot: inherited MySQL ordering; the Kotlin umbrella does not subclass MySQL.

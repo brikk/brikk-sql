@@ -8,6 +8,7 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.intellij.lexer.CoreStatements
+import dev.brikk.house.sql.intellij.lexer.KEPT_BIND_COLON
 import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
@@ -21,7 +22,11 @@ import org.jetbrains.annotations.ApiStatus
  * shared with the lexer's pass over the same text.
  */
 @ApiStatus.Experimental
-public class StatementBoundaryGate(private val coreDialect: String) {
+public class StatementBoundaryGate(
+    private val coreDialect: String,
+    /** Whether a lenient statement makes every `:name` bind a parameter, as the dialect's IDE binds; kept binds always are. */
+    private val colonParameters: Boolean = false,
+) {
     private var text: CharSequence? = null
     private var statements: CoreStatements? = null
 
@@ -58,7 +63,8 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         val stop = builder.currentOffset
         val erred = builder.platformBuilder()?.hasErrorsAfter(marker) ?: true
         val reached = builder.consumedEnd() <= end && stop >= end
-        if (reached) {
+        // A bind kept in a masked span (KEPT_BIND_COLON) is no grammar's: only a lenient statement makes it a parameter.
+        if (reached && !(erred && builder.hasKeptBindSince(start))) {
             marker.drop()
             return parsed
         }
@@ -69,7 +75,10 @@ public class StatementBoundaryGate(private val coreDialect: String) {
         }
         marker.rollbackTo()
         val statement = builder.mark()
-        while (!builder.eof() && builder.currentOffset < end) builder.advanceLenient()
+        while (!builder.eof() && builder.currentOffset < end) {
+            val bind = (colonParameters || builder.tokenType == KEPT_BIND_COLON) && builder.parseColonParameter(named = true)
+            if (!bind) builder.advanceLenient()
+        }
         statement.done(type)
         return true
     }
@@ -99,6 +108,17 @@ public class StatementBoundaryGate(private val coreDialect: String) {
             splitAt = -1
         }
         return known.rangeAt(builder.currentOffset)
+    }
+}
+
+/** Whether a bind kept in a masked span ([KEPT_BIND_COLON]) lies between [start] and the current token. */
+private fun PsiBuilder.hasKeptBindSince(start: Int): Boolean {
+    var step = -1
+    while (true) {
+        val type = rawLookup(step) ?: return false
+        if (rawTokenTypeStart(step) < start) return false
+        if (type == KEPT_BIND_COLON) return true
+        step--
     }
 }
 

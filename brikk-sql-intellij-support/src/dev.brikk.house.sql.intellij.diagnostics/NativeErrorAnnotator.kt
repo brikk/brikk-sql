@@ -103,14 +103,19 @@ public interface NativeErrorProfile {
      */
     public val budget: Duration? get() = null
 
-    /** [sql] as the engine verifies it, of the same length, such as with binds masked. */
-    public fun verificationText(sql: String): String = sql
+    /**
+     * [sql] of [file] (a fragment, when injected) as the engine verifies it, of the same length, such
+     * as with binds masked. Runs off the PSI: use [file]'s identity, project and user data, not its PSI.
+     */
+    public fun verificationText(file: PsiFile, sql: String): String = sql
 
     /**
-     * Diagnostics from the plugin's own check of [statement] in [script], such as a PIPE lowering
-     * refusal, instead of verification and the IDE parser's errors; null verifies it. Runs off the PSI.
+     * Diagnostics from the plugin's own check of [statement] in [script] of [file] (a fragment, when
+     * injected), such as a PIPE lowering refusal or a template check, instead of verification and the
+     * IDE parser's errors; null verifies it. Runs off the PSI: use [file]'s identity, project and user
+     * data, not its PSI; what depends on the PSI is read in [validator] or [modificationCount].
      */
-    public fun statementDiagnostics(script: String, statement: SqlStatementRange): List<SqlDiagnostic>? = null
+    public fun statementDiagnostics(file: PsiFile, script: String, statement: SqlStatementRange): List<SqlDiagnostic>? = null
 
     /**
      * Diagnostics read with [file]'s PSI (a fragment, when injected), such as the last server error,
@@ -165,9 +170,9 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     /** What a source's verdicts depend on besides the document revision; the validator counts by instance. */
     internal data class Dependencies(val script: String, val validator: NativeSqlValidator?, val revision: Long)
 
-    /** One SQL text: [fragment] is its injected file, or null for the annotated file itself. */
+    /** One SQL text: [file] is its injected fragment, or the annotated file itself. */
     internal class Source(
-        val fragment: PsiFile?,
+        val file: PsiFile,
         val dependencies: Dependencies,
         val psiErrors: List<SqlDiagnostic>,
     ) {
@@ -212,7 +217,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         file.getUserData(outcomeKey)?.takeIf { it.profile === profile && it.stamp == stamp && it.dependencies == dependencies }
             ?.let { return Snapshot(stamp, emptyList(), it) }
         val sources = fragments.indices.map { index ->
-            Source(fragments[index], dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList())
+            Source(fragments[index] ?: file, dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList())
         }
         return Snapshot(stamp, sources, null)
     }
@@ -274,7 +279,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         for (statement in statements) {
             ProgressManager.checkCanceled()
             val inStatement = psiErrors.filter { it.start >= statement.start && it.start < statement.end }
-            profile.statementDiagnostics(script, statement)?.let {
+            profile.statementDiagnostics(source.file, script, statement)?.let {
                 diagnostics += it
                 psiErrors -= inStatement.toSet()
                 continue
@@ -286,7 +291,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             val asked = when {
                 validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
                 deadline != null && System.nanoTime() > deadline -> Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)
-                else -> ask(validator, script.substring(range.first, range.last + 1), deadline)
+                else -> ask(validator, source.file, script.substring(range.first, range.last + 1), deadline)
             }
             final = final && asked.final
             val native = asked.outcome
@@ -305,8 +310,8 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     /** An engine's [outcome]; not [final] when asking again could give a verdict (an unavailable engine, a failure, the budget). */
     private class Asked(val outcome: NativeOutcome, val final: Boolean)
 
-    private fun ask(validator: NativeSqlValidator, sql: String, deadline: Long?): Asked {
-        val text = profile.verificationText(sql)
+    private fun ask(validator: NativeSqlValidator, file: PsiFile, sql: String, deadline: Long?): Asked {
+        val text = profile.verificationText(file, sql)
         if (text.length != sql.length) return Asked(NativeOutcome.NoVerdict("The verification text changed length"), final = true)
         // One call per validator instance: a call an earlier pass gave up on may still be running.
         if (!running.add(validator)) return Asked(NativeOutcome.NoVerdict("An earlier verification is still running"), final = false)

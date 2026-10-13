@@ -9,6 +9,7 @@ import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementDecorator
 import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.database.model.DasRoutine
 import com.intellij.database.util.Case
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
@@ -17,11 +18,15 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.dialects.BuiltinFunction
 import com.intellij.sql.formatter.settings.SqlCodeStyles
 import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
+import com.intellij.sql.psi.SqlResolveResult
+import dev.brikk.house.sql.intellij.catalog.isBuiltinCatalogObject
 import dev.brikk.house.sql.intellij.pipe.PipeText
+import dev.brikk.house.sql.shape.SqlNameContext
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
@@ -46,42 +51,46 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         // Injected SQL is read unescaped, so a host's doubled quotes do not change its literals.
         val source = PipeText.of(file)
         val before = source.text.substring(0, source.textOffset(prefixAt(file, parameters.offset).first).coerceIn(0, source.text.length))
-        val position = functionPosition(
-            before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
-            { name -> name in reads.snapshot.functions }, ProgressManager::checkCanceled,
-        )
-        val functions = completeFunctions(parameters, result, reads, position)
+        val context = SqlNameContext.of(before, profile.metadata.dialect, ProgressManager::checkCanceled)
+        val position = context?.let {
+            functionPosition(it.tokens, profile.tablePositions, profile.stagePhrases, { name -> name in reads.snapshot.functions })
+        } ?: FunctionPosition.UNKNOWN
+        val inCode = context?.inCode != false
+        val functions = if (inCode) completeFunctions(parameters, result, reads, position, context) else emptySet()
         completeTableFunctionArguments(parameters, result, reads)
-        if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position)
+        if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position.takeIf { inCode })
     }
 
     /**
-     * Keywords that neither [functions] (upper-case names this contributor offered) nor a later
-     * contributor offered. Keywords of later contributors are spelled in the same case as these:
-     * the user's SQL code style keyword case if it sets one, else the profile's. A PIPE stage head
-     * gets none of its own: only a stage phrase stands there.
+     * Passes on later contributors' items, dropping the base dialect's builtin-function items for
+     * [functions] (upper-case names this contributor offered from metadata), so each is offered once;
+     * the base dialect's own forms stay. Then keywords that neither [functions] nor a later
+     * contributor offered; none outside code (a null [position]). Keywords of later contributors are
+     * spelled in the same case as these: the user's SQL code style keyword case if it sets one, else
+     * the profile's. A PIPE stage head gets none of its own: only a stage phrase stands there.
      */
     private fun completeKeywords(
         parameters: CompletionParameters,
         result: CompletionResultSet,
         reads: ProfileReads,
         functions: Set<String>,
-        position: FunctionPosition,
+        position: FunctionPosition?,
     ) {
         val scope = profile.keywords
         val style = profile.styles[SqlLookupKind.KEYWORD]
         val codeStyleCase = SqlCodeStyles.getSqlSettings(parameters.originalFile).keywordCase.takeIf { it != Case.MIXED }
         val recased = style.case.takeIf { codeStyleCase == null && it != LookupCase.AS_GIVEN }
-        if (scope == KeywordScope.NONE && recased == null) return
-        val catalog = reads.keywords ?: return
+        val catalog = if (scope != KeywordScope.NONE || recased != null) reads.keywords else null
+        if (catalog == null && functions.isEmpty()) return
         val offered = HashSet(functions)
         result.runRemainingContributors(parameters) { completion ->
             val element = completion.lookupElement
+            if (element.isBaseBuiltin() && element.lookupString.uppercase() in functions) return@runRemainingContributors
             offered += element.lookupString.uppercase()
-            val keyword = recased?.takeIf { element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
+            val keyword = recased?.takeIf { catalog != null && element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
             result.passResult(keyword?.let(completion::withLookupElement) ?: completion)
         }
-        if (scope == KeywordScope.NONE || position == FunctionPosition.STAGE_HEAD) return
+        if (catalog == null || scope == KeywordScope.NONE || position == null || position == FunctionPosition.STAGE_HEAD) return
         val fallback = if (codeStyleCase == null) style else style.copy(case = LookupCase.AS_GIVEN)
         val sink = result.caseInsensitive()
         for (keyword in catalog.keywords) {
@@ -91,6 +100,17 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
             sink.addElement(fallback.lookup(word, word, style.typeText))
         }
     }
+}
+
+/**
+ * Whether this item, from another contributor, is one of the base dialect's builtin functions: a
+ * prototype, or a routine of the platform's builtin catalog. A data source's or the user's routine
+ * of the same name is never one.
+ */
+private fun LookupElement.isBaseBuiltin(): Boolean = when (val target = `object`) {
+    is BuiltinFunction.Prototype -> true
+    is SqlResolveResult -> target.targetSymbol?.dasObject.let { it is DasRoutine && isBuiltinCatalogObject(it) }
+    else -> false
 }
 
 /**
@@ -127,15 +147,28 @@ private class ProfileReads(val profile: SqlCompletionProfile, val file: PsiFile)
     val keywords by lazy(LazyThreadSafetyMode.NONE) { profile.keywordCatalog(file, snapshot) }
 }
 
-/** Offers the functions the gates allow that fit [position] and returns their upper-case names. */
-private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, position: FunctionPosition): Set<String> {
+/**
+ * Offers the functions the gates allow that fit [position] and returns their upper-case names. The
+ * gates read [context], the source's tokens, or PSI where core does not know the dialect.
+ */
+private fun completeFunctions(
+    parameters: CompletionParameters,
+    result: CompletionResultSet,
+    reads: ProfileReads,
+    position: FunctionPosition,
+    context: SqlNameContext?,
+): Set<String> {
     val profile = reads.profile
     val file = parameters.originalFile
     val gates = profile.functionGates
     if (gates.digitPrefix && prefixIsDigitLed(file, parameters.offset)) return emptySet()
-    if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return emptySet()
-    val qualifier = PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)
-        ?.qualifierExpression?.text
+    val autopopup = gates.autopopup
+    if (parameters.invocationCount == 0 && autopopup != null) {
+        val follows = if (context != null) autopopup.follows(context.previous) else autopopup.matches(file, parameters.offset)
+        if (!follows) return emptySet()
+    }
+    val qualifier = if (context != null) context.qualifier
+    else PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)?.qualifierExpression?.text
     val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
     val names = HashSet<String>()
     val positions = profile.tablePositions
@@ -329,6 +362,9 @@ private fun ExpressionPositions.matches(file: PsiFile, offset: Int): Boolean {
     while (leaf != null && (leaf is PsiWhiteSpace || leaf is PsiComment || leaf.textLength == 0)) {
         leaf = PsiTreeUtil.prevLeaf(leaf, true)
     }
-    val text = leaf?.text ?: return false
-    return text in operators || keywords.any { it.equals(text, ignoreCase = true) }
+    return follows(leaf?.text)
 }
+
+/** Whether a function may follow [previous], the last token before the typed name. */
+private fun ExpressionPositions.follows(previous: String?): Boolean =
+    previous != null && (previous in operators || keywords.any { it.equals(previous, ignoreCase = true) })
