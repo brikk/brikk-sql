@@ -4,6 +4,7 @@ import com.intellij.lang.Language
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.completion.SqlLookupKind
+import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import dev.brikk.house.sql.intellij.completion.SqlLookupStyles
 import dev.brikk.house.sql.scope.ColumnOrigin
 import dev.brikk.house.sql.scope.Nullability
@@ -62,6 +63,9 @@ public interface RelationScopeProfile {
     public val labels: RelationColumnLabels get() = RelationColumnLabels()
 
     public val styles: SqlLookupStyles get() = SqlLookupStyles.DEFAULT
+
+    /** The consumer's SQL in host strings, if any: no relation diagnostics run while its SQL is pending. */
+    public val hostSql: HostSqlChannel? get() = null
 }
 
 /**

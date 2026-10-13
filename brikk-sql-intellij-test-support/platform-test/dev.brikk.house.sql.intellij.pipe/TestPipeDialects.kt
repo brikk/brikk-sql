@@ -11,13 +11,18 @@ import com.intellij.sql.dialects.SqlDialectMappings
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.psi.SqlLanguage
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture
+import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import java.util.UUID
 
 /**
  * Profiles over each core PIPE dialect, with that plugin's first-stage policy, executing through
  * BigQuery consoles: the bundled BigQuery PSI splits PIPE statements as the plugins' own PSI does.
  */
-class TestPipeDialect(override val dialect: String, override val firstStage: FirstStageRule) : PipeDialect {
+class TestPipeDialect(
+    override val dialect: String,
+    override val firstStage: FirstStageRule,
+    override val hostSql: HostSqlChannel? = null,
+) : PipeDialect {
     override val label = "Test PIPE"
     override val vetoProperty = "brikk.test.pipes"
     override val language: Language = SqlLanguage.INSTANCE
