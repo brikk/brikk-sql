@@ -17,6 +17,8 @@ import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.catalog.otherRequestor
 import dev.brikk.house.sql.verify.ClickhouseQueryConnection
 import dev.brikk.house.sql.verify.ParseOnlyClickhouseVerifier
+import dev.brikk.house.sql.verify.SqlVerifier
+import dev.brikk.house.sql.verify.VerifyError
 import dev.brikk.house.sql.verify.VerifyResult
 import java.net.URI
 import java.net.http.HttpClient
@@ -24,6 +26,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
+import java.sql.SQLException
 import java.util.Properties
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -58,14 +61,14 @@ class ClickhouseDataSourceVerificationTest : BasePlatformTestCase() {
         // The all-in-one jar and the slf4j-api the script fetches beside it.
         val driverJar = Path.of(System.getenv("BRIKK_CLICKHOUSE_DRIVER"))
         val jars = listOf(driverJar.toString(), driverJar.resolveSibling("slf4j-api-2.0.7.jar").toString())
-        val driver = DatabaseDriverManager.getInstance().createDriver("verify-clickhouse-${UUID.randomUUID()}", "Verify ClickHouse", UrlTemplate("default", "jdbc:clickhouse://{host}")) as DatabaseDriverImpl
+        val driver = DatabaseDriverManager.getInstance().createDriver("verify-clickhouse-${UUID.randomUUID()}", "Verify ClickHouse", UrlTemplate("default", PLUGIN_URL_TEMPLATE)) as DatabaseDriverImpl
         driver.setDriverClass("com.clickhouse.jdbc.ClickHouseDriver")
         driver.setAdditionalClasspathElements(jars.flatMap { SimpleClasspathElementFactory.createElements("jar://$it!/") })
         dataSource = LocalDataSource().apply {
             name = "verify clickhouse ${UUID.randomUUID()}"
             databaseDriver = driver
             // The IDE passes `session_id`, which this driver rejects unless told to ignore unknown keys.
-            this.url = "$url?ignore_unknown_config_key=true&user=$user&password=$PASSWORD"
+            this.url = "$url?ignore_unknown_config_key=true"
             username = user
             isAutoSynchronize = false
             // The user's saved password: a helper never asks for one.
@@ -100,8 +103,20 @@ class ClickhouseDataSourceVerificationTest : BasePlatformTestCase() {
                 it.putAll(UNCOMPRESSED)
             }
         }
-        val user = runBlocking { DatabaseConnectionManager.getInstance().build(project, point).setRequestor(otherRequestor()).create() }
-        return checkNotNull(user).use { checkNotNull(verification(properties).validator(myFixture.file)).verify(sql, null) }
+        val session = runBlocking { DatabaseConnectionManager.getInstance().build(project, point).setRequestor(otherRequestor()).create() }
+        return checkNotNull(session).use { checkNotNull(verification(properties).validator(myFixture.file)).verify(sql, null) }
+    }
+
+    /** Runs [use] while the user's own session (uncompressed, see [verify]) is open. */
+    private fun <T> whileConnected(use: () -> T): T {
+        val point = object : DatabaseConnectionPoint.Adapter(dataSource) {
+            override fun getConnectionProperties(): Properties = Properties().also {
+                super.getConnectionProperties()?.let(it::putAll)
+                it.putAll(UNCOMPRESSED)
+            }
+        }
+        val session = runBlocking { DatabaseConnectionManager.getInstance().build(project, point).setRequestor(otherRequestor()).create() }
+        return checkNotNull(session).use { use() }
     }
 
     fun testUncompressedHelpersGetPositionedVerdicts() {
@@ -120,8 +135,42 @@ class ClickhouseDataSourceVerificationTest : BasePlatformTestCase() {
         assertInstanceOf(result, VerifyResult.Unavailable::class.java)
     }
 
+    /**
+     * The data source's user and the password stored only in `DatabaseCredentials` (not in the URL) reach
+     * the driver on a helper, which never asks for a password; without a stored one there is no verdict.
+     */
+    fun testTheStoredLoginReachesTheDriverOnAHelper() {
+        url ?: return
+        assertFalse("the URL holds no password", PASSWORD in dataSource.url.orEmpty())
+        val probe = DataSourceVerification(DialectDataSourceResolver(dataSource.dbms), connectionProperties = { UNCOMPRESSED }) { connect ->
+            object : SqlVerifier {
+                override val engine = "probe"
+                override fun verify(sql: String): VerifyResult = try {
+                    val helper = connect() ?: return VerifyResult.Unavailable("disconnected")
+                    VerifyResult.Rejected(VerifyError(helper.use { it.queryString("SELECT currentUser()", 10).orEmpty() }))
+                } catch (e: SQLException) {
+                    VerifyResult.Unavailable(e.message.orEmpty())
+                }
+                override fun verifyExpression(sql: String) = verify(sql)
+            }
+        }
+        whileConnected {
+            val validator = checkNotNull(probe.validator(myFixture.file))
+            assertEquals("the helper's session user", VerifyResult.Rejected(VerifyError(user)), validator.verify("SELECT 1", null))
+            DatabaseCredentials.getInstance().setPassword(dataSource, null)
+            assertInstanceOf(validator.verify("SELECT 1", null), VerifyResult.Unavailable::class.java)
+        }
+    }
+
     private companion object {
         const val PASSWORD = "brikk-verify-secret"
+
+        /**
+         * The ClickHouse plugin's driver URL template. Its user and password placeholders make the IDE
+         * require authentication, so the data source's user and stored password reach the driver.
+         */
+        const val PLUGIN_URL_TEMPLATE =
+            "jdbc:clickhouse://{host::localhost}?[:{port::8123}][/{database}?][\\?<&,user={user},password={password},{:identifier}={:identifier}>]"
         val UNCOMPRESSED = mapOf("compress" to "false", "decompress" to "false")
     }
 }
