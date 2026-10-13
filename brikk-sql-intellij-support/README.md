@@ -166,35 +166,54 @@ SQL features over relation facts from any provider, built on core's `RelationSco
 injected fragment with a revision, or `Pending`; optionally navigation by a fact's provenance, labels,
 and `platformResolves` for relations the platform resolves itself. A plugin implements one
 `RelationScopeProfile` (language, core dialect, providers in precedence order, labels, styles) and
-registers no-arg subclasses:
+registers no-arg subclasses. Providers must be stable instances: the analysis is cached per provider
+instance and revision. A slot, a table and a call with the same key are different relations, each
+owned by the first provider that supplies it.
+
+A provider's column is *managed* where it is visible directly through that provider's slot, table or
+call (and the provider does not set `platformResolves`). Where a CTE or derived table passes it on, the
+platform resolves the outer reference itself through the inner one, so it gets no symbol of its own.
 
 - `ExternalRelationResolveExtension` (`com.intellij.sql.resolveExtension`): light column symbols for
-  provider columns the analysis resolves, so platform resolve and highlighting see them.
+  managed columns, so platform resolve and highlighting see them. One provider column is one symbol,
+  whatever alias shows it, and it is equivalent to the provider's navigation target for the column.
 - `ExternalRelationInspectionSuppressor` (`com.intellij.sql.inspectionSuppressorDelegate`): hides the
-  resolve inspection only on references the analysis decides (resolved or ambiguous provider columns,
-  absent columns it reports itself, provider relations such as a slot call); never other inspections.
-- `ExternalRelationCompletionContributor` (`order="first"`): create-or-decorate. Another
-  contributor's item for a visible column is decorated, only columns without one are created; nothing
-  is offered twice and same-named columns of different relations stay distinct. `RelationColumnLabels`
-  name each origin ("declared column (rel)" with the provider's display type, "relation contract
-  (rel)", "computed column (stage or CTE)", "column (table)" with its SQL type) and pick its lookup kind;
-  a provider can bring its own (the Brikk helper's "brikk column" with the bricks icon), and a renamed
-  column keeps its origin. Where a relation stands, it offers the provider relations the platform does
-  not know (slots, table functions), inserted as core writes them (`src()`); CTEs and a data source's
-  tables stay the platform's items.
-- `ExternalRelationGotoDeclarationHandler`: the provider's target for its columns and relations, or the
-  SQL's declaration where the platform resolves nothing (PIPE stages).
+  resolve, type and signature inspections only on the reference's own element, and only where the
+  analysis decides: managed columns it resolves or finds ambiguous, and provider relations such as a
+  slot call; the resolve inspection also on absent columns it reports itself. Other inspections stay.
+- `ExternalRelationCompletionContributor` (`order="first"`): create-or-decorate through
+  `SqlColumnCompletion.createOrDecorate`. Another contributor's item for a visible column is decorated:
+  the platform's item for a light symbol or the native adapter's column, a data source column of the
+  same table (full path), or the declaration or inner reference a CTE or derived table passes on. Only
+  columns without one are created, in their label's lookup kind (`RELATION_COLUMN` by default: the
+  column icon, ranked ahead of the platform's long lists). Nothing is offered twice; columns of
+  different relations, quoted aliases differing only in case included, stay distinct; an unrelated item
+  of the same name stays beside the column. `RelationColumnLabels` name each origin ("declared column
+  (rel)" with the provider's display type, "relation contract (rel)", "computed column (stage or CTE)",
+  "column (table)" with its SQL type); a provider can bring its own (the Brikk helper's "brikk column"
+  with `BRIKK_COLUMN`), and a renamed column keeps its origin. Where a relation stands, it offers the
+  provider relations the platform does not know (slots, table functions), inserted as core writes them
+  (`src()`); CTEs and a data source's tables stay the platform's items.
+- `ExternalRelationGotoDeclarationHandler`: the provider's target for managed columns and provider
+  relations, or the SQL's declaration where the platform resolves nothing (PIPE stages); there a
+  column passed on from a provider leads to the provider's target rather than to the stage.
 - `ExternalRelationAnnotator`, or `relationDiagnostics(file, profile)` for a `NativeErrorProfile`:
   missing, ambiguous, partial-contract, unknown-qualifier, unknown-table and PIPE_UNSUPPORTED problems
   at exact ranges, injected fragments included.
 
-Each statement is analyzed on its own and the analysis is cached per profile while the document
-revision, text and every provider's revision stay; nothing is analyzed or cached while a provider is
-pending. Restart the daemon when facts change without an edit. Each consumer acts on exactly its own
-language. `DasRelationFacts` (catalog kit) supplies the tables of a file's data source with stored names,
-so core folds unquoted names as the dialect does. `RelationTableTypes.of(call, profile)` is the
-optional native adapter: a plugin's function-call element returns it as its type, so ordinary SQL over a
-slot gets the platform's resolve, rename and find usages.
+Each statement is analyzed on its own and the analysis is cached per file and profile while the
+document revision and every provider's revision stay; nothing is analyzed or cached while a provider
+is pending. Restart the daemon when facts change without an edit. Each consumer acts on exactly its
+own language.
+
+`DasRelationFacts` (catalog kit) supplies the tables of a file's data source with stored names, so core
+folds unquoted names as the dialect does; a table without introspected columns proves no column
+absent, and each data source's model state has its own revision.
+
+`RelationTableTypes.of(call, profile)` is the optional native adapter: a plugin's function-call element
+returns it as its type, so ordinary SQL over a slot resolves through the platform's own table type.
+Each column is the column's symbol: SQL references resolve to it, and find usages and rename of the
+provider's declaration (a Kotlin property, say) find and rename them.
 
 ## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
 
