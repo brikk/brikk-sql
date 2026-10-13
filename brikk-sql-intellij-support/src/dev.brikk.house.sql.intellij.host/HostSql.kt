@@ -145,9 +145,18 @@ public open class HostSqlChannel(public val id: String) {
     /** Whether `:name` binds parse as parameters in [file]; a parser calls `parseColonParameter()` when they do. */
     public fun parsesColonBinds(file: PsiFile?): Boolean = marker(file)?.colonBinds == true
 
-    /** Whether `[start, end)` of [file]'s unescaped text overlaps or touches a placeholder, as an error the placeholder causes does. */
-    public fun overlapsPlaceholder(file: PsiFile?, start: Int, end: Int): Boolean =
-        marker(file)?.placeholders?.any { it.startOffset <= end && start <= it.endOffset } == true
+    /**
+     * Whether an error at `[start, end)` of [text], [file]'s unescaped text, is a placeholder's: a
+     * non-empty one overlapping a placeholder, or an empty one before a placeholder's text (the token
+     * it complains about).
+     */
+    public fun isPlaceholderError(file: PsiFile?, text: String, start: Int, end: Int): Boolean {
+        val placeholders = marker(file)?.placeholders.orEmpty().ifEmpty { return false }
+        if (end > start) return placeholders.any { it.startOffset < end && start < it.endOffset }
+        var token = start
+        while (token < text.length && text[token].isWhitespace()) token++
+        return placeholders.any { token >= it.startOffset && token < it.endOffset }
+    }
 
     /**
      * Schedules one reanalysis of [host]'s file once indexing is done (see [reanalyze]). At most one
@@ -194,8 +203,8 @@ public open class HostSqlChannel(public val id: String) {
 }
 
 /**
- * Hides parse errors on the placeholders of [channel]'s SQL: they stand for text not known
- * yet. Register a no-arg subclass as a `highlightErrorFilter`.
+ * Hides parse errors on the placeholders of [channel]'s SQL: they stand for text not known yet.
+ * Register a no-arg subclass as a `highlightErrorFilter`.
  */
 @ApiStatus.Experimental
 public abstract class HostSqlPlaceholderErrorFilter(private val channel: HostSqlChannel) : HighlightErrorFilter() {
@@ -203,10 +212,6 @@ public abstract class HostSqlPlaceholderErrorFilter(private val channel: HostSql
         val file = element.containingFile ?: return true
         if (channel.marker(file)?.placeholders.isNullOrEmpty()) return true
         val text = PipeText.of(file)
-        val start = text.textOffset(element.textRange.startOffset)
-        var end = text.textOffset(element.textRange.endOffset)
-        // An empty error stands before the token it expected something instead of.
-        if (end == start) while (end < text.text.length && text.text[end].isWhitespace()) end++
-        return !channel.overlapsPlaceholder(file, start, end)
+        return !channel.isPlaceholderError(file, text.text, text.textOffset(element.textRange.startOffset), text.textOffset(element.textRange.endOffset))
     }
 }

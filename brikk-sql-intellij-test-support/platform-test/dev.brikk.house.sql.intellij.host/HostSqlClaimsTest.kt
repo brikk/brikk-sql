@@ -165,4 +165,54 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
         assertEquals("the first revision's and three edits'", 4, reanalyses)
     }
+
+    fun testAnUnmatchedParenthesisAfterAPlaceholderStaysAnError() {
+        HighlightErrorFilter.EP_NAME.getPoint(project).registerExtension(object : HostSqlPlaceholderErrorFilter(channel) {}, testRootDisposable)
+        claim = { host ->
+            val at = host.text.indexOf("\${x}")
+            HostSqlClaim.Injected(postgres, HostSqlEntries(listOf(
+                HostSqlEntry(TextRange(1, at)), HostSqlEntry(TextRange(at, at + 4), "1", placeholder = true), HostSqlEntry(TextRange(at + 4, host.textLength - 1)),
+            )), pending = true)
+        }
+        open("SELECT 'SELECT \${x})'")
+        assertNotEmpty(myFixture.doHighlighting(HighlightSeverity.ERROR))
+    }
+
+    private fun nativeAnnotator(reportsPsiErrors: Boolean) {
+        val profile = TestProfile(postgres, "postgres", "Placeholder verifier").apply {
+            injectionHosts = setOf(mysql)
+            this.reportsPsiErrors = reportsPsiErrors
+            if (reportsPsiErrors) validator = null
+            hostSql = channel
+        }
+        ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(mysql, object : NativeErrorAnnotator(profile) {}, testRootDisposable)
+        HighlightErrorFilter.EP_NAME.getPoint(project).registerExtension(object : HostSqlPlaceholderErrorFilter(channel) {}, testRootDisposable)
+    }
+
+    private fun placeholder(replacement: String, text: String = "SELECT 'SELECT \${x} FROM events() e'") {
+        claim = { host ->
+            val at = host.text.indexOf("\${x}")
+            HostSqlClaim.Injected(postgres, HostSqlEntries(listOf(
+                HostSqlEntry(TextRange(1, at)), HostSqlEntry(TextRange(at, at + 4), replacement, placeholder = true), HostSqlEntry(TextRange(at + 4, host.textLength - 1)),
+            )), pending = true)
+        }
+        open(text)
+    }
+
+    private fun verifierReports() = myFixture.doHighlighting().filter { it.description?.startsWith("Placeholder verifier") == true }.map { it.description }
+
+    fun testNativeVerificationSkipsStatementsWithPlaceholders() {
+        nativeAnnotator(reportsPsiErrors = false)
+        // The verifier rejects `bad`: as a placeholder, it is not the SQL that runs.
+        placeholder("bad")
+        assertEmpty(verifierReports())
+        placeholder("bad", "SELECT 'SELECT bad; SELECT \${x} FROM events() e'")
+        assertEquals(1, verifierReports().size)
+    }
+
+    fun testParseErrorsAPlaceholderCausesDoNotComeBackThroughTheNativeAnnotator() {
+        nativeAnnotator(reportsPsiErrors = true)
+        placeholder(")(")
+        assertEmpty(verifierReports())
+    }
 }

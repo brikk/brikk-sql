@@ -27,6 +27,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.DiagnosticSource
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
+import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import dev.brikk.house.sql.intellij.completion.configureDialect
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
 import dev.brikk.house.sql.intellij.pipe.NativeVerdict
@@ -67,6 +68,7 @@ class TestProfile(
     override var sizeCap: Int? = null
     override var debounce: Duration = Duration.ZERO
     override var budget: Duration? = null
+    override var hostSql: HostSqlChannel? = null
     var extra: List<SqlDiagnostic> = emptyList()
     var revision = 0L
     override fun modificationCount(file: PsiFile) = revision

@@ -30,6 +30,7 @@ import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.diagnostics.combineStatementDiagnostics
 import dev.brikk.house.sql.diagnostics.localParseDiagnostics
 import dev.brikk.house.sql.diagnostics.verificationRange
+import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.intellij.recoverEditorOperation
@@ -124,6 +125,12 @@ public interface NativeErrorProfile {
     public fun fileDiagnostics(file: PsiFile, script: String): List<SqlDiagnostic> = emptyList()
 
     /**
+     * The plugin's SQL in host strings, if any: a statement holding a placeholder is not verified
+     * (its text is not the SQL that runs), and no diagnostic a placeholder causes is reported.
+     */
+    public val hostSql: HostSqlChannel? get() = null
+
+    /**
      * A count that changes whenever anything but [file]'s text can change its verdicts: settings, a
      * connection, a newly available engine or data source. A result is reused only while it, the
      * text and [validator]'s instance stay the same. Restart the daemon for the file when it changes,
@@ -175,6 +182,8 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         val file: PsiFile,
         val dependencies: Dependencies,
         val psiErrors: List<SqlDiagnostic>,
+        /** Placeholder ranges of the script. */
+        val placeholders: List<TextRange> = emptyList(),
     ) {
         val script: String get() = dependencies.script
         val validator: NativeSqlValidator? get() = dependencies.validator
@@ -217,7 +226,11 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         file.getUserData(outcomeKey)?.takeIf { it.profile === profile && it.stamp == stamp && it.dependencies == dependencies }
             ?.let { return Snapshot(stamp, emptyList(), it) }
         val sources = fragments.indices.map { index ->
-            Source(fragments[index] ?: file, dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList())
+            val sqlFile = fragments[index] ?: file
+            Source(
+                sqlFile, dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList(),
+                profile.hostSql?.marker(sqlFile)?.placeholders.orEmpty(),
+            )
         }
         return Snapshot(stamp, sources, null)
     }
@@ -246,6 +259,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         for ((index, diagnostics) in outcome.diagnostics.withIndex()) {
             val fragment = fragments[index]
             for (diagnostic in diagnostics + profile.fileDiagnostics(fragment ?: file, texts[index].text)) {
+                if (profile.hostSql?.isPlaceholderError(fragment ?: file, texts[index].text, diagnostic.start, diagnostic.end) == true) continue
                 val local = texts[index].fileRange(diagnostic.start, diagnostic.end) ?: editableRange(texts[index], diagnostic.start) ?: continue
                 val range = (if (fragment == null) local else manager.injectedToHost(fragment, local)).takeIf { it.endOffset <= file.textLength && !it.isEmpty } ?: continue
                 val message = profile.message(diagnostic)
@@ -287,6 +301,10 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             val range = verificationRange(script, statement) ?: continue
             if (profile.sizeCap?.let { range.last + 1 - range.first > it } == true) continue
             psiErrors -= inStatement.toSet()
+            if (source.placeholders.any { it.startOffset <= range.last && range.first < it.endOffset }) {
+                diagnostics += inStatement
+                continue
+            }
             val local = inStatement + if (profile.localParser) localDiagnostics(script, range) else emptyList()
             val asked = when {
                 validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
