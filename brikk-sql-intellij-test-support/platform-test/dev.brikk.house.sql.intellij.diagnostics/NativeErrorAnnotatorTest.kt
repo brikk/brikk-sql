@@ -483,10 +483,13 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
     fun testARealDuckdbVerifierEndToEnd() {
         ParseOnlyDuckdbVerifier(DuckDBDriver()).use { verifier ->
             postgresProfile.validator = NativeSqlValidator.of(verifier)
-            open("SELECT 1;\nSELECT * FROM t WHERE;\nSELECT 2;")
-            val (text, message) = marks().single()
-            assertTrue(message, message.startsWith("Engine: ") && "syntax error" in message)
-            assertTrue(text, text.isNotBlank())
+            val text = "SELECT 1;\nSELECT * FROM t WHERE x = = 1;\nSELECT 2;"
+            open(text)
+            val error = highlight().single { it.description?.startsWith("Engine: ") == true }
+            assertTrue(error.description, "syntax error" in error.description)
+            // DuckDB reports the second '=', and the mark covers exactly it.
+            assertEquals(text.indexOf("= 1"), error.startOffset)
+            assertEquals("=", text.substring(error.startOffset, error.endOffset))
         }
     }
 }
