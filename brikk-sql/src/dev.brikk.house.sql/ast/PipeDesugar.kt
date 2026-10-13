@@ -53,15 +53,23 @@ fun desugarPipes(expression: Expression, copy: kotlin.Boolean = true): Expressio
     desugarPipes(expression, Dialects.BASE, copy)
 
 /** Uses the input dialect's identifier rules for namespace proofs; preserves SQL spelling. */
-fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean = true): Expression {
+fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean = true): Expression =
+    desugarPipes(expression, dialect, copy, lenient = false)
+
+/**
+ * [lenient] lowers what execution refuses, for editor scopes rather than execution: an input
+ * boundary that cannot preserve its namespaces drops them (old qualifiers stop resolving), and
+ * row slices that are not plain literals are kept as written.
+ */
+internal fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean, lenient: kotlin.Boolean): Expression {
     val root = if (copy) expression.copy() else expression
     // sqlglot: Parser._pipe_cte_counter (per-statement)
     val counter = PipeCteCounter(root.findAll(Table::class, TableAlias::class)
-        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect)
+        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect, lenient)
     return desugarNode(root, counter)
 }
 
-private class PipeCteCounter(val takenNames: kotlin.collections.Set<String>, val dialect: Dialect) {
+private class PipeCteCounter(val takenNames: kotlin.collections.Set<String>, val dialect: Dialect, val lenient: kotlin.Boolean) {
     var n: Int = 0
 }
 
@@ -226,14 +234,16 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
 
         // A combined LIMIT/OFFSET skips rows of the input before taking its limit.
         is PipeLimit -> {
-            val limit = stage.thisArg as? Limit
-                ?: throw UnsupportedError("Pipe LIMIT requires a non-negative signed 64-bit integer literal")
-            applyPipeOffset(query, stage.args["offset"] as? Offset, limit)
+            lenientSlice(query, stage, counter) {
+                val limit = stage.thisArg as? Limit
+                    ?: throw UnsupportedError("Pipe LIMIT requires a non-negative signed 64-bit integer literal")
+                applyPipeOffset(query, stage.args["offset"] as? Offset, limit)
+            }
             query
         }
 
         is PipeOffset -> {
-            applyPipeOffset(query, stage.thisArg as? Offset)
+            lenientSlice(query, stage, counter) { applyPipeOffset(query, stage.thisArg as? Offset) }
             query
         }
 
@@ -298,20 +308,20 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
                     )
                 ) as Expression
             }
-            buildPipeCte(
+            closeModifiedStar(buildPipeCte(
                 query,
                 listOf(Star(args("replace" to replaceList.toMutableList()))),
                 counter,
-            )
+            ), counter)
         }
 
         // googlesql: pipe DROP (docs/pipe-syntax.md ~713) — NO sqlglot counterpart.
         // `|> DROP col, ...` ≡ `SELECT * EXCEPT (col, ...)` from the CTE'd input.
-        is PipeDrop -> buildPipeCte(
+        is PipeDrop -> closeModifiedStar(buildPipeCte(
             query,
             listOf(Star(args("except_" to stage.expressionsArg.toMutableList()))),
             counter,
-        )
+        ), counter)
 
         // googlesql: pipe RENAME (docs/pipe-syntax.md ~763) — NO sqlglot counterpart.
         // `|> RENAME old AS new, ...` ≡ `SELECT * RENAME (old AS new, ...)` from the
@@ -320,8 +330,8 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
             for (rename in stage.expressionsArg) {
                 val alias = rename as? Alias
                 val column = alias?.thisArg as? Column
-                if (alias == null || column == null || column.thisArg !is Identifier || alias.args["alias"] !is Identifier ||
-                    column.table.isNotEmpty() || column.db.isNotEmpty() || column.catalog.isNotEmpty()) {
+                if (!counter.lenient && (alias == null || column == null || column.thisArg !is Identifier || alias.args["alias"] !is Identifier ||
+                    column.table.isNotEmpty() || column.db.isNotEmpty() || column.catalog.isNotEmpty())) {
                     throw UnsupportedError("Pipe RENAME requires unqualified source and target column identifiers")
                 }
             }
@@ -389,6 +399,25 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
 }
 
 private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteCounter): Select {
+    val (namespace, rankingOrder) = try {
+        pipeInputBoundary(query, stage, counter)
+    } catch (e: UnsupportedError) {
+        if (!counter.lenient) throw e
+        null to null
+    }
+    val outer = buildPipeCte(query, listOf(Star()), counter)
+    // Retain the single input namespace, including references inside correlated
+    // stage expressions, without stripping qualifiers or changing source positions.
+    if (namespace != null) {
+        ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
+    }
+    // Ranking still needs the input order; the original stays with its restriction.
+    if (rankingOrder != null) outer.set("order", rankingOrder)
+    return outer
+}
+
+/** The input namespace a boundary preserves and the ranking order DISTINCT ON keeps, or why it cannot. */
+private fun pipeInputBoundary(query: Expression, stage: Expression, counter: PipeCteCounter): Pair<Identifier?, Expression?> {
     val operation = if (stage is PipeWhere) "WHERE" else "SELECT/DISTINCT"
     fun bindingName(identifier: kotlin.Any?): String? = (identifier as? Identifier)?.let {
         normalizeIdentifiers(it.copy(), dialect = counter.dialect).name
@@ -508,15 +537,7 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
             }
         }
     } else null
-    val outer = buildPipeCte(query, listOf(Star()), counter)
-    // Retain the single input namespace, including references inside correlated
-    // stage expressions, without stripping qualifiers or changing source positions.
-    if (namespace != null) {
-        ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
-    }
-    // Ranking still needs the input order; the original stays with its restriction.
-    if (rankingOrder != null) outer.set("order", rankingOrder)
-    return outer
+    return namespace to rankingOrder
 }
 
 private fun pipeScope(expression: Expression, dialect: Dialect): Scope {
@@ -533,6 +554,24 @@ private fun pipeScope(expression: Expression, dialect: Dialect): Scope {
         buildScope(analysis) ?: throw UnsupportedError("Cannot determine pipe input namespaces")
     } catch (error: OptimizeError) {
         throw UnsupportedError("Cannot determine pipe input namespaces: ${error.message}")
+    }
+}
+
+/**
+ * A lenient lowering puts a SET or DROP output behind its own CTE, as RENAME always is, so a later
+ * JOIN joins that output rather than extending the modified star over both sides.
+ */
+private fun closeModifiedStar(query: Select, counter: PipeCteCounter): Select =
+    if (counter.lenient) buildPipeCte(query, listOf(Star()), counter) else query
+
+/** Slices change rows, not scopes: a lenient lowering keeps a slice it cannot compose as written. */
+private inline fun lenientSlice(query: Expression, stage: Expression, counter: PipeCteCounter, compose: () -> Unit) {
+    try {
+        compose()
+    } catch (e: UnsupportedError) {
+        if (!counter.lenient) throw e
+        (stage.thisArg as? Expression)?.let { query.set(if (it is Offset) "offset" else "limit", it) }
+        (stage.args["offset"] as? Offset)?.let { query.set("offset", it) }
     }
 }
 
