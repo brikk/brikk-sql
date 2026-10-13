@@ -358,9 +358,11 @@ function, 4 tab-separated columns: `name`, `is_aggregate`, `case_insensitive`, `
 prerequisite catalog for the `duckdb↔clickhouse` / `trino↔clickhouse` semantic-hazard probe
 program (see `docs/research/REPORT-clickhouse-differential-probe-2026-07-13.md`).
 `tools/generate_clickhouse_functions.py` generates
-`GeneratedClickhouseFunctionCatalog.kt` from it: 1570 definitions with 200 distinct
-cross-name aliases after case-only self-alias rows are folded. The dump exposes no
-signatures, so overload lists remain honestly empty.
+`GeneratedClickhouseFunctionCatalog.kt` from it and `clickhouse-table-functions-26.5.1.1.tsv`:
+1561 definitions with 200 distinct cross-name aliases after case-only self-alias rows are folded
+and the 9 `__`-prefixed engine internals (`__getScalar`, ...) are left out, plus the 87 table
+functions as `TABLE_VALUED` (1648 in all). `file`, `format` and `fuzzQuery` are defined under
+both kinds. The dumps expose no signatures, so overload lists remain honestly empty.
 
 Two ClickHouse-specific columns beyond the other engines' catalogs:
 - `is_aggregate` — 1 for aggregate functions.
@@ -393,3 +395,14 @@ clickhouse local --query "SELECT name, is_aggregate, case_insensitive, alias_to 
 Refresh on a version bump: re-dump against the new pin, save as
 `data/clickhouse-functions-<version>.tsv`, update this pin, and run
 `python3 tools/generate_clickhouse_functions.py`.
+
+## `data/clickhouse-table-functions-26.5.1.1.tsv`
+
+ClickHouse 26.5.1.1's `system.table_functions`: `name` and `allow_readonly`, 87 rows,
+captured 2026-10-12 with `chdb` 4.2.1 pinned to `chdb-core` 26.5.0 (`SELECT version()` =
+`26.5.1.1`), the same engine as the function dump. The description column is left out.
+
+```bash
+python3 -c "import chdb; open('vendor/data/clickhouse-table-functions-<ver>.tsv','w').write(str(chdb.query(
+  'SELECT name, allow_readonly FROM system.table_functions ORDER BY name FORMAT TSVWithNames')))"
+```

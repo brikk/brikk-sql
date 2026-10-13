@@ -172,6 +172,13 @@ open class Dialect {
      */
     open val halfOpenPartitionRanges: Boolean get() = false
 
+    /**
+     * brikk-native: the PIPE stage phrases (as [dev.brikk.house.sql.parser.pipeStageKeywords] spells
+     * them) that the engine runs as core lowers them, by recorded evidence; null without evidence,
+     * when every parsed phrase stands. See [dev.brikk.house.sql.parser.pipeRunnableStageKeywords].
+     */
+    open val pipeRunnableStages: Set<String>? get() = null
+
     /** brikk-native: whether `{name:Type}` is a server query parameter (ClickHouse). */
     open val typedQueryParameters: Boolean get() = false
 

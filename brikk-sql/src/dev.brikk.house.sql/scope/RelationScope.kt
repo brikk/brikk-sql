@@ -11,7 +11,9 @@ import kotlinx.serialization.Serializable
  * and the fact it passes through unchanged ([source]), if any.
  *
  * - [relation] is the alias, table, slot or CTE name that qualifies it, empty when nothing
- *   does: a projection's output, a pipe stage's output, a merged USING key.
+ *   does: a projection's output, a pipe stage's output, a merged USING key. [relationKind] is
+ *   that relation's kind, null when [relation] is empty: SLOT, TABLE or CALL when the column is
+ *   seen directly through a provider's relation, CTE or SUBQUERY when through SQL's own.
  * - [origin] is the source fact's origin, or [ColumnOrigin.COMPUTED].
  * - [computedBy] names what computes a computed column: a pipe stage (`EXTEND`), a set
  *   operation (`UNION ALL`), `PIVOT`, `USING`, or the CTE or derived table whose projection it is
@@ -32,15 +34,16 @@ data class ScopeColumn(
     val computedBy: String? = null,
     val provenance: String? = null,
     val declaration: ScopeRange? = null,
+    val relationKind: RelationKind? = null,
 )
 
 /** A range `[start, end)` of script offsets. */
 @Serializable
 data class ScopeRange(val start: Int, val end: Int)
 
-/** The [column] fact supplied under [relation], a slot, table or call key. */
+/** The [column] fact supplied under [relation], a slot, table or call key, as [kind] says: SLOT, TABLE or CALL. */
 @Serializable
-data class ColumnSource(val relation: String, val column: ColumnFact)
+data class ColumnSource(val relation: String, val column: ColumnFact, val kind: RelationKind)
 
 @Serializable
 enum class RelationKind { SLOT, TABLE, CALL, CTE, SUBQUERY, FUNCTION, VALUES, OTHER }

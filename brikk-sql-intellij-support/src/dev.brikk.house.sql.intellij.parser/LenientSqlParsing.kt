@@ -85,15 +85,25 @@ public fun PsiBuilder.parseLenientStatement(type: IElementType = SqlCompositeEle
     return true
 }
 
-/** Parses `:name`, a colon directly followed by an identifier, as a parameter reference. */
+/**
+ * Parses `:name`, a colon directly followed by an identifier, as a parameter reference. With
+ * [named], the name is an identifier node, as the platform grammars build it, so the console
+ * names the parameter.
+ */
 @ApiStatus.Experimental
-public fun PsiBuilder.parseColonParameter(): Boolean {
+public fun PsiBuilder.parseColonParameter(named: Boolean = false): Boolean {
     if (tokenText != ":") return false
     val marker = mark()
     val start = currentOffset
     advanceLexer()
     if (currentOffset == start + 1 && tokenText?.matches(PARAMETER_NAME) == true) {
-        advanceLexer()
+        if (named) {
+            val name = mark()
+            advanceLexer()
+            name.done(SqlCompositeElementTypes.SQL_IDENTIFIER)
+        } else {
+            advanceLexer()
+        }
         marker.done(SqlElementTypes.SQL_PARAMETER_REFERENCE)
         return true
     }
