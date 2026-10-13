@@ -11,9 +11,10 @@ import org.jetbrains.annotations.ApiStatus
  * Where a table function stands, recognized by the keywords before the name being typed, ignoring
  * case: right after a phrase in [after] (`FROM`, any join ending in `JOIN`), after a comma
  * continuing a list one of them began (`FROM a, b`), and right inside the parentheses of a word in
- * [parenthesized] (`TABLE(...)`). A longer phrase in [notAfter] wins, such as `IS DISTINCT FROM` or
- * ClickHouse's `ARRAY JOIN`. A `FROM` inside a call that holds no query (`EXTRACT(YEAR FROM x)`) is
- * an argument, not a table position.
+ * [parenthesized] (`TABLE(...)`). A longer phrase in [expressionsAfter] or [notAfter] wins: after
+ * the first an expression stands, such as after `IS DISTINCT FROM` or ClickHouse's `ARRAY JOIN`; after
+ * the second the position is not known. A `FROM` inside a call that holds no query
+ * (`EXTRACT(YEAR FROM x)`) is an argument, not a table position.
  *
  * Table functions named in [inExpressions] or of a kind in [kindsInExpressions] are also offered in
  * expressions. With [wrapper], a table function other than those in [unwrapped] is inserted as
@@ -28,6 +29,7 @@ public data class TablePositions(
     val kindsInExpressions: Set<FunctionKind> = emptySet(),
     val wrapper: String? = null,
     val unwrapped: Set<String> = emptySet(),
+    val expressionsAfter: Set<String> = emptySet(),
 ) {
     internal fun fitsExpressions(entry: FunctionPresentation): Boolean =
         entry.kind in kindsInExpressions || inExpressions.any { it.equals(entry.name, ignoreCase = true) }
@@ -40,7 +42,7 @@ public data class TablePositions(
         public val STANDARD: TablePositions = TablePositions(
             after = setOf("FROM", "JOIN", "|> CALL"),
             parenthesized = setOf("TABLE"),
-            notAfter = setOf("DISTINCT FROM", "ARRAY JOIN"),
+            expressionsAfter = setOf("DISTINCT FROM", "ARRAY JOIN"),
         )
 
         /** [STANDARD] with what the engine adds, for the dialects with recorded evidence. */
@@ -115,7 +117,10 @@ private class Word(val text: String, val type: TokenType) {
     val isName: Boolean get() = type == TokenType.VAR || type == TokenType.IDENTIFIER
 }
 
-/** TABLE or UNKNOWN if a keyword phrase of [TablePositions.after] or [TablePositions.notAfter] ends [words], the longest deciding. */
+/**
+ * TABLE, EXPRESSION or UNKNOWN if a keyword phrase of [TablePositions.after], [TablePositions.expressionsAfter]
+ * or [TablePositions.notAfter] ends [words], the longest deciding; a tie is not a table, and not known between the last two.
+ */
 private fun TablePositions.phraseAtEnd(words: List<Word>): FunctionPosition? {
     fun matches(phrase: String): Boolean {
         val parts = phrase.uppercase(Locale.ROOT).split(' ')
@@ -123,11 +128,14 @@ private fun TablePositions.phraseAtEnd(words: List<Word>): FunctionPosition? {
             tail.map(Word::text) == parts && tail.none(Word::isName)
         }
     }
-    val table = after.filter(::matches).maxOfOrNull { it.split(' ').size }
-    val other = notAfter.filter(::matches).maxOfOrNull { it.split(' ').size }
+    fun longest(phrases: Set<String>) = phrases.filter(::matches).maxOfOrNull { it.split(' ').size } ?: 0
+    val table = longest(after)
+    val expression = longest(expressionsAfter)
+    val other = longest(notAfter)
     return when {
-        table == null && other == null -> null
-        (other ?: 0) >= (table ?: 0) -> FunctionPosition.UNKNOWN
+        table == 0 && expression == 0 && other == 0 -> null
+        other >= maxOf(table, expression) -> FunctionPosition.UNKNOWN
+        expression >= table -> FunctionPosition.EXPRESSION
         else -> FunctionPosition.TABLE
     }
 }
@@ -249,4 +257,4 @@ private val PIPE_EXPRESSION_STAGES = setOf("EXTEND", "AGGREGATE")
 
 private val OPERATORS = ExpressionPositions.STANDARD.operators - setOf("(", ",") + "*"
 
-private val EXPRESSION_KEYWORDS = ExpressionPositions.STANDARD.keywords + setOf("BY", "SET", "RETURN", "QUALIFY")
+private val EXPRESSION_KEYWORDS = ExpressionPositions.STANDARD.keywords + setOf("BY", "SET", "RETURN", "QUALIFY", "LIMIT", "OFFSET", "RETURNING", "PREWHERE")

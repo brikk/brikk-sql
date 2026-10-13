@@ -283,8 +283,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   Function kinds follow the position, judged from the core tokens of the statement before the typed
   name (`tablePositions`, by default `TablePositions.of(dialect)`). `STANDARD` places tables after FROM,
   any join and PIPE `|> CALL`, after a comma continuing their list, and inside `TABLE(`; `IS DISTINCT
-  FROM`, ClickHouse's `ARRAY JOIN` and a FROM inside a call holding no query (`EXTRACT(YEAR FROM x)`)
-  are not table positions. A table position offers only table functions, a known expression position
+  FROM` and ClickHouse's `ARRAY JOIN` (and the list it begins) are expression positions (`expressionsAfter`),
+  as are `LIMIT`, `OFFSET`, `RETURNING` and ClickHouse's `PREWHERE`; a FROM inside a call holding no
+  query (`EXTRACT(YEAR FROM x)`) is an argument, not a table position. A table position offers only table functions, a known expression position
   hides them, so a name of both kinds (DuckDB `range`) shows its fitting form; where the text does not
   tell, every function is offered. Aggregates and window functions are not filtered by clause.
   Per dialect: DuckDB's `unnest` is also offered in expressions; Doris's generators are too, and

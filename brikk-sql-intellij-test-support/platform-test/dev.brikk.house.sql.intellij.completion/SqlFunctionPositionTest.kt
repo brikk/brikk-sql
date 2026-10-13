@@ -105,8 +105,31 @@ class SqlFunctionPositionTest : CompletionTestCase() {
     fun testInjectedSqlHasTablePositions() =
         assertEquals(table, offeredInjected("SELECT * FROM ra<caret> WHERE true").filterTo(HashSet()) { it.first == "range" })
 
-    fun testDistinctFromIsNotATablePosition() =
-        assertOffers(everything, "SELECT * FROM t WHERE a IS DISTINCT FROM ra<caret>", "SELECT * FROM t WHERE a IS NOT DISTINCT FROM ra<caret>")
+    fun testDistinctFromIsAnExpressionPosition() =
+        assertOffers(expression, "SELECT * FROM t WHERE a IS DISTINCT FROM ra<caret>", "SELECT * FROM t WHERE a IS NOT DISTINCT FROM ra<caret>")
+
+    /** Clauses that take an expression and no table. */
+    fun testExpressionClausesHideTheTableForm() = assertOffers(
+        expression,
+        "SELECT * FROM t LIMIT ra<caret>", "SELECT * FROM t LIMIT 1 OFFSET ra<caret>", "SELECT * FROM t OFFSET ra<caret>",
+        "DELETE FROM t RETURNING ra<caret>", "INSERT INTO t VALUES (1) RETURNING a, ra<caret>",
+    )
+
+    /** ClickHouse's ARRAY JOIN takes array expressions, and PREWHERE a condition: neither offers `numbers`. */
+    fun testClickhouseArrayJoinAndPrewhereAreExpressionPositions() {
+        fun kinds(text: String, name: String): Set<FunctionKind> {
+            configure(text, ClickhouseCompletion::class.java)
+            return functionItems().filter { it.name.equals(name, ignoreCase = true) }.mapTo(HashSet()) { it.kind }
+        }
+        for (text in listOf(
+            "SELECT * FROM t ARRAY JOIN num<caret>", "SELECT * FROM t LEFT ARRAY JOIN num<caret>",
+            "SELECT * FROM t ARRAY JOIN a AS x, num<caret>", "SELECT * FROM t PREWHERE num<caret>",
+        )) {
+            assertEquals(text, emptySet<FunctionKind>(), kinds(text, "numbers"))
+            assertEquals(text, setOf(SCALAR), kinds(text.replace("num<caret>", "arrayJo<caret>"), "arrayJoin"))
+        }
+        assertEquals(setOf(TABLE_VALUED), kinds("SELECT * FROM t JOIN num<caret>", "numbers"))
+    }
 
     fun testKeywordsNotNamesDecide() {
         // The generic SQL parser does not take LATERAL; PostgreSQL's does.
