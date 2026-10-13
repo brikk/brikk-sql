@@ -4,6 +4,7 @@ import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.parser.ErrorLevel
+import dev.brikk.house.sql.parser.PIPE_STAGES_RUN_EVERYWHERE
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.StringEscapeProfiles
@@ -15,6 +16,11 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
  */
 // sqlglot: dialects.duckdb.DuckDB
 open class DuckdbDialect : Dialect() {
+    // brikk-native PIPE evidence: DuckDB 1.5.6 ran every lowered stage below.
+    override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf(
+        "CALL", "DROP", "SET", "RENAME", "PIVOT", "UNPIVOT", "TABLESAMPLE", "UNION", "ASOF JOIN", "NATURAL JOIN", "POSITIONAL JOIN",
+    )
+
 
     override val name: String get() = "duckdb"
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.IN_PLACE

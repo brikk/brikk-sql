@@ -11,6 +11,7 @@ import dev.brikk.house.sql.ast.UniquePredicate
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.metadata.TRINO_FUNCTION_CATALOG
 import dev.brikk.house.sql.parser.ErrorLevel
+import dev.brikk.house.sql.parser.PIPE_STAGES_RUN_EVERYWHERE
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.TrinoTokenizerTables
@@ -22,6 +23,11 @@ import dev.brikk.house.sql.parser.TrinoTokenizerTables
  */
 // sqlglot: dialects.trino.Trino
 class TrinoDialect : PrestoDialect() {
+    // brikk-native PIPE evidence (Trino 483 ran the lowered stages): ASOF JOIN reads as an alias,
+    // NATURAL JOIN is not supported, CALL needs TABLE(...), DROP and SET have no `* EXCEPT` /
+    // `* REPLACE`, and core refuses or blocks RENAME, PIVOT and UNPIVOT.
+    override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf("TABLESAMPLE", "UNION")
+
 
     override val name: String get() = "trino"
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.OMIT
