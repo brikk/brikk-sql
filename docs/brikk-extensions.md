@@ -1937,6 +1937,21 @@ invisible to the editor. Not covered, as their quoting is not known from the INS
 `Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw line break,
 so their data keeps the plain rule.
 
+## 57. Plan-only text explain and catalog definitions
+
+`prepareTextExplain(statement, dialect, isBuiltinFunction)` builds the `EXPLAIN` an IDE shows as text,
+or refuses. Only Trino (without ANALYZE) and Doris are explained, and only a single plain query: a
+live Trino 483 creates the table of `EXPLAIN CREATE TABLE ... AS SELECT` (`TextExplainResultTest`),
+while `EXPLAIN INSERT` and `EXPLAIN DROP TABLE` change nothing. Queries reading a table function,
+calling a namespaced routine or a function the caller does not know as a built-in are refused, since
+planning may evaluate them; so is text the core parser cannot read. DuckDB is refused outright: its
+`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence (DuckDB 1.5.6). `explainPlanText`
+joins the first column of the plan rows.
+
+`definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris and Trino
+`SHOW CREATE`, DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
+macros rebuilt from `duckdb_functions()`, whose definition says that parameter defaults are not reported.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
