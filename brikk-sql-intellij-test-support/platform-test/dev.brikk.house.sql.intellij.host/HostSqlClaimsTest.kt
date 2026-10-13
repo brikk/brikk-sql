@@ -7,6 +7,7 @@ import com.intellij.codeInsight.highlighting.HighlightErrorFilter
 import com.intellij.database.actions.RunQueryAction
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.console.JdbcConsoleProvider
+import com.intellij.database.intentions.RunQueryIntentionActionAvailable
 import com.intellij.lang.ExternalLanguageAnnotators
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.lang.injection.InjectedLanguageManager
@@ -170,6 +171,12 @@ class HostSqlClaimsTest : HostSqlTestCase() {
     fun testExecuteFromTheHostEditorIsRefused() {
         claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
         contract().refusesInspectionOnlySqlFromTheHostEditor()
+    }
+
+    fun testRunInConsoleIsVetoed() {
+        claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
+        RunQueryIntentionActionAvailable.EP_NAME.point.registerExtension(object : HostSqlRunConsoleVeto(channel) {}, testRootDisposable)
+        contract().vetoesRunInConsole()
     }
 
     fun testARetryInjectsOnceTheFactsAreThereAndStops() {

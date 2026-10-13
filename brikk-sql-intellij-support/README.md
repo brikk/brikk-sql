@@ -237,8 +237,9 @@ host-language dependency and knows nothing about Brikk.
   Injectors outside that mechanism (a `multiHostInjector`) cannot be kept off: SQL they put into a
   string is inspection-only when any host string it joins was claimed by the channel's last claim of
   that host, or by `claimsHost(host)`, which a plugin overrides to ask its recognizer. Each host's claim
-  is asked once and shared by the contributor and performer (even as separate instances) until the
-  host's file changes or the channel reanalyzes, negative claims included.
+  is asked once and shared by the contributor and performer (even as separate instances) until any
+  PSI in the project changes (a constant the string interpolates may live in another file) or the
+  channel reanalyzes, negative claims included.
 - Retries: unavailable and pending claims schedule one reanalysis per file and file revision once
   indexing is done; it drops PSI caches (injection results are cached until PSI changes) and the file's
   injected documents, and restarts its highlighting. A provider whose facts change without an edit
@@ -255,8 +256,11 @@ host-language dependency and knows nothing about Brikk.
   runs no relation diagnostics while SQL is pending.
 - `PipeDialect.hostSql`: PIPE editing is on in the channel's SQL; inspection-only SQL refuses Execute,
   also from the host's editor with the caret in the SQL (the stock action would run it in a console),
-  has no run-to-stage and says so in the preview. `HostSqlExecutionContract` (test kit) checks Execute
-  from a plugin's real host editor.
+  has no run-to-stage and says so in the preview; the selection counts too (every string it intersects,
+  and the one the caret touches, past its closing quote included). `HostSqlRunConsoleVeto`
+  (`com.intellij.database.runConsoleAvailable`) vetoes the platform's "Run query in console" intention,
+  which runs injected SQL without Execute, by the same rules. `HostSqlExecutionContract` (test kit)
+  checks both from a plugin's real host editor.
 - `HostSqlLineMarkerProvider` (`codeInsight.lineMarkerProvider` for the host language): a named,
   dumb-aware gutter icon per claimed string, toggled in Settings | Editor | General | Gutter Icons,
   dimmed while pending, unavailable or indexing, with the caller's tooltip. `HostSqlActionBanner`
@@ -297,15 +301,20 @@ it came through `*`, which the platform cannot expand over a provider's relation
   columns without one are created, in their label's lookup kind (`RELATION_COLUMN` by default: the
   column icon, ranked ahead of the platform's long lists). Nothing is offered twice; columns of
   different relations, quoted aliases differing only in case included, stay distinct; an unrelated item
-  of the same name stays beside the column. `RelationColumnLabels` name each origin ("declared column
+  of the same name stays beside the column. Items standing for provider columns the analysis does not
+  see at the caret (an outer or shadowed alias's, a set operation's branch, a merged key's side) are
+  hidden; the native adapter's items are matched by their qualifier. `RelationColumnLabels` name each origin ("declared column
   (rel)" with the provider's display type, "relation contract (rel)", "computed column (stage or CTE)",
   "column (table)" with its SQL type); a provider can bring its own (the Brikk helper's "brikk column"
   with `BRIKK_COLUMN`), and a renamed column keeps its origin. Where a relation stands, it offers the
   provider relations the platform does not know (slots, table functions), inserted as core writes them
   (`src()`); CTEs and a data source's tables stay the platform's items.
-- `ExternalRelationGotoDeclarationHandler`: the provider's target for managed columns and provider
-  relations, or the SQL's declaration where the platform resolves nothing (PIPE stages); there a
-  column passed on from a provider leads to the provider's target rather than to the stage.
+- `ExternalRelationGotoDeclarationHandler`: answers for every column and relation the analysis
+  resolves, ahead of the platform's resolver: the provider's target for a column with provenance
+  (through aliases, pass-through relations and merged USING or NATURAL keys, on the side the analysis
+  names) and for a provider relation; else the declaration in the SQL; every branch's item for a set
+  operation's output; the USING key for a merged key no provider column names. The platform navigates
+  only where the analysis has no answer; a native adapter still serves rename and find usages.
 - `ExternalRelationAnnotator`, or `relationDiagnostics(file, profile)` for a `NativeErrorProfile`:
   missing, ambiguous, partial-contract, unknown-qualifier, unknown-table and PIPE_UNSUPPORTED problems
   at exact ranges, injected fragments included.
@@ -322,7 +331,9 @@ own language.
 
 `DasRelationFacts` (catalog kit) supplies the tables of a file's data source with stored names, so core
 folds unquoted names as the dialect does; a table without introspected columns proves no column
-absent, and each data source's model state has its own revision.
+absent, and each data source's model state has its own revision. Its search path is the file's
+console's current namespace, so of same-named tables in several schemas an unqualified name means the
+current schema's; without one it is ambiguous (unknown columns, nothing reported).
 
 `RelationTableTypes.of(call, profile)` is the optional native adapter: a plugin's function-call element
 returns it as its type, so ordinary SQL over a slot resolves through the platform's own table type.
