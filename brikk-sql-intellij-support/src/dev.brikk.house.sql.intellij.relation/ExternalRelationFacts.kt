@@ -43,6 +43,28 @@ public interface ExternalRelationFacts {
 
     /** How this provider's columns are labeled in completion; null uses the profile's. */
     public val labels: RelationColumnLabels? get() = null
+
+    public companion object {
+        /**
+         * A provider from functions, so a plugin maps another library's facts (core data and its own
+         * available or pending result) in a few lines. Keep the instance: the analysis is cached per
+         * provider instance.
+         */
+        public fun of(
+            labels: RelationColumnLabels? = null,
+            platformResolves: Boolean = false,
+            navigationTarget: (file: PsiFile, provenance: String) -> PsiElement? = { _, _ -> null },
+            facts: (file: PsiFile) -> RelationFactsResult?,
+        ): ExternalRelationFacts = object : ExternalRelationFacts {
+            override fun facts(file: PsiFile): RelationFactsResult? = facts(file)
+
+            override fun navigationTarget(file: PsiFile, provenance: String): PsiElement? = navigationTarget(file, provenance)
+
+            override val platformResolves: Boolean get() = platformResolves
+
+            override val labels: RelationColumnLabels? get() = labels
+        }
+    }
 }
 
 /**

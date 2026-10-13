@@ -68,4 +68,15 @@ class RelationNavigationTest : RelationTestCase() {
         assertEquals(listOf("kind.txt"), targets("SELECT * FROM events() AS e WHERE kind IS NULL", "kind"))
         assertEquals(listOf("id.txt"), targets("WITH c AS (SELECT * FROM events()) SELECT c.id FROM c", "id"))
     }
+
+    fun testAFunctionBackedProviderServesFactsNavigationAndPending() {
+        var pending = false
+        val targets = pgRelations.fake.targets
+        pgRelations.providers = listOf(ExternalRelationFacts.of(navigationTarget = targets) { _ ->
+            if (pending) RelationFactsResult.Pending("indexing") else RelationFactsResult.Available(FakeFacts.EVENTS, 0)
+        })
+        assertEquals(listOf("id.txt"), targets("SELECT e.id FROM events() e", "id"))
+        pending = true
+        assertEmpty(targets("SELECT e.id FROM events() e", "id"))
+    }
 }

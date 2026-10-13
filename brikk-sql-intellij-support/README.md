@@ -177,6 +177,8 @@ host-language dependency and knows nothing about Brikk.
   range, the injection `places` (contiguous origins joined; replacement text as a place's prefix, or
   the last place's suffix) and the placeholders. Escapes, trims, CRLF and supplementary characters keep
   exact origins, so annotations on the injected SQL land on the host text that produced it.
+- Entries are plain data: a plugin maps a recognizer's output (the Brikk helper's host ranges,
+  replacements and pending projection, which depend on core only) into `HostSqlEntry`s.
 - `HostSqlChannel(id)`, one per plugin (its keys are its own): `perform(registrar, host, claim)` runs a
   recognizer's `HostSqlClaim` from an injection performer or injector. `Injected` injects (`pending`
   when placeholders stand for facts not known yet; `inspectionOnly`; `colonBinds`; caller `data`);
@@ -205,7 +207,9 @@ SQL features over relation facts from any provider, built on core's `RelationSco
 (`dev.brikk.house.sql.scope`); this layer knows nothing about Brikk. A provider implements
 `ExternalRelationFacts`: copied core `RelationFacts` (slots, tables, table-function calls) for a file or
 injected fragment with a revision, or `Pending`; optionally navigation by a fact's provenance, labels,
-and `platformResolves` for relations the platform resolves itself. A plugin implements one
+and `platformResolves` for relations the platform resolves itself. `ExternalRelationFacts.of(labels, platformResolves,
+navigationTarget) { file -> result }` builds one from functions, so a plugin maps a library's facts
+(core `RelationFacts` and its own available/pending result, such as the Brikk helper's) in a few lines. A plugin implements one
 `RelationScopeProfile` (language, core dialect, providers in precedence order, labels, styles) and
 registers no-arg subclasses. Providers must be stable instances: the analysis is cached per provider
 instance and revision. A slot, a table and a call with the same key are different relations, each
