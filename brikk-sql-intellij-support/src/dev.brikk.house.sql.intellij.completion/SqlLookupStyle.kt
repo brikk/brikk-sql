@@ -35,6 +35,9 @@ public enum class SqlLookupKind {
     PIPE_STAGE,
     PIPE_INPUT_COLUMN,
     BRIKK_COLUMN,
+
+    /** A column of an external relation, or computed over one, that no other item offers. */
+    RELATION_COLUMN,
     CATALOG,
     SCHEMA,
     TABLE,
@@ -114,6 +117,7 @@ public class SqlLookupStyles private constructor(private val styles: Map<SqlLook
                     SqlLookupKind.PIPE_STAGE -> SqlLookupStyle(typeText = "PIPE stage", bold = true, case = LookupCase.UPPER)
                     SqlLookupKind.PIPE_INPUT_COLUMN -> SqlLookupStyle(DatabaseIcons.Col, "PIPE input column", priority = 95.0)
                     SqlLookupKind.BRIKK_COLUMN -> SqlLookupStyle(SqlLookupIcons.BrikkColumn, priority = 120.0)
+                    SqlLookupKind.RELATION_COLUMN -> SqlLookupStyle(DatabaseIcons.Col, priority = 110.0)
                     SqlLookupKind.CATALOG -> SqlLookupStyle(DatabaseIcons.Database, "catalog", priority = 96.0)
                     SqlLookupKind.SCHEMA -> SqlLookupStyle(DatabaseIcons.Schema, "schema", priority = 96.0)
                     SqlLookupKind.TABLE -> SqlLookupStyle(DatabaseIcons.Table, "table", priority = 96.0)

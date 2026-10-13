@@ -55,6 +55,7 @@ public interface RelationScopeProfile {
 
     public val dialect: String
 
+    /** Stable instances: the analysis is cached per provider instance and its revision. */
     public val providers: List<ExternalRelationFacts>
 
     /** Labels of computed columns and of providers without their own. */
@@ -65,15 +66,15 @@ public interface RelationScopeProfile {
 
 /**
  * Completion labels by column origin: the origin text shown with the relation, its lookup kind
- * (icon and priority from the profile's styles) and its type. A declared column shows the
+ * (icon and priority from the profile's styles, for items no other contributor offers) and its type. A declared column shows the
  * provider's display type, a physical one its SQL type, a computed one what computes it.
  */
 @ApiStatus.Experimental
 public data class RelationColumnLabels(
     val declared: String = "declared column",
-    val declaredKind: SqlLookupKind = SqlLookupKind.COLUMN,
+    val declaredKind: SqlLookupKind = SqlLookupKind.RELATION_COLUMN,
     val contract: String = "relation contract",
-    val contractKind: SqlLookupKind = SqlLookupKind.COLUMN,
+    val contractKind: SqlLookupKind = SqlLookupKind.RELATION_COLUMN,
     val computed: String = "computed column",
     val physical: String = "column",
 ) {
@@ -89,9 +90,9 @@ public data class RelationColumnLabels(
             ColumnOrigin.DECLARED -> RelationColumnLabel(declared, relation, column.displayType ?: column.sqlType, nullable, declaredKind)
             ColumnOrigin.RELATION_CONTRACT -> RelationColumnLabel(contract, relation, column.displayType ?: column.sqlType, nullable, contractKind)
             ColumnOrigin.PHYSICAL_TABLE ->
-                RelationColumnLabel(physical, column.source?.relation?.substringAfterLast('.') ?: relation, column.sqlType, nullable, SqlLookupKind.COLUMN)
+                RelationColumnLabel(physical, column.source?.relation?.substringAfterLast('.') ?: relation, column.sqlType, nullable, SqlLookupKind.RELATION_COLUMN)
             ColumnOrigin.COMPUTED ->
-                RelationColumnLabel(computed, column.computedBy ?: relation, column.sqlType ?: column.displayType, nullable, SqlLookupKind.COLUMN)
+                RelationColumnLabel(computed, column.computedBy ?: relation, column.sqlType ?: column.displayType, nullable, SqlLookupKind.RELATION_COLUMN)
         }
     }
 }

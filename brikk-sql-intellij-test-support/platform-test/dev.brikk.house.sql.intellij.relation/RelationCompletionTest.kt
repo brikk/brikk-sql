@@ -70,6 +70,14 @@ class RelationCompletionTest : RelationTestCase() {
         assertEquals("SELECT * FROM events()", myFixture.editor.document.text)
     }
 
+    fun testCreatedColumnsLeadAtUnqualifiedPositions() {
+        for (text in listOf("SELECT <caret> FROM events() e", "SELECT * FROM events() e WHERE <caret>", "SELECT * FROM events() e ORDER BY <caret>")) {
+            open(text)
+            val all = myFixture.completeBasic().orEmpty().map { it.lookupString }
+            assertTrue("$text: ${all.take(10)}", all.take(5).containsAll(listOf("id", "kind")))
+        }
+    }
+
     fun testNothingIsOfferedWhileFactsArePending() {
         pgRelations.fake.pending = true
         assertEmpty(offered("FROM events() |> SELECT <caret>", "id", "kind"))
