@@ -189,6 +189,10 @@ DataSourceVerification(resolver, connectionProperties = { mapOf("compress" to "f
 }
 ```
 
+A helper uses the data source's user and the password saved in the IDE's credentials (it never asks).
+The IDE passes them to a driver only when its URL template has `{user}`/`{password}` placeholders,
+as the ClickHouse plugin's template does; a driver whose template lacks them connects without a login.
+
 The server rejects IDE binds, so the profile's `verificationText` masks IDE `:name` and `?` binds (at
 equal length); it never masks ClickHouse's `{name:Type}` server parameters, which the server parses.
 
