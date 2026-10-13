@@ -24,6 +24,7 @@ import com.intellij.psi.impl.light.LightElement
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
 import com.intellij.sql.psi.SqlReference
+import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlScopeProcessor
 import com.intellij.sql.psi.impl.SqlResolveExtension
@@ -55,39 +56,52 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
         val start = analysis.source.textOffset(element.textRange.startOffset + psiReference.rangeInElement.startOffset)
         val scoped = analysis.referenceAt(start)?.takeIf { it.kind == ReferenceKind.COLUMN && it.start == start } ?: return true
         for (column in scoped.columns) {
-            if (!analysis.manages(column)) continue
-            if (!processor.execute(RelationColumnSymbol(file, analysis, column), ResolveState.initial())) return false
+            if (!analysis.manages(column, start, file)) continue
+            val symbol = RelationColumnSymbol(file, analysis.providerOf(column, start, file), column)
+            if (!processor.execute(symbol, ResolveState.initial())) return false
         }
         return true
     }
 }
 
 /**
- * Suppresses the platform's resolve inspection only on references the analysis decides: columns it
- * resolves or finds ambiguous through a provider's relations, columns it reports absent itself, and
- * the provider relations SQL names (such as a slot call). Every other inspection, and every other
- * reference, stays. Register a no-arg subclass as `com.intellij.sql.inspectionSuppressorDelegate`.
+ * Suppresses the platform's resolve, type and signature inspections only on the references the
+ * analysis decides, each on the reference's own element: columns it resolves or finds ambiguous
+ * directly through a provider's relations, and the provider relations SQL names (such as a slot
+ * call); the resolve inspection also on columns the analysis reports absent itself. Every other
+ * inspection, and every other reference, stays. Register a no-arg subclass as
+ * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
 @ApiStatus.Experimental
 public abstract class ExternalRelationInspectionSuppressor(private val profile: RelationScopeProfile) : SqlInspectionSuppressorDelegate {
     final override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
-        if (toolId.removeSuffix("Inspection") != "SqlResolve") return false
+        val tool = toolId.removeSuffix("Inspection")
+        if (tool !in TOOLS) return false
         val file = element.containingFile ?: return false
         val analysis = RelationAnalysis.of(file, profile) ?: return false
-        // The element reported on: a name, or a reference expression whose name it is. Its parents are asked too, and must not match.
-        val name = (element as? SqlReferenceExpression)?.identifier ?: element
-        val start = analysis.source.textOffset(name.textRange.startOffset)
-        val end = analysis.source.textOffset(name.textRange.endOffset)
-        return analysis.references.any { it.start == start && it.end == end && analysis.decides(it) }
+        // The element reported on: a name, or the reference or call it names. Its parents are asked too, and must not match.
+        val name = when (element) {
+            is SqlReferenceExpression -> element.identifier
+            is SqlFunctionCallExpression -> element.nameElement?.identifier
+            else -> element
+        } ?: return false
+        val range = name.textRange ?: return false
+        val start = analysis.source.textOffset(range.startOffset)
+        val end = analysis.source.textOffset(range.endOffset)
+        return analysis.referencesAt(start, end).any { analysis.decides(it, file, absent = tool == "SqlResolve") }
     }
 
-    private fun RelationAnalysis.decides(reference: ScopeReference): Boolean = when (reference.kind) {
+    private fun RelationAnalysis.decides(reference: ScopeReference, file: PsiFile, absent: Boolean): Boolean = when (reference.kind) {
         ReferenceKind.COLUMN -> when (reference.resolution) {
-            Resolution.RESOLVED, Resolution.AMBIGUOUS -> reference.columns.isNotEmpty() && reference.columns.all(::manages)
+            Resolution.RESOLVED, Resolution.AMBIGUOUS -> reference.columns.isNotEmpty() && reference.columns.all { manages(it, reference.start, file) }
             // Absent where the facts prove it: the analysis reports it itself, once.
-            Resolution.UNRESOLVED -> statements.any { (_, scope) -> scope.diagnostics.any { it.start == reference.start && it.end == reference.end } }
+            Resolution.UNRESOLVED -> absent && diagnoses(reference.start, reference.end)
         }
         ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
+    }
+
+    private companion object {
+        val TOOLS = setOf("SqlResolve", "SqlType", "SqlSignature")
     }
 }
 
@@ -105,9 +119,9 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
         val platformResolves = file.findReferenceAt(offset)?.let { it is PsiPolyVariantReference && it.multiResolve(false).isNotEmpty() || it.resolve() != null } == true
         val targets = when (reference.kind) {
             ReferenceKind.COLUMN -> reference.columns.mapNotNull { column ->
-                val provider = analysis.providerOf(column)
+                val provider = analysis.providerOf(column, reference.start, file)
                 when {
-                    analysis.manages(column) -> column.provenance?.let { provider?.navigationTarget(file, it) }
+                    analysis.manages(column, reference.start, file) -> column.provenance?.let { provider?.navigationTarget(file, it) }
                     platformResolves -> null
                     else -> column.provenance?.let { provider?.navigationTarget(file, it) } ?: column.declaration?.let { analysis.elementAt(file, it) }
                 }
@@ -155,14 +169,17 @@ private fun RelationAnalysis.elementAt(file: PsiFile, range: ScopeRange): PsiEle
 
 /**
  * A column the analysis resolves through a provider's relation, as the platform's resolve sees it.
- * Equal symbols name the same column of the same relation in the same file.
+ * Equal symbols name the same provider column in the same file, whatever alias shows it: `a.id` and
+ * `b.id` of a self-join are one column.
  */
 internal class RelationColumnSymbol(
     private val file: PsiFile,
-    private val analysis: RelationAnalysis,
+    private val provider: ExternalRelationFacts?,
     val column: ScopeColumn,
 ) : LightElement(file.manager, file.language), DasPsiSymbol, DasColumnSymbol {
-    private val identity = listOf(column.relation.lowercase(), column.source?.relation, column.name, column.provenance)
+    private val target: PsiElement? by lazy { column.provenance?.let { provider?.navigationTarget(file.originalFile, it) } }
+
+    private val identity = listOf(column.source?.relation, column.name, column.provenance)
 
     override fun equals(other: Any?): Boolean = other is RelationColumnSymbol && file.originalFile === other.file.originalFile && identity == other.identity
 
@@ -184,8 +201,7 @@ internal class RelationColumnSymbol(
 
     override fun getContextElement(): PsiElement = file
 
-    override fun getNavigationElement(): PsiElement =
-        column.provenance?.let { analysis.providerOf(column)?.navigationTarget(file, it) } ?: this
+    override fun getNavigationElement(): PsiElement = target ?: this
 
     override fun getText(): String = column.name
 
@@ -205,7 +221,7 @@ internal class RelationColumnSymbol(
         override fun getName(): String = column.name
         override fun getKind(): ObjectKind = ObjectKind.COLUMN
         override fun isQuoted(): Boolean = false
-        override fun getTable(): DasTable = RelationTable(column.relation)
+        override fun getTable(): DasTable = RelationTable(column.source?.relation ?: column.relation)
         override fun getDasParent(): DasObject = table
         // A provider's columns have no SQL ordinal.
         override fun getPosition(): Short = -1

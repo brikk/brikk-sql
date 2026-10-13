@@ -3,6 +3,7 @@ package dev.brikk.house.sql.intellij.relation
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.lang.annotation.HighlightSeverity
 import dev.brikk.house.sql.diagnostics.DiagnosticSource
+import dev.brikk.house.sql.scope.CatalogKnowledge
 import dev.brikk.house.sql.scope.ColumnFact
 import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
@@ -66,5 +67,18 @@ class RelationDiagnosticsTest : RelationTestCase() {
         assertSameElements(marks().map { it.first }, "pgnope", "mynope")
         mysqlRelations.fake.pending = true
         assertEquals(listOf("pgnope"), marks().map { it.first })
+    }
+
+    fun testAnExplicitlyClosedEmptyCatalogStillReportsUnknownTables() {
+        pgRelations.fake.facts = RelationFacts(catalog = CatalogKnowledge.CLOSED)
+        open("SELECT * FROM misspelled")
+        assertEquals(listOf("misspelled"), relationDiagnostics(myFixture.file, pgRelations).map { myFixture.file.text.substring(it.start, it.end) })
+    }
+
+    fun testReplacingAProviderWithoutAnEditInvalidates() {
+        open("SELECT e.later FROM events() e")
+        assertEquals(1, relationDiagnostics(myFixture.file, pgRelations).size)
+        pgRelations.providers = listOf(FakeFacts(RelationFacts(slots = mapOf("events" to RelationFact(listOf(ColumnFact("later")))))))
+        assertEmpty(relationDiagnostics(myFixture.file, pgRelations))
     }
 }

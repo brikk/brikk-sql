@@ -13,27 +13,33 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.psi.SqlAsExpression
+import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
 import dev.brikk.house.sql.intellij.SqlColumnCompletion
 import dev.brikk.house.sql.intellij.SqlColumnFacts
+import dev.brikk.house.sql.intellij.catalog.dasTablePath
 import dev.brikk.house.sql.intellij.completion.SqlLookupKind
 import dev.brikk.house.sql.intellij.completion.lookup
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.scope.ColumnOrigin
 import dev.brikk.house.sql.scope.CompletionItem
 import dev.brikk.house.sql.scope.PositionKind
+import dev.brikk.house.sql.scope.ReferenceKind
 import dev.brikk.house.sql.scope.RelationScope
 import dev.brikk.house.sql.scope.ScopeColumn
 import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completes the columns the analysis sees at the caret, create-or-decorate (and at a FROM position
- * the provider relations the platform does not know, such as slots): another contributor's
- * item for a visible column (the platform's lookup of a light symbol, a data source column, a
- * declaration in the SQL) is decorated with the column's label, and only columns no item stands for
- * are created, so nothing is offered twice; same-named columns of different relations stay
- * distinct. Labels come from the providers' or the profile's [RelationColumnLabels]. Register a
- * no-arg subclass for the language with `order="first"`.
+ * the provider relations the platform does not know, such as slots): another contributor's item
+ * standing for a visible column (the platform's lookup of a light symbol or of the native adapter's
+ * column, a data source column of the same table, a declaration or pass-through in the SQL) is
+ * decorated with the column's label, and only columns no item stands for are created, in their
+ * label's lookup kind; nothing is offered twice, and columns of different relations stay distinct.
+ * Labels come from the providers' or the profile's [RelationColumnLabels]. Register a no-arg
+ * subclass for the language with `order="first"`.
  */
 @ApiStatus.Experimental
 public abstract class ExternalRelationCompletionContributor(private val profile: RelationScopeProfile) : CompletionContributor(), DumbAware {
@@ -48,7 +54,14 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
         val completion = RelationScope.complete(text, profile.dialect, analysis.facts.merged, offset, statement, ProgressManager::checkCanceled)
         val sink = result.withPrefixMatcher(completion.prefix).caseInsensitive()
         when (completion.position) {
-            PositionKind.COLUMN -> completeColumns(parameters, result, sink, completion.items, analysis)
+            PositionKind.COLUMN -> {
+                // The statement as completion sees it, a name at the caret, so the relations it names are known while it is being typed.
+                val site = RelationScope.analyze(
+                    text.substring(0, offset) + CARET + text.substring(offset), profile.dialect, analysis.facts.merged,
+                    statement.first..statement.last + CARET.length, ProgressManager::checkCanceled,
+                )
+                completeColumns(parameters, sink, completion.items, analysis, offset, site)
+            }
             PositionKind.RELATION -> completeRelations(sink, completion.items, analysis)
             else -> {}
         }
@@ -70,67 +83,85 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
 
     private fun completeColumns(
         parameters: CompletionParameters,
-        result: CompletionResultSet,
         sink: CompletionResultSet,
         items: List<CompletionItem>,
         analysis: RelationAnalysis,
+        offset: Int,
+        site: RelationScope,
     ) {
-        val visible = LinkedHashMap<Identity, Candidate>()
+        val file = parameters.originalFile
+        val candidates = LinkedHashMap<Identity, Candidate>()
         for (item in items) {
             val column = item.column ?: continue
-            val label = analysis.labels(column).label(column)
-            val identity = Identity(column.name, column.relation.lowercase(), column.source?.relation)
-            visible.putIfAbsent(identity, Candidate(identity, item, column, SqlColumnFacts(column.name, label.type, label.nullable, label.relation, label.origin, identity), label))
+            val label = analysis.labels(column, offset, file, site).label(column)
+            val identity = Identity(column.name, column.relation, column.source?.relation, column.provenance)
+            val facts = SqlColumnFacts(column.name, label.type, label.nullable, label.relation, label.origin, identity)
+            candidates.putIfAbsent(identity, Candidate(item, column, facts, label, analysis.providerOf(column, offset, file, site)))
         }
-        if (visible.isEmpty()) return
-        val offered = HashSet<Identity>()
-        val platformNames = HashSet<String>()
-        result.runRemainingContributors(parameters) { other ->
-            val element = other.lookupElement
-            val candidate = match(element, visible.values, analysis, parameters)
-            when {
-                candidate == null -> {
-                    platformNames += element.lookupString.lowercase()
-                    result.passResult(other)
-                }
-                offered.add(candidate.identity) -> result.passResult(other.withLookupElement(SqlColumnCompletion.decorate(element, candidate.facts)))
-            }
-        }
-        for (candidate in visible.values) {
-            if (candidate.identity in offered) continue
-            // A column the platform resolves itself (a CTE's, a table's) and already offers under its name.
-            if (!analysis.manages(candidate.column) && candidate.column.name.lowercase() in platformNames) continue
-            offered += candidate.identity
-            sink.addElement(inserting(SqlColumnCompletion.create(candidate.facts, profile.styles[candidate.label.kind]), candidate.item))
-        }
+        if (candidates.isEmpty()) return
+        val byFacts = candidates.values.associateBy { it.facts }
+        SqlColumnCompletion.createOrDecorate(
+            parameters,
+            sink,
+            candidates.values.map { it.facts },
+            create = { facts -> byFacts.getValue(facts).let { inserting(SqlColumnCompletion.create(facts, profile.styles[it.label.kind]), it.item) } },
+        ) { element -> match(element, candidates.values, analysis, parameters)?.facts }
     }
 
-    private data class Identity(val name: String, val relation: String, val source: String?)
+    private companion object {
+        const val CARET = "brikkCompletionCaret"
+    }
 
-    private class Candidate(val identity: Identity, val item: CompletionItem, val column: ScopeColumn, val facts: SqlColumnFacts, val label: RelationColumnLabel)
+    /** Which column a candidate is: its name, the exact label of the relation showing it, and the fact behind it. */
+    private data class Identity(val name: String, val relation: String, val source: String?, val provenance: String?)
+
+    private class Candidate(
+        val item: CompletionItem,
+        val column: ScopeColumn,
+        val facts: SqlColumnFacts,
+        val label: RelationColumnLabel,
+        val provider: ExternalRelationFacts?,
+    )
 
     /** The visible column another contributor's [element] stands for, or null. */
-    private fun match(element: LookupElement, visible: Collection<Candidate>, analysis: RelationAnalysis, parameters: CompletionParameters): Candidate? {
+    private fun match(element: LookupElement, candidates: Collection<Candidate>, analysis: RelationAnalysis, parameters: CompletionParameters): Candidate? {
         val target = (element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object` ?: element.psiElement
+        // A light symbol, of the resolve extension or the native adapter: the same fact, under the same relation if it says.
         (target as? RelationColumnSymbol ?: element.psiElement as? RelationColumnSymbol)?.let { symbol ->
-            return visible.firstOrNull { it.column == symbol.column }
+            val same = candidates.filter { it.column.source == symbol.column.source && it.column.name == symbol.column.name }
+            return same.firstOrNull { it.column.relation == symbol.column.relation } ?: same.singleOrNull()
         }
         val das = ((target as? DasSymbol)?.dasObject ?: target) as? DasColumn
         if (das != null) {
-            val table = das.table?.name ?: return null
-            return visible.filter { candidate ->
-                val column = candidate.column
-                column.origin == ColumnOrigin.PHYSICAL_TABLE && column.name.equals(das.name, ignoreCase = true) &&
-                    column.source?.relation?.substringAfterLast('.').equals(table, ignoreCase = true)
+            val table = das.table?.let(::dasTablePath) ?: return null
+            return candidates.filter {
+                it.column.origin == ColumnOrigin.PHYSICAL_TABLE && it.column.source?.relation == table && it.column.name == das.name
             }.singleOrNull()
         }
-        // A declaration in the SQL (an alias, a CTE column): the platform offers it from the completion copy.
         val declaration = target as? PsiElement ?: element.psiElement ?: return null
-        val name = ((declaration as? PsiNameIdentifierOwner)?.nameIdentifier ?: declaration).textRange
-        if (declaration.containingFile?.originalFile != parameters.originalFile) return null
-        val start = analysis.source.textOffset(originalOffset(name.startOffset, parameters))
-        val end = analysis.source.textOffset(originalOffset(name.endOffset, parameters))
-        return visible.filter { candidate -> candidate.column.declaration?.let { it.start >= start && it.end <= end } == true }.singleOrNull()
+        val file = parameters.originalFile
+        if (declaration.containingFile?.originalFile != file) {
+            // A provider's declaration, as the native adapter gives its columns.
+            return candidates.filter { candidate ->
+                candidate.column.name.equals(element.lookupString, ignoreCase = true) &&
+                    candidate.column.provenance?.let { candidate.provider?.navigationTarget(file, it) } == declaration
+            }.singleOrNull()
+        }
+        // A declaration in the SQL (an alias, a CTE or derived table's column): the platform offers it from the completion copy.
+        val named = (declaration as? PsiNameIdentifierOwner)?.nameIdentifier ?: (declaration as? SqlReferenceExpression)?.identifier ?: declaration
+        val range = named.textRange ?: return null
+        val start = analysis.source.textOffset(originalOffset(range.startOffset, parameters))
+        val end = analysis.source.textOffset(originalOffset(range.endOffset, parameters))
+        candidates.filter { candidate -> candidate.column.declaration?.let { it.start >= start && it.end <= end } == true }.singleOrNull()?.let { return it }
+        // A column passed on, as it is or renamed: the platform's item is the inner reference or its alias, whose
+        // reference core resolves to the same fact.
+        val aliased = (PsiTreeUtil.getParentOfType(declaration, SqlAsExpression::class.java, false)?.expression as? SqlReferenceExpression)?.identifier
+        val inner = listOfNotNull(start to end, aliased?.textRange?.let { analysis.source.textOffset(originalOffset(it.startOffset, parameters)) to analysis.source.textOffset(originalOffset(it.endOffset, parameters)) })
+            .flatMap { (from, to) -> analysis.referencesAt(from, to) }.filter { it.kind == ReferenceKind.COLUMN }.flatMap { it.columns }
+        return candidates.filter { candidate ->
+            candidate.column.source != null && candidate.column.name.equals(element.lookupString, ignoreCase = true) &&
+                inner.any { it.source == candidate.column.source }
+        }.singleOrNull()
     }
 
     /** The original file's offset of [offset] in the completion copy, which holds a dummy identifier at the caret. */

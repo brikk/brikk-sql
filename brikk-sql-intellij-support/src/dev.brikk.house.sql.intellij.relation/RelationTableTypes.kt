@@ -11,6 +11,7 @@ import com.intellij.sql.psi.SqlTableType
 import com.intellij.sql.psi.impl.SqlTableTypeBase
 import com.intellij.util.IncorrectOperationException
 import dev.brikk.house.sql.scope.ColumnFact
+import dev.brikk.house.sql.scope.RelationKind
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -32,7 +33,7 @@ public object RelationTableTypes {
         val name = call.nameElement?.name ?: return null
         val file = call.containingFile ?: return null
         val analysis = RelationAnalysis.of(file, profile) ?: return null
-        val provider = analysis.facts.providerOf(name)?.takeUnless { it.platformResolves } ?: return null
+        val provider = analysis.facts.providerOf(RelationKind.SLOT, name)?.takeUnless { it.platformResolves } ?: return null
         val relation = analysis.facts.merged.slots[name] ?: return null
         var table: SqlTableType = SqlTableTypeBase.EMPTY_TABLE
         for (column in relation.columns) {

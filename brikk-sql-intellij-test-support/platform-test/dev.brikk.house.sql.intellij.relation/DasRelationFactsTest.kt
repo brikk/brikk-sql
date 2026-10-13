@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.database.Dbms
 import com.intellij.database.dataSource.DatabaseDriverManager
@@ -12,6 +13,7 @@ import com.intellij.database.model.ObjectName
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.types.DasSimpleTypeClass
 import com.intellij.database.types.DasType
+import com.intellij.database.util.DasUtil
 import com.intellij.database.util.TreePattern
 import com.intellij.sql.dialects.SqlImportUtil
 import com.intellij.sql.dialects.SqlResolveMappings
@@ -130,5 +132,18 @@ class DasRelationFactsTest : RelationTestCase() {
         assertEquals(1, relationDiagnostics(myFixture.file, pgRelations).size)
         mapTo(second)
         assertEmpty(relationDiagnostics(myFixture.file, pgRelations))
+    }
+
+    fun testOnlyTheSameTablesColumnIsDecorated() {
+        val other = checkNotNull(orders.parent?.parent).schemas.createOrGet("other").tables.createOrGet("orders").columns.createOrGet("id")
+        DbPsiFacade.getInstance(project).clearCaches()
+        open("FROM shop.public.orders |> SELECT <caret>")
+        OtherCompletion.offer(myFixture.file, LookupElementBuilder.create(other, "id").withTailText(" other schema"), testRootDisposable)
+        val tails = myFixture.completeBasic().orEmpty().filter { it.lookupString == "id" }.map { LookupElementPresentation.renderElement(it).tailText }
+        assertSameElements(tails, " other schema", "  column (orders)")
+        open("FROM shop.public.orders |> SELECT <caret>")
+        val same = DasUtil.getColumns(orders).single { it.name == "id" }
+        OtherCompletion.offer(myFixture.file, LookupElementBuilder.create(same, "id").withTailText(" same table"), testRootDisposable)
+        assertEquals(listOf("  column (orders)"), myFixture.completeBasic().orEmpty().filter { it.lookupString == "id" }.map { LookupElementPresentation.renderElement(it).tailText })
     }
 }

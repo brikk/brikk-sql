@@ -89,7 +89,7 @@ public object SqlColumnCompletion {
     /**
      * Offers [columns], the columns visible at the caret, once per identity: the first of other
      * contributors' items that [match] maps to a visible column is decorated and further ones are
-     * dropped; the columns no item matched are created in [style]. [match] identifies a candidate
+     * dropped; the columns no item matched are created in [style], or by [create]. [match] identifies a candidate
      * by its semantic column and source, so same-named columns of different relations stay
      * distinct. Call it from a contributor registered with `order="first"`, since it runs the
      * remaining contributors.
@@ -100,6 +100,7 @@ public object SqlColumnCompletion {
         result: CompletionResultSet,
         columns: Collection<SqlColumnFacts>,
         style: SqlLookupStyle = SqlLookupStyles.DEFAULT[SqlLookupKind.BRIKK_COLUMN],
+        create: (SqlColumnFacts) -> LookupElement = { create(it, style) },
         match: (LookupElement) -> SqlColumnFacts?,
     ) {
         val visible = LinkedHashMap<ColumnIdentity, SqlColumnFacts>().apply { for (column in columns) putIfAbsent(column.identity, column) }
@@ -111,6 +112,6 @@ public object SqlColumnCompletion {
                 offered.add(column.identity) -> result.passResult(completion.withLookupElement(decorate(completion.lookupElement, column)))
             }
         }
-        for ((identity, column) in visible) if (offered.add(identity)) result.addElement(create(column, style))
+        for ((identity, column) in visible) if (offered.add(identity)) result.addElement(create(column))
     }
 }

@@ -2,6 +2,9 @@ package dev.brikk.house.sql.intellij.relation
 
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.psi.PsiElement
+import dev.brikk.house.sql.scope.ColumnFact
+import dev.brikk.house.sql.scope.RelationFact
+import dev.brikk.house.sql.scope.RelationFacts
 
 /** Go to declaration: a provider's target for its columns and relations, the SQL's declaration where the platform has no reference. */
 class RelationNavigationTest : RelationTestCase() {
@@ -46,5 +49,17 @@ class RelationNavigationTest : RelationTestCase() {
     fun testNothingWhileFactsArePending() {
         pgRelations.fake.pending = true
         assertEmpty(targets("SELECT e.id FROM events() e", "id"))
+    }
+
+    fun testSameKeyedSlotAndTableLeadToTheirOwnProviders() {
+        val slot = FakeFacts(RelationFacts(slots = mapOf("same" to RelationFact(listOf(ColumnFact("id", provenance = "decl:events"))))))
+        val table = FakeFacts(RelationFacts(tables = mapOf("same" to RelationFact(listOf(ColumnFact("id", provenance = "decl:kind"))))))
+        val targets = pgRelations.fake.targets
+        // Each provider knows only its own declarations.
+        slot.targets = { file, provenance -> if (provenance == "decl:events") targets(file, provenance) else null }
+        table.targets = { file, provenance -> if (provenance == "decl:kind") targets(file, provenance) else null }
+        pgRelations.providers = listOf(slot, table)
+        assertEquals(listOf("kind.txt"), targets("SELECT t.id FROM same t", "id"))
+        assertEquals(listOf("events.txt"), targets("SELECT t.id FROM same() t", "id"))
     }
 }

@@ -2,9 +2,13 @@ package dev.brikk.house.sql.intellij.relation
 
 import com.intellij.codeInsight.lookup.Lookup
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
 import dev.brikk.house.sql.intellij.completion.SqlLookupIcons
 import dev.brikk.house.sql.intellij.completion.SqlLookupKind
+import dev.brikk.house.sql.scope.ColumnFact
+import dev.brikk.house.sql.scope.RelationFact
+import dev.brikk.house.sql.scope.RelationFacts
 
 /** Create-or-decorate completion of the analysis's columns, labeled through the presentation policy. */
 class RelationCompletionTest : RelationTestCase() {
@@ -18,6 +22,8 @@ class RelationCompletionTest : RelationTestCase() {
         open(text)
         return items(*names).map { val p = LookupElementPresentation.renderElement(it); Triple(it.lookupString, p.tailText, p.typeText) }
     }
+
+    private fun tails(name: String): List<String?> = items(name).map { LookupElementPresentation.renderElement(it).tailText }
 
     private fun items(vararg names: String): List<LookupElement> =
         myFixture.completeBasic().orEmpty().filter { it.lookupString in names }
@@ -76,6 +82,38 @@ class RelationCompletionTest : RelationTestCase() {
             val all = myFixture.completeBasic().orEmpty().map { it.lookupString }
             assertTrue("$text: ${all.take(10)}", all.take(5).containsAll(listOf("id", "kind")))
         }
+    }
+
+    fun testColumnsPassedOnByACteOrDerivedTableAreOfferedOnce() {
+        for ((text, name) in listOf(
+            "WITH c AS (SELECT e.id FROM events() e) SELECT c.<caret> FROM c" to "id",
+            "WITH c AS (SELECT e.id AS key FROM events() e) SELECT c.<caret> FROM c" to "key",
+            "SELECT t.<caret> FROM (SELECT e.id FROM events() e) t" to "id",
+            "SELECT t.<caret> FROM (SELECT e.id AS key FROM events() e) t" to "key",
+        )) {
+            open(text)
+            val items = items(name)
+            assertEquals("$text: ${items.map { LookupElementPresentation.renderElement(it).tailText }}", 1, items.size)
+        }
+    }
+
+    fun testQuotedAliasesDifferingOnlyInCaseAreDistinctRelations() {
+        val ids = offered("SELECT i<caret> FROM events() \"A\" CROSS JOIN events() \"a\"", "id").map { it.second }
+        assertSameElements(ids, "  declared column (A)", "  declared column (a)")
+    }
+
+    fun testAnUnrelatedItemOfTheSameNameStaysBesideTheColumn() {
+        open("FROM events() |> SELECT <caret>")
+        OtherCompletion.offer(myFixture.file, LookupElementBuilder.create("id").withTailText(" unrelated"), testRootDisposable)
+        assertSameElements(tails("id"), " unrelated", "  declared column (events)")
+    }
+
+    fun testSameKeyedSlotAndTableKeepTheirOwnProvidersLabels() {
+        val slot = FakeFacts(RelationFacts(slots = mapOf("same" to RelationFact(listOf(ColumnFact("id"))))), labels = RelationColumnLabels(declared = "slot column"))
+        val table = FakeFacts(RelationFacts(tables = mapOf("same" to RelationFact(listOf(ColumnFact("id"))))), labels = RelationColumnLabels(declared = "table column"))
+        pgRelations.providers = listOf(slot, table)
+        assertEquals(listOf("  table column (same)"), offered("FROM same |> SELECT <caret>", "id").map { it.second })
+        assertEquals(listOf("  slot column (same)"), offered("FROM same() |> SELECT <caret>", "id").map { it.second })
     }
 
     fun testNothingIsOfferedWhileFactsArePending() {
