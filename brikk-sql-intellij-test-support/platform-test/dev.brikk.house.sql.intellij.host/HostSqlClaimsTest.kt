@@ -7,6 +7,7 @@ import com.intellij.codeInsight.highlighting.HighlightErrorFilter
 import com.intellij.database.actions.RunQueryAction
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.console.JdbcConsoleProvider
+import com.intellij.database.intentions.RunQueryIntentionActionAvailable
 import com.intellij.lang.ExternalLanguageAnnotators
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.lang.injection.InjectedLanguageManager
@@ -162,12 +163,20 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         assertTrue(channel.isInspectionOnly(injected()))
     }
 
+    private fun contract() = HostSqlExecutionContract(TestPipeDialect("trino", FirstStageRule.AnyQuery, channel)) {
+        open("SELECT 'FROM t |> WHERE id > <caret>0', 2")
+        myFixture.editor
+    }
+
     fun testExecuteFromTheHostEditorIsRefused() {
         claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
-        HostSqlExecutionContract(TestPipeDialect("trino", FirstStageRule.AnyQuery, channel)) {
-            open("SELECT 'FROM t |> WHERE id > <caret>0'")
-            myFixture.editor
-        }.refusesInspectionOnlySqlFromTheHostEditor()
+        contract().refusesInspectionOnlySqlFromTheHostEditor()
+    }
+
+    fun testRunInConsoleIsVetoed() {
+        claim = { host -> HostSqlClaim.Injected(postgres, content(host)) }
+        RunQueryIntentionActionAvailable.EP_NAME.point.registerExtension(object : HostSqlRunConsoleVeto(channel) {}, testRootDisposable)
+        contract().vetoesRunInConsole()
     }
 
     fun testARetryInjectsOnceTheFactsAreThereAndStops() {

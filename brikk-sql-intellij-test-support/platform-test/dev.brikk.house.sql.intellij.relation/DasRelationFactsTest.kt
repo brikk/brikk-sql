@@ -9,17 +9,21 @@ import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.dialects.postgres.model.PgLocalTable
 import com.intellij.database.dialects.postgres.model.PgRoot
 import com.intellij.database.model.ModelFactory
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.model.ObjectName
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.types.DasSimpleTypeClass
 import com.intellij.database.types.DasType
 import com.intellij.database.util.DasUtil
+import com.intellij.database.util.ObjectPath
+import com.intellij.database.util.SearchPath
 import com.intellij.database.util.TreePattern
 import com.intellij.sql.dialects.SqlImportUtil
 import com.intellij.sql.dialects.SqlResolveMappings
 import com.intellij.testFramework.RunAll
 import dev.brikk.house.sql.intellij.catalog.DasRelationFacts
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
+import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import java.util.UUID
 
 /** Physical tables of a PostgreSQL data source's model as relation facts: PIPE completion, folding, model changes. */
@@ -132,6 +136,36 @@ class DasRelationFactsTest : RelationTestCase() {
         assertEquals(1, relationDiagnostics(myFixture.file, pgRelations).size)
         mapTo(second)
         assertEmpty(relationDiagnostics(myFixture.file, pgRelations))
+    }
+
+    fun testAnUnqualifiedTableIsTheConsoleSchemasOne() {
+        val model = ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES)
+        val shop = (model.root as PgRoot).databases.createOrGet("shop")
+        for ((schema, only) in listOf("a_db" to "a_only", "b_db" to "b_only")) {
+            val table = shop.schemas.createOrGet(schema).tables.createOrGet("orders")
+            table.columns.createOrGet("id").apply { storedType = type("integer") }
+            table.columns.createOrGet(only).apply { storedType = type("integer") }
+        }
+        val schemas = LocalDataSource().apply {
+            name = "relations ${UUID.randomUUID()}"
+            databaseDriver = checkNotNull(DatabaseDriverManager.getInstance().getDriver("postgresql"))
+            url = "jdbc:offline:schemas"
+            isAutoSynchronize = false
+            this.model = model
+        }
+        LocalDataSourceManager.getInstance(project).addDataSource(schemas)
+        extra += schemas
+        DbPsiFacade.getInstance(project).clearCaches()
+        val sql = "SELECT b_only, a_only FROM orders"
+        open(sql)
+        fun reported(schema: String?): List<String> = RecordingConsole(project, myFixture.file.virtualFile, schemas).use { recording ->
+            schema?.let { recording.console.setSearchPath(SearchPath.of(ObjectPath.create("shop", ObjectKind.DATABASE).append(it, ObjectKind.SCHEMA))) }
+            relationDiagnostics(myFixture.file, pgRelations).map { sql.substring(it.start, it.end) }
+        }
+        assertEquals(listOf("a_only"), reported("b_db"))
+        assertEquals(listOf("b_only"), reported("a_db"))
+        // Without a current schema the table is ambiguous: nothing is reported, nothing is taken from the first schema.
+        assertEmpty(reported(null))
     }
 
     fun testOnlyTheSameTablesColumnIsDecorated() {

@@ -15,6 +15,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlAsExpression
+import com.intellij.sql.psi.SqlNameElement
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
 import dev.brikk.house.sql.intellij.SqlColumnCompletion
@@ -74,6 +75,10 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
         }
     }
 
+    /**
+     * The columns of [items], create-or-decorate. Even with none, the provider columns other items stand
+     * for and the analysis does not see here are hidden: it places every provider column.
+     */
     private fun completeColumns(parameters: CompletionParameters, sink: CompletionResultSet, items: List<CompletionItem>, analysis: RelationAnalysis) {
         val candidates = LinkedHashMap<Identity, Candidate>()
         for (item in items) {
@@ -83,13 +88,15 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             val facts = SqlColumnFacts(column.name, label.type, label.nullable, label.relation, label.origin, identity)
             candidates.putIfAbsent(identity, Candidate(item, column, facts, label, analysis.providerOf(column)))
         }
-        if (candidates.isEmpty()) return
         val byFacts = candidates.values.associateBy { it.facts }
         SqlColumnCompletion.createOrDecorate(
             parameters,
             sink,
             candidates.values.map { it.facts },
             create = { facts -> byFacts.getValue(facts).let { inserting(SqlColumnCompletion.create(facts, profile.styles[it.label.kind]), it.item) } },
+            // A provider column no visible column matches is not visible here as itself: an outer or shadowed
+            // relation's, or one a set operation or USING merges into a column of its own.
+            hides = { symbolOf(it) != null },
         ) { element -> match(element, candidates.values, analysis, parameters)?.facts }
     }
 
@@ -104,13 +111,19 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
         val provider: ExternalRelationFacts?,
     )
 
+    /** The provider column [element] stands for, as the resolve extension or the native adapter gives it. */
+    private fun symbolOf(element: LookupElement): RelationColumnSymbol? =
+        ((element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object`) as? RelationColumnSymbol ?: element.psiElement as? RelationColumnSymbol
+
     /** The visible column another contributor's [element] stands for, or null. */
     private fun match(element: LookupElement, candidates: Collection<Candidate>, analysis: RelationAnalysis, parameters: CompletionParameters): Candidate? {
         val target = (element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object` ?: element.psiElement
         // A light symbol, of the resolve extension or the native adapter: the same fact, under the same relation if it says.
-        (target as? RelationColumnSymbol ?: element.psiElement as? RelationColumnSymbol)?.let { symbol ->
+        symbolOf(element)?.let { symbol ->
             val same = candidates.filter { it.column.source == symbol.column.source && it.column.name == symbol.column.name }
-            return same.firstOrNull { it.column.relation == symbol.column.relation } ?: same.singleOrNull()
+            // The relation the item shows the column under: its qualifier (a self-join's `e` or `f`), else the symbol's own.
+            val relation = ((element.`object` as? SqlResolveResult)?.qualifier as? SqlNameElement)?.name ?: symbol.column.relation
+            return same.firstOrNull { it.column.relation == relation } ?: same.singleOrNull()
         }
         val das = ((target as? DasSymbol)?.dasObject ?: target) as? DasColumn
         if (das != null) {

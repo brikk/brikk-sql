@@ -16,6 +16,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
+import com.intellij.psi.util.PsiModificationTracker
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import java.util.concurrent.atomic.AtomicLong
 import org.jetbrains.annotations.ApiStatus
@@ -157,11 +158,12 @@ public open class HostSqlChannel(public val id: String) {
 
     /**
      * [host]'s claim from [recognize], shared by every caller (an injector's contributor and performer
-     * are separate instances) until the host's file changes or the channel reanalyzes; negative claims
-     * included, so a string recognized later is found then.
+     * are separate instances) until any PSI in the project changes (a constant the string interpolates
+     * may live in another file) or the channel reanalyzes; negative claims included, so a string
+     * recognized later is found then.
      */
     internal fun claim(host: PsiLanguageInjectionHost, recognize: () -> HostSqlClaim): HostSqlClaim {
-        val revision = host.containingFile?.modificationStamp ?: return recognize()
+        val revision = PsiModificationTracker.getInstance(host.project).modificationCount
         val current = generation.get()
         host.getUserData(claimKey)?.takeIf { it.revision == revision && it.generation == current }?.let { return it.claim }
         return recognize().also { host.putUserData(claimKey, CachedClaim(revision, current, it)) }

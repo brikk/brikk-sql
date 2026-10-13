@@ -28,7 +28,9 @@ import org.jetbrains.annotations.ApiStatus
  * and columns with their SQL type and nullability. The platform resolves these tables itself, so
  * they serve the analysis only (completion, PIPE stages, diagnostics). The catalog stays open: the
  * model may lack tables, and a table without columns in it (never introspected to that level)
- * proves no column absent. Facts are copies, rebuilt when the data source's model changes; a file
+ * proves no column absent. The search path is the file's console's current namespace, so an
+ * unqualified name several schemas hold means the current schema's table, and is unknown without a
+ * console namespace. Facts are copies, rebuilt when the data source's model changes; a file
  * without a data source has none, and each data source and model state has its own revision.
  */
 @ApiStatus.Experimental
@@ -36,8 +38,10 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
     private val built = ConcurrentHashMap<String, Built>()
     private val revisions = AtomicLong()
 
-    /** One data source's facts at its model's [modification] count, numbered [revision] among all builds. */
-    private class Built(val modification: Long, val revision: Long, val facts: RelationFacts)
+    /** One data source's facts at its model's [modification] count, numbered by search path among all builds. */
+    private class Built(val modification: Long, val facts: RelationFacts) {
+        val revisions = ConcurrentHashMap<List<String>, Long>()
+    }
 
     override val platformResolves: Boolean get() = true
 
@@ -45,11 +49,14 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
         val dataSource = dataSource(file) ?: return@recoverEditorOperation null
         val modification = dataSource.modificationTracker.modificationCount
         val current = built[dataSource.uniqueId]?.takeIf { it.modification == modification }
-            ?: Built(modification, revisions.incrementAndGet(), copy(dataSource)).also { fresh ->
+            ?: Built(modification, copy(dataSource)).also { fresh ->
                 built.keys.retainAll(DbPsiFacade.getInstance(file.project).dataSources.mapTo(HashSet()) { it.uniqueId })
                 built[dataSource.uniqueId] = fresh
             }
-        RelationFactsResult.Available(current.facts, current.revision)
+        // The console's current namespace decides which of same-named tables an unqualified name means.
+        val searchPath = resolver.consoleNamespace(file).ifEmpty { null }?.let { listOf(it.joinToString(".")) }.orEmpty()
+        val revision = current.revisions.computeIfAbsent(searchPath) { revisions.incrementAndGet() }
+        RelationFactsResult.Available(current.facts.copy(searchPath = searchPath), revision)
     }.getOrNull()
 
     override fun navigationTarget(file: PsiFile, provenance: String): PsiElement? = recoverEditorOperation {

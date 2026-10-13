@@ -17,16 +17,23 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiPolyVariantReference
 import com.intellij.psi.PsiReference
 import com.intellij.psi.ResolveState
 import com.intellij.psi.impl.light.LightElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
-import com.intellij.sql.psi.SqlReference
+import com.intellij.sql.psi.SqlAsExpression
+import com.intellij.sql.psi.SqlExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
+import com.intellij.sql.psi.SqlParenthesizedExpression
+import com.intellij.sql.psi.SqlQueryExpression
+import com.intellij.sql.psi.SqlReference
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlScopeProcessor
+import com.intellij.sql.psi.SqlSelectClause
+import com.intellij.sql.psi.SqlSetOperatorExpression
+import com.intellij.sql.psi.SqlStatement
 import com.intellij.sql.psi.impl.SqlResolveExtension
 import com.intellij.util.IncorrectOperationException
 import com.intellij.util.containers.JBIterable
@@ -34,6 +41,7 @@ import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.scope.Nullability
 import dev.brikk.house.sql.scope.ReferenceKind
+import dev.brikk.house.sql.scope.RelationKind
 import dev.brikk.house.sql.scope.Resolution
 import dev.brikk.house.sql.scope.ScopeColumn
 import dev.brikk.house.sql.scope.ScopeRange
@@ -106,9 +114,14 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
 }
 
 /**
- * Go to declaration for the analysis's references: a provider's navigation target for its columns
- * and relations; where the platform resolves nothing itself (PIPE stages), also a computed column's
- * or relation's declaration in the SQL. Register a no-arg subclass as `gotoDeclarationHandler`.
+ * Go to declaration for every column and relation reference the analysis resolves in the profile's
+ * files, ahead of the platform's resolver: a provider's navigation target for a column with
+ * provenance (through aliases, pass-through relations and merged USING or NATURAL keys, which lead to
+ * the side the analysis names) and for a provider relation; else the declaration in the SQL (an
+ * alias, a CTE or derived table column, a computed PIPE column); the branches' output items for a
+ * set operation's output column, which has no single origin; a merged key no provider column names
+ * declares itself in its own join's USING list. Only where the analysis has no answer does the platform's own
+ * resolution navigate. Register a no-arg subclass as `gotoDeclarationHandler`.
  */
 @ApiStatus.Experimental
 public abstract class ExternalRelationGotoDeclarationHandler(private val profile: RelationScopeProfile) : GotoDeclarationHandler {
@@ -116,26 +129,68 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
         val file = sourceElement?.containingFile ?: return null
         val analysis = RelationAnalysis.of(file, profile) ?: return null
         val reference = analysis.referenceAt(analysis.source.textOffset(offset)) ?: return null
-        val platformResolves = file.findReferenceAt(offset)?.let { it is PsiPolyVariantReference && it.multiResolve(false).isNotEmpty() || it.resolve() != null } == true
         val targets = when (reference.kind) {
-            ReferenceKind.COLUMN -> reference.columns.mapNotNull { column ->
-                val provider = analysis.providerOf(column)
-                when {
-                    analysis.manages(column, reference.start) -> column.provenance?.let { provider?.navigationTarget(file, it) }
-                    platformResolves -> null
-                    else -> column.provenance?.let { provider?.navigationTarget(file, it) } ?: column.declaration?.let { analysis.elementAt(file, it) }
+            ReferenceKind.COLUMN -> reference.columns.flatMap { column ->
+                column.provenance?.let { analysis.providerOf(column)?.navigationTarget(file, it) }?.let { return@flatMap listOf(it) }
+                column.declaration?.let { analysis.elementAt(file, it) }?.let { return@flatMap listOf(it) }
+                when (column.computedBy) {
+                    in SET_OPERATIONS -> setOperationOutputs(owningSetOperation(file, analysis, column, offset), column.name)
+                    else -> emptyList()
                 }
             }
             ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> listOfNotNull(reference.relation?.let { relation ->
-                val provider = analysis.providerOf(relation)
-                when {
-                    analysis.manages(relation) -> relation.provenance?.let { provider?.navigationTarget(file, it) }
-                    platformResolves -> null
-                    else -> relation.provenance?.let { provider?.navigationTarget(file, it) } ?: relation.declaration?.let { analysis.elementAt(file, it) }
-                }
+                relation.provenance?.let { analysis.providerOf(relation)?.navigationTarget(file, it) }
+                    ?: relation.declaration?.let { analysis.elementAt(file, it) }
             })
         }
         return targets.distinct().takeIf { it.isNotEmpty() }?.toTypedArray()
+    }
+
+    /**
+     * The set operation whose output [column], referred to at [offset], is: the one a derived table or
+     * CTE the column is seen through declares, else the nearest one around the reference.
+     */
+    private fun owningSetOperation(file: PsiFile, analysis: RelationAnalysis, column: ScopeColumn, offset: Int): SqlSetOperatorExpression? {
+        val owner = column.relationKind?.takeIf { it == RelationKind.SUBQUERY || it == RelationKind.CTE }?.let { kind ->
+            analysis.statementReferences(analysis.source.textOffset(offset)).asSequence().filter { it.kind != ReferenceKind.COLUMN }.mapNotNull { it.relation }
+                .firstOrNull { it.kind == kind && it.name == column.relation }?.declaration?.let { analysis.elementAt(file, it) } ?: return null
+        }
+        var element: PsiElement? = owner ?: file.findElementAt(offset)
+        while (element != null && element !is PsiFile) {
+            outermostSetOperation(element)?.let { return it }
+            if (element is SqlStatement) return null
+            element = element.parent
+        }
+        return null
+    }
+
+    private fun outermostSetOperation(scope: PsiElement): SqlSetOperatorExpression? = scope as? SqlSetOperatorExpression
+        ?: PsiTreeUtil.findChildrenOfType(scope, SqlSetOperatorExpression::class.java)
+            .firstOrNull { PsiTreeUtil.getParentOfType(it, SqlSetOperatorExpression::class.java, true, SqlStatement::class.java)?.let { outer -> !PsiTreeUtil.isAncestor(scope, outer, false) } != false }
+
+    /** The items producing output column [name] in each branch of [operation], by its position in the first branch. */
+    private fun setOperationOutputs(operation: SqlSetOperatorExpression?, name: String): List<PsiElement> {
+        operation ?: return emptyList()
+        val branches = branchesOf(operation).map { it.expressions }
+        val position = branches.firstOrNull()?.indexOfFirst { outputName(it).equals(name, ignoreCase = true) }?.takeIf { it >= 0 } ?: return emptyList()
+        return branches.mapNotNull { items -> items.getOrNull(position)?.let { (it as? SqlAsExpression)?.nameElement ?: it } }
+    }
+
+    private fun branchesOf(expression: SqlExpression): List<SqlSelectClause> = when (expression) {
+        is SqlSetOperatorExpression -> expression.operands.flatMap(::branchesOf)
+        is SqlQueryExpression -> listOfNotNull(expression.selectClause)
+        is SqlParenthesizedExpression -> expression.expression?.let(::branchesOf).orEmpty()
+        else -> emptyList()
+    }
+
+    private fun outputName(item: SqlExpression): String? = when (item) {
+        is SqlAsExpression -> item.name
+        is SqlReferenceExpression -> item.name
+        else -> null
+    }
+
+    private companion object {
+        val SET_OPERATIONS = setOf("UNION", "UNION ALL", "INTERSECT", "INTERSECT ALL", "EXCEPT", "EXCEPT ALL", "MINUS")
     }
 }
 

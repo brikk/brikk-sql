@@ -45,6 +45,9 @@ internal class RelationAnalysis(
     /** Whether the analysis reports a problem on exactly `[start, end)`. */
     fun diagnoses(start: Int, end: Int): Boolean = (start to end) in diagnosed
 
+    /** The references of the statement holding [offset] of the text. */
+    fun statementReferences(offset: Int): List<ScopeReference> = statementOf(offset)?.second?.references.orEmpty()
+
     /** The innermost reference covering [offset] of the text, or the one ending there. */
     fun referenceAt(offset: Int): ScopeReference? = statementOf(offset)?.second?.referenceAt(offset)
 
@@ -150,7 +153,9 @@ internal class MergedFacts(val merged: RelationFacts, private val owners: Map<Pa
             // declares its catalog closed) lists all of its own.
             val catalogs = facts.map { it.second }.filter { it.tables.isNotEmpty() || it.catalog == CatalogKnowledge.CLOSED }.map { it.catalog }
             val catalog = if (catalogs.isNotEmpty() && catalogs.all { it == CatalogKnowledge.CLOSED }) CatalogKnowledge.CLOSED else CatalogKnowledge.OPEN
-            return MergedFacts(RelationFacts(slots, tables, calls, catalog), owners)
+            // Each provider's namespaces, in provider order.
+            val searchPath = facts.flatMap { it.second.searchPath }.distinct()
+            return MergedFacts(RelationFacts(slots, tables, calls, catalog, searchPath), owners)
         }
     }
 }

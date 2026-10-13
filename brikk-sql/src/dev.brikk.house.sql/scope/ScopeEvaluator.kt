@@ -243,7 +243,8 @@ internal class ScopeEvaluator(
         }
     }
 
-    private class Key(val name: String, val left: ScopeColumn?, val right: ScopeColumn?)
+    /** A join key; [declaration] is its name in the join's USING list, none for a NATURAL join's. */
+    private class Key(val name: String, val left: ScopeColumn?, val right: ScopeColumn?, val declaration: ScopeRange? = null)
 
     private fun usingKeys(join: Join, left: List<Binding>, leftMerged: List<ScopeColumn>, right: List<Binding>): List<Key> {
         val leftFrame = Frame(left, null, leftMerged)
@@ -255,13 +256,14 @@ internal class ScopeEvaluator(
                 val l = unqualified(leftFrame, identifier)
                 val r = unqualified(rightFrame, identifier)
                 val lookup = when {
-                    l.single != null && r.single != null -> Lookup(listOf(merge(Key(stored(identifier), l.single, r.single), join.side)), Knowledge.FULL)
+                    l.single != null && r.single != null ->
+                        Lookup(listOf(merge(Key(stored(identifier), l.single, r.single, declared(identifier)), join.side)), Knowledge.FULL)
                     l.candidates.isEmpty() -> l
                     r.candidates.isEmpty() -> r
                     else -> Lookup(l.candidates + r.candidates, Knowledge.FULL)
                 }
                 record(identifier, null, lookup)
-                Key(stored(identifier), l.single, r.single)
+                Key(stored(identifier), l.single, r.single, declared(identifier))
             }
         }
         if (join.method != "NATURAL") return emptyList()
@@ -292,7 +294,7 @@ internal class ScopeEvaluator(
         if (left != null && left.source != null && left.source == right?.source) return left.copy(relation = "", relationKind = null, nullability = nullability)
         // One key in two relations: what both sides say about it still holds.
         return computed(key.name, nullability, "USING", left?.sqlType?.takeIf { it == right?.sqlType })
-            .copy(displayType = left?.displayType?.takeIf { it == right?.displayType })
+            .copy(displayType = left?.displayType?.takeIf { it == right?.displayType }, declaration = key.declaration)
     }
 
     /** The relations [node] contributes to a FROM clause; [lateral] is what it may correlate with. */
@@ -354,7 +356,15 @@ internal class ScopeEvaluator(
             }
         }
         val parts = node.parts.filterIsInstance<Identifier>()
-        val match = facts.tables.entries.firstOrNull { (key, _) -> sameTable(key, parts) }
+        val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }
+        val match = matches.singleOrNull()
+            ?: facts.searchPath.firstNotNullOfOrNull { namespace -> matches.singleOrNull { (key, _) -> inNamespace(key, parts.size, namespace) } }
+        if (match == null && matches.size > 1) {
+            // Several tables answer to the name and the search path picks none: which one is unknown.
+            reference(ReferenceKind.TABLE, name, Resolution.AMBIGUOUS, Knowledge.UNKNOWN, start = parts.firstOrNull())
+            val label = parts.joinToString(".", transform = ::stored)
+            return Binding(label, true, ScopeRelation(label, RelationKind.TABLE, Knowledge.UNKNOWN), emptyList(), parts.map(::stored))
+        }
         if (match == null) {
             val knowledge = Knowledge.UNKNOWN
             reference(ReferenceKind.TABLE, name, Resolution.UNRESOLVED, knowledge, start = parts.firstOrNull())
@@ -912,6 +922,18 @@ internal class ScopeEvaluator(
     private fun path(parts: List<Identifier>, key: String): List<String> {
         val keys = key.split('.')
         return keys.take(keys.size - parts.size) + parts.map(::stored)
+    }
+
+    /**
+     * Whether the table [key], named by its last [named] parts, lies in [namespace], a dotted path as
+     * stored: the namespace supplies the leading components the name leaves out (`one.sales` makes
+     * `sales.orders` `one.sales.orders` and `orders` `one.sales.orders`), or, shorter than those, their
+     * innermost ones (`sales` for `one.sales.orders`).
+     */
+    private fun inNamespace(key: String, named: Int, namespace: String): Boolean {
+        val missing = key.split('.').dropLast(named)
+        val path = namespace.split('.')
+        return if (missing.size <= path.size) missing == path.take(missing.size) else missing.takeLast(path.size) == path
     }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
