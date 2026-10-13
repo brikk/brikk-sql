@@ -5,6 +5,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.parser.sourceOffset
 
 /**
  * brikk-native: editor diagnostics for SQL scripts as plain data, so any editor (IntelliJ, an LSP
@@ -56,14 +57,19 @@ sealed interface NativeOutcome {
     data class NoVerdict(val reason: String) : NativeOutcome
 }
 
-/** One engine error; [offset] and [endOffset] are UTF-16 offsets in the verified statement text, null when unknown. */
-data class NativeError(val message: String, val offset: Int? = null, val endOffset: Int? = null)
-
 /**
- * A statement's diagnostics, and whether the engine accepted it. An accepted statement keeps no
- * local parser errors, and an editor may also hide its own local parser's errors in
- * `[start, end)`; it must not hide anything else.
+ * One engine error. [offset] and [endOffset] are UTF-16 offsets in the verified text, null when
+ * unknown; without an offset, a 1-based [line] and [column] (UTF-16, LF line breaks) place it.
  */
+data class NativeError(
+    val message: String,
+    val offset: Int? = null,
+    val endOffset: Int? = null,
+    val line: Int? = null,
+    val column: Int? = null,
+)
+
+/** A verified unit's diagnostics, and whether an authoritative engine accepted the SQL at `[start, end)`. */
 data class StatementDiagnostics(
     val start: Int,
     val end: Int,
@@ -86,12 +92,13 @@ fun verificationRange(script: String, statement: SqlStatementRange): IntRange? {
 /**
  * brikk-sql's parser errors for the SQL at [range] of [script] in [dialect], positioned in the
  * script. A lexical error marks where its token begins; an unknown position marks the first
- * non-blank character. Empty for a dialect brikk-sql does not know.
+ * non-blank character. Empty for a dialect brikk-sql does not know. [checkCanceled] is called while
+ * tokenizing; whatever it throws propagates.
  */
-fun localParseDiagnostics(script: String, range: IntRange, dialect: String): List<SqlDiagnostic> {
+fun localParseDiagnostics(script: String, range: IntRange, dialect: String, checkCanceled: () -> Unit = {}): List<SqlDiagnostic> {
     val source = Dialects.forNameOrNull(dialect) ?: return emptyList()
     val sql = script.substring(range.first, range.last + 1)
-    val lexed = Tokenizer(source.tokenizerConfig).tokenizeForEditor(sql)
+    val lexed = Tokenizer(source.tokenizerConfig).tokenizeForEditor(sql, checkCanceled)
     lexed.failureOffset?.let { failure ->
         return listOf(diagnostic(script, range, DiagnosticSource.LOCAL_PARSER, DiagnosticSeverity.ERROR, lexed.error ?: "Invalid token", failure, null))
     }
@@ -109,29 +116,58 @@ fun localParseDiagnostics(script: String, range: IntRange, dialect: String): Lis
 
 /**
  * Combines [local] parser diagnostics ([DiagnosticSource.LOCAL_PARSER] or
- * [DiagnosticSource.EDITOR_PARSER]) with the engine's [native] outcome for the SQL verified at
- * [range] of [script]: a rejection shows the engine's errors (in [nativeSeverity]) instead of the
- * local ones, an acceptance clears the local ones as false positives, and no verdict leaves the
- * local ones alone.
+ * [DiagnosticSource.EDITOR_PARSER]) of the unit verified at [range] of [script] with the engine's
+ * [native] outcome. An [advisory] engine (a re-implemented grammar) only adds warnings. An
+ * authoritative engine:
+ * - rejecting at a position drops the local errors that start before its first error, a prefix
+ *   it proved parses, and keeps the later ones next to its own errors;
+ * - rejecting without a position keeps the local errors and adds its message, marked at the first
+ *   local error, else the first non-blank character;
+ * - accepting clears the local errors that lie wholly inside [range];
+ * - giving no verdict keeps the local errors.
  */
 fun combineStatementDiagnostics(
     script: String,
     range: IntRange,
     local: List<SqlDiagnostic>,
     native: NativeOutcome,
-    nativeSeverity: DiagnosticSeverity = DiagnosticSeverity.ERROR,
+    advisory: Boolean = false,
 ): StatementDiagnostics {
-    val diagnostics = when (native) {
-        NativeOutcome.Accepted -> emptyList()
-        is NativeOutcome.Rejected -> native.errors.map {
-            diagnostic(script, range, DiagnosticSource.NATIVE, nativeSeverity, it.message, it.offset, it.endOffset)
+    val start = range.first
+    val end = range.last + 1
+    val sql = script.substring(start, end)
+    val errors = (native as? NativeOutcome.Rejected)?.errors.orEmpty()
+        .map { it.copy(offset = it.offset ?: it.line?.let { line -> sourceOffset(sql, line, it.column ?: 1) }) }
+    val severity = if (advisory) DiagnosticSeverity.WARNING else DiagnosticSeverity.ERROR
+    val firstLocal = local.minByOrNull { it.start }
+    fun positioned(error: NativeError) = diagnostic(script, range, DiagnosticSource.NATIVE, severity, error.message, error.offset, error.endOffset)
+    val kept: List<SqlDiagnostic>
+    val added: List<SqlDiagnostic>
+    when {
+        advisory || native is NativeOutcome.NoVerdict -> {
+            kept = local
+            added = errors.map(::positioned)
         }
-        is NativeOutcome.NoVerdict -> local
+        native == NativeOutcome.Accepted -> {
+            kept = local.filterNot { it.start >= start && it.end <= end }
+            added = emptyList()
+        }
+        errors.any { it.offset != null } -> {
+            val first = start + errors.mapNotNull { it.offset }.min()
+            kept = local.filter { it.start >= first }
+            added = errors.map(::positioned)
+        }
+        else -> {
+            kept = local
+            added = errors.map { error ->
+                firstLocal?.let { SqlDiagnostic(severity, error.message, it.start, it.end, DiagnosticSource.NATIVE) } ?: positioned(error)
+            }
+        }
     }
-    return StatementDiagnostics(range.first, range.last + 1, diagnostics.distinctByRange(), native == NativeOutcome.Accepted)
+    return StatementDiagnostics(start, end, added.distinctByRange() + kept.distinctByRange(), !advisory && native == NativeOutcome.Accepted)
 }
 
-/** One diagnostic per range, the first kept, so two sources never mark the same text twice. */
+/** One diagnostic per range, the first kept, such as for an engine reporting one position twice. */
 fun List<SqlDiagnostic>.distinctByRange(): List<SqlDiagnostic> = distinctBy { it.start to it.end }
 
 /**

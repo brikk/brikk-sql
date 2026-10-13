@@ -209,7 +209,6 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             VerificationUnit.File -> listOf(SqlStatementRange(0, script.length, hasSql = script.isNotBlank(), hasPipe = false))
         }
         val validator = source.validator
-        val severity = if (validator?.advisory == true) DiagnosticSeverity.WARNING else DiagnosticSeverity.ERROR
         val diagnostics = ArrayList(source.fileDiagnostics)
         val psiErrors = source.psiErrors.toMutableList()
         for (statement in statements) {
@@ -229,14 +228,14 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
                 deadline != null && System.nanoTime() > deadline -> NativeOutcome.NoVerdict("Verification budget spent")
                 else -> nativeOutcome(validator, script.substring(range.first, range.last + 1))
             }
-            diagnostics += combineStatementDiagnostics(script, range, local, native, severity).diagnostics
+            diagnostics += combineStatementDiagnostics(script, range, local, native, validator?.advisory == true).diagnostics
         }
         // The IDE parser's errors outside every checked statement have no verdict to answer them.
         return (diagnostics + psiErrors).distinctByRange()
     }
 
     private fun localDiagnostics(script: String, range: IntRange): List<SqlDiagnostic> =
-        recoverEditorOperation { localParseDiagnostics(script, range, profile.dialect) }.getOrElse {
+        recoverEditorOperation { localParseDiagnostics(script, range, profile.dialect, ProgressManager::checkCanceled) }.getOrElse {
             LOG.warn("brikk-sql's ${profile.dialect} parser failed on a statement; reporting none for it", it)
             emptyList()
         }
@@ -250,7 +249,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         }
         return when (result) {
             VerifyResult.Accepted -> NativeOutcome.Accepted
-            is VerifyResult.Rejected -> NativeOutcome.Rejected(result.errors.map { NativeError(it.message, it.offset, it.endOffset) })
+            is VerifyResult.Rejected -> NativeOutcome.Rejected(result.errors.map { NativeError(it.message, it.offset, it.endOffset, it.line, it.column) })
             is VerifyResult.Unverified -> NativeOutcome.NoVerdict(result.reason)
             is VerifyResult.Unavailable -> NativeOutcome.NoVerdict(result.reason)
         }

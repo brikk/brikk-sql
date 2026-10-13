@@ -145,11 +145,24 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertEquals(listOf<Pair<String, String>>(), marks())
         postgresProfile.validator = ScriptedValidator { VerifyResult.Rejected(VerifyError.atOffset(it, "engine says", it.indexOf('='))) }
         open(text)
-        assertEquals(listOf("=" to "Engine: engine says"), marks())
+        // The engine proved the text before its error parses, so only local errors at or after it remain.
+        val (engine, local) = marks().partition { it.second.startsWith("Engine: ") }
+        assertEquals(listOf("=" to "Engine: engine says"), engine)
+        assertTrue(local.all { text.indexOf(it.first, text.indexOf('=')) >= text.indexOf('=') })
         // No verdict keeps the local error.
         postgresProfile.validator = ScriptedValidator { VerifyResult.Unavailable("down") }
         open(text)
         assertTrue(marks().single().second.startsWith("Engine (brikk-sql): "))
+    }
+
+    fun testAnEnginePositionGivenAsLineAndColumnIsPlaced() {
+        postgresProfile.validator = ScriptedValidator { sql ->
+            val bad = sql.indexOf("bad")
+            if (bad < 0) VerifyResult.Accepted
+            else VerifyResult.Rejected(VerifyError("by line", line = sql.take(bad).count { it == '\n' } + 1, column = bad - sql.lastIndexOf('\n', bad) ))
+        }
+        open("SELECT 1;\nSELECT 1,\n  bad;")
+        assertEquals(listOf("bad" to "Engine: by line"), marks())
     }
 
     fun testTheLocalParserIsOffByDefault() {
@@ -177,7 +190,11 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         val shown = myFixture.doHighlighting().filter { it.severity == HighlightSeverity.ERROR }
         // Accepted: none; rejected: the engine's error instead; no verdict: the IDE parser's errors.
         assertTrue("$shown", shown.none { it.startOffset < second })
-        assertEquals(listOf("Engine: no bad here"), shown.filter { it.startOffset in second until third }.map { it.description })
+        val bad = text.indexOf("bad")
+        val rejected = shown.filter { it.startOffset in second until third }
+        assertEquals("Engine: no bad here", rejected.first().description)
+        // Before the engine's first error its parser succeeded; the IDE parser's later errors stay.
+        assertEquals(platform.filter { it.startOffset in bad until third }.map { it.description }, rejected.drop(1).map { it.description })
         assertEquals(platform.filter { it.startOffset >= third }.map { it.description to it.startOffset }, shown.filter { it.startOffset >= third }.map { it.description to it.startOffset })
     }
 

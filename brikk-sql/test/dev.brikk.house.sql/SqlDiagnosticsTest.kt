@@ -38,6 +38,13 @@ class SqlDiagnosticsTest {
     }
 
     @Test
+    fun localParsingIsCancellable() {
+        val stop = IllegalStateException("canceled")
+        val sql = "SELECT " + (1..20_000).joinToString(", ")
+        assertEquals(stop, kotlin.runCatching { localParseDiagnostics(sql, sql.indices, "duckdb") { throw stop } }.exceptionOrNull())
+    }
+
+    @Test
     fun aLexicalErrorMarksWhereItsTokenBegins() {
         val script = "SELECT 1;\nSELECT 'open"
         val error = localParseDiagnostics(script, script.indexOf("SELECT 'open") until script.length, "duckdb").single()
@@ -47,31 +54,76 @@ class SqlDiagnosticsTest {
     @Test
     fun anUnknownDialectHasNoLocalDiagnostics() = assertEquals(listOf(), localParseDiagnostics("SELECT", 0 until 6, "no-such-engine"))
 
-    private val local = listOf(SqlDiagnostic(DiagnosticSeverity.ERROR, "local", 7, 8, DiagnosticSource.LOCAL_PARSER))
+    private fun local(start: Int, end: Int = start + 1, source: DiagnosticSource = DiagnosticSource.LOCAL_PARSER) =
+        SqlDiagnostic(DiagnosticSeverity.ERROR, "local $start", start, end, source)
+
+    private val script = "x;\nSELECT foo bar baz qux"
+    private val unit = 3 until script.length
+
+    private fun rejectedAt(offset: Int?) = NativeOutcome.Rejected(listOf(NativeError("engine", offset)))
 
     @Test
-    fun aNativeRejectionReplacesTheLocalErrors() {
-        val script = "x;\nSELECT foo bar baz"
-        val range = 3 until script.length
-        val outcome = combineStatementDiagnostics(script, range, local, NativeOutcome.Rejected(listOf(NativeError("engine", offset = 11))))
-        val error = outcome.diagnostics.single()
-        assertEquals("bar", text(script, error))
-        assertEquals(DiagnosticSource.NATIVE to "engine", error.source to error.message)
+    fun aPositionedRejectionDropsLocalErrorsBeforeItsFirstErrorAndKeepsLaterOnes() {
+        val bar = script.indexOf("bar")
+        val before = local(script.indexOf("foo"))
+        val at = local(bar, source = DiagnosticSource.EDITOR_PARSER)
+        val after = local(script.indexOf("qux"))
+        val outcome = combineStatementDiagnostics(script, unit, listOf(before, at, after), rejectedAt(bar - 3))
+        assertEquals(listOf("engine" to "bar", "local $bar" to "b", "local ${after.start}" to "q"), outcome.diagnostics.map { it.message to text(script, it) })
         assertEquals(false, outcome.nativelyAccepted)
     }
 
     @Test
-    fun aNativeAcceptanceClearsTheLocalFalsePositives() {
-        val outcome = combineStatementDiagnostics("SELECT foo bar", 0 until 14, local, NativeOutcome.Accepted)
-        assertEquals(listOf(), outcome.diagnostics)
+    fun aPositionlessRejectionKeepsTheLocalErrorsAndAddsItsMessageAtTheFirst() {
+        val first = local(script.indexOf("baz"), script.indexOf("baz") + 3)
+        val outcome = combineStatementDiagnostics(script, unit, listOf(first), rejectedAt(null))
+        assertEquals(listOf("engine" to "baz", "local ${first.start}" to "baz"), outcome.diagnostics.map { it.message to text(script, it) })
+        assertEquals(listOf("engine" to "SELECT"), combineStatementDiagnostics(script, unit, listOf(), rejectedAt(null)).diagnostics.map { it.message to text(script, it) })
+    }
+
+    @Test
+    fun anAcceptanceClearsOnlyLocalErrorsInsideTheVerifiedUnit() {
+        val inside = local(script.indexOf("foo"))
+        val outside = local(0)
+        val outcome = combineStatementDiagnostics(script, unit, listOf(inside, outside), NativeOutcome.Accepted)
+        assertEquals(listOf(outside), outcome.diagnostics)
         assertTrue(outcome.nativelyAccepted)
     }
 
     @Test
     fun noNativeVerdictKeepsTheLocalErrorsAndIsNeverClean() {
-        val outcome = combineStatementDiagnostics("SELECT foo bar", 0 until 14, local, NativeOutcome.NoVerdict("engine unavailable"))
-        assertEquals(local, outcome.diagnostics)
+        val errors = listOf(local(script.indexOf("foo")))
+        val outcome = combineStatementDiagnostics(script, unit, errors, NativeOutcome.NoVerdict("engine unavailable"))
+        assertEquals(errors, outcome.diagnostics)
         assertEquals(false, outcome.nativelyAccepted)
+    }
+
+    @Test
+    fun anAdvisoryEngineOnlyAddsWarnings() {
+        val errors = listOf(local(script.indexOf("foo")))
+        val rejected = combineStatementDiagnostics(script, unit, errors, rejectedAt(script.indexOf("qux") - 3), advisory = true)
+        assertEquals(listOf(DiagnosticSeverity.WARNING to "engine", DiagnosticSeverity.ERROR to errors.single().message), rejected.diagnostics.map { it.severity to it.message })
+        val accepted = combineStatementDiagnostics(script, unit, errors, NativeOutcome.Accepted, advisory = true)
+        assertEquals(errors, accepted.diagnostics)
+        assertEquals(false, accepted.nativelyAccepted)
+    }
+
+    @Test
+    fun aLineAndColumnPlaceAnErrorWithoutAnOffset() {
+        val text = "x;\nSELECT 1,\n  bad"
+        val outcome = combineStatementDiagnostics(text, 3 until text.length, listOf(), NativeOutcome.Rejected(listOf(NativeError("e", line = 2, column = 3))))
+        assertEquals("bad", text(text, outcome.diagnostics.single()))
+    }
+
+    @Test
+    fun aWholeFileUnitFollowsTheSameRules() {
+        val file = "SELECT a FROM t;\nSELECT b bad c;\nSELECT d"
+        val whole = file.indices
+        val early = local(file.indexOf("a "))
+        val late = local(file.indexOf("d"))
+        val outcome = combineStatementDiagnostics(file, whole, listOf(early, late), rejectedAt(file.indexOf("bad")))
+        assertEquals(listOf("engine" to "bad", late.message to "d"), outcome.diagnostics.map { it.message to text(file, it) })
+        assertEquals(listOf<SqlDiagnostic>(), combineStatementDiagnostics(file, whole, listOf(early, late), NativeOutcome.Accepted).diagnostics)
     }
 
     @Test
@@ -92,16 +144,10 @@ class SqlDiagnosticsTest {
     }
 
     @Test
-    fun aWarningSeverityIsKeptForAdvisoryEngines() {
-        val outcome = combineStatementDiagnostics("SELECT x", 0 until 8, listOf(), NativeOutcome.Rejected(listOf(NativeError("e", 7))), DiagnosticSeverity.WARNING)
-        assertEquals(DiagnosticSeverity.WARNING, outcome.diagnostics.single().severity)
-    }
-
-    @Test
     fun oneDiagnosticPerRange() {
         val twice = combineStatementDiagnostics("SELECT x", 0 until 8, listOf(), NativeOutcome.Rejected(listOf(NativeError("a", 7), NativeError("b", 7))))
         assertEquals(listOf("a"), twice.diagnostics.map { it.message })
-        assertEquals(1, (local + local.map { it.copy(message = "other") }).distinctByRange().size)
+        assertEquals(1, listOf(local(7), local(7).copy(message = "other")).distinctByRange().size)
     }
 
     @Test

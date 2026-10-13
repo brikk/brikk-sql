@@ -116,10 +116,13 @@ statement of core's statement ranges (or, with `VerificationUnit.File`, the whol
 validator's `verify`; the diagnostics themselves are core's plain data
 (`dev.brikk.house.sql.diagnostics`), so an LSP server can reuse them.
 
-- The engine decides where it gives a verdict. A rejection is marked at the engine's UTF-16
-  position (across the token, or one code point); an acceptance clears the local parsers' errors in
-  that statement; `Unverified`, `Unavailable`, a failed validator or no validator give no verdict,
-  never "clean", and leave the local errors. An advisory validator's rejections are warnings.
+- The engine's errors are marked at its UTF-16 position (or line and column), across the token or
+  one code point. Against the local parsers' errors, an authoritative engine that rejects at a
+  position keeps only local errors at or after its first error (it proved the text before parses);
+  rejecting without a position, it keeps them and adds its message at the first; accepting, it
+  clears those wholly inside the verified text. `Unverified`, `Unavailable`, a failed validator or
+  no validator give no verdict, never "clean", and keep them. An advisory validator only adds
+  warnings.
 - Local parsers, off by default: `localParser` reports brikk-sql's parser errors;
   `reportsPsiErrors` reports the IDE parser's PSI errors through the same rule (register a
   `NativeErrorPsiFilter` so the platform does not also show them; it hides only PSI error elements
