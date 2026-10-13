@@ -272,14 +272,17 @@ private val CODE_IN = Regex("""Code: (\d+)\. """)
 internal fun syntaxError(sql: String, detail: String): VerifyError {
     val match = POSITION.find(detail) ?: return VerifyError(detail)
     val head = detail.substring(0, match.range.first).trimEnd().removeSuffix(":")
-    val token = match.groupValues[2]
+    val reported = match.groupValues[2]
     val byte = match.groupValues[1].toInt() - 1
     val located = VerifyError.atUtf8Byte(sql, "", byte)
+    // Older servers (24.3) quote the token: `('t')`. A string literal's own quotes are in the text.
+    val candidates = listOf(reported, reported.removeSurrounding("'")).distinct()
+    val token = located.offset?.let { at -> candidates.firstOrNull { sql.startsWith(it, at) } } ?: candidates.last()
     val atToken = if (token == "end of query") "at the end of the query" else "at $token"
     val message = listOfNotNull("$head $atToken", afterEcho(detail.substring(match.range.last + 1), located.offset?.let(sql::substring), sql))
         .joinToString(": ")
     val offset = located.offset ?: return VerifyError(message)
-    val end = if (token != "end of query" && sql.startsWith(token, offset)) offset + token.length else null
+    val end = if (token != "end of query" && token.isNotEmpty() && sql.startsWith(token, offset)) offset + token.length else null
     return VerifyError.atOffset(sql, message, offset, end)
 }
 

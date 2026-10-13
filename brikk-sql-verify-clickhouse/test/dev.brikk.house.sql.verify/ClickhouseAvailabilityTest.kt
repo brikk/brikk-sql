@@ -121,6 +121,21 @@ internal class ClickhouseAvailabilityTest {
         assertEquals(VerifyError("Syntax error without a position"), syntaxError(sql, "Syntax error without a position"))
     }
 
+    /** Older servers (24.3) quote the token: the span and the message still name it. */
+    @Test
+    fun aQuotedTokenSpansTheToken() {
+        assertEquals(
+            VerifyError("Syntax error at ): Unmatched parentheses: )", 1, 30, 29, 30),
+            syntaxError("SELECT 1 FROM t WHERE (a = 1)) x", "Syntax error: failed at position 30 (')'): ) x. Unmatched parentheses: )"),
+        )
+        assertEquals(
+            VerifyError("Syntax error at t: Expected one of: token", 1, 16, 15, 16),
+            syntaxError("SELECT 'ü' FRM t", "Syntax error: failed at position 17 ('t'): t. Expected one of: token"),
+        )
+        // A string literal token keeps its quotes: they are in the text.
+        assertEquals(19, syntaxError("SELECT 1 FROM t 'x' y", "Syntax error: failed at position 17 ('x'): 'x' y. Expected one of: token").endOffset)
+    }
+
     /** The server's echo of the rest of the query ends where the statement says, whatever the token or text holds. */
     @Test
     fun theMessageAfterTheEchoIsKept() {

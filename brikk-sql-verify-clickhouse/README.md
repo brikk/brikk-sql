@@ -55,6 +55,7 @@ support's `DataSourceVerification` takes such properties). The driver also sends
 through it on 26.9, and its own console fails the same way (25.8 accepts those settings at their
 defaults); over the plain HTTP interface such a login gets verdicts.
 
-The server tests pass on ClickHouse 26.9.17.8 and 25.8.33.6, where a login on the old analyzer
+The server tests pass on ClickHouse 26.9.17.8, 25.8.33.6 and 24.3.18.7 (which quotes the failing
+token: `('t')`), and on 25.8 and 24.3 a login on the old analyzer
 (`allow_experimental_analyzer = 0`) gets the same positioned rejections; 26.9 refuses that setting,
 so that test is skipped there.
