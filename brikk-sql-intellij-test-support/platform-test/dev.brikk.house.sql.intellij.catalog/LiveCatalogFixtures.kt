@@ -21,6 +21,7 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.runBlocking
 import com.intellij.database.dataSource.connection.ConnectionRequestor
+import dev.brikk.house.sql.intellij.catalog.helperRequestor
 import com.intellij.database.remote.jdbc.helpers.GenericJdbcHelper
 import com.intellij.database.remote.jdbc.impl.RemoteConnectionImpl
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
@@ -121,6 +122,25 @@ fun databaseConnection(connection: Connection, point: DatabaseConnectionPoint, d
 
 /** An introspection's connection requestor: neither a console engine nor a refresh's helper. */
 fun otherRequestor(): ConnectionRequestor = ConnectionRequestor.Anonymous()
+
+/**
+ * Another plugin's helper requestor: this library's helper requestor class defined again by a class
+ * loader of its own, as each plugin's copy of the library defines it, so it is not this copy's class.
+ */
+fun foreignHelperRequestor(): ConnectionRequestor {
+    val name = "dev.brikk.house.sql.intellij.catalog.HelperRequestor"
+    val home = ConnectionRequestor::class.java.classLoader
+    val bytes = checkNotNull(helperRequestor().javaClass.classLoader.getResourceAsStream(name.replace('.', '/') + ".class")).use { it.readBytes() }
+    val loader = object : ClassLoader(helperRequestor().javaClass.classLoader) {
+        override fun loadClass(className: String, resolve: Boolean): Class<*> =
+            if (className == name) synchronized(getClassLoadingLock(className)) { findLoadedClass(className) ?: defineClass(className, bytes, 0, bytes.size) }
+            else super.loadClass(className, resolve)
+    }
+    check(home != null)
+    val type = loader.loadClass(name)
+    check(type !== helperRequestor().javaClass) { "the foreign copy must be another class" }
+    return type.getDeclaredConstructor().apply { isAccessible = true }.newInstance() as ConnectionRequestor
+}
 
 class LiveProfile(
     override val harvester: LiveCatalogHarvester = CountingHarvester(),

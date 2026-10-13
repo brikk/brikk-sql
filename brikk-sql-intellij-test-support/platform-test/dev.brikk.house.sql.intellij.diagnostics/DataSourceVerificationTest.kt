@@ -14,6 +14,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
+import dev.brikk.house.sql.intellij.catalog.foreignHelperRequestor
 import dev.brikk.house.sql.intellij.catalog.otherRequestor
 import dev.brikk.house.sql.intellij.catalog.realDuckdbDataSource
 import dev.brikk.house.sql.intellij.catalog.withIdeConnection
@@ -98,6 +99,29 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
         }
         restartsReach(2)
         assertEquals("disconnecting", listOf(project, project), restarted.toList())
+    }
+
+    /** Another plugin's helper connection (its own copy of this library) is no user connection: it neither enables verification nor restarts highlighting. */
+    fun testAnotherPluginsHelperIsNotTheUsersConnection() {
+        val restarted = mutableListOf<Project>()
+        ApplicationManager.getApplication().messageBus.connect(testRootDisposable).subscribe(
+            DatabaseConnectionManager.TOPIC,
+            object : VerificationConnectionListener() {
+                override fun restart(project: Project) {
+                    restarted += project
+                }
+            },
+        )
+        val disconnected = verification.modificationCount(myFixture.file)
+        withIdeConnection(project, dataSource, foreignHelperRequestor()) {
+            assertEquals(VerifyResult.Unavailable("disconnected"), answer("SELECT 1"))
+            assertEquals(disconnected, verification.modificationCount(myFixture.file))
+        }
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        assertEquals(emptyList<Project>(), restarted.toList())
+        withIdeConnection(project, dataSource, otherRequestor()) {
+            PlatformTestUtil.waitWithEventsDispatching("a user's connection restarts", { restarted.isNotEmpty() }, 10)
+        }
     }
 
     /** A startup script (the data source's, else its driver's) is for the user's sessions, not a verification's. */

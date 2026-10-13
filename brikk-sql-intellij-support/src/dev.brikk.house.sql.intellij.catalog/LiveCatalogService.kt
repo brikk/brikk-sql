@@ -230,7 +230,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val profile = profile
         if (!accepts(connection.dbms)) return
         val requestor = (connection as? DatabaseConnection)?.requestor
-        if (requestor is HelperRequestor) return
+        if (isHelperRequestor(requestor)) return
         val dataSource = connection.connectionPoint.dataSource
         val identity = profile.identity(dataSource)
         val console = requestor is DataProducer
@@ -463,8 +463,32 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     }
 }
 
-/** Opens this library's own helper connections (refreshes, text explain), which harvests skip. */
-internal class HelperRequestor : ConnectionRequestor by ConnectionRequestor.Anonymous()
+/** Opens this library's own helper connections (refreshes, text explain, verification), which harvests skip. */
+internal class HelperRequestor : ConnectionRequestor by ConnectionRequestor.Anonymous() {
+    // Every plugin's copy of this library defines its own class: the key, not the class, marks a helper.
+    override fun toString(): String = HELPER_REQUESTOR_KEY
+}
+
+/** What marks a helper connection's requestor across plugins' copies of this library ([isHelperRequestor]). */
+@ApiStatus.Experimental
+public const val HELPER_REQUESTOR_KEY: String = "dev.brikk.house.sql.intellij.helper-connection"
+
+/**
+ * A requestor for a helper connection: every plugin's copy of this library recognizes it
+ * ([isHelperRequestor]), so harvests, connected-state checks and highlighting restarts skip it.
+ */
+@ApiStatus.Experimental
+public fun helperRequestor(): ConnectionRequestor = HelperRequestor()
+
+/**
+ * Whether [requestor] opened a helper connection, in this or another plugin's copy of this library:
+ * by its key, or by the helper requestor's class name for copies before the key, never by class identity.
+ */
+@ApiStatus.Experimental
+public fun isHelperRequestor(requestor: Any?): Boolean =
+    requestor != null && (requestor.javaClass.name == HELPER_REQUESTOR_CLASS || requestor.toString() == HELPER_REQUESTOR_KEY)
+
+private val HELPER_REQUESTOR_CLASS: String = HelperRequestor::class.java.name
 
 /**
  * `<database.connectionInterceptor>`: harvests new connections of the profile's dbms through the

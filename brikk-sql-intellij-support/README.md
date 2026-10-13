@@ -168,7 +168,11 @@ optional `connectionProperties(dataSource)` adds over the data source's (the dat
 changed), never asking for a password, and only while the user has the data source connected; otherwise it gives null, which the verifier reports as `Unavailable`.
 All of this library's helper connections (verification, refresh, text explain) connect through
 `HelperConnectionPoint(point, properties)`, which drops the data source's and driver's startup script
-(an `INSERT` there would run on every helper) and adds driver properties; a plugin's own helper can use it too. The count
+(an `INSERT` there would run on every helper) and adds driver properties; a plugin's own helper can use it too.
+Their requestor is `helperRequestor()`, which every plugin's copy of this library recognizes
+(`isHelperRequestor`, by `HELPER_REQUESTOR_KEY` or the helper requestor's class name, never by class
+identity), so another plugin's helpers neither count as the user's connection, nor get harvested,
+nor restart highlighting. The count
 changes with the data source (identity, URL, user) and its connected state; register
 `VerificationConnectionListener` as an application listener of
 `com.intellij.database.dataSource.DatabaseConnectionManager$Listener` so connecting and disconnecting

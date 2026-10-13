@@ -69,6 +69,17 @@ class LiveCatalogConnectionTest : BasePlatformTestCase() {
         assertEquals("the startup INSERT ran on the refresh's connection (own, driver's)", listOf(0, 0), runs)
     }
 
+    /** Another plugin's copy of this library opens its helpers with its own requestor class: they are not harvested either. */
+    fun testAnotherPluginsHelperConnectionIsNotHarvested() {
+        val foreign = foreignHelperRequestor()
+        assertNotSame(helperRequestor().javaClass, foreign.javaClass)
+        assertTrue(isHelperRequestor(foreign))
+        withIdeConnection(project, dataSource, foreign) { }
+        assertEquals(0, harvester.harvests.get())
+        withIdeConnection(project, dataSource, otherRequestor()) { }
+        assertEquals("a user's connection still harvests", 1, harvester.harvests.get())
+    }
+
     fun testANewConnectionHarvestsOncePerSessionThroughTheInterceptor() {
         withIdeConnection(project, dataSource, otherRequestor()) { }
         assertEquals(1, harvester.harvests.get())

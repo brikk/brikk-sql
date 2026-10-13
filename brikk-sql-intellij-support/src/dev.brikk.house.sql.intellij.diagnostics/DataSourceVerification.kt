@@ -16,6 +16,7 @@ import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.catalog.HelperConnectionPoint
 import dev.brikk.house.sql.intellij.catalog.HelperRequestor
+import dev.brikk.house.sql.intellij.catalog.isHelperRequestor
 import dev.brikk.house.sql.intellij.catalog.queryRows
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
 import dev.brikk.house.sql.intellij.pipe.ValidationTiming
@@ -93,7 +94,8 @@ public class DataSourceVerification(
 internal fun isUserConnected(dataSource: LocalDataSource): Boolean =
     DatabaseConnectionManager.getInstance().activeConnections.any { it.isUsers() && it.connectionPoint.dataSource == dataSource }
 
-private fun DatabaseConnection.isUsers(): Boolean = requestor !is HelperRequestor
+// Another plugin's copy of this library opens helpers too: they are recognized by key, never by class.
+private fun DatabaseConnection.isUsers(): Boolean = !isHelperRequestor(requestor)
 
 /**
  * A helper connection a [DataSourceVerification] opened for one verification. A verifier runs its
