@@ -107,6 +107,20 @@ class RelationScopeTest {
     }
 
     @Test
+    fun aFullJoinKeyIsNotNullOnlyWhenBothSidesAreNot() {
+        fun key(left: Nullability, right: Nullability): Nullability {
+            val input = RelationFacts(slots = mapOf(
+                "a" to RelationFact(listOf(ColumnFact("id", nullability = left))),
+                "b" to RelationFact(listOf(ColumnFact("id", nullability = right))),
+            ))
+            return checkNotNull(analyze("SELECT id FROM a() FULL JOIN b() USING (id)", input = input).output).columns.single().nullability
+        }
+        assertEquals(Nullability.NON_NULL, key(Nullability.NON_NULL, Nullability.NON_NULL))
+        assertEquals(Nullability.NULLABLE, key(Nullability.NON_NULL, Nullability.NULLABLE))
+        assertEquals(Nullability.UNKNOWN, key(Nullability.NON_NULL, Nullability.UNKNOWN))
+    }
+
+    @Test
     fun slotsMatchExactlyAndOnlyWithoutArgumentsOrQualifiers() {
         assertTrue(analyze("SELECT e.nope FROM Events() e").diagnostics.isEmpty())
         assertTrue(analyze("SELECT e.nope FROM events(1) e").diagnostics.isEmpty())

@@ -266,9 +266,10 @@ internal class ScopeEvaluator(
             else -> left
         }
         if (kept != null) return kept.copy(relation = "")
+        // COALESCE(left, right) over a FULL join: each side alone supplies the rows the other lacks.
         val nullability = when {
-            left?.nullability == Nullability.NON_NULL || right?.nullability == Nullability.NON_NULL -> Nullability.NON_NULL
-            left?.nullability == Nullability.NULLABLE && right?.nullability == Nullability.NULLABLE -> Nullability.NULLABLE
+            left?.nullability == Nullability.NULLABLE || right?.nullability == Nullability.NULLABLE -> Nullability.NULLABLE
+            left?.nullability == Nullability.NON_NULL && right?.nullability == Nullability.NON_NULL -> Nullability.NON_NULL
             else -> Nullability.UNKNOWN
         }
         return if (left != null && left.source != null && left.source == right?.source) left.copy(relation = "", nullability = nullability)
