@@ -1,6 +1,25 @@
 package dev.brikk.house.sql.shape
 
 import dev.brikk.house.sql.ast.Alter
+import dev.brikk.house.sql.ast.And
+import dev.brikk.house.sql.ast.Array as ArrayNode
+import dev.brikk.house.sql.ast.Case
+import dev.brikk.house.sql.ast.Cast
+import dev.brikk.house.sql.ast.CurrentDate
+import dev.brikk.house.sql.ast.CurrentTimestamp
+import dev.brikk.house.sql.ast.Extract
+import dev.brikk.house.sql.ast.If
+import dev.brikk.house.sql.ast.JSONArrayContains
+import dev.brikk.house.sql.ast.JSONExtract
+import dev.brikk.house.sql.ast.JSONExtractScalar
+import dev.brikk.house.sql.ast.Map as MapNode
+import dev.brikk.house.sql.ast.Or
+import dev.brikk.house.sql.ast.ParseJSON
+import dev.brikk.house.sql.ast.Soundex
+import dev.brikk.house.sql.ast.Struct
+import dev.brikk.house.sql.ast.Unnest
+import dev.brikk.house.sql.ast.VarMap
+import dev.brikk.house.sql.ast.Xor
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.Command
 import dev.brikk.house.sql.ast.Commit
@@ -59,8 +78,9 @@ val TEXT_EXPLAIN_DIALECTS: Set<String> = setOf("trino", "doris")
  * query, refused are: statements (DML in a CTE, `SELECT ... INTO`), routine declarations (Trino's
  * `WITH FUNCTION`, which may take a built-in's name or run Python), table functions in relations
  * (Trino `TABLE(...)`, Doris table-valued functions), namespaced routine calls, and calls whose name as
- * written [isBuiltinFunction] does not know; grammar forms with their own syntax (`CAST`, `EXTRACT`,
- * `CASE`, ...) are not calls. Parameters (the dialect's, and the console's default `${name}` and
+ * written (the name token the parser recorded) [isBuiltinFunction] does not know or that recorded no name.
+ * Operators, literals and keyword forms (`a AND b`, `TIMESTAMP '...'`, `CASE`, `CAST`, `ARRAY[...]`), and
+ * nodes a parser synthesizes inside a named call, are not calls of their own. Parameters (the dialect's, and the console's default `${name}` and
  * `#{name}`) are refused: they are resolved with Execute. A query the core
  * parser cannot read is refused, never guessed at. PIPE syntax must be lowered first. A query starting
  * with a parenthesis is explained as a derived table, since `EXPLAIN (` opens Trino's options. DuckDB is
@@ -115,21 +135,24 @@ private fun refusal(node: Expression, sql: String, dialect: String, isBuiltinFun
     node is Placeholder || node is Parameter -> PARAMETERS
     node is Table && node.args["this"] is Func -> "The query reads a table function, which the engine may run while planning: ${node.sql(dialect)}"
     node is Func && node.parent is Dot -> "The query calls a routine, which the engine may run while planning: ${node.sql(dialect)}"
-    node is Func -> writtenName(node, sql)?.takeUnless(isBuiltinFunction)?.let { name ->
-        "The query calls $name, which is not a built-in function the engine is known to plan safely."
+    node is Func -> when (val name = writtenName(node, sql)) {
+        null -> if (isGrammarForm(node) || isSynthesized(node)) null else "The query calls a function whose name is not known: ${node.sql(dialect)}"
+        else -> if (isGrammarForm(node) || isBuiltinFunction(name)) null else "The query calls $name, which is not a built-in function the engine is known to plan safely."
     }
     else -> null
 }
 
-/**
- * The name [call] is written with in [sql], unquoted, from the name token the parser records; null for
- * grammar forms (`CAST`, `EXTRACT`, `CASE`, `ARRAY[...]`), which have their own syntax and no name to call.
- */
+/** Operators, literals and keyword forms that are no function a user could define (`a AND b`, `TIMESTAMP '...'`, `CASE`, `ARRAY[...]`). */
+private fun isGrammarForm(node: Expression): Boolean = node is Cast || node::class in GRAMMAR_FORMS
+
+/** A node a parser built for a named call, as Doris `TO_DAYS(x)` becomes `(DateDiff(TsOrDsToDate(x), ...) + 1)`: part of that call. */
+private fun isSynthesized(node: Expression): Boolean =
+    node !is Anonymous && generateSequence(node.parent) { it.parent }.any { it.callName != null }
+
+/** The name [call] is written with in [sql], unquoted, from the name token the parser recorded; null when it recorded none. */
 private fun writtenName(call: Expression, sql: String): String? {
-    if (call is Anonymous) return call.name
-    val start = call.meta["start"] as? Int ?: return null
-    val end = call.meta["end"] as? Int ?: return null
-    val written = sql.substring(start, end + 1)
+    val range = call.callName ?: return (call as? Anonymous)?.name
+    val written = sql.substring(range.first, range.last + 1)
     val quote = written.first()
     return if (quote in "\"`" && written.length > 1 && written.last() == quote) written.substring(1, written.length - 1).replace("$quote$quote", "$quote") else written
 }
@@ -142,6 +165,12 @@ private fun hasUserParameters(sql: String, dialect: String): Boolean = try {
 } catch (_: TokenError) {
     false
 }
+
+private val GRAMMAR_FORMS = setOf(
+    And::class, Or::class, Xor::class, Case::class, If::class, ArrayNode::class, MapNode::class, VarMap::class, Struct::class,
+    Unnest::class, ParseJSON::class, Extract::class, CurrentDate::class, CurrentTimestamp::class,
+    JSONArrayContains::class, JSONExtract::class, JSONExtractScalar::class, Soundex::class,
+)
 
 private val STATEMENTS = setOf(
     Insert::class, Update::class, Delete::class, Merge::class, Create::class, Drop::class, Alter::class, Command::class,

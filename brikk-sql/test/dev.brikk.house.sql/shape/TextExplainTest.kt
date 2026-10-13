@@ -74,6 +74,34 @@ class TextExplainTest {
         assertReady("EXPLAIN SELECT CAST(x AS integer), EXTRACT(YEAR FROM d), CASE WHEN a THEN 1 END, CURRENT_DATE FROM t", "SELECT CAST(x AS integer), EXTRACT(YEAR FROM d), CASE WHEN a THEN 1 END, CURRENT_DATE FROM t")
     }
 
+    /** Calls a parser handler builds (ARGMAX, STRING_AGG), quoted ones, and calls in lambdas and windows are all checked by name. */
+    @Test
+    fun everyParsedCallIsCheckedByName() {
+        for (sql in listOf(
+            "SELECT ARGMAX(1, 2)",
+            "SELECT \"ARGMAX\"(1, 2)",
+            "SELECT STRING_AGG('a', ',')",
+            "SELECT STRING_AGG(x, ',') OVER () FROM t",
+            "SELECT transform(ARRAY[1], x -> ARGMAX(x, 2))",
+            "SELECT LISTAGG(x, ',') WITHIN GROUP (ORDER BY x) FROM t",
+        )) assertRefused(sql)
+        val known = setOf("argmax", "string_agg", "transform", "listagg", "sum")
+        for (sql in listOf("SELECT ARGMAX(1, 2)", "SELECT STRING_AGG(x, ',') OVER () FROM t", "SELECT transform(ARRAY[1], x -> ARGMAX(x, 2))", "SELECT sum(x) OVER () FROM t")) {
+            assertIs<ExplainPreparation.Ready>(prepareTextExplain(sql, "trino") { it.lowercase() in known }, sql)
+        }
+    }
+
+    /** Operators, literals and keyword forms, and nodes a parser synthesizes inside a named call, are not calls of their own. */
+    @Test
+    fun grammarFormsAndSynthesizedNodesNeedNoName() {
+        for (sql in listOf(
+            "SELECT TIMESTAMP '2020-01-01', JSON '{}', ARRAY[1], a AND b OR c, CASE WHEN a THEN 1 END, TRY_CAST(x AS INT) FROM t",
+            "SELECT a FROM x CROSS JOIN UNNEST(ARRAY[1]) AS u (a)",
+        )) assertIs<ExplainPreparation.Ready>(prepareTextExplain(sql, "trino") { false }, sql)
+        val toDays = prepareTextExplain("SELECT TO_DAYS(x) FROM t", "doris") { it.lowercase() == "to_days" }
+        assertIs<ExplainPreparation.Ready>(toDays, toDays.toString())
+    }
+
     @Test
     fun statementsInsideAQueryAreRefused() {
         assertRefused("WITH d AS (DELETE FROM t RETURNING x) SELECT * FROM d")

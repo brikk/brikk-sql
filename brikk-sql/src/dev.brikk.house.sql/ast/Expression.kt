@@ -84,6 +84,9 @@ abstract class Expression(initArgs: Args = emptyMap()) {
     // Authored text a generator may reuse while the node still equals its parsed shape; never serialized.
     internal var authoredSyntax: AuthoredSyntax? = null
 
+    // brikk-native: the source range of the name a parsed function call is written with; never serialized.
+    internal var callName: IntRange? = null
+
     // sqlglot: Expression.meta
     val meta: MutableMap<String, kotlin.Any?>
         get() = metaOrNull ?: LinkedHashMap<String, kotlin.Any?>().also { metaOrNull = it }
@@ -409,6 +412,7 @@ abstract class Expression(initArgs: Args = emptyMap()) {
             node.metaOrNull?.let { copy.metaOrNull = LinkedHashMap(it) }
             copy.syntaxOrigin = node.syntaxOrigin
             copy.authoredSyntax = node.authoredSyntax
+            copy.callName = node.callName
 
             for ((k, vs) in node.args) {
                 if (vs is Expression) {
