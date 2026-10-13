@@ -17,7 +17,8 @@ internal object ClickhouseServer {
 
     fun open(url: String = require()): Connection =
         ClickHouseDriver().connect(url, Properties().apply { setProperty("user", "default"); setProperty("password", "")
-            // The driver's LZ4 framing fails on some server responses; verification answers are tiny.
+            // The 0.9.8 driver's compressed transport fails against ClickHouse 26.9 even with its complete
+            // all-in-one jar: answers fail with "Invalid LZ4 magic byte", errors read "<Unreadable error message>".
             setProperty("compress", "false")
             setProperty("decompress", "false")
         }) ?: error("no connection for $url")

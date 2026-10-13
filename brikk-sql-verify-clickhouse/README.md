@@ -45,7 +45,11 @@ loading the dictionary; with the verifier switched to that query, the test fails
 Without `BRIKK_CLICKHOUSE_URL` the server tests are skipped; the rest (no data source, a refused
 connection, a hanging server canceled, an interrupted caller, message parsing) run anywhere.
 
-The test classpath uses `com.clickhouse:clickhouse-jdbc` 0.9.8 with compression off: with LZ4 on it
-mangled server responses, error texts included. That driver also sends its own settings with each
-request, so a `readonly = 1` login gets `Unavailable` through it; over the plain HTTP interface such a
-login gets verdicts.
+With `com.clickhouse:clickhouse-jdbc` 0.9.8 (also as its all-in-one jar), the driver's default
+compressed transport fails against ClickHouse 26.9: answers fail with "Invalid LZ4 magic byte" and
+errors read `<Unreadable error message>`, which the verifier reports as `Unavailable`, never as a
+rejection. Turn compression off on the verification connection (`compress=false`, `decompress=false`;
+support's `DataSourceVerification` takes such properties). The driver also sends its own settings
+(`async_insert`, `wait_end_of_query`) with each request, so a `readonly = 1` login gets `Unavailable`
+through it, and its own console fails the same way; over the plain HTTP interface such a login gets
+verdicts.

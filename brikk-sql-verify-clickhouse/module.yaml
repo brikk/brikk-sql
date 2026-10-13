@@ -14,7 +14,8 @@ dependencies:
 test-dependencies:
   # The driver the ClickHouse plugin's data sources use (com.clickhouse.jdbc.ClickHouseDriver).
   - com.clickhouse:clickhouse-jdbc:0.9.8
-  # The driver's optional compression codec, which it loads for every HTTP request.
+  # LZ4 classes the driver loads for every request. Its POM's own LZ4 (at.yawk.lz4, which declares the
+  # org.lz4 capability) does not resolve here; the tests run with compression off anyway (ClickhouseServer).
   - org.lz4:lz4-java:1.8.0
 
 settings:

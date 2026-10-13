@@ -132,6 +132,8 @@ public class ParseOnlyClickhouseVerifier(
 
     private fun SQLException.toResult(sql: String): VerifyResult {
         val detail = serverMessage()
+        // A driver whose transport garbled the answer (the 0.9.8 driver with compression on) says so instead of the server's message.
+        if (UNREADABLE in detail) return VerifyResult.Unavailable("ClickHouse verification is unavailable: the driver could not read the server's answer (unreadable error message; turn the driver's compression off).")
         return when (serverCode()) {
             null -> VerifyResult.Unavailable("ClickHouse verification is unavailable: ${reason()}.")
             SYNTAX_ERROR -> if (detail.startsWith("Empty query")) {
@@ -162,6 +164,7 @@ public class ParseOnlyClickhouseVerifier(
         /** Keeps the query under ClickHouse's default `max_query_size` (256 KiB). */
         const val MAX_HEX_LENGTH = 200_000
         const val EXPRESSION_PREFIX = "SELECT "
+        const val UNREADABLE = "<Unreadable error message>"
         const val INSERT_DATA = "ClickHouse parses an INSERT's header only; its inline data is checked when it runs."
 
         val WORKERS: ExecutorService = Executors.newCachedThreadPool { task ->

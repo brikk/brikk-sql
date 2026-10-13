@@ -90,6 +90,21 @@ internal class ClickhouseAvailabilityTest {
         assertEquals(VerifyError("Syntax error without a position"), syntaxError(sql, "Syntax error without a position"))
     }
 
+    /** The 0.9.8 driver's compressed transport turns the server's message into this: no verdict. */
+    @Test
+    fun anUnreadableServerMessageIsNoVerdict() {
+        val unreadable = SQLException("Code: 62. DB::Exception: <Unreadable error message> (transport error: 400) (queryId= 8ca1)")
+        val result = ParseOnlyClickhouseVerifier({ FailingConnection(unreadable) }).verify("SELECT 1; S")
+        assertIs<VerifyResult.Unavailable>(result)
+        assertTrue("unreadable" in result.reason, result.reason)
+    }
+
+    private class FailingConnection(private val failure: SQLException) : ClickhouseQueryConnection {
+        override fun queryString(sql: String, timeoutSeconds: Int): String? = throw failure
+        override fun cancel() = Unit
+        override fun close() = Unit
+    }
+
     @Test
     fun anInsertWithInlineDataIsRecognizedFromTheServersFormatting() {
         assertTrue("INSERT INTO t FORMAT Values".isInsertWithData())
