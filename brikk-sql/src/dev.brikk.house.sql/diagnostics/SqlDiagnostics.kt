@@ -25,6 +25,9 @@ enum class DiagnosticSource {
     /** The engine's own parser or server. */
     NATIVE,
 
+    /** brikk-sql's relation scope (`RelationScope`): names its facts and SQL do not resolve. */
+    SCOPE,
+
     /** A consumer's own check, such as a PIPE lowering refusal. */
     OTHER,
 }

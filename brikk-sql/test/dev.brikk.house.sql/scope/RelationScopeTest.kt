@@ -1,5 +1,8 @@
 package dev.brikk.house.sql.scope
 
+import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
+import dev.brikk.house.sql.diagnostics.DiagnosticSource
+import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -73,7 +76,9 @@ class RelationScopeTest {
     fun knowledgeDecidesWhatAnAbsentNameMeans() {
         assertEquals(listOf(ScopeProblem.MISSING_COLUMN), analyze("SELECT nope FROM events()").problems())
         assertEquals(listOf(ScopeProblem.PARTIAL_CONTRACT), analyze("SELECT nope FROM partial()").problems())
-        assertEquals(ScopeDiagnostic.Severity.WARNING, analyze("SELECT nope FROM partial()").diagnostics.single().severity)
+        val warning = analyze("SELECT nope FROM partial()").diagnostics.single()
+        assertEquals(DiagnosticSeverity.WARNING, warning.severity)
+        assertEquals(SqlDiagnostic(DiagnosticSeverity.WARNING, warning.message, warning.start, warning.end, DiagnosticSource.SCOPE), warning.toSqlDiagnostic())
         assertTrue(analyze("SELECT nope FROM unknown()").diagnostics.isEmpty())
         assertTrue(analyze("SELECT nope FROM events() JOIN unknown() u ON true").diagnostics.isEmpty())
     }

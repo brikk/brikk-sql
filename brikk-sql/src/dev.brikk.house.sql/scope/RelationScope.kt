@@ -1,5 +1,8 @@
 package dev.brikk.house.sql.scope
 
+import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
+import dev.brikk.house.sql.diagnostics.DiagnosticSource
+import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.dialects.Dialects
 import kotlinx.serialization.Serializable
 
@@ -86,40 +89,40 @@ data class ScopeReference(
 )
 
 @Serializable
-enum class ScopeProblem(val severity: ScopeDiagnostic.Severity) {
+enum class ScopeProblem(val severity: DiagnosticSeverity) {
     /** A column absent from fully known relations. */
-    MISSING_COLUMN(ScopeDiagnostic.Severity.ERROR),
+    MISSING_COLUMN(DiagnosticSeverity.ERROR),
 
     /** A column absent from what a partial contract lists; it may exist at run time. */
-    PARTIAL_CONTRACT(ScopeDiagnostic.Severity.WARNING),
-    AMBIGUOUS_COLUMN(ScopeDiagnostic.Severity.ERROR),
-    UNKNOWN_QUALIFIER(ScopeDiagnostic.Severity.ERROR),
+    PARTIAL_CONTRACT(DiagnosticSeverity.WARNING),
+    AMBIGUOUS_COLUMN(DiagnosticSeverity.ERROR),
+    UNKNOWN_QUALIFIER(DiagnosticSeverity.ERROR),
 
     /** A table absent from a [CatalogKnowledge.CLOSED] catalog. */
-    UNKNOWN_TABLE(ScopeDiagnostic.Severity.ERROR),
+    UNKNOWN_TABLE(DiagnosticSeverity.ERROR),
 
     /** Positional set-operation branches with different column counts; marks the operator. */
-    COLUMN_COUNT_MISMATCH(ScopeDiagnostic.Severity.ERROR),
+    COLUMN_COUNT_MISMATCH(DiagnosticSeverity.ERROR),
 
     /** A pipe stage execution cannot lower (a slice that is no literal, a qualified RENAME); marks the stage. */
-    PIPE_UNSUPPORTED(ScopeDiagnostic.Severity.ERROR),
+    PIPE_UNSUPPORTED(DiagnosticSeverity.ERROR),
 }
 
-/** A problem over `[start, end)`, never empty. */
+/** A problem over `[start, end)`, never empty; [toSqlDiagnostic] gives the editor-wide form. */
 @Serializable
 data class ScopeDiagnostic(
     val problem: ScopeProblem,
-    val severity: Severity,
+    val severity: DiagnosticSeverity,
     val message: String,
     val start: Int,
     val end: Int,
 ) {
-    @Serializable
-    enum class Severity { ERROR, WARNING }
-
     init {
         require(start in 0 until end) { "A diagnostic needs a non-empty range: [$start, $end)" }
     }
+
+    /** This diagnostic among the others an editor shows, from [DiagnosticSource.SCOPE]. */
+    fun toSqlDiagnostic(): SqlDiagnostic = SqlDiagnostic(severity, message, start, end, DiagnosticSource.SCOPE)
 }
 
 @Serializable
