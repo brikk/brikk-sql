@@ -54,11 +54,10 @@ internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Un
 internal fun lowerPipes(statement: Expression, dialect: Dialect, names: SourceNames, text: String, base: Int): Pair<Expression, PipeOrigins> {
     val origins = PipeOrigins()
     for (pipe in statement.findAll<PipeQuery>().toList()) {
+        // Execution reads a SELECT-first head's rows, merging a later stage into the head only where
+        // that is equivalent; the editor scopes the head's projection as the input it is.
         val head = pipe.thisArg as? Select
-        // A SELECT-first head's output, not its FROM clause, is the pipe's input.
-        if (head != null && head.syntaxOrigin?.fromFirst != true && !head.isPlainStar()) {
-            pipe.set("this", Subquery(args("this" to head)))
-        }
+        if (head != null && head.args["from_"] != null && !head.isPlainStar()) pipe.set("this", Subquery(args("this" to head)))
         for (stage in pipe.expressionsArg.filterIsInstance<Expression>()) {
             val keyword = names.range(stage)?.let { text.substring(it.first - base, it.last + 1 - base).uppercase() }.orEmpty()
             when (stage) {
@@ -81,7 +80,7 @@ internal fun lowerPipes(statement: Expression, dialect: Dialect, names: SourceNa
             }
         }
     }
-    return desugarPipes(statement, dialect, copy = false, lenient = true) to origins
+    return desugarPipes(statement, dialect, copy = false) { stage, message -> origins.refusals += stage to message } to origins
 }
 
 private fun Select.isPlainStar(): Boolean {
@@ -131,6 +130,10 @@ internal class ScopeAnalysis(
             }
             references += evaluator.references
             diagnostics += evaluator.diagnostics
+            for ((stage, message) in origins.refusals) names.range(stage)?.let { keyword ->
+                diagnostics += ScopeDiagnostic(ScopeProblem.PIPE_UNSUPPORTED, ScopeProblem.PIPE_UNSUPPORTED.severity,
+                    "Execution refuses this stage: $message", keyword.first, keyword.last + 1)
+            }
         }
         return RelationScope(
             references.distinctBy { Triple(it.kind, it.start, it.end) }.sortedBy { it.start },

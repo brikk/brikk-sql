@@ -148,6 +148,15 @@ class RelationScopeTest {
     }
 
     @Test
+    fun stagesExecutionRefusesAreReported() {
+        val sql = "FROM events() |> LIMIT :n |> RENAME events.id AS key |> WHERE key > 0"
+        val scope = analyze(sql)
+        assertEquals(listOf("LIMIT", "RENAME"), scope.diagnostics.map { sql.substring(it.start, it.end) })
+        assertTrue(scope.diagnostics.all { it.problem == ScopeProblem.PIPE_UNSUPPORTED })
+        assertEquals(id, scope.column(sql, "key", 1).columns.single().source?.column)
+    }
+
+    @Test
     fun completionOffersTheScopeWithInsertableNames() {
         val sql = "SELECT e. FROM events() e"
         val completion = RelationScope.complete(sql, "postgres", facts, sql.indexOf('.') + 1)

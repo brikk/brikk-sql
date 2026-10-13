@@ -81,6 +81,7 @@ internal class PipeOrigins {
     val stages = IdentityHashMap<Expression, String>()
     val setTargets = IdentityHashMap<Expression, Column>()
     val operators = IdentityHashMap<Expression, Pair<IntRange, String>>()
+    val refusals = ArrayList<Pair<Expression, String>>()
 }
 
 /**

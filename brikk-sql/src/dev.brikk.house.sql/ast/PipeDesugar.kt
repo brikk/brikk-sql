@@ -54,23 +54,34 @@ fun desugarPipes(expression: Expression, copy: kotlin.Boolean = true): Expressio
 
 /** Uses the input dialect's identifier rules for namespace proofs; preserves SQL spelling. */
 fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean = true): Expression =
-    desugarPipes(expression, dialect, copy, lenient = false)
+    desugarPipes(expression, dialect, copy, refused = null)
 
 /**
- * [lenient] lowers what execution refuses, for editor scopes rather than execution: an input
- * boundary that cannot preserve its namespaces drops them (old qualifiers stop resolving), and
- * row slices that are not plain literals are kept as written.
+ * With [refused], lowers leniently for editor scopes what execution refuses: an input boundary
+ * that cannot keep its namespaces drops them, so old qualifiers stop resolving (a scope finding of
+ * its own); a slice that is no plain literal and a qualified RENAME source lower as written and
+ * are reported to [refused] with the stage and execution's reason.
  */
-internal fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean, lenient: kotlin.Boolean): Expression {
+internal fun desugarPipes(
+    expression: Expression,
+    dialect: Dialect,
+    copy: kotlin.Boolean,
+    refused: ((stage: Expression, message: String) -> Unit)?,
+): Expression {
     val root = if (copy) expression.copy() else expression
     // sqlglot: Parser._pipe_cte_counter (per-statement)
     val counter = PipeCteCounter(root.findAll(Table::class, TableAlias::class)
-        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect, lenient)
+        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect, refused)
     return desugarNode(root, counter)
 }
 
-private class PipeCteCounter(val takenNames: kotlin.collections.Set<String>, val dialect: Dialect, val lenient: kotlin.Boolean) {
+private class PipeCteCounter(
+    val takenNames: kotlin.collections.Set<String>,
+    val dialect: Dialect,
+    val refused: ((Expression, String) -> Unit)?,
+) {
     var n: Int = 0
+    val lenient: kotlin.Boolean get() = refused != null
 }
 
 private fun desugarNode(node: Expression, counter: PipeCteCounter): Expression {
@@ -175,6 +186,7 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
     val star = query.expressionsArg.singleOrNull() as? Star
     val stageColumns = when (stage) {
         is PipeWhere -> walkInScope(stage.thisArg as Where).filterIsInstance<Column>().toList()
+        is PipeOrderBy -> walkInScope(stage.thisArg as Expression).filterIsInstance<Column>().toList()
         else -> stage.expressionsArg.filterIsInstance<Expression>()
     }
     val directProjection = (star != null && star.args.values.all {
@@ -192,9 +204,10 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
             listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null } ||
                 (stage is PipeSelect && (!directProjection || positionalOrder)) ||
                 (stage is PipeWhere && !directProjection)
-            )) {
+            ) || stage is PipeOrderBy && !directProjection) {
         query = pipeInputCte(query, stage, counter)
     }
+    if (needsWholeRows(query, stage)) query = wholeRowInput(query, counter)
     return when (stage) {
         // sqlglot: Parser._parse_pipe_syntax_select
         is PipeSelect -> {
@@ -318,20 +331,20 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
                     )
                 ) as Expression
             }
-            closeModifiedStar(buildPipeCte(
+            buildPipeCte(
                 query,
                 listOf(Star(args("replace" to replaceList.toMutableList()))),
                 counter,
-            ), counter)
+            )
         }
 
         // googlesql: pipe DROP (docs/pipe-syntax.md ~713) — NO sqlglot counterpart.
         // `|> DROP col, ...` ≡ `SELECT * EXCEPT (col, ...)` from the CTE'd input.
-        is PipeDrop -> closeModifiedStar(buildPipeCte(
+        is PipeDrop -> buildPipeCte(
             query,
             listOf(Star(args("except_" to stage.expressionsArg.toMutableList()))),
             counter,
-        ), counter)
+        )
 
         // googlesql: pipe RENAME (docs/pipe-syntax.md ~763) — NO sqlglot counterpart.
         // `|> RENAME old AS new, ...` ≡ `SELECT * RENAME (old AS new, ...)` from the
@@ -340,9 +353,10 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
             for (rename in stage.expressionsArg) {
                 val alias = rename as? Alias
                 val column = alias?.thisArg as? Column
-                if (!counter.lenient && (alias == null || column == null || column.thisArg !is Identifier || alias.args["alias"] !is Identifier ||
-                    column.table.isNotEmpty() || column.db.isNotEmpty() || column.catalog.isNotEmpty())) {
-                    throw UnsupportedError("Pipe RENAME requires unqualified source and target column identifiers")
+                if (alias == null || column == null || column.thisArg !is Identifier || alias.args["alias"] !is Identifier ||
+                    column.table.isNotEmpty() || column.db.isNotEmpty() || column.catalog.isNotEmpty()) {
+                    val message = "Pipe RENAME requires unqualified source and target column identifiers"
+                    counter.refused?.invoke(stage, message) ?: throw UnsupportedError(message)
                 }
             }
             val renamed = buildPipeCte(query, listOf(Star(args("rename" to stage.expressionsArg.toMutableList()))), counter)
@@ -428,7 +442,11 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
 
 /** The input namespace a boundary preserves and the ranking order DISTINCT ON keeps, or why it cannot. */
 private fun pipeInputBoundary(query: Expression, stage: Expression, counter: PipeCteCounter): Pair<Identifier?, Expression?> {
-    val operation = if (stage is PipeWhere) "WHERE" else "SELECT/DISTINCT"
+    val operation = when (stage) {
+        is PipeWhere -> "WHERE"
+        is PipeOrderBy -> "ORDER BY"
+        else -> "SELECT/DISTINCT"
+    }
     fun bindingName(identifier: kotlin.Any?): String? = (identifier as? Identifier)?.let {
         normalizeIdentifiers(it.copy(), dialect = counter.dialect).name
     }
@@ -567,19 +585,48 @@ private fun pipeScope(expression: Expression, dialect: Dialect): Scope {
     }
 }
 
+private fun Expression.isPlainStar(): kotlin.Boolean {
+    val star = expressionsArg.singleOrNull() as? Star ?: return false
+    return star.args.values.all { it == null || it == false || (it is List<*> && it.isEmpty()) }
+}
+
 /**
- * A lenient lowering puts a SET or DROP output behind its own CTE, as RENAME always is, so a later
- * JOIN joins that output rather than extending the modified star over both sides.
+ * brikk extension: whether [stage], which rewrites [query]'s projection or FROM clause in place,
+ * must instead read [query]'s finished rows: after a projection that is not a plain `*` (a
+ * SELECT-first head, a SET or DROP star), or after clauses that would otherwise apply later
+ * (an aggregate or window over a LIMIT, a JOIN after DISTINCT, a PIVOT after WHERE).
  */
-private fun closeModifiedStar(query: Select, counter: PipeCteCounter): Select =
-    if (counter.lenient) buildPipeCte(query, listOf(Star()), counter) else query
+private fun needsWholeRows(query: Expression, stage: Expression): kotlin.Boolean {
+    val shaped = listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null }
+    return when (stage) {
+        is PipeExtend -> !query.isPlainStar() || query.args["distinct"] != null
+        is PipeWindow, is PipeAggregate, is PipeJoin -> !query.isPlainStar() || shaped
+        is PipePivot, is PipeUnpivot -> !query.isPlainStar() || shaped || query.args["where"] != null ||
+            !(query.args["joins"] as? List<*>).isNullOrEmpty() || !(query.args["laterals"] as? List<*>).isNullOrEmpty()
+        else -> false
+    }
+}
+
+/** [query]'s rows behind a CTE; a single aliased source of a plain `*` keeps its alias, as a WHERE boundary does. */
+private fun wholeRowInput(query: Expression, counter: PipeCteCounter): Select {
+    val source = (query.args["from_"] as? From)?.thisArg as? Expression
+    val alias = (source?.args?.get("alias") as? TableAlias)?.thisArg as? Identifier
+    val single = query.isPlainStar() && (query.args["joins"] as? List<*>).isNullOrEmpty() &&
+        (query.args["laterals"] as? List<*>).isNullOrEmpty()
+    val outer = buildPipeCte(query, listOf(Star()), counter)
+    if (single && alias != null) {
+        ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to alias.copy())))
+    }
+    return outer
+}
 
 /** Slices change rows, not scopes: a lenient lowering keeps a slice it cannot compose as written. */
 private inline fun lenientSlice(query: Expression, stage: Expression, counter: PipeCteCounter, compose: () -> Unit) {
     try {
         compose()
     } catch (e: UnsupportedError) {
-        if (!counter.lenient) throw e
+        val refused = counter.refused ?: throw e
+        refused(stage, e.message.orEmpty())
         (stage.thisArg as? Expression)?.let { query.set(if (it is Offset) "offset" else "limit", it) }
         (stage.args["offset"] as? Offset)?.let { query.set("offset", it) }
     }

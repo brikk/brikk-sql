@@ -89,6 +89,9 @@ enum class ScopeProblem(val severity: ScopeDiagnostic.Severity) {
 
     /** Positional set-operation branches with different column counts; marks the operator. */
     COLUMN_COUNT_MISMATCH(ScopeDiagnostic.Severity.ERROR),
+
+    /** A pipe stage execution cannot lower (a slice that is no literal, a qualified RENAME); marks the stage. */
+    PIPE_UNSUPPORTED(ScopeDiagnostic.Severity.ERROR),
 }
 
 /** A problem over `[start, end)`, never empty. */
