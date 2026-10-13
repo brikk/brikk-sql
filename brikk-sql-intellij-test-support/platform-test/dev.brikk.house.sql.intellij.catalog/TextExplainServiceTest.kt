@@ -1,8 +1,10 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
+import com.intellij.database.console.JdbcConsole
 import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.dataSource.DatabaseConnectionInterceptor
+import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
@@ -19,9 +21,18 @@ import dev.brikk.house.sql.intellij.testing.BackgroundErrors
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.metadata.TRINO_FUNCTION_CATALOG
+import java.lang.reflect.Proxy
+import java.sql.Connection
+import java.sql.Statement
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -41,7 +52,7 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         override val builtinFunctions: FunctionCatalog = TRINO_FUNCTION_CATALOG
     }
 
-    class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope)
+    open class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope)
 
     /** Counts the helper connections opened to the data source. */
     private inner class Connections : DatabaseConnectionInterceptor {
@@ -99,10 +110,97 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         assertFalse(recording.console.session.isConnected)
     }
 
-    fun testWithoutASearchPathTheHelperStaysInTheDefaultNamespace() {
+    /** A namespace the console knows but the helper cannot reach is refused, never explained in the default namespace. */
+    fun testAKnownNamespaceWithoutAStrategyIsRefused() {
         val outcome = explain("SELECT count(*) FROM t", Profile(dataSource.dbms, searchPath = null))
-        assertInstanceOf(outcome, ExplainOutcome.Failed::class.java)
-        assertTrue((outcome as ExplainOutcome.Failed).message, "t" in outcome.message)
+        assertTrue(outcome.toString(), (outcome as ExplainOutcome.Refused).reason.contains("no search path strategy"))
+        assertEquals(0, opened.get())
+    }
+
+    fun testAConsoleWithoutANamespaceExplainsInTheDefaultOne() {
+        val file = myFixture.addFileToProject("plain-${UUID.randomUUID()}.sql", "SELECT 1").virtualFile
+        RecordingConsole(project, file, dataSource).use { plain ->
+            val service = Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms, searchPath = null))
+            assertEquals(ExplainOutcome.Plan("physical_plan"), runBlocking { service.explain(plain.console, "SELECT count(*) FROM web.t") })
+        }
+    }
+
+    /** Trino cannot USE a catalog alone: a catalog-only namespace is refused for a strategy that cannot switch to it. */
+    fun testACatalogOnlyNamespaceTheStrategyCannotSwitchToIsRefused() {
+        recording.console.setSearchPath(SearchPath.of(ObjectPath.create(catalog, ObjectKind.DATABASE)))
+        val schemaOnly = CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", catalogProbes = emptyList(), schemaProbes = emptyList())
+        val refused = explain("SELECT count(*) FROM web.t", Profile(dataSource.dbms, searchPath = schemaOnly))
+        assertTrue(refused.toString(), (refused as ExplainOutcome.Refused).reason.contains("choose a schema"))
+        assertEquals(0, opened.get())
+        assertEquals("a strategy that switches to a catalog explains", ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM web.t"))
+    }
+
+    fun testTheHelperConnectionIsReleased() {
+        assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
+        assertEmpty(DatabaseConnectionManager.getInstance().activeConnections.filter { it.connectionPoint.dataSource === dataSource })
+    }
+
+    /** The live catalog skips the helper connection: explaining never harvests. */
+    fun testTheHelperConnectionIsNotHarvested() {
+        val harvester = CountingHarvester()
+        val live = LiveService(errors.newScope(testRootDisposable), LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, dbms = dataSource.dbms), null)
+        ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, live, testRootDisposable)
+        ApplicationManager.getApplication().extensionArea
+            .getExtensionPoint<DatabaseConnectionInterceptor>("com.intellij.database.connectionInterceptor")
+            .registerExtension(LiveInterceptor(), testRootDisposable)
+        assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
+        assertEquals(0, harvester.harvests.get())
+    }
+
+    /**
+     * A driver may return normally from a cancelled statement: cancelled during its USE, the production
+     * coroutine submits no EXPLAIN.
+     */
+    fun testCancellingDuringTheNamespaceSwitchSubmitsNothingMore() {
+        val inUse = CountDownLatch(1)
+        val released = CountDownLatch(1)
+        val queries = CopyOnWriteArrayList<String>()
+        val engine = embeddedDuckdb()
+        val ignoring = Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
+            val result = method.invoke(engine, *(args ?: emptyArray()))
+            if (result !is Statement) return@newProxyInstance result
+            Proxy.newProxyInstance(Statement::class.java.classLoader, arrayOf(Statement::class.java)) { _, call, callArgs ->
+                when (call.name) {
+                    "execute" -> {
+                        inUse.countDown()
+                        // Returns normally once cancelled, ignoring interrupts.
+                        while (true) {
+                            try {
+                                if (released.await(10, TimeUnit.SECONDS)) break
+                            } catch (_: InterruptedException) {
+                            }
+                        }
+                        false
+                    }
+                    "cancel" -> released.countDown().let { null }
+                    "executeQuery" -> {
+                        queries += callArgs[0] as String
+                        call.invoke(result, *callArgs)
+                    }
+                    else -> call.invoke(result, *(callArgs ?: emptyArray()))
+                }
+            } as Statement
+        } as Connection
+        val connection = databaseConnection(ignoring, dataSource, dataSource.dbms, otherRequestor())
+        val service = object : Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms)) {
+            override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T = use(connection)
+        }
+        try {
+            runBlocking {
+                val running = launch(Dispatchers.Default) { service.explain(recording.console, "SELECT count(*) FROM t") }
+                assertTrue(inUse.await(30, TimeUnit.SECONDS))
+                running.cancelAndJoin()
+            }
+            assertEquals(0, released.count)
+            assertEmpty("no EXPLAIN after cancelling", queries)
+        } finally {
+            engine.close()
+        }
     }
 
     /** Trino 483 creates the table of an EXPLAIN CREATE TABLE AS: statements that are not plain queries never reach a connection. */

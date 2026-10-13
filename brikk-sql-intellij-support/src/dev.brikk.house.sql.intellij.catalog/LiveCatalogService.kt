@@ -230,7 +230,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val profile = profile
         if (!accepts(connection.dbms)) return
         val requestor = (connection as? DatabaseConnection)?.requestor
-        if (requestor is HarvestRequestor) return
+        if (requestor is HelperRequestor) return
         val dataSource = connection.connectionPoint.dataSource
         val identity = profile.identity(dataSource)
         val console = requestor is DataProducer
@@ -266,7 +266,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val identity = profile.identity(dataSource)
         val ref = try {
             // The identity is taken before connecting, so a change while connecting cannot be mislabelled.
-            DatabaseConnectionManager.getInstance().build(project, dataSource).setRequestor(HarvestRequestor()).create()
+            DatabaseConnectionManager.getInstance().build(project, dataSource).setRequestor(HelperRequestor()).create()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -462,8 +462,8 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     }
 }
 
-/** The requestor of the helper connections refreshes open, which the interceptor recognizes and skips. */
-internal class HarvestRequestor : ConnectionRequestor by ConnectionRequestor.Anonymous()
+/** Opens this library's own helper connections (refreshes, text explain), which harvests skip. */
+internal class HelperRequestor : ConnectionRequestor by ConnectionRequestor.Anonymous()
 
 /**
  * `<database.connectionInterceptor>`: harvests new connections of the profile's dbms through the

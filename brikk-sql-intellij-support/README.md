@@ -356,22 +356,24 @@ MAT_VIEW to DefinedObject.MATERIALIZED_VIEW, SCHEMA to DefinedObject.SCHEMA), li
 
 Explain Plan as text in a popup with Copy, for dialects whose plan is text (Doris, Trino). A plugin
 implements one `TextExplainProfile` (minimum `dbms`, `productLabel`, core `dialect`, the bundled
-`builtinFunctions`; optional `searchPath`, `pipe`, `timeout`; `enabled` is false until a dialect turns it
-on) and registers no-arg subclasses: `TextExplainService(project, scope)` as a project service, and
+`builtinFunctions`; optional `searchPath`, `pipe`, `timeout`, `explainableStatements` (plain queries until a
+live engine proves another set writes nothing); `enabled` is false until a dialect turns it on) and registers no-arg subclasses: `TextExplainService(project, scope)` as a project service, and
 `TextExplainConfiguration(serviceClass)` as `dynamicActionConfigurationCustomizer`. The configuration
 wraps `Console.Jdbc.ExplainPlan` cooperatively: in the profile's consoles it shows the action and
-explains the selection, else the statement at the caret; every other console keeps the wrapped action
-(the stock graphical explain, or another plugin's wrapper).
+explains the selection, else the statement at the caret, and says so when there is none; every other
+console keeps the wrapped action (the stock graphical explain, or another plugin's wrapper).
 
 Safety: the statement (PIPE lowered first, unresolved PIPE parameters refused) goes through core's
-`prepareTextExplain`, which explains only a single plain query that reads no table function and calls
-only built-in functions, for Trino and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
+`prepareTextExplain`, which explains only a single plain query with no parameters, routine declarations,
+nested statements or table functions, calling only built-in functions by their written names, for Trino
+and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
 function arguments (`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence). It runs on a new
 helper connection to the console's data source, never the console's session, so the session's
-transaction, settings and namespace stay as they are; the helper first switches to the console's current
-namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), and a namespace the
-strategy cannot switch to refuses rather than explaining in the wrong one. Cancellation and the
-`timeout` cancel the running statement.
+transaction, settings and namespace stay as they are, and harvests skip it. The helper first switches to
+the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema); a
+known namespace with no strategy, or one the strategy cannot switch to (Trino's catalog alone), is refused
+rather than explained in the wrong one. Cancellation and the `timeout` cancel the running statement, and
+nothing more is submitted after cancelling, also when a driver returns normally from a cancelled one.
 
 ### Out-of-scope references
 
