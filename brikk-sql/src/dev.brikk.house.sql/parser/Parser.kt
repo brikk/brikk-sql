@@ -9106,9 +9106,6 @@ open class Parser(
         return func
     }
 
-    /** brikk-native: remembers the source range of the name this call is written with ([Expression.callName]). */
-    private fun Expression.withCallName(name: Token): Expression = also { if (name.exists) callName = name.start..name.end }
-
     // sqlglot: Parser._parse_function_args
     protected fun parseFunctionArgs(alias: kotlin.Boolean = false): MutableList<Expression> =
         parseCsv { parseLambda(alias = alias) }
@@ -9144,13 +9141,13 @@ open class Parser(
             !afterDot
         ) {
             advance()
-            return parseWindow(noParenParser(this)?.withCallName(token))
+            return parseWindow(noParenParser(this))
         }
 
         if (nextToken.tokenType != TokenType.L_PAREN) {
             if (optionalParens && tokenType in noParenFunctions && !afterDot) {
                 advance()
-                return expression(noParenFunctions.getValue(tokenType)()).withCallName(token)
+                return expression(noParenFunctions.getValue(tokenType)())
             }
 
             return null
@@ -9170,7 +9167,7 @@ open class Parser(
         val parser = functionParsers[upper]
         var result: Expression?
         if (parser != null && !anonymous) {
-            result = parser(this)?.withCallName(token)
+            result = parser(this)
         } else {
             val subqueryPredicate = subqueryPredicates[tokenType]
 
@@ -9230,7 +9227,6 @@ open class Parser(
 
             // sqlglot: result = result.update_positions(token)
             result.updatePositions(token)
-            result.withCallName(token)
         }
 
         result?.addComments(comments)

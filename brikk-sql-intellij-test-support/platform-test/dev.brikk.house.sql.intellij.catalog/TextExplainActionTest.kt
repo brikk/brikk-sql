@@ -23,8 +23,6 @@ import dev.brikk.house.sql.intellij.CooperativeAction
 import dev.brikk.house.sql.intellij.CooperativeActionConfiguration
 import dev.brikk.house.sql.intellij.testing.BackgroundErrors
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
-import dev.brikk.house.sql.metadata.FunctionCatalog
-import dev.brikk.house.sql.metadata.TRINO_FUNCTION_CATALOG
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CoroutineScope
@@ -34,7 +32,6 @@ class TextExplainActionTest : BasePlatformTestCase() {
     class Profile(override val dbms: Dbms, override val enabled: Boolean = true) : TextExplainProfile {
         override val productLabel = "Fixture"
         override val dialect = "trino"
-        override val builtinFunctions: FunctionCatalog = TRINO_FUNCTION_CATALOG
         override val searchPath = CatalogSchemaSearchPath(
             '"', "USE {catalog}.{schema}",
             catalogProbes = listOf(NamespaceProbe.Value("SELECT current_database()")),
@@ -52,7 +49,7 @@ class TextExplainActionTest : BasePlatformTestCase() {
         }
 
         override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
-            super.withHelperConnection(console) { use(recordingTrinoContext(it, CopyOnWriteArrayList())) }
+            super.withHelperConnection(console) { use(recordingStatements(it, CopyOnWriteArrayList())) }
     }
 
     class Foreign(project: Project, scope: CoroutineScope) : Service(project, scope)

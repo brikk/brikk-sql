@@ -23,8 +23,6 @@ import dev.brikk.house.sql.intellij.pipe.PipeDialect
 import dev.brikk.house.sql.intellij.pipe.TestPipeDialect
 import dev.brikk.house.sql.intellij.testing.BackgroundErrors
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
-import dev.brikk.house.sql.metadata.FunctionCatalog
-import dev.brikk.house.sql.metadata.TRINO_FUNCTION_CATALOG
 import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.Statement
@@ -54,14 +52,13 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         override val enabled: Boolean = true,
     ) : TextExplainProfile {
         override val productLabel = "Fixture"
-        override val builtinFunctions: FunctionCatalog = TRINO_FUNCTION_CATALOG
     }
 
     open class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope) {
         val executed = CopyOnWriteArrayList<String>()
 
         override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
-            super.withHelperConnection(console) { use(recordingTrinoContext(it, executed)) }
+            super.withHelperConnection(console) { use(recordingStatements(it, executed)) }
     }
 
     /** Counts the helper connections opened to the data source. */
@@ -117,7 +114,7 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         val outcome = runBlocking { service.explain(recording.console, "SELECT count(*) FROM t WHERE x > 1") }
         assertEquals(
             "the namespace, then the built-in-only context, then the plan",
-            listOf("USE \"$catalog\".\"web\"", "SET PATH system.builtin", "EXPLAIN SELECT count(*) FROM t WHERE x > 1"),
+            listOf("USE \"$catalog\".\"web\"", "EXPLAIN SELECT count(*) FROM t WHERE x > 1"),
             service.executed.toList(),
         )
         assertEquals("DuckDB's first plan column", ExplainOutcome.Plan("physical_plan"), outcome)
@@ -169,7 +166,7 @@ class TextExplainServiceTest : BasePlatformTestCase() {
             override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
                 super.withHelperConnection(console) { connection ->
                     threads += firstColumn(connection, "SELECT current_setting('threads')").single()?.toString()
-                    use(recordingTrinoContext(connection, CopyOnWriteArrayList()))
+                    use(recordingStatements(connection, CopyOnWriteArrayList()))
                 }
         }
         assertEquals(ExplainOutcome.Plan("physical_plan"), runBlocking { service.explain(recording.console, "SELECT count(*) FROM t") })
@@ -225,8 +222,8 @@ class TextExplainServiceTest : BasePlatformTestCase() {
             type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, _ -> call(method.name) })
         val remote = proxy(RemoteConnection::class.java) { name ->
             check(name == "createStatement") { name }
-            // The setup's statements first (the namespace switch and the context), then the EXPLAIN's.
-            if (created.incrementAndGet() == 3) {
+            // The namespace switch first, then the EXPLAIN's statement.
+            if (created.incrementAndGet() == 2) {
                 creating.countDown()
                 while (release.count > 0) try {
                     release.await(5, TimeUnit.SECONDS)
@@ -317,12 +314,17 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         for (sql in listOf(
             "CREATE TABLE web.u AS SELECT 1 AS x",
             "INSERT INTO web.t VALUES (1)",
-            "SELECT * FROM TABLE(system.query(query => 'DELETE FROM t'))",
-            "SELECT my_udf(x) FROM t",
             "SELECT 1; SELECT 2",
         )) assertTrue(sql, explain(sql) is ExplainOutcome.Refused)
         assertEquals(0, opened.get())
         assertEmpty(withIdeConnection(project, dataSource, otherRequestor()) { firstColumn(it, "SELECT * FROM web.t") })
+    }
+
+    /** A query calling a function the engine may not know is the engine's to judge: it reaches the helper, and the engine's error shows. */
+    fun testAQueryWithAnUnknownFunctionReachesTheEngine() {
+        val outcome = explain("SELECT my_udf(x) FROM t")
+        assertTrue(outcome.toString(), outcome is ExplainOutcome.Failed && "my_udf" in outcome.message)
+        assertEquals(1, opened.get())
     }
 
     fun testDuckdbsOwnRulesRefuseEverything() {
@@ -390,11 +392,8 @@ class TextExplainServiceTest : BasePlatformTestCase() {
     }
 }
 
-/**
- * [connection], recording every statement it executes in [executed] and answering Trino's built-in-only
- * context itself: the fixtures explain with Trino's rules on DuckDB, which has no `SET PATH`.
- */
-fun recordingTrinoContext(connection: DatabaseConnectionCore, executed: MutableList<String>): DatabaseConnectionCore {
+/** [connection], recording every statement it executes in [executed]. */
+fun recordingStatements(connection: DatabaseConnectionCore, executed: MutableList<String>): DatabaseConnectionCore {
     fun <T : Any> proxy(type: Class<T>, target: T, call: (java.lang.reflect.Method, Array<Any?>) -> Any?): T =
         type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, args ->
             try {
@@ -408,7 +407,7 @@ fun recordingTrinoContext(connection: DatabaseConnectionCore, executed: MutableL
         val result = method.invoke(remote, *args)
         if (result !is RemoteStatement) result else proxy(RemoteStatement::class.java, result) { call, callArgs ->
             if (call.name in setOf("execute", "executeQuery")) executed += callArgs[0] as String
-            if (call.name == "execute" && callArgs[0] == "SET PATH system.builtin") false else call.invoke(result, *callArgs)
+            call.invoke(result, *callArgs)
         }
     }
     return proxy(DatabaseConnectionCore::class.java, connection) { method, args ->

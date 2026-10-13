@@ -590,8 +590,8 @@ MAT_VIEW to DefinedObject.MATERIALIZED_VIEW, SCHEMA to DefinedObject.SCHEMA), li
 ### Text explain
 
 Explain Plan as text in a popup with Copy, for dialects whose plan is text (Doris, Trino). A plugin
-implements one `TextExplainProfile` (minimum `dbms`, `productLabel`, core `dialect`, the bundled
-`builtinFunctions`; optional `searchPath`, `pipe`, `timeout`, `explainableStatements` (plain queries until a
+implements one `TextExplainProfile` (minimum `dbms`, `productLabel`, core `dialect`; optional `searchPath`,
+`connectionProperties`, `pipe`, `timeout`, `explainableStatements` (plain queries until a
 live engine proves another set writes nothing); `enabled` is false until a dialect turns it on) and registers no-arg subclasses: `TextExplainService(project, scope)` as a project service, and
 `TextExplainConfiguration(serviceClass)` as `dynamicActionConfigurationCustomizer`. The configuration
 wraps `Console.Jdbc.ExplainPlan` cooperatively: in the profile's consoles it shows the action and
@@ -601,15 +601,15 @@ console keeps the wrapped action (the stock graphical explain, or another plugin
 Safety: text matching the IDE's own user parameter patterns (Database settings), which the console would
 prompt for, is refused before any connection. The statement (PIPE lowered first, unresolved PIPE parameters
 refused) goes through core's
-`prepareTextExplain`, which explains only a single plain query with no parameters, routine declarations,
-nested statements or table functions, calling only built-in functions by their written names, for Trino
-and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
+`prepareTextExplain`, which explains only a single query without parameters, for Trino and Doris: DML,
+DDL and `CREATE TABLE AS` are refused (Trino 483 creates the table of an `EXPLAIN CREATE TABLE AS`), as is a
+statement inside the query (DML in a CTE, `SELECT ... INTO`). Functions, UDFs and hints are the engine's
+business, as in any query the console runs; text core cannot parse is explained when it starts like a query
+and holds no statement keyword, so the server reports its own error. DuckDB is refused, because its `EXPLAIN` evaluates table
 function arguments (`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence). It runs on a new
 helper connection to the console's data source, never the console's session, so the session's
 transaction, settings and namespace stay as they are; it runs no startup script, and harvests skip it. The helper first switches to
-the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), then runs core's
-built-in-only context (Trino `SET PATH system.builtin`; Doris `SET prefer_udf_over_builtin = false`, unverified
-live), since a built-in's name alone does not prove the built-in binds; a
+the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema); a
 known namespace with no strategy, or one the strategy cannot switch to (Trino's catalog alone), is refused
 rather than explained in the wrong one. Cancellation and the `timeout` cancel the running statement, and
 nothing more is submitted after cancelling, also when a driver returns normally from a cancelled one.

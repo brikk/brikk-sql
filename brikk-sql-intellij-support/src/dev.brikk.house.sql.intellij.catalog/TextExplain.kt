@@ -70,8 +70,9 @@ public interface TextExplainProfile {
     /** Core dialect name, as `prepareTextExplain` accepts it (Trino and Doris explain; others refuse). */
     public val dialect: String
 
-    /** The engine's built-in functions (the bundled catalog, not a live one): a query calling any other function is not explained. */
-    public val builtinFunctions: FunctionCatalog
+    /** Unused: text explain no longer checks which functions a query calls. */
+    @Deprecated("Unused: text explain no longer checks which functions a query calls; remove the override.")
+    public val builtinFunctions: FunctionCatalog? get() = null
 
     /** Text explain for the dialect's consoles. Off until a dialect enables it. */
     public val enabled: Boolean get() = false
@@ -112,11 +113,10 @@ public sealed interface ExplainOutcome {
 
 /**
  * Explains a console's statement as text: the statement (PIPE lowered first) is prepared by core's
- * `prepareTextExplain`, which explains only plain queries that cannot run code while being planned. It
- * runs on a new helper connection to the console's data source, never on the console's session: the
- * session's transaction, settings and namespace stay untouched. The helper first switches to the
- * console's current namespace through the profile's [CatalogSearchPathStrategy], then runs core's
- * built-in-only context (Trino `SET PATH system.builtin`, Doris `SET prefer_udf_over_builtin = false`). The result shows in a
+ * `prepareTextExplain`, which explains only queries (no DML, DDL or `CREATE TABLE AS`) and refuses
+ * parameters. It runs on a new helper connection to the console's data source, never on the console's
+ * session: the session's transaction, settings and namespace stay untouched. The helper first switches
+ * to the console's current namespace through the profile's [CatalogSearchPathStrategy]. The result shows in a
  * popup with Copy. Register a project service subclass with the platform's `(Project, CoroutineScope)`
  * constructor, and a [TextExplainConfiguration] subclass naming it.
  */
@@ -145,7 +145,7 @@ public abstract class TextExplainService(protected val project: Project, private
                     ?: return ExplainOutcome.Refused("The console's namespace ($names) cannot be switched to on another connection; choose a schema in the console.")
             }
         }
-        return withTimeoutOrNull(profile.timeout) { runOnHelper(console, listOfNotNull(namespace) + ready.context, ready.sql) }
+        return withTimeoutOrNull(profile.timeout) { runOnHelper(console, listOfNotNull(namespace), ready.sql) }
             ?: ExplainOutcome.Failed("EXPLAIN did not finish within ${profile.timeout}.")
     }
 
@@ -170,7 +170,7 @@ public abstract class TextExplainService(protected val project: Project, private
                 lowered.sql
             }
         }
-        return prepareTextExplain(sql, profile.dialect, profile.explainableStatements, profile.builtinFunctions::isKnown)
+        return prepareTextExplain(sql, profile.dialect, profile.explainableStatements)
     }
 
     private suspend fun runOnHelper(console: JdbcConsole, setup: List<String>, sql: String): ExplainOutcome = try {
@@ -190,7 +190,7 @@ public abstract class TextExplainService(protected val project: Project, private
         return ref.use { use(it.get()) }
     }
 
-    /** Runs [setup] (the namespace switch, then the built-in-only context), then [sql], unless cancelled. */
+    /** Runs [setup] (the namespace switch), then [sql], unless cancelled. */
     private suspend fun runOn(connection: DatabaseConnectionCore, setup: List<String>, sql: String): ExplainOutcome {
         val running = AtomicReference<RemoteStatement?>()
         val cancelled = AtomicBoolean()
