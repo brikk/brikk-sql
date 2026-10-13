@@ -372,7 +372,9 @@ and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
 function arguments (`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence). It runs on a new
 helper connection to the console's data source, never the console's session, so the session's
 transaction, settings and namespace stay as they are, and harvests skip it. The helper first switches to
-the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema); a
+the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), then runs core's
+built-in-only context (Trino `SET PATH system.builtin`; Doris `SET prefer_udf_over_builtin = false`, unverified
+live), since a built-in's name alone does not prove the built-in binds; a
 known namespace with no strategy, or one the strategy cannot switch to (Trino's catalog alone), is refused
 rather than explained in the wrong one. Cancellation and the `timeout` cancel the running statement, and
 nothing more is submitted after cancelling, also when a driver returns normally from a cancelled one.

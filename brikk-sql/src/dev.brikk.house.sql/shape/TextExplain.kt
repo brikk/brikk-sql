@@ -30,6 +30,7 @@ import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Drop
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Func
+import dev.brikk.house.sql.ast.Hint
 import dev.brikk.house.sql.ast.FunctionSpecification
 import dev.brikk.house.sql.ast.Insert
 import dev.brikk.house.sql.ast.Into
@@ -55,8 +56,12 @@ import dev.brikk.house.sql.parser.TokenType
 
 /** Outcome of [prepareTextExplain]. */
 sealed interface ExplainPreparation {
-    /** Run [sql]; its rows are the plan ([explainPlanText]). */
-    data class Ready(val sql: String) : ExplainPreparation
+    /**
+     * Run [context], then [sql], on a connection of its own; its rows are the plan ([explainPlanText]).
+     * [context] makes only built-in functions resolve: a built-in's name alone does not prove the built-in
+     * binds (Trino falls through to routines on the session path, Doris may prefer UDFs).
+     */
+    data class Ready(val sql: String, val context: List<String>) : ExplainPreparation
 
     /** Not explained, because of [reason]. */
     data class Refused(val reason: String) : ExplainPreparation
@@ -68,8 +73,18 @@ sealed interface ExplainableStatements {
     data object Queries : ExplainableStatements
 }
 
-/** Dialects whose `EXPLAIN` of a plain query only plans it: Trino (without ANALYZE) and Doris. */
-val TEXT_EXPLAIN_DIALECTS: Set<String> = setOf("trino", "doris")
+/**
+ * The session statements under which only built-in functions resolve: Trino's path holds only
+ * `system.builtin` (a live Trino 483 then resolves no routine, also under EXPLAIN), and Doris prefers
+ * built-ins over UDFs (`prefer_udf_over_builtin`, not verified on a live Doris).
+ */
+private val BUILTIN_ONLY: Map<String, List<String>> = mapOf(
+    "trino" to listOf("SET PATH system.builtin"),
+    "doris" to listOf("SET prefer_udf_over_builtin = false"),
+)
+
+/** Dialects whose `EXPLAIN` of a plain query only plans it, in a session where only built-ins resolve: Trino (without ANALYZE) and Doris. */
+val TEXT_EXPLAIN_DIALECTS: Set<String> = BUILTIN_ONLY.keys
 
 /**
  * brikk-native: the `EXPLAIN` that shows [statement]'s plan as text in [dialect], or why it must not
@@ -127,12 +142,14 @@ fun prepareTextExplain(
     for (node in ast.findAll(Expression::class)) refusal(node, sql, dialect, isBuiltinFunction)?.let { return ExplainPreparation.Refused(it) }
     // Decided on the first token, so leading comments do not hide the parenthesis; a trailing line comment ends before the wrapper closes.
     val parenthesized = Dialects.forName(dialect).tokenize(sql).firstOrNull()?.tokenType == TokenType.L_PAREN
-    return ExplainPreparation.Ready(if (parenthesized) "EXPLAIN SELECT * FROM ($sql\n) AS explained" else "EXPLAIN $sql")
+    val explain = if (parenthesized) "EXPLAIN SELECT * FROM ($sql\n) AS explained" else "EXPLAIN $sql"
+    return ExplainPreparation.Ready(explain, BUILTIN_ONLY.getValue(dialect))
 }
 
 /** Why [node] of the query [sql] must not be planned, or null. */
 private fun refusal(node: Expression, sql: String, dialect: String, isBuiltinFunction: (String) -> Boolean): String? = when {
     node::class in STATEMENTS -> "The query holds a statement (${node.key.uppercase()}), which EXPLAIN may run."
+    node is Hint -> "The query has an optimizer hint, which may set session variables for it (Doris SET_VAR)."
     node is FunctionSpecification || node is UserDefinedFunction -> "The query declares a routine, which the engine may run while planning."
     node is Placeholder || node is Parameter -> PARAMETERS
     node is Table && node.args["this"] is Func -> "The query reads a table function, which the engine may run while planning: ${node.sql(dialect)}"

@@ -1946,8 +1946,13 @@ while `EXPLAIN INSERT` and `EXPLAIN DROP TABLE` change nothing (`ExplainableStat
 set until a live engine proves another writes nothing). Anywhere in the query, statements (DML in a CTE,
 `SELECT ... INTO`), routine declarations (Trino `WITH FUNCTION`, which may take a built-in's name), table
 functions, namespaced routine calls and calls whose name as written the caller does not know as a
-built-in are refused, since planning may evaluate them; grammar forms (`CAST`, `EXTRACT`, `CASE`) are not
-calls. Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused, as is
+built-in are refused, since planning may evaluate them; operators, literals and keyword forms are not calls,
+and any other call without a recorded name (the parser records each call's name token) is refused. A
+built-in's name does not prove the built-in binds: with a routine's schema on its session path, a live Trino
+483 resolved `abs('text')` to the routine and evaluated it while planning `EXPLAIN`. So `Ready` carries a
+context run first in which only built-ins resolve: Trino `SET PATH system.builtin` (live: then no routine
+resolves, also under EXPLAIN), Doris `SET prefer_udf_over_builtin = false` (not verified on a live Doris),
+and optimizer hints, which may set session variables per query (Doris `SET_VAR`), are refused. Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused, as is
 text the core parser cannot read. A query starting with a parenthesis is explained as a derived table,
 since `EXPLAIN (` opens Trino's options. DuckDB is refused outright: its
 `EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence (DuckDB 1.5.6). `explainPlanText`

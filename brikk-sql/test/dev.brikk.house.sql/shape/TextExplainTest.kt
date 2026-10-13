@@ -11,7 +11,7 @@ class TextExplainTest {
     private fun prepare(sql: String, dialect: String = "trino") = prepareTextExplain(sql, dialect) { it.lowercase() in builtins }
 
     private fun assertReady(expected: String, sql: String, dialect: String = "trino") =
-        assertEquals(ExplainPreparation.Ready(expected), prepare(sql, dialect), "$dialect: $sql")
+        assertEquals(expected, assertIs<ExplainPreparation.Ready>(prepare(sql, dialect), "$dialect: $sql").sql, "$dialect: $sql")
 
     private fun assertRefused(sql: String, dialect: String = "trino"): String =
         assertIs<ExplainPreparation.Refused>(prepare(sql, dialect), "$dialect: $sql").reason
@@ -100,6 +100,24 @@ class TextExplainTest {
         )) assertIs<ExplainPreparation.Ready>(prepareTextExplain(sql, "trino") { false }, sql)
         val toDays = prepareTextExplain("SELECT TO_DAYS(x) FROM t", "doris") { it.lowercase() == "to_days" }
         assertIs<ExplainPreparation.Ready>(toDays, toDays.toString())
+    }
+
+    /**
+     * A built-in's name does not prove the built-in binds: Trino falls through to routines on the session
+     * path (a live Trino 483 evaluated one while planning), and Doris may prefer UDFs. The helper first
+     * runs a context in which only built-ins resolve.
+     */
+    @Test
+    fun theExplainRunsInABuiltinOnlyContext() {
+        assertEquals(listOf("SET PATH system.builtin"), assertIs<ExplainPreparation.Ready>(prepare("SELECT abs(1)")).context)
+        assertEquals(listOf("SET prefer_udf_over_builtin = false"), assertIs<ExplainPreparation.Ready>(prepare("SELECT abs(1)", "doris")).context)
+    }
+
+    /** A Doris hint sets session variables for its query (SET_VAR(prefer_udf_over_builtin=true)): no hint is explained. */
+    @Test
+    fun hintsAreRefused() {
+        assertTrue("hint" in assertRefused("SELECT /*+ SET_VAR(prefer_udf_over_builtin=true) */ abs(1) FROM t", "doris"))
+        assertTrue("hint" in assertRefused("SELECT /*+ SET_VAR(x=1) */ 1", "doris"))
     }
 
     @Test

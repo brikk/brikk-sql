@@ -106,8 +106,9 @@ public sealed interface ExplainOutcome {
  * Explains a console's statement as text: the statement (PIPE lowered first) is prepared by core's
  * `prepareTextExplain`, which explains only plain queries that cannot run code while being planned. It
  * runs on a new helper connection to the console's data source, never on the console's session: the
- * session's transaction, settings and namespace stay untouched, and the helper first switches to the
- * console's current namespace through the profile's [CatalogSearchPathStrategy]. The result shows in a
+ * session's transaction, settings and namespace stay untouched. The helper first switches to the
+ * console's current namespace through the profile's [CatalogSearchPathStrategy], then runs core's
+ * built-in-only context (Trino `SET PATH system.builtin`, Doris `SET prefer_udf_over_builtin = false`). The result shows in a
  * popup with Copy. Register a project service subclass with the platform's `(Project, CoroutineScope)`
  * constructor, and a [TextExplainConfiguration] subclass naming it.
  */
@@ -120,8 +121,8 @@ public abstract class TextExplainService(protected val project: Project, private
 
     /** Explains [text] as run in [console]. Cancellation propagates, cancelling a running statement. */
     public suspend fun explain(console: JdbcConsole, text: String): ExplainOutcome {
-        val sql = when (val prepared = prepare(text)) {
-            is ExplainPreparation.Ready -> prepared.sql
+        val ready = when (val prepared = prepare(text)) {
+            is ExplainPreparation.Ready -> prepared
             is ExplainPreparation.Refused -> return ExplainOutcome.Refused(prepared.reason)
         }
         val namespace = when (val current = console.currentNamespace?.takeIf { namesOf(it).isNotEmpty() }) {
@@ -134,7 +135,7 @@ public abstract class TextExplainService(protected val project: Project, private
                     ?: return ExplainOutcome.Refused("The console's namespace ($names) cannot be switched to on another connection; choose a schema in the console.")
             }
         }
-        return withTimeoutOrNull(profile.timeout) { runOnHelper(console, namespace, sql) }
+        return withTimeoutOrNull(profile.timeout) { runOnHelper(console, listOfNotNull(namespace) + ready.context, ready.sql) }
             ?: ExplainOutcome.Failed("EXPLAIN did not finish within ${profile.timeout}.")
     }
 
@@ -155,8 +156,8 @@ public abstract class TextExplainService(protected val project: Project, private
         return prepareTextExplain(sql, profile.dialect, profile.explainableStatements, profile.builtinFunctions::isKnown)
     }
 
-    private suspend fun runOnHelper(console: JdbcConsole, namespace: String?, sql: String): ExplainOutcome = try {
-        withHelperConnection(console) { connection -> runOn(connection, namespace, sql) } ?: ExplainOutcome.Failed("No connection.")
+    private suspend fun runOnHelper(console: JdbcConsole, setup: List<String>, sql: String): ExplainOutcome = try {
+        withHelperConnection(console) { connection -> runOn(connection, setup, sql) } ?: ExplainOutcome.Failed("No connection.")
     } catch (e: Exception) {
         if (e is ControlFlowException || e is CancellationException) throw e
         ExplainOutcome.Failed("No connection: ${e.message}")
@@ -171,7 +172,8 @@ public abstract class TextExplainService(protected val project: Project, private
         return ref.use { use(it.get()) }
     }
 
-    private suspend fun runOn(connection: DatabaseConnectionCore, namespace: String?, sql: String): ExplainOutcome {
+    /** Runs [setup] (the namespace switch, then the built-in-only context), then [sql], unless cancelled. */
+    private suspend fun runOn(connection: DatabaseConnectionCore, setup: List<String>, sql: String): ExplainOutcome {
         val running = AtomicReference<RemoteStatement?>()
         val cancelled = AtomicBoolean()
         // A statement registered after cancelling is cancelled at once.
@@ -196,8 +198,10 @@ public abstract class TextExplainService(protected val project: Project, private
                         if (cancelled.get()) throw CancellationException("EXPLAIN was cancelled")
                     }
                     val seconds = profile.timeout.inWholeSeconds.toInt().coerceAtLeast(1)
-                    proceed()
-                    namespace?.let { connection.executeStatement(it, seconds, register) }
+                    for (statement in setup) {
+                        proceed()
+                        connection.executeStatement(statement, seconds, register)
+                    }
                     proceed()
                     val rows = connection.queryRows(sql, MAX_PLAN_ROWS, seconds, onStatement = register)
                     proceed()

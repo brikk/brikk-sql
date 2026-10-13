@@ -7,6 +7,8 @@ import com.intellij.database.dataSource.DatabaseConnectionInterceptor
 import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.remote.jdbc.RemoteConnection
+import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
@@ -52,7 +54,12 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         override val builtinFunctions: FunctionCatalog = TRINO_FUNCTION_CATALOG
     }
 
-    open class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope)
+    open class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope) {
+        val executed = CopyOnWriteArrayList<String>()
+
+        override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
+            super.withHelperConnection(console) { use(recordingTrinoContext(it, executed)) }
+    }
 
     /** Counts the helper connections opened to the data source. */
     private inner class Connections : DatabaseConnectionInterceptor {
@@ -103,7 +110,13 @@ class TextExplainServiceTest : BasePlatformTestCase() {
     }
 
     fun testAQueryIsExplainedOnAHelperConnectionInTheConsolesNamespace() {
-        val outcome = explain("SELECT count(*) FROM t WHERE x > 1")
+        val service = Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms))
+        val outcome = runBlocking { service.explain(recording.console, "SELECT count(*) FROM t WHERE x > 1") }
+        assertEquals(
+            "the namespace, then the built-in-only context, then the plan",
+            listOf("USE \"$catalog\".\"web\"", "SET PATH system.builtin", "EXPLAIN SELECT count(*) FROM t WHERE x > 1"),
+            service.executed.toList(),
+        )
         assertEquals("DuckDB's first plan column", ExplainOutcome.Plan("physical_plan"), outcome)
         assertEquals(1, opened.get())
         assertEmpty("the console's session is never used", recording.requests)
@@ -278,5 +291,31 @@ class TextExplainServiceTest : BasePlatformTestCase() {
             catalogProbes = listOf(NamespaceProbe.Column(DUCKDB_READ_BACK, "catalog")),
             schemaProbes = listOf(NamespaceProbe.Column(DUCKDB_READ_BACK, "schema")),
         )
+    }
+}
+
+/**
+ * [connection], recording every statement it executes in [executed] and answering Trino's built-in-only
+ * context itself: the fixtures explain with Trino's rules on DuckDB, which has no `SET PATH`.
+ */
+fun recordingTrinoContext(connection: DatabaseConnectionCore, executed: MutableList<String>): DatabaseConnectionCore {
+    fun <T : Any> proxy(type: Class<T>, target: T, call: (java.lang.reflect.Method, Array<Any?>) -> Any?): T =
+        type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, args ->
+            try {
+                call(method, args ?: emptyArray())
+            } catch (e: java.lang.reflect.InvocationTargetException) {
+                throw e.targetException
+            }
+        })
+    val remote = connection.remoteConnection
+    val statements = proxy(RemoteConnection::class.java, remote) { method, args ->
+        val result = method.invoke(remote, *args)
+        if (result !is RemoteStatement) result else proxy(RemoteStatement::class.java, result) { call, callArgs ->
+            if (call.name in setOf("execute", "executeQuery")) executed += callArgs[0] as String
+            if (call.name == "execute" && callArgs[0] == "SET PATH system.builtin") false else call.invoke(result, *callArgs)
+        }
+    }
+    return proxy(DatabaseConnectionCore::class.java, connection) { method, args ->
+        if (method.name == "getRemoteConnection") statements else method.invoke(connection, *args)
     }
 }

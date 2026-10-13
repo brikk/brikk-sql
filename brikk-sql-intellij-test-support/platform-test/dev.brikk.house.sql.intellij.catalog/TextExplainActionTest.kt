@@ -1,6 +1,8 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
+import com.intellij.database.console.JdbcConsole
+import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
@@ -48,6 +50,9 @@ class TextExplainActionTest : BasePlatformTestCase() {
         override fun present(outcome: ExplainOutcome) {
             shown += outcome
         }
+
+        override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
+            super.withHelperConnection(console) { use(recordingTrinoContext(it, CopyOnWriteArrayList())) }
     }
 
     class Foreign(project: Project, scope: CoroutineScope) : Service(project, scope)
