@@ -177,7 +177,9 @@ class PipePaginationTest {
                 assertEquals("Doris OFFSET without LIMIT requires a non-negative signed 64-bit integer literal", error.message)
             }
         }
-        assertSlice("SELECT id FROM t OFFSET 1 |> ORDER BY id", null, 1L)
+        // ORDER BY sorts the rows the OFFSET left, so the offset stays in the stage's input.
+        val lowered = SqlFragment("SELECT id FROM t OFFSET 1 |> ORDER BY id", "doris").toExecutable("doris").sql
+        assertEquals("WITH __tmp1 AS (SELECT id FROM t LIMIT 9223372036854775806 OFFSET 1) SELECT * FROM __tmp1 ORDER BY id", lowered)
     }
 
     @Test
