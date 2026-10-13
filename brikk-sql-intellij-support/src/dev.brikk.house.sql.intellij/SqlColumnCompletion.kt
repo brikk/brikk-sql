@@ -91,8 +91,9 @@ public object SqlColumnCompletion {
      * contributors' items that [match] maps to a visible column is decorated and further ones are
      * dropped; the columns no item matched are created in [style], or by [create]. [match] identifies a candidate
      * by its semantic column and source, so same-named columns of different relations stay
-     * distinct. Call it from a contributor registered with `order="first"`, since it runs the
-     * remaining contributors.
+     * distinct. An item no visible column matches stays, unless [hides] says it stands for a column
+     * that is not visible here. Call it from a contributor registered with `order="first"`, since it
+     * runs the remaining contributors.
      */
     @ApiStatus.Experimental
     public fun createOrDecorate(
@@ -101,6 +102,7 @@ public object SqlColumnCompletion {
         columns: Collection<SqlColumnFacts>,
         style: SqlLookupStyle = SqlLookupStyles.DEFAULT[SqlLookupKind.BRIKK_COLUMN],
         create: (SqlColumnFacts) -> LookupElement = { create(it, style) },
+        hides: (LookupElement) -> Boolean = { false },
         match: (LookupElement) -> SqlColumnFacts?,
     ) {
         val visible = LinkedHashMap<ColumnIdentity, SqlColumnFacts>().apply { for (column in columns) putIfAbsent(column.identity, column) }
@@ -108,7 +110,7 @@ public object SqlColumnCompletion {
         result.runRemainingContributors(parameters) { completion ->
             val column = match(completion.lookupElement)?.let { visible[it.identity] }
             when {
-                column == null -> result.passResult(completion)
+                column == null -> if (!hides(completion.lookupElement)) result.passResult(completion)
                 offered.add(column.identity) -> result.passResult(completion.withLookupElement(decorate(completion.lookupElement, column)))
             }
         }
