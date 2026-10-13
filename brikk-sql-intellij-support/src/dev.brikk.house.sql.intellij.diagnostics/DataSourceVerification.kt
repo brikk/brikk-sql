@@ -3,6 +3,7 @@ package dev.brikk.house.sql.intellij.diagnostics
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.database.dataSource.DatabaseConnection
 import com.intellij.database.dataSource.DatabaseConnectionManager
+import com.intellij.database.dataSource.DatabaseConnectionPoint
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.remote.jdbc.RemoteStatement
@@ -33,8 +34,8 @@ import org.jetbrains.annotations.ApiStatus
  *
  * Each data source gets one validator over the verifier [verifierFor] makes, given a supplier of
  * [DataSourceQueryConnection]s. The supplier opens a separate, short-lived helper connection: never
- * the console's session (whose transaction, settings and namespace stay untouched), never asking
- * for a password, and only while the user has the data source connected; otherwise it gives null,
+ * the console's session (whose transaction, settings and namespace stay untouched), running no
+ * startup script, never asking for a password, and only while the user has the data source connected; otherwise it gives null,
  * which a verifier reports as unavailable. Introspection harvests skip helper connections.
  *
  * [modificationCount] changes with the file's data source, its URL and user, and whether it is
@@ -67,11 +68,20 @@ public class DataSourceVerification(
 
     private fun openHelper(project: Project?, dataSource: LocalDataSource?): DataSourceQueryConnection? {
         if (project == null || project.isDisposed || dataSource == null || !isUserConnected(dataSource)) return null
-        val builder = DatabaseConnectionManager.getInstance().build(project, dataSource).setRequestor(HelperRequestor()).setAskPassword(false)
+        val builder = DatabaseConnectionManager.getInstance().build(project, WithoutStartupScript(dataSource))
+            .setRequestor(HelperRequestor()).setAskPassword(false)
         // Verifiers open connections on their own workers, outside any progress indicator; an interrupt cancels.
         val ref = runBlocking { builder.create() } ?: return null
         return DataSourceQueryConnection(ref)
     }
+}
+
+/**
+ * [point] without its startup script (the data source's and its driver's): that is for the user's
+ * sessions, and would run again on every verification connection. The data source is not changed.
+ */
+private class WithoutStartupScript(point: DatabaseConnectionPoint) : DatabaseConnectionPoint.Adapter(point) {
+    override fun getInitScript(): String? = null
 }
 
 /** Whether the user (not a helper) has a connection to [dataSource] open. */

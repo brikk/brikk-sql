@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij.diagnostics
 
 import com.intellij.database.dataSource.DatabaseConnectionManager
+import com.intellij.database.dataSource.DatabaseDriverImpl
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
@@ -92,6 +93,29 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
         }
         restartsReach(2)
         assertEquals("disconnecting", listOf(project, project), restarted.toList())
+    }
+
+    /** A startup script (the data source's, else its driver's) is for the user's sessions, not a verification's. */
+    fun testAHelperRunsNoStartupScript() {
+        val driver = dataSource.databaseDriver as DatabaseDriverImpl
+        withIdeConnection(project, dataSource, otherRequestor()) { user ->
+            user.remoteConnection.createStatement().execute("CREATE TABLE startup_counter (n INTEGER)")
+            for ((own, drivers) in listOf("INSERT INTO startup_counter VALUES (1)" to null, null to "INSERT INTO startup_counter VALUES (2)")) {
+                dataSource.initScript = own
+                driver.initScript = drivers
+                try {
+                    answer("SELECT 1")
+                    answer("SELECT 1")
+                    val rows = user.remoteConnection.createStatement().executeQuery("SELECT count(*) FROM startup_counter")
+                    rows.next()
+                    assertEquals("a verification ran the startup INSERT ($own, $drivers)", "0", rows.getString(1))
+                    rows.close()
+                } finally {
+                    dataSource.initScript = null
+                    driver.initScript = null
+                }
+            }
+        }
     }
 
     fun testTheValidatorIsOnePerDataSource() {
