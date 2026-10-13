@@ -20,7 +20,8 @@ import kotlinx.serialization.Serializable
  *   (`SELECT` when it has no name).
  * - [provenance] is the source fact's navigation id, kept through renames.
  * - [declaration] is where SQL names the column (`AS k`, a CTE or alias column list, a RENAME
- *   target), kept through later references; null when only a fact names it.
+ *   target, the USING key a FULL join merges), kept through later references; null when only a
+ *   fact names it.
  */
 @Serializable
 data class ScopeColumn(

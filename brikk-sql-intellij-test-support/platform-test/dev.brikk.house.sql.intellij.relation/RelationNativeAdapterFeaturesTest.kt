@@ -139,8 +139,11 @@ class RelationNativeAdapterFeaturesTest : RelationTestCase() {
         val two = "SELECT x.id, y.id FROM (SELECT id FROM src() UNION ALL SELECT id FROM rhs()) x, (SELECT code AS id FROM rhs() UNION ALL SELECT kind FROM src()) y"
         assertEquals(listOf("sql@${two.indexOf("code AS id") + 8}", "sql@${two.indexOf("kind FROM")}"), navigation(two, "id", 1))
         // A FULL JOIN's merged key, which no provider column names, leads to the USING key.
-        val full = "SELECT q.id FROM (SELECT id FROM src() FULL JOIN rhs() USING (id)) q"
+        val full = "SELECT q.id FROM (SELECT id /* USING (id) */ FROM src() FULL JOIN rhs() USING (id)) q"
         assertEquals(listOf("sql@${full.lastIndexOf("id")}"), navigation(full, "id"))
+        // Of two FULL JOINs, each merged key leads to its own join's key.
+        val joins = "SELECT p.id, r.id FROM (SELECT id FROM src() FULL JOIN rhs() USING (id)) p, (SELECT id FROM rhs() FULL JOIN src() USING (id)) r"
+        assertEquals(listOf("sql@${joins.lastIndexOf("id")}"), navigation(joins, "id", 1))
         // A CTE's computed column leads to its declaration.
         val cte = "WITH c AS (SELECT 1 AS total) SELECT total FROM c"
         assertEquals(listOf("sql@${cte.indexOf("total")}"), navigation(cte, "total", 1))

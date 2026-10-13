@@ -119,8 +119,8 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
  * provenance (through aliases, pass-through relations and merged USING or NATURAL keys, which lead to
  * the side the analysis names) and for a provider relation; else the declaration in the SQL (an
  * alias, a CTE or derived table column, a computed PIPE column); the branches' output items for a
- * set operation's output column, which has no single origin; the USING clause's key for a merged
- * key no provider column names. Only where the analysis has no answer does the platform's own
+ * set operation's output column, which has no single origin; a merged key no provider column names
+ * declares itself in its own join's USING list. Only where the analysis has no answer does the platform's own
  * resolution navigate. Register a no-arg subclass as `gotoDeclarationHandler`.
  */
 @ApiStatus.Experimental
@@ -135,7 +135,6 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
                 column.declaration?.let { analysis.elementAt(file, it) }?.let { return@flatMap listOf(it) }
                 when (column.computedBy) {
                     in SET_OPERATIONS -> setOperationOutputs(owningSetOperation(file, analysis, column, offset), column.name)
-                    "USING" -> listOfNotNull(analysis.usingKey(file, reference.start, column.name))
                     else -> emptyList()
                 }
             }
@@ -194,24 +193,6 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
         val SET_OPERATIONS = setOf("UNION", "UNION ALL", "INTERSECT", "INTERSECT ALL", "EXCEPT", "EXCEPT ALL", "MINUS")
     }
 }
-
-/** The key [name] in a USING clause of the statement holding [start], in the analysis's text. */
-private fun RelationAnalysis.usingKey(file: PsiFile, start: Int, name: String): PsiElement? {
-    val statement = statements.firstOrNull { start in it.first }?.first ?: return null
-    val text = source.text.substring(statement.first, statement.last + 1)
-    for (clause in USING_CLAUSE.findAll(text)) {
-        val keys = clause.groups[1] ?: continue
-        for (key in USING_KEY.findAll(keys.value)) {
-            if (!key.value.trim('`', '"').equals(name, ignoreCase = true)) continue
-            val at = statement.first + keys.range.first + key.range.first
-            return elementAt(file, ScopeRange(at, at + key.value.length))
-        }
-    }
-    return null
-}
-
-private val USING_CLAUSE = Regex("""\bUSING\s*\(([^)]*)\)""", RegexOption.IGNORE_CASE)
-private val USING_KEY = Regex("""[^\s,]+""")
 
 /**
  * Marks the analysis's problems (missing, ambiguous and partial-contract columns, unknown

@@ -243,7 +243,8 @@ internal class ScopeEvaluator(
         }
     }
 
-    private class Key(val name: String, val left: ScopeColumn?, val right: ScopeColumn?)
+    /** A join key; [declaration] is its name in the join's USING list, none for a NATURAL join's. */
+    private class Key(val name: String, val left: ScopeColumn?, val right: ScopeColumn?, val declaration: ScopeRange? = null)
 
     private fun usingKeys(join: Join, left: List<Binding>, leftMerged: List<ScopeColumn>, right: List<Binding>): List<Key> {
         val leftFrame = Frame(left, null, leftMerged)
@@ -255,13 +256,14 @@ internal class ScopeEvaluator(
                 val l = unqualified(leftFrame, identifier)
                 val r = unqualified(rightFrame, identifier)
                 val lookup = when {
-                    l.single != null && r.single != null -> Lookup(listOf(merge(Key(stored(identifier), l.single, r.single), join.side)), Knowledge.FULL)
+                    l.single != null && r.single != null ->
+                        Lookup(listOf(merge(Key(stored(identifier), l.single, r.single, declared(identifier)), join.side)), Knowledge.FULL)
                     l.candidates.isEmpty() -> l
                     r.candidates.isEmpty() -> r
                     else -> Lookup(l.candidates + r.candidates, Knowledge.FULL)
                 }
                 record(identifier, null, lookup)
-                Key(stored(identifier), l.single, r.single)
+                Key(stored(identifier), l.single, r.single, declared(identifier))
             }
         }
         if (join.method != "NATURAL") return emptyList()
@@ -292,7 +294,7 @@ internal class ScopeEvaluator(
         if (left != null && left.source != null && left.source == right?.source) return left.copy(relation = "", relationKind = null, nullability = nullability)
         // One key in two relations: what both sides say about it still holds.
         return computed(key.name, nullability, "USING", left?.sqlType?.takeIf { it == right?.sqlType })
-            .copy(displayType = left?.displayType?.takeIf { it == right?.displayType })
+            .copy(displayType = left?.displayType?.takeIf { it == right?.displayType }, declaration = key.declaration)
     }
 
     /** The relations [node] contributes to a FROM clause; [lateral] is what it may correlate with. */

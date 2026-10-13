@@ -150,6 +150,17 @@ class RelationScopeTest {
     }
 
     @Test
+    fun aMergedFullJoinKeyIsDeclaredByItsOwnJoinsUsingKey() {
+        val sql = "SELECT a.id, b.id FROM (SELECT id /* USING (id) */ FROM events() FULL JOIN partial() USING (id)) a, " +
+            "(SELECT id FROM partial() x FULL JOIN events() y USING (id)) b"
+        val scope = analyze(sql)
+        val declarations = scope.references.filter { it.kind == ReferenceKind.COLUMN && it.start < sql.indexOf(" FROM (") }
+            .map { reference -> reference.columns.single().declaration }
+        val keys = Regex("USING \\((id)\\)").findAll(sql).map { it.groups[1]?.range?.first }.toList().drop(1)
+        assertEquals(keys.map { ScopeRange(checkNotNull(it), it + 2) }, declarations)
+    }
+
+    @Test
     fun aFullJoinKeyIsNotNullOnlyWhenBothSidesAreNot() {
         fun key(left: Nullability, right: Nullability): Nullability {
             val input = RelationFacts(slots = mapOf(
