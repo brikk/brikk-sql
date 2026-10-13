@@ -17,6 +17,7 @@ import com.intellij.psi.PsiLanguageInjectionHost
 import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
 import dev.brikk.house.sql.intellij.pipe.PipeText
+import java.util.concurrent.atomic.AtomicLong
 import org.jetbrains.annotations.ApiStatus
 
 /** What a recognizer of the host language decided about one host string. */
@@ -149,6 +150,23 @@ public open class HostSqlChannel(public val id: String) {
         return hosts
     }
 
+    private val claimKey = Key.create<CachedClaim>("$id.host.sql.claim")
+    private val generation = AtomicLong()
+
+    private class CachedClaim(val revision: Long, val generation: Long, val claim: HostSqlClaim)
+
+    /**
+     * [host]'s claim from [recognize], shared by every caller (an injector's contributor and performer
+     * are separate instances) until the host's file changes or the channel reanalyzes; negative claims
+     * included, so a string recognized later is found then.
+     */
+    internal fun claim(host: PsiLanguageInjectionHost, recognize: () -> HostSqlClaim): HostSqlClaim {
+        val revision = host.containingFile?.modificationStamp ?: return recognize()
+        val current = generation.get()
+        host.getUserData(claimKey)?.takeIf { it.revision == revision && it.generation == current }?.let { return it.claim }
+        return recognize().also { host.putUserData(claimKey, CachedClaim(revision, current, it)) }
+    }
+
     /** Whether [file] waits for facts; relation diagnostics do not run then. */
     public fun isPending(file: PsiFile?): Boolean = marker(file)?.pending == true
 
@@ -196,7 +214,12 @@ public open class HostSqlChannel(public val id: String) {
         val pointer = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(file)
         ApplicationManager.getApplication().invokeLater({
             DumbService.getInstance(project).runWhenSmart {
-                runReadAction { pointer.element?.let(::reanalyze) }
+                runReadAction {
+                    val current = pointer.element ?: return@runReadAction
+                    // Every cached claim is asked again: the facts behind it may have changed.
+                    generation.incrementAndGet()
+                    reanalyze(current)
+                }
             }
         }, project.disposed)
     }
