@@ -8,6 +8,7 @@ import com.intellij.psi.tree.IElementType
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.intellij.lexer.CoreStatements
+import dev.brikk.house.sql.intellij.lexer.KEPT_BIND_COLON
 import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
@@ -23,7 +24,7 @@ import org.jetbrains.annotations.ApiStatus
 @ApiStatus.Experimental
 public class StatementBoundaryGate(
     private val coreDialect: String,
-    /** Whether a lenient statement makes `:name` binds parameters, as the dialect's IDE binds. */
+    /** Whether a lenient statement makes every `:name` bind a parameter, as the dialect's IDE binds; kept binds always are. */
     private val colonParameters: Boolean = false,
 ) {
     private var text: CharSequence? = null
@@ -62,8 +63,8 @@ public class StatementBoundaryGate(
         val stop = builder.currentOffset
         val erred = builder.platformBuilder()?.hasErrorsAfter(marker) ?: true
         val reached = builder.consumedEnd() <= end && stop >= end
-        // A bind kept in a masked span (`MaskingSqlLexer(keepParameters)`) is no grammar's: only a lenient statement makes it a parameter.
-        if (reached && !(colonParameters && erred && builder.hasMaskedBindSince(start))) {
+        // A bind kept in a masked span (KEPT_BIND_COLON) is no grammar's: only a lenient statement makes it a parameter.
+        if (reached && !(erred && builder.hasKeptBindSince(start))) {
             marker.drop()
             return parsed
         }
@@ -75,7 +76,8 @@ public class StatementBoundaryGate(
         marker.rollbackTo()
         val statement = builder.mark()
         while (!builder.eof() && builder.currentOffset < end) {
-            if (!colonParameters || !builder.parseColonParameter(named = true)) builder.advanceLenient()
+            val bind = (colonParameters || builder.tokenType == KEPT_BIND_COLON) && builder.parseColonParameter(named = true)
+            if (!bind) builder.advanceLenient()
         }
         statement.done(type)
         return true
@@ -109,20 +111,13 @@ public class StatementBoundaryGate(
     }
 }
 
-/**
- * Whether a `:name` bind follows a masked span (a comment token without comment syntax, as
- * `MaskingSqlLexer` emits) between [start] and the current token.
- */
-private fun PsiBuilder.hasMaskedBindSince(start: Int): Boolean {
+/** Whether a bind kept in a masked span ([KEPT_BIND_COLON]) lies between [start] and the current token. */
+private fun PsiBuilder.hasKeptBindSince(start: Int): Boolean {
     var step = -1
     while (true) {
-        rawLookup(step) ?: return false
-        val tokenStart = rawTokenTypeStart(step)
-        if (tokenStart < start) return false
-        if (rawLookup(step) == SqlTokens.SQL_COLON && rawLookup(step + 1) == SqlTokens.SQL_IDENT && rawLookup(step - 1) == SqlTokens.SQL_BLOCK_COMMENT) {
-            val mask = originalText.subSequence(rawTokenTypeStart(step - 1), tokenStart)
-            if (!mask.startsWith("/*")) return true
-        }
+        val type = rawLookup(step) ?: return false
+        if (rawTokenTypeStart(step) < start) return false
+        if (type == KEPT_BIND_COLON) return true
         step--
     }
 }

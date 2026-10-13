@@ -27,6 +27,15 @@ class MaskedSpanParametersTest : CHouseFixtureTestCase() {
         assertEquals(listOf("prefix", "q"), parameters())
     }
 
+    /** Comments, nested comments and strings of the dialect hold no binds; only a real one is kept. */
+    fun testNoGhostBindsInTheDialectsCommentsAndStrings() {
+        for (expression in listOf("concat(:real, 1) # :ghost\n", "concat(:real, /* outer /* inner */ :ghost */ 1)",
+            "concat(:real, \$\$:ghost\$\$)", "concat(:real, 'a'' :ghost')")) {
+            configureCHouse("INSERT INTO FUNCTION null('x String') PARTITION BY $expression SELECT :q;")
+            assertEquals(expression, listOf("real", "q"), parameters())
+        }
+    }
+
     fun testABindOnTheExportsOneLineIsFound() {
         configureCHouse("INSERT INTO FUNCTION null('id UInt64') PARTITION BY toString(:partition) SELECT 1 AS id;")
         assertEquals(listOf("partition"), parameters())
@@ -43,6 +52,11 @@ class MaskedSpanParametersTest : CHouseFixtureTestCase() {
             assertTrue(query, query.contains("concat('p', ':no'"))
             assertTrue(query, query.endsWith("SELECT 7"))
         }
+    }
+
+    fun testAKeptBindHasItsOwnColonType() {
+        val tokens = definition.createLexer(project).lexAll(text)
+        assertEquals(listOf(":prefix"), tokens.withIndex().filter { it.value.type == KEPT_BIND_COLON }.map { (i, it) -> text.substring(it.start, tokens[i + 1].end) })
     }
 
     fun testStatesStayNonNegativeAndRestartable() {

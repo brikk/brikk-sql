@@ -192,10 +192,14 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   never sees a lexer that lost its context: an edit relexes its own statement, nothing before.
   States stay non-negative, as the console's parameter preprocessing requires; the base lexer's
   state must fit 15 bits.
-  Restoring a saved position relexes from its statement's start. With `keepParameters`, IDE `:name` binds inside a
-  span masked as a comment stay `:` and name tokens (a masked span is split around them), so they
-  remain parameters: in a `CHouseFamilyParser`, a statement whose grammar fails on such a bind becomes
-  lenient, and its lenient statements parse `:name` binds as named parameters. A routine body still unbalanced
+  Restoring a saved position relexes from its statement's start. With `parameterDialect`, the IDE `:name` binds core's
+  parameter discovery finds in a span masked as a comment (never in the dialect's comments or strings)
+  stay a `KEPT_BIND_COLON` and a name token, so they remain parameters: a `StatementBoundaryGate`
+  makes a statement whose grammar fails on a kept bind lenient, and parses kept binds (and, in a
+  `CHouseFamilyParser`, every `:name` bind) as named parameters. Known limitation: such a statement
+  loses the grammar's structured PSI (a ClickHouse `INSERT ... PARTITION BY concat(:prefix, ...)
+  SELECT ...` becomes one lenient statement); a clause-level parse keeping the INSERT and SELECT
+  structure would be the better answer. A routine body still unbalanced
   at the end of the text ends before its first `;`, so later statements keep their tokens.
 - `StatementBoundedSqlLexer(baseFactory, coreDialect)` (`lexer`): lexes each statement of core's
   script ranges on its own with a fresh start of the base lexer, so no token runs past its
