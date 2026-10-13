@@ -15,6 +15,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -69,10 +70,12 @@ class TestProfile(
     var extra: List<SqlDiagnostic> = emptyList()
     var revision = 0L
     override fun modificationCount(file: PsiFile) = revision
-    var custom: (String, SqlStatementRange) -> List<SqlDiagnostic>? = { _, _ -> null }
+    var custom: (PsiFile, String, SqlStatementRange) -> List<SqlDiagnostic>? = { _, _, _ -> null }
+    var mask: (PsiFile, String) -> String = { _, sql -> sql }
     override fun validator(file: PsiFile) = validator
     override fun fileDiagnostics(file: PsiFile, script: String) = extra
-    override fun statementDiagnostics(script: String, statement: SqlStatementRange) = custom(script, statement)
+    override fun statementDiagnostics(file: PsiFile, script: String, statement: SqlStatementRange) = custom(file, script, statement)
+    override fun verificationText(file: PsiFile, sql: String) = mask(file, sql)
 }
 
 private val postgres get() = Language.findLanguageByID("PostgreSQL")!!
@@ -100,7 +103,8 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
             profile.budget = null
             profile.extra = emptyList()
             profile.revision = 0
-            profile.custom = { _, _ -> null }
+            profile.custom = { _, _, _ -> null }
+            profile.mask = { _, sql -> sql }
         }
     }
 
@@ -421,13 +425,37 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertEquals(listOf("SELECT 1;\nSELECT bad;"), validator.asked)
         postgresProfile.unit = VerificationUnit.Statement
         postgresProfile.extra = emptyList()
-        postgresProfile.custom = { script, statement ->
+        postgresProfile.custom = { _, script, statement ->
             if ("|>" in script.substring(statement.start, statement.end)) listOf(SqlDiagnostic(DiagnosticSeverity.ERROR, "Engine PIPE: refused", statement.start + 1, statement.start + 5, DiagnosticSource.OTHER)) else null
         }
         postgresProfile.validator = ScriptedValidator(::rejectBad)
         open("SELECT bad;\nFROM t |> bad;")
         assertSameElements(marks(), "bad" to "Engine: no bad here", "FROM" to "Engine PIPE: refused")
         assertEquals(listOf("SELECT bad"), validator.asked)
+    }
+
+    /** A profile tells files apart without shared state: here a project file whose PIPE is off, and an injected fragment it masks. */
+    fun testStatementAndVerificationHooksVaryByFile() {
+        val pipeOff = Key.create<Boolean>("test.pipe.off")
+        postgresProfile.custom = { file, script, statement ->
+            if (file.getUserData(pipeOff) == true) listOf(SqlDiagnostic(DiagnosticSeverity.ERROR, "Engine PIPE: off", statement.start, statement.start + 6, DiagnosticSource.OTHER)) else null
+        }
+        open("SELECT bad;")
+        assertEquals(listOf("bad" to "Engine: no bad here"), marks())
+        myFixture.file.putUserData(pipeOff, true)
+        postgresProfile.revision++ // A setting changed: verdicts are not reused.
+        assertEquals(listOf("SELECT" to "Engine PIPE: off"), marks())
+        postgresProfile.custom = { _, _, _ -> null }
+
+        val injected = InjectedLanguageManager.getInstance(project)
+        val masked = { file: PsiFile, sql: String -> if (injected.isInjectedFragment(file)) sql.replace("bad", "ok ") else sql }
+        postgresProfile.mask = masked
+        mysqlProfile.mask = masked
+        openInjected("SELECT 'SELECT bad', 1;")
+        assertEquals(listOf<Pair<String, String>>(), marks("Injected"))
+        assertEquals(listOf("SELECT ok "), (mysqlProfile.validator as ScriptedValidator).asked)
+        assertEquals("bad" to "Engine: no bad here", marks().single())
+        assertEquals("SELECT 'SELECT bad', 1", validator.asked.last())
     }
 
     fun testAnAdvisoryValidatorWarns() {

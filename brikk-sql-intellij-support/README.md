@@ -155,7 +155,9 @@ validator's `verify`; the diagnostics themselves are core's plain data
   handling.
 - Hooks: `statementDiagnostics` replaces a statement's check (PIPE lowering, Brikk templates),
   `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
-  masks binds at equal length, `message` formats.
+  masks binds at equal length, `message` formats. Each gets the file (the injected fragment, when
+  injected), so its answer can vary by file; `statementDiagnostics` and `verificationText` run off
+  the PSI and read only the file's identity, project and user data.
 
 `NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
