@@ -23,7 +23,7 @@ class HostSqlLayoutTest : HostSqlTestCase() {
         assertEquals(runtime(host, entries), layout.text)
         for (i in layout.text.indices) {
             val origin = layout.hostRange(i, i + 1) ?: continue
-            assertEquals("character $i of ${layout.text}", layout.text[i].toString(), decoded(host, origin).let { if (it == "\r\n") "\n" else it })
+            assertEquals("character $i of ${layout.text}", layout.text[i].toString(), decoded(host, origin))
         }
         val placeholders = entries.entries.filter { it.placeholder }.mapNotNull { it.replacement }
         assertEquals(placeholders, layout.placeholders.map { it.substring(layout.text) })

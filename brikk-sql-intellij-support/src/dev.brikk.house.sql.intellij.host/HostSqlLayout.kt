@@ -83,20 +83,18 @@ public object HostSqlInjection {
     public fun places(host: PsiLanguageInjectionHost, entries: HostSqlEntries): List<HostSqlPlace> = layout(host, entries).places
 
     /**
-     * The SQL of [entries] in [host]: kept ranges decoded by the host's escaper, replacements as given,
-     * then the trims. A kept range the escaper cannot decode is taken as it is.
+     * The SQL of [entries] in [host]: kept ranges decoded by the host's escaper (as far as it can, like
+     * the platform's injection), replacements as given, then the trims.
      */
     public fun layout(host: PsiLanguageInjectionHost, entries: HostSqlEntries): HostSqlLayout {
         val escaper = host.createLiteralTextEscaper()
         var chars = entries.entries.flatMap { entry ->
             val range = entry.range
             entry.replacement?.map { Origin(it, range.startOffset, range.startOffset, synthetic = true, placeholder = entry.placeholder) } ?: run {
+                // A range the escaper cannot decode to its end keeps what it decoded, as the platform's injection does.
                 val decoded = StringBuilder()
-                if (escaper.decode(range, decoded)) {
-                    decoded.indices.map { i -> Origin(decoded[i], escaper.getOffsetInHost(i, range), escaper.getOffsetInHost(i + 1, range)) }
-                } else {
-                    range.substring(host.text).mapIndexed { i, char -> Origin(char, range.startOffset + i, range.startOffset + i + 1) }
-                }
+                escaper.decode(range, decoded)
+                decoded.indices.map { i -> Origin(decoded[i], escaper.getOffsetInHost(i, range), escaper.getOffsetInHost(i + 1, range)) }
             }
         }
         for (trim in entries.trims) chars = trimmed(chars, trim)
