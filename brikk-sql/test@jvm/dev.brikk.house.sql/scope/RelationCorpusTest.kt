@@ -125,7 +125,7 @@ class RelationCorpusTest {
             val offset = caret.int("offset")
             val completion = RelationScope.complete(sql, dialect, input, offset)
             val position = caret.string("positionKind")
-            val scope = completion.items.map { it.column }
+            val scope = completion.items.mapNotNull { it.column }
             axes += Triple("scope@$offset",
                 scope(position, caret.string("knowledge"), caret.array("columns").map(::expectedColumn)),
                 scope(completion.position.name, completion.knowledge?.name ?: "NONE", scope.map(::observed)))

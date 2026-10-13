@@ -129,9 +129,12 @@ data class ScopeDiagnostic(
 enum class PositionKind { COLUMN, QUALIFIER, RELATION, STRING, COMMENT, OTHER }
 
 @Serializable
-enum class CompletionKind { COLUMN }
+enum class CompletionKind { COLUMN, RELATION }
 
-/** A completion candidate that replaces `[start, end)` with [insertText]. [detail] says what it is, [type] its type. */
+/**
+ * A completion candidate that replaces `[start, end)` with [insertText]. [detail] says what it is,
+ * [type] a column's type. A COLUMN item carries its [column], a RELATION item its [relation].
+ */
 @Serializable
 data class CompletionItem(
     val name: String,
@@ -141,12 +144,14 @@ data class CompletionItem(
     val end: Int,
     val detail: String,
     val type: String?,
-    val column: ScopeColumn,
+    val column: ScopeColumn? = null,
+    val relation: ScopeRelation? = null,
 )
 
 /**
  * What a caret can complete: the [position] it is in, and at a column position the columns
- * visible there ([items], all of them: clients filter by [prefix], the name typed before the
+ * visible there, at a relation position the CTEs in scope and the facts' tables, slots and table
+ * functions ([items], all of them: clients filter by [prefix], the name typed before the
  * caret without its opening quote) and how much the scope knew. Items replace the whole
  * identifier at the caret, `[start, end)`, quotes included. [knowledge] is null at other positions.
  */

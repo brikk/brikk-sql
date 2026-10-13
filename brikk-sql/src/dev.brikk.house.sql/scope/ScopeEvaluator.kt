@@ -118,6 +118,10 @@ internal class ScopeEvaluator(
 
     class CaretSite(val frame: Frame?, val qualifier: List<Identifier>)
 
+    /** The CTEs visible where the caret marker names a FROM item, when completing one. */
+    var caretCtes: List<Cte>? = null
+        private set
+
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {
         // Recursion follows query nesting only, which the parser caps at its bracket depth.
         checkCanceled()
@@ -341,6 +345,7 @@ internal class ScopeEvaluator(
         val function = node.thisArg as? Anonymous
         if (function != null) return tableFunction(node, function, env, lateral)
         val name = node.thisArg as? Identifier ?: return unknownRelation(node.name, RelationKind.OTHER)
+        if (caretMarker != null && caretMarker in name.name && caretCtes == null) caretCtes = env.ctes.filterNot { it.synthetic }
         if (node.db.isEmpty() && node.catalog.isEmpty()) {
             cte(name, env)?.let { (cte, row) ->
                 val relation = bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name))

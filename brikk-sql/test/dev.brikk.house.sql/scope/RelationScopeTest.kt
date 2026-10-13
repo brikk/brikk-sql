@@ -300,6 +300,20 @@ class RelationScopeTest {
     }
 
     @Test
+    fun relationPositionsOfferCtesTablesSlotsAndTableFunctions() {
+        val input = facts.copy(calls = mapOf("read_rows" to RelationFact(knowledge = Knowledge.UNKNOWN)))
+        fun at(sql: String) = RelationScope.complete(sql.replace("<caret>", ""), "duckdb", input, sql.indexOf("<caret>"))
+        val from = at("WITH recent AS (SELECT id FROM events()) SELECT * FROM recent r JOIN <caret>")
+        assertEquals(PositionKind.RELATION, from.position)
+        assertEquals(listOf("recent", "db.accounts", "events()", "partial()", "unknown()", "read_rows()"), from.items.map { it.insertText })
+        assertEquals(listOf(RelationKind.CTE, RelationKind.TABLE, RelationKind.SLOT, RelationKind.SLOT, RelationKind.SLOT, RelationKind.CALL),
+            from.items.map { it.relation?.kind })
+        assertTrue(from.items.all { it.kind == CompletionKind.RELATION && it.column == null })
+        assertEquals(listOf("accounts"), at("SELECT * FROM db.<caret>").items.map { it.insertText })
+        assertEquals(listOf("db.accounts", "events()", "partial()", "unknown()", "read_rows()"), at("SELECT * FROM ev<caret>").items.map { it.insertText })
+    }
+
+    @Test
     fun completionRecoversFromIncompleteInput() {
         fun at(sql: String, caret: String = "<caret>") = RelationScope.complete(sql.replace(caret, ""), "duckdb", facts, sql.indexOf(caret))
         assertEquals(listOf("id", "eventKind"), at("SELECT CASE WHEN <caret> FROM events()").items.map { it.name })
