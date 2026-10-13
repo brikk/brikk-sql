@@ -200,4 +200,17 @@ class SqlFunctionPositionTest : CompletionTestCase() {
         assertEquals(emptySet<FunctionKind>(), kinds("SELECT numb<caret>", "numbers"))
         assertEquals(setOf(TABLE_VALUED), kinds("SELECT * FROM numb<caret>", "numbers"))
     }
+
+    /** Plugins compiled against TablePositions before expressionsAfter still link (`STANDARD.copy(...)`, the constructor). */
+    fun testTablePositionsKeepsItsEarlierShape() {
+        val set = Set::class.java
+        val shape = arrayOf(set, set, set, set, set, String::class.java, set)
+        val marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
+        val standard = TablePositions.STANDARD
+        val copyDefault = TablePositions::class.java.getMethod("copy\$default", TablePositions::class.java, *shape, Int::class.javaPrimitiveType, Any::class.java)
+        val copied = copyDefault.invoke(null, standard, setOf("unnest"), null, null, null, null, null, null, 0b1111110, null) as TablePositions
+        assertEquals(standard.copy(after = setOf("unnest")), copied)
+        val constructor = TablePositions::class.java.getDeclaredConstructor(*shape, Int::class.javaPrimitiveType, marker)
+        assertEquals(TablePositions(setOf("FROM")), constructor.newInstance(setOf("FROM"), null, null, null, null, null, null, 0b1111110, null))
+    }
 }

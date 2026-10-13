@@ -58,6 +58,20 @@ data class SqlScriptParameters(
     val error: String? = null,
     val ambiguous: List<SyntacticRange> = emptyList(),
 ) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before ambiguous.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(text: String, dialect: String, occurrences: List<ParameterOccurrence>, failureOffset: Int? = null, error: String? = null) :
+        this(text, dialect, occurrences, failureOffset, error, emptyList())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(
+        text: String = this.text,
+        dialect: String = this.dialect,
+        occurrences: List<ParameterOccurrence> = this.occurrences,
+        failureOffset: Int? = this.failureOffset,
+        error: String? = this.error,
+    ): SqlScriptParameters = copy(text, dialect, occurrences, failureOffset, error, ambiguous)
+
     companion object {
         /**
          * A bind is `:` directly followed by an ASCII name token (`[A-Za-z_][A-Za-z0-9_]*`,

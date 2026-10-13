@@ -31,6 +31,29 @@ public data class TablePositions(
     val unwrapped: Set<String> = emptySet(),
     val expressionsAfter: Set<String> = emptySet(),
 ) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before expressionsAfter.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(
+        after: Set<String>,
+        parenthesized: Set<String> = emptySet(),
+        notAfter: Set<String> = emptySet(),
+        inExpressions: Set<String> = emptySet(),
+        kindsInExpressions: Set<FunctionKind> = emptySet(),
+        wrapper: String? = null,
+        unwrapped: Set<String> = emptySet(),
+    ) : this(after, parenthesized, notAfter, inExpressions, kindsInExpressions, wrapper, unwrapped, emptySet())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(
+        after: Set<String> = this.after,
+        parenthesized: Set<String> = this.parenthesized,
+        notAfter: Set<String> = this.notAfter,
+        inExpressions: Set<String> = this.inExpressions,
+        kindsInExpressions: Set<FunctionKind> = this.kindsInExpressions,
+        wrapper: String? = this.wrapper,
+        unwrapped: Set<String> = this.unwrapped,
+    ): TablePositions = copy(after, parenthesized, notAfter, inExpressions, kindsInExpressions, wrapper, unwrapped, expressionsAfter)
+
     internal fun fitsExpressions(entry: FunctionPresentation): Boolean =
         entry.kind in kindsInExpressions || inExpressions.any { it.equals(entry.name, ignoreCase = true) }
 

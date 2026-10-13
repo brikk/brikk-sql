@@ -23,3 +23,25 @@ When you (a Buzz agent) commit on someone's behalf, attribute the commit to the
 This matters for a **shared** Buzz agent that acts for several people. A person's
 own standalone agent that only ever commits as its owner can ignore it — that
 agent's global git identity is already correct.
+
+## Binary compatibility of public data classes
+
+Other artifacts (the plugins, the Brikk Kotlin helper) are compiled separately against published
+brikk-sql and support jars, so a changed JVM signature breaks them at link time
+(`NoSuchMethodError`) even when their sources still compile. When you add a defaulted field to a
+public data class they use (`RelationFacts`, `ColumnFact`, `ScopeColumn`, `SqlScriptParameters`,
+`TablePositions`, ...), keep the earlier shape available:
+
+```kotlin
+// Binary compatibility: the constructor and copy from before newField.
+@Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+constructor(a: A = ..., b: B = ...) : this(a, b, newFieldDefault)
+
+@Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+fun copy(a: A = this.a, b: B = this.b): T = copy(a, b, newField)
+```
+
+The hidden constructor with the old defaults keeps both the exact constructor and Kotlin's synthetic
+defaults constructor of the earlier shape, and is invisible to new code (no ambiguity, serialization
+uses the primary constructor). Add the old shape to `BinaryCompatibilityTest` (core) or the
+module's platform test. Removing or retyping a field is a breaking change: say so when publishing.
