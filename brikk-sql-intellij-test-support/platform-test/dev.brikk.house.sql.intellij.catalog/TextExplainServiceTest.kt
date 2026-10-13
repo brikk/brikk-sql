@@ -1,11 +1,17 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
+import com.intellij.database.console.JdbcConsole
 import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.dataSource.DatabaseConnectionInterceptor
+import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.remote.jdbc.RemoteConnection
+import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
+import com.intellij.database.settings.DatabaseSettings
+import com.intellij.database.settings.UserPatterns
 import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.openapi.application.ApplicationManager
@@ -19,10 +25,20 @@ import dev.brikk.house.sql.intellij.testing.BackgroundErrors
 import dev.brikk.house.sql.intellij.testing.RecordingConsole
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.metadata.TRINO_FUNCTION_CATALOG
+import java.lang.reflect.Proxy
+import java.sql.Connection
+import java.sql.Statement
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /**
  * Text explain against a real DuckDB data source through the IDE's driver process. The profile explains
@@ -41,7 +57,12 @@ class TextExplainServiceTest : BasePlatformTestCase() {
         override val builtinFunctions: FunctionCatalog = TRINO_FUNCTION_CATALOG
     }
 
-    class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope)
+    open class Service(project: Project, scope: CoroutineScope, override val profile: TextExplainProfile) : TextExplainService(project, scope) {
+        val executed = CopyOnWriteArrayList<String>()
+
+        override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
+            super.withHelperConnection(console) { use(recordingTrinoContext(it, executed)) }
+    }
 
     /** Counts the helper connections opened to the data source. */
     private inner class Connections : DatabaseConnectionInterceptor {
@@ -92,17 +113,175 @@ class TextExplainServiceTest : BasePlatformTestCase() {
     }
 
     fun testAQueryIsExplainedOnAHelperConnectionInTheConsolesNamespace() {
-        val outcome = explain("SELECT count(*) FROM t WHERE x > 1")
+        val service = Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms))
+        val outcome = runBlocking { service.explain(recording.console, "SELECT count(*) FROM t WHERE x > 1") }
+        assertEquals(
+            "the namespace, then the built-in-only context, then the plan",
+            listOf("USE \"$catalog\".\"web\"", "SET PATH system.builtin", "EXPLAIN SELECT count(*) FROM t WHERE x > 1"),
+            service.executed.toList(),
+        )
         assertEquals("DuckDB's first plan column", ExplainOutcome.Plan("physical_plan"), outcome)
         assertEquals(1, opened.get())
         assertEmpty("the console's session is never used", recording.requests)
         assertFalse(recording.console.session.isConnected)
     }
 
-    fun testWithoutASearchPathTheHelperStaysInTheDefaultNamespace() {
+    /** A namespace the console knows but the helper cannot reach is refused, never explained in the default namespace. */
+    fun testAKnownNamespaceWithoutAStrategyIsRefused() {
         val outcome = explain("SELECT count(*) FROM t", Profile(dataSource.dbms, searchPath = null))
-        assertInstanceOf(outcome, ExplainOutcome.Failed::class.java)
-        assertTrue((outcome as ExplainOutcome.Failed).message, "t" in outcome.message)
+        assertTrue(outcome.toString(), (outcome as ExplainOutcome.Refused).reason.contains("no search path strategy"))
+        assertEquals(0, opened.get())
+    }
+
+    fun testAConsoleWithoutANamespaceExplainsInTheDefaultOne() {
+        val file = myFixture.addFileToProject("plain-${UUID.randomUUID()}.sql", "SELECT 1").virtualFile
+        RecordingConsole(project, file, dataSource).use { plain ->
+            val service = Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms, searchPath = null))
+            assertEquals(ExplainOutcome.Plan("physical_plan"), runBlocking { service.explain(plain.console, "SELECT count(*) FROM web.t") })
+        }
+    }
+
+    /** Trino cannot USE a catalog alone: a catalog-only namespace is refused for a strategy that cannot switch to it. */
+    fun testACatalogOnlyNamespaceTheStrategyCannotSwitchToIsRefused() {
+        recording.console.setSearchPath(SearchPath.of(ObjectPath.create(catalog, ObjectKind.DATABASE)))
+        val schemaOnly = CatalogSchemaSearchPath('"', "USE {catalog}.{schema}", catalogProbes = emptyList(), schemaProbes = emptyList())
+        val refused = explain("SELECT count(*) FROM web.t", Profile(dataSource.dbms, searchPath = schemaOnly))
+        assertTrue(refused.toString(), (refused as ExplainOutcome.Refused).reason.contains("choose a schema"))
+        assertEquals(0, opened.get())
+        assertEquals("a strategy that switches to a catalog explains", ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM web.t"))
+    }
+
+    fun testTheHelperConnectionIsReleased() {
+        assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
+        assertEmpty(DatabaseConnectionManager.getInstance().activeConnections.filter { it.connectionPoint.dataSource === dataSource })
+    }
+
+    /** The live catalog skips the helper connection: explaining never harvests. */
+    fun testTheHelperConnectionIsNotHarvested() {
+        val harvester = CountingHarvester()
+        val live = LiveService(errors.newScope(testRootDisposable), LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, dbms = dataSource.dbms), null)
+        ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, live, testRootDisposable)
+        ApplicationManager.getApplication().extensionArea
+            .getExtensionPoint<DatabaseConnectionInterceptor>("com.intellij.database.connectionInterceptor")
+            .registerExtension(LiveInterceptor(), testRootDisposable)
+        assertEquals(ExplainOutcome.Plan("physical_plan"), explain("SELECT count(*) FROM t"))
+        assertEquals(0, harvester.harvests.get())
+    }
+
+    /** The console would prompt for a parameter of the IDE's own patterns: it is refused before any connection. */
+    fun testCustomIdeParameterPatternsAreRefusedBeforeConnecting() {
+        val settings = DatabaseSettings.getSettings()
+        val previous = settings.userPatterns
+        settings.userPatterns = UserPatterns().apply {
+            inScripts = true
+            inLiterals = true
+            patterns = arrayListOf(UserPatterns.ParameterPattern("__(\\w+)__").enabled(true, true))
+        }
+        try {
+            val outcome = explain("SELECT count(*) FROM t WHERE x = '__customer__'")
+            assertTrue(outcome.toString(), (outcome as ExplainOutcome.Refused).reason.contains("__(\\w+)__"))
+            assertEquals(0, opened.get())
+        } finally {
+            settings.userPatterns = previous
+        }
+    }
+
+    /** Cancelled while the EXPLAIN's statement is being created: the new statement is cancelled and closed, never run. */
+    fun testCancellingWhileTheStatementIsCreatedRunsNothing() {
+        val creating = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val created = AtomicInteger()
+        val cancels = AtomicInteger()
+        val queries = AtomicInteger()
+        fun <T> proxy(type: Class<T>, call: (String) -> Any?): T =
+            type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, _ -> call(method.name) })
+        val remote = proxy(RemoteConnection::class.java) { name ->
+            check(name == "createStatement") { name }
+            // The setup's statements first (the namespace switch and the context), then the EXPLAIN's.
+            if (created.incrementAndGet() == 3) {
+                creating.countDown()
+                while (release.count > 0) try {
+                    release.await(5, TimeUnit.SECONDS)
+                } catch (_: InterruptedException) {
+                }
+            }
+            proxy(RemoteStatement::class.java) { operation ->
+                when (operation) {
+                    "setQueryTimeout", "close" -> null
+                    "cancel" -> cancels.incrementAndGet().let { null }
+                    "execute" -> false
+                    "executeQuery" -> queries.incrementAndGet().let { error("EXPLAIN ran after cancelling") }
+                    else -> error(operation)
+                }
+            }
+        }
+        val connection = proxy(DatabaseConnectionCore::class.java) { name -> if (name == "getRemoteConnection") remote else error(name) }
+        val service = object : Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms)) {
+            override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T = use(connection)
+        }
+        runBlocking {
+            val running = launch(Dispatchers.Default) { service.explain(recording.console, "SELECT count(*) FROM t") }
+            try {
+                assertTrue(withContext(Dispatchers.IO) { creating.await(30, TimeUnit.SECONDS) })
+                running.cancel()
+            } finally {
+                release.countDown()
+                running.join()
+            }
+        }
+        assertEquals("the new statement is cancelled", 1, cancels.get())
+        assertEquals(0, queries.get())
+    }
+
+    /**
+     * A driver may return normally from a cancelled statement: cancelled during its USE, the production
+     * coroutine submits no EXPLAIN.
+     */
+    fun testCancellingDuringTheNamespaceSwitchSubmitsNothingMore() {
+        val inUse = CountDownLatch(1)
+        val released = CountDownLatch(1)
+        val queries = CopyOnWriteArrayList<String>()
+        val engine = embeddedDuckdb()
+        val ignoring = Proxy.newProxyInstance(Connection::class.java.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
+            val result = method.invoke(engine, *(args ?: emptyArray()))
+            if (result !is Statement) return@newProxyInstance result
+            Proxy.newProxyInstance(Statement::class.java.classLoader, arrayOf(Statement::class.java)) { _, call, callArgs ->
+                when (call.name) {
+                    "execute" -> {
+                        inUse.countDown()
+                        // Returns normally once cancelled, ignoring interrupts.
+                        while (true) {
+                            try {
+                                if (released.await(10, TimeUnit.SECONDS)) break
+                            } catch (_: InterruptedException) {
+                            }
+                        }
+                        false
+                    }
+                    "cancel" -> released.countDown().let { null }
+                    "executeQuery" -> {
+                        queries += callArgs[0] as String
+                        call.invoke(result, *callArgs)
+                    }
+                    else -> call.invoke(result, *(callArgs ?: emptyArray()))
+                }
+            } as Statement
+        } as Connection
+        val connection = databaseConnection(ignoring, dataSource, dataSource.dbms, otherRequestor())
+        val service = object : Service(project, errors.newScope(testRootDisposable), Profile(dataSource.dbms)) {
+            override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T = use(connection)
+        }
+        try {
+            runBlocking {
+                val running = launch(Dispatchers.Default) { service.explain(recording.console, "SELECT count(*) FROM t") }
+                assertTrue(inUse.await(30, TimeUnit.SECONDS))
+                running.cancelAndJoin()
+            }
+            assertEquals(0, released.count)
+            assertEmpty("no EXPLAIN after cancelling", queries)
+        } finally {
+            engine.close()
+        }
     }
 
     /** Trino 483 creates the table of an EXPLAIN CREATE TABLE AS: statements that are not plain queries never reach a connection. */
@@ -180,5 +359,31 @@ class TextExplainServiceTest : BasePlatformTestCase() {
             catalogProbes = listOf(NamespaceProbe.Column(DUCKDB_READ_BACK, "catalog")),
             schemaProbes = listOf(NamespaceProbe.Column(DUCKDB_READ_BACK, "schema")),
         )
+    }
+}
+
+/**
+ * [connection], recording every statement it executes in [executed] and answering Trino's built-in-only
+ * context itself: the fixtures explain with Trino's rules on DuckDB, which has no `SET PATH`.
+ */
+fun recordingTrinoContext(connection: DatabaseConnectionCore, executed: MutableList<String>): DatabaseConnectionCore {
+    fun <T : Any> proxy(type: Class<T>, target: T, call: (java.lang.reflect.Method, Array<Any?>) -> Any?): T =
+        type.cast(Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { _, method, args ->
+            try {
+                call(method, args ?: emptyArray())
+            } catch (e: java.lang.reflect.InvocationTargetException) {
+                throw e.targetException
+            }
+        })
+    val remote = connection.remoteConnection
+    val statements = proxy(RemoteConnection::class.java, remote) { method, args ->
+        val result = method.invoke(remote, *args)
+        if (result !is RemoteStatement) result else proxy(RemoteStatement::class.java, result) { call, callArgs ->
+            if (call.name in setOf("execute", "executeQuery")) executed += callArgs[0] as String
+            if (call.name == "execute" && callArgs[0] == "SET PATH system.builtin") false else call.invoke(result, *callArgs)
+        }
+    }
+    return proxy(DatabaseConnectionCore::class.java, connection) { method, args ->
+        if (method.name == "getRemoteConnection") statements else method.invoke(connection, *args)
     }
 }

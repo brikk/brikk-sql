@@ -6,12 +6,12 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class TextExplainTest {
-    private val builtins = setOf("known_builtin")
+    private val builtins = setOf("known_builtin", "abs", "lower", "upper", "count", "coalesce", "date_add", "max", "explode")
 
     private fun prepare(sql: String, dialect: String = "trino") = prepareTextExplain(sql, dialect) { it.lowercase() in builtins }
 
     private fun assertReady(expected: String, sql: String, dialect: String = "trino") =
-        assertEquals(ExplainPreparation.Ready(expected), prepare(sql, dialect), "$dialect: $sql")
+        assertEquals(expected, assertIs<ExplainPreparation.Ready>(prepare(sql, dialect), "$dialect: $sql").sql, "$dialect: $sql")
 
     private fun assertRefused(sql: String, dialect: String = "trino"): String =
         assertIs<ExplainPreparation.Refused>(prepare(sql, dialect), "$dialect: $sql").reason
@@ -53,6 +53,124 @@ class TextExplainTest {
         assertTrue("routine" in assertRefused("SELECT memory.default.known_builtin(1)"))
         assertTrue("my_udf" in assertRefused("SELECT my_udf(a) FROM t"))
         assertTrue("my_udf" in assertRefused("SELECT a FROM t WHERE a IN (SELECT my_udf(b) FROM u)", "doris"))
+    }
+
+    /** Trino lets an inline function take a built-in's name (and, from 455, run Python): no routine declaration is explained. */
+    @Test
+    fun routineDeclarationsAreRefused() {
+        assertTrue("routine" in assertRefused("WITH FUNCTION abs(x bigint) RETURNS bigint RETURN x + 1 SELECT abs(1)"))
+        assertTrue("routine" in assertRefused("WITH FUNCTION my_f(x bigint) RETURNS bigint RETURN x SELECT 1"))
+    }
+
+    /** Every function call is checked by the name as written, also where the parser builds a typed node for it. */
+    @Test
+    fun functionsAreCheckedByTheirWrittenNames() {
+        assertTrue("sequence" in assertRefused("SELECT sequence(1, 3)"))
+        assertTrue("generate_series" in assertRefused("SELECT * FROM t WHERE x IN (SELECT generate_series(1, 2))"))
+        assertTrue("explode_split" in assertRefused("SELECT x FROM t LATERAL VIEW explode_split(a, ',') v AS x", "doris"))
+        assertReady("EXPLAIN SELECT abs(-1), \"lower\"(s), count(*), COALESCE(a, b), date_add('day', 1, d) FROM t", "SELECT abs(-1), \"lower\"(s), count(*), COALESCE(a, b), date_add('day', 1, d) FROM t")
+        assertReady("EXPLAIN SELECT `upper`(s), CAST(x AS INT) FROM t", "SELECT `upper`(s), CAST(x AS INT) FROM t", "doris")
+        // Grammar forms have no function name to check.
+        assertReady("EXPLAIN SELECT CAST(x AS integer), EXTRACT(YEAR FROM d), CASE WHEN a THEN 1 END, CURRENT_DATE FROM t", "SELECT CAST(x AS integer), EXTRACT(YEAR FROM d), CASE WHEN a THEN 1 END, CURRENT_DATE FROM t")
+    }
+
+    /** Calls a parser handler builds (ARGMAX, STRING_AGG), quoted ones, and calls in lambdas and windows are all checked by name. */
+    @Test
+    fun everyParsedCallIsCheckedByName() {
+        for (sql in listOf(
+            "SELECT ARGMAX(1, 2)",
+            "SELECT \"ARGMAX\"(1, 2)",
+            "SELECT STRING_AGG('a', ',')",
+            "SELECT STRING_AGG(x, ',') OVER () FROM t",
+            "SELECT transform(ARRAY[1], x -> ARGMAX(x, 2))",
+            "SELECT LISTAGG(x, ',') WITHIN GROUP (ORDER BY x) FROM t",
+        )) assertRefused(sql)
+        val known = setOf("argmax", "string_agg", "transform", "listagg", "sum")
+        for (sql in listOf("SELECT ARGMAX(1, 2)", "SELECT STRING_AGG(x, ',') OVER () FROM t", "SELECT transform(ARRAY[1], x -> ARGMAX(x, 2))", "SELECT sum(x) OVER () FROM t")) {
+            assertIs<ExplainPreparation.Ready>(prepareTextExplain(sql, "trino") { it.lowercase() in known }, sql)
+        }
+    }
+
+    /**
+     * A recorded name is checked whatever node the parser built for it: Doris has no built-in `parse_json`
+     * and falls back to a UDF of that name, though `PARSE_JSON(...)` parses into the same node as `JSON '...'`.
+     */
+    @Test
+    fun recordedNamesAreCheckedWhateverNodeTheyBecome() {
+        val none: (String) -> Boolean = { false }
+        for ((dialect, sql) in listOf(
+            "doris" to "SELECT PARSE_JSON('{}')",
+            "doris" to "SELECT TO_DAYS(x) FROM t",
+            "doris" to "SELECT ARRAY_SUM([1])",
+            "trino" to "SELECT JSON_PARSE('{}')",
+            "trino" to "SELECT approx_percentile(x, 0.5) FROM t",
+            "trino" to "SELECT regexp_like(s, 'a') FROM t",
+        )) assertIs<ExplainPreparation.Refused>(prepareTextExplain(sql, dialect, isBuiltinFunction = none), "$dialect: $sql")
+        assertIs<ExplainPreparation.Ready>(prepareTextExplain("SELECT JSON '{}'", "trino", isBuiltinFunction = none), "a JSON literal calls nothing")
+    }
+
+    /** Operators, literals and keyword forms, and nodes a parser synthesizes inside a named call, are not calls of their own. */
+    @Test
+    fun grammarFormsAndSynthesizedNodesNeedNoName() {
+        for (sql in listOf(
+            "SELECT TIMESTAMP '2020-01-01', JSON '{}', ARRAY[1], a AND b OR c, CASE WHEN a THEN 1 END, TRY_CAST(x AS INT) FROM t",
+            "SELECT a FROM x CROSS JOIN UNNEST(ARRAY[1]) AS u (a)",
+        )) assertIs<ExplainPreparation.Ready>(prepareTextExplain(sql, "trino") { false }, sql)
+        val toDays = prepareTextExplain("SELECT TO_DAYS(x) FROM t", "doris") { it.lowercase() == "to_days" }
+        assertIs<ExplainPreparation.Ready>(toDays, toDays.toString())
+    }
+
+    /**
+     * A built-in's name does not prove the built-in binds: Trino falls through to routines on the session
+     * path (a live Trino 483 evaluated one while planning), and Doris may prefer UDFs. The helper first
+     * runs a context in which only built-ins resolve.
+     */
+    @Test
+    fun theExplainRunsInABuiltinOnlyContext() {
+        assertEquals(listOf("SET PATH system.builtin"), assertIs<ExplainPreparation.Ready>(prepare("SELECT abs(1)")).context)
+        assertEquals(listOf("SET prefer_udf_over_builtin = false"), assertIs<ExplainPreparation.Ready>(prepare("SELECT abs(1)", "doris")).context)
+    }
+
+    /** Doris collects hints anywhere in a SELECT and SET_VAR sets session variables for it: no hint comment is explained, in any position or dialect. */
+    @Test
+    fun hintsAreRefusedWherever() {
+        for (dialect in listOf("doris", "trino")) {
+            for (sql in listOf(
+                "SELECT /*+ SET_VAR(prefer_udf_over_builtin=true) */ abs(1) FROM t",
+                "SELECT abs(/*+ SET_VAR(prefer_udf_over_builtin=true) */ 1)",
+                "SELECT 1 + /*+SET_VAR(x=1)*/ abs(1)",
+                "SELECT abs(1) /*+ SET_VAR(x=1) */",
+                "/*+ SET_VAR(x=1) */ SELECT abs(1)",
+                "WITH c AS (SELECT /*+ SET_VAR(x=1) */ abs(1)) SELECT * FROM c",
+                "SELECT /*! SET_VAR(x=1) */ abs(1)",
+            )) assertTrue("hint" in assertRefused(sql, dialect), "$dialect: $sql")
+            assertReady("EXPLAIN SELECT '/*+ not a hint */' AS s, abs(1) /* + spaced */", "SELECT '/*+ not a hint */' AS s, abs(1) /* + spaced */", dialect)
+        }
+    }
+
+    @Test
+    fun statementsInsideAQueryAreRefused() {
+        assertRefused("WITH d AS (DELETE FROM t RETURNING x) SELECT * FROM d")
+        assertRefused("WITH i AS (INSERT INTO t VALUES (1) RETURNING x) SELECT * FROM i")
+        assertTrue("INTO" in assertRefused("SELECT x INTO t2 FROM t"))
+    }
+
+    /** Parameters would reach the server unprompted: they are resolved with Execute, as for PIPE. */
+    @Test
+    fun parametersAreRefused() {
+        for (sql in listOf("SELECT * FROM t WHERE x = ?", "SELECT * FROM t WHERE x = :p", "SELECT * FROM t WHERE x = \${p}", "SELECT * FROM t WHERE x = #{p}")) {
+            assertRefused(sql)
+        }
+        assertRefused("SELECT * FROM t WHERE x = ?", "doris")
+    }
+
+    /** `EXPLAIN (` opens Trino's options list, so a query starting with a parenthesis is explained as a derived table. */
+    @Test
+    fun parenthesizedQueriesAreWrapped() {
+        assertReady("EXPLAIN SELECT * FROM ((SELECT 1)\n) AS explained", "(SELECT 1)")
+        assertReady("EXPLAIN SELECT * FROM ((SELECT 1) UNION (SELECT 2)\n) AS explained", "(SELECT 1) UNION (SELECT 2)", "doris")
+        assertReady("EXPLAIN SELECT * FROM (/* c */ -- d\n(SELECT 1)\n) AS explained", "/* c */ -- d\n(SELECT 1)")
+        assertReady("EXPLAIN SELECT * FROM ((SELECT 1) -- trailing\n) AS explained", "(SELECT 1) -- trailing")
     }
 
     @Test

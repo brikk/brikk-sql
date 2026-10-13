@@ -3,9 +3,11 @@ package dev.brikk.house.sql.intellij.catalog
 import com.intellij.database.Dbms
 import com.intellij.database.console.JdbcConsole
 import com.intellij.database.dataSource.DatabaseConnectionManager
-import com.intellij.database.dataSource.connection.ConnectionRequestor
+import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.remote.jdbc.RemoteStatement
+import com.intellij.database.settings.DatabaseSettings
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
+import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -28,6 +30,7 @@ import dev.brikk.house.sql.intellij.pipe.lower
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.shape.ExplainPreparation
+import dev.brikk.house.sql.shape.ExplainableStatements
 import dev.brikk.house.sql.shape.explainPlanText
 import dev.brikk.house.sql.shape.prepareTextExplain
 import java.awt.BorderLayout
@@ -35,6 +38,7 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.Font
 import java.awt.datatransfer.StringSelection
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -80,6 +84,9 @@ public interface TextExplainProfile {
     /** Lowers PIPE statements first when PIPE is enabled for the project. */
     public val pipe: PipeDialect? get() = null
 
+    /** Which statements are explained: plain queries, until a live engine proves another set writes nothing. */
+    public val explainableStatements: ExplainableStatements get() = ExplainableStatements.Queries
+
     /** How long connecting, switching and explaining may take together. */
     public val timeout: Duration get() = 60.seconds
 }
@@ -100,8 +107,9 @@ public sealed interface ExplainOutcome {
  * Explains a console's statement as text: the statement (PIPE lowered first) is prepared by core's
  * `prepareTextExplain`, which explains only plain queries that cannot run code while being planned. It
  * runs on a new helper connection to the console's data source, never on the console's session: the
- * session's transaction, settings and namespace stay untouched, and the helper first switches to the
- * console's current namespace through the profile's [CatalogSearchPathStrategy]. The result shows in a
+ * session's transaction, settings and namespace stay untouched. The helper first switches to the
+ * console's current namespace through the profile's [CatalogSearchPathStrategy], then runs core's
+ * built-in-only context (Trino `SET PATH system.builtin`, Doris `SET prefer_udf_over_builtin = false`). The result shows in a
  * popup with Copy. Register a project service subclass with the platform's `(Project, CoroutineScope)`
  * constructor, and a [TextExplainConfiguration] subclass naming it.
  */
@@ -114,17 +122,35 @@ public abstract class TextExplainService(protected val project: Project, private
 
     /** Explains [text] as run in [console]. Cancellation propagates, cancelling a running statement. */
     public suspend fun explain(console: JdbcConsole, text: String): ExplainOutcome {
-        val sql = when (val prepared = prepare(text)) {
-            is ExplainPreparation.Ready -> prepared.sql
+        // The console would prompt for these; they are resolved with Execute, before any connection.
+        ideParameterPattern(text)?.let { return ExplainOutcome.Refused("The statement has parameters ($it): resolve them with Execute before EXPLAIN.") }
+        val ready = when (val prepared = prepare(text)) {
+            is ExplainPreparation.Ready -> prepared
             is ExplainPreparation.Refused -> return ExplainOutcome.Refused(prepared.reason)
         }
-        val namespace = console.currentNamespace?.let { current ->
-            val strategy = profile.searchPath ?: return@let null
-            strategy.switchSql(SearchPath.of(current)) ?: return ExplainOutcome.Refused("The console's namespace cannot be switched to on another connection.")
+        val namespace = when (val current = console.currentNamespace?.takeIf { namesOf(it).isNotEmpty() }) {
+            null -> null
+            else -> {
+                val names = namesOf(current).joinToString(".")
+                val strategy = profile.searchPath
+                    ?: return ExplainOutcome.Refused("The console's namespace ($names) cannot be set on another connection: the dialect has no search path strategy.")
+                strategy.switchSql(SearchPath.of(current))
+                    ?: return ExplainOutcome.Refused("The console's namespace ($names) cannot be switched to on another connection; choose a schema in the console.")
+            }
         }
-        return withTimeoutOrNull(profile.timeout) { runOnHelper(console, namespace, sql) }
+        return withTimeoutOrNull(profile.timeout) { runOnHelper(console, listOfNotNull(namespace) + ready.context, ready.sql) }
             ?: ExplainOutcome.Failed("EXPLAIN did not finish within ${profile.timeout}.")
     }
+
+    /** The first of the IDE's user parameter patterns (Database settings) in force that matches [text]. */
+    private fun ideParameterPattern(text: String): String? =
+        DatabaseSettings.getSettings().userPatterns.patterns.orEmpty()
+            .filter { it.inScripts || it.inLiterals }
+            .firstOrNull { pattern -> runCatching { Regex(pattern.pattern).containsMatchIn(text) }.getOrDefault(false) }
+            ?.pattern
+
+    private fun namesOf(path: ObjectPath): List<String> =
+        generateSequence(path) { it.parent }.mapNotNull { it.name?.takeIf(String::isNotBlank) }.toList()
 
     private fun prepare(text: String): ExplainPreparation {
         val pipe = profile.pipe
@@ -137,40 +163,65 @@ public abstract class TextExplainService(protected val project: Project, private
                 lowered.sql
             }
         }
-        return prepareTextExplain(sql, profile.dialect, profile.builtinFunctions::isKnown)
+        return prepareTextExplain(sql, profile.dialect, profile.explainableStatements, profile.builtinFunctions::isKnown)
     }
 
-    private suspend fun runOnHelper(console: JdbcConsole, namespace: String?, sql: String): ExplainOutcome {
-        val ref = try {
-            DatabaseConnectionManager.getInstance().build(project, console.dataSource).setRequestor(ConnectionRequestor.Anonymous()).create()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            return ExplainOutcome.Failed("No connection: ${e.message}")
-        } ?: return ExplainOutcome.Failed("No connection.")
-        return ref.use { helper ->
-            val running = AtomicReference<RemoteStatement?>()
-            coroutineScope {
-                // Cancelling (or the timeout) cancels the running statement, which a driver's blocking call may not notice otherwise.
-                val watcher = launch {
-                    try {
-                        awaitCancellation()
-                    } finally {
-                        running.get()?.let { JdbcNativeUtil.performSafe { it.cancel() } }
-                    }
-                }
+    private suspend fun runOnHelper(console: JdbcConsole, setup: List<String>, sql: String): ExplainOutcome = try {
+        withHelperConnection(console) { connection -> runOn(connection, setup, sql) } ?: ExplainOutcome.Failed("No connection.")
+    } catch (e: Exception) {
+        if (e is ControlFlowException || e is CancellationException) throw e
+        ExplainOutcome.Failed("No connection: ${e.message}")
+    }
+
+    /**
+     * Runs [use] on a new helper connection to [console]'s data source and closes it afterwards; null when
+     * none opens. The connection is never the console's, and harvests skip it. Override to set it up differently.
+     */
+    protected open suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? {
+        val ref = DatabaseConnectionManager.getInstance().build(project, console.dataSource).setRequestor(HelperRequestor()).create() ?: return null
+        return ref.use { use(it.get()) }
+    }
+
+    /** Runs [setup] (the namespace switch, then the built-in-only context), then [sql], unless cancelled. */
+    private suspend fun runOn(connection: DatabaseConnectionCore, setup: List<String>, sql: String): ExplainOutcome {
+        val running = AtomicReference<RemoteStatement?>()
+        val cancelled = AtomicBoolean()
+        // A statement registered after cancelling is cancelled at once.
+        val register: (RemoteStatement?) -> Unit = { statement ->
+            running.set(statement)
+            if (statement != null && cancelled.get()) JdbcNativeUtil.performSafe { statement.cancel() }
+        }
+        return coroutineScope {
+            // Cancelling (or the timeout) cancels the running statement, which a driver's blocking call may not notice otherwise.
+            val watcher = launch {
                 try {
-                    runInterruptible(Dispatchers.IO) {
-                        val seconds = profile.timeout.inWholeSeconds.toInt().coerceAtLeast(1)
-                        namespace?.let { helper.get().executeStatement(it, seconds, running::set) }
-                        ExplainOutcome.Plan(explainPlanText(helper.get().queryRows(sql, MAX_PLAN_ROWS, seconds, running::set).map { it.values.firstOrNull() }))
-                    }
-                } catch (e: Exception) {
-                    if (e is ControlFlowException || e is CancellationException) throw e
-                    ExplainOutcome.Failed(e.message ?: e.toString())
+                    awaitCancellation()
                 } finally {
-                    watcher.cancel()
+                    cancelled.set(true)
+                    running.get()?.let { JdbcNativeUtil.performSafe { it.cancel() } }
                 }
+            }
+            try {
+                runInterruptible(Dispatchers.IO) {
+                    // A driver may return normally from a cancelled statement: nothing more is submitted after cancelling.
+                    fun proceed() {
+                        if (cancelled.get()) throw CancellationException("EXPLAIN was cancelled")
+                    }
+                    val seconds = profile.timeout.inWholeSeconds.toInt().coerceAtLeast(1)
+                    for (statement in setup) {
+                        proceed()
+                        connection.executeStatement(statement, seconds, register, cancelled::get)
+                    }
+                    proceed()
+                    val rows = connection.queryRows(sql, MAX_PLAN_ROWS, seconds, onStatement = register, isCancelled = cancelled::get)
+                    proceed()
+                    ExplainOutcome.Plan(explainPlanText(rows.map { it.values.firstOrNull() as? String }))
+                }
+            } catch (e: Exception) {
+                if (e is ControlFlowException || e is CancellationException) throw e
+                ExplainOutcome.Failed(e.message ?: e.toString())
+            } finally {
+                watcher.cancel()
             }
         }
     }
@@ -180,6 +231,9 @@ public abstract class TextExplainService(protected val project: Project, private
         val outcome = explain(console, text)
         withContext(Dispatchers.EDT) { present(outcome) }
     }
+
+    /** Shows [outcome] now, on the EDT. */
+    internal fun show(outcome: ExplainOutcome) = present(outcome)
 
     /** Shows [outcome]; by default a resizable monospaced popup with Copy All and Close. */
     protected open fun present(outcome: ExplainOutcome) {
@@ -235,16 +289,15 @@ public abstract class TextExplainService(protected val project: Project, private
 public class TextExplainInterceptor(private val service: Class<out TextExplainService>) : ActionInterceptor {
     override fun update(event: AnActionEvent): Boolean? = target(event)?.let { true }
 
+    /** An owned console's Explain Plan is always handled here, also with nothing to explain. */
     override fun perform(event: AnActionEvent, delegate: () -> Unit): ExecutionClaim {
         val (explain, console) = target(event) ?: return ExecutionClaim.DECLINED
-        val editor = event.getData(CommonDataKeys.EDITOR) ?: return ExecutionClaim.DECLINED
-        val selection = editor.selectionModel.selectedText?.takeIf(String::isNotBlank)
-        val text = selection ?: run {
-            val document = editor.document.text
-            SqlScriptSnapshot.parse(document, explain.profile.dialect).at(editor.caretModel.offset)?.let { document.substring(it.start, it.end) }
+        val editor = event.getData(CommonDataKeys.EDITOR)
+        val text = editor?.selectionModel?.selectedText?.takeIf(String::isNotBlank) ?: editor?.let {
+            val document = it.document.text
+            SqlScriptSnapshot.parse(document, explain.profile.dialect).at(it.caretModel.offset)?.let { range -> document.substring(range.start, range.end) }
         }
-        if (text.isNullOrBlank()) return ExecutionClaim.DECLINED
-        explain.explainAndShow(console, text)
+        if (text.isNullOrBlank()) explain.show(ExplainOutcome.Refused("There is no statement at the caret to explain.")) else explain.explainAndShow(console, text)
         return ExecutionClaim.HANDLED
     }
 

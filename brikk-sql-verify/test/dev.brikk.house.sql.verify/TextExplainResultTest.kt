@@ -50,10 +50,46 @@ class TextExplainResultTest {
         runCatchupEngineSql(container, client, "CREATE TABLE memory.$schema.t (x bigint)")
         val query = "SELECT count(*) FROM memory.$schema.t WHERE x > 1"
         val ready = assertIs<ExplainPreparation.Ready>(prepareTextExplain(query, "trino") { true })
-        val plan = rows(runCatchupEngineSql(container, client, ready.sql)).single().values.single().orEmpty()
+        val plan = rows(runCatchupEngineSql(container, client, ready.context.joinToString("; ", postfix = "; ") + ready.sql)).last().values.single().orEmpty()
         assertTrue("Fragment" in plan && "Trino version" in plan, plan)
         assertEquals(listOf("t"), tables(container, schema))
         assertEquals("0", rows(runCatchupEngineSql(container, client, "SELECT count(*) AS n FROM memory.$schema.t")).single()["n"])
+    }
+
+    /** Why routine declarations are refused: an inline function takes a built-in's name. */
+    @Test
+    fun liveTrinoInlineFunctionsOverrideBuiltins() {
+        val container = container()
+        val sql = "WITH FUNCTION abs(x bigint) RETURNS bigint RETURN x + 100 SELECT abs(1) AS v"
+        assertEquals("101", rows(runCatchupEngineSql(container, client, sql)).single()["v"])
+        assertIs<ExplainPreparation.Refused>(prepareTextExplain(sql, "trino") { true })
+    }
+
+    /**
+     * A built-in's name does not prove the built-in binds: with a routine's schema on the session path,
+     * Trino falls through to it for an unmatched overload and evaluates it while planning EXPLAIN. The
+     * prepared context (`SET PATH system.builtin`) leaves only built-ins, so nothing user-defined runs.
+     */
+    @Test
+    fun liveTrinoBuiltinOnlyContextKeepsRoutinesFromBinding() {
+        val container = container()
+        val schema = schema(container)
+        val pathClient = listOf("trino", "--catalog", "memory", "--schema", schema, "--output-format=TSV_HEADER", "--execute")
+        runCatchupEngineSql(container, client, "CREATE FUNCTION memory.$schema.abs(x varchar) RETURNS varchar RETURN 'routine ran'")
+        val ready = assertIs<ExplainPreparation.Ready>(prepareTextExplain("SELECT abs('text')", "trino") { true })
+        val userPath = "SET PATH memory.$schema; "
+        assertTrue("routine ran" in runCatchupEngineSql(container, pathClient, userPath + ready.sql), "without the context the routine is planned")
+        val guarded = runCatching { runCatchupEngineSql(container, pathClient, userPath + ready.context.joinToString("; ", postfix = "; ") + ready.sql) }
+        val output = guarded.exceptionOrNull()?.message ?: guarded.getOrThrow()
+        assertTrue("Unexpected parameters" in output && "routine ran" !in output, output)
+    }
+
+    /** `EXPLAIN (` opens Trino's options list; a parenthesized query is explained as a derived table. */
+    @Test
+    fun liveTrinoExplainsAParenthesizedQuery() {
+        val container = container()
+        val ready = assertIs<ExplainPreparation.Ready>(prepareTextExplain("(SELECT 1) UNION (SELECT 2)", "trino") { true })
+        assertTrue("Fragment" in runCatchupEngineSql(container, client, ready.sql))
     }
 
     @Test

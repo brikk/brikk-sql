@@ -10,6 +10,8 @@ dependencies:
   - ../brikk-sql: exported
   # exported: the completion API exposes metadata types (snapshots, function presentations).
   - ../brikk-sql-metadata: exported
+  # exported: native validators answer with the verification API's results and error positions.
+  - ../brikk-sql-verify-api: exported
 
 plugins:
   brikk-sql-intellij-tooling: enabled
@@ -21,7 +23,7 @@ settings:
     version: 2.4.10
     # This classpath replaces the toolchain's, so it repeats the module dependencies' outputs.
     freeCompilerArgs:
-      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-metadatajvm/kotlin-output
+      - -classpath=build/intellij-sql-api/intellij-sql-api.jar:build/artifacts/CompiledJvmArtifact/brikk-sqljvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-metadatajvm/kotlin-output:build/artifacts/CompiledJvmArtifact/brikk-sql-verify-apijvm/kotlin-output
       - -Xexplicit-api=strict
   publishing:
     artifactId: brikk-sql-intellij-support

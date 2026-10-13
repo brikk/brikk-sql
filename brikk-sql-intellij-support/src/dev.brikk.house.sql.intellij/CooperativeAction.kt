@@ -17,8 +17,11 @@ public interface ActionInterceptor {
     public fun update(event: AnActionEvent): Boolean? = null
 
     /**
-     * Performs [event]. DECLINED runs the wrapped action instead. A claim may run it itself through
-     * [delegate] (for example the stock cancel before a server-side one) and then returns HANDLED.
+     * Performs [event]. DECLINED runs the wrapped action instead. A claim returns HANDLED; it may run the
+     * wrapped action itself through [delegate], before, after or instead of its own work (Doris cancels on
+     * the client and kills the query on the server, and runs the stock cancel only as a fallback). Call
+     * [delegate] at most once and only during this call, on its thread: it performs the wrapped action with
+     * [event], whose data context is not valid afterwards.
      */
     public fun perform(event: AnActionEvent, delegate: () -> Unit): ExecutionClaim
 }

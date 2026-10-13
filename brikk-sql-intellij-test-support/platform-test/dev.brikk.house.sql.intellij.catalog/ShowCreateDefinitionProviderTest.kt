@@ -6,6 +6,7 @@ import com.intellij.database.dialects.postgres.model.PgRoot
 import com.intellij.database.model.DasObject
 import com.intellij.database.model.ModelFactory
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.shape.DefinedObject
 import java.sql.Connection
@@ -74,12 +75,63 @@ class ShowCreateDefinitionProviderTest : BasePlatformTestCase() {
         assertTrue("CREATE TABLE o(x INTEGER);" in load(databases.createOrGet("lake").schemas.createOrGet("main").tables.createOrGet("o")))
     }
 
+    /**
+     * A user macro named like a catalog function, or like any function DuckDB's own macros call (its
+     * `array_to_string` is a macro calling `list_aggr`), is never called: the reads call none.
+     */
+    fun testUserMacrosNamedLikeCatalogOrHelperFunctionsAreNotCalled() {
+        engine.createStatement().use { statement ->
+            statement.execute("CREATE SEQUENCE calls")
+            for (name in listOf("duckdb_tables", "duckdb_views", "duckdb_functions", "duckdb_sequences", "duckdb_indexes")) {
+                statement.execute(
+                    "CREATE MACRO $name() AS TABLE SELECT nextval('calls')::VARCHAR AS sql, 'memory' AS database_name, 'web' AS schema_name, " +
+                        "'t' AS table_name, 'v' AS view_name, 'seq' AS sequence_name, 'ix' AS index_name, 'add' AS function_name, " +
+                        "'macro' AS function_type, ['a'] AS parameters, '1' AS macro_definition, 0 AS function_oid, false AS internal",
+                )
+            }
+            for (name in listOf("array_to_string", "list_aggr", "list_transform", "concat", "replace", "unnest", "list_extract", "array_extract")) {
+                statement.execute("CREATE MACRO $name(a := 0, b := 0, c := 0) AS nextval('calls')")
+            }
+        }
+        val web = (ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES).root as PgRoot).databases.createOrGet("memory").schemas.createOrGet("web")
+        val table = web.tables.createOrGet("t")
+        assertTrue(load(table).contains("CREATE TABLE web.t("))
+        assertTrue(load(web.views.createOrGet("v")).contains("CREATE VIEW web.v AS"))
+        assertTrue(load(web.sequences.createOrGet("seq")).contains("START 5"))
+        assertTrue(load(table.indices.createOrGet("ix")).contains("CREATE INDEX ix"))
+        assertTrue(load(web.routines.createOrGet("add")).contains("CREATE MACRO \"web\".\"add\"(\"a\", \"b\")"))
+        engine.createStatement().use { statement ->
+            val error = runCatching { statement.executeQuery("SELECT currval('calls')").use { it.next() } }.exceptionOrNull()
+            assertTrue("the sequence was never advanced: $error", error?.message.orEmpty().contains("not yet defined"))
+        }
+    }
+
+    /** The macro's parameter list is read as an array through the IDE's own driver process, as for a user's data source. */
+    fun testMacroParametersAreReadThroughTheIdesDriverProcess() {
+        val dataSource = realDuckdbDataSource(project, testRootDisposable)
+        val definition = withIdeConnection(project, dataSource, otherRequestor()) { connection ->
+            val statement = checkNotNull(JdbcNativeUtil.computeRemote { connection.remoteConnection.createStatement() })
+            try {
+                JdbcNativeUtil.computeRemote { statement.execute("CREATE MACRO main.m(\"a, b\", c) AS c") }
+            } finally {
+                JdbcNativeUtil.closeRemoteStatementSafe(statement)
+            }
+            val database = checkNotNull(JdbcNativeUtil.computeRemote { connection.remoteConnection.metaData.connection.catalog })
+            val main = (ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES).root as PgRoot).databases.createOrGet(database).schemas.createOrGet("main")
+            StringBuilder().also { Provider().load(listOf(main.routines.createOrGet("m")), connection, it) }.toString()
+        }
+        assertTrue(definition, definition.contains("CREATE MACRO \"main\".\"m\"(\"a, b\", \"c\") AS c;"))
+    }
+
     fun testMacrosAreRebuiltWithTheirOverloadsAndSayWhatTheyLeaveOut() {
         val web = (ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES).root as PgRoot).databases.createOrGet("memory").schemas.createOrGet("web")
         val add = load(web.routines.createOrGet("add"))
-        assertTrue(add, add.contains("-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO web.add(a, b) AS (a + b), (a, b, c) AS ((a + b) + c);"))
+        assertTrue(add, add.contains("-- DuckDB does not report macro parameter defaults; any are omitted here.\nCREATE MACRO \"web\".\"add\"(\"a\", \"b\") AS (a + b), (\"a\", \"b\", \"c\") AS ((a + b) + c);"))
         val rows = load(web.routines.createOrGet("rows"))
-        assertTrue(rows, rows.contains("CREATE MACRO web.rows(n) AS TABLE SELECT * FROM \"range\"(n);"))
+        assertTrue(rows, rows.contains("CREATE MACRO \"web\".\"rows\"(\"n\") AS TABLE SELECT * FROM \"range\"(n);"))
+        engine.createStatement().use { it.execute("CREATE MACRO web.\"select\"(\"a b\", \"c, d\", \"e\"\"f\") AS 1") }
+        val quoted = load(web.routines.createOrGet("select"))
+        assertTrue(quoted, quoted.contains("CREATE MACRO \"web\".\"select\"(\"a b\", \"c, d\", \"e\"\"f\") AS 1;"))
         engine.createStatement().use { it.execute("DROP MACRO web.add") }
         assertFalse("a macro the server no longer has", "CREATE MACRO" in load(web.routines.createOrGet("add")))
     }

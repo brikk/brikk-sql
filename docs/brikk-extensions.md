@@ -1951,15 +1951,34 @@ so their data keeps the plain rule.
 `prepareTextExplain(statement, dialect, isBuiltinFunction)` builds the `EXPLAIN` an IDE shows as text,
 or refuses. Only Trino (without ANALYZE) and Doris are explained, and only a single plain query: a
 live Trino 483 creates the table of `EXPLAIN CREATE TABLE ... AS SELECT` (`TextExplainResultTest`),
-while `EXPLAIN INSERT` and `EXPLAIN DROP TABLE` change nothing. Queries reading a table function,
-calling a namespaced routine or a function the caller does not know as a built-in are refused, since
-planning may evaluate them; so is text the core parser cannot read. DuckDB is refused outright: its
+while `EXPLAIN INSERT` and `EXPLAIN DROP TABLE` change nothing (`ExplainableStatements.Queries`, the only
+set until a live engine proves another writes nothing). Anywhere in the query, statements (DML in a CTE,
+`SELECT ... INTO`), routine declarations (Trino `WITH FUNCTION`, which may take a built-in's name), table
+functions, namespaced routine calls and calls whose name as written the caller does not know as a
+built-in are refused, since planning may evaluate them; operators, literals and keyword forms are not calls,
+and any other call without a recorded name (the parser records each call's name token) is refused. A
+built-in's name does not prove the built-in binds: with a routine's schema on its session path, a live Trino
+483 resolved `abs('text')` to the routine and evaluated it while planning `EXPLAIN`. So `Ready` carries a
+context run first in which only built-ins resolve: Trino `SET PATH system.builtin` (live: then no routine
+resolves, also under EXPLAIN), Doris `SET prefer_udf_over_builtin = false` (not verified on a live Doris),
+and optimizer hints, which may set session variables per query (Doris `SET_VAR`, collected anywhere in a
+SELECT), are refused lexically in any position and dialect, as are MySQL-style executable comments.
+Every recorded call name is checked against the catalog whatever node the call became (Doris
+`PARSE_JSON(...)` parses like a `JSON '...'` literal yet calls a UDF); only keyword syntax is exempt. Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused, as is
+text the core parser cannot read. A query starting with a parenthesis is explained as a derived table,
+since `EXPLAIN (` opens Trino's options. DuckDB is refused outright: its
 `EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence (DuckDB 1.5.6). `explainPlanText`
-joins the first column of the plan rows.
+joins the first column of the plan rows. `TextExplainResultTest` runs against a live Trino when
+`BRIKK_TRINO_TEST_CONTAINER` names its container, and is skipped otherwise.
 
 `definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris and Trino
 `SHOW CREATE`, DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
 macros rebuilt from `duckdb_functions()`, whose definition says that parameter defaults are not reported.
+Every DuckDB read calls one built-in table function, qualified as `system.main.`, and no other function: a
+user macro named `duckdb_tables` shadows the unqualified call and runs (DuckDB 1.5.6 advanced a sequence
+through it), and DuckDB's own `system.main.array_to_string` is a macro that calls `list_aggr` unqualified, so
+a user `list_aggr` ran even through the qualified helper. A macro's parameters are read as a list column and
+quoted here, so `"select"("a b", "c, d")` round-trips.
 
 ## Upstream sync protocol
 

@@ -1,6 +1,8 @@
 package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.Dbms
+import com.intellij.database.console.JdbcConsole
+import com.intellij.database.dataSource.DatabaseConnectionCore
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
@@ -11,6 +13,7 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.TestActionEvent
@@ -47,6 +50,9 @@ class TextExplainActionTest : BasePlatformTestCase() {
         override fun present(outcome: ExplainOutcome) {
             shown += outcome
         }
+
+        override suspend fun <T> withHelperConnection(console: JdbcConsole, use: suspend (DatabaseConnectionCore) -> T): T? =
+            super.withHelperConnection(console) { use(recordingTrinoContext(it, CopyOnWriteArrayList())) }
     }
 
     class Foreign(project: Project, scope: CoroutineScope) : Service(project, scope)
@@ -138,6 +144,24 @@ class TextExplainActionTest : BasePlatformTestCase() {
             action.actionPerformed(event(action))
             PlatformTestUtil.waitWithEventsDispatching("the plan is shown", { ours.shown.isNotEmpty() }, 30)
             assertEquals(listOf<ExplainOutcome>(ExplainOutcome.Plan("physical_plan")), ours.shown.toList())
+        }
+    }
+
+    /** An owned console's Explain Plan is handled even with nothing to explain: it never falls through to the stock action. */
+    fun testNothingToExplainIsSaidNotPassedOn() {
+        installed { action ->
+            WriteCommandAction.runWriteCommandAction(project) { myFixture.editor.document.setText("SELECT 1;\n\n   ") }
+            myFixture.editor.caretModel.moveToOffset(myFixture.editor.document.textLength)
+            action.actionPerformed(event(action))
+            val noEditor = TestActionEvent.createTestEvent(
+                action,
+                SimpleDataContext.builder().add(CommonDataKeys.PROJECT, project).add(CommonDataKeys.PSI_FILE, myFixture.file)
+                    .add(CommonDataKeys.VIRTUAL_FILE, myFixture.file.virtualFile).build(),
+            )
+            action.actionPerformed(noEditor)
+            assertEquals(2, ours.shown.size)
+            assertTrue(ours.shown.toString(), ours.shown.all { it is ExplainOutcome.Refused && "no statement" in it.reason })
+            assertEmpty(recording.requests)
         }
     }
 

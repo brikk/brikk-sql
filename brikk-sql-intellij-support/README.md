@@ -23,8 +23,9 @@ no internal-API annotation.
   `CANCEL`, ...) around whatever is registered under them, so plugins chain instead of replacing
   one another with `overrides="true"`. Its `ActionInterceptor` claims its own events (`update`:
   true shows, false hides, null leaves it to the wrapped action; `perform` returns `DECLINED` to
-  run the wrapped action, or runs it itself through `delegate`, as Doris's cancel runs the stock
-  cancel first, and returns `HANDLED`). Register a subclass as `dynamicActionConfigurationCustomizer`;
+  run the wrapped action, or `HANDLED`, having run it itself through `delegate` or not: Doris's
+  cancel would cancel on the client, then `KILL QUERY` on the server, and run the stock cancel only as
+  a fallback. `delegate` runs at most once, during `perform`, as the event is not valid afterwards). Register a subclass as `dynamicActionConfigurationCustomizer`;
   ids the IDE lacks are skipped, and unloading beneath a peer detaches as for Execute.
 - `EditorSnapshot`: refuse stale document identity/revisions, including edit/revert,
   with `SqlExecutionRefusal`. Cancellation propagates unchanged. `captureAfterSave`
@@ -115,6 +116,47 @@ or execute inspection templates. Stock user parameters remain a platform concern
 Foreign wrappers are traversed through platform `ActionWithDelegate`, never a cast
 to another plugin's private helper copy. Unloading beneath a peer detaches the
 wrapper but may retain its classloader until restart.
+
+## Native errors (`dev.brikk.house.sql.intellij.diagnostics`, experimental)
+
+A plugin implements one `NativeErrorProfile` (language, core dialect, label, `validator(file)`) and
+registers a no-arg `NativeErrorAnnotator` subclass as the language's `externalAnnotator`. Each
+statement of core's statement ranges (or, with `VerificationUnit.File`, the whole text) goes to the
+validator's `verify`; the diagnostics themselves are core's plain data
+(`dev.brikk.house.sql.diagnostics`), so an LSP server can reuse them.
+
+- The engine's errors are marked at its UTF-16 position (or line and column), across the token or
+  one code point. Against the local parsers' errors, an authoritative engine that rejects at a
+  position keeps only local errors at or after its first error (it proved the text before parses);
+  rejecting without a position, it keeps them and adds its message at the first; accepting, it
+  clears those wholly inside the verified text. `Unverified`, `Unavailable`, a failed validator or
+  no validator give no verdict, never "clean", and keep them. An advisory validator only adds
+  warnings.
+- Local parsers, off by default: `localParser` reports brikk-sql's parser errors;
+  `reportsPsiErrors` reports the IDE parser's PSI errors through the same rule. Register a
+  `NativeErrorPsiFilter(profile)` so the platform does not also show them: it hides only the PSI
+  errors the annotator reports (exactly the profile's language, its non-Frankenstein fragments in
+  `injectionHosts`), never other inspections or annotators. Its match is exact where
+  `SubstrateErrorFilter` uses `isKindOf`; a plugin turning the option on replaces that filter
+  with this one rather than keeping both.
+- A result is applied only while its document revision, text, validator instance and the profile's
+  `modificationCount` are unchanged, and later passes reuse it then. Cancellation propagates unchanged; `debounce` waits for typing to pause
+  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass (a
+  verifier still running then is canceled or abandoned, and local results show). All off by
+  default.
+- Only files of exactly the profile's language are annotated, so each consumer acts on its own
+  dialect. SQL injected into `injectionHosts` languages (register the annotator for each host too;
+  external annotators do not run on fragments) is read unescaped, every fragment of a file, and
+  marked at its host text, cut to editable parts; only equal diagnostics count as duplicates.
+  Frankenstein fragments (templates with uncertain holes) are not checked and keep the platform's
+  handling.
+- Hooks: `statementDiagnostics` replaces a statement's check (PIPE lowering, Brikk templates),
+  `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
+  masks binds at equal length, `message` formats.
+
+`NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
+without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
+verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
 
 ## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
 
@@ -344,7 +386,9 @@ takes the dbms the platform passes):
 server's catalog with core's `definitionQuery`: Doris and Trino `SHOW CREATE` (Doris shows an external
 catalog's view as a table), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`,
 `duckdb_indexes()` and macros rebuilt from `duckdb_functions()` with their overloads (DuckDB does not
-report parameter defaults; the definition says so). `kinds` maps model kinds to `DefinedObject`s; a path is
+report parameter defaults; the definition says so). Each DuckDB read calls one built-in table function,
+qualified as `system.main.`, and nothing else (DuckDB's own helpers are macros calling others unqualified),
+so no user macro runs; macro parameters are read as a list and quoted here. `kinds` maps model kinds to `DefinedObject`s; a path is
 the object's ancestors of the namespace `levels`, top first, then its name. The queries only read the
 catalog, over the connection the platform hands over for loading sources. Register a no-arg subclass as
 `<definitionProvider dbms="X">`, for example
@@ -355,22 +399,28 @@ MAT_VIEW to DefinedObject.MATERIALIZED_VIEW, SCHEMA to DefinedObject.SCHEMA), li
 
 Explain Plan as text in a popup with Copy, for dialects whose plan is text (Doris, Trino). A plugin
 implements one `TextExplainProfile` (minimum `dbms`, `productLabel`, core `dialect`, the bundled
-`builtinFunctions`; optional `searchPath`, `pipe`, `timeout`; `enabled` is false until a dialect turns it
-on) and registers no-arg subclasses: `TextExplainService(project, scope)` as a project service, and
+`builtinFunctions`; optional `searchPath`, `pipe`, `timeout`, `explainableStatements` (plain queries until a
+live engine proves another set writes nothing); `enabled` is false until a dialect turns it on) and registers no-arg subclasses: `TextExplainService(project, scope)` as a project service, and
 `TextExplainConfiguration(serviceClass)` as `dynamicActionConfigurationCustomizer`. The configuration
 wraps `Console.Jdbc.ExplainPlan` cooperatively: in the profile's consoles it shows the action and
-explains the selection, else the statement at the caret; every other console keeps the wrapped action
-(the stock graphical explain, or another plugin's wrapper).
+explains the selection, else the statement at the caret, and says so when there is none; every other
+console keeps the wrapped action (the stock graphical explain, or another plugin's wrapper).
 
-Safety: the statement (PIPE lowered first, unresolved PIPE parameters refused) goes through core's
-`prepareTextExplain`, which explains only a single plain query that reads no table function and calls
-only built-in functions, for Trino and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
+Safety: text matching the IDE's own user parameter patterns (Database settings), which the console would
+prompt for, is refused before any connection. The statement (PIPE lowered first, unresolved PIPE parameters
+refused) goes through core's
+`prepareTextExplain`, which explains only a single plain query with no parameters, routine declarations,
+nested statements or table functions, calling only built-in functions by their written names, for Trino
+and Doris; DuckDB is refused, because its `EXPLAIN` evaluates table
 function arguments (`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence). It runs on a new
 helper connection to the console's data source, never the console's session, so the session's
-transaction, settings and namespace stay as they are; the helper first switches to the console's current
-namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), and a namespace the
-strategy cannot switch to refuses rather than explaining in the wrong one. Cancellation and the
-`timeout` cancel the running statement.
+transaction, settings and namespace stay as they are, and harvests skip it. The helper first switches to
+the console's current namespace with the profile's `CatalogSearchPathStrategy` (catalog and schema), then runs core's
+built-in-only context (Trino `SET PATH system.builtin`; Doris `SET prefer_udf_over_builtin = false`, unverified
+live), since a built-in's name alone does not prove the built-in binds; a
+known namespace with no strategy, or one the strategy cannot switch to (Trino's catalog alone), is refused
+rather than explained in the wrong one. Cancellation and the `timeout` cancel the running statement, and
+nothing more is submitted after cancelling, also when a driver returns normally from a cancelled one.
 
 ### Out-of-scope references
 
@@ -608,9 +658,9 @@ python3 tools/publish_intellij_support.py 0.2.0 --core-version 0.20.0
 
 The last command requires the existing Central/signing environment. It publishes
 this module and its test kit, `brikk-sql-intellij-test-support`, at the same version,
-plus core and metadata at `--core-version`, never verify/oracle. Without
-`--core-version`, only a local publication is allowed; it references the core
-snapshot already in Maven Local. The module has independent `0.x` versioning.
+plus core, metadata and `brikk-sql-verify-api` (which support exports) at `--core-version`,
+never a verifier engine or the oracle. Without `--core-version`, only a local publication is
+allowed; it references the core, metadata and verify-api snapshots already in Maven Local. The module has independent `0.x` versioning.
 Temporary release overrides restore on success or failure.
 
 Shared platform contracts run in a real IDE against the test kit:
