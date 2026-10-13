@@ -207,6 +207,20 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertSameElements(marks(), localText to localMessage, localText to "Engine: no position")
     }
 
+    /** One malformed statement shows one error: brikk-sql's first, not its parser's cascade nor the IDE parser's error beside it. */
+    fun testAMalformedStatementWithoutAVerdictShowsOneError() {
+        registerFilter()
+        postgresProfile.localParser = true
+        postgresProfile.reportsPsiErrors = true
+        postgresProfile.validator = null
+        val text = "SELECT FROM WHERE = 1"
+        open(text)
+        val shown = myFixture.doHighlighting().filter { it.severity == HighlightSeverity.ERROR }
+        assertEquals(shown.toString(), 1, shown.size)
+        assertTrue(shown.single().description.orEmpty().startsWith("Engine (brikk-sql): "))
+        assertEquals("WHERE", text.substring(shown.single().startOffset, shown.single().endOffset))
+    }
+
     fun testTheLocalParserIsOffByDefault() {
         postgresProfile.validator = null
         open("SELECT * FROM t WHERE = 1;")

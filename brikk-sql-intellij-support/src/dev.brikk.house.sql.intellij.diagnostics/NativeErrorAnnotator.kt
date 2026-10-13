@@ -79,8 +79,9 @@ public interface NativeErrorProfile {
     /**
      * Whether this annotator reports the IDE parser's errors (PSI error elements) of [language]
      * itself, combined with the engine's verdict like the local parser's: hidden where the engine
-     * accepts, replaced where it rejects. Register a [NativeErrorPsiFilter] so the platform does
-     * not show them as well.
+     * accepts, replaced where it rejects. In a statement where [localParser] finds an error, that
+     * error stands for the statement and the IDE parser's are left out. Register a
+     * [NativeErrorPsiFilter] so the platform does not show them as well.
      */
     public val reportsPsiErrors: Boolean get() = false
 
@@ -302,7 +303,9 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             val range = verificationRange(script, statement) ?: continue
             if (profile.sizeCap?.let { range.last + 1 - range.first > it } == true) continue
             psiErrors -= inStatement.toSet()
-            val local = inStatement + if (profile.localParser) localDiagnostics(script, range) else emptyList()
+            // brikk-sql's error stands for its statement; the IDE parser's errors there would repeat it.
+            val parsed = if (profile.localParser) localDiagnostics(script, range) else emptyList()
+            val local = parsed.ifEmpty { inStatement }
             val asked = when {
                 validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
                 // Its text is not the SQL that runs; local errors the placeholders cause are dropped when applied.
