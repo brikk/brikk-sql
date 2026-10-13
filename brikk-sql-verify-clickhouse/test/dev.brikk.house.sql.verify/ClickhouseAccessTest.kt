@@ -7,6 +7,7 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 /**
  * A profile that forbids changing settings still gets verdicts; a login the server refuses gets none.
@@ -50,7 +51,9 @@ internal class ClickhouseAccessTest {
         ClickhouseServer.open().use { admin ->
             admin.run("CREATE USER $user IDENTIFIED WITH no_password SETTINGS readonly = 1")
             try {
-                assertIs<VerifyResult.Unavailable>(verifierAs(user).verify("SELECT 1"))
+                // 26.9 refuses them (Unavailable); 25.8 lets a readonly login set them to their defaults (Accepted).
+                val result = verifierAs(user).verify("SELECT 1")
+                assertTrue(result is VerifyResult.Unavailable || result == VerifyResult.Accepted, result.toString())
             } finally {
                 admin.run("DROP USER IF EXISTS $user")
             }
@@ -68,6 +71,26 @@ internal class ClickhouseAccessTest {
                 val verifier = ParseOnlyClickhouseVerifier({ HttpClickhouseQueryConnection(HTTP, user) })
                 assertIs<VerifyResult.Unverified>(verifier.verify("SELECT " + "1 + ".repeat(100) + "1"))
                 assertIs<VerifyResult.Rejected>(verifier.verify("SELECT FROM WHERE"))
+            } finally {
+                admin.run("DROP USER IF EXISTS $user")
+            }
+        }
+    }
+
+    /** A login on the old analyzer gets positioned rejections too; skipped where the server no longer has it (26.9). */
+    @Test
+    fun theOldAnalyzerStillRejects() {
+        ClickhouseServer.require()
+        val user = "verify_old_" + UUID.randomUUID().toString().replace("-", "")
+        ClickhouseServer.open().use { admin ->
+            val created = runCatching { admin.run("CREATE USER $user IDENTIFIED WITH no_password SETTINGS allow_experimental_analyzer = 0") }
+            org.junit.jupiter.api.Assumptions.assumeTrue(created.isSuccess, "this server has no old analyzer")
+            try {
+                val verifier = ParseOnlyClickhouseVerifier({ HttpClickhouseQueryConnection(HTTP, user) })
+                val sql = "SELECT 'é' FRM t"
+                val error = (verifier.verify(sql) as? VerifyResult.Rejected)?.error
+                assertEquals(sql.lastIndexOf('t'), error?.offset, error.toString())
+                assertTrue(error?.message.orEmpty().startsWith("Syntax error at t: Expected one of:"), error?.message)
             } finally {
                 admin.run("DROP USER IF EXISTS $user")
             }

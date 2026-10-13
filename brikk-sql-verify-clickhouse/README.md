@@ -12,10 +12,9 @@ verifier.verify("SELECT 'ü' FRM t") // Rejected: "Syntax error at t: Expected o
   `SELECT formatQuery(unhex('<the SQL's UTF-8 as hex>')) SETTINGS readonly = 1, max_execution_time = N`
   and closes it. The SQL is data, a string argument the server parses; the query cannot be anything
   else. A profile that refuses query settings (`readonly` users) is asked without them.
-- **Verdicts.** Only a syntax error (code 62) in the supplied text (the server reports it in
-  `formatQuery`'s scope) is `Rejected`, positioned from ClickHouse's 1-based
-  UTF-8 byte position (`VerifyError.atUtf8Byte`), spanning the token. An error in the verifier's own query, a statement over the
-  server's `max_query_size`, or one too deep, too big or too slow to parse is `Unverified`; anything else (no connection, authentication, access, no
+- **Verdicts.** Only a syntax error (code 62) is `Rejected` (new analyzer or old), positioned from ClickHouse's 1-based
+  UTF-8 byte position (`VerifyError.atUtf8Byte`), spanning the token. A statement over the server's `max_query_size` (in the
+  verifier's query or inside the statement), or one too deep, too big or too slow to parse is `Unverified`; anything else (no connection, authentication, access, no
   `formatQuery` before 23.10) is `Unavailable`, never clean.
 - **INSERT data.** The server parses an INSERT's header only; `VALUES` rows and `FORMAT` data are read
   when it runs (`INSERT INTO t VALUES (1), (2` formats as `INSERT INTO t FORMAT Values`). An accepted
@@ -53,5 +52,9 @@ errors read `<Unreadable error message>`, which the verifier reports as `Unavail
 rejection. Turn compression off on the verification connection (`compress=false`, `decompress=false`;
 support's `DataSourceVerification` takes such properties). The driver also sends its own settings
 (`async_insert`, `wait_end_of_query`) with each request, so a `readonly = 1` login gets `Unavailable`
-through it, and its own console fails the same way; over the plain HTTP interface such a login gets
-verdicts.
+through it on 26.9, and its own console fails the same way (25.8 accepts those settings at their
+defaults); over the plain HTTP interface such a login gets verdicts.
+
+The server tests pass on ClickHouse 26.9.17.8 and 25.8.33.6, where a login on the old analyzer
+(`allow_experimental_analyzer = 0`) gets the same positioned rejections; 26.9 refuses that setting,
+so that test is skipped there.

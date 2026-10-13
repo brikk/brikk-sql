@@ -149,15 +149,25 @@ internal class ClickhouseAvailabilityTest {
         assertTrue("unreadable" in result.reason, result.reason)
     }
 
-    /** Errors in the verifier's own query, or past the size limit inside the statement, are no verdict on the statement. */
+    /** Past the size limit, in the verifier's own query or inside the statement, there is no verdict on the statement. */
     @Test
-    fun wrapperAndSizeErrorsAreUnverified() {
+    fun sizeErrorsAreUnverified() {
         val inside = "Code: 62. DB::Exception: Max query size exceeded (can be increased with the `max_query_size` setting): " +
             "Syntax error: failed at position 201 (+): +. : In scope SELECT formatQuery(unhex('5345')). (SYNTAX_ERROR)"
-        val wrapper = "Code: 62. DB::Exception: Syntax error: failed at position 26 ('5345'): '5345'. Expected one of: token. (SYNTAX_ERROR)"
-        for (message in listOf(inside, wrapper)) {
+        val outer = "Code: 62. DB::Exception: Max query size exceeded (can be increased with the `max_query_size` setting): " +
+            "Syntax error: failed at position 26 ('5345'): '5345'. (SYNTAX_ERROR)"
+        for (message in listOf(inside, outer)) {
             assertIs<VerifyResult.Unverified>(ParseOnlyClickhouseVerifier({ FailingConnection(SQLException(message)) }).verify("SELECT 1"), message)
         }
+    }
+
+    /** The old analyzer (before 24.3 by default, selectable through 26.8) reports the same error in another scope. */
+    @Test
+    fun theOldAnalyzersShapeIsARejectionWithoutTheHex() {
+        val old = "Code: 62. DB::Exception: Syntax error: failed at position 14 (t): t. Expected one of: token, Comma: " +
+            "While processing formatQuery(unhex('53454C45435420312046524D2074')). (SYNTAX_ERROR) (version 25.8.33.6 (official build))"
+        val result = ParseOnlyClickhouseVerifier({ FailingConnection(SQLException(old)) }).verify("SELECT 1 FRM t")
+        assertEquals(VerifyResult.Rejected(VerifyError("Syntax error at t: Expected one of: token, Comma", 1, 14, 13, 14)), result)
     }
 
     @Test
