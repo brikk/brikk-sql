@@ -24,6 +24,7 @@ import kotlinx.coroutines.runBlocking
 import java.sql.SQLException
 import java.util.Collections
 import java.util.Objects
+import java.util.Properties
 import java.util.WeakHashMap
 import java.util.concurrent.CancellationException
 import org.jetbrains.annotations.ApiStatus
@@ -35,7 +36,7 @@ import org.jetbrains.annotations.ApiStatus
  * Each data source gets one validator over the verifier [verifierFor] makes, given a supplier of
  * [DataSourceQueryConnection]s. The supplier opens a separate, short-lived helper connection: never
  * the console's session (whose transaction, settings and namespace stay untouched), running no
- * startup script, never asking for a password, and only while the user has the data source connected; otherwise it gives null,
+ * startup script, with the driver properties [connectionProperties] adds, never asking for a password, and only while the user has the data source connected; otherwise it gives null,
  * which a verifier reports as unavailable. Introspection harvests skip helper connections.
  *
  * [modificationCount] changes with the file's data source, its URL and user, and whether it is
@@ -46,6 +47,11 @@ import org.jetbrains.annotations.ApiStatus
 public class DataSourceVerification(
     private val resolver: DialectDataSourceResolver,
     private val timing: ValidationTiming = ValidationTiming.Lowering,
+    /**
+     * Driver properties a helper connection to a data source sets over the data source's own, such
+     * as turning off a driver's response compression; the data source is not changed.
+     */
+    private val connectionProperties: (LocalDataSource) -> Map<String, String> = { emptyMap() },
     private val verifierFor: (connect: () -> DataSourceQueryConnection?) -> SqlVerifier,
 ) {
     private val validators: MutableMap<LocalDataSource, NativeSqlValidator> = Collections.synchronizedMap(WeakHashMap())
@@ -68,7 +74,7 @@ public class DataSourceVerification(
 
     private fun openHelper(project: Project?, dataSource: LocalDataSource?): DataSourceQueryConnection? {
         if (project == null || project.isDisposed || dataSource == null || !isUserConnected(dataSource)) return null
-        val builder = DatabaseConnectionManager.getInstance().build(project, WithoutStartupScript(dataSource))
+        val builder = DatabaseConnectionManager.getInstance().build(project, VerificationPoint(dataSource, connectionProperties(dataSource)))
             .setRequestor(HelperRequestor()).setAskPassword(false)
         // Verifiers open connections on their own workers, outside any progress indicator; an interrupt cancels.
         val ref = runBlocking { builder.create() } ?: return null
@@ -77,11 +83,17 @@ public class DataSourceVerification(
 }
 
 /**
- * [point] without its startup script (the data source's and its driver's): that is for the user's
- * sessions, and would run again on every verification connection. The data source is not changed.
+ * [point] as a verification connects to it: without its startup script (the data source's and its
+ * driver's), which is for the user's sessions and would run again on every verification connection,
+ * and with [properties] over its driver properties. Its data source stays [point]'s, unchanged.
  */
-private class WithoutStartupScript(point: DatabaseConnectionPoint) : DatabaseConnectionPoint.Adapter(point) {
+private class VerificationPoint(point: DatabaseConnectionPoint, private val properties: Map<String, String>) : DatabaseConnectionPoint.Adapter(point) {
     override fun getInitScript(): String? = null
+
+    override fun getConnectionProperties(): Properties = Properties().also { shaped ->
+        super.getConnectionProperties()?.let(shaped::putAll)
+        shaped.putAll(properties)
+    }
 }
 
 /** Whether the user (not a helper) has a connection to [dataSource] open. */

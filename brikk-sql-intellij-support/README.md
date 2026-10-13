@@ -161,15 +161,17 @@ validator's `verify`; the diagnostics themselves are core's plain data
 the file (the shared `DialectDataSourceResolver`): its `validator(file)` and `modificationCount(file)`
 are the profile's two methods. One validator per data source wraps the verifier, whose `connect()`
 opens a separate short-lived helper connection (`DataSourceQueryConnection`: `queryString`, `cancel`,
-`close`), never the console's session, never asking for a password, and only while the user has the
-data source connected; otherwise it gives null, which the verifier reports as `Unavailable`. The count
+`close`), never the console's session, running no startup script, with the driver properties the
+optional `connectionProperties(dataSource)` adds over the data source's (the data source is not
+changed), never asking for a password, and only while the user has the data source connected; otherwise it gives null, which the verifier reports as `Unavailable`. The count
 changes with the data source (identity, URL, user) and its connected state; register
 `VerificationConnectionListener` as an application listener of
 `com.intellij.database.dataSource.DatabaseConnectionManager$Listener` so connecting and disconnecting
-restart highlighting (helper connections are ignored). For ClickHouse:
+restart highlighting (helper connections are ignored). For ClickHouse, whose 0.9.8 driver's
+compressed transport fails (see `brikk-sql-verify-clickhouse`):
 
 ```kotlin
-DataSourceVerification(resolver) { connect ->
+DataSourceVerification(resolver, connectionProperties = { mapOf("compress" to "false", "decompress" to "false") }) { connect ->
     ParseOnlyClickhouseVerifier({
         connect()?.let { helper ->
             object : ClickhouseQueryConnection {
