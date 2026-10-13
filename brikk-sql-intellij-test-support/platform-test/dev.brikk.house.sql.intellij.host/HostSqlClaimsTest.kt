@@ -270,6 +270,18 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         assertEmpty(verifierReports())
     }
 
+    fun testAStatementWithAPlaceholderKeepsItsLocalParseErrors() {
+        val profile = TestProfile(postgres, "postgres", "Local parser").apply {
+            injectionHosts = setOf(mysql)
+            validator = null
+            localParser = true
+            hostSql = channel
+        }
+        ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(mysql, object : NativeErrorAnnotator(profile) {}, testRootDisposable)
+        placeholder("1", "SELECT 'SELECT \${x} FROM WHERE'")
+        assertNotEmpty(myFixture.doHighlighting(HighlightSeverity.ERROR).filter { it.description?.startsWith("Local parser") == true })
+    }
+
     fun testTheGutterIconIsDimmedWhileIndexing() {
         val markers = object : HostSqlLineMarkerProvider(channel, "Claimed SQL strings", SqlLookupIcons.BrikkColumn) {
             override fun tooltip(state: HostSqlState) = "SQL string"

@@ -301,13 +301,12 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             val range = verificationRange(script, statement) ?: continue
             if (profile.sizeCap?.let { range.last + 1 - range.first > it } == true) continue
             psiErrors -= inStatement.toSet()
-            if (source.placeholders.any { it.startOffset <= range.last && range.first < it.endOffset }) {
-                diagnostics += inStatement
-                continue
-            }
             val local = inStatement + if (profile.localParser) localDiagnostics(script, range) else emptyList()
             val asked = when {
                 validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
+                // Its text is not the SQL that runs; local errors the placeholders cause are dropped when applied.
+                source.placeholders.any { it.startOffset <= range.last && range.first < it.endOffset } ->
+                    Asked(NativeOutcome.NoVerdict("The statement holds placeholders"), final = true)
                 deadline != null && System.nanoTime() > deadline -> Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)
                 else -> ask(validator, source.file, script.substring(range.first, range.last + 1), deadline)
             }
