@@ -338,6 +338,19 @@ takes the dbms the platform passes):
   file attached to another dbms's console is never introspected. Register a no-arg subclass as
   `<completion.contributor language="X" order="first" implementationClass="..."/>`.
 
+### Object definitions
+
+`ShowCreateDefinitionProvider(dialect, kinds, levels)` gives the platform an object's source from the
+server's catalog with core's `definitionQuery`: Doris and Trino `SHOW CREATE` (Doris shows an external
+catalog's view as a table), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`,
+`duckdb_indexes()` and macros rebuilt from `duckdb_functions()` with their overloads (DuckDB does not
+report parameter defaults; the definition says so). `kinds` maps model kinds to `DefinedObject`s; a path is
+the object's ancestors of the namespace `levels`, top first, then its name. The queries only read the
+catalog, over the connection the platform hands over for loading sources. Register a no-arg subclass as
+`<definitionProvider dbms="X">`, for example
+`ShowCreateDefinitionProvider("trino", mapOf(TABLE to DefinedObject.TABLE, VIEW to DefinedObject.VIEW,
+MAT_VIEW to DefinedObject.MATERIALIZED_VIEW, SCHEMA to DefinedObject.SCHEMA), listOf(DATABASE, SCHEMA))`.
+
 ### Out-of-scope references
 
 A reference into a namespace the model lists but never introspected fails to resolve though the name
