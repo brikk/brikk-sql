@@ -1904,6 +1904,11 @@ open class Generator(
 
         var settings = sql(expression, "settings")
         if (settings.isNotEmpty()) settings = " $settings"
+        // brikk-native: ClickHouse inline data after FORMAT <name>, written as it came.
+        sql(expression, "format").takeIf(String::isNotEmpty)?.let { format ->
+            val data = (expression.args["insert_data"] as? String).orEmpty()
+            settings += " FORMAT $format" + if (data.isEmpty()) "" else "\n$data"
+        }
 
         var source = sql(expression, "source")
         if (source.isNotEmpty()) source = "TABLE $source"

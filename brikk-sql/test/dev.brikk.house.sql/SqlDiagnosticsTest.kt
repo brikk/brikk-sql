@@ -62,6 +62,29 @@ class SqlDiagnosticsTest {
         assertEquals(1, localParseDiagnostics(apart, apart.indices, "clickhouse").size)
     }
 
+    /** ClickHouse inline INSERT data is data, never SQL: the statement parses with its payload framed as core frames it. */
+    @Test
+    fun clickhouseInlineInsertDataIsNotParsedAsSql() {
+        for (script in listOf(
+            "INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"message\":\"semi;colon\"}\n{\"id\":2}\n;",
+            "INSERT INTO events FORMAT CSV\n1,\"semi;colon\"\n2,\"quoted\"\n;",
+            "INSERT INTO events (id, name) SETTINGS format_csv_delimiter = ';' FORMAT CSV\n1;a\n2;\"b;c\"\n;\nSELECT 2;",
+            "INSERT INTO events FORMAT TSV\n1\ta\n2\tb\n",
+            "INSERT INTO events FORMAT TabSeparatedWithNames\nid\tname\n1\ta\n\nSELECT 3;",
+            "INSERT INTO db.events FORMAT JSONEachRow\n{\"a\": [1, 2],\n \"b\": \"multi\nline\"}\n;",
+            "INSERT INTO events FORMAT CSV",
+        )) {
+            for (statement in SqlScriptSnapshot.parse(script, "clickhouse").statements) {
+                val range = verificationRange(script, statement) ?: continue
+                assertEquals(listOf(), localParseDiagnostics(script, range, "clickhouse"), script.substring(range.first, range.last + 1))
+            }
+        }
+        // A real error in the header is still reported, before the data.
+        val broken = "INSERT INTO events (id) WHERE FORMAT CSV\n1\n;"
+        val range = checkNotNull(verificationRange(broken, SqlScriptSnapshot.parse(broken, "clickhouse").statements.first()))
+        assertEquals(listOf("WHERE"), localParseDiagnostics(broken, range, "clickhouse").map { broken.substring(it.start, it.end) })
+    }
+
     @Test
     fun anUnknownDialectHasNoLocalDiagnostics() = assertEquals(listOf(), localParseDiagnostics("SELECT", 0 until 6, "no-such-engine"))
 

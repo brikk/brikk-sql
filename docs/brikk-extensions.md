@@ -1955,6 +1955,10 @@ invisible to the editor. Not covered, as their quoting is not known from the INS
 `Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw line break,
 so their data keeps the plain rule.
 
+The parser consumes `FORMAT <name>` and the framed INSERT_DATA token as the insert's format (`format`, the
+name; `insert_data`, the payload as written), so local diagnostics never read data as SQL and the generator
+writes header and data back unchanged. Without the editor's framing nothing is consumed.
+
 ## 57. Plan-only text explain and catalog definitions
 
 `prepareTextExplain(statement, dialect)` builds the `EXPLAIN` an IDE shows as text, or refuses. Only

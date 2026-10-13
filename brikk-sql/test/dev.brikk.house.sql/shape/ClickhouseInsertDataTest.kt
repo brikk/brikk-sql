@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.shape
 
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.sql
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
@@ -190,6 +191,20 @@ class ClickhouseInsertDataTest {
         for (head in listOf("INSERT INTO t (a, b)", "INSERT INTO db.t SETTINGS async_insert = 1", "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a")) {
             val sql = "$head FORMAT CSV\n1,'\n;\nSELECT 2;"
             assertEquals(listOf("$head FORMAT CSV\n1,'\n;", "SELECT 2;"), statements(sql), head)
+        }
+    }
+
+    /** Parsed with the editor's framing, the data stays one opaque payload and is written back as it came. */
+    @Test fun framedDataParsesAndRoundTrips() {
+        val dialect = Dialects.forName("clickhouse")
+        for (sql in listOf(
+            "INSERT INTO events FORMAT JSONEachRow\n{\"id\":1,\"m\":\"semi;colon\"}\n{\"id\":2}",
+            "INSERT INTO events (id, name) SETTINGS format_csv_delimiter = ';' FORMAT CSV\n1;a\n2;b",
+            "INSERT INTO events FORMAT TSV",
+        )) {
+            val tokens = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(sql).tokens
+            val parsed = dialect.parser().parse(tokens, sql).single()
+            assertEquals(sql, checkNotNull(parsed).sql("clickhouse"), sql)
         }
     }
 

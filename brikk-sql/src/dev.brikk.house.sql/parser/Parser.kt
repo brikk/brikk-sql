@@ -5922,6 +5922,7 @@ open class Parser(
         var alternative: String? = null
         var isFunction: kotlin.Boolean? = null
         var functionPartition: Expression? = null
+        var insertData: String? = null
 
         var this_: Expression?
         if (matchTextSeq("DIRECTORY")) {
@@ -6028,6 +6029,8 @@ open class Parser(
                     "using" to replaceUsing,
                     "partition" to (functionPartition ?: if (match(TokenType.PARTITION_BY)) parsePartitionedBy() else false),
                     "settings" to (if (matchTextSeq("SETTINGS")) parseSettingsProperty() else false),
+                    "format" to parseInsertDataFormat()?.also { insertData = it.second }?.first,
+                    "insert_data" to insertData,
                     "default" to matchTextSeq("DEFAULT", "VALUES"),
                     "expression" to (setValues ?: parseDerivedTableValues(allowValueSynonym = true) ?: parseDdlSelect()),
                     "conflict" to parseOnConflict(),
@@ -6040,6 +6043,21 @@ open class Parser(
             ),
             comments = comments,
         )
+    }
+
+    /**
+     * brikk-native: ClickHouse `INSERT ... FORMAT <name>` followed by its inline data, which the editor
+     * tokenizer frames as one INSERT_DATA token (empty when there is none): the data is never read as SQL.
+     * Without that token (other dialects, plain tokenizing) nothing is consumed.
+     */
+    private fun parseInsertDataFormat(): Pair<Expression, String>? {
+        if (currToken.tokenType != TokenType.FORMAT || nextToken.tokenType == TokenType.INSERT_DATA) return null
+        if (tokens.getOrNull(index + 2)?.tokenType != TokenType.INSERT_DATA) return null
+        advance()
+        val name = parseIdVar(anyToken = true) ?: return null
+        val data = currToken.text
+        advance()
+        return name to data
     }
 
     // sqlglot: Parser._parse_declareitem
