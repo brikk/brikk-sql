@@ -46,18 +46,20 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         // Injected SQL is read unescaped, so a host's doubled quotes do not change its literals.
         val source = PipeText.of(file)
         val before = source.text.substring(0, source.textOffset(prefixAt(file, parameters.offset).first).coerceIn(0, source.text.length))
+        val context = sourceContext(before, profile.metadata.dialect, ProgressManager::checkCanceled)
         val position = functionPosition(
-            before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
+            context?.statement ?: before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
             { name -> name in reads.snapshot.functions }, ProgressManager::checkCanceled,
         )
-        val functions = completeFunctions(parameters, result, reads, position)
+        val inCode = context?.inCode != false
+        val functions = if (inCode) completeFunctions(parameters, result, reads, position, context) else emptySet()
         completeTableFunctionArguments(parameters, result, reads)
-        if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position)
+        if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position.takeIf { inCode })
     }
 
     /**
      * Keywords that neither [functions] (upper-case names this contributor offered) nor a later
-     * contributor offered. Keywords of later contributors are spelled in the same case as these:
+     * contributor offered; none outside code (a null [position]). Keywords of later contributors are spelled in the same case as these:
      * the user's SQL code style keyword case if it sets one, else the profile's. A PIPE stage head
      * gets none of its own: only a stage phrase stands there.
      */
@@ -66,7 +68,7 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         result: CompletionResultSet,
         reads: ProfileReads,
         functions: Set<String>,
-        position: FunctionPosition,
+        position: FunctionPosition?,
     ) {
         val scope = profile.keywords
         val style = profile.styles[SqlLookupKind.KEYWORD]
@@ -81,7 +83,7 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
             val keyword = recased?.takeIf { element.isKeywordOf(catalog) }?.let { CasedKeyword(element, it.apply(element.lookupString)) }
             result.passResult(keyword?.let(completion::withLookupElement) ?: completion)
         }
-        if (scope == KeywordScope.NONE || position == FunctionPosition.STAGE_HEAD) return
+        if (scope == KeywordScope.NONE || position == null || position == FunctionPosition.STAGE_HEAD) return
         val fallback = if (codeStyleCase == null) style else style.copy(case = LookupCase.AS_GIVEN)
         val sink = result.caseInsensitive()
         for (keyword in catalog.keywords) {
@@ -127,15 +129,28 @@ private class ProfileReads(val profile: SqlCompletionProfile, val file: PsiFile)
     val keywords by lazy(LazyThreadSafetyMode.NONE) { profile.keywordCatalog(file, snapshot) }
 }
 
-/** Offers the functions the gates allow that fit [position] and returns their upper-case names. */
-private fun completeFunctions(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads, position: FunctionPosition): Set<String> {
+/**
+ * Offers the functions the gates allow that fit [position] and returns their upper-case names. The
+ * gates read [context], the source's tokens, or PSI where core does not know the dialect.
+ */
+private fun completeFunctions(
+    parameters: CompletionParameters,
+    result: CompletionResultSet,
+    reads: ProfileReads,
+    position: FunctionPosition,
+    context: SourceContext?,
+): Set<String> {
     val profile = reads.profile
     val file = parameters.originalFile
     val gates = profile.functionGates
     if (gates.digitPrefix && prefixIsDigitLed(file, parameters.offset)) return emptySet()
-    if (parameters.invocationCount == 0 && gates.autopopup?.matches(file, parameters.offset) == false) return emptySet()
-    val qualifier = PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)
-        ?.qualifierExpression?.text
+    val autopopup = gates.autopopup
+    if (parameters.invocationCount == 0 && autopopup != null) {
+        val follows = if (context != null) autopopup.follows(context.previous) else autopopup.matches(file, parameters.offset)
+        if (!follows) return emptySet()
+    }
+    val qualifier = if (context != null) context.qualifier
+    else PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)?.qualifierExpression?.text
     val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
     val names = HashSet<String>()
     val positions = profile.tablePositions
@@ -329,6 +344,9 @@ private fun ExpressionPositions.matches(file: PsiFile, offset: Int): Boolean {
     while (leaf != null && (leaf is PsiWhiteSpace || leaf is PsiComment || leaf.textLength == 0)) {
         leaf = PsiTreeUtil.prevLeaf(leaf, true)
     }
-    val text = leaf?.text ?: return false
-    return text in operators || keywords.any { it.equals(text, ignoreCase = true) }
+    return follows(leaf?.text)
 }
+
+/** Whether a function may follow [previous], the last token before the typed name. */
+private fun ExpressionPositions.follows(previous: String?): Boolean =
+    previous != null && (previous in operators || keywords.any { it.equals(previous, ignoreCase = true) })

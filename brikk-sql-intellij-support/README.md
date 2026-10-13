@@ -159,7 +159,10 @@ dark variant: `WindowFunction` ("W" in the function circle, the WINDOW row) and 
 laid 2-1-2, the BRIKK_COLUMN row). `nativeKinds` maps engine-native function kinds
 (`FunctionPresentation.nativeKind`, such as DuckDB macros) to their own rows. `SqlFunctionGates` are off by default: the qualifier
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
-the autopopup gate (`ExpressionPositions`; explicit completion always offers functions).
+the autopopup gate (`ExpressionPositions`; explicit completion always offers functions). The
+qualifier, the token before the name and whether it stands in code are read from the core dialect's
+tokens of the source, so PIPE text and lenient statements get the qualifier, strings, comments and
+inline data get no functions or keywords, and spans the dialect's lexer masks complete as code.
 
 `SelectAliasResolveExtension(dbms, clauses)` (`dev.brikk.house.sql.intellij.psi`, experimental):
 unqualified references in the given clauses (default HAVING, GROUP BY, ORDER BY) of a query in
