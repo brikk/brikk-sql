@@ -136,10 +136,12 @@ public class ParseOnlyClickhouseVerifier(
         if (UNREADABLE in detail) return VerifyResult.Unavailable("ClickHouse verification is unavailable: the driver could not read the server's answer (unreadable error message; turn the driver's compression off).")
         return when (serverCode()) {
             null -> VerifyResult.Unavailable("ClickHouse verification is unavailable: ${reason()}.")
-            SYNTAX_ERROR -> if (detail.startsWith("Empty query")) {
-                VerifyResult.Unverified("ClickHouse has no statement to parse-check here.")
-            } else {
-                VerifyResult.Rejected(syntaxError(sql, detail))
+            SYNTAX_ERROR -> when {
+                // Every error in the supplied text is reported in formatQuery's scope; one without it is the wrapper's.
+                !inFormatQuery() -> VerifyResult.Unverified("ClickHouse could not parse-check this statement: the verification query failed ($detail)")
+                detail.startsWith("Max query size exceeded") -> VerifyResult.Unverified("The statement is longer than the server's max_query_size allows to parse-check.")
+                detail.startsWith("Empty query") -> VerifyResult.Unverified("ClickHouse has no statement to parse-check here.")
+                else -> VerifyResult.Rejected(syntaxError(sql, detail))
             }
             UNKNOWN_FUNCTION -> if ("formatQuery" in detail) {
                 VerifyResult.Unavailable("ClickHouse verification is unavailable: the server has no formatQuery (ClickHouse 23.10 or later).")
@@ -215,10 +217,15 @@ public class JdbcClickhouseQueryConnection(private val connection: java.sql.Conn
 /** ClickHouse's error code in this exception's or a cause's message. */
 private fun SQLException.serverCode(): Int? = chain().firstNotNullOfOrNull { it.message?.let(CODE_IN::find) }?.groupValues?.get(1)?.toIntOrNull()
 
+/** Whether the server reported the error while formatQuery parsed its argument, not while parsing the verifier's own query. */
+private fun SQLException.inFormatQuery(): Boolean = chain().any { it.message?.contains(IN_FORMAT_QUERY) == true }
+
+private const val IN_FORMAT_QUERY = ": In scope SELECT formatQuery"
+
 /** The server's message after `DB::Exception: `, without the echo of the verifier's own query. */
 private fun SQLException.serverMessage(): String {
     val message = chain().mapNotNull { it.message }.firstOrNull { CODE_IN.containsMatchIn(it) } ?: return reason()
-    return message.substringAfter("DB::Exception: ").substringBefore(": In scope SELECT formatQuery").substringBefore(" (SYNTAX_ERROR)")
+    return message.substringAfter("DB::Exception: ").substringBefore(IN_FORMAT_QUERY).substringBefore(" (SYNTAX_ERROR)")
         .substringBefore(" (version ").trim().removeSuffix(".")
 }
 

@@ -12,9 +12,10 @@ verifier.verify("SELECT 'ü' FRM t") // Rejected: "Syntax error at t: Expected o
   `SELECT formatQuery(unhex('<the SQL's UTF-8 as hex>')) SETTINGS readonly = 1, max_execution_time = N`
   and closes it. The SQL is data, a string argument the server parses; the query cannot be anything
   else. A profile that refuses query settings (`readonly` users) is asked without them.
-- **Verdicts.** Only a syntax error (code 62) is `Rejected`, positioned from ClickHouse's 1-based
-  UTF-8 byte position (`VerifyError.atUtf8Byte`), spanning the token. A statement too deep, too big
-  or too slow to parse is `Unverified`; anything else (no connection, authentication, access, no
+- **Verdicts.** Only a syntax error (code 62) in the supplied text (the server reports it in
+  `formatQuery`'s scope) is `Rejected`, positioned from ClickHouse's 1-based
+  UTF-8 byte position (`VerifyError.atUtf8Byte`), spanning the token. An error in the verifier's own query, a statement over the
+  server's `max_query_size`, or one too deep, too big or too slow to parse is `Unverified`; anything else (no connection, authentication, access, no
   `formatQuery` before 23.10) is `Unavailable`, never clean.
 - **INSERT data.** The server parses an INSERT's header only; `VALUES` rows and `FORMAT` data are read
   when it runs (`INSERT INTO t VALUES (1), (2` formats as `INSERT INTO t FORMAT Values`). An accepted

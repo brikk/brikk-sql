@@ -55,6 +55,22 @@ internal class ClickhouseAccessTest {
         }
     }
 
+    /** A statement over the server's `max_query_size` (here, the hex wrapper) is not checked, never rejected at a wrapper offset. */
+    @Test
+    fun aStatementOverTheQuerySizeLimitIsUnverified() {
+        val user = "verify_small_" + UUID.randomUUID().toString().replace("-", "")
+        ClickhouseServer.open().use { admin ->
+            admin.run("CREATE USER $user IDENTIFIED WITH no_password SETTINGS max_query_size = 600")
+            try {
+                val verifier = ParseOnlyClickhouseVerifier({ HttpClickhouseQueryConnection(HTTP, user) })
+                assertIs<VerifyResult.Unverified>(verifier.verify("SELECT " + "1 + ".repeat(100) + "1"))
+                assertIs<VerifyResult.Rejected>(verifier.verify("SELECT FROM WHERE"))
+            } finally {
+                admin.run("DROP USER IF EXISTS $user")
+            }
+        }
+    }
+
     @Test
     fun aRefusedLoginIsUnavailable() {
         assertIs<VerifyResult.Unavailable>(verifierAs("default", "wrong").verify("SELECT 1"))

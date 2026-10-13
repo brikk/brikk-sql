@@ -99,6 +99,17 @@ internal class ClickhouseAvailabilityTest {
         assertTrue("unreadable" in result.reason, result.reason)
     }
 
+    /** Errors in the verifier's own query, or past the size limit inside the statement, are no verdict on the statement. */
+    @Test
+    fun wrapperAndSizeErrorsAreUnverified() {
+        val inside = "Code: 62. DB::Exception: Max query size exceeded (can be increased with the `max_query_size` setting): " +
+            "Syntax error: failed at position 201 (+): +. : In scope SELECT formatQuery(unhex('5345')). (SYNTAX_ERROR)"
+        val wrapper = "Code: 62. DB::Exception: Syntax error: failed at position 26 ('5345'): '5345'. Expected one of: token. (SYNTAX_ERROR)"
+        for (message in listOf(inside, wrapper)) {
+            assertIs<VerifyResult.Unverified>(ParseOnlyClickhouseVerifier({ FailingConnection(SQLException(message)) }).verify("SELECT 1"), message)
+        }
+    }
+
     private class FailingConnection(private val failure: SQLException) : ClickhouseQueryConnection {
         override fun queryString(sql: String, timeoutSeconds: Int): String? = throw failure
         override fun cancel() = Unit
