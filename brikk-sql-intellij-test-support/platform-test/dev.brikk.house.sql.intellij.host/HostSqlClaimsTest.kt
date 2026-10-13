@@ -282,6 +282,30 @@ class HostSqlClaimsTest : HostSqlTestCase() {
         assertNotEmpty(myFixture.doHighlighting(HighlightSeverity.ERROR).filter { it.description?.startsWith("Local parser") == true })
     }
 
+    fun testAResolvedPlaceholderIsVerifiedWithoutATextChange() {
+        val validator = ScriptedValidator(::rejectBad)
+        val profile = TestProfile(postgres, "postgres", "Resolved verifier").apply {
+            injectionHosts = setOf(mysql)
+            this.validator = validator
+            hostSql = channel
+        }
+        ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(mysql, object : NativeErrorAnnotator(profile) {}, testRootDisposable)
+        var pending = true
+        claim = { host ->
+            val at = host.text.indexOf("\${x}")
+            HostSqlClaim.Injected(postgres, HostSqlEntries(listOf(
+                HostSqlEntry(TextRange(1, at)), HostSqlEntry(TextRange(at, at + 4), "bad", placeholder = pending), HostSqlEntry(TextRange(at + 4, host.textLength - 1)),
+            )), pending = pending)
+        }
+        open("SELECT 'SELECT \${x}'")
+        val reports = { myFixture.doHighlighting(HighlightSeverity.ERROR).filter { it.description?.startsWith("Resolved verifier") == true } }
+        assertEmpty(reports())
+        pending = false
+        channel.requestReanalysis(myFixture.file)
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        assertNotEmpty(reports())
+    }
+
     fun testTheGutterIconIsDimmedWhileIndexing() {
         val markers = object : HostSqlLineMarkerProvider(channel, "Claimed SQL strings", SqlLookupIcons.BrikkColumn) {
             override fun tooltip(state: HostSqlState) = "SQL string"
