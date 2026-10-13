@@ -79,7 +79,8 @@ data class SqlScriptParameters(
          * Where the dialect has typed server parameters (ClickHouse), each `{name:Type}` is
          * reported as [ParamStyle.NAMED_TYPED] over its whole braces, for callers to skip.
          *
-         * With [positional], each `?` bind is reported too, as [ParamStyle.POSITIONAL] without a name.
+         * With [positional], each `?` bind is reported too, as [ParamStyle.POSITIONAL] without a name,
+         * including the `?` of a cast `?::Type` (one token); the type a `::` cast names ends its operand.
          * Where `?` is also the ternary operator (ClickHouse `cond ? a : b`, as the IDE's ClickHouse
          * grammar reads it), a `?` after a complete operand is the operator and opens a ternary,
          * and a `:` after a complete operand closes the nearest open one in the same brackets and is
@@ -179,7 +180,11 @@ data class SqlScriptParameters(
             val ternaries = ArrayList<Pair<Token, Int>>()
             var bindNameEnd = -1
             var skipThrough = -1
-            fun endsOperand(previous: Token?) = previous != null && (previous.tokenType in OPERAND_ENDS || previous.end == bindNameEnd)
+            // The type a `::` cast names ends its operand (`x::Int32 ? 1 : 0`); a type with arguments ends with `)`.
+            var castTypeAt = -1
+            var castTypeEnd = -1
+            fun endsOperand(previous: Token?) =
+                previous != null && (previous.tokenType in OPERAND_ENDS || previous.end == bindNameEnd || previous.end == castTypeEnd)
             fun leaveTernaries(depth: Int) {
                 while (ternaries.isNotEmpty() && ternaries.last().second > depth) {
                     val question = ternaries.removeAt(ternaries.lastIndex).first
@@ -189,20 +194,24 @@ data class SqlScriptParameters(
             for ((index, token) in tokens.withIndex()) {
                 if (index and 1023 == 1023) checkCanceled()
                 if (index <= skipThrough) continue
+                if (index == castTypeAt) castTypeEnd = token.end
                 val previous = tokens.getOrNull(index - 1)
                 when (token.tokenType) {
                     TokenType.SEMICOLON -> {
                         leaveTernaries(-1)
                         open.clear()
                     }
-                    TokenType.PLACEHOLDER -> if (token.text == "?") {
+                    // `?::` (QDCOLON) is a `?` followed by a cast; its `?` follows the same rules.
+                    TokenType.PLACEHOLDER, TokenType.QDCOLON -> if (token.text == "?" || token.tokenType == TokenType.QDCOLON) {
                         if (ternary && endsOperand(previous)) {
                             ternaries += token to open.depth
                         } else {
-                            if (positional) binds += ParameterOccurrence(null, ParamStyle.POSITIONAL, SyntacticRange(token.start, token.end + 1), null)
+                            if (positional) binds += ParameterOccurrence(null, ParamStyle.POSITIONAL, SyntacticRange(token.start, token.start + 1), null)
                             bindNameEnd = token.end
                         }
+                        if (token.tokenType == TokenType.QDCOLON) castTypeAt = index + 1
                     }
+                    TokenType.DCOLON -> castTypeAt = index + 1
                     TokenType.L_PAREN -> open.push(Bracket.PAREN)
                     TokenType.L_BRACKET -> open.push(when {
                         halfOpenRanges && previous?.tokenType == TokenType.VALUES -> Bracket.RANGE

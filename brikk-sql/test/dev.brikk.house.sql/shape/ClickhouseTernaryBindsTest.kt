@@ -66,10 +66,24 @@ class ClickhouseTernaryBindsTest {
         assertEquals(listOf("?@19") to listOf(9), binds("SELECT x ?; SELECT ?"))
     }
 
+    /** `?::` lexes as one token; its `?` follows the same rules, and the cast's type ends an operand. */
+    @Test
+    fun aCastBindIsABind() {
+        assertBinds("SELECT ?::UInt64", "?@7")
+        assertBinds("SELECT f(?::Int32, :n::Int32)", "?@9", ":n@19")
+        assertBinds("SELECT :name::UInt64", ":name@7")
+        assertBinds("SELECT ?::UInt8 ? 1 : 0", "?@7")
+        assertBinds("SELECT x::Int32 ? 1 : 0")
+        assertBinds("SELECT c ? ?::Int32 : 0", "?@11")
+        assertBinds("SELECT ? ::Int32", "?@7")
+    }
+
     @Test
     fun otherDialectsHaveNoTernary() {
         assertEquals(listOf("?@9", ":z@13") to emptyList(), binds("SELECT x ? y :z", "duckdb"))
         assertEquals(listOf("?@7") to emptyList(), binds("SELECT ?", "doris"))
+        assertEquals(listOf("?@7", ":n@19") to emptyList(), binds("SELECT ?::INTEGER, :n::INTEGER", "duckdb"))
+        assertEquals(listOf("?@9") to emptyList(), binds("SELECT f(?::int)", "postgres"))
     }
 
     @Test

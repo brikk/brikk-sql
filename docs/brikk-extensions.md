@@ -1884,7 +1884,8 @@ ClickHouse's `?` is also the ternary operator (`cond ? a : b`), so editor discov
 (`SqlScriptParameters.parse(text, dialect, positional = true)`) tells them apart by tokens as the
 IDE's ClickHouse grammar does (`Dialect.questionMarkTernary`): a `?` after a complete operand opens a
 ternary, the `:` after a complete operand closing it is never a bind (`x ? y :z`), and `?` or `:name`
-in operand position stay binds. A `?` tokens cannot prove (a ternary never closed, an empty middle)
+in operand position stay binds, also as `?::Type` (one token) and `:name::Type`; a cast's type ends an
+operand (`x::Int32 ? 1 : 0`). A `?` tokens cannot prove (a ternary never closed, an empty middle)
 is reported as `ambiguous`; the IDE calls it a parameter. One known divergence: for a bind opening a
 ternary's middle (`x ? :p : ?`), the IDE also takes the ternary `?` for a parameter.
 
