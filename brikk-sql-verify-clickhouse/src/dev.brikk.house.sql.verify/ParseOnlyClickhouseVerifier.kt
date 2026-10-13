@@ -1,5 +1,8 @@
 package dev.brikk.house.sql.verify
 
+import dev.brikk.house.sql.parser.TokenType
+import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.parser.TokenizerConfigs
 import java.sql.SQLException
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
@@ -28,7 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean
  * authentication, access, no `formatQuery` before ClickHouse 23.10) is [VerifyResult.Unavailable].
  *
  * The server parses an INSERT's header only: inline data (`VALUES` rows, `FORMAT` data) is read at
- * execution. An accepted INSERT with a data format is therefore [VerifyResult.Unverified]. Error
+ * execution. An accepted INSERT with inline data (read from core's tokens, wrapped in EXPLAIN or not)
+ * is therefore [VerifyResult.Unverified]. Error
  * positions are converted from ClickHouse's UTF-8 byte offsets.
  *
  * [checkCanceled] is polled while the server works; whatever it throws cancels the query, closes
@@ -50,7 +54,7 @@ public class ParseOnlyClickhouseVerifier(
         if (hex.length > MAX_HEX_LENGTH) return VerifyResult.Unverified("The statement is too long for ClickHouse parse-checking.")
         val answer = ask(hex)
         return when (answer) {
-            is Answer.Formatted -> if (answer.text.isInsertWithData()) VerifyResult.Unverified(INSERT_DATA) else VerifyResult.Accepted
+            is Answer.Formatted -> if (hasInlineData(sql)) VerifyResult.Unverified(INSERT_DATA) else VerifyResult.Accepted
             is Answer.Failed -> answer.failure.toResult(sql)
             is Answer.NoConnection -> VerifyResult.Unavailable(answer.reason)
         }
@@ -254,12 +258,35 @@ internal fun syntaxError(sql: String, detail: String): VerifyError {
     return if (token != "end of query" && sql.startsWith(token, offset)) located.copy(endOffset = offset + token.length) else located
 }
 
-/** Whether ClickHouse's formatting of an accepted statement is an INSERT whose rows follow as inline data. */
-internal fun String.isInsertWithData(): Boolean = INSERT_WITH_DATA.matches(trim())
+/**
+ * Whether [sql], read with core's ClickHouse tokens, holds an INSERT whose rows follow as inline data:
+ * a `VALUES` before the INSERT's query, or a `FORMAT`, after an `INSERT` at its parenthesis depth (also under `EXPLAIN`),
+ * or inline data core already separated. Strings and comments never count; text core cannot
+ * tokenize counts when it holds an `INSERT`.
+ */
+internal fun hasInlineData(sql: String): Boolean {
+    val lexed = Tokenizer(TokenizerConfigs.forName("clickhouse")).tokenizeForEditor(sql)
+    var depth = 0
+    var insertDepth: Int? = null
+    var query = false
+    for (token in lexed.tokens) {
+        when (token.tokenType) {
+            TokenType.INSERT_DATA -> return true
+            TokenType.L_PAREN -> depth++
+            TokenType.R_PAREN -> depth--
+            TokenType.INSERT -> if (insertDepth == null) insertDepth = depth
+            TokenType.SELECT, TokenType.WITH -> if (insertDepth == depth) query = true
+            // After the INSERT's query, `values(...)` is a table function; FORMAT still names the data's format (`input()`).
+            TokenType.VALUES -> if (insertDepth == depth && !query) return true
+            TokenType.FORMAT -> if (insertDepth == depth) return true
+            else -> Unit
+        }
+    }
+    return lexed.failureOffset != null && insertDepth != null
+}
 
 private val POSITION = Regex("""failed at position (\d+) \(((?:[^()]|\([^()]*\))*)\)(?: \(line \d+, col \d+\))?""")
 
-private val INSERT_WITH_DATA = Regex("""(?is)INSERT\b.*\bFORMAT\s+\S+""")
 
 private fun ByteArray.toHex(): String {
     val digits = "0123456789ABCDEF"

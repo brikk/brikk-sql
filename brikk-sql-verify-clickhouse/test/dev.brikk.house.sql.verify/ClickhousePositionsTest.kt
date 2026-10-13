@@ -47,6 +47,15 @@ internal class ClickhousePositionsTest {
         assertTrue(error.message.startsWith("Syntax error at the end of the query"), error.message)
     }
 
+    /** The server reads no inline data, so an accepted INSERT carrying some is not checked, wrapped or not. */
+    @Test
+    fun insertsWithInlineDataAreUnverifiedAndAFormatInAStringIsNotData() {
+        ClickhouseServer.require()
+        assertIs<VerifyResult.Unverified>(verifier.verify("EXPLAIN AST INSERT INTO t VALUES (1), (2"))
+        assertIs<VerifyResult.Unverified>(verifier.verify("INSERT INTO t VALUES (1), (2"))
+        assertEquals(VerifyResult.Accepted, verifier.verify("INSERT INTO t SELECT 'x FORMAT y'"))
+    }
+
     @Test
     fun anExpressionIsPositionedInTheFragment() {
         val error = assertIs<VerifyResult.Rejected>(verifier.verifyExpression("plus(1, , 2)")).error

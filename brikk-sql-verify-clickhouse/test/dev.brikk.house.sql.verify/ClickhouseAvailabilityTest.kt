@@ -117,10 +117,15 @@ internal class ClickhouseAvailabilityTest {
     }
 
     @Test
-    fun anInsertWithInlineDataIsRecognizedFromTheServersFormatting() {
-        assertTrue("INSERT INTO t FORMAT Values".isInsertWithData())
-        assertTrue("INSERT INTO t\nSETTINGS async_insert = 1\nFORMAT CSV".isInsertWithData())
-        assertFalse("INSERT INTO t SELECT 1".isInsertWithData())
-        assertFalse("SELECT 1\nFORMAT JSON".isInsertWithData())
+    fun insertsWithInlineDataAreRecognizedFromTheirTokens() {
+        for (sql in listOf(
+            "INSERT INTO t VALUES (1), (2", "INSERT INTO t FORMAT CSV\n1,\"x\n", "insert into t settings async_insert = 1 values (1)",
+            "EXPLAIN AST INSERT INTO t VALUES (1), (2", "EXPLAIN SYNTAX INSERT INTO t FORMAT JSONEachRow {\"a\":",
+            "INSERT INTO t SELECT a FROM input('a UInt64') FORMAT TSV\n88\n", "INSERT INTO t VALUES",
+        )) assertTrue(hasInlineData(sql), sql)
+        for (sql in listOf(
+            "INSERT INTO t SELECT 'x FORMAT y'", "INSERT INTO t SELECT * FROM values('a UInt8', 1)", "SELECT 1 FORMAT JSON",
+            "SELECT 'INSERT INTO t VALUES'", "INSERT INTO t SELECT 1 -- VALUES (1)",
+        )) assertFalse(hasInlineData(sql), sql)
     }
 }
