@@ -22,6 +22,11 @@ open class DuckdbDialect : Dialect() {
     )
 
     override val name: String get() = "duckdb"
+
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val whereProjectionAliases: Boolean get() = true
+    override val lateralColumnAliases: Boolean get() = true
+
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.IN_PLACE
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.RAW
 
@@ -30,6 +35,9 @@ open class DuckdbDialect : Dialect() {
 
     // sqlglot: DuckDB.NORMALIZATION_STRATEGY
     override val normalizationStrategy get() = NormalizationStrategy.CASE_INSENSITIVE
+
+    // brikk-native: see Dialect.deduplicatesDerivedColumnNames.
+    override val deduplicatesDerivedColumnNames: Boolean get() = true
 
     // sqlglot: DuckDB.ASCII_ONLY_NORMALIZATION = True
     override val asciiOnlyNormalization: Boolean get() = true

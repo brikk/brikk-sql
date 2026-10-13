@@ -24,6 +24,9 @@ class MysqlDialect : Dialect() {
     // sqlglot: MySQL.NORMALIZATION_STRATEGY
     override val normalizationStrategy get() = NormalizationStrategy.CASE_SENSITIVE
 
+    // brikk-native: see Dialect.caseInsensitiveColumns.
+    override val caseInsensitiveColumns: Boolean get() = true
+
     override val tokenizerConfig: TokenizerConfig get() = dev.brikk.house.sql.parser.StringEscapeProfiles.MYSQL
 
     // sqlglot: MySQL.TIME_MAPPING

@@ -26,6 +26,10 @@ open class ClickhouseDialect : Dialect() {
 
     override val name: String get() = "clickhouse"
 
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val whereProjectionAliases: Boolean get() = true
+    override val lateralColumnAliases: Boolean get() = true
+
     // sqlglot: ClickHouseParser._parse_query_parameter
     override val typedQueryParameters: Boolean get() = true
 

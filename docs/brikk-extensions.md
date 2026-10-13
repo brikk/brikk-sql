@@ -53,8 +53,17 @@ exceptions today:
   Whole-row DISTINCT followed by plain projection can return duplicate projected
   values. The older test expecting these to collapse was incorrect and is replaced
   by row-result assertions.
-- The pipe corpus has two explicit, checked native expectations: sequential slices
-  that exhaust the earlier limit, and WHERE's boundary after DISTINCT. The extracted
+- EXTEND, WINDOW, AGGREGATE, JOIN, PIVOT and UNPIVOT rewrite the current SELECT in place
+  only when it is a plain `SELECT *`; otherwise they read its finished rows through an input
+  CTE. Earlier versions (and sqlglot) dropped a SELECT-first head's projection
+  (`SELECT a, b FROM t |> EXTEND 1 AS x` ran as `SELECT *, 1 AS x FROM t`), spread a SET or
+  DROP star across a later JOIN, aggregated or windowed before a prior LIMIT or DISTINCT, and
+  pivoted the first table before a JOIN or WHERE. A boundary keeps a single source's alias
+  for a plain `*`, as WHERE's does. ORDER BY after a SELECT-first head now reads only its
+  output, like WHERE: `SELECT a FROM t |> ORDER BY b` fails rather than sorting by `b`.
+- The pipe corpus has four explicit, checked native expectations: sequential slices
+  that exhaust the earlier limit, WHERE's boundary after DISTINCT, and PIVOT and UNPIVOT
+  of joined rows. The extracted
   SQLGlot fixtures are unchanged; overrides must match current inputs and become stale
   if upstream adopts their output. `DorisPipeStageOrderTest` and
   `PipePaginationSemanticsTest` use independent staged references and actual row results.

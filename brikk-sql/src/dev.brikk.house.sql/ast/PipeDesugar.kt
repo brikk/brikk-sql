@@ -53,16 +53,37 @@ fun desugarPipes(expression: Expression, copy: kotlin.Boolean = true): Expressio
     desugarPipes(expression, Dialects.BASE, copy)
 
 /** Uses the input dialect's identifier rules for namespace proofs; preserves SQL spelling. */
-fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean = true): Expression {
+fun desugarPipes(expression: Expression, dialect: Dialect, copy: kotlin.Boolean = true): Expression =
+    desugarPipes(expression, dialect, copy, refused = null)
+
+/**
+ * With [refused], lowers leniently for editor scopes what execution refuses: an input boundary
+ * that cannot keep its namespaces drops them, so old qualifiers stop resolving (a scope finding of
+ * its own); a slice that is no plain literal and a qualified RENAME source lower as written and
+ * are reported to [refused] with the stage and execution's reason.
+ */
+internal fun desugarPipes(
+    expression: Expression,
+    dialect: Dialect,
+    copy: kotlin.Boolean,
+    refused: ((stage: Expression, message: String) -> Unit)?,
+    checkCanceled: () -> Unit = {},
+): Expression {
     val root = if (copy) expression.copy() else expression
     // sqlglot: Parser._pipe_cte_counter (per-statement)
     val counter = PipeCteCounter(root.findAll(Table::class, TableAlias::class)
-        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect)
+        .flatMap { listOf(it.name.lowercase(), it.alias.lowercase()) }.toSet(), dialect, refused, checkCanceled)
     return desugarNode(root, counter)
 }
 
-private class PipeCteCounter(val takenNames: kotlin.collections.Set<String>, val dialect: Dialect) {
+private class PipeCteCounter(
+    val takenNames: kotlin.collections.Set<String>,
+    val dialect: Dialect,
+    val refused: ((Expression, String) -> Unit)?,
+    val checkCanceled: () -> Unit,
+) {
     var n: Int = 0
+    val lenient: kotlin.Boolean get() = refused != null
 }
 
 private fun desugarNode(node: Expression, counter: PipeCteCounter): Expression {
@@ -71,20 +92,32 @@ private fun desugarNode(node: Expression, counter: PipeCteCounter): Expression {
     return node
 }
 
-/** Desugars nested PipeQueries in arg-insertion order (approximates parse order). */
+/**
+ * Desugars nested PipeQueries in arg-insertion order (approximates parse order). Iterative, so a
+ * long expression chain (thousands of ANDs) does not exhaust the stack; only pipe nesting recurses.
+ */
 private fun desugarChildren(node: Expression, counter: PipeCteCounter) {
-    for ((key, value) in node.args.entries.toList()) {
-        if (value is Expression) {
-            val desugared = desugarNode(value, counter)
-            if (desugared !== value) node.set(key, desugared)
-        } else if (value is List<*>) {
-            for ((i, item) in value.withIndex()) {
-                if (item is Expression) {
-                    val desugared = desugarNode(item, counter)
-                    if (desugared !== item) node.set(key, desugared, index = i)
-                }
-            }
+    class Slot(val node: Expression, val parent: Expression, val key: String, val index: Int?)
+    val pending = ArrayDeque<Slot>()
+    fun pushChildren(parent: Expression) {
+        val children = ArrayList<Slot>()
+        for ((key, value) in parent.args.entries) {
+            if (value is Expression) children += Slot(value, parent, key, null)
+            else if (value is List<*>) value.forEachIndexed { i, item -> if (item is Expression) children += Slot(item, parent, key, i) }
         }
+        for (child in children.asReversed()) pending.addLast(child)
+    }
+    pushChildren(node)
+    var visited = 0
+    while (pending.isNotEmpty()) {
+        if (++visited % 1024 == 0) counter.checkCanceled()
+        val slot = pending.removeLast()
+        if (slot.node !is PipeQuery) {
+            pushChildren(slot.node)
+            continue
+        }
+        val desugared = desugarNode(slot.node, counter)
+        if (slot.index == null) slot.parent.set(slot.key, desugared) else slot.parent.set(slot.key, desugared, index = slot.index)
     }
 }
 
@@ -101,6 +134,7 @@ private fun desugarPipeQuery(pipeQuery: PipeQuery, counter: PipeCteCounter): Exp
     }
 
     for (stage in pipeQuery.expressionsArg) {
+        counter.checkCanceled()
         stage as Expression
         // A stage's nested subpipelines were parsed (and therefore numbered) before the
         // stage's own CTEs — desugar them first to reproduce sqlglot's __tmpN order.
@@ -157,13 +191,15 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
     val star = query.expressionsArg.singleOrNull() as? Star
     val stageColumns = when (stage) {
         is PipeWhere -> walkInScope(stage.thisArg as Where).filterIsInstance<Column>().toList()
+        is PipeOrderBy -> walkInScope(stage.thisArg as Expression).filterIsInstance<Column>().toList()
         else -> stage.expressionsArg.filterIsInstance<Expression>()
     }
     val directProjection = (star != null && star.args.values.all {
         it == null || it == false || (it is List<*> && it.isEmpty())
     }) || (
         query.expressionsArg.all { it is Column && !it.isStar } &&
-            stageColumns.all { it is Column && it in query.expressionsArg }
+            // A qualified name reads an old namespace, which a projection's output no longer has (Q13-C).
+            stageColumns.all { it is Column && it.table.isEmpty() && it in query.expressionsArg }
         )
     val positionalOrder = (query.args["order"] as? Order)?.expressionsArg.orEmpty().any {
         ((it as? Ordered)?.thisArg as? Expression)?.unnest()?.isInt == true
@@ -174,9 +210,10 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
             listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null } ||
                 (stage is PipeSelect && (!directProjection || positionalOrder)) ||
                 (stage is PipeWhere && !directProjection)
-            )) {
+            ) || stage is PipeOrderBy && (!directProjection || query.args["limit"] != null || query.args["offset"] != null)) {
         query = pipeInputCte(query, stage, counter)
     }
+    if (needsWholeRows(query, stage)) query = wholeRowInput(query, stage, counter)
     return when (stage) {
         // sqlglot: Parser._parse_pipe_syntax_select
         is PipeSelect -> {
@@ -226,14 +263,16 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
 
         // A combined LIMIT/OFFSET skips rows of the input before taking its limit.
         is PipeLimit -> {
-            val limit = stage.thisArg as? Limit
-                ?: throw UnsupportedError("Pipe LIMIT requires a non-negative signed 64-bit integer literal")
-            applyPipeOffset(query, stage.args["offset"] as? Offset, limit)
+            lenientSlice(query, stage, counter) {
+                val limit = stage.thisArg as? Limit
+                    ?: throw UnsupportedError("Pipe LIMIT requires a non-negative signed 64-bit integer literal")
+                applyPipeOffset(query, stage.args["offset"] as? Offset, limit)
+            }
             query
         }
 
         is PipeOffset -> {
-            applyPipeOffset(query, stage.thisArg as? Offset)
+            lenientSlice(query, stage, counter) { applyPipeOffset(query, stage.thisArg as? Offset) }
             query
         }
 
@@ -298,11 +337,15 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
                     )
                 ) as Expression
             }
+            // New values may read the input by its name: FROM t e |> SET a = e.a + 1.
+            val namespace = if (stage.findAll<Column>().any { it.table.isNotEmpty() }) keptNamespace(query, stage, counter) else null
             buildPipeCte(
                 query,
                 listOf(Star(args("replace" to replaceList.toMutableList()))),
                 counter,
-            )
+            ).also { replaced ->
+                if (namespace != null) ((replaced.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
+            }
         }
 
         // googlesql: pipe DROP (docs/pipe-syntax.md ~713) — NO sqlglot counterpart.
@@ -322,7 +365,8 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
                 val column = alias?.thisArg as? Column
                 if (alias == null || column == null || column.thisArg !is Identifier || alias.args["alias"] !is Identifier ||
                     column.table.isNotEmpty() || column.db.isNotEmpty() || column.catalog.isNotEmpty()) {
-                    throw UnsupportedError("Pipe RENAME requires unqualified source and target column identifiers")
+                    val message = "Pipe RENAME requires unqualified source and target column identifiers"
+                    counter.refused?.invoke(stage, message) ?: throw UnsupportedError(message)
                 }
             }
             val renamed = buildPipeCte(query, listOf(Star(args("rename" to stage.expressionsArg.toMutableList()))), counter)
@@ -389,7 +433,42 @@ private fun applyPipeStage(input: Expression, stage: Expression, counter: PipeCt
 }
 
 private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteCounter): Select {
-    val operation = if (stage is PipeWhere) "WHERE" else "SELECT/DISTINCT"
+    val (namespace, rankingOrder) = try {
+        pipeInputBoundary(query, stage, counter)
+    } catch (e: UnsupportedError) {
+        if (!counter.lenient) throw e
+        null to null
+    }
+    val outer = buildPipeCte(query, listOf(Star()), counter)
+    // Retain the single input namespace, including references inside correlated
+    // stage expressions, without stripping qualifiers or changing source positions.
+    if (namespace != null) {
+        ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
+    }
+    // Ranking still needs the input order; the original stays with its restriction.
+    if (rankingOrder != null) outer.set("order", rankingOrder)
+    return outer
+}
+
+/** The input namespace a boundary preserves and the ranking order DISTINCT ON keeps, or why it cannot. */
+/**
+ * [references] holds the stage's column references that must still resolve past the boundary.
+ * With [wholeRows] (a stage reading whole rows: JOIN, AGGREGATE, EXTEND, ...) the input may span
+ * several sources or repeat a name: only a qualifier the boundary cannot keep is refused.
+ */
+private fun pipeInputBoundary(
+    query: Expression,
+    stage: Expression,
+    counter: PipeCteCounter,
+    references: Expression = stage,
+    wholeRows: kotlin.Boolean = false,
+): Pair<Identifier?, Expression?> {
+    val operation = when (stage) {
+        is PipeWhere -> "WHERE"
+        is PipeOrderBy -> "ORDER BY"
+        is PipeSelect, is PipeDistinct -> "SELECT/DISTINCT"
+        else -> stage::class.simpleName.orEmpty().removePrefix("Pipe").uppercase()
+    }
     fun bindingName(identifier: kotlin.Any?): String? = (identifier as? Identifier)?.let {
         normalizeIdentifiers(it.copy(), dialect = counter.dialect).name
     }
@@ -405,10 +484,10 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
         throw UnsupportedError("Cannot preserve pipe input namespaces: ${error.message}")
     }
     val singleRowset = rowsetName != null
-    if (!singleRowset && hasStar) {
+    if (!singleRowset && hasStar && !wholeRows) {
         throw UnsupportedError("Cannot preserve a pipe $operation input boundary over multiple or unresolved source namespaces and stars; project uniquely named input columns first")
     }
-    if (!hasStar && (projections.any { it.outputName.isEmpty() } ||
+    if (!wholeRows && !hasStar && (projections.any { it.outputName.isEmpty() } ||
             projections.map { it.outputName.lowercase() }.toSet().size != projections.size)) {
         throw UnsupportedError("Pipe $operation input boundaries require uniquely named input columns; add explicit aliases")
     }
@@ -430,7 +509,7 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
     // qualified physical table case but folds alias/column identifiers separately.
     val scopedSource = (inputScope.expression.args["from_"] as? From)?.thisArg as? Expression
     val namespace = sourceAlias.takeIf { singleRowset && wholeRowset && scopedSource?.aliasOrName == rowsetName }
-    val stageScope = pipeScope(Select(args("expressions" to listOf(stage.copy()))), counter.dialect)
+    val stageScope = pipeScope(Select(args("expressions" to listOf(references.copy()))), counter.dialect)
     val stageAnalysis = stageScope.expression.expressionsArg.single() as Expression
     val stageColumns = mutableListOf<Column>()
     // Scope.columns omits child-CTE correlations and stars. Inspect direct
@@ -508,19 +587,19 @@ private fun pipeInputCte(query: Expression, stage: Expression, counter: PipeCteC
             }
         }
     } else null
-    val outer = buildPipeCte(query, listOf(Star()), counter)
-    // Retain the single input namespace, including references inside correlated
-    // stage expressions, without stripping qualifiers or changing source positions.
-    if (namespace != null) {
-        ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
-    }
-    // Ranking still needs the input order; the original stays with its restriction.
-    if (rankingOrder != null) outer.set("order", rankingOrder)
-    return outer
+    return namespace to rankingOrder
 }
 
 private fun pipeScope(expression: Expression, dialect: Dialect): Scope {
-    val analysis = normalizeIdentifiers(expression.copy(), dialect = dialect)
+    // Namespaces come from the query's own clauses: copying its hoisted CTE chain as well would make
+    // every boundary of a long pipe cost the whole chain.
+    val ctes = expression.args["with_"] as? With
+    val analysis = try {
+        ctes?.let { expression.set("with_", null) }
+        normalizeIdentifiers(expression.copy(), dialect = dialect)
+    } finally {
+        ctes?.let { expression.set("with_", it) }
+    }
     // Pipe AS uses From(TableAlias) as a CTE reference, including inside scalar
     // stages. Adapt both input and consumer analysis without changing the public AST.
     for (from in analysis.findAll<From>()) {
@@ -533,6 +612,76 @@ private fun pipeScope(expression: Expression, dialect: Dialect): Scope {
         buildScope(analysis) ?: throw UnsupportedError("Cannot determine pipe input namespaces")
     } catch (error: OptimizeError) {
         throw UnsupportedError("Cannot determine pipe input namespaces: ${error.message}")
+    }
+}
+
+private fun Expression.isPlainStar(): kotlin.Boolean {
+    val star = expressionsArg.singleOrNull() as? Star ?: return false
+    return star.args.values.all { it == null || it == false || (it is List<*> && it.isEmpty()) }
+}
+
+/**
+ * brikk extension: whether [stage], which rewrites [query]'s projection or FROM clause in place,
+ * must instead read [query]'s finished rows: after a projection that is not a plain `*` (a
+ * SELECT-first head, a SET or DROP star), or after clauses that would otherwise apply later
+ * (an aggregate or window over a LIMIT, a JOIN after DISTINCT or WHERE, a PIVOT after WHERE).
+ * A WHERE merged below a JOIN would filter the joined rows: an outer join's null-extended rows
+ * are lost, and the condition's unqualified names may meet the joined relation's.
+ */
+private fun needsWholeRows(query: Expression, stage: Expression): kotlin.Boolean {
+    val shaped = listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null }
+    return when (stage) {
+        // EXTEND is per row, unless a window function reads the rows a slice or grouping left.
+        is PipeExtend -> !query.isPlainStar() || query.args["distinct"] != null ||
+            shaped && stage.expressionsArg.any { it is Expression && it.find<Window>() != null }
+        is PipeWindow, is PipeAggregate -> !query.isPlainStar() || shaped
+        is PipeJoin -> !query.isPlainStar() || shaped || query.args["where"] != null
+        is PipePivot, is PipeUnpivot -> !query.isPlainStar() || shaped || query.args["where"] != null ||
+            !(query.args["joins"] as? List<*>).isNullOrEmpty() || !(query.args["laterals"] as? List<*>).isNullOrEmpty()
+        else -> false
+    }
+}
+
+private fun wholeRowInput(query: Expression, stage: Expression, counter: PipeCteCounter): Select {
+    val namespace = keptNamespace(query, stage, counter)
+    val outer = buildPipeCte(query, listOf(Star()), counter)
+    if (namespace != null) ((outer.args["from_"] as From).thisArg as Table).set("alias", TableAlias(args("this" to namespace.copy())))
+    return outer
+}
+
+/**
+ * The namespace a whole-row boundary before [stage] keeps, by WHERE's rule (a single source,
+ * aliased or a bare table, read whole); a stage qualifying by any other old namespace is refused,
+ * or in a lenient lowering loses it.
+ */
+private fun keptNamespace(query: Expression, stage: Expression, counter: PipeCteCounter): Identifier? = try {
+    pipeInputBoundary(query, stage, counter, references = stageReferences(stage), wholeRows = true).first
+} catch (e: UnsupportedError) {
+    if (!counter.lenient) throw e
+    null
+}
+
+/** The part of [stage] whose columns read the stage's input: a JOIN's condition, without the joined relation's own columns. */
+private fun stageReferences(stage: Expression): Expression {
+    val join = (stage as? PipeJoin)?.thisArg as? Join ?: return stage
+    val condition = (join.args["on"] as? Expression)?.copy() ?: return Null()
+    val joined = (join.thisArg as? Expression)?.aliasOrName?.lowercase()
+    if (condition is Column) return if (condition.table.lowercase() == joined) Null() else condition
+    for (column in condition.findAll<Column>().toList()) {
+        if (column.table.isNotEmpty() && column.table.lowercase() == joined) column.replace(Null())
+    }
+    return condition
+}
+
+/** Slices change rows, not scopes: a lenient lowering keeps a slice it cannot compose as written. */
+private inline fun lenientSlice(query: Expression, stage: Expression, counter: PipeCteCounter, compose: () -> Unit) {
+    try {
+        compose()
+    } catch (e: UnsupportedError) {
+        val refused = counter.refused ?: throw e
+        refused(stage, e.message.orEmpty())
+        (stage.thisArg as? Expression)?.let { query.set(if (it is Offset) "offset" else "limit", it) }
+        (stage.args["offset"] as? Offset)?.let { query.set("offset", it) }
     }
 }
 

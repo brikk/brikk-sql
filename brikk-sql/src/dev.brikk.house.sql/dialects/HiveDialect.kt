@@ -21,6 +21,9 @@ open class HiveDialect : Dialect() {
 
     override val name: String get() = "hive"
 
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val groupByProjectionAliases: Boolean get() = false
+
     // sqlglot: Hive.EXPRESSION_METADATA (sqlglot/typing/hive.py)
     override val expressionMetadata get() = GeneratedTypingMetadata.HIVE
 
