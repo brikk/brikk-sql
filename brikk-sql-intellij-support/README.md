@@ -45,7 +45,9 @@ no internal-API annotation.
   PIPE stage input columns, and `createOrDecorate`, which decorates the first of other
   contributors' items matched to each visible column and creates the columns no item matched.
 - `ToggleSettings` and `ToggleConfigurable`: a persisted project switch that reparses
-  its language's files, and its settings page with a `-D<property>=false` veto.
+  its language's files, and its settings page with a `-D<property>=false` veto. Store it in
+  `ToggleSettings.STORAGE` (the workspace file): `@State(name = "...", storages = [Storage(ToggleSettings.STORAGE)])`;
+  another storage is reported as an error.
 - `notifyEscaped`: plain-text notifications. `FileBanner` and `FileBannerProvider`:
   per-file editor banners scoped to their project.
 
