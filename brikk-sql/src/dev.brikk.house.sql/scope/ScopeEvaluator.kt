@@ -285,8 +285,10 @@ internal class ScopeEvaluator(
             left?.nullability == Nullability.NON_NULL && right?.nullability == Nullability.NON_NULL -> Nullability.NON_NULL
             else -> Nullability.UNKNOWN
         }
-        return if (left != null && left.source != null && left.source == right?.source) left.copy(relation = "", nullability = nullability)
-        else computed(key.name, nullability, "USING")
+        if (left != null && left.source != null && left.source == right?.source) return left.copy(relation = "", nullability = nullability)
+        // One key in two relations: what both sides say about it still holds.
+        return computed(key.name, nullability, "USING", left?.sqlType?.takeIf { it == right?.sqlType })
+            .copy(displayType = left?.displayType?.takeIf { it == right?.displayType })
     }
 
     /** The relations [node] contributes to a FROM clause; [lateral] is what it may correlate with. */
@@ -354,10 +356,12 @@ internal class ScopeEvaluator(
             if (facts.catalog == CatalogKnowledge.CLOSED) {
                 diagnose(ScopeProblem.UNKNOWN_TABLE, "Unknown table '${parts.joinToString(".") { it.name }}'", parts.firstOrNull() ?: name, name)
             }
-            return Binding(stored(name), true, ScopeRelation(stored(name), RelationKind.TABLE, knowledge), emptyList(), parts.map(::stored))
+            val label = parts.joinToString(".", transform = ::stored)
+            return Binding(label, true, ScopeRelation(label, RelationKind.TABLE, knowledge), emptyList(), parts.map(::stored))
         }
         val (key, fact) = match
-        val label = stored(name)
+        // An unaliased table is visible by the name as written, qualified or not.
+        val label = parts.joinToString(".", transform = ::stored)
         val relation = ScopeRelation(label, RelationKind.TABLE, fact.knowledge, key, fact.provenance)
         reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, fact.knowledge, relation = relation, start = parts.firstOrNull())
         return Binding(label, true, relation, fact.columns.map { it.visible(key, label) }, path(parts, key))
