@@ -117,6 +117,47 @@ Foreign wrappers are traversed through platform `ActionWithDelegate`, never a ca
 to another plugin's private helper copy. Unloading beneath a peer detaches the
 wrapper but may retain its classloader until restart.
 
+## Native errors (`dev.brikk.house.sql.intellij.diagnostics`, experimental)
+
+A plugin implements one `NativeErrorProfile` (language, core dialect, label, `validator(file)`) and
+registers a no-arg `NativeErrorAnnotator` subclass as the language's `externalAnnotator`. Each
+statement of core's statement ranges (or, with `VerificationUnit.File`, the whole text) goes to the
+validator's `verify`; the diagnostics themselves are core's plain data
+(`dev.brikk.house.sql.diagnostics`), so an LSP server can reuse them.
+
+- The engine's errors are marked at its UTF-16 position (or line and column), across the token or
+  one code point. Against the local parsers' errors, an authoritative engine that rejects at a
+  position keeps only local errors at or after its first error (it proved the text before parses);
+  rejecting without a position, it keeps them and adds its message at the first; accepting, it
+  clears those wholly inside the verified text. `Unverified`, `Unavailable`, a failed validator or
+  no validator give no verdict, never "clean", and keep them. An advisory validator only adds
+  warnings.
+- Local parsers, off by default: `localParser` reports brikk-sql's parser errors;
+  `reportsPsiErrors` reports the IDE parser's PSI errors through the same rule. Register a
+  `NativeErrorPsiFilter(profile)` so the platform does not also show them: it hides only the PSI
+  errors the annotator reports (exactly the profile's language, its non-Frankenstein fragments in
+  `injectionHosts`), never other inspections or annotators. Its match is exact where
+  `SubstrateErrorFilter` uses `isKindOf`; a plugin turning the option on replaces that filter
+  with this one rather than keeping both.
+- A result is applied only while its document revision, text, validator instance and the profile's
+  `modificationCount` are unchanged, and later passes reuse it then. Cancellation propagates unchanged; `debounce` waits for typing to pause
+  (an edit cancels the wait), `sizeCap` skips large statements, `budget` caps one pass (a
+  verifier still running then is canceled or abandoned, and local results show). All off by
+  default.
+- Only files of exactly the profile's language are annotated, so each consumer acts on its own
+  dialect. SQL injected into `injectionHosts` languages (register the annotator for each host too;
+  external annotators do not run on fragments) is read unescaped, every fragment of a file, and
+  marked at its host text, cut to editable parts; only equal diagnostics count as duplicates.
+  Frankenstein fragments (templates with uncertain holes) are not checked and keep the platform's
+  handling.
+- Hooks: `statementDiagnostics` replaces a statement's check (PIPE lowering, Brikk templates),
+  `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
+  masks binds at equal length, `message` formats.
+
+`NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
+without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
+verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
+
 ## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
 
 A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; optional
@@ -617,9 +658,9 @@ python3 tools/publish_intellij_support.py 0.2.0 --core-version 0.20.0
 
 The last command requires the existing Central/signing environment. It publishes
 this module and its test kit, `brikk-sql-intellij-test-support`, at the same version,
-plus core and metadata at `--core-version`, never verify/oracle. Without
-`--core-version`, only a local publication is allowed; it references the core
-snapshot already in Maven Local. The module has independent `0.x` versioning.
+plus core, metadata and `brikk-sql-verify-api` (which support exports) at `--core-version`,
+never a verifier engine or the oracle. Without `--core-version`, only a local publication is
+allowed; it references the core, metadata and verify-api snapshots already in Maven Local. The module has independent `0.x` versioning.
 Temporary release overrides restore on success or failure.
 
 Shared platform contracts run in a real IDE against the test kit:

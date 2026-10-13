@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Scoped, restoring release overrides. Publishes support, its test kit, and optionally its core prerequisites."""
+"""Scoped, restoring release overrides. Publishes support, its test kit, and optionally its core prerequisites
+(core, metadata and the verification API)."""
 import argparse
 import json
 import os
@@ -16,7 +17,7 @@ def main():
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
     args = parser.parse_args()
     if not args.local and not args.core_version:
-        raise SystemExit("Central releases need --core-version: support depends on released core and metadata")
+        raise SystemExit("Central releases need --core-version: support depends on released core, metadata and verify-api")
     root = Path(__file__).resolve().parents[1]
     intellij = ["brikk-sql-intellij-support", "brikk-sql-intellij-test-support"]
     descriptors = [root / m / "module.yaml" for m in intellij]
@@ -35,7 +36,8 @@ def main():
             raise SystemExit("Missing KOTLIN_TOOLCHAIN_SIGNING_KEY")
     modules = intellij
     core_version = args.core_version or development_version(originals[template])
-    if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql"] + modules
+    # Support exports the verification API (validators answer with its results), never an engine.
+    if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql", "brikk-sql-verify-api"] + modules
     try:
         backup.write_text(originals[template])
         if args.local:

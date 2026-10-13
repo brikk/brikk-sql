@@ -14,7 +14,11 @@ import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.psi.PsiFile
+import dev.brikk.house.sql.shape.ShapeCatalog
+import com.intellij.testFramework.DumbModeTestUtils
 import com.intellij.testFramework.TestActionEvent
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.completion.LookupCase
@@ -33,6 +37,13 @@ class TestLowerStageCompletion : PipeStageCompletionContributor(
 class TestEmbeddedStageCompletion : PipeStageCompletionContributor(object : PipeDialect by trino {
     override fun enablesEditing(file: PsiFile) = true
 })
+/** Reads indexes for its input catalog, as a plugin resolving physical tables would. */
+class TestIndexedStageCompletion : PipeStageCompletionContributor(trino) {
+    override fun inputCatalog(file: PsiFile, input: String): ShapeCatalog? {
+        if (DumbService.isDumb(file.project)) throw IndexNotReadyException.create()
+        return ShapeCatalog.EMPTY
+    }
+}
 class TestOtherCompletion : CompletionContributor() {
     override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         result.addElement(LookupElementBuilder.create("other_item"))
@@ -163,6 +174,20 @@ class PipeEditorTest : BasePlatformTestCase() {
         val items = myFixture.lookupElementStrings.orEmpty()
         assertContainsElements(items, "other_item", "a")
         assertDoesntContain(items, "WHERE")
+    }
+
+    fun testStagesCompleteWhileIndexesAreBuilt() {
+        DumbModeTestUtils.runInDumbModeSynchronously(project) {
+            configure("FROM t |> whe<caret>", TestIndexedStageCompletion::class.java)
+            myFixture.completeBasic()
+            assertEquals("FROM t |> WHERE", myFixture.editor.document.text)
+            configure("FROM t |> SELECT a |> WHERE <caret>", TestIndexedStageCompletion::class.java)
+            myFixture.completeBasic()
+            assertDoesntContain(myFixture.lookupElementStrings.orEmpty(), "a")
+        }
+        configure("FROM t |> SELECT a |> WHERE <caret>", TestIndexedStageCompletion::class.java)
+        myFixture.completeBasic()
+        assertContainsElements(myFixture.lookupElementStrings.orEmpty(), "a")
     }
 
     fun testOnlyBasicCompletionOffersStages() {

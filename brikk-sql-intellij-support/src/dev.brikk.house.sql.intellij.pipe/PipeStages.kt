@@ -9,6 +9,8 @@ import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
+import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.completion.SqlLookupKind
@@ -35,7 +37,7 @@ import org.jetbrains.annotations.ApiStatus
 public abstract class PipeStageCompletionContributor(
     private val dialect: PipeDialect,
     private val styles: SqlLookupStyles = SqlLookupStyles.DEFAULT,
-) : CompletionContributor() {
+) : CompletionContributor(), DumbAware {
     private val phrases by lazy { dialect.stagePhrases }
     private val inputColumns = object : LinkedHashMap<Pair<String, ShapeCatalog>, List<String>>(32, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Pair<String, ShapeCatalog>, List<String>>) = size > 32
@@ -44,7 +46,8 @@ public abstract class PipeStageCompletionContributor(
     /**
      * Relations that the stage input [input] may read in [file], such as base table columns; null
      * offers no input columns. By default none where [PipeDialect.enablesEditing] enables the file,
-     * whose own completion owns its columns.
+     * whose own completion owns its columns. Completion also runs while indexes are built: a catalog
+     * that needs them may throw `IndexNotReadyException` then, and no input columns are offered.
      */
     protected open fun inputCatalog(file: PsiFile, input: String): ShapeCatalog? =
         if (dialect.enablesEditing(file)) null else ShapeCatalog.EMPTY
@@ -70,7 +73,11 @@ public abstract class PipeStageCompletionContributor(
             return
         }
         val input = before.substring(stage.inputStart, stage.pipe).trim()
-        val catalog = inputCatalog(file, input) ?: return
+        val catalog = try {
+            inputCatalog(file, input)
+        } catch (_: IndexNotReadyException) {
+            null
+        } ?: return
         val sink = result.caseInsensitive()
         val style = styles[SqlLookupKind.PIPE_INPUT_COLUMN]
         for (column in columns(input, catalog)) sink.addElement(style.lookup(column))
