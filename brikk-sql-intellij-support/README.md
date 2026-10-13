@@ -231,7 +231,9 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   collapsed spans token by token with the core tokenizer, in the colors the file's highlighter
   gives the same platform token kinds. Genuine comments, quoted strings (`E'..'`, `$$..$$`) and
   identifiers are never touched; comments inside a span keep comment colors.
-- `SubstrateErrorFilter(language)`: hides the substrate grammar's parse errors in the dialect.
+- `SubstrateErrorFilter(language, scope = ALL)`: hides the substrate grammar's parse errors in the dialect;
+  `SubstrateErrors.LENIENT_ONLY`, for a stock substrate whose errors are the dialect's (ClickHouse), hides
+  only those inside lenient fallback statements.
 - `SqlDialectQuoteHandler(EnterInString)`: Enter in a quoted string inserts a newline or splits
   it with `||`; collapsed spans are never split.
 - `KeywordOverlayHighlighterFactory(dialect, keywords)`: the dialect's SQL highlighter factory
