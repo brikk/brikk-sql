@@ -733,7 +733,8 @@ failed script whose statements include a begin leaves the session in a transacti
 have run and its end may not. From 263 the platform reads `COMMIT`
 and `ROLLBACK` statements itself (`transactionControlLanguageHandler`, PostgreSQL and MySQL families, not
 the stock `DUCK`), but only to end a manual-commit transaction, where this tracking does not apply; the
-two agree, `AND CHAIN` included. Without such a handler, a `COMMIT` statement leaves the platform holding
+two agree, `AND CHAIN` included. A profile for an engine without client transactions (ClickHouse) sets
+`clientTransactions = false`: its sessions are never treated as in one, so none of these guards stops a harvest. Without such a handler, a `COMMIT` statement leaves the platform holding
 the manual-commit transaction, and it refuses the harvest's request (`HarvestFailed`). A session that is not connected
 falls back to the helper connection. `RefreshLiveCatalogAction` uses the editor's connected console
 session when it has one. `inventoryChanged(project, session,

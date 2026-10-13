@@ -220,6 +220,21 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         assertEquals(harvests + 1, harvester.harvests.get())
     }
 
+    /** For an engine without client transactions, a statement read as a begin leaves no transaction behind. */
+    @Test
+    fun withoutClientTransactionsABeginStatementDoesNotGuard() {
+        service = LiveService(errors.newScope(testRootDisposable),
+            LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, dbms = dataSource.dbms, clientTransactions = false), dir)
+        ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, service, testRootDisposable)
+        val a = console("a")
+        a.run("SELECT 1")
+        val harvests = harvester.harvests.get()
+        a.run("BEGIN TRANSACTION")
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
+        assertEquals(harvests + 1, harvester.harvests.get())
+        a.run("COMMIT")
+    }
+
     /**
      * A COMMIT statement ends a manual-commit transaction, but a manual-commit session is never harvested.
      * Back in auto-commit mode, the observer keeps nothing stale: where the platform has a transaction control

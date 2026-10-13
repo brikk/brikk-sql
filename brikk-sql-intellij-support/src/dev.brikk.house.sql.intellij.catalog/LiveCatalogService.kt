@@ -112,6 +112,14 @@ public interface LiveCatalogProfile {
         ConnectionIdentity.of(listOf(dbms.name, dataSource.url, dataSource.username))
 
     /**
+     * Whether the engine has client transactions. With them (the default), a session the kit sees in a
+     * transaction (manual commit, a begin statement, a connection not in auto-commit mode or of unknown
+     * mode) is never harvested, since a failing harvest query could abort it. An engine without them
+     * (ClickHouse) is never in one, so nothing about transactions stops a harvest.
+     */
+    public val clientTransactions: Boolean get() = true
+
+    /**
      * Driver properties the refresh's helper connection to [dataSource] sets over the data source's own
      * and its URL's ([HelperConnectionPoint]), such as turning off a driver's response compression; the
      * data source is not changed.
@@ -304,7 +312,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val dataSource = session.connectionPoint.dataSource
         if (!session.isConnected) return refresh(project, dataSource)
         // A request outside the session's transaction would make the engine end it; such a session is left alone.
-        if (session.currentTx != DataRequest.AUTO_COMMIT || session in explicitTransactions) return RefreshOutcome.SessionInTransaction
+        if (profile.clientTransactions && (session.currentTx != DataRequest.AUTO_COMMIT || session in explicitTransactions)) return RefreshOutcome.SessionInTransaction
         val result = CompletableDeferred<RefreshOutcome>()
         val request = object : DataRequest.RawRequest(session) {
             override fun processRaw(context: DataRequest.Context, connection: DatabaseConnectionCore) {
@@ -344,7 +352,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
             LOG.info("Not harvesting ${dataSource.name} over a connection to the server it named before")
             return RefreshOutcome.Superseded
         }
-        if (session in explicitTransactions || inTransaction(connection)) {
+        if (profile.clientTransactions && (session in explicitTransactions || inTransaction(connection))) {
             LOG.info("Not harvesting ${dataSource.name} over a session in a transaction")
             return RefreshOutcome.SessionInTransaction
         }

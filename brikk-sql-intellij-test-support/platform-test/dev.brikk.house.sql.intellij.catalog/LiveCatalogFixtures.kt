@@ -152,6 +152,7 @@ class LiveProfile(
     override val persistenceId: String? = "live-test",
     override val dbms: Dbms = Dbms.POSTGRES,
     override val refreshDelay: Duration = 100.milliseconds,
+    override val clientTransactions: Boolean = true,
     private val properties: Map<String, String> = emptyMap(),
 ) : LiveCatalogProfile {
     override val productLabel = "Fixture"

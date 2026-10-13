@@ -272,6 +272,19 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         assertTrue("in_tx" in offered(fileA))
     }
 
+    /** An engine without client transactions (ClickHouse) is never in one: its connection's auto-commit mode does not stop a harvest. */
+    fun testWithoutClientTransactionsTheAutoCommitModeDoesNotGuard() {
+        newService(LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, clientTransactions = false))
+        connect(0, engines[0])
+        jdbc[0].autoCommit = false
+        execute(0, "CREATE TEMP MACRO no_tx(x) AS x")
+        changed(consoleA, engines[0])
+        assertEquals(2, harvester.harvests.get())
+        assertTrue("no_tx" in offered(fileA))
+        jdbc[0].commit()
+        jdbc[0].autoCommit = true
+    }
+
     fun testADisabledProfileHarvestsNothing() {
         newService(LiveProfile(harvester, enabled = false))
         connect(0, engines[0])
