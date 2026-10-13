@@ -152,8 +152,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
 - `SqlCompletionConfidence` (`order="first"`): keeps the autopopup inside a table function's
   property strings, and skips it after a digit-led prefix when the digit gate is on.
 - The contributor offers a function metadata and the base dialect both know once, from metadata: the
-  base dialect's builtin items of that name (prototypes and builtin-model routines, never an
-  introspected routine) are dropped; its own forms, such as ClickHouse combinators, stay.
+  base dialect's builtin items of that name (prototypes, and routines of the platform's builtin
+  catalog, `isBuiltinCatalogObject`) are dropped; a data source's or the user's routine of the same
+  name stays, and so do the base dialect's own forms, such as ClickHouse combinators.
 - `SqlBuiltinPrototypeFilter` (`order="first"`): drops the base dialect's builtin-function
   items (`BuiltinFunction.Prototype` only) that the profile's `builtinFunctionFilter` does not
   keep; null (the default) keeps them all.
@@ -581,6 +582,10 @@ references a class, enclosing class or package annotated `@ApiStatus.Internal` o
 `@IntellijInternalApi`, or a member so annotated or declared by such a class (found through the
 owner's supertypes). It also fails if the kit's internal API differs from the test's own list, which
 this table mirrors.
+
+`isBuiltinCatalogObject` (catalog kit) reads `BasicElement.getModel`, `BasicModModel.getTextStorage`
+and `DataSourceSnapshotManager.MINICAT_STORAGE`, the platform's own test for a builtin resolve result
+(`SqlResolveResultImpl`): Database Tools implementation classes without an internal-API annotation.
 
 Auto-introspection's sync seams carry no internal-API annotation on IDEA 261.25134.95, 262.8665.81
 and 263.5701.42 (the containment test runs on each), but they are Database Tools implementation

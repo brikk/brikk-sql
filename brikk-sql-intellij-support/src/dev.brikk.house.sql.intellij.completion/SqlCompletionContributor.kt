@@ -24,6 +24,7 @@ import com.intellij.sql.psi.SqlBinaryExpression
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
+import dev.brikk.house.sql.intellij.catalog.isBuiltinCatalogObject
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
@@ -103,12 +104,12 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
 
 /**
  * Whether this item, from another contributor, is one of the base dialect's builtin functions: a
- * prototype, or a resolved routine of the dialect's builtin model (no data source behind it, unlike
- * an introspected routine).
+ * prototype, or a routine of the platform's builtin catalog. A data source's or the user's routine
+ * of the same name is never one.
  */
 private fun LookupElement.isBaseBuiltin(): Boolean = when (val target = `object`) {
     is BuiltinFunction.Prototype -> true
-    is SqlResolveResult -> target.element == null && target.targetSymbol?.dasObject is DasRoutine
+    is SqlResolveResult -> target.targetSymbol?.dasObject.let { it is DasRoutine && isBuiltinCatalogObject(it) }
     else -> false
 }
 
