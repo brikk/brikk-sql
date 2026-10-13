@@ -73,6 +73,16 @@ public data class VerifyError(
             return atOffset(text, message, offset, endCodePoint?.let(::utf16)?.takeIf { it > offset })
         }
 
+        /**
+         * An error at the 0-based UTF-8 byte offset [byte] in [text], optionally spanning to
+         * [endByte], for engines that index their input's UTF-8 encoding (ClickHouse). An offset
+         * inside a character's encoding, or outside the text, is no position.
+         */
+        public fun atUtf8Byte(text: String, message: String, byte: Int, endByte: Int? = null): VerifyError {
+            val offset = utf16OfUtf8Byte(text, byte) ?: return VerifyError(message)
+            return atOffset(text, message, offset, endByte?.let { utf16OfUtf8Byte(text, it) }?.takeIf { it > offset })
+        }
+
         /** An error at the UTF-16 [offset] in [text], optionally spanning to [endOffset]. */
         public fun atOffset(text: String, message: String, offset: Int, endOffset: Int? = null): VerifyError {
             if (offset !in 0..text.length) return VerifyError(message)
@@ -104,4 +114,24 @@ public fun VerifyResult.withoutPrefix(prefix: String): VerifyResult {
             endOffset = error.endOffset?.let { (it - shift).coerceAtLeast(0) },
         )
     })
+}
+
+/** The UTF-16 offset in [text] where its UTF-8 encoding's byte [byte] starts a character, or its end; else null. */
+private fun utf16OfUtf8Byte(text: String, byte: Int): Int? {
+    if (byte < 0) return null
+    var bytes = 0
+    var index = 0
+    while (index < text.length) {
+        if (bytes == byte) return index
+        if (bytes > byte) return null
+        val codePoint = text.codePointAt(index)
+        bytes += when {
+            codePoint < 0x80 -> 1
+            codePoint < 0x800 -> 2
+            codePoint < 0x10000 -> 3
+            else -> 4
+        }
+        index += Character.charCount(codePoint)
+    }
+    return index.takeIf { bytes == byte }
 }

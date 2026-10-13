@@ -1,0 +1,30 @@
+# ClickHouse parse-only verifier over the user's own server: formatQuery parses the SQL, passed as
+# hex data, so nothing the user typed runs. No driver dependency: callers supply the connection.
+product: jvm/lib
+
+# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+description: ClickHouse parse-only SQL verifier (the user's server parses with formatQuery) for brikk-sql.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  - ../brikk-sql-verify-api: exported
+
+test-dependencies:
+  # The driver the ClickHouse plugin's data sources use (com.clickhouse.jdbc.ClickHouseDriver).
+  - com.clickhouse:clickhouse-jdbc:0.9.8
+  # LZ4 classes the driver loads for every request. Its POM's own LZ4 (at.yawk.lz4, which declares the
+  # org.lz4 capability) does not resolve here; the tests run with compression off anyway (ClickhouseServer).
+  - org.lz4:lz4-java:1.8.0
+
+settings:
+  publishing:
+    # Published coordinate: dev.brikk.house:brikk-sql-verify-clickhouse.
+    artifactId: brikk-sql-verify-clickhouse
+  jvm:
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict

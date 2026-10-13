@@ -17,6 +17,9 @@ tasks:
           - org.duckdb:duckdb_jdbc:1.5.6.0
           # A real native verifier for the shared error annotator's end-to-end test.
           - ../brikk-sql-verify-duckdb
+          # The ClickHouse verifier, for data-source verification end to end (the driver itself is
+          # the all-in-one jar tools/clickhouse-verify-server.sh fetches, loaded by the IDE's JDBC process).
+          - ../brikk-sql-verify-clickhouse
       testSources: ${project.rootDir}/brikk-sql-intellij-test-support/platform-test
       toolchain:
         dependencies:
