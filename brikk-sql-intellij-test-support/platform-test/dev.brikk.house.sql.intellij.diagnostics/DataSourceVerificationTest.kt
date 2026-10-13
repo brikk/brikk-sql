@@ -4,7 +4,11 @@ import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.DatabaseDriverImpl
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -115,6 +119,23 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
                     driver.initScript = null
                 }
             }
+        }
+    }
+
+    /** Opening a helper under a canceled indicator stops at once and opens nothing. */
+    fun testACanceledCallerOpensNoHelper() {
+        withIdeConnection(project, dataSource, otherRequestor()) {
+            val validator = checkNotNull(verification.validator(myFixture.file))
+            val indicator = EmptyProgressIndicator()
+            val failure = CompletableFuture.supplyAsync {
+                runCatching {
+                    // Starting the process clears an earlier cancellation.
+                    ProgressManager.getInstance().runProcess(Computable { indicator.cancel(); validator.verify("SELECT 1", null) }, indicator)
+                }.exceptionOrNull()
+            }.get(30, TimeUnit.SECONDS)
+            assertInstanceOf(failure, ProcessCanceledException::class.java)
+            assertEquals("only the user's connection", 1, helpers())
+            assertEquals(emptyList<DataSourceQueryConnection?>(), opened)
         }
     }
 

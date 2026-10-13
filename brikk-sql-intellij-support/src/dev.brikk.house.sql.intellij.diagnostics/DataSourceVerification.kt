@@ -10,6 +10,7 @@ import com.intellij.database.remote.jdbc.RemoteStatement
 import com.intellij.database.remote.jdbc.helpers.JdbcNativeUtil
 import com.intellij.database.util.GuardedRef
 import com.intellij.openapi.diagnostic.ControlFlowException
+import com.intellij.openapi.progress.runBlockingMaybeCancellable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.psi.PsiFile
@@ -20,7 +21,6 @@ import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
 import dev.brikk.house.sql.intellij.pipe.ValidationTiming
 import dev.brikk.house.sql.verify.SqlVerifier
 import java.lang.ref.WeakReference
-import kotlinx.coroutines.runBlocking
 import java.sql.SQLException
 import java.util.Collections
 import java.util.Objects
@@ -76,8 +76,8 @@ public class DataSourceVerification(
         if (project == null || project.isDisposed || dataSource == null || !isUserConnected(dataSource)) return null
         val builder = DatabaseConnectionManager.getInstance().build(project, VerificationPoint(dataSource, connectionProperties(dataSource)))
             .setRequestor(HelperRequestor()).setAskPassword(false)
-        // Verifiers open connections on their own workers, outside any progress indicator; an interrupt cancels.
-        val ref = runBlocking { builder.create() } ?: return null
+        // Verifiers open connections on their own workers, usually outside any progress indicator; one there cancels.
+        val ref = runBlockingMaybeCancellable { builder.create() } ?: return null
         return DataSourceQueryConnection(ref)
     }
 }
