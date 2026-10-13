@@ -70,7 +70,9 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         // A console is valid only while its data source is in the PSI view, which caches the data sources.
         DbPsiFacade.getInstance(project).clearCaches()
         harvester = CountingHarvester()
-        service = LiveService(errors.newScope(testRootDisposable), LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, dbms = dataSource.dbms), dir)
+        val clientTransactions = name != "withoutClientTransactionsABeginStatementDoesNotGuard"
+        service = LiveService(errors.newScope(testRootDisposable),
+            LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, dbms = dataSource.dbms, clientTransactions = clientTransactions), dir)
         ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, service, testRootDisposable)
         ApplicationManager.getApplication().extensionArea
             .getExtensionPoint<DatabaseConnectionInterceptor>("com.intellij.database.connectionInterceptor")
@@ -223,9 +225,7 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
     /** For an engine without client transactions, a statement read as a begin leaves no transaction behind. */
     @Test
     fun withoutClientTransactionsABeginStatementDoesNotGuard() {
-        service = LiveService(errors.newScope(testRootDisposable),
-            LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, dbms = dataSource.dbms, clientTransactions = false), dir)
-        ApplicationManager.getApplication().registerOrReplaceServiceInstance(LiveService::class.java, service, testRootDisposable)
+        assertFalse(service.profile.clientTransactions)
         val a = console("a")
         a.run("SELECT 1")
         val harvests = harvester.harvests.get()
@@ -233,6 +233,8 @@ class LiveCatalogConsoleTest : BasePlatformTestCase() {
         assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
         assertEquals(harvests + 1, harvester.harvests.get())
         a.run("COMMIT")
+        // One more request lets the console's UI finish updating after the commit before the console goes (263).
+        assertInstanceOf(refreshFrom(a.file), RefreshOutcome.Refreshed::class.java)
     }
 
     /**
