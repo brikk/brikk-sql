@@ -97,8 +97,8 @@ fun verificationRange(script: String, statement: SqlStatementRange): IntRange? {
 
 /**
  * brikk-sql's parser errors for the SQL at [range] of [script] in [dialect], positioned in the
- * script. A lexical error marks where its token begins; an unknown position marks the first
- * non-blank character. Empty for a dialect brikk-sql does not know. [checkCanceled] is called while
+ * script, one per range (the first raised there). A lexical error marks where its token begins;
+ * an unknown position marks the first non-blank character. Empty for a dialect brikk-sql does not know. [checkCanceled] is called while
  * tokenizing; whatever it throws propagates.
  */
 fun localParseDiagnostics(script: String, range: IntRange, dialect: String, checkCanceled: () -> Unit = {}): List<SqlDiagnostic> {
@@ -114,9 +114,10 @@ fun localParseDiagnostics(script: String, range: IntRange, dialect: String, chec
     } catch (e: ParseError) {
         val errors = e.errors.ifEmpty { null }
             ?: return listOf(diagnostic(script, range, DiagnosticSource.LOCAL_PARSER, DiagnosticSeverity.ERROR, e.message ?: "Invalid SQL", null, null))
+        // One error can be raised twice at its token (`Expecting )`, then `Invalid expression`): the first names it.
         errors.map { error ->
             diagnostic(script, range, DiagnosticSource.LOCAL_PARSER, DiagnosticSeverity.ERROR, error.description ?: e.message ?: "Invalid SQL", error.start, error.end)
-        }.distinct()
+        }.distinctBy { it.start to it.end }
     }
 }
 

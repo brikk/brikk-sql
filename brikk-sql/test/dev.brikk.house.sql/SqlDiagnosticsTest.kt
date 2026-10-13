@@ -51,6 +51,15 @@ class SqlDiagnosticsTest {
     }
 
     @Test
+    fun oneParseErrorIsOneDiagnosticAtItsRange() {
+        val sql = "INSERT INTO FUNCTION null('id UInt64') (id SELECT 1"
+        val errors = localParseDiagnostics(sql, sql.indices, "clickhouse")
+        assertEquals(listOf("Expecting )" to "id"), errors.map { it.message to sql.substring(it.start, it.end) })
+        val apart = "SELECT f(a b) FROM t"
+        assertEquals(2, localParseDiagnostics(apart, apart.indices, "clickhouse").size, "errors at different ranges stay")
+    }
+
+    @Test
     fun anUnknownDialectHasNoLocalDiagnostics() = assertEquals(listOf(), localParseDiagnostics("SELECT", 0 until 6, "no-such-engine"))
 
     private fun local(start: Int, end: Int = start + 1, source: DiagnosticSource = DiagnosticSource.LOCAL_PARSER) =
