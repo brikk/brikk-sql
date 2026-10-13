@@ -129,6 +129,20 @@ class RelationScopeTest {
     }
 
     @Test
+    fun declarationsLocateWhereSqlNamesRelationsAndColumns() {
+        val sql = "WITH q AS (SELECT id AS k, id + 1 AS n FROM events()) SELECT x.k, x.n FROM q x |> RENAME k AS key |> WHERE key > 0"
+        val scope = analyze(sql)
+        fun range(text: String, nth: Int = 0) = Regex("\\b$text\\b").findAll(sql).elementAt(nth).range.let { ScopeRange(it.first, it.last + 1) }
+        val cte = scope.references.single { it.kind == ReferenceKind.TABLE && it.start == range("q").start }
+        assertEquals(range("q"), cte.relation?.declaration)
+        assertEquals(range("x", 2), scope.references.first { it.kind == ReferenceKind.QUALIFIER }.relation?.declaration)
+        assertEquals(range("k"), scope.column(sql, "k", 1).columns.single().declaration)
+        assertEquals(range("n"), scope.column(sql, "n", 1).columns.single().declaration)
+        assertEquals(range("key"), scope.column(sql, "key", 1).columns.single().declaration)
+        assertNull(scope.column(sql, "id").columns.single().declaration)
+    }
+
+    @Test
     fun slotsMatchExactlyAndOnlyWithoutArgumentsOrQualifiers() {
         assertTrue(analyze("SELECT e.nope FROM Events() e").diagnostics.isEmpty())
         assertTrue(analyze("SELECT e.nope FROM events(1) e").diagnostics.isEmpty())

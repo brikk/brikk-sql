@@ -140,7 +140,10 @@ internal class ScopeEvaluator(
             val synthetic = !names.positioned(name)
             val visible = if (with.recursive) ctes + Cte(name, Row(emptyList(), Knowledge.UNKNOWN), synthetic) else ctes
             val row = query(body, Env(visible, env.outer), if (synthetic) "SELECT" else name.name)
-            ctes = ctes + Cte(name, Row(renamedColumns(row.columns, alias), row.knowledge), synthetic)
+            val defined = Row(renamedColumns(row.columns, alias), row.knowledge)
+            if (!synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, defined.knowledge,
+                ScopeRelation(stored(name), RelationKind.CTE, defined.knowledge, stored(name), declaration = declared(name)))
+            ctes = ctes + Cte(name, defined, synthetic)
         }
         return Env(ctes, env.outer)
     }
@@ -284,7 +287,7 @@ internal class ScopeEvaluator(
             is Table -> table(node, env, lateral)
             is TableAlias -> {
                 val name = node.thisArg as? Identifier
-                cte(name, env)?.let { (cte, row) -> bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name) }
+                cte(name, env)?.let { (cte, row) -> bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name)) }
                     ?: unknownRelation(node.name, RelationKind.OTHER)
             }
             is Subquery -> {
@@ -320,7 +323,7 @@ internal class ScopeEvaluator(
     private fun opaque(node: Expression, lateral: Frame, env: Env): Binding {
         expression(node, lateral, env)
         val columns = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
-        val row = Row(columns.map { computed(stored(it), Nullability.UNKNOWN, "SELECT") }, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
+        val row = Row(columns.map { computed(stored(it), Nullability.UNKNOWN, node.key.uppercase()).copy(declaration = declared(it)) }, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
         return bound(row, null, synthetic = true, kind = RelationKind.FUNCTION, source = null)
     }
 
@@ -330,7 +333,7 @@ internal class ScopeEvaluator(
         val name = node.thisArg as? Identifier ?: return unknownRelation(node.name, RelationKind.OTHER)
         if (node.db.isEmpty() && node.catalog.isEmpty()) {
             cte(name, env)?.let { (cte, row) ->
-                val relation = bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name)
+                val relation = bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name))
                 if (!cte.synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, row.knowledge, relation = relation.relation)
                 return relation
             }
@@ -380,10 +383,17 @@ internal class ScopeEvaluator(
         return cte to cte.row
     }
 
-    private fun bound(row: Row, label: Identifier?, synthetic: Boolean, kind: RelationKind, source: String?): Binding {
+    private fun bound(
+        row: Row,
+        label: Identifier?,
+        synthetic: Boolean,
+        kind: RelationKind,
+        source: String?,
+        declaration: ScopeRange? = null,
+    ): Binding {
         val name = if (synthetic || label == null) "" else stored(label)
         val columns = deduplicated(row.columns).map { it.copy(relation = name) }
-        return Binding(name, name.isNotEmpty(), ScopeRelation(name, kind, row.knowledge, source), columns)
+        return Binding(name, name.isNotEmpty(), ScopeRelation(name, kind, row.knowledge, source, declaration = declaration), columns)
     }
 
     private fun anonymous(row: Row) = Binding("", false, ScopeRelation("", RelationKind.OTHER, row.knowledge), row.columns)
@@ -393,12 +403,15 @@ internal class ScopeEvaluator(
         val name = label?.let(::stored) ?: binding.name
         val qualifiable = if (label != null) names.positioned(label) else binding.qualifiable
         val columns = renamedColumns(binding.columns, alias).map { it.copy(relation = if (qualifiable) name else "") }
-        return Binding(name, qualifiable, binding.relation.copy(name = name), columns)
+        val declaration = label?.let(::declared) ?: binding.relation.declaration
+        return Binding(name, qualifiable, binding.relation.copy(name = name, declaration = declaration), columns)
     }
 
     private fun renamedColumns(columns: List<ScopeColumn>, alias: TableAlias): List<ScopeColumn> {
         val names = alias.columns.filterIsInstance<Identifier>()
-        return columns.mapIndexed { index, column -> names.getOrNull(index)?.let { column.copy(name = stored(it)) } ?: column }
+        return columns.mapIndexed { index, column ->
+            names.getOrNull(index)?.let { column.copy(name = stored(it), declaration = declared(it)) } ?: column
+        }
     }
 
     private fun unknownRelation(name: String, kind: RelationKind) =
@@ -450,8 +463,10 @@ internal class ScopeEvaluator(
             val old = (rename.thisArg as? Column)?.thisArg as? Identifier ?: continue
             record(old, null, unqualified(pool, old))
             val index = columns.indexOfFirst { same(old, it.name, columns = true) }
-            val target = (rename.args["alias"] as? Identifier)?.let(::stored) ?: rename.alias
-            if (index >= 0) columns = columns.toMutableList().also { it[index] = it[index].copy(name = target) }
+            val target = rename.args["alias"] as? Identifier
+            if (index >= 0) columns = columns.toMutableList().also {
+                it[index] = it[index].copy(name = target?.let(::stored) ?: rename.alias, declaration = target?.let(::declared))
+            }
         }
         return columns to knowledge
     }
@@ -494,13 +509,15 @@ internal class ScopeEvaluator(
     /** A projection's output column: the referenced column, renamed, or a computed one. */
     private fun projected(projection: Expression, context: String): ScopeColumn {
         val value = projection.unwrapped()
-        val name = ((projection as? Alias)?.args?.get("alias") as? Identifier ?: (value as? Column)?.thisArg as? Identifier)
-            ?.let(::stored) ?: (projection as? Alias)?.alias ?: value.outputName
+        val alias = (projection as? Alias)?.args?.get("alias") as? Identifier
+        val name = (alias ?: (value as? Column)?.thisArg as? Identifier)?.let(::stored) ?: (projection as? Alias)?.alias ?: value.outputName
+        // SET's replacement alias is synthetic; the SET target names the column.
+        val declaration = alias?.let(::declared) ?: origins.setTargets[projection.thisArg]?.let { (it.thisArg as? Identifier)?.let(::declared) }
         if (value is Column && value.thisArg is Identifier) {
-            resolved[value]?.let { return it.copy(name = name, relation = "") }
+            resolved[value]?.let { return it.copy(name = name, relation = "", declaration = declaration ?: it.declaration) }
         }
         val by = origins.stages[projection] ?: origins.stages[projection.thisArg] ?: origins.stages[value] ?: context
-        return ScopeColumn(name, "", ColumnOrigin.COMPUTED, nullabilityOf(value), sqlTypeOf(value), computedBy = by)
+        return ScopeColumn(name, "", ColumnOrigin.COMPUTED, nullabilityOf(value), sqlTypeOf(value), computedBy = by, declaration = declaration)
     }
 
     private fun nullabilityOf(value: Expression): Nullability {
@@ -621,10 +638,14 @@ internal class ScopeEvaluator(
                 else -> Nullability.UNKNOWN
             }
             val by = stage ?: "UNPIVOT"
-            val nameColumns = fields.mapNotNull { (it.thisArg as? Identifier)?.let(::stored) ?: (it.thisArg as? Expression)?.name?.takeIf(String::isNotEmpty) }
-                .map { computed(it, Nullability.NON_NULL, by, "VARCHAR") }
+            val nameColumns = fields.mapNotNull { field ->
+                val identifier = field.thisArg as? Identifier
+                val name = identifier?.let(::stored) ?: (field.thisArg as? Expression)?.name?.takeIf(String::isNotEmpty)
+                name?.let { computed(it, Nullability.NON_NULL, by, "VARCHAR").copy(declaration = identifier?.let(::declared)) }
+            }
             val valueColumns = pivot.expressionsArg.filterIsInstance<Expression>().map {
                 computed((it as? Identifier)?.let(::stored) ?: it.name, valueNullability, by, values.map { v -> v.sqlType?.let(::canonical) }.distinct().singleOrNull())
+                    .copy(declaration = (it as? Identifier)?.let(::declared))
             }
             binding.columns.filterNot { it in values } + nameColumns + valueColumns
         } else {
@@ -637,14 +658,15 @@ internal class ScopeEvaluator(
             val aggregates = pivot.expressionsArg.filterIsInstance<Expression>()
             val by = stage ?: "PIVOT"
             val values = fields.flatMap { field -> field.expressionsArg.filterIsInstance<Expression>() }.map { value ->
-                ((value as? Alias)?.args?.get("alias") as? Identifier)?.let(::stored) ?: (value.unwrapped() as? Literal)?.name ?: value.outputName
+                val alias = (value as? Alias)?.args?.get("alias") as? Identifier
+                (alias?.let(::stored) ?: (value.unwrapped() as? Literal)?.name ?: value.outputName) to alias?.let(::declared)
             }
-            val pivoted = values.flatMap { value ->
+            val pivoted = values.flatMap { (value, declaration) ->
                 aggregates.map { aggregate ->
                     val suffix = (aggregate as? Alias)?.alias?.takeIf { aggregates.size > 1 }
                     val counting = aggregate.unwrapped() is dev.brikk.house.sql.ast.Count
                     computed(if (suffix == null) value else "${value}_$suffix",
-                        if (counting) Nullability.NON_NULL else Nullability.NULLABLE, by)
+                        if (counting) Nullability.NON_NULL else Nullability.NULLABLE, by).copy(declaration = declaration)
                 }
             }
             (group ?: binding.columns.filterNot { it in used }) + pivoted
@@ -652,7 +674,8 @@ internal class ScopeEvaluator(
         val name = label?.let(::stored) ?: binding.name
         val knowledge = binding.knowledge
         return Binding(name, label != null || binding.qualifiable && name.isNotEmpty(),
-            ScopeRelation(name, binding.relation.kind, knowledge, binding.relation.source, binding.relation.provenance),
+            ScopeRelation(name, binding.relation.kind, knowledge, binding.relation.source, binding.relation.provenance,
+                label?.let(::declared) ?: binding.relation.declaration),
             output.map { it.copy(relation = name) })
     }
 
@@ -660,7 +683,7 @@ internal class ScopeEvaluator(
         node.expressionsArg.filterIsInstance<Expression>().forEach { expression(it, env.outer, env) }
         // Unnamed VALUES columns get dialect-specific names (col0, _col0, column1): only an alias's names are known.
         val names = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
-        return Row(names.map { computed(stored(it), Nullability.UNKNOWN, "VALUES") }, if (names.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
+        return Row(names.map { computed(stored(it), Nullability.UNKNOWN, "VALUES").copy(declaration = declared(it)) }, if (names.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
     }
 
     // ------------------------------------------------------------------ names
@@ -807,6 +830,9 @@ internal class ScopeEvaluator(
                 "Column '${identifier.name}' is not in the partial relation contract", identifier, identifier)
         }
     }
+
+    /** Where SQL writes [identifier], or null for a name lowering made up. */
+    private fun declared(identifier: Identifier): ScopeRange? = names.range(identifier)?.let { ScopeRange(it.first, it.last + 1) }
 
     private fun reference(
         kind: ReferenceKind,

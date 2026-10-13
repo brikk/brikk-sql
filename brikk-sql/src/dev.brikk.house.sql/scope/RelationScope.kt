@@ -14,6 +14,8 @@ import kotlinx.serialization.Serializable
  *   operation (`UNION ALL`), `PIVOT`, `USING`, or the CTE or derived table whose projection it is
  *   (`SELECT` when it has no name).
  * - [provenance] is the source fact's navigation id, kept through renames.
+ * - [declaration] is where SQL names the column (`AS k`, a CTE or alias column list, a RENAME
+ *   target), kept through later references; null when only a fact names it.
  */
 @Serializable
 data class ScopeColumn(
@@ -26,7 +28,12 @@ data class ScopeColumn(
     val source: ColumnSource? = null,
     val computedBy: String? = null,
     val provenance: String? = null,
+    val declaration: ScopeRange? = null,
 )
+
+/** A range `[start, end)` of script offsets. */
+@Serializable
+data class ScopeRange(val start: Int, val end: Int)
 
 /** The [column] fact supplied under [relation], a slot, table or call key. */
 @Serializable
@@ -35,7 +42,10 @@ data class ColumnSource(val relation: String, val column: ColumnFact)
 @Serializable
 enum class RelationKind { SLOT, TABLE, CALL, CTE, SUBQUERY, FUNCTION, VALUES, OTHER }
 
-/** A relation a qualifier or table name refers to. [source] is its slot, table, call or CTE name. */
+/**
+ * A relation a qualifier or table name refers to. [source] is its slot, table, call or CTE name;
+ * [declaration] is where SQL names it: its alias, or a CTE's name.
+ */
 @Serializable
 data class ScopeRelation(
     val name: String,
@@ -43,6 +53,7 @@ data class ScopeRelation(
     val knowledge: Knowledge,
     val source: String? = null,
     val provenance: String? = null,
+    val declaration: ScopeRange? = null,
 )
 
 @Serializable
