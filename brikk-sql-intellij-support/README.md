@@ -157,6 +157,31 @@ validator's `verify`; the diagnostics themselves are core's plain data
   `fileDiagnostics` adds diagnostics read with the PSI (a last server error), `verificationText`
   masks binds at equal length, `message` formats.
 
+`DataSourceVerification(resolver) { connect -> verifier }` verifies against the data source that serves
+the file (the shared `DialectDataSourceResolver`): its `validator(file)` and `modificationCount(file)`
+are the profile's two methods. One validator per data source wraps the verifier, whose `connect()`
+opens a separate short-lived helper connection (`DataSourceQueryConnection`: `queryString`, `cancel`,
+`close`), never the console's session, never asking for a password, and only while the user has the
+data source connected; otherwise it gives null, which the verifier reports as `Unavailable`. The count
+changes with the data source (identity, URL, user) and its connected state; register
+`VerificationConnectionListener` as an application listener of
+`com.intellij.database.dataSource.DatabaseConnectionManager$Listener` so connecting and disconnecting
+restart highlighting (helper connections are ignored). For ClickHouse:
+
+```kotlin
+DataSourceVerification(resolver) { connect ->
+    ParseOnlyClickhouseVerifier({
+        connect()?.let { helper ->
+            object : ClickhouseQueryConnection {
+                override fun queryString(sql: String, timeoutSeconds: Int) = helper.queryString(sql, timeoutSeconds)
+                override fun cancel() = helper.cancel()
+                override fun close() = helper.close()
+            }
+        }
+    }, checkCanceled = ProgressManager::checkCanceled)
+}
+```
+
 `NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
