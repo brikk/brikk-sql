@@ -29,7 +29,10 @@ enum class DiagnosticSource {
     OTHER,
 }
 
-/** One diagnostic over a script; [start] and [end] are UTF-16 offsets into the script, [end] exclusive and after [start]. */
+/**
+ * One diagnostic over a script; [start] and [end] are UTF-16 offsets into the script, [end] exclusive
+ * and after [start]. Diagnostics differing in anything may share a range; only equal ones are duplicates.
+ */
 data class SqlDiagnostic(
     val severity: DiagnosticSeverity,
     val message: String,
@@ -110,7 +113,7 @@ fun localParseDiagnostics(script: String, range: IntRange, dialect: String, chec
             ?: return listOf(diagnostic(script, range, DiagnosticSource.LOCAL_PARSER, DiagnosticSeverity.ERROR, e.message ?: "Invalid SQL", null, null))
         errors.map { error ->
             diagnostic(script, range, DiagnosticSource.LOCAL_PARSER, DiagnosticSeverity.ERROR, error.description ?: e.message ?: "Invalid SQL", error.start, error.end)
-        }.distinctByRange()
+        }.distinct()
     }
 }
 
@@ -164,11 +167,8 @@ fun combineStatementDiagnostics(
             }
         }
     }
-    return StatementDiagnostics(start, end, added.distinctByRange() + kept.distinctByRange(), !advisory && native == NativeOutcome.Accepted)
+    return StatementDiagnostics(start, end, (added + kept).distinct(), !advisory && native == NativeOutcome.Accepted)
 }
-
-/** One diagnostic per range, the first kept, such as for an engine reporting one position twice. */
-fun List<SqlDiagnostic>.distinctByRange(): List<SqlDiagnostic> = distinctBy { it.start to it.end }
 
 /**
  * A diagnostic for an error at [offset] in the SQL at [range] of [script]: up to [endOffset] when

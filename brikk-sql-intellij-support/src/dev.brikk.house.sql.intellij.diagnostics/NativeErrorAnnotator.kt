@@ -28,7 +28,6 @@ import dev.brikk.house.sql.diagnostics.NativeError
 import dev.brikk.house.sql.diagnostics.NativeOutcome
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.diagnostics.combineStatementDiagnostics
-import dev.brikk.house.sql.diagnostics.distinctByRange
 import dev.brikk.house.sql.diagnostics.localParseDiagnostics
 import dev.brikk.house.sql.diagnostics.verificationRange
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
@@ -230,14 +229,14 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         if (texts.map(PipeText::text) != outcome.dependencies.map(Dependencies::script)) return
         file.putUserData(outcomeKey, outcome.takeIf { it.reusable })
         val manager = InjectedLanguageManager.getInstance(file.project)
-        val annotated = HashSet<Pair<TextRange, String>>()
+        val annotated = HashSet<Triple<TextRange, DiagnosticSeverity, String>>()
         for ((index, diagnostics) in outcome.diagnostics.withIndex()) {
             val fragment = fragments[index]
             for (diagnostic in diagnostics + profile.fileDiagnostics(fragment ?: file, texts[index].text)) {
                 val local = texts[index].fileRange(diagnostic.start, diagnostic.end) ?: editableRange(texts[index], diagnostic.start) ?: continue
                 val range = (if (fragment == null) local else manager.injectedToHost(fragment, local)).takeIf { it.endOffset <= file.textLength && !it.isEmpty } ?: continue
                 val message = profile.message(diagnostic)
-                if (!annotated.add(range to message)) continue
+                if (!annotated.add(Triple(range, diagnostic.severity, message))) continue
                 val severity = if (diagnostic.severity == DiagnosticSeverity.WARNING) HighlightSeverity.WARNING else HighlightSeverity.ERROR
                 holder.newAnnotation(severity, message).range(range).create()
             }
@@ -280,7 +279,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             diagnostics += combineStatementDiagnostics(script, range, local, native, validator?.advisory == true).diagnostics
         }
         // The IDE parser's errors outside every checked statement have no verdict to answer them.
-        return Check((diagnostics + psiErrors).distinctByRange(), final)
+        return Check((diagnostics + psiErrors).distinct(), final)
     }
 
     private fun localDiagnostics(script: String, range: IntRange): List<SqlDiagnostic> =

@@ -175,6 +175,31 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
         assertEquals(listOf("bad" to "Engine: by line"), marks())
     }
 
+    /** The messages one pass creates, before the platform's display rules (a warning under an error on one range is not drawn). */
+    private fun created(): List<String> {
+        val annotator = PostgresErrorAnnotator()
+        return recorded(annotator, annotator.doAnnotate(annotator.collectInformation(myFixture.file)))
+    }
+
+    fun testDistinctDiagnosticsOnOneRangeAllShow() {
+        postgresProfile.localParser = true
+        val text = "SELECT * FROM t WHERE = 1;"
+        postgresProfile.validator = null
+        open(text)
+        val (localText, localMessage) = marks().single()
+        // An advisory warning on the local error's range adds to it.
+        postgresProfile.validator = object : NativeSqlValidator by ScriptedValidator({ sql ->
+            VerifyResult.Rejected(VerifyError.atOffset(sql, "advisory", sql.indexOf(localText), sql.indexOf(localText) + localText.length))
+        }) {
+            override val advisory = true
+        }
+        assertSameElements(created(), localMessage, "advisory")
+        // A positionless rejection keeps the local error and adds its message at the same range.
+        postgresProfile.validator = ScriptedValidator { VerifyResult.Rejected(VerifyError("no position")) }
+        assertSameElements(created(), localMessage, "no position")
+        assertSameElements(marks(), localText to localMessage, localText to "Engine: no position")
+    }
+
     fun testTheLocalParserIsOffByDefault() {
         postgresProfile.validator = null
         open("SELECT * FROM t WHERE = 1;")

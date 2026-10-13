@@ -6,7 +6,6 @@ import dev.brikk.house.sql.diagnostics.NativeError
 import dev.brikk.house.sql.diagnostics.NativeOutcome
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.diagnostics.combineStatementDiagnostics
-import dev.brikk.house.sql.diagnostics.distinctByRange
 import dev.brikk.house.sql.diagnostics.localParseDiagnostics
 import dev.brikk.house.sql.diagnostics.verificationRange
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
@@ -144,10 +143,12 @@ class SqlDiagnosticsTest {
     }
 
     @Test
-    fun oneDiagnosticPerRange() {
-        val twice = combineStatementDiagnostics("SELECT x", 0 until 8, listOf(), NativeOutcome.Rejected(listOf(NativeError("a", 7), NativeError("b", 7))))
-        assertEquals(listOf("a"), twice.diagnostics.map { it.message })
-        assertEquals(1, listOf(local(7), local(7).copy(message = "other")).distinctByRange().size)
+    fun onlyEqualDiagnosticsAreDuplicates() {
+        val errors = NativeOutcome.Rejected(listOf(NativeError("a", 7), NativeError("b", 7), NativeError("a", 7)))
+        assertEquals(listOf("a", "b"), combineStatementDiagnostics("SELECT x", 0 until 8, listOf(), errors).diagnostics.map { it.message })
+        // A local error and an advisory warning on one range both stay.
+        val sameRange = combineStatementDiagnostics("SELECT x", 0 until 8, listOf(local(7)), NativeOutcome.Rejected(listOf(NativeError("w", 7))), advisory = true)
+        assertEquals(listOf(DiagnosticSeverity.WARNING to "w", DiagnosticSeverity.ERROR to "local 7"), sameRange.diagnostics.map { it.severity to it.message })
     }
 
     @Test
