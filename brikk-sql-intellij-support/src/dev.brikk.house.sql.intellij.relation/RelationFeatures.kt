@@ -170,12 +170,15 @@ private fun RelationAnalysis.elementAt(file: PsiFile, range: ScopeRange): PsiEle
 /**
  * A column the analysis resolves through a provider's relation, as the platform's resolve sees it.
  * Equal symbols name the same provider column in the same file, whatever alias shows it: `a.id` and
- * `b.id` of a self-join are one column.
+ * `b.id` of a self-join are one column. It is equivalent to the provider's navigation target for
+ * the column, so find usages and rename of that declaration include the SQL referring to it;
+ * without one it navigates to [fallback].
  */
 internal class RelationColumnSymbol(
     private val file: PsiFile,
     private val provider: ExternalRelationFacts?,
     val column: ScopeColumn,
+    private val fallback: PsiElement? = null,
 ) : LightElement(file.manager, file.language), DasPsiSymbol, DasColumnSymbol {
     private val target: PsiElement? by lazy { column.provenance?.let { provider?.navigationTarget(file.originalFile, it) } }
 
@@ -201,7 +204,9 @@ internal class RelationColumnSymbol(
 
     override fun getContextElement(): PsiElement = file
 
-    override fun getNavigationElement(): PsiElement = target ?: this
+    override fun getNavigationElement(): PsiElement = target ?: fallback ?: this
+
+    override fun isEquivalentTo(another: PsiElement?): Boolean = super.isEquivalentTo(another) || another != null && another == target
 
     override fun getText(): String = column.name
 

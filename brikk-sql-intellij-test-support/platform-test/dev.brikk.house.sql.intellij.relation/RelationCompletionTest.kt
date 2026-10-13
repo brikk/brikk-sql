@@ -4,6 +4,8 @@ import com.intellij.codeInsight.lookup.Lookup
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.sql.psi.SqlFunctionCallExpression
 import dev.brikk.house.sql.intellij.completion.SqlLookupIcons
 import dev.brikk.house.sql.intellij.completion.SqlLookupKind
 import dev.brikk.house.sql.scope.ColumnFact
@@ -106,6 +108,14 @@ class RelationCompletionTest : RelationTestCase() {
         open("FROM events() |> SELECT <caret>")
         OtherCompletion.offer(myFixture.file, LookupElementBuilder.create("id").withTailText(" unrelated"), testRootDisposable)
         assertSameElements(tails("id"), " unrelated", "  declared column (events)")
+    }
+
+    fun testANativeAdapterColumnIsDecoratedNotDuplicated() {
+        open("SELECT e.i<caret> FROM events() e")
+        val call = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlFunctionCallExpression::class.java).single()
+        val column = checkNotNull(checkNotNull(RelationTableTypes.of(call, pgRelations)).getColumnElement(0))
+        OtherCompletion.offer(myFixture.file, LookupElementBuilder.create(column, "id").withTailText(" native"), testRootDisposable)
+        assertEquals(listOf("  declared column (e)"), tails("id"))
     }
 
     fun testSameKeyedSlotAndTableKeepTheirOwnProvidersLabels() {

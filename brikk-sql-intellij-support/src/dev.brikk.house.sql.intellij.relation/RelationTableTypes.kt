@@ -1,22 +1,17 @@
 package dev.brikk.house.sql.intellij.relation
 
 import com.intellij.database.types.DasTypeSystemBase
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiNamedElement
-import com.intellij.psi.impl.light.LightElement
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlTableType
 import com.intellij.sql.psi.impl.SqlTableTypeBase
-import com.intellij.util.IncorrectOperationException
-import dev.brikk.house.sql.scope.ColumnFact
+import dev.brikk.house.sql.scope.ColumnSource
 import dev.brikk.house.sql.scope.RelationKind
+import dev.brikk.house.sql.scope.ScopeColumn
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * The optional native adapter: a slot call's columns as the platform's own table type, so ordinary
- * SQL over it gets the platform's resolve, rename and find usages without light symbols. A plugin
+ * The optional native adapter: a slot call's columns as the platform's own table type. A plugin
  * returns [of] from its function-call element's type computation (an element factory override);
  * PIPE stages, which have no such PSI, keep the analysis.
  */
@@ -26,6 +21,11 @@ public object RelationTableTypes {
      * The table type of [call] when it is a slot (an unqualified call without arguments in a FROM
      * position) of a provider's relation in [profile]; null otherwise, and while facts are pending,
      * so the platform's own typing applies. Column types stay unknown: a display type proves no SQL type.
+     *
+     * Each column's element is the column's symbol, as the resolve extension gives it: equivalent to
+     * the provider's navigation target for the column, so the platform's find usages and rename of
+     * that declaration include the SQL referring to it, and navigating to it, else to the relation's
+     * target, else to the call. It is equal across calls.
      */
     public fun of(call: SqlFunctionCallExpression, profile: RelationScopeProfile): SqlTableType? {
         if (call.parent?.node?.elementType != SqlCompositeElementTypes.SQL_TABLE_PROCEDURE_CALL_EXPRESSION) return null
@@ -35,31 +35,15 @@ public object RelationTableTypes {
         val analysis = RelationAnalysis.of(file, profile) ?: return null
         val provider = analysis.facts.providerOf(RelationKind.SLOT, name)?.takeUnless { it.platformResolves } ?: return null
         val relation = analysis.facts.merged.slots[name] ?: return null
+        val fallback = relation.provenance?.let { provider.navigationTarget(file, it) } ?: call
         var table: SqlTableType = SqlTableTypeBase.EMPTY_TABLE
-        for (column in relation.columns) {
-            val anchor = ColumnAnchor(call, file, column, provider, relation.provenance)
-            table = table.add(SqlTableTypeBase.createType(anchor, DasTypeSystemBase.UNKNOWN, column.name, false, false, true, null, null))
+        for (fact in relation.columns) {
+            val column = ScopeColumn(
+                fact.name, name, fact.origin, fact.nullability, fact.sqlType, fact.displayType, ColumnSource(name, fact), provenance = fact.provenance,
+            )
+            val symbol = RelationColumnSymbol(file, provider, column, fallback)
+            table = table.add(SqlTableTypeBase.createType(symbol, DasTypeSystemBase.UNKNOWN, fact.name, false, false, true, null, null))
         }
         return table
-    }
-
-    /** A slot column's declaration for the platform: it navigates to the provider's target for the column, else the relation, else the call. */
-    private class ColumnAnchor(
-        private val call: SqlFunctionCallExpression,
-        private val file: PsiFile,
-        private val column: ColumnFact,
-        private val provider: ExternalRelationFacts,
-        private val relation: String?,
-    ) : LightElement(call.manager, call.language), PsiNamedElement {
-        override fun getName(): String = column.name
-
-        override fun setName(name: String): PsiElement = throw IncorrectOperationException("Rename the column where its relation is declared")
-
-        override fun getContainingFile(): PsiFile = file
-
-        override fun getNavigationElement(): PsiElement =
-            column.provenance?.let { provider.navigationTarget(file, it) } ?: relation?.let { provider.navigationTarget(file, it) } ?: call
-
-        override fun toString(): String = "Relation column ${column.name}"
     }
 }
