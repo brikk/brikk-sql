@@ -27,6 +27,7 @@ internal class ClickhouseAccessTest {
 
     @Test
     fun readonlyProfilesGetVerdicts() {
+        ClickhouseServer.require()
         val suffix = UUID.randomUUID().toString().replace("-", "")
         ClickhouseServer.open().use { admin ->
             for (level in 1..2) admin.run("CREATE USER verify_ro${level}_$suffix IDENTIFIED WITH no_password SETTINGS readonly = $level")
@@ -44,6 +45,7 @@ internal class ClickhouseAccessTest {
 
     @Test
     fun theJdbcDriversOwnSettingsMakeAReadonlyOneLoginUnavailable() {
+        ClickhouseServer.require()
         val user = "verify_jdbc_ro_" + UUID.randomUUID().toString().replace("-", "")
         ClickhouseServer.open().use { admin ->
             admin.run("CREATE USER $user IDENTIFIED WITH no_password SETTINGS readonly = 1")
@@ -58,6 +60,7 @@ internal class ClickhouseAccessTest {
     /** A statement over the server's `max_query_size` (here, the hex wrapper) is not checked, never rejected at a wrapper offset. */
     @Test
     fun aStatementOverTheQuerySizeLimitIsUnverified() {
+        ClickhouseServer.require()
         val user = "verify_small_" + UUID.randomUUID().toString().replace("-", "")
         ClickhouseServer.open().use { admin ->
             admin.run("CREATE USER $user IDENTIFIED WITH no_password SETTINGS max_query_size = 600")
@@ -73,6 +76,7 @@ internal class ClickhouseAccessTest {
 
     @Test
     fun aRefusedLoginIsUnavailable() {
+        ClickhouseServer.require()
         assertIs<VerifyResult.Unavailable>(verifierAs("default", "wrong").verify("SELECT 1"))
     }
 

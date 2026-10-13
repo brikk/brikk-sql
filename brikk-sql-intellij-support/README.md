@@ -184,6 +184,9 @@ DataSourceVerification(resolver, connectionProperties = { mapOf("compress" to "f
 }
 ```
 
+The server rejects IDE binds, so the profile's `verificationText` masks IDE `:name` and `?` binds (at
+equal length); it never masks ClickHouse's `{name:Type}` server parameters, which the server parses.
+
 `NativeSqlValidator.verify` returns the engine's positioned `VerifyResult` (by default `validate`
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.

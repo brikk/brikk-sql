@@ -23,7 +23,7 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-verify-duckdb](brikk-sql-verify-duckdb/) | `brikk-sql-verify-duckdb` | DuckDB corpus-gate verifier and the parse-only editor verifier. |
 | [brikk-sql-verify-doris](brikk-sql-verify-doris/) | `brikk-sql-verify-doris` | Doris FE parser verifier, single statement or every error in a script. |
 | [brikk-sql-verify-shardingsphere](brikk-sql-verify-shardingsphere/) | `brikk-sql-verify-shardingsphere` | Advisory ShardingSphere grammars for PostgreSQL, MySQL, Hive and ClickHouse. Exclude `org.apache.groovy:groovy`: parsing never uses it and Toolchain cannot publish the exclusion. |
-| [brikk-sql-verify-clickhouse](brikk-sql-verify-clickhouse/README.md) | `brikk-sql-verify-clickhouse` | Parse-only ClickHouse verifier over the user's own server (`formatQuery`, never executes); the caller supplies the connection. |
+| [brikk-sql-verify-clickhouse](brikk-sql-verify-clickhouse/) | `brikk-sql-verify-clickhouse` | Parse-only ClickHouse verifier over the user's own server (`formatQuery`, never executes); the caller supplies the connection. |
 | [brikk-sql-verify](brikk-sql-verify/) | `brikk-sql-verify` | Aggregate of every self-contained verifier plus the `SqlVerifiers` registry (not ClickHouse, which needs the user's server). |
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Embedded IntelliJ action, snapshot and console-preparation mechanics; independently versioned. |
