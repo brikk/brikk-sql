@@ -158,10 +158,13 @@ public abstract class ExternalRelationAnnotator(private val profile: RelationSco
     }
 }
 
-/** The analysis's problems in [file]'s SQL (unescaped when injected), as core diagnostics; empty while facts are pending. */
+/**
+ * The analysis's problems in [file]'s SQL (unescaped when injected), as core diagnostics; empty while
+ * facts are pending, a provider's or the host string's ([RelationScopeProfile.hostSql]).
+ */
 @ApiStatus.Experimental
 public fun relationDiagnostics(file: PsiFile, profile: RelationScopeProfile): List<SqlDiagnostic> =
-    RelationAnalysis.of(file, profile)?.statements?.flatMap { (_, scope) -> scope.diagnostics.map { it.toSqlDiagnostic() } }.orEmpty()
+    if (profile.hostSql?.isPending(file) == true) emptyList() else RelationAnalysis.of(file, profile)?.statements?.flatMap { (_, scope) -> scope.diagnostics.map { it.toSqlDiagnostic() } }.orEmpty()
 
 /** The element at the start of [range] of the analysis's text in [file]. */
 private fun RelationAnalysis.elementAt(file: PsiFile, range: ScopeRange): PsiElement? =

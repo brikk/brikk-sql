@@ -5,6 +5,7 @@ import com.intellij.lang.Language
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.SqlParameterSpan
+import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import dev.brikk.house.sql.parser.ColumnUnit
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SqlStatementRange
@@ -37,14 +38,20 @@ public interface PipeDialect {
     /** The project's PIPE setting. */
     public fun isProjectEnabled(project: Project): Boolean
 
-    /** Enables PIPE editing, never execution, in [file] regardless of the project setting. */
-    public fun enablesEditing(file: PsiFile): Boolean = false
+    /** The dialect's SQL in host strings, if it injects any; it decides [enablesEditing] and [isInspectionHost] by default. */
+    public val hostSql: HostSqlChannel? get() = null
+
+    /** Enables PIPE editing, never execution, in [file] regardless of the project setting: by default SQL [hostSql] injected. */
+    public fun enablesEditing(file: PsiFile): Boolean = hostSql?.marker(file) != null
 
     /** Where PIPE editing is enabled, whether [file] offers the generated-SQL preview. */
     public fun enablesPreview(file: PsiFile): Boolean = true
 
-    /** An inspection-only view: Execute is refused and run-to-stage is unavailable. */
-    public fun isInspectionHost(file: PsiFile): Boolean = false
+    /**
+     * An inspection-only view: Execute is refused, run-to-stage is unavailable and the preview says so.
+     * By default SQL [hostSql] injected for editing only.
+     */
+    public fun isInspectionHost(file: PsiFile): Boolean = hostSql?.isInspectionOnly(file) == true
 
     /** Whether PIPE statements run through [session], typically decided by its DBMS. */
     public fun ownsSession(session: DatabaseSession): Boolean

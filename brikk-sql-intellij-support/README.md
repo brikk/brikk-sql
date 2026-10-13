@@ -200,13 +200,72 @@ equal length); it never masks ClickHouse's `{name:Type}` server parameters, whic
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
 
+## SQL in host strings (`dev.brikk.house.sql.intellij.host`, experimental)
+
+The mechanics of SQL injected into another language's strings, from abstract entries; a recognizer
+of the host language (the Brikk helper for Kotlin, say) decides what a string is. This layer has no
+host-language dependency and knows nothing about Brikk.
+
+- `HostSqlEntries`: `HostSqlEntry`s in host order (a range of the host element's text, kept as the
+  host's escaper decodes it or replaced by text; a `placeholder` replacement stands for something not
+  known yet) and the `HostSqlTrim`s the host applies at runtime (`Indent`, `Margin(prefix)`), with
+  Kotlin's semantics: trimmed lines join with `\n`, untrimmed text keeps `\r\n`.
+- `HostSqlInjection.layout(host, entries)`: the SQL text (the runtime string), each character's host
+  range, the injection `places` (contiguous origins joined; replacement text as a place's prefix, or
+  the last place's suffix) and the placeholders. Escapes, trims, CRLF and supplementary characters keep
+  exact origins, so annotations on the injected SQL land on the host text that produced it. A range the
+  escaper cannot decode to its end keeps what it decoded, as the platform's injection does.
+- Entries are plain data: a plugin maps a recognizer's output (the Brikk helper's host ranges,
+  replacements and pending projection, which depend on core only) into `HostSqlEntry`s.
+- `HostSqlChannel(id)`, one per plugin (its keys are its own), performs a recognizer's `HostSqlClaim`.
+  `Injected` injects (`pending` when placeholders stand for facts not known yet; `inspectionOnly`;
+  `colonBinds`; caller `data`); `Unavailable` claims the string without injecting anything; `NotClaimed`
+  leaves it. A recognizer that keeps a previous recognition while facts are pending (the Brikk helper's
+  projection) claims `Injected` with `pending` and its interpolations as placeholder entries; one with
+  nothing to show claims `Unavailable`.
+- `HostSqlInjector(channel, language)`: the required registration. Register a no-arg subclass under both
+  `languageInjectionContributor` and `languageInjectionPerformer` for the host language, `order="first"`.
+  The platform injects a string with the first contributor's injection and the first performer that
+  performs it, so a claimed string (injected or unavailable) gets no other contributor's SQL, such as an
+  `@Language` annotation's or a configured injection; it is dumb-aware, so this holds while indexing.
+  Injectors outside that mechanism (a `multiHostInjector`) cannot be kept off: SQL they put into a
+  string is inspection-only when any host string it joins was claimed by the channel's last claim of
+  that host, or by `claimsHost(host)`, which a plugin overrides to ask its recognizer. Each host's claim
+  is asked once and shared by the contributor and performer (even as separate instances) until the
+  host's file changes or the channel reanalyzes, negative claims included.
+- Retries: unavailable and pending claims schedule one reanalysis per file and file revision once
+  indexing is done; it drops PSI caches (injection results are cached until PSI changes) and the file's
+  injected documents, and restarts its highlighting. A provider whose facts change without an edit
+  (shapes generated later) calls `requestReanalysis(file)`, never from inside its own `facts()` or a
+  claim.
+- Questions for injected files: `marker(file)`, `isPending`, `parsesColonBinds` (a parser calls
+  `parseColonParameter()` where it holds) and `isInspectionOnly`: true for inspection-only and pending
+  SQL and for SQL in a claimed host string (above).
+- Placeholders are never errors: `HostSqlPlaceholderErrorFilter` (`highlightErrorFilter`) hides parse
+  errors overlapping a placeholder or, when empty, standing before one; other errors stay (`${x})` keeps
+  its `)`). Placeholder SQL gets lenient inspections. `NativeErrorProfile.hostSql` verifies no statement
+  holding a placeholder with the engine (local parsing still runs), reports no diagnostic a placeholder
+  causes, and treats placeholder changes like text changes for its cached outcomes; `RelationScopeProfile.hostSql`
+  runs no relation diagnostics while SQL is pending.
+- `PipeDialect.hostSql`: PIPE editing is on in the channel's SQL; inspection-only SQL refuses Execute,
+  also from the host's editor with the caret in the SQL (the stock action would run it in a console),
+  has no run-to-stage and says so in the preview. `HostSqlExecutionContract` (test kit) checks Execute
+  from a plugin's real host editor.
+- `HostSqlLineMarkerProvider` (`codeInsight.lineMarkerProvider` for the host language): a named,
+  dumb-aware gutter icon per claimed string, toggled in Settings | Editor | General | Gutter Icons,
+  dimmed while pending, unavailable or indexing, with the caller's tooltip. `HostSqlActionBanner`
+  (`editorNotificationProvider`): a banner with a fix link only when the caller reports an action is
+  needed; no routine banner.
+
 ## Relations (`dev.brikk.house.sql.intellij.relation`, experimental)
 
 SQL features over relation facts from any provider, built on core's `RelationScope`
 (`dev.brikk.house.sql.scope`); this layer knows nothing about Brikk. A provider implements
 `ExternalRelationFacts`: copied core `RelationFacts` (slots, tables, table-function calls) for a file or
 injected fragment with a revision, or `Pending`; optionally navigation by a fact's provenance, labels,
-and `platformResolves` for relations the platform resolves itself. A plugin implements one
+and `platformResolves` for relations the platform resolves itself. `ExternalRelationFacts.of(labels, platformResolves,
+navigationTarget) { file -> result }` builds one from functions, so a plugin maps a library's facts
+(core `RelationFacts` and its own available/pending result, such as the Brikk helper's) in a few lines. A plugin implements one
 `RelationScopeProfile` (language, core dialect, providers in precedence order, labels, styles) and
 registers no-arg subclasses. Providers must be stable instances: the analysis is cached per provider
 instance and revision. A slot, a table and a call with the same key are different relations, each

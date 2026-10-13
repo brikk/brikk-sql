@@ -101,6 +101,10 @@ private fun PipeDialect.runnable(file: PsiFile, editor: Editor): CaretStatement?
         InjectedLanguageManager.getInstance(file.project).isInjectedFragment(file)
     ) null else caretStatement(editor.document.text, editor.caretModel.offset)
 
+/** The preview's title; inspection-only SQL says it does not run as it is. */
+internal fun PipeDialect.previewTitle(generated: Boolean, inspectionOnly: Boolean): String =
+    (if (generated) "$label: generated SQL" else "$label: execution blocked") + if (inspectionOnly) " (inspection only, not executable)" else ""
+
 private fun PipeDialect.preview(file: PsiFile, editor: Editor) {
     val statement = previewable(file, editor) ?: return
     val (sql, diagnostics) = when (val translation = lower(statement.text, file = file)) {
@@ -123,7 +127,7 @@ private fun PipeDialect.preview(file: PsiFile, editor: Editor) {
         content.add(JBScrollPane(it).apply { preferredSize = JBUI.size(640, 100) }, if (sql == null) BorderLayout.CENTER else BorderLayout.NORTH)
     }
     JBPopupFactory.getInstance().createComponentPopupBuilder(content, focus ?: notes)
-        .setTitle(if (diagnostics == null) "$label: generated SQL" else "$label: execution blocked")
+        .setTitle(previewTitle(diagnostics == null, isInspectionHost(file)))
         .setResizable(true).setMovable(true).setRequestFocus(true)
         .createPopup().showInBestPositionFor(editor)
 }

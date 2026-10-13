@@ -30,6 +30,7 @@ import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.diagnostics.combineStatementDiagnostics
 import dev.brikk.house.sql.diagnostics.localParseDiagnostics
 import dev.brikk.house.sql.diagnostics.verificationRange
+import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.intellij.recoverEditorOperation
@@ -124,6 +125,12 @@ public interface NativeErrorProfile {
     public fun fileDiagnostics(file: PsiFile, script: String): List<SqlDiagnostic> = emptyList()
 
     /**
+     * The plugin's SQL in host strings, if any: a statement holding a placeholder is not verified
+     * (its text is not the SQL that runs), and no diagnostic a placeholder causes is reported.
+     */
+    public val hostSql: HostSqlChannel? get() = null
+
+    /**
      * A count that changes whenever anything but [file]'s text can change its verdicts: settings, a
      * connection, a newly available engine or data source. A result is reused only while it, the
      * text and [validator]'s instance stay the same. Restart the daemon for the file when it changes,
@@ -168,7 +175,13 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     )
 
     /** What a source's verdicts depend on besides the document revision; the validator counts by instance. */
-    internal data class Dependencies(val script: String, val validator: NativeSqlValidator?, val revision: Long)
+    internal data class Dependencies(
+        val script: String,
+        val validator: NativeSqlValidator?,
+        val revision: Long,
+        /** Placeholder ranges of the script ([NativeErrorProfile.hostSql]): resolving one changes the verdicts without changing the text. */
+        val placeholders: List<TextRange> = emptyList(),
+    )
 
     /** One SQL text: [file] is its injected fragment, or the annotated file itself. */
     internal class Source(
@@ -217,7 +230,8 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         file.getUserData(outcomeKey)?.takeIf { it.profile === profile && it.stamp == stamp && it.dependencies == dependencies }
             ?.let { return Snapshot(stamp, emptyList(), it) }
         val sources = fragments.indices.map { index ->
-            Source(fragments[index] ?: file, dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList())
+            val sqlFile = fragments[index] ?: file
+            Source(sqlFile, dependencies[index], if (profile.reportsPsiErrors) psiErrors(texts[index]) else emptyList())
         }
         return Snapshot(stamp, sources, null)
     }
@@ -246,6 +260,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
         for ((index, diagnostics) in outcome.diagnostics.withIndex()) {
             val fragment = fragments[index]
             for (diagnostic in diagnostics + profile.fileDiagnostics(fragment ?: file, texts[index].text)) {
+                if (profile.hostSql?.isPlaceholderError(fragment ?: file, texts[index].text, diagnostic.start, diagnostic.end) == true) continue
                 val local = texts[index].fileRange(diagnostic.start, diagnostic.end) ?: editableRange(texts[index], diagnostic.start) ?: continue
                 val range = (if (fragment == null) local else manager.injectedToHost(fragment, local)).takeIf { it.endOffset <= file.textLength && !it.isEmpty } ?: continue
                 val message = profile.message(diagnostic)
@@ -259,7 +274,7 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
     private fun dependencies(file: PsiFile, fragments: List<PsiFile?>, texts: List<PipeText>): List<Dependencies> =
         fragments.zip(texts) { fragment, text ->
             val sqlFile = fragment ?: file
-            Dependencies(text.text, profile.validator(sqlFile), profile.modificationCount(sqlFile))
+            Dependencies(text.text, profile.validator(sqlFile), profile.modificationCount(sqlFile), profile.hostSql?.marker(sqlFile)?.placeholders.orEmpty())
         }
 
     /** A source's diagnostics, positioned in its script, and whether every verdict in them is final. */
@@ -290,6 +305,9 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
             val local = inStatement + if (profile.localParser) localDiagnostics(script, range) else emptyList()
             val asked = when {
                 validator == null -> Asked(NativeOutcome.NoVerdict("No native validator"), final = true)
+                // Its text is not the SQL that runs; local errors the placeholders cause are dropped when applied.
+                source.dependencies.placeholders.any { it.startOffset <= range.last && range.first < it.endOffset } ->
+                    Asked(NativeOutcome.NoVerdict("The statement holds placeholders"), final = true)
                 deadline != null && System.nanoTime() > deadline -> Asked(NativeOutcome.NoVerdict("Verification budget spent"), final = false)
                 else -> ask(validator, source.file, script.substring(range.first, range.last + 1), deadline)
             }

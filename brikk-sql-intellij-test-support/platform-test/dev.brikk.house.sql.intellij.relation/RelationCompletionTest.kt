@@ -128,6 +128,11 @@ class RelationCompletionTest : RelationTestCase() {
         assertEquals(listOf("  slot column (same)"), offered("FROM same() |> SELECT <caret>", "id").map { it.second })
     }
 
+    fun testAFunctionBackedProviderBringsItsLabels() {
+        pgRelations.providers = listOf(ExternalRelationFacts.of(RelationColumnLabels(declared = "host column")) { RelationFactsResult.Available(FakeFacts.EVENTS, 0) })
+        assertEquals(listOf("  host column (events)"), offered("FROM events() |> SELECT <caret>", "id").map { it.second })
+    }
+
     fun testNothingIsOfferedWhileFactsArePending() {
         pgRelations.fake.pending = true
         assertEmpty(offered("FROM events() |> SELECT <caret>", "id", "kind"))
