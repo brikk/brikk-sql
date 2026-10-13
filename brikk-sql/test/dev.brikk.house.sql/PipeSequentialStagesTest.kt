@@ -64,4 +64,11 @@ class PipeSequentialStagesTest {
         // Merged, the unqualified a would meet u's a.
         assertEquals(emptyList(), problems("FROM t |> WHERE a > 1 |> JOIN u ON t.a = u.a"))
     }
+
+    @Test
+    fun aWindowInExtendReadsTheSlice() {
+        assertEquals("WITH __tmp1 AS (SELECT * FROM t LIMIT 3), __tmp2 AS (SELECT *, ROW_NUMBER() OVER (ORDER BY a) AS rn FROM __tmp1 AS t) SELECT * FROM __tmp2",
+            lowered("FROM t |> LIMIT 3 |> EXTEND row_number() OVER (ORDER BY a) AS rn"))
+        assertEquals("WITH __tmp1 AS (SELECT *, a + 1 AS x FROM t LIMIT 3) SELECT * FROM __tmp1", lowered("FROM t |> LIMIT 3 |> EXTEND a + 1 AS x"))
+    }
 }

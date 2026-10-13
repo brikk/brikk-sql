@@ -626,7 +626,9 @@ private fun Expression.isPlainStar(): kotlin.Boolean {
 private fun needsWholeRows(query: Expression, stage: Expression): kotlin.Boolean {
     val shaped = listOf("limit", "offset", "distinct", "group", "having", "qualify").any { query.args[it] != null }
     return when (stage) {
-        is PipeExtend -> !query.isPlainStar() || query.args["distinct"] != null
+        // EXTEND is per row, unless a window function reads the rows a slice or grouping left.
+        is PipeExtend -> !query.isPlainStar() || query.args["distinct"] != null ||
+            shaped && stage.expressionsArg.any { it is Expression && it.find<Window>() != null }
         is PipeWindow, is PipeAggregate -> !query.isPlainStar() || shaped
         is PipeJoin -> !query.isPlainStar() || shaped || query.args["where"] != null
         is PipePivot, is PipeUnpivot -> !query.isPlainStar() || shaped || query.args["where"] != null ||
