@@ -2,11 +2,8 @@ package dev.brikk.house.sql.intellij.completion
 
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
-import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
-import dev.brikk.house.sql.parser.Tokenizer
-import dev.brikk.house.sql.parser.TokenizerConfigs
 import java.util.Locale
 import org.jetbrains.annotations.ApiStatus
 
@@ -90,23 +87,17 @@ internal enum class FunctionPosition {
 }
 
 /**
- * The position after [text], which ends at the typed name, in the core [dialect]: only the
- * statement holding its end is read. [stagePhrases] are the PIPE stages that may follow `|>`;
+ * The position after [tokens], the core tokens of the statement before the typed name
+ * (`SqlNameContext.tokens`). [stagePhrases] are the PIPE stages that may follow `|>`;
  * [isFunction] tells a call such as `range(` from a keyword when the name tokenizes as one.
  */
 internal fun functionPosition(
-    text: String,
-    dialect: String,
+    tokens: List<Token>,
     positions: TablePositions,
     stagePhrases: List<String>,
     isFunction: (String) -> Boolean,
-    checkCanceled: () -> Unit,
 ): FunctionPosition {
-    val config = TokenizerConfigs.forNameOrNull(dialect) ?: return FunctionPosition.UNKNOWN
-    val start = SqlScriptSnapshot.parse(text, dialect, checkCanceled).statements.lastOrNull()?.start ?: 0
-    val lexed = Tokenizer(config).tokenizeForEditor(text.substring(start), checkCanceled)
-    if (lexed.failureOffset != null) return FunctionPosition.UNKNOWN
-    val words = lexed.tokens.takeLastWhile { it.tokenType != TokenType.SEMICOLON }.flatMap(Token::words)
+    val words = tokens.takeLastWhile { it.tokenType != TokenType.SEMICOLON }.flatMap(Token::words)
     if (words.isEmpty()) return FunctionPosition.UNKNOWN
     val stage = words.indexOfLast { it.text == "|>" }
     if (stage >= 0 && isStageHead(words.subList(stage + 1, words.size), stagePhrases)) return FunctionPosition.STAGE_HEAD

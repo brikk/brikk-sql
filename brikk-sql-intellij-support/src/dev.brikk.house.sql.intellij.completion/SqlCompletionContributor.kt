@@ -26,6 +26,7 @@ import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
 import dev.brikk.house.sql.intellij.catalog.isBuiltinCatalogObject
 import dev.brikk.house.sql.intellij.pipe.PipeText
+import dev.brikk.house.sql.shape.SqlNameContext
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.InvocationSyntax
@@ -50,11 +51,10 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         // Injected SQL is read unescaped, so a host's doubled quotes do not change its literals.
         val source = PipeText.of(file)
         val before = source.text.substring(0, source.textOffset(prefixAt(file, parameters.offset).first).coerceIn(0, source.text.length))
-        val context = sourceContext(before, profile.metadata.dialect, ProgressManager::checkCanceled)
-        val position = functionPosition(
-            context?.statement ?: before, profile.metadata.dialect, profile.tablePositions, profile.stagePhrases,
-            { name -> name in reads.snapshot.functions }, ProgressManager::checkCanceled,
-        )
+        val context = SqlNameContext.of(before, profile.metadata.dialect, ProgressManager::checkCanceled)
+        val position = context?.let {
+            functionPosition(it.tokens, profile.tablePositions, profile.stagePhrases, { name -> name in reads.snapshot.functions })
+        } ?: FunctionPosition.UNKNOWN
         val inCode = context?.inCode != false
         val functions = if (inCode) completeFunctions(parameters, result, reads, position, context) else emptySet()
         completeTableFunctionArguments(parameters, result, reads)
@@ -156,7 +156,7 @@ private fun completeFunctions(
     result: CompletionResultSet,
     reads: ProfileReads,
     position: FunctionPosition,
-    context: SourceContext?,
+    context: SqlNameContext?,
 ): Set<String> {
     val profile = reads.profile
     val file = parameters.originalFile

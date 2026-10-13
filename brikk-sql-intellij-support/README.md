@@ -168,8 +168,11 @@ laid 2-1-2, the BRIKK_COLUMN row). `nativeKinds` maps engine-native function kin
 rule (`Unrestricted`, `Unqualified`, or `Namespaced` functions), the digit-prefix gate, and
 the autopopup gate (`ExpressionPositions`; explicit completion always offers functions). The
 qualifier, the token before the name and whether it stands in code are read from the core dialect's
-tokens of the source, so PIPE text and lenient statements get the qualifier, strings, comments and
-inline data get no functions or keywords, and spans the dialect's lexer masks complete as code.
+tokens of the source (core's `SqlNameContext`, whose tokens also decide the function position), so
+PIPE text and lenient statements get the qualifier, strings, comments and inline data get no
+functions or keywords, and spans the dialect's lexer masks complete as code. A lexical failure before
+the name (an unterminated string, quoted name or comment) leaves everything after it outside code,
+so the rest of the file gets no functions or keywords until it is closed.
 
 `SelectAliasResolveExtension(dbms, clauses)` (`dev.brikk.house.sql.intellij.psi`, experimental):
 unqualified references in the given clauses (default HAVING, GROUP BY, ORDER BY) of a query in
