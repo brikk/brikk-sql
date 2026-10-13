@@ -56,8 +56,8 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
         val start = analysis.source.textOffset(element.textRange.startOffset + psiReference.rangeInElement.startOffset)
         val scoped = analysis.referenceAt(start)?.takeIf { it.kind == ReferenceKind.COLUMN && it.start == start } ?: return true
         for (column in scoped.columns) {
-            if (!analysis.manages(column, start, file)) continue
-            val symbol = RelationColumnSymbol(file, analysis.providerOf(column, start, file), column)
+            if (!analysis.manages(column, start)) continue
+            val symbol = RelationColumnSymbol(file, analysis.providerOf(column), column)
             if (!processor.execute(symbol, ResolveState.initial())) return false
         }
         return true
@@ -93,7 +93,7 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
 
     private fun RelationAnalysis.decides(reference: ScopeReference, file: PsiFile, absent: Boolean): Boolean = when (reference.kind) {
         ReferenceKind.COLUMN -> when (reference.resolution) {
-            Resolution.RESOLVED, Resolution.AMBIGUOUS -> reference.columns.isNotEmpty() && reference.columns.all { manages(it, reference.start, file) }
+            Resolution.RESOLVED, Resolution.AMBIGUOUS -> reference.columns.isNotEmpty() && reference.columns.all { manages(it, reference.start) }
             // Absent where the facts prove it: the analysis reports it itself, once.
             Resolution.UNRESOLVED -> absent && diagnoses(reference.start, reference.end)
         }
@@ -119,9 +119,9 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
         val platformResolves = file.findReferenceAt(offset)?.let { it is PsiPolyVariantReference && it.multiResolve(false).isNotEmpty() || it.resolve() != null } == true
         val targets = when (reference.kind) {
             ReferenceKind.COLUMN -> reference.columns.mapNotNull { column ->
-                val provider = analysis.providerOf(column, reference.start, file)
+                val provider = analysis.providerOf(column)
                 when {
-                    analysis.manages(column, reference.start, file) -> column.provenance?.let { provider?.navigationTarget(file, it) }
+                    analysis.manages(column, reference.start) -> column.provenance?.let { provider?.navigationTarget(file, it) }
                     platformResolves -> null
                     else -> column.provenance?.let { provider?.navigationTarget(file, it) } ?: column.declaration?.let { analysis.elementAt(file, it) }
                 }

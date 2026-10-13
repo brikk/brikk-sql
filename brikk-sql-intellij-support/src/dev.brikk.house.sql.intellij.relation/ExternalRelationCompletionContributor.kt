@@ -54,14 +54,7 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
         val completion = RelationScope.complete(text, profile.dialect, analysis.facts.merged, offset, statement, ProgressManager::checkCanceled)
         val sink = result.withPrefixMatcher(completion.prefix).caseInsensitive()
         when (completion.position) {
-            PositionKind.COLUMN -> {
-                // The statement as completion sees it, a name at the caret, so the relations it names are known while it is being typed.
-                val site = RelationScope.analyze(
-                    text.substring(0, offset) + CARET + text.substring(offset), profile.dialect, analysis.facts.merged,
-                    statement.first..statement.last + CARET.length, ProgressManager::checkCanceled,
-                )
-                completeColumns(parameters, sink, completion.items, analysis, offset, site)
-            }
+            PositionKind.COLUMN -> completeColumns(parameters, sink, completion.items, analysis)
             PositionKind.RELATION -> completeRelations(sink, completion.items, analysis)
             else -> {}
         }
@@ -81,22 +74,14 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
         }
     }
 
-    private fun completeColumns(
-        parameters: CompletionParameters,
-        sink: CompletionResultSet,
-        items: List<CompletionItem>,
-        analysis: RelationAnalysis,
-        offset: Int,
-        site: RelationScope,
-    ) {
-        val file = parameters.originalFile
+    private fun completeColumns(parameters: CompletionParameters, sink: CompletionResultSet, items: List<CompletionItem>, analysis: RelationAnalysis) {
         val candidates = LinkedHashMap<Identity, Candidate>()
         for (item in items) {
             val column = item.column ?: continue
-            val label = analysis.labels(column, offset, file, site).label(column)
+            val label = analysis.labels(column).label(column)
             val identity = Identity(column.name, column.relation, column.source?.relation, column.provenance)
             val facts = SqlColumnFacts(column.name, label.type, label.nullable, label.relation, label.origin, identity)
-            candidates.putIfAbsent(identity, Candidate(item, column, facts, label, analysis.providerOf(column, offset, file, site)))
+            candidates.putIfAbsent(identity, Candidate(item, column, facts, label, analysis.providerOf(column)))
         }
         if (candidates.isEmpty()) return
         val byFacts = candidates.values.associateBy { it.facts }
@@ -106,10 +91,6 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             candidates.values.map { it.facts },
             create = { facts -> byFacts.getValue(facts).let { inserting(SqlColumnCompletion.create(facts, profile.styles[it.label.kind]), it.item) } },
         ) { element -> match(element, candidates.values, analysis, parameters)?.facts }
-    }
-
-    private companion object {
-        const val CARET = "brikkCompletionCaret"
     }
 
     /** Which column a candidate is: its name, the exact label of the relation showing it, and the fact behind it. */

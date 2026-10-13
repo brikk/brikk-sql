@@ -98,4 +98,23 @@ class RelationResolveTest : RelationTestCase() {
         val marks = reports().map { it.first }
         assertTrue(marks.toString(), marks.containsAll(listOf("nope", "eventz", "bad", "unknown_table", "missing")))
     }
+
+    /** What the resolve inspection reports in [sql] once the relation features are on. */
+    private fun unresolvedIn(sql: String): List<String> {
+        open(sql)
+        return reports().filter { it.second?.startsWith("Un") == true }.map { it.first }
+    }
+
+    fun testUnqualifiedColumnsOverAnAliasedSlotResolveAndLoseTheResolveInspection() {
+        enableResolveInspection()
+        registerPgRelations(testRootDisposable)
+        for (sql in listOf("SELECT id FROM events() e", "SELECT id FROM events() AS e", "SELECT * FROM events() e WHERE kind IS NULL")) {
+            assertEmpty(sql, unresolvedIn(sql))
+            val word = if ("kind" in sql) "kind" else "id"
+            assertTrue(sql, targets(word).single() is DasColumnSymbol)
+        }
+        // Ambiguous between two aliases: both symbols, and the analysis reports it, not the platform.
+        assertEmpty(unresolvedIn("SELECT id FROM events() a, events() b"))
+        assertTrue(targets("id").isNotEmpty() && targets("id").all { it is DasColumnSymbol })
+    }
 }

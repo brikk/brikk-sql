@@ -39,7 +39,7 @@ public object RelationTableTypes {
         var table: SqlTableType = SqlTableTypeBase.EMPTY_TABLE
         for (fact in relation.columns) {
             val column = ScopeColumn(
-                fact.name, name, fact.origin, fact.nullability, fact.sqlType, fact.displayType, ColumnSource(name, fact), provenance = fact.provenance,
+                fact.name, name, fact.origin, fact.nullability, fact.sqlType, fact.displayType, ColumnSource(name, fact, RelationKind.SLOT), provenance = fact.provenance, relationKind = RelationKind.SLOT,
             )
             val symbol = RelationColumnSymbol(file, provider, column, fallback)
             table = table.add(SqlTableTypeBase.createType(symbol, DasTypeSystemBase.UNKNOWN, fact.name, false, false, true, null, null))

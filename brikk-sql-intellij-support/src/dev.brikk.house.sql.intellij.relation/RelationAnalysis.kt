@@ -5,10 +5,6 @@ import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.UserDataHolderEx
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
-import com.intellij.psi.util.PsiTreeUtil
-import com.intellij.sql.psi.SqlAsExpression
-import com.intellij.sql.psi.SqlFunctionCallExpression
-import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.scope.CatalogKnowledge
@@ -21,7 +17,6 @@ import dev.brikk.house.sql.scope.RelationScope
 import dev.brikk.house.sql.scope.ScopeColumn
 import dev.brikk.house.sql.scope.ScopeReference
 import dev.brikk.house.sql.scope.ScopeRelation
-import java.util.Optional
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -58,74 +53,23 @@ internal class RelationAnalysis(
         return statements.getOrNull(after)
     }
 
-    /**
-     * The kind of the relation [column] is visible through at [offset]: a qualifier or table naming
-     * it in [site] (the statement as completion sees it) or the statement, else, given [file], the
-     * alias that names it in the statement's PSI. Null when unknown, such as a PIPE stage's output.
-     */
-    fun relationKind(column: ScopeColumn, offset: Int, file: PsiFile? = null, site: RelationScope? = null): RelationKind? {
-        val label = column.relation.ifEmpty { return null }
-        val (range, scope) = statementOf(offset) ?: return null
-        for (one in listOfNotNull(site, scope)) {
-            val named = one.references.filter { it.kind != ReferenceKind.COLUMN }.mapNotNull { it.relation }
-            named.filter { it.name == label }.map { it.kind }.distinct().singleOrNull()?.let { return it }
-        }
-        return file?.let { aliasKind(it, range, label, column) }
-    }
-
-    private val aliasKinds = ConcurrentHashMap<Triple<Int, String, String>, Optional<RelationKind>>()
-
-    /**
-     * What the alias [label] of [column]'s relation names in the statement at [range] of [file]: a
-     * provider's slot or call, a table, or something else (a CTE, a subquery); null when unknown.
-     */
-    private fun aliasKind(file: PsiFile, range: IntRange, label: String, column: ScopeColumn): RelationKind? {
-        val key = column.source?.relation ?: return null
-        return aliasKinds.getOrPut(Triple(range.first, label, key)) {
-            val host = source.fileRange(range.first, range.last + 1)
-            val root = host?.let { PsiTreeUtil.findCommonParent(file.findElementAt(it.startOffset), file.findElementAt(maxOf(it.startOffset, it.endOffset - 1))) }
-            val kinds = PsiTreeUtil.findChildrenOfType(root ?: file, SqlAsExpression::class.java).filter { alias ->
-                alias.name.equals(label, ignoreCase = true) && source.textOffset(alias.textRange.startOffset) in range
-            }.map { alias ->
-                when (val expression = alias.expression) {
-                    is SqlFunctionCallExpression -> when {
-                        expression.nameElement?.name != key -> RelationKind.OTHER
-                        expression.parameterList?.expressionList.isNullOrEmpty() -> RelationKind.SLOT
-                        else -> RelationKind.CALL
-                    }
-                    is SqlReferenceExpression -> if (key.substringAfterLast('.') == expression.name) RelationKind.TABLE else RelationKind.OTHER
-                    else -> RelationKind.OTHER
-                }
-            }.distinct()
-            Optional.ofNullable(kinds.singleOrNull())
-        }.orElse(null)
-    }
-
-    /** The provider of [column]'s fact, by the kind of relation it is visible through, else by the first kind its key has. */
-    fun providerOf(column: ScopeColumn, offset: Int, file: PsiFile? = null, site: RelationScope? = null): ExternalRelationFacts? {
-        val key = column.source?.relation ?: return null
-        val kind = relationKind(column, offset, file, site)?.takeIf { it in PROVIDED }
-        return if (kind != null) facts.providerOf(kind, key) else PROVIDED.firstNotNullOfOrNull { facts.providerOf(it, key) }
-    }
+    /** The provider of [column]'s fact; null for a computed column. */
+    fun providerOf(column: ScopeColumn): ExternalRelationFacts? = column.source?.let { facts.providerOf(it.kind, it.relation) }
 
     fun providerOf(relation: ScopeRelation): ExternalRelationFacts? =
         relation.kind.takeIf { it in PROVIDED }?.let { kind -> relation.source?.let { facts.providerOf(kind, it) } }
 
     /**
-     * Whether [column], at [offset], is visible directly through the slot, table or call of a
-     * provider the platform does not resolve itself; not when a CTE or derived table passes it on,
-     * where the platform resolves the inner reference.
+     * Whether [column] is the analysis's to resolve: a fact of a provider the platform does not
+     * resolve itself, seen directly through its slot, table or call; not when a CTE or derived table
+     * passes it on, where the platform resolves the inner reference.
      */
-    fun manages(column: ScopeColumn, offset: Int, file: PsiFile? = null): Boolean {
-        if (column.origin == ColumnOrigin.COMPUTED) return false
-        val kind = relationKind(column, offset, file)?.takeIf { it in PROVIDED } ?: return false
-        return column.source?.relation?.let { facts.providerOf(kind, it) }?.platformResolves == false
-    }
+    fun manages(column: ScopeColumn, offset: Int): Boolean =
+        column.origin != ColumnOrigin.COMPUTED && column.relationKind in PROVIDED && providerOf(column)?.platformResolves == false
 
     fun manages(relation: ScopeRelation): Boolean = providerOf(relation)?.platformResolves == false
 
-    fun labels(column: ScopeColumn, offset: Int, file: PsiFile? = null, site: RelationScope? = null): RelationColumnLabels =
-        providerOf(column, offset, file, site)?.labels ?: profile.labels
+    fun labels(column: ScopeColumn): RelationColumnLabels = providerOf(column)?.labels ?: profile.labels
 
     companion object {
         private val PROVIDED = listOf(RelationKind.SLOT, RelationKind.CALL, RelationKind.TABLE)

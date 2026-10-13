@@ -62,4 +62,10 @@ class RelationNavigationTest : RelationTestCase() {
         assertEquals(listOf("kind.txt"), targets("SELECT t.id FROM same t", "id"))
         assertEquals(listOf("events.txt"), targets("SELECT t.id FROM same() t", "id"))
     }
+
+    fun testUnqualifiedColumnsOverAnAliasedSlotOrThroughSelectStarLeadToTheirDeclarations() {
+        assertEquals(listOf("id.txt"), targets("SELECT id FROM events() e", "id"))
+        assertEquals(listOf("kind.txt"), targets("SELECT * FROM events() AS e WHERE kind IS NULL", "kind"))
+        assertEquals(listOf("id.txt"), targets("WITH c AS (SELECT * FROM events()) SELECT c.id FROM c", "id"))
+    }
 }
