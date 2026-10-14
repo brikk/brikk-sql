@@ -35,6 +35,9 @@ import dev.brikk.house.sql.parser.Tokenizer
 
 internal class ParsedRegion(val tokens: List<Token>, val statements: List<Expression>)
 
+/** An edit replacing `[start, end)` of a text by [length] characters. */
+internal class Splice(val start: Int, val end: Int, val length: Int)
+
 /** Parses [text] completely, or returns null: scopes need a whole statement (see [CaretCompletion] for recovery). */
 internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Unit): ParsedRegion? {
     val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(text, checkCanceled)
@@ -182,7 +185,8 @@ internal class CaretCompletion(
 
     /** What the caret is in: the identifier it edits (its replace range and typed prefix), or why there is none. */
     private sealed interface Edit {
-        class Name(val marked: String, val start: Int, val end: Int, val prefix: String, val quoted: Boolean) : Edit
+        /** [marked] is the text with [inserted] at the caret: the marker, and a closing quote the name lacks. */
+        class Name(val marked: String, val start: Int, val end: Int, val prefix: String, val quoted: Boolean, val inserted: Splice) : Edit
         class Elsewhere(val kind: PositionKind) : Edit
     }
 
@@ -193,7 +197,8 @@ internal class CaretCompletion(
         val start = range.first + edit.start
         val end = range.first + edit.end
         fun none(kind: PositionKind) = ScopeCompletion(kind, null, start, end, edit.prefix, emptyList())
-        val parsed = recover(edit.marked) ?: return none(PositionKind.OTHER)
+        val (parsed, splices) = recover(edit.marked) ?: return none(PositionKind.OTHER)
+        val edits = listOf(edit.inserted) + splices
         val names = SourceNames(range.first, parsed.tokens)
         for (statement in parsed.statements) {
             val (lowered, origins) = try {
@@ -225,7 +230,9 @@ internal class CaretCompletion(
             // Pipe lowering may also project the marker itself, as an AGGREGATE grouping does.
             val columns = found.filterNot { MARKER in it.name }
             val knowledge = if (absence != Knowledge.FULL && columns.isNotEmpty()) Knowledge.PARTIAL else absence
-            return ScopeCompletion(kind, knowledge, start, end, edit.prefix, columns.map { item(it, start, end, edit.quoted) })
+            // Declarations are found in the edited text; the items name them in the script.
+            val placed = columns.map { column -> column.copy(declaration = column.declaration?.let { placed(it, edits) }) }
+            return ScopeCompletion(kind, knowledge, start, end, edit.prefix, placed.map { item(it, start, end, edit.quoted) })
         }
         return none(PositionKind.OTHER)
     }
@@ -245,13 +252,13 @@ internal class CaretCompletion(
                     marked[failure] == '#') PositionKind.COMMENT else PositionKind.STRING)
             // An identifier whose closing quote is not typed yet.
             val closed = text.substring(0, caret) + MARKER + closer + text.substring(caret)
-            return Edit.Name(closed, failure, caret, text.substring(failure + 1, caret), quoted = true)
+            return Edit.Name(closed, failure, caret, text.substring(failure + 1, caret), quoted = true, Splice(caret, caret, MARKER.length + 1))
         }
         if (token.tokenType == TokenType.STRING || token.tokenType.name.endsWith("_STRING")) return Edit.Elsewhere(PositionKind.STRING)
         val quoted = token.tokenType == TokenType.IDENTIFIER && marked[token.start] in dialect.tokenizerConfig.identifiers
         val end = token.end + 1 - MARKER.length
         val prefix = text.substring(if (quoted) token.start + 1 else token.start, caret)
-        return Edit.Name(marked, token.start, end, prefix, quoted)
+        return Edit.Name(marked, token.start, end, prefix, quoted, Splice(caret, caret, MARKER.length))
     }
 
     private fun candidates(evaluator: ScopeEvaluator, site: ScopeEvaluator.CaretSite): Pair<List<ScopeColumn>, Knowledge> {
@@ -316,24 +323,44 @@ internal class CaretCompletion(
         return dialect.generate(Identifier(args("this" to name, "quoted" to !bare)))
     }
 
-    private fun recover(marked: String): ParsedRegion? {
-        parseRegion(marked, dialect, checkCanceled)?.let { return it }
+    /** [marked] parsed, recovered if it must be, with the edits recovery made to it; brackets closed at the end move nothing. */
+    private fun recover(marked: String): Pair<ParsedRegion, List<Splice>>? {
+        parseRegion(marked, dialect, checkCanceled)?.let { return it to emptyList() }
         val tokens = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(marked, checkCanceled).tokens
         val at = tokens.indexOfFirst { MARKER in it.text }.takeIf { it >= 0 } ?: return null
         val markerEnd = tokens[at].end + 1
-        parseRegion(balanced(marked, tokens), dialect, checkCanceled)?.let { return it }
+        parseRegion(balanced(marked, tokens), dialect, checkCanceled)?.let { return it to emptyList() }
         // A RENAME source needs its target before the stage parses.
         if (stageOf(tokens, at) == "RENAME") {
-            val renamed = marked.substring(0, markerEnd) + " AS $TARGET" + marked.substring(markerEnd)
+            val target = " AS $TARGET"
+            val renamed = marked.substring(0, markerEnd) + target + marked.substring(markerEnd)
             parseRegion(balanced(renamed, Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(renamed, checkCanceled).tokens), dialect, checkCanceled)
-                ?.let { return it }
+                ?.let { return it to listOf(Splice(markerEnd, markerEnd, target.length)) }
         }
-        blanked(marked, tokens, at)?.let { blank ->
+        blanked(marked, tokens, at)?.let { (blank, splice) ->
             val blankTokens = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(blank, checkCanceled).tokens
-            parseRegion(balanced(blank, blankTokens), dialect, checkCanceled)?.let { return it }
+            parseRegion(balanced(blank, blankTokens), dialect, checkCanceled)?.let { return it to listOf(splice) }
         }
         val cut = marked.substring(0, markerEnd)
-        return parseRegion(balanced(cut, tokens.take(at + 1)), dialect, checkCanceled)
+        return parseRegion(balanced(cut, tokens.take(at + 1)), dialect, checkCanceled)?.let { it to listOf(Splice(markerEnd, marked.length, 0)) }
+    }
+
+    /** [declaration], found in the region's text after [edits], in the script; null where an edit made it. */
+    private fun placed(declaration: ScopeRange, edits: List<Splice>): ScopeRange? {
+        fun unedited(position: Int): Int? {
+            var at = position - range.first
+            for (edit in edits.asReversed()) {
+                at = when {
+                    at < edit.start -> at
+                    at >= edit.start + edit.length -> at - edit.length + (edit.end - edit.start)
+                    else -> return null
+                }
+            }
+            return at + range.first
+        }
+        val start = unedited(declaration.start) ?: return null
+        val last = unedited(declaration.end - 1) ?: return null
+        return ScopeRange(start, last + 1)
     }
 
     /** The keyword of the pipe stage holding token [at], if it is in one. */
@@ -355,7 +382,7 @@ internal class CaretCompletion(
     }
 
     /** [marked] with the clause around the marker reduced to the marker: the scope depends on the clause, not its expression. */
-    private fun blanked(marked: String, tokens: List<Token>, at: Int): String? {
+    private fun blanked(marked: String, tokens: List<Token>, at: Int): Pair<String, Splice>? {
         var depth = 0
         var start = -1
         var index = at - 1
@@ -386,7 +413,7 @@ internal class CaretCompletion(
         }
         val from = tokens[start].end + 1
         val to = tokens.getOrNull(end)?.start ?: marked.length
-        return marked.substring(0, from) + " $MARKER " + marked.substring(to)
+        return marked.substring(0, from) + " $MARKER " + marked.substring(to) to Splice(from, to, MARKER.length + 2)
     }
 
     private fun Token.isClauseStart(previous: Token?): Boolean =

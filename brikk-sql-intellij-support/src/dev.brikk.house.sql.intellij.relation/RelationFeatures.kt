@@ -27,6 +27,7 @@ import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
 import com.intellij.sql.psi.SqlAsExpression
 import com.intellij.sql.psi.SqlClause
+import com.intellij.sql.psi.SqlCreateTableStatement
 import com.intellij.sql.psi.SqlExpression
 import com.intellij.sql.psi.SqlFromClause
 import com.intellij.sql.psi.SqlFunctionCallExpression
@@ -87,7 +88,8 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * from a relation that is unknown, out of scope, listed without columns or not introspected yet. A
  * column absent from a fully known source and an unknown table name stay reported; a qualifier
  * naming a relation of its query does not, nor one that may name a ROW column of such a relation where
- * `a.b` reads a field, nor a column of a statement beyond core's grammar. Where the platform knows every
+ * `a.b` reads a field, nor a column of a statement beyond core's grammar, except one of the table its own
+ * CREATE TABLE declares. Where the platform knows every
  * source of a column (tables it resolves with their columns, table functions it types), its report stands. Every other
  * inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
@@ -120,6 +122,8 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
     private fun unread(analysis: RelationAnalysis, element: PsiElement, name: PsiElement, start: Int): Boolean {
         val reference = element as? SqlReferenceExpression ?: PsiTreeUtil.getParentOfType(name, SqlReferenceExpression::class.java) ?: return false
         if (reference.referenceElementType.targetKind != ObjectKind.COLUMN) return false
+        // A column of the table its statement declares (a key, index, partition or distribution clause) is fully known.
+        if (declaresItsTable(reference)) return false
         return analysis.statementReferences(start).isEmpty() && !platformKnowsSources(name)
     }
 
@@ -139,6 +143,12 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
         ReferenceKind.QUALIFIER -> reference.relation?.let(::manages) == true || absent && (reference.resolution == Resolution.RESOLVED ||
             reference.knowledge != Knowledge.FULL && !platformKnowsSources(name))
         ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
+    }
+
+    /** Whether [reference] names a column of the table its statement creates, outside the statement's query. */
+    private fun declaresItsTable(reference: SqlReferenceExpression): Boolean {
+        val create = PsiTreeUtil.getParentOfType(reference, SqlCreateTableStatement::class.java) ?: return false
+        return PsiTreeUtil.getParentOfType(reference, SqlQueryExpression::class.java)?.let { PsiTreeUtil.isAncestor(create, it, true) } != true
     }
 
     /**
