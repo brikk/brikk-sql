@@ -40,9 +40,10 @@ class RelationResolveTest : RelationTestCase() {
         assertSameElements(platform, "id", "nope", "y", "events", "nowhere")
         registerPgRelations(testRootDisposable)
         open(sql)
-        // The slot, its resolved column and the missing column the analysis reports are decided; the rest stays.
+        // The slot, its resolved column, the missing column the analysis reports and the column of the
+        // unknown table are decided; the unknown table stays.
         val reported = reports()
-        assertSameElements(reported.map { it.first }, "y", "nowhere", "nope")
+        assertSameElements(reported.map { it.first }, "nowhere", "nope")
         assertEquals("only the analysis reports the missing column", 1, reported.count { it.first == "nope" })
     }
 
@@ -91,12 +92,14 @@ class RelationResolveTest : RelationTestCase() {
         assertFalse(suppressor.isSuppressedFor(at("id"), "SqlNoDataSourceInspection"))
     }
 
-    fun testSuppressionStaysInItsStatementAndOffMisspelledRelations() {
+    fun testSuppressionStaysInItsStatementAndOffMisspelledRelationNames() {
         enableResolveInspection()
         registerPgRelations(testRootDisposable)
         open("SELECT e.nope FROM events() e; SELECT z.bad FROM eventz() z; SELECT q.missing FROM unknown_table q")
         val marks = reports().map { it.first }
-        assertTrue(marks.toString(), marks.containsAll(listOf("nope", "eventz", "bad", "unknown_table", "missing")))
+        assertTrue(marks.toString(), marks.containsAll(listOf("nope", "eventz", "unknown_table")))
+        // Columns of an unknown relation are not known absent: only its name is reported.
+        assertTrue(marks.toString(), marks.none { it == "bad" || it == "missing" })
     }
 
     /** What the resolve inspection reports in [sql] once the relation features are on. */

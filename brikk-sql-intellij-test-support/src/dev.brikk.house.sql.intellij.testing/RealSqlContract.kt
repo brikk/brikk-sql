@@ -23,6 +23,13 @@ public interface RealSqlTarget {
     public val fixture: CodeInsightTestFixture
 
     public fun open(sql: String)
+
+    /**
+     * Makes [model] the data source's content, for [RealSqlContract.checkModelStates]; files opened
+     * afterwards see it. Targets that check only [RealSqlModel.STANDARD] need not override it.
+     */
+    public fun install(model: RealSqlModel): Unit =
+        throw UnsupportedOperationException("Override install to check model states")
 }
 
 /**
@@ -36,6 +43,20 @@ public class RealSqlContract(private val target: RealSqlTarget, private val case
     /** Checks every applicable case. */
     public fun check() {
         val failures = cases.filter { target.features.containsAll(it.needs) }.flatMap(::failures)
+        if (failures.isNotEmpty()) throw AssertionError("${failures.size} false report(s) on real ${target.dialect} SQL:\n" + failures.joinToString("\n"))
+    }
+
+    /**
+     * Checks [cases] (by default [RealSqlCases.EXTERNAL]) in every model of [states], installing each
+     * with [RealSqlTarget.install]: columns that may come from a table nobody has loaded, or that has no
+     * columns, are never reported.
+     */
+    public fun checkModelStates(states: Map<String, RealSqlModel> = RealSqlModel.STATES, cases: List<RealSqlCase> = RealSqlCases.EXTERNAL) {
+        val applicable = cases.filter { target.features.containsAll(it.needs) }
+        val failures = states.flatMap { (state, model) ->
+            target.install(model)
+            applicable.flatMap(::failures).map { "$state: $it" }
+        }
         if (failures.isNotEmpty()) throw AssertionError("${failures.size} false report(s) on real ${target.dialect} SQL:\n" + failures.joinToString("\n"))
     }
 
