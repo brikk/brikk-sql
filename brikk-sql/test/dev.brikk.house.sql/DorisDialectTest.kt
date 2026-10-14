@@ -580,6 +580,28 @@ class DorisDialectTest {
     }
 
     @Test
+    fun aQueryCanSelectPartitionsOfATable() {
+        // Doris relationPrimary: name specifiedPartition? alias; specifiedPartition is
+        // TEMPORARY? PARTITION (identifier | identifierList) | TEMPORARY? PARTITIONS identifierList.
+        for ((sql, generated) in listOf(
+            "SELECT k FROM db.t PARTITIONS (p1, p2) WHERE v > 0" to "SELECT k FROM db.t PARTITION(p1, p2) WHERE v > 0",
+            "SELECT k FROM db.t PARTITION (p1, p2) AS x" to "SELECT k FROM db.t PARTITION(p1, p2) AS x",
+            "SELECT k FROM db.t PARTITION p1 x" to "SELECT k FROM db.t PARTITION(p1) AS x",
+            "SELECT k FROM db.t TEMPORARY PARTITION (p1) WHERE v > 0" to "SELECT k FROM db.t TEMPORARY PARTITION(p1) WHERE v > 0",
+            "SELECT k FROM db.t TEMPORARY PARTITIONS (p1, p2)" to "SELECT k FROM db.t TEMPORARY PARTITION(p1, p2)",
+        )) {
+            val alias = parseOne(sql, "doris").find(dev.brikk.house.sql.ast.Table::class)?.alias.orEmpty()
+            assertTrue(!alias.uppercase().startsWith("PARTITION"), "$sql: PARTITIONS read as an alias")
+            assertEquals(generated, roundTrip(sql), sql)
+        }
+        val facts = dev.brikk.house.sql.scope.RelationFacts(tables = mapOf("db.t" to dev.brikk.house.sql.scope.RelationFact(listOf(
+            dev.brikk.house.sql.scope.ColumnFact("k"), dev.brikk.house.sql.scope.ColumnFact("v"),
+        ))))
+        val scope = dev.brikk.house.sql.scope.RelationScope.analyze("SELECT k FROM db.t PARTITIONS (p1, p2) WHERE v > 0", "doris", facts)
+        assertEquals(emptyList(), scope.diagnostics.map { it.message })
+    }
+
+    @Test
     fun refreshMaterializedViewCatalogAndDatabase() {
         // REFRESH is a sqlglot statement token the Doris tokenizer never received, so
         // every REFRESH statement used to be a hard parse error.

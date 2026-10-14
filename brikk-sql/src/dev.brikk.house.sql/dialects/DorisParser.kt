@@ -200,6 +200,28 @@ open class DorisParser(
         return if (schema) parseSchema(target) else target
     }
 
+    // brikk-native (docs/brikk-extensions.md #19): a table reference's partition selection
+    // (DorisParser.g4 specifiedPartition): TEMPORARY? PARTITION (p | (p, ...)) | TEMPORARY? PARTITIONS (p, ...).
+    override fun parseTablePartitionSelection(): Expression? {
+        val start = index
+        val temporary = match(TokenType.TEMPORARY)
+        val partition = when {
+            // The MySQL form, as sqlglot parses it.
+            matchPair(TokenType.PARTITION, TokenType.L_PAREN, advance = false) -> parsePartition()
+            match(TokenType.PARTITION) -> partitionOf(listOf(parseDisjunction()))
+            matchTextSeq("PARTITIONS") && match(TokenType.L_PAREN, advance = false) -> partitionOf(parseWrappedCsv({ parseDisjunction() }))
+            else -> null
+        }
+        if (partition == null) {
+            retreat(start)
+            return null
+        }
+        return if (temporary) expression(DorisTemporaryPartition(args("this" to partition))) else partition
+    }
+
+    private fun partitionOf(names: List<Expression?>): Expression =
+        expression(Partition(args("subpartition" to false, "expressions" to names.filterNotNull())))
+
     // brikk-native (docs/brikk-extensions.md #19): MySQL's ALTER actions + Doris partition /
     // rollup / swap actions (each falls back to the MySQL parser when its keyword is absent).
     override val alterParsers: Map<String, (Parser) -> kotlin.Any?>
