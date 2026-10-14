@@ -46,6 +46,21 @@ public enum class RealSqlFeature {
 
     /** Doris functions and syntax (`FROM_SECOND`, multi-catalog). */
     DORIS,
+
+    /** PostgreSQL's set-returning functions in FROM (`generate_series`). */
+    SET_RETURNING_FUNCTIONS,
+
+    /** ClickHouse table functions (`numbers`, `s3`, `url`) and `INSERT INTO FUNCTION`. */
+    CLICKHOUSE_TABLE_FUNCTIONS,
+
+    /** Doris table functions given properties (`numbers("number" = "10")`, `s3(...)`), read and written. */
+    DORIS_TABLE_FUNCTIONS,
+
+    /** DuckDB's file and range table functions (`read_parquet`, `read_csv`, `range`). */
+    DUCKDB_TABLE_FUNCTIONS,
+
+    /** Trino's `TABLE(system.sequence(...))` and `UNNEST`. */
+    TRINO_TABLE_FUNCTIONS,
 }
 
 /**
@@ -214,6 +229,78 @@ public object RealSqlCases {
         ),
     )
 
+
+    /**
+     * Table functions, read alone, joined to a table under an alias, through `t.*` and `t.col`, and written
+     * where the dialect writes through one: a known function is no unknown function, its columns are open
+     * unless its schema is known, and a table function target counts no columns against the query.
+     */
+    public val TABLE_FUNCTIONS: List<RealSqlCase> = listOf(
+        RealSqlCase("srf-read", "SELECT g FROM generate_series(1, 3) AS g", needs = setOf(RealSqlFeature.SET_RETURNING_FUNCTIONS)),
+        RealSqlCase(
+            "srf-joined",
+            "SELECT o.order_id, g.n FROM sales.orders o JOIN generate_series(1, 3) AS g(n) ON g.n = o.order_id",
+            needs = setOf(RealSqlFeature.SET_RETURNING_FUNCTIONS),
+        ),
+        RealSqlCase("srf-star", "SELECT t.* FROM generate_series(1, 3) AS t", needs = setOf(RealSqlFeature.SET_RETURNING_FUNCTIONS)),
+
+        RealSqlCase("clickhouse-tf-read", "SELECT number FROM numbers(10)", needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "clickhouse-tf-joined",
+            "SELECT t.number, o.order_id FROM numbers(3) AS t JOIN sales.orders AS o ON o.order_id = t.number",
+            needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase("clickhouse-tf-star", "SELECT t.* FROM s3('https://bucket.example/path/data.csv', 'CSV') AS t", needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS)),
+        RealSqlCase("clickhouse-tf-open-column", "SELECT t.c1 FROM url('https://example.com/data.csv', 'CSV') AS t", needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "clickhouse-insert-into-function",
+            "INSERT INTO FUNCTION s3('https://bucket.example/path/out.csv', 'CSV') SELECT order_id, amount FROM sales.orders",
+            needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS),
+        ),
+
+        RealSqlCase("doris-tf-read", "SELECT number FROM numbers(\"number\" = \"10\")", needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "doris-tf-joined",
+            "SELECT t.number, o.order_id FROM numbers(\"number\" = \"3\") AS t JOIN sales.orders o ON o.order_id = t.number",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "doris-tf-star",
+            "SELECT t.* FROM s3(\"uri\" = \"s3://bucket/path/data.csv\", \"format\" = \"csv\") AS t",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "doris-tf-open-column",
+            "SELECT t.c1 FROM s3(\"uri\" = \"s3://bucket/path/data.csv\", \"format\" = \"csv\") AS t",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "doris-insert-into-table-function",
+            "INSERT INTO s3(\"uri\" = \"s3://bucket/path/out/\", \"format\" = \"csv\") SELECT order_id, amount FROM sales.orders",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+
+        RealSqlCase("duckdb-tf-read", "SELECT * FROM read_parquet('data/orders.parquet')", needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "duckdb-tf-joined",
+            "SELECT t.order_id, u.name FROM read_csv('data/orders.csv') AS t JOIN sales.users u ON u.user_id = t.user_id",
+            needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase("duckdb-tf-star", "SELECT t.* FROM read_parquet('data/*.parquet') AS t", needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS)),
+        RealSqlCase("duckdb-range", "SELECT r.range FROM range(3) AS r", needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS)),
+
+        RealSqlCase("trino-sequence", "SELECT * FROM TABLE(system.sequence(start => 1, stop => 10))", needs = setOf(RealSqlFeature.TRINO_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "trino-sequence-aliased",
+            "SELECT s.sequential_number FROM TABLE(system.sequence(start => 1, stop => 3)) AS s",
+            needs = setOf(RealSqlFeature.TRINO_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "trino-unnest-joined",
+            "SELECT o.order_id, u.x FROM sales.orders o CROSS JOIN UNNEST(ARRAY[1, 2]) AS u(x)",
+            needs = setOf(RealSqlFeature.TRINO_TABLE_FUNCTIONS),
+        ),
+    )
 
     public val ALL: List<RealSqlCase> = listOf(
         // Stars through derived tables and CTEs.

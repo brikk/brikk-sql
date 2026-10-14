@@ -172,7 +172,7 @@ class RealSqlContractTest : RelationTestCase() {
         val features = setOf(
             RealSqlFeature.NATURAL_JOIN, RealSqlFeature.FULL_JOIN, RealSqlFeature.INTERSECT_EXCEPT, RealSqlFeature.NAMED_WINDOW,
             RealSqlFeature.UNNEST, RealSqlFeature.LATERAL_SUBQUERY, RealSqlFeature.VALUES_COLUMN_ALIASES, RealSqlFeature.CREATE_TABLE_AS,
-            RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DOUBLE_QUOTED_IDENTIFIERS,
+            RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DOUBLE_QUOTED_IDENTIFIERS, RealSqlFeature.SET_RETURNING_FUNCTIONS,
         )
         val target = Target("postgres", features, postgres, Dbms.POSTGRES, "postgresql")
         try {

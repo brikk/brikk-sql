@@ -39,7 +39,7 @@ public interface RealSqlTarget {
  * [AssertionError].
  */
 @ApiStatus.Experimental
-public class RealSqlContract(private val target: RealSqlTarget, private val cases: List<RealSqlCase> = RealSqlCases.ALL) {
+public class RealSqlContract(private val target: RealSqlTarget, private val cases: List<RealSqlCase> = RealSqlCases.ALL + RealSqlCases.TABLE_FUNCTIONS) {
     /** Checks every applicable case. */
     public fun check() {
         val failures = cases.filter { target.features.containsAll(it.needs) }.flatMap(::failures)
