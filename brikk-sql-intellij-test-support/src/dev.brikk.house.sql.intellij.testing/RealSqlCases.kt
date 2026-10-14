@@ -1,0 +1,320 @@
+package dev.brikk.house.sql.intellij.testing
+
+import org.jetbrains.annotations.ApiStatus
+
+/** Syntax a dialect may lack; a case needing one runs only where the target has it. */
+@ApiStatus.Experimental
+public enum class RealSqlFeature {
+    /** `* EXCEPT (a, b)` in a projection. */
+    STAR_EXCEPT,
+
+    /** `* REPLACE (expr AS a)` in a projection. */
+    STAR_REPLACE,
+
+    /** A projection alias usable later in the same SELECT list or its WHERE. */
+    LATERAL_ALIAS,
+
+    /** Aliases of the SELECT list in GROUP BY and HAVING. */
+    GROUP_BY_ALIAS,
+    NATURAL_JOIN,
+    FULL_JOIN,
+    INTERSECT_EXCEPT,
+
+    /** `WINDOW w AS (...)` and `OVER w`. */
+    NAMED_WINDOW,
+
+    /** `UNNEST(array) AS u(x)` in FROM. */
+    UNNEST,
+
+    /** `LATERAL (subquery)` in FROM. */
+    LATERAL_SUBQUERY,
+
+    /** `(VALUES ...) AS v(a, b)`. */
+    VALUES_COLUMN_ALIASES,
+
+    /** `CREATE TABLE t AS SELECT`. */
+    CREATE_TABLE_AS,
+
+    /** `catalog.schema.table` names. */
+    THREE_PART_NAMES,
+
+    /** `"Quoted"` identifiers that keep their case. */
+    DOUBLE_QUOTED_IDENTIFIERS,
+
+    /** `` `quoted` `` identifiers. */
+    BACKTICK_IDENTIFIERS,
+
+    /** Doris functions and syntax (`FROM_SECOND`, multi-catalog). */
+    DORIS,
+}
+
+/** A completion check: at `<caret>` in [sql], [offered] are all offered. */
+@ApiStatus.Experimental
+public data class RealSqlCompletion(val sql: String, val offered: Set<String>) {
+    init {
+        require("<caret>" in sql) { "A completion needs a <caret>" }
+    }
+}
+
+/**
+ * One realistic statement over [RealSqlModel.STANDARD]: it must highlight with no error or warning,
+ * except on the names in [reported] (a table the model lacks, say). It runs where the target has every
+ * feature in [needs]; [variants] replaces the SQL for a dialect.
+ */
+@ApiStatus.Experimental
+public data class RealSqlCase(
+    val name: String,
+    val sql: String,
+    val needs: Set<RealSqlFeature> = emptySet(),
+    val variants: Map<String, String> = emptyMap(),
+    val completions: List<RealSqlCompletion> = emptyList(),
+    val reported: Set<String> = emptySet(),
+) {
+    /** The SQL for [dialect]. */
+    public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
+}
+
+/**
+ * The tables cases name. [tables] are introspected, by dotted path and columns; [bare] are in the
+ * model without columns (listed, never introspected); [absent] are named by SQL but not in the model
+ * at all. Paths are `catalog.schema.table`; a target without catalogs drops the first part.
+ */
+@ApiStatus.Experimental
+public data class RealSqlModel(
+    val tables: Map<String, List<String>>,
+    val bare: List<String>,
+    val absent: List<String>,
+) {
+    public companion object {
+        public val STANDARD: RealSqlModel = RealSqlModel(
+            tables = mapOf(
+                "shop.sales.orders" to listOf("order_id", "user_id", "amount", "status", "created_at"),
+                "shop.sales.users" to listOf("user_id", "name", "country", "signup_at"),
+                "shop.sales.items" to listOf("item_id", "order_id", "sku", "qty", "price"),
+                "ext_catalog.archive_db.facts" to listOf("ts", "uid", "kind"),
+            ),
+            bare = listOf("shop.sales.archive"),
+            absent = listOf("shop.sales.ghost"),
+        )
+    }
+}
+
+/** The shared pack of realistic statements every SQL plugin must highlight without a false error. */
+@ApiStatus.Experimental
+public object RealSqlCases {
+    public val ALL: List<RealSqlCase> = listOf(
+        // Stars through derived tables and CTEs.
+        RealSqlCase(
+            "star-derived",
+            "SELECT d.user_id, d.amount FROM (SELECT * FROM sales.orders) AS d WHERE d.status = 'paid'",
+            completions = listOf(RealSqlCompletion("SELECT d.<caret> FROM (SELECT * FROM sales.orders) AS d", setOf("user_id", "amount"))),
+        ),
+        RealSqlCase(
+            "star-cte",
+            "WITH o AS (SELECT * FROM sales.orders) SELECT user_id, sum(amount) AS total FROM o GROUP BY user_id",
+            completions = listOf(RealSqlCompletion("WITH o AS (SELECT * FROM sales.orders) SELECT <caret> FROM o", setOf("user_id", "status"))),
+        ),
+        RealSqlCase(
+            "star-nested-cte",
+            "WITH a AS (SELECT * FROM sales.orders), b AS (SELECT * FROM a WHERE amount > 0) SELECT b.order_id, b.user_id FROM b",
+        ),
+        RealSqlCase(
+            "star-cte-of-derived",
+            "WITH c AS (SELECT * FROM (SELECT * FROM sales.users) AS u) SELECT c.name, c.country FROM c",
+        ),
+        RealSqlCase(
+            "star-mixed-projection",
+            "SELECT x.total, x.user_id, x.tag FROM (SELECT amount * 2 AS total, *, 'k' AS tag FROM sales.orders) AS x",
+        ),
+        RealSqlCase(
+            "star-qualified",
+            "SELECT p.name, p.order_id FROM (SELECT u.*, o.order_id FROM sales.users u JOIN sales.orders o ON o.user_id = u.user_id) AS p",
+        ),
+        RealSqlCase(
+            "star-except",
+            "SELECT e.user_id, e.amount FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e",
+            needs = setOf(RealSqlFeature.STAR_EXCEPT),
+            completions = listOf(RealSqlCompletion("SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e", setOf("user_id"))),
+        ),
+        RealSqlCase(
+            "star-except-in-cte-with-expression",
+            "WITH c AS (SELECT upper(status) AS status, * EXCEPT (status) FROM sales.orders) SELECT status, user_id FROM c",
+            needs = setOf(RealSqlFeature.STAR_EXCEPT),
+        ),
+        RealSqlCase(
+            "star-replace",
+            "SELECT r.amount, r.user_id FROM (SELECT * REPLACE (amount * 100 AS amount) FROM sales.orders) AS r",
+            needs = setOf(RealSqlFeature.STAR_REPLACE),
+        ),
+        // Relations the model knows nothing about stay open.
+        RealSqlCase(
+            "star-over-bare-table",
+            "WITH a AS (SELECT * FROM sales.archive) SELECT a.anything, a.order_id FROM a",
+        ),
+        RealSqlCase(
+            "star-over-absent-table-in-derived",
+            "SELECT g.whatever FROM (SELECT * FROM sales.ghost) AS g WHERE g.other = 1",
+            // The missing table itself may be reported; nothing downstream.
+            reported = setOf("ghost"),
+        ),
+        RealSqlCase(
+            "three-part-name",
+            "SELECT o.order_id, o.amount FROM shop.sales.orders o",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES),
+        ),
+        // Joins.
+        RealSqlCase(
+            "join-on",
+            "SELECT o.order_id, u.name, i.sku FROM sales.orders o JOIN sales.users u ON u.user_id = o.user_id " +
+                "LEFT JOIN sales.items i ON i.order_id = o.order_id",
+        ),
+        RealSqlCase(
+            "join-using",
+            "SELECT user_id, name, amount FROM sales.orders JOIN sales.users USING (user_id)",
+        ),
+        RealSqlCase(
+            "join-natural",
+            "SELECT user_id, name FROM sales.orders NATURAL JOIN sales.users",
+            needs = setOf(RealSqlFeature.NATURAL_JOIN),
+        ),
+        RealSqlCase(
+            "join-full-using",
+            "SELECT user_id, amount, name FROM sales.orders FULL JOIN sales.users USING (user_id)",
+            needs = setOf(RealSqlFeature.FULL_JOIN),
+        ),
+        // Set operations name their columns after the first branch.
+        RealSqlCase(
+            "union-naming",
+            "SELECT s.uid FROM (SELECT user_id AS uid FROM sales.orders UNION ALL SELECT user_id FROM sales.users) AS s ORDER BY uid",
+        ),
+        RealSqlCase(
+            "intersect-except",
+            "SELECT user_id FROM sales.orders INTERSECT SELECT user_id FROM sales.users EXCEPT SELECT user_id FROM sales.orders WHERE amount < 0",
+            needs = setOf(RealSqlFeature.INTERSECT_EXCEPT),
+        ),
+        // Windows.
+        RealSqlCase(
+            "window-partition-order",
+            "SELECT order_id, row_number() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn, " +
+                "sum(amount) OVER (PARTITION BY user_id) AS total FROM sales.orders",
+        ),
+        RealSqlCase(
+            "window-named",
+            "SELECT order_id, rank() OVER w AS r FROM sales.orders WINDOW w AS (PARTITION BY user_id ORDER BY amount)",
+            needs = setOf(RealSqlFeature.NAMED_WINDOW),
+        ),
+        // Aliases in later clauses.
+        RealSqlCase(
+            "order-by-alias",
+            "SELECT user_id AS u, sum(amount) AS total FROM sales.orders GROUP BY user_id ORDER BY total DESC, u",
+        ),
+        RealSqlCase(
+            "group-by-having-alias",
+            "SELECT status AS s, count(*) AS n FROM sales.orders GROUP BY s HAVING n > 1",
+            needs = setOf(RealSqlFeature.GROUP_BY_ALIAS),
+        ),
+        RealSqlCase(
+            "lateral-alias",
+            "SELECT amount * 2 AS doubled, doubled + 1 AS more FROM sales.orders",
+            needs = setOf(RealSqlFeature.LATERAL_ALIAS),
+        ),
+        // Subqueries.
+        RealSqlCase(
+            "correlated-exists",
+            "SELECT u.name FROM sales.users u WHERE EXISTS (SELECT 1 FROM sales.orders o WHERE o.user_id = u.user_id AND o.amount > 10)",
+        ),
+        RealSqlCase(
+            "in-subquery-and-scalar",
+            "SELECT u.name, (SELECT max(o.amount) FROM sales.orders o WHERE o.user_id = u.user_id) AS top " +
+                "FROM sales.users u WHERE u.user_id IN (SELECT user_id FROM sales.orders)",
+        ),
+        RealSqlCase(
+            "lateral-subquery",
+            "SELECT u.name, l.amount FROM sales.users u, LATERAL (SELECT o.amount FROM sales.orders o WHERE o.user_id = u.user_id) AS l",
+            needs = setOf(RealSqlFeature.LATERAL_SUBQUERY),
+        ),
+        RealSqlCase(
+            "unnest",
+            "SELECT u.name, t.tag FROM sales.users u CROSS JOIN UNNEST(ARRAY['a', 'b']) AS t(tag)",
+            needs = setOf(RealSqlFeature.UNNEST),
+        ),
+        RealSqlCase(
+            "values-aliases",
+            "SELECT v.a, v.b FROM (VALUES (1, 'x'), (2, 'y')) AS v(a, b)",
+            needs = setOf(RealSqlFeature.VALUES_COLUMN_ALIASES),
+        ),
+        // Statements around queries.
+        RealSqlCase(
+            "insert-select",
+            "INSERT INTO sales.archive SELECT * FROM sales.orders WHERE status = 'done'",
+        ),
+        RealSqlCase(
+            "create-table-as",
+            "CREATE TABLE sales.big_orders AS SELECT order_id, amount FROM sales.orders WHERE amount > 100",
+            needs = setOf(RealSqlFeature.CREATE_TABLE_AS),
+        ),
+        RealSqlCase(
+            "case-cast-dates",
+            "SELECT CASE WHEN amount > 10 THEN 'big' ELSE 'small' END AS size, CAST(amount AS DECIMAL(10, 2)) AS money, " +
+                "created_at + INTERVAL '1' DAY AS due FROM sales.orders",
+            variants = mapOf("mysql" to "SELECT CASE WHEN amount > 10 THEN 'big' ELSE 'small' END AS size, " +
+                "CAST(amount AS DECIMAL(10, 2)) AS money, created_at + INTERVAL 1 DAY AS due FROM sales.orders"),
+        ),
+        // Identifier case.
+        RealSqlCase(
+            "unquoted-case-folding",
+            "SELECT O.ORDER_ID, o.User_Id FROM SALES.ORDERS o",
+        ),
+        RealSqlCase(
+            "double-quoted-identifiers",
+            "SELECT \"o\".\"order_id\" FROM \"sales\".\"orders\" AS \"o\"",
+            needs = setOf(RealSqlFeature.DOUBLE_QUOTED_IDENTIFIERS),
+        ),
+        RealSqlCase(
+            "backtick-identifiers",
+            "SELECT `o`.`order_id` FROM `sales`.`orders` AS `o`",
+            needs = setOf(RealSqlFeature.BACKTICK_IDENTIFIERS),
+        ),
+        // Shapes from Doris dogfooding (invented names): a renamed column beside a star in a derived table, under a CTE.
+        RealSqlCase(
+            "doris-except-star-in-derived-cte",
+            """
+            WITH recent AS (
+               SELECT * FROM (
+                   select FROM_SECOND(ts) AS ts, * EXCEPT(ts), 0 AS src_flag
+                   FROM ext_catalog.archive_db.facts
+               ) AS d
+            )
+            SELECT ts, uid FROM recent
+            """.trimIndent(),
+            needs = setOf(RealSqlFeature.DORIS, RealSqlFeature.STAR_EXCEPT, RealSqlFeature.THREE_PART_NAMES),
+        ),
+        RealSqlCase(
+            "doris-star-in-derived-cte",
+            """
+            WITH recent AS (
+               SELECT * FROM (
+                   select FROM_SECOND(ts) AS ts2, * , 0 AS src_flag
+                   FROM ext_catalog.archive_db.facts
+               ) AS d
+            )
+            SELECT ts2, uid FROM recent
+            """.trimIndent(),
+            needs = setOf(RealSqlFeature.DORIS, RealSqlFeature.THREE_PART_NAMES),
+        ),
+        RealSqlCase(
+            "doris-star-in-derived",
+            """
+            SELECT uid, * FROM (
+                 select FROM_SECOND(ts) AS ts2, * , 0 AS src_flag
+                 FROM ext_catalog.archive_db.facts
+             ) AS d
+            """.trimIndent(),
+            needs = setOf(RealSqlFeature.DORIS, RealSqlFeature.THREE_PART_NAMES),
+            completions = listOf(RealSqlCompletion(
+                "SELECT <caret> FROM (select FROM_SECOND(ts) AS ts2, * , 0 AS src_flag FROM ext_catalog.archive_db.facts) AS d",
+                setOf("uid", "ts2"),
+            )),
+        ),
+    )
+}
