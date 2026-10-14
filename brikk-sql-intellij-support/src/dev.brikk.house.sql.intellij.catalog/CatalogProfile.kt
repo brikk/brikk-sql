@@ -37,6 +37,12 @@ public interface CatalogProfile {
     public val autoIntrospect: Boolean get() = false
 
     /**
+     * Whether the engine has client transactions. With them (the default), nothing is introspected for a
+     * file whose console is in a transaction; an engine without them (ClickHouse) is never in one.
+     */
+    public val clientTransactions: Boolean get() = true
+
+    /**
      * Unresolved references into namespaces that are listed but never introspected are not reported
      * ([OutOfScopeReferenceFilter]) and offer to introspect them ([IntrospectNamespaceIntention]). Off
      * until a dialect enables it.
