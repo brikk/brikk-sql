@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -340,6 +341,23 @@ class RelationScopeTest {
         for (dialect in listOf("postgres", "mysql")) {
             assertEquals(Knowledge.FULL, qualifier(dialect).knowledge, dialect)
             assertEquals(emptyList(), RelationScope.analyze(sql, dialect, RelationFacts()).diagnostics.map { it.message }, dialect)
+        }
+    }
+
+    @Test
+    fun completedColumnsDeclaredAfterTheCaretKeepTheirPlaceInTheText() {
+        for (sql in listOf(
+            "SELECT <caret> FROM (SELECT FROM_SECOND(ts) AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d",
+            "SELECT k, <caret> FROM (SELECT FROM_SECOND(ts) AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d",
+            "SELECT `t<caret> FROM (SELECT FROM_SECOND(ts) AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d",
+        )) {
+            val text = sql.replace("<caret>", "")
+            val items = RelationScope.complete(text, "doris", RelationFacts(), sql.indexOf("<caret>")).items
+            assertEquals(listOf("ts2", "k"), items.map { it.name }, sql)
+            for (item in items) {
+                val declaration = assertNotNull(item.column?.declaration, sql)
+                assertEquals(item.name, text.substring(declaration.start, declaration.end), sql)
+            }
         }
     }
 

@@ -19,6 +19,17 @@ class TestKitBinaryCompatibilityTest : TestCase() {
         assertEquals(widened.copy(bare = emptyList()), copy.invoke(widened, widened.tables, emptyList<String>(), widened.absent))
     }
 
+    fun testRealSqlCompletionKeepsItsShapeFromBeforeOnce() {
+        val string = String::class.java
+        val set = Set::class.java
+        val map = Map::class.java
+        val exact = RealSqlCompletion::class.java.getConstructor(string, set, set, map)
+        assertEquals(RealSqlCompletion("SELECT <caret>", setOf("a"), setOf("b")), exact.newInstance("SELECT <caret>", setOf("a"), setOf("b"), emptyMap<String, String>()))
+        val completion = RealSqlCompletion("SELECT <caret>", setOf("a"), once = setOf("a"))
+        val copy = RealSqlCompletion::class.java.getMethod("copy", string, set, set, map)
+        assertEquals(completion.copy(offered = setOf("c")), copy.invoke(completion, "SELECT <caret>", setOf("c"), emptySet<String>(), emptyMap<String, String>()))
+    }
+
     fun testRealSqlCompletionKeepsItsShapeFromBeforeVariantsAndNotOffered() {
         val string = String::class.java
         val set = Set::class.java

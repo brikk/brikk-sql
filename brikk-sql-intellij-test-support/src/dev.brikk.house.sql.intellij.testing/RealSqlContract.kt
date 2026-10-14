@@ -80,8 +80,10 @@ public class RealSqlContract(private val target: RealSqlTarget, private val case
         val missing = case.completions.flatMap { completion ->
             val sql = completion.sqlFor(target.dialect)
             target.open(sql)
-            val offered = fixture.completeBasic()?.map { it.lookupString }?.toSet() ?: emptySet()
+            val items = fixture.completeBasic()?.map { it.lookupString }.orEmpty()
+            val offered = items.toSet()
             listOfNotNull(
+                completion.once.filter { name -> items.count { it == name } > 1 }.takeIf { it.isNotEmpty() }?.let { "${case.name}: offered more than once $it at $sql" },
                 (completion.offered - offered).takeIf { it.isNotEmpty() }?.let { "${case.name}: not offered $it at $sql" },
                 completion.notOffered.filter { it in offered }.takeIf { it.isNotEmpty() }?.let { "${case.name}: offered $it, which must not be, at $sql" },
             )

@@ -107,6 +107,15 @@ class RelationCompletionTest : RelationTestCase() {
         assertSameElements(ids, "  declared column (A)", "  declared column (a)")
     }
 
+    fun testColumnsDeclaredAfterTheCaretDecorateThePlatformsItemsOnce() {
+        for (sql in listOf("SELECT <caret> FROM (SELECT to_timestamp(ts) AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d",
+            "SELECT <caret> FROM (SELECT ts AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d")) {
+            open(sql)
+            val items = items("ts2", "k").map { it.lookupString to LookupElementPresentation.renderElement(it).tailText }
+            assertSameElements(sql, items, listOf("ts2" to "  computed column (d)", "k" to "  computed column (d)"))
+        }
+    }
+
     fun testAnUnrelatedItemOfTheSameNameStaysBesideTheColumn() {
         // Without a prefix the lookup holds more than 500 items and keeps only the most relevant: the plain item could be cut.
         Registry.get("ide.completion.variant.limit").setValue(10000, testRootDisposable)
