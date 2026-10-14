@@ -137,6 +137,15 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertNoRefresh()
     }
 
+    fun testADialectMayMarkANamespaceLoaded() {
+        val schema = databases().createOrGet("part").schemas.createOrGet("s")
+        schema.tables.createOrGet("t1")
+        DbPsiFacade.getInstance(project).clearCaches()
+        service.markLoaded(source, listOf("part", "s"))
+        assertFalse(service.requestPath(myFixture.file, listOf("part", "s")))
+        assertNoRefresh()
+    }
+
     fun testANameStillMissingAfterListingStaysUnknownWithoutRetrying() {
         clearModel()
         assertTrue(service.requestPath(myFixture.file, listOf("nowhere", "web")))

@@ -202,6 +202,18 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         }
     }
 
+    /**
+     * Records that every child of the namespace at [path] of [dataSource] is in the model, as a dialect knows
+     * after loading it its own way: requests for it then start nothing until its model is cleared.
+     */
+    public fun markLoaded(dataSource: LocalDataSource, path: List<String>) {
+        val key = AutoIntrospectEngine.Key(dataSource.uniqueId, path)
+        engine.finish(key, succeeded = true)
+        loaded += key
+        synced += key
+        LOG.info("Auto-introspection: ${dataSource.name}: ${path.joinToString(".")} marked loaded by the dialect")
+    }
+
     /** Logs why [label] starts nothing; false. */
     private fun skipped(label: String, why: String): Boolean {
         LOG.info("Auto-introspection skipped $label: $why")
