@@ -110,6 +110,19 @@ class ExecutionObserverTest : AutoIntrospectTestCase() {
         awaitIdle()
     }
 
+    fun testTableDdlReloadsTheSchemaHoldingTheTableNamedOrCompletedFromTheConsole() {
+        run("ALTER TABLE loaded.web.orders ADD COLUMN amount int")
+        nextRefresh().finish()
+        awaitIdle()
+        run("CREATE TABLE fresh (x int)")
+        assertNoRefresh()
+        recording.console.setSearchPath(SearchPath.of(ObjectPath.create("loaded", ObjectKind.DATABASE).append("web", ObjectKind.SCHEMA)))
+        run("CREATE TABLE fresh (x int); CREATE VIEW recent AS SELECT * FROM orders")
+        nextRefresh().finish()
+        awaitIdle()
+        assertNoRefresh()
+    }
+
     fun testStatementsChangingOneNamespaceTogetherReloadItOnce() {
         run("CREATE SCHEMA loaded.a; CREATE SCHEMA loaded.b")
         run("DROP SCHEMA loaded.c")

@@ -198,10 +198,14 @@ public object StatementRules {
     private val server = StatementEffect.FunctionInventory(sessionFacts = false)
     private val session = StatementEffect.FunctionInventory(sessionFacts = true)
 
+    private val table = StatementEffect.Namespace(3)
+    private val schema = StatementEffect.Namespace(2)
+
     /**
      * DuckDB: installing extensions and creating persistent macros change the server's functions; loading
      * extensions and creating temporary macros, or dropping any, may change only the session's. Attaching
-     * and detaching databases change the top-level namespaces.
+     * and detaching databases change the top-level namespaces; table, view and schema DDL the schema or
+     * catalog holding what it changes (`catalog.schema.table`).
      */
     public val DUCKDB: List<StatementRule> = listOf(
         StatementRule("INSTALL", server),
@@ -212,22 +216,51 @@ public object StatementRules {
         StatementRule("DROP MACRO|FUNCTION", session),
         StatementRule("ATTACH [DATABASE]", StatementEffect.Namespace(1)),
         StatementRule("DETACH [DATABASE]", StatementEffect.Namespace(1)),
+        StatementRule("CREATE [OR REPLACE] [TEMP|TEMPORARY] TABLE|VIEW", table),
+        StatementRule("ALTER|DROP TABLE|VIEW", table),
+        StatementRule("CREATE|DROP SCHEMA", schema),
     )
 
-    /** Trino: creating or dropping catalogs and schemas; creating or dropping functions. */
+    /**
+     * Trino: creating or dropping catalogs; schema, table, view and materialized view DDL
+     * (`catalog.schema.table`); creating or dropping functions.
+     */
     public val TRINO: List<StatementRule> = listOf(
         StatementRule("CREATE CATALOG", StatementEffect.Namespace(1)),
         StatementRule("DROP CATALOG", StatementEffect.Namespace(1)),
-        StatementRule("CREATE SCHEMA", StatementEffect.Namespace(2)),
-        StatementRule("DROP SCHEMA", StatementEffect.Namespace(2)),
+        StatementRule("CREATE|ALTER|DROP SCHEMA", schema),
+        StatementRule("CREATE [OR REPLACE] TABLE|VIEW", table),
+        StatementRule("CREATE [OR REPLACE] MATERIALIZED VIEW", table),
+        StatementRule("ALTER|DROP TABLE|VIEW", table),
+        StatementRule("ALTER|DROP MATERIALIZED VIEW", table),
         StatementRule("CREATE [OR REPLACE] FUNCTION", server),
         StatementRule("DROP FUNCTION", server),
     )
 
-    /** Doris: creating, dropping or refreshing catalogs. */
+    /**
+     * Doris: creating, dropping or refreshing catalogs; database, table, view and materialized view DDL
+     * (`catalog.database.table`).
+     */
     public val DORIS: List<StatementRule> = listOf(
         StatementRule("CREATE CATALOG", StatementEffect.Namespace(1)),
         StatementRule("DROP CATALOG", StatementEffect.Namespace(1)),
         StatementRule("REFRESH CATALOG", StatementEffect.Namespace(1, refreshDepth = 1)),
+        StatementRule("CREATE|ALTER|DROP DATABASE|SCHEMA", schema),
+        StatementRule("CREATE [OR REPLACE] [EXTERNAL] [TEMPORARY] TABLE|VIEW", table),
+        StatementRule("CREATE MATERIALIZED VIEW", table),
+        StatementRule("ALTER|DROP TABLE|VIEW", table),
+        StatementRule("DROP MATERIALIZED VIEW", table),
+    )
+
+    /**
+     * ClickHouse: database DDL changes the top-level namespaces; table, view, dictionary DDL, renames and
+     * exchanges the database holding what they change (`database.table`).
+     */
+    public val CLICKHOUSE: List<StatementRule> = listOf(
+        StatementRule("CREATE|DROP|ATTACH|DETACH|RENAME DATABASE", StatementEffect.Namespace(1)),
+        StatementRule("CREATE [OR REPLACE] [TEMPORARY] TABLE|VIEW|DICTIONARY", StatementEffect.Namespace(2)),
+        StatementRule("CREATE MATERIALIZED|LIVE|WINDOW VIEW", StatementEffect.Namespace(2)),
+        StatementRule("ALTER|DROP|ATTACH|DETACH|RENAME [TEMPORARY] TABLE|VIEW|DICTIONARY", StatementEffect.Namespace(2)),
+        StatementRule("EXCHANGE TABLES|DICTIONARIES", StatementEffect.Namespace(2)),
     )
 }
