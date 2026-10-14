@@ -160,4 +160,22 @@ class ClickhouseDialectTest {
             "SELECT * FROM viewExplain('EXPLAIN', '', (SELECT 1))",
         )) assertEquals(sql, roundTrip(sql), sql)
     }
+
+    /** DESCRIBE [TABLE] takes a table function, never a column list: numbers (3) is a call, not a table with columns. */
+    @Test
+    fun describeTakesTableFunctions() {
+        for ((sql, expected) in listOf(
+            "DESCRIBE TABLE numbers(3)" to "DESCRIBE numbers(3)",
+            "DESCRIBE TABLE format('TSV', 'a UInt64, b String', '1\\tsample')" to "DESCRIBE format('TSV', 'a UInt64, b String', '1\\tsample')",
+            "DESCRIBE TABLE merge('db1', 'one_column')" to "DESCRIBE merge('db1', 'one_column')",
+            "DESCRIBE TABLE view(SELECT 1 AS a)" to "DESCRIBE view(SELECT 1 AS a)",
+            "DESCRIBE TABLE dictionary('db1.d')" to "DESCRIBE dictionary('db1.d')",
+            "DESCRIBE TABLE s3('https://x', 'TSV', 'a UInt64')" to "DESCRIBE s3('https://x', 'TSV', 'a UInt64')",
+            "DESCRIBE TABLE db1.one_column" to "DESCRIBE db1.one_column",
+        )) {
+            val once = roundTrip(sql)
+            assertEquals(expected, once, sql)
+            assertEquals(once, roundTrip(once), "stable: $sql")
+        }
+    }
 }

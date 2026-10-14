@@ -717,6 +717,10 @@ open class ClickhouseParser(
         return this_
     }
 
+    // brikk-native: ClickHouse DESCRIBE [TABLE] takes a table, a table function or a subquery, never a
+    // column list, so numbers(3) is a call (as in FROM), not the table numbers with a column (3).
+    override fun parseDescribeTarget(): Expression? = parseTable()
+
     // sqlglot: ClickHouseParser._parse_position
     override fun parsePosition(haystackFirst: Boolean): Expression =
         super.parsePosition(haystackFirst = true)

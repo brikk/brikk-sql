@@ -5752,22 +5752,30 @@ open class Parser(
         )
     }
 
+    /** brikk-native: what DESCRIBE describes; a table that may carry a column list, as sqlglot reads it. */
+    protected open fun parseDescribeTarget(): Expression? = parseTable(schema = true)
+
     // sqlglot: Parser._parse_describe
     // (open for DorisParser: DESC t ALL, docs/brikk-extensions.md #19)
     open fun parseDescribe(): Expression {
-        val kind = if (matchSet(creatables)) prevToken.text else null
+        // brikk-native: a creatable word that may name a function, followed by a parenthesis, is the
+        // described call (ClickHouse view(SELECT ...)), not the kind.
+        fun isCall() = currToken.tokenType in funcTokens && nextToken.tokenType == TokenType.L_PAREN
+        val kind = if (!isCall() && matchSet(creatables)) prevToken.text else null
         var style: String? = if (matchTexts(describeStyles)) prevToken.text.uppercase() else null
         if (match(TokenType.DOT)) {
             style = null
             retreat(index - 2)
         }
 
-        val format = if (match(TokenType.FORMAT, advance = false)) parseProperty() else null
+        // brikk-native: FORMAT directly followed by a parenthesis is a call (ClickHouse format(...)), not the option.
+        val format = if (match(TokenType.FORMAT, advance = false) && nextToken.tokenType != TokenType.L_PAREN) parseProperty() else null
 
-        val this_: Expression? = if (matchSet(statementParsers.keys, advance = false)) {
+        // Likewise a statement keyword (ClickHouse merge(...)).
+        val this_: Expression? = if (!isCall() && matchSet(statementParsers.keys, advance = false)) {
             parseStatement()
         } else {
-            parseTable(schema = true)
+            parseDescribeTarget()
         }
 
         val properties = parseProperties()
