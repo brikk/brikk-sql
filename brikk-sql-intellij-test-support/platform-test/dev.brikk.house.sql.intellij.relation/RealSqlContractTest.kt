@@ -12,7 +12,11 @@ import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.dialects.mysql.model.MysqlRoot
 import com.intellij.database.dialects.postgres.model.PgRoot
+import com.intellij.codeInsight.lookup.LookupElementPresentation
 import com.intellij.database.model.ModelFactory
+import com.intellij.database.model.basic.BasicModel
+import com.intellij.database.model.properties.DataTypeFactory
+import com.intellij.database.types.DasTypeSystems
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.ObjectPath
@@ -272,6 +276,35 @@ class RealSqlContractTest : RelationTestCase() {
         }
     }
 
+    /** Completes `SELECT <caret> FROM orders o` over typed physical columns, as name to presentation. */
+    private fun typedColumns(): Map<String, LookupElementPresentation> {
+        val source = dataSource(Dbms.POSTGRES, "postgresql")
+        val orders = ((source.model as BasicModel).root as PgRoot).databases.createOrGet("shop").schemas.createOrGet("sales").tables.createOrGet("orders")
+        fun type(name: String) = DasTypeSystems.getTypeSystem(Dbms.POSTGRES).createDasType(DataTypeFactory.of(name))
+        orders.columns.createOrGet("amount").storedType = type("numeric(20)")
+        orders.columns.createOrGet("status").storedType = type("varchar(16)")
+        orders.columns.createOrGet("order_id").apply { storedType = type("bigint"); setNotNull(true) }
+        DbPsiFacade.getInstance(project).clearCaches()
+        val file = myFixture.configureByText("stock-${UUID.randomUUID()}.sql", "SELECT <caret> FROM orders o").virtualFile
+        setSqlDialectMapping(project, file, postgres as SqlLanguageDialect, testRootDisposable)
+        myFixture.configureFromExistingVirtualFile(file)
+        return RecordingConsole(project, file, source).use { recording ->
+            recording.console.setSearchPath(SearchPath.of(ObjectPath.create("shop", ObjectKind.DATABASE).append("sales", ObjectKind.SCHEMA)))
+            myFixture.completeBasic().orEmpty().filter { it.lookupString in TYPED.keys }.associate { it.lookupString to LookupElementPresentation.renderElement(it) }
+        }
+    }
+
+    fun testStockShowsAPhysicalColumnsTypeNameWithoutNullability() {
+        assertEquals(TYPED, typedColumns().mapValues { it.value.typeText })
+    }
+
+    fun testAPhysicalColumnShowsItsSqlTypeAsStockDoesUnderItsTablesLabel() {
+        register(pgRelations, Dbms.POSTGRES)
+        val ours = typedColumns()
+        assertEquals(TYPED, ours.mapValues { it.value.typeText })
+        assertEquals(TYPED.keys.associateWith { "  column (orders)" }, ours.mapValues { it.value.tailText })
+    }
+
     fun testMysql() {
         register(mysqlRelations, Dbms.MYSQL)
         val features = setOf(
@@ -286,6 +319,9 @@ class RealSqlContractTest : RelationTestCase() {
         }
     }
 }
+
+/** Typed physical columns and the type text stock completion shows for them. */
+private val TYPED = mapOf("amount" to "numeric", "status" to "varchar", "order_id" to "bigint")
 
 private const val TYPED_FUNCTION = "CREATE FUNCTION recent_orders() RETURNS TABLE (order_id int, amount int) AS $$ SELECT 1, 2 $$ LANGUAGE sql;\n"
 

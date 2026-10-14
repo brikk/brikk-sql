@@ -112,18 +112,22 @@ public data class RelationColumnLabels(
             Nullability.UNKNOWN -> null
         }
         val relation = column.relation.ifBlank { column.source?.relation.orEmpty() }
+        // Nullability shows only beside the provider's own type text (a Kotlin type, where `?` is its syntax); SQL types show plain.
+        val shown = nullable.takeIf { column.displayType != null }
         return when (column.origin) {
-            ColumnOrigin.DECLARED -> RelationColumnLabel(declared, relation, column.displayType ?: column.sqlType, nullable, declaredKind)
-            ColumnOrigin.RELATION_CONTRACT -> RelationColumnLabel(contract, relation, column.displayType ?: column.sqlType, nullable, contractKind)
+            ColumnOrigin.DECLARED -> RelationColumnLabel(declared, relation, column.displayType ?: column.sqlType, shown, declaredKind)
+            ColumnOrigin.RELATION_CONTRACT -> RelationColumnLabel(contract, relation, column.displayType ?: column.sqlType, shown, contractKind)
             ColumnOrigin.PHYSICAL_TABLE ->
-                RelationColumnLabel(physical, column.source?.relation?.substringAfterLast('.') ?: relation, column.sqlType, nullable, SqlLookupKind.RELATION_COLUMN)
-            ColumnOrigin.COMPUTED ->
-                RelationColumnLabel(computed, column.computedBy ?: relation, column.sqlType ?: column.displayType, nullable, SqlLookupKind.RELATION_COLUMN)
+                RelationColumnLabel(physical, column.source?.relation?.substringAfterLast('.') ?: relation, column.sqlType, null, SqlLookupKind.RELATION_COLUMN)
+            ColumnOrigin.COMPUTED -> RelationColumnLabel(
+                computed, column.computedBy ?: relation, column.sqlType ?: column.displayType,
+                shown.takeIf { column.sqlType == null }, SqlLookupKind.RELATION_COLUMN,
+            )
         }
     }
 }
 
-/** A column's completion presentation: "[origin] ([relation])", its [type] and three-state [nullable]. */
+/** A column's completion presentation: "[origin] ([relation])", its [type] and three-state [nullable], given only with a Kotlin [type]. */
 @ApiStatus.Experimental
 public data class RelationColumnLabel(
     val origin: String,

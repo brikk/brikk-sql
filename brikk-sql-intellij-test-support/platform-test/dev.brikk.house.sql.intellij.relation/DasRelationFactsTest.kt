@@ -77,7 +77,7 @@ class DasRelationFactsTest : RelationTestCase() {
 
     fun testPhysicalColumnsFeedPipeCompletionWithTheirSqlTypes() {
         assertSameElements(offered("FROM shop.public.orders |> SELECT <caret>", "id", "total"),
-            Triple("id", "  column (orders)", "integer"), Triple("total", "  column (orders)", "numeric?"))
+            Triple("id", "  column (orders)", "integer"), Triple("total", "  column (orders)", "numeric"))
         assertEquals(2, offered("FROM orders |> WHERE <caret>", "id", "total").size)
     }
 

@@ -89,7 +89,9 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             val column = item.column ?: continue
             val label = analysis.labels(column).label(column)
             val identity = Identity(column.name, column.relation, column.source?.relation, column.provenance)
-            val facts = SqlColumnFacts(column.name, label.type, label.nullable, label.relation, label.origin, identity)
+            // A data source column's item keeps the platform's own type text; one this creates shows the model's type.
+            val shownType = label.type.takeIf { column.origin != ColumnOrigin.PHYSICAL_TABLE }
+            val facts = SqlColumnFacts(column.name, shownType, label.nullable, label.relation, label.origin, identity)
             candidates.putIfAbsent(identity, Candidate(item, column, facts, label, analysis.providerOf(column)))
         }
         val byFacts = candidates.values.associateBy { it.facts }
@@ -97,7 +99,9 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             parameters,
             sink,
             candidates.values.map { it.facts },
-            create = { facts -> byFacts.getValue(facts).let { inserting(SqlColumnCompletion.create(facts, profile.styles[it.label.kind]), it.item) } },
+            create = { facts ->
+                byFacts.getValue(facts).let { inserting(SqlColumnCompletion.create(facts.copy(typeName = it.label.type), profile.styles[it.label.kind]), it.item) }
+            },
             // A provider column no visible column matches is not visible here as itself: an outer or shadowed
             // relation's, or one a set operation or USING merges into a column of its own.
             hides = { symbolOf(it) != null || known && dasColumnOf(it) != null },
