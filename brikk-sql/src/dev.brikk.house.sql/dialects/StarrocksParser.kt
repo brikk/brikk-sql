@@ -119,6 +119,14 @@ open class StarrocksParser(
 
     override fun parseInto(): Expression? = if (isIntoOutfile()) null else super.parseInto()
 
+    // brikk-native: REFRESH MATERIALIZED VIEW options sqlglot does not model (FORCE, WITH SYNC MODE,
+    // PARTITION START (...) END (...)) keep the statement as a command, its text kept.
+    override fun parseRefresh(): Expression {
+        val start = prevToken
+        return tryParse({ super.parseRefresh().takeIf { !currToken.exists || currToken.tokenType == TokenType.SEMICOLON } })
+            ?: parseAsCommand(start)
+    }
+
     // sqlglot: StarRocks.INDEX_OFFSET = 1 (mirrored by StarrocksGenerator.dialectIndexOffset)
     override val indexOffset: Int get() = 1
 

@@ -63,6 +63,6 @@ class StarrocksDialect : Dialect() {
         // must reach the window NULL-modifier parser as a contextual identifier.
         val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.STARROCKS
             // brikk-native: administrative statements degrade to an opaque Command (text kept), as Doris's do.
-            .withKeywords(mapOf("IGNORE" to TokenType.VAR, "ADMIN" to TokenType.COMMAND, "CANCEL" to TokenType.COMMAND))
+            .withKeywords(mapOf("IGNORE" to TokenType.VAR, "ADMIN" to TokenType.COMMAND, "CANCEL" to TokenType.COMMAND, "SUBMIT" to TokenType.COMMAND))
     }
 }

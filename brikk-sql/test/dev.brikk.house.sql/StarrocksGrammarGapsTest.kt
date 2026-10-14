@@ -30,4 +30,19 @@ class StarrocksGrammarGapsTest {
             assertEquals(sql, roundTrip(sql))
         }
     }
+
+    /** S3: StarRocks-only statements parse, at least as commands with their text kept. */
+    @Test
+    fun starrocksOnlyStatementsParse() {
+        for (sql in listOf(
+            "SUBMIT TASK j SCHEDULE EVERY(INTERVAL 2 MINUTE) AS INSERT INTO t SELECT 1",
+            "REFRESH MATERIALIZED VIEW d.mv FORCE",
+            "REFRESH MATERIALIZED VIEW d.mv WITH SYNC MODE",
+            "REFRESH MATERIALIZED VIEW d.mv PARTITION START ('2024-01-01') END ('2024-02-01')",
+            "DROP TASK j", "SHOW TASKS", "CREATE PIPE p AS INSERT INTO t SELECT * FROM FILES('path' = 's3://x')",
+            "ALTER PIPE p SET ('k' = 'v')", "SHOW PIPES", "SET CATALOG x", "SHOW PROC '/backends'", "SHOW RESOURCE GROUPS", "SHOW TABLET FROM t",
+        )) assertEquals(sql, roundTrip(sql))
+        assertEquals("REFRESH MATERIALIZED VIEW d.mv", roundTrip("REFRESH MATERIALIZED VIEW d.mv"))
+        assertIs<dev.brikk.house.sql.ast.Refresh>(Dialects.forName("starrocks").parseOne("REFRESH MATERIALIZED VIEW d.mv"))
+    }
 }
