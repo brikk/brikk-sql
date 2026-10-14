@@ -12,12 +12,20 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
+import com.intellij.openapi.progress.ProgressManager
+import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
+import dev.brikk.house.sql.parser.SqlScriptSnapshot
+import dev.brikk.house.sql.scope.ReferenceKind
+import dev.brikk.house.sql.scope.RelationFacts
+import dev.brikk.house.sql.scope.RelationScope
+import dev.brikk.house.sql.scope.Resolution
 import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completion after a qualified path (`hive.` or `hive.web.` with the caret after the dot or in the
  * next name) asks the plugin's [AutoIntrospectService] to introspect what the path names. It offers
- * nothing itself; the platform's completion shows the loaded names when invoked again. Only a
+ * nothing itself; the platform's completion shows the loaded names when invoked again. A first name the
+ * statement defines (an alias, a CTE, a derived table, by core's scope analysis) is no namespace. Only a
  * console or data source of the profile's dbms is used; comments and string literals never trigger it. Needs no indexes, so it also works while
  * the IDE indexes.
  *
@@ -33,11 +41,33 @@ public abstract class QualifiedPathIntrospectContributor(private val service: Cl
                 val requests = file.project.getService(service) ?: return
                 if (!requests.profile.autoIntrospect || inCommentOrString(parameters.position)) return
                 val path = qualifiedPathBefore(parameters.editor.document.charsSequence, parameters.offset, requests.profile.quoteChars) ?: return
+                val dialect = SqlDialectRegistry.forDbms(requests.profile.dbms)?.coreDialect
+                if (dialect != null && definesQualifier(file.text, parameters.offset, path.first(), dialect)) return
                 requests.requestPath(file, path)
             }
         })
     }
 }
+
+/**
+ * Whether the statement at [offset] of [text] defines [name] as a relation it reads (an alias, a CTE, a derived
+ * table), so `name.` qualifies its columns and names no namespace; read by core's scope analysis, with a name
+ * put at the caret so the statement parses.
+ */
+internal fun definesQualifier(text: String, offset: Int, name: String, dialect: String): Boolean {
+    val at = offset.coerceIn(0, text.length)
+    val completed = text.substring(0, at) + PLACEHOLDER + text.substring(at)
+    val statement = SqlScriptSnapshot.parse(completed, dialect, ProgressManager::checkCanceled).at(at) ?: return false
+    val scope = RelationScope.analyze(completed.substring(statement.start, statement.end), dialect, RelationFacts())
+    val local = at - statement.start
+    return scope.references.any {
+        it.kind == ReferenceKind.QUALIFIER && it.resolution == Resolution.RESOLVED && it.start < local && it.start >= local - PATH_WINDOW &&
+            it.name.equals(name, ignoreCase = true)
+    }
+}
+
+/** A name for the caret's place, so a statement whose name is being typed parses. */
+private const val PLACEHOLDER = "brikk_completion_7f3a"
 
 private fun inCommentOrString(position: PsiElement): Boolean {
     if (PsiTreeUtil.getNonStrictParentOfType(position, PsiComment::class.java) != null) return true

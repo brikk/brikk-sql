@@ -27,6 +27,24 @@ class QualifiedPathIntrospectContributorTest : AutoIntrospectTestCase() {
         awaitIdle()
     }
 
+    fun testANameTheStatementDefinesIsNoNamespace() {
+        for (sql in listOf(
+            "SELECT o.<caret> FROM orders AS o",
+            "WITH c AS (SELECT 1 AS x) SELECT c.<caret> FROM c",
+            "SELECT d.<caret> FROM (SELECT 1 AS x) AS d",
+            // An alias named like a catalog is still the alias.
+            "SELECT hive.<caret> FROM orders AS hive",
+        )) {
+            complete(sql)
+            assertNull(sql, pending())
+        }
+        assertNoRefresh()
+        complete("SELECT * FROM hive.<caret>")
+        assertEquals("hive", pending())
+        nextRefresh().finish { hive.schemas.createOrGet("web") }
+        awaitIdle()
+    }
+
     fun testQuotedNamesAndTheNameBeingTyped() {
         complete("SELECT * FROM \"hi\"\"ve\".x, \"memory\" . we<caret>")
         assertNull("not a path: a space before the dot", pending())
