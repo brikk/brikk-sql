@@ -89,6 +89,20 @@ class SqlDocsTest {
         assertNull(at("SELECT <caret>read_parquet FROM t", "duckdb"))
     }
 
+    private val starrocks = "https://docs.starrocks.io/docs/"
+
+    @Test
+    fun starrocksStatementsAndTableFunctionsLinkTheirPages() {
+        for ((sql, page) in listOf(
+            "CREATE <caret>TABLE t (k INT) DUPLICATE KEY(k) DISTRIBUTED BY HASH(k)" to "sql-statements/table_bucket_part_index/CREATE_TABLE/",
+            "CREATE MATERIALIZED <caret>VIEW mv REFRESH ASYNC AS SELECT 1" to "sql-statements/materialized_view/CREATE_MATERIALIZED_VIEW/",
+            "<caret>SUBMIT TASK t AS INSERT INTO t SELECT 1" to "sql-statements/loading_unloading/ETL/SUBMIT_TASK/",
+            "CREATE <caret>PIPE p AS INSERT INTO t SELECT * FROM FILES('path' = 's3://b/p/')" to "sql-statements/loading_unloading/pipe/CREATE_PIPE/",
+            "SET <caret>CATALOG hive" to "sql-statements/Catalog/SET_CATALOG/",
+            "CREATE PIPE p AS INSERT INTO t SELECT * FROM <caret>FILES('path' = 's3://b/p/')" to "sql-functions/table-functions/files/",
+        )) assertEquals(starrocks + "sql-reference/" + page, at(sql, "starrocks")?.url, sql)
+    }
+
     @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",

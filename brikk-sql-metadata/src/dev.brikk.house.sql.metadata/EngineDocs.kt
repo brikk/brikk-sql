@@ -43,4 +43,4 @@ data class EngineDocs(
 }
 
 /** The bundled engine documentation, by core dialect name. */
-val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS, CLICKHOUSE_DOCS, DUCKDB_DOCS).associateBy { it.dialect }
+val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS, CLICKHOUSE_DOCS, DUCKDB_DOCS, STARROCKS_DOCS).associateBy { it.dialect }
