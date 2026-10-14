@@ -14,6 +14,7 @@ import com.intellij.database.util.ObjectPath
 import com.intellij.database.util.SearchPath
 import com.intellij.lang.ExternalLanguageAnnotators
 import com.intellij.lang.Language
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.lang.LanguageAnnotators
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
@@ -163,6 +164,41 @@ class RealSqlContractTest : RelationTestCase() {
         }
     }
 
+    /** Whether `nope` in [sql] opened through [target] is an error. */
+    private fun nopeReported(target: Target, sql: String): Boolean {
+        target.open(sql)
+        return reports(HighlightSeverity.ERROR).any { it.first == "nope" }
+    }
+
+    fun testThePlatformsMissesStandWhereItKnowsEverySourceAndNoneWhereItDoesNot() {
+        // The analysis sees no data source; the platform resolves its tables.
+        register(pgRelations, Dbms.POSTGRES)
+        pgRelations.providers = emptyList()
+        val target = Target("postgres", emptySet(), postgres, Dbms.POSTGRES, "postgresql")
+        try {
+            for (sql in listOf(
+                "SELECT nope FROM orders",
+                "SELECT o.nope FROM orders o JOIN users u ON u.user_id = o.user_id",
+                "SELECT nope FROM (SELECT * FROM orders) d",
+                "WITH c AS (SELECT * FROM orders) SELECT nope FROM c",
+                // A table function the platform types.
+                "$TYPED_FUNCTION SELECT r.nope, r.amount FROM recent_orders() r",
+                "$TYPED_FUNCTION SELECT nope FROM (SELECT * FROM recent_orders()) d",
+            )) assertTrue(sql, nopeReported(target, sql))
+            // A source neither knows keeps every column quiet: listed without columns, absent, an untyped call, or mixed in.
+            for (sql in listOf(
+                "SELECT nope FROM archive",
+                "SELECT nope FROM (SELECT * FROM archive) d",
+                "SELECT nope FROM orders o, archive a",
+                "WITH c AS (SELECT * FROM ghost) SELECT nope FROM c",
+                "SELECT nope FROM orders o, events() e",
+                "$TYPED_FUNCTION SELECT nope FROM recent_orders() r, archive a",
+            )) assertFalse(sql, nopeReported(target, sql))
+        } finally {
+            target.close()
+        }
+    }
+
     fun testMysql() {
         register(mysqlRelations, Dbms.MYSQL)
         val features = setOf(
@@ -177,6 +213,8 @@ class RealSqlContractTest : RelationTestCase() {
         }
     }
 }
+
+private const val TYPED_FUNCTION = "CREATE FUNCTION recent_orders() RETURNS TABLE (order_id int, amount int) AS $$ SELECT 1, 2 $$ LANGUAGE sql;\n"
 
 private fun localParse(language: Language, dialect: String) = TestProfile(language, dialect, "Local parse").apply {
     validator = null
