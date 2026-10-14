@@ -837,12 +837,16 @@ internal class ScopeEvaluator(
             out += current.bindings.flatMap { it.columns }
             out += current.merged
             out += current.aliases.filter { alias ->
-                alias.name.isNotEmpty() && out.none { it == alias || same(it.name, alias.name) && it.source != null && it.source == alias.source }
+                alias.name.isNotEmpty() && out.none { it == alias || same(it.name, alias.name) && it.passedOnAs(alias) }
             }
             current = current.outer
         }
         return out
     }
+
+    /** Whether [alias] is this column as a projection passes it on ([projected]), from the same fact or the same column of the SQL. */
+    private fun ScopeColumn.passedOnAs(alias: ScopeColumn): Boolean =
+        source != null && source == alias.source || copy(name = alias.name, relation = "", relationKind = null) == alias
 
     private fun record(identifier: Identifier, column: Column?, lookup: Lookup, report: Boolean = true) {
         val span = names.range(identifier) ?: return

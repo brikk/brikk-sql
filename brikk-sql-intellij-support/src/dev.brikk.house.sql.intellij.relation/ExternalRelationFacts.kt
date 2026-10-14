@@ -119,8 +119,9 @@ public data class RelationColumnLabels(
             ColumnOrigin.RELATION_CONTRACT -> RelationColumnLabel(contract, relation, column.displayType ?: column.sqlType, shown, contractKind)
             ColumnOrigin.PHYSICAL_TABLE ->
                 RelationColumnLabel(physical, column.source?.relation?.substringAfterLast('.') ?: relation, column.sqlType, null, SqlLookupKind.RELATION_COLUMN)
+            // Under the relation showing it at the caret; one with none (a set operation's, a merged key's) under what computes it.
             ColumnOrigin.COMPUTED -> RelationColumnLabel(
-                computed, column.computedBy ?: relation, column.sqlType ?: column.displayType,
+                computed, column.relation.ifBlank { column.computedBy ?: relation }, column.sqlType ?: column.displayType,
                 shown.takeIf { column.sqlType == null }, SqlLookupKind.RELATION_COLUMN,
             )
         }

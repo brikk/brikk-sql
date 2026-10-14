@@ -305,6 +305,37 @@ class RealSqlContractTest : RelationTestCase() {
         assertEquals(TYPED.keys.associateWith { "  column (orders)" }, ours.mapValues { it.value.tailText })
     }
 
+    /** The items [names] offered at the caret of [sql] through [target], as name and tail. */
+    private fun offered(target: Target, sql: String, vararg names: String): List<Pair<String, String?>> {
+        target.open(sql)
+        return myFixture.completeBasic().orEmpty().filter { it.lookupString in names }
+            .map { it.lookupString to LookupElementPresentation.renderElement(it).tailText }.also { myFixture.lookup?.hideLookup(true) }
+    }
+
+    /** A CTE chain passing computed columns on through `SELECT *`, completed in a GROUP BY. */
+    private fun cteChain(cast: String) =
+        "WITH extract_fields AS (SELECT CAST(status AS $cast) AS flag_a, CAST(amount AS $cast) AS flag_b, user_id AS k FROM sales.orders), " +
+            "final_projection AS (SELECT * FROM extract_fields), " +
+            "grouping_it_all AS (SELECT k, MAX(flag_b) AS flag_b FROM final_projection GROUP BY k, flag_a, <caret>) SELECT * FROM grouping_it_all"
+
+    private fun assertOneItemPerColumnUnderTheRelationShowingIt(target: Target, chain: String, vararg wrappers: String) {
+        for (sql in listOf(chain) + wrappers.map { "$it $chain" }) {
+            val items = offered(target, sql, "flag_a", "flag_b", "k")
+            assertSameElements(sql, items.map { it.first }, listOf("flag_a", "flag_b", "k"))
+            for (name in listOf("flag_a", "flag_b")) assertEquals(sql, "  computed column (final_projection)", items.toMap()[name])
+        }
+    }
+
+    fun testACteChainOffersEachColumnOnceUnderTheRelationShowingItOnPostgresql() {
+        register(pgRelations, Dbms.POSTGRES)
+        val target = Target("postgres", emptySet(), postgres, Dbms.POSTGRES, "postgresql")
+        try {
+            assertOneItemPerColumnUnderTheRelationShowingIt(target, cteChain("BOOLEAN"), "CREATE VIEW sales.v AS", "CREATE MATERIALIZED VIEW sales.mv AS")
+        } finally {
+            target.close()
+        }
+    }
+
     fun testMysql() {
         register(mysqlRelations, Dbms.MYSQL)
         val features = setOf(

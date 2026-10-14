@@ -18,6 +18,7 @@ import com.intellij.sql.psi.SqlAsExpression
 import com.intellij.sql.psi.SqlNameElement
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
+import com.intellij.sql.psi.SqlSelectClause
 import dev.brikk.house.sql.intellij.SqlColumnCompletion
 import dev.brikk.house.sql.intellij.SqlColumnFacts
 import dev.brikk.house.sql.intellij.catalog.dasTablePath
@@ -40,8 +41,8 @@ import org.jetbrains.annotations.ApiStatus
  * column, a data source column of the same table, a declaration or pass-through in the SQL) is
  * decorated with the column's label, and only columns no item stands for are created, in their
  * label's lookup kind; nothing is offered twice, and columns of different relations stay distinct.
- * Where the scope is fully known, another contributor's provider or data source column no visible column
- * matches is dropped. Labels come from the providers' or the profile's [RelationColumnLabels]. Register a no-arg
+ * Where the scope is fully known, another contributor's data source or select-list column no visible column
+ * matches is dropped, so each visible column is offered once, under the relation showing it. Labels come from the providers' or the profile's [RelationColumnLabels]. Register a no-arg
  * subclass for the language with `order="first"`.
  */
 @ApiStatus.Experimental
@@ -81,7 +82,8 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
      * The columns of [items], create-or-decorate. Even with none, the provider columns other items stand
      * for and the analysis does not see here are hidden: it places every provider column. Where the scope
      * is [known] fully, so are a data source's columns it does not see (another namespace's same-named
-     * table's, say); never where it is partial or unknown.
+     * table's, say) and select-list columns it does not offer here (an aggregate's alias in GROUP BY);
+     * never where it is partial or unknown.
      */
     private fun completeColumns(parameters: CompletionParameters, sink: CompletionResultSet, items: List<CompletionItem>, analysis: RelationAnalysis, known: Boolean) {
         val candidates = LinkedHashMap<Identity, Candidate>()
@@ -104,7 +106,7 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             },
             // A provider column no visible column matches is not visible here as itself: an outer or shadowed
             // relation's, or one a set operation or USING merges into a column of its own.
-            hides = { symbolOf(it) != null || known && dasColumnOf(it) != null },
+            hides = { symbolOf(it) != null || known && (dasColumnOf(it) != null || declaresProjection(it)) },
         ) { element -> match(element, candidates.values, analysis, parameters)?.facts }
     }
 
@@ -122,6 +124,12 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
     /** The provider column [element] stands for, as the resolve extension or the native adapter gives it. */
     private fun symbolOf(element: LookupElement): RelationColumnSymbol? =
         ((element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object`) as? RelationColumnSymbol ?: element.psiElement as? RelationColumnSymbol
+
+    /** Whether [element] stands for a column a select list of the SQL declares (`expr AS name`). */
+    private fun declaresProjection(element: LookupElement): Boolean {
+        val target = (element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object` ?: element.psiElement
+        return (target as? SqlAsExpression)?.parent is SqlSelectClause
+    }
 
     /** The data source column [element] stands for, or null. */
     private fun dasColumnOf(element: LookupElement): DasColumn? {
