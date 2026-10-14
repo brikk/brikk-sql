@@ -13,6 +13,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
 import com.intellij.openapi.extensions.LoadingOrder
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.util.Disposer
+import java.util.concurrent.atomic.AtomicBoolean
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -102,13 +104,19 @@ class OtherCompletion : CompletionContributor() {
     companion object {
         val ITEM = Key.create<LookupElement>("relation.test.other.item")
 
+        private val registered = AtomicBoolean()
+
         /** Offers [item] in [file]'s completion until [until] ends. */
         fun offer(file: PsiFile, item: LookupElement, until: Disposable) {
             file.putUserData(ITEM, item)
-            val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test.other"), OtherCompletion::class.java.classLoader)
-            CompletionContributor.EP.point.registerExtension(CompletionContributorEP(postgres.id, OtherCompletion::class.java.name, plugin), LoadingOrder.LAST, until)
-            // Reading the language's contributors now rebuilds the cached list; otherwise completion may keep a stale one without this.
-            CompletionContributor.forLanguage(file.language)
+            Disposer.register(until) { file.putUserData(ITEM, null) }
+            // Registered once for the run: registering and unregistering it per test raced with completion's contributor list.
+            if (registered.compareAndSet(false, true)) {
+                val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test.other"), OtherCompletion::class.java.classLoader)
+                CompletionContributor.EP.point.registerExtension(
+                    CompletionContributorEP(postgres.id, OtherCompletion::class.java.name, plugin), LoadingOrder.LAST, ApplicationManager.getApplication(),
+                )
+            }
         }
     }
 }
