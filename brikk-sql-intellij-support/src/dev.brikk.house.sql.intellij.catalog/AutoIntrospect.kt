@@ -102,7 +102,8 @@ public class AutoIntrospectEngine(
 
 /**
  * Introspects, one level, what a path typed in an editor names when the model lists it but has not
- * loaded its children. The data source's introspection scope gains exactly that namespace, so what loads stays loaded, and only that model
+ * loaded its children, or loaded only some of them (single tables loaded on demand). The data source's
+ * introspection scope gains exactly that namespace, so what loads stays loaded, and only that model
  * element is refreshed, never the whole scope. A path the model does not hold yet (the model was
  * cleared, or a namespace was never listed) is discovered step by step: the top-level namespaces are
  * listed once, cheaply, then each level down to the path's is loaded, and a name still missing after
@@ -170,7 +171,8 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
 
     /**
      * Introspects what [path] names in [file] (as typed, absolute or relative to the console's namespace):
-     * a namespace or object that is listed but childless; or, when the model does not hold the path yet, discovers it ([AutoIntrospectService]). True when work was queued.
+     * a namespace or object that is listed but childless, or a namespace only partly loaded; or, when the
+     * model does not hold the path yet, discovers it ([AutoIntrospectService]). True when work was queued.
      */
     public fun requestPath(file: PsiFile, path: List<String>): Boolean {
         if (!profile.autoIntrospect || path.isEmpty()) return false
@@ -209,9 +211,20 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         return pathResolver.resolve(model.modelRoots.toList(), path, current)
     }
 
-    /** Whether [target] must load: it is childless. */
-    @Suppress("UNUSED_PARAMETER")
-    private fun needsLoad(dataSource: LocalDataSource, target: NamespaceTarget): Boolean = pathResolver.isChildless(target.node)
+    /** Whether [target] must load: it is childless, or a namespace whose children may be only some of them. */
+    private fun needsLoad(dataSource: LocalDataSource, target: NamespaceTarget): Boolean =
+        pathResolver.isChildless(target.node) || target.node.kind in profile.levels && !completelyLoaded(dataSource, target.path)
+
+    /**
+     * Whether every child of the namespace at [path] was loaded: a refresh of this service loaded it, or the
+     * introspection scope selects it by name without restricting its children. Single objects loaded on
+     * demand do not make a namespace complete.
+     */
+    private fun completelyLoaded(dataSource: LocalDataSource, path: List<String>): Boolean {
+        val key = AutoIntrospectEngine.Key(dataSource.uniqueId, path)
+        return engine.state(key) == AutoIntrospectEngine.State.Done || key in synced || key in loaded ||
+            CatalogScopes.selectsWhole(dataSource.introspectionScope, profile.levels, path)
+    }
 
     /** Whether [file]'s console is in a transaction, which introspection must not disturb. */
     private fun inTransaction(file: PsiFile): Boolean =

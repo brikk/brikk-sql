@@ -133,6 +133,24 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertTrue(selects(listOf("hive", "web")))
     }
 
+    fun testAPartlyLoadedNamespaceLoadsItsWholeObjectList() {
+        // One table of part.s loaded on demand, outside the scope.
+        val schema = databases().createOrGet("part").schemas.createOrGet("s")
+        schema.tables.createOrGet("t1")
+        DbPsiFacade.getInstance(project).clearCaches()
+        assertTrue(service.requestPath(myFixture.file, listOf("part", "s")))
+        val refresh = nextRefresh()
+        assertEquals("only the schema is refreshed", 1, refresh.context.tasks.size)
+        assertTrue(selects(listOf("part", "s")))
+        refresh.finish { schema.tables.createOrGet("t2") }
+        awaitIdle()
+        assertFalse("now whole", service.requestPath(myFixture.file, listOf("part", "s")))
+        // The catalog itself lists only the schema the scope named: its schema list loads too.
+        assertTrue(service.requestPath(myFixture.file, listOf("loaded")))
+        nextRefresh().finish { databases().createOrGet("loaded").schemas.createOrGet("archive") }
+        awaitIdle()
+    }
+
     fun testNothingLoadsWhileTheConsoleIsInATransaction() {
         RecordingConsole(project, myFixture.file.virtualFile, source).use { recording ->
             recording.console.session.setAutoCommit(false)
