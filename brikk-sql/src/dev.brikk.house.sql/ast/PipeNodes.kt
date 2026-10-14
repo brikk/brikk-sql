@@ -282,7 +282,7 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "DorisIndexParameters", "DorisAddPartition", "DorisDropPartition", "DorisReplacePartition",
     "DorisModifyPartition", "DorisRename", "DorisReplaceWith", "DorisAddRollup",
     "DorisAddColumn", "DorisAlterOrderBy", "DorisEnableFeature", "DorisModifyDistribution",
-    "DorisModifyEngine", "DorisModifyComment", "DorisBuildIndex", "DorisMaterializedViewJob",
+    "DorisModifyEngine", "DorisModifyComment", "DorisBuildIndex", "DorisCreateJob", "DorisMaterializedViewJob",
     "DorisCancelMaterializedViewTask", "DorisRecover",
     "DorisDefault", "DorisCompactTablet", "DorisModifyColumn",
 )

@@ -199,6 +199,19 @@ public object RealSqlCases {
             needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS),
             reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
+        // Doris runs a scheduled job's statement, and writes through a table function given properties.
+        RealSqlCase(
+            "external-scheduled-job",
+            "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO shop.sales.archive SELECT * EXCEPT (kind) FROM ext_catalog.archive_db.facts WHERE uid = 1",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS, RealSqlFeature.STAR_EXCEPT),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
+        ),
+        RealSqlCase(
+            "external-insert-into-table-function",
+            "INSERT INTO s3(\"uri\" = \"s3://bucket/path/\", \"format\" = \"csv\") SELECT ts, uid FROM ext_catalog.archive_db.facts WHERE kind = 'a'",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
+        ),
     )
 
 

@@ -285,6 +285,19 @@ class DorisBuildIndex(initArgs: Args = emptyMap()) : Expression(initArgs) {
     }
 }
 
+/**
+ * `CREATE JOB name [PROPERTIES (...)] ON SCHEDULE ... [COMMENT '...'] DO statement` (DorisParser.g4
+ * createScheduledJob): `schedule` is the schedule as written (`EVERY 1 DAY STARTS '...'`, `AT CURRENT_TIMESTAMP`),
+ * `expression` the statement the job runs.
+ */
+class DorisCreateJob(initArgs: Args = emptyMap()) : Expression(initArgs) {
+    override val argTypes get() = ARG_TYPES
+
+    companion object {
+        private val ARG_TYPES = argTypesOf("this" to true, "properties" to false, "schedule" to true, "comment" to false, "expression" to true)
+    }
+}
+
 /** `PAUSE | RESUME MATERIALIZED VIEW JOB ON [db.]mv` (`kind` is PAUSE or RESUME). */
 class DorisMaterializedViewJob(initArgs: Args = emptyMap()) : Expression(initArgs) {
     override val argTypes get() = ARG_TYPES
@@ -376,6 +389,7 @@ internal fun registerNativeDorisNodes(
     entries["DorisModifyEngine"] = ExpressionRegistry.Entry(module) { DorisModifyEngine() }
     entries["DorisModifyComment"] = ExpressionRegistry.Entry(module) { DorisModifyComment() }
     entries["DorisBuildIndex"] = ExpressionRegistry.Entry(module) { DorisBuildIndex() }
+    entries["DorisCreateJob"] = ExpressionRegistry.Entry(module) { DorisCreateJob() }
     entries["DorisMaterializedViewJob"] = ExpressionRegistry.Entry(module) { DorisMaterializedViewJob() }
     entries["DorisCancelMaterializedViewTask"] = ExpressionRegistry.Entry(module) { DorisCancelMaterializedViewTask() }
     entries["DorisRecover"] = ExpressionRegistry.Entry(module) { DorisRecover() }
