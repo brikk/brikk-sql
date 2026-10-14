@@ -239,14 +239,15 @@ open class StarrocksParser(
 
         matchRParen()
 
-        return expression(
-            PartitionByRangeProperty(
-                args(
-                    "partition_expressions" to expr,
-                    "create_expressions" to createExpressions,
-                )
+        val node = PartitionByRangeProperty(
+            args(
+                "partition_expressions" to expr,
+                "create_expressions" to (createExpressions ?: emptyList<Expression>()),
             )
         )
+        // brikk-native: `()`, the empty list of dynamic partitions, is legal (as for Doris); built
+        // directly so the required-argument check does not reject it.
+        return if (createExpressions.isNullOrEmpty()) node else expression(node)
     }
 
     // sqlglot: StarRocksParser._parse_partitioning_granularity_dynamic
