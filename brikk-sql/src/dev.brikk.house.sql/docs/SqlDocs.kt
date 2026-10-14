@@ -40,6 +40,8 @@ object SqlDocs {
             for (start in starts) {
                 if (start > at) break
                 val used = match(Pattern.of(entry.pattern), tokens, text, start) ?: continue
+                val prefix = entry.literalPrefix
+                if (prefix != null && !tokens.getOrNull(start + used).isStringStarting(prefix)) continue
                 if (at < start + used) return link(entry.title, entry.summary, entry.path, start, start + used - 1)
             }
         }
@@ -73,6 +75,10 @@ object SqlDocs {
             is Pattern.Optional -> match(first.elements + rest, tokens, text, from) ?: match(rest, tokens, text, from)
         }
     }
+
+    /** Whether this is a string literal whose value starts with [prefix], ignoring case. */
+    private fun Token?.isStringStarting(prefix: String): Boolean =
+        this != null && tokenType == TokenType.STRING && text.startsWith(prefix, ignoreCase = true)
 
     /** A bare word as written, not a quoted identifier or a string. */
     private fun Token.isWord(text: String): Boolean =

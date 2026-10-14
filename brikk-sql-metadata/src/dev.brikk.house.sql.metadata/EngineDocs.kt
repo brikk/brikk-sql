@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
  * A documented SQL construct: the words naming it, as a pattern (`A|B` accepts either, `[...]` makes
  * words optional: `CREATE [OR REPLACE] VIEW`), the page documenting it relative to [EngineDocs.base], its
  * [title] and an optional one-line [summary]. A [clause] is named anywhere in a statement (`INTO OUTFILE`);
- * otherwise the words begin the statement.
+ * otherwise the words begin the statement. With a [literalPrefix], the words must be followed by a string
+ * literal starting with it (`ATTACH 'ducklake:...'`).
  */
 @Serializable
 data class DocsEntry(
@@ -15,6 +16,7 @@ data class DocsEntry(
     val title: String,
     val summary: String? = null,
     val clause: Boolean = false,
+    val literalPrefix: String? = null,
 )
 
 /**
@@ -41,4 +43,4 @@ data class EngineDocs(
 }
 
 /** The bundled engine documentation, by core dialect name. */
-val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS, CLICKHOUSE_DOCS).associateBy { it.dialect }
+val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS, CLICKHOUSE_DOCS, DUCKDB_DOCS).associateBy { it.dialect }

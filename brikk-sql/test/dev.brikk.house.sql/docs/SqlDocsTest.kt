@@ -67,6 +67,28 @@ class SqlDocsTest {
         assertNull(at("SELECT * FROM <caret>viewExplain('EXPLAIN', '', (SELECT 1))", "clickhouse"))
     }
 
+    private val duckdb = "https://duckdb.org/docs/current/"
+
+    @Test
+    fun duckdbStatementsClausesAndTableFunctionsLinkTheirPages() {
+        for ((sql, page) in listOf(
+            "<caret>ATTACH 'file.db' AS f" to "sql/statements/attach",
+            "<caret>ATTACH 'ducklake:metadata.ducklake' AS lake (DATA_PATH 'files/')" to "core_extensions/ducklake",
+            "ATTACH <caret>DATABASE 'x.db' AS x" to "sql/statements/attach",
+            "<caret>COPY t TO 'out.parquet' (FORMAT parquet)" to "sql/statements/copy",
+            "CREATE OR REPLACE TEMP <caret>MACRO add_one(x) AS x + 1" to "sql/statements/create_macro",
+            "<caret>PIVOT t ON k USING sum(v)" to "sql/statements/pivot",
+            "SELECT * FROM t <caret>UNPIVOT (v FOR k IN (a, b))" to "sql/statements/unpivot",
+            "SET <caret>VARIABLE x = 1" to "sql/statements/set_variable",
+            "<caret>SET threads = 4" to "sql/statements/set",
+            "UPDATE <caret>EXTENSIONS" to "sql/statements/update_extensions",
+            "SELECT * FROM <caret>read_parquet('data/*.parquet')" to "data/parquet/overview",
+            "SELECT * FROM t JOIN <caret>read_csv('x.csv') AS c ON true" to "data/csv/overview",
+            "SELECT * FROM duckdb_<caret>tables()" to "sql/meta/duckdb_table_functions",
+        )) assertEquals(duckdb + page, at(sql, "duckdb")?.url, sql)
+        assertNull(at("SELECT <caret>read_parquet FROM t", "duckdb"))
+    }
+
     @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
