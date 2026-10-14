@@ -4,6 +4,7 @@ import com.intellij.codeInsight.lookup.Lookup
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.lookup.LookupElementPresentation
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import dev.brikk.house.sql.intellij.completion.SqlLookupIcons
@@ -107,6 +108,8 @@ class RelationCompletionTest : RelationTestCase() {
     }
 
     fun testAnUnrelatedItemOfTheSameNameStaysBesideTheColumn() {
+        // Without a prefix the lookup holds more than 500 items and keeps only the most relevant: the plain item could be cut.
+        Registry.get("ide.completion.variant.limit").setValue(10000, testRootDisposable)
         open("FROM events() |> SELECT <caret>")
         OtherCompletion.offer(myFixture.file, LookupElementBuilder.create("id").withTailText(" unrelated"), testRootDisposable)
         assertSameElements(tails("id"), " unrelated", "  declared column (events)")
