@@ -182,6 +182,21 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertFalse("lake_one stays as listed", selects(listOf("lake_one")))
     }
 
+    fun testANameAbsentAtTheTopLevelStopsAfterTheListing() {
+        useService(Profile(usesCurrentNamespace = true))
+        RecordingConsole(project, myFixture.file.virtualFile, source).use { recording ->
+            recording.console.setSearchPath(SearchPath.of(ObjectPath.create("primary", ObjectKind.DATABASE).append("main", ObjectKind.SCHEMA)))
+            clearModel()
+            assertTrue(service.requestPath(myFixture.file, listOf("does_not_exist", "sales")))
+            // The console's namespace is listed too, childless: it cannot hold does_not_exist.sales, so it stays as it is.
+            nextRefresh().finish { listCurrentCatalog(); databases().createOrGet("primary").schemas.createOrGet("main") }
+            awaitIdle()
+            assertNoRefresh()
+            assertFalse(service.requestPath(myFixture.file, listOf("does_not_exist", "sales")))
+            assertNoRefresh()
+        }
+    }
+
     fun testClearingTheModelForgetsWhatWasLoaded() {
         assertTrue(service.requestPath(myFixture.file, listOf("hive")))
         nextRefresh().finish { hive.schemas.createOrGet("web") }

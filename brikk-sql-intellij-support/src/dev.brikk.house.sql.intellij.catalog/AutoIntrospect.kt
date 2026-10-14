@@ -289,9 +289,10 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
             val ancestor = resolve(file, dataSource, path.take(length)) ?: continue
             return if (needsLoad(dataSource, ancestor)) Step.Load(ancestor) else Step.Unknown
         }
-        // A first name may be under the current namespace, whose children may not be listed yet.
+        // A first name may be under the current namespace, whose children may not be listed yet: only a level the
+        // path fits below (`web` under the current catalog, not under its current schema; nothing for a.b.c).
         val current = currentNamespace(file, modelOf(dataSource))
-        for (length in current.size downTo 1) {
+        for (length in minOf(current.size, profile.levels.size - path.size) downTo 1) {
             val namespace = resolve(file, dataSource, current.take(length)) ?: continue
             if (needsLoad(dataSource, namespace)) return Step.Load(namespace)
             break
