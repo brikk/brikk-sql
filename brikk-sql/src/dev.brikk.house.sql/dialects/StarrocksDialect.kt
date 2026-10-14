@@ -62,6 +62,7 @@ class StarrocksDialect : Dialect() {
         // sqlglot #8412: StarRocks has no INSERT IGNORE/index hint grammar; IGNORE
         // must reach the window NULL-modifier parser as a contextual identifier.
         val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.STARROCKS
-            .withKeywords(mapOf("IGNORE" to TokenType.VAR))
+            // brikk-native: administrative statements degrade to an opaque Command (text kept), as Doris's do.
+            .withKeywords(mapOf("IGNORE" to TokenType.VAR, "ADMIN" to TokenType.COMMAND, "CANCEL" to TokenType.COMMAND))
     }
 }

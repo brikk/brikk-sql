@@ -21,4 +21,13 @@ class StarrocksGrammarGapsTest {
         val sql = "CREATE TABLE d.t (k BIGINT, ts DATETIME) DUPLICATE KEY (k) PARTITION BY RANGE (ts) () DISTRIBUTED BY HASH (k) BUCKETS 1 PROPERTIES ('replication_num'='1')"
         assertEquals(sql, roundTrip(sql))
     }
+
+    /** S2: administrative statements are commands, their text kept, as in Doris. */
+    @Test
+    fun cancelAndAdminStatementsAreCommands() {
+        for (sql in listOf("CANCEL LOAD FROM d WHERE LABEL = 'x'", "ADMIN ABORT TRANSACTION WHERE txn_id = 1")) {
+            assertIs<Command>(Dialects.forName("starrocks").parseOne(sql), sql)
+            assertEquals(sql, roundTrip(sql))
+        }
+    }
 }
