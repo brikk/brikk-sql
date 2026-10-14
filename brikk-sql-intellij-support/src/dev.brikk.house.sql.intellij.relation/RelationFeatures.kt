@@ -39,6 +39,7 @@ import com.intellij.util.IncorrectOperationException
 import com.intellij.util.containers.JBIterable
 import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
+import dev.brikk.house.sql.scope.Knowledge
 import dev.brikk.house.sql.scope.Nullability
 import dev.brikk.house.sql.scope.ReferenceKind
 import dev.brikk.house.sql.scope.RelationKind
@@ -76,8 +77,10 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * Suppresses the platform's resolve, type and signature inspections only on the references the
  * analysis decides, each on the reference's own element: columns it resolves or finds ambiguous
  * directly through a provider's relations, and the provider relations SQL names (such as a slot
- * call); the resolve inspection also on columns the analysis reports absent itself. Every other
- * inspection, and every other reference, stays. Register a no-arg subclass as
+ * call). The resolve inspection also on every column the analysis resolves, through stars and
+ * derived tables the platform may not follow, on columns it reports absent itself, and on columns it
+ * cannot know (a star over a table whose columns were never introspected) in a statement whose
+ * relations are all known. Every other inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
 @ApiStatus.Experimental
@@ -101,9 +104,13 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
 
     private fun RelationAnalysis.decides(reference: ScopeReference, file: PsiFile, absent: Boolean): Boolean = when (reference.kind) {
         ReferenceKind.COLUMN -> when (reference.resolution) {
-            Resolution.RESOLVED, Resolution.AMBIGUOUS -> reference.columns.isNotEmpty() && reference.columns.all { manages(it, reference.start) }
-            // Absent where the facts prove it: the analysis reports it itself, once.
-            Resolution.UNRESOLVED -> absent && diagnoses(reference.start, reference.end)
+            Resolution.RESOLVED, Resolution.AMBIGUOUS ->
+                reference.columns.isNotEmpty() && (absent || reference.columns.all { manages(it, reference.start) })
+            // Absent where the facts prove it, the analysis reports it itself, once. Where they cannot (a star
+            // over a table whose columns were never introspected), nothing proves it absent; unless a relation
+            // of the statement is unknown, which is the error to fix first.
+            Resolution.UNRESOLVED -> absent && (diagnoses(reference.start, reference.end) ||
+                reference.knowledge != Knowledge.FULL && statementReferences(reference.start).none { it.kind != ReferenceKind.COLUMN && it.resolution != Resolution.RESOLVED })
         }
         ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
     }
