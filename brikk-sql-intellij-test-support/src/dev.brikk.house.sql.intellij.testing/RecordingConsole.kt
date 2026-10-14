@@ -164,6 +164,9 @@ public class RecordingConsole private constructor(
             }
         }
 
+        @Volatile
+        private var autoCommit = true
+
         @Suppress("UNCHECKED_CAST")
         val session: DatabaseSession = recording("Recording session", { beforeSessionCall(it) }) { method, args ->
             when (method.name) {
@@ -178,7 +181,9 @@ public class RecordingConsole private constructor(
                 "detach" -> { clients -= args[0] as DatabaseSessionClient; null }
                 "isValid", "isIdle" -> true
                 "isConnected", "isInternal", "isService", "isCancelled" -> false
-                "getCurrentTx" -> DataRequest.AUTO_COMMIT
+                // Manual commit, as a user switches it, puts the session outside auto-commit.
+                "getCurrentTx" -> if (autoCommit) DataRequest.AUTO_COMMIT else DataRequest.START_NEW
+                "setAutoCommit" -> { autoCommit = args[0] as Boolean; null }
                 "getUserData" -> userData.getUserData(args[0] as Key<Any>)
                 "putUserData" -> { userData.putUserData(args[0] as Key<Any>, args[1]); null }
                 else -> unsupported(method)

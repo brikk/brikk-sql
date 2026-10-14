@@ -5,6 +5,7 @@ import com.intellij.database.dataSource.DataSourceStorage
 import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dialects.postgres.model.PgRoot
 import com.intellij.database.model.ModelFactory
+import com.intellij.database.model.basic.BasicModel
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.ObjectPath
@@ -61,11 +62,118 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         awaitIdle()
     }
 
-    fun testListedChildrenAndUnknownNamesStartNothing() {
-        assertFalse(service.requestPath(myFixture.file, listOf("loaded")))
-        assertFalse(service.requestPath(myFixture.file, listOf("nope")))
+    fun testLoadedNamespacesStartNothingAndAnUnknownNameListsTheTopLevelOnce() {
+        assertFalse("selected whole by the scope", service.requestPath(myFixture.file, listOf("loaded", "web")))
         assertFalse("deeper than the namespaces", service.requestPath(myFixture.file, listOf("loaded", "web", "orders")))
         assertNoRefresh()
+        assertTrue(service.requestPath(myFixture.file, listOf("nope")))
+        nextRefresh().finish()
+        awaitIdle()
+        assertFalse("listed once: still unknown", service.requestPath(myFixture.file, listOf("nope")))
+        assertNoRefresh()
+    }
+
+    /** The model as Clear Introspection Data leaves it: no namespaces at all. */
+    private fun clearModel() {
+        source.model = ModelFactory.BLACK_HOLE.createModel(Dbms.POSTGRES)
+        DbPsiFacade.getInstance(project).clearCaches()
+    }
+
+    private fun databases() = ((source.model as BasicModel).root as PgRoot).databases
+
+    fun testAClearedModelListsTheTopLevelThenLoadsEachLevelOfThePath() {
+        clearModel()
+        assertTrue(service.requestPath(myFixture.file, listOf("hive", "web")))
+        assertEquals("hive.web", pending())
+        nextRefresh().finish { databases().createOrGet("hive"); databases().createOrGet("memory") }
+        nextRefresh().finish { databases().createOrGet("hive").schemas.createOrGet("web") }
+        assertEquals("hive.web", pending())
+        nextRefresh().finish { databases().createOrGet("hive").schemas.createOrGet("web").tables.createOrGet("pages") }
+        awaitIdle()
+        assertTrue(selects(listOf("hive")) && selects(listOf("hive", "web")))
+        assertFalse(service.requestPath(myFixture.file, listOf("hive", "web")))
+        assertNoRefresh()
+    }
+
+    /** A dialect listing its namespaces itself (Doris's SHOW CATALOGS): then the targeted load runs as usual. */
+    fun testADialectMayListTheTopLevelItself() {
+        var listings = 0
+        useService(Profile()) { dataSource ->
+            listings++
+            // As a dialect writes the names it queried: on the EDT.
+            com.intellij.openapi.application.ApplicationManager.getApplication().invokeAndWait {
+                ((dataSource.model as BasicModel).root as PgRoot).databases.createOrGet("hive")
+                DbPsiFacade.getInstance(project).clearCaches()
+            }
+            true
+        }
+        clearModel()
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        nextRefresh().finish { databases().createOrGet("hive").schemas.createOrGet("web") }
+        awaitIdle()
+        assertEquals(1, listings)
+        assertTrue(selects(listOf("hive")))
+    }
+
+    fun testANameStillMissingAfterListingStaysUnknownWithoutRetrying() {
+        clearModel()
+        assertTrue(service.requestPath(myFixture.file, listOf("nowhere", "web")))
+        nextRefresh().finish { databases().createOrGet("hive") }
+        awaitIdle()
+        assertFalse(service.requestPath(myFixture.file, listOf("nowhere", "web")))
+        assertFalse(service.requestPath(myFixture.file, listOf("nowhere")))
+        assertNoRefresh()
+    }
+
+    fun testAPathUnderAChildlessCatalogLoadsTheCatalogThenTheSchema() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive", "web")))
+        nextRefresh().finish { hive.schemas.createOrGet("web") }
+        nextRefresh().finish { hive.schemas.createOrGet("web").tables.createOrGet("pages") }
+        awaitIdle()
+        assertTrue(selects(listOf("hive", "web")))
+    }
+
+    fun testAPartlyLoadedNamespaceLoadsItsWholeObjectList() {
+        // One table of part.s loaded on demand, outside the scope.
+        val schema = databases().createOrGet("part").schemas.createOrGet("s")
+        schema.tables.createOrGet("t1")
+        DbPsiFacade.getInstance(project).clearCaches()
+        assertTrue(service.requestPath(myFixture.file, listOf("part", "s")))
+        val refresh = nextRefresh()
+        assertEquals("only the schema is refreshed", 1, refresh.context.tasks.size)
+        assertTrue(selects(listOf("part", "s")))
+        refresh.finish { schema.tables.createOrGet("t2") }
+        awaitIdle()
+        assertFalse("now whole", service.requestPath(myFixture.file, listOf("part", "s")))
+        // The catalog itself lists only the schema the scope named: its schema list loads too.
+        assertTrue(service.requestPath(myFixture.file, listOf("loaded")))
+        nextRefresh().finish { databases().createOrGet("loaded").schemas.createOrGet("archive") }
+        awaitIdle()
+    }
+
+    fun testNothingLoadsWhileTheConsoleIsInATransaction() {
+        RecordingConsole(project, myFixture.file.virtualFile, source).use { recording ->
+            recording.console.session.setAutoCommit(false)
+            assertFalse(service.requestPath(myFixture.file, listOf("hive")))
+            assertFalse(service.requestPath(myFixture.file, listOf("nope")))
+            assertNoRefresh()
+            recording.console.session.setAutoCommit(true)
+            assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+            nextRefresh().finish { hive.schemas.createOrGet("web") }
+            awaitIdle()
+        }
+    }
+
+    fun testClearingTheModelForgetsWhatWasLoaded() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        nextRefresh().finish { hive.schemas.createOrGet("web") }
+        awaitIdle()
+        assertFalse(service.requestPath(myFixture.file, listOf("hive")))
+        clearModel()
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        nextRefresh().finish { databases().createOrGet("hive") }
+        nextRefresh().finish { databases().createOrGet("hive").schemas.createOrGet("web") }
+        awaitIdle()
     }
 
     fun testOffUntilTheDialectEnablesIt() {
@@ -98,7 +206,11 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
             val web = (model.root as PgRoot).databases.createOrGet("hive").schemas.createOrGet("web")
             recording.console.dataSource.model = model
             DbPsiFacade.getInstance(project).clearCaches()
-            assertFalse("not in the current catalog yet", service.requestPath(myFixture.file, listOf("web")))
+            // Not under the console's catalog yet, nor at the top level: listed once, then unknown.
+            assertTrue(service.requestPath(myFixture.file, listOf("web")))
+            nextRefresh().finish()
+            awaitIdle()
+            assertFalse(service.requestPath(myFixture.file, listOf("web")))
             recording.console.setSearchPath(SearchPath.of(ObjectPath.create("hive", ObjectKind.DATABASE)))
             assertTrue(service.requestPath(myFixture.file, listOf("web")))
             val refresh = nextRefresh()

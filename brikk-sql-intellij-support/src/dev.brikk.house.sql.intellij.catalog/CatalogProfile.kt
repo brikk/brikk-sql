@@ -37,6 +37,12 @@ public interface CatalogProfile {
     public val autoIntrospect: Boolean get() = false
 
     /**
+     * Whether the engine has client transactions. With them (the default), nothing is introspected for a
+     * file whose console is in a transaction; an engine without them (ClickHouse) is never in one.
+     */
+    public val clientTransactions: Boolean get() = true
+
+    /**
      * Unresolved references into namespaces that are listed but never introspected are not reported
      * ([OutOfScopeReferenceFilter]) and offer to introspect them ([IntrospectNamespaceIntention]). Off
      * until a dialect enables it.
@@ -81,6 +87,21 @@ public object CatalogScopes {
             node = node.getGroup(kind)?.children?.firstOrNull { it.naming.matches(ObjectName.plain(name), Casing.EXACT) } ?: return false
         }
         return true
+    }
+
+    /**
+     * Whether [scope] names each namespace on [path] explicitly and selects all of the last one's children:
+     * no group under it restricts them to some.
+     */
+    internal fun selectsWhole(scope: TreePattern?, levels: List<ObjectKind>, path: List<String>): Boolean {
+        var node = scope?.root ?: return false
+        for ((level, name) in path.withIndex()) {
+            val kind = levels.getOrNull(level) ?: return false
+            node = node.getGroup(kind)?.children?.firstOrNull {
+                it.naming is TreePatternNode.PositiveNaming && it.naming.matches(ObjectName.plain(name), Casing.EXACT)
+            } ?: return false
+        }
+        return levels.getOrNull(path.size)?.let { node.getGroup(it) } == null
     }
 
     /** Whether [scope] names each namespace on [path] explicitly, not through a wildcard or an exception list. */
