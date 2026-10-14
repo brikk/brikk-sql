@@ -3027,6 +3027,7 @@ open class Generator(
         parts.addAll(afterLimitModifiers(expression))
         parts.add(optionsModifier(expression))
         parts.add(sql(expression, "for_"))
+        parts.add(sql(expression, "outfile"))
 
         return parts.filter { it.isNotEmpty() }.joinToString("")
     }
@@ -3881,6 +3882,13 @@ open class Generator(
     // sqlglot: Generator.attimezone_sql
     open fun attimezoneSql(expression: AtTimeZone): String =
         "${sql(expression, "this")} AT TIME ZONE ${sql(expression, "zone")}"
+
+    // brikk-native: Doris and StarRocks INTO OUTFILE, the last clause of a query.
+    open fun dorisoutfileSql(expression: DorisOutfile): String {
+        val format = sql(expression, "format").let { if (it.isEmpty()) "" else " FORMAT AS $it" }
+        val properties = (expression.args["properties"] as? Properties)?.let { " ${properties(it, prefix = "PROPERTIES")}" }.orEmpty()
+        return " INTO OUTFILE ${sql(expression, "this")}$format$properties"
+    }
 
     open fun atlocalSql(expression: AtLocal): String =
         "${sql(expression, "this")} AT LOCAL"

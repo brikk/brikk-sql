@@ -33,6 +33,8 @@ import dev.brikk.house.sql.ast.EQ
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GeneratedAsIdentityColumnConstraint
 import dev.brikk.house.sql.ast.GroupConcat
+import dev.brikk.house.sql.ast.Properties
+import dev.brikk.house.sql.ast.DorisOutfile
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.IndexColumnConstraint
 import dev.brikk.house.sql.ast.IndexConstraintOption
@@ -738,6 +740,21 @@ open class MysqlParser(
     // -------------------------------------------------------------------
     // Ported base-parser methods only reachable from mysql tables
     // -------------------------------------------------------------------
+
+    /**
+     * brikk-native: Doris and StarRocks `INTO OUTFILE 'uri' [FORMAT AS fmt] [PROPERTIES (...)]` ending a
+     * query, as a query modifier ([DorisOutfile]). Registered by those dialects only.
+     */
+    protected fun parseDorisOutfile(): Pair<String, kotlin.Any?> {
+        if (!matchTextSeq("INTO", "OUTFILE")) return "outfile" to null
+        val uri = parseString()
+        val format = if (matchTextSeq("FORMAT", "AS")) Var(args("this" to advanceAny()?.text?.uppercase())) else null
+        val properties = if (matchTextSeq("PROPERTIES")) expression(Properties(args("expressions" to parseWrappedProperties()))) else null
+        return "outfile" to expression(DorisOutfile(args("this" to uri, "format" to format, "properties" to properties)))
+    }
+
+    /** `INTO OUTFILE` right after the select list is the export clause (Doris, StarRocks), never `SELECT ... INTO table`. */
+    protected fun isIntoOutfile(): Boolean = currToken.tokenType == TokenType.INTO && nextToken.text.equals("OUTFILE", ignoreCase = true)
 
     // sqlglot: Parser._parse_group_concat
     open fun parseGroupConcat(): Expression? {

@@ -393,6 +393,7 @@ object GeneratorTables {
         reg(AtIndex::class) { e -> atindexSql(e as AtIndex) }
         reg(AtTimeZone::class) { e -> attimezoneSql(e as AtTimeZone) }
         reg(AtLocal::class) { e -> atlocalSql(e as AtLocal) }
+        reg(DorisOutfile::class) { e -> dorisoutfileSql(e as DorisOutfile) }
         reg(MatchPredicate::class) { e -> matchpredicateSql(e as MatchPredicate) }
         reg(UniquePredicate::class) { e -> uniquepredicateSql(e as UniquePredicate) }
         reg(FromTimeZone::class) { e -> fromtimezoneSql(e as FromTimeZone) }

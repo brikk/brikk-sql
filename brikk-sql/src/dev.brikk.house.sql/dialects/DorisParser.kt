@@ -150,6 +150,12 @@ open class DorisParser(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
+    override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>
+        get() = super.queryModifierParsers + (TokenType.INTO to { p -> (p as DorisParser).parseDorisOutfile() })
+
+    override fun parseInto(): Expression? = if (isIntoOutfile()) null else super.parseInto()
+
     // brikk extension (registry entry 7): Doris array subscripts are 1-based (ELEMENT_AT /
     // arr[i] start at 1); sqlglot inherits MySQL's INDEX_OFFSET = 0. Mirrored by
     // DorisGenerator.dialectIndexOffset so doris->doris round-trips and cross-dialect

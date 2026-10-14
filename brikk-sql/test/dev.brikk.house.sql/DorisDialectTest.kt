@@ -867,4 +867,22 @@ class DorisDialectTest {
             assertEquals(once, dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(once).sql("doris"), "stable: $sql")
         }
     }
+
+    /** G1: Doris and StarRocks export a query's rows with SELECT ... INTO OUTFILE 'uri' [FORMAT AS f] [PROPERTIES (...)]. */
+    @Test
+    fun selectIntoOutfile() {
+        for (dialect in listOf("doris", "starrocks")) {
+            for (sql in listOf(
+                "SELECT * FROM t WHERE a = 1 INTO OUTFILE 's3://b/p-' FORMAT AS PARQUET PROPERTIES ('k'='v', 's3.region'='r')",
+                "SELECT * FROM t INTO OUTFILE 's3://b/p-' FORMAT AS CSV",
+                "SELECT a, b FROM t ORDER BY a LIMIT 10 INTO OUTFILE 'hdfs://h/p'",
+            )) {
+                val once = dev.brikk.house.sql.dialects.Dialects.forName(dialect).parseOne(sql).sql(dialect)
+                assertEquals(sql, once, "$dialect: $sql")
+            }
+        }
+        // Double-quoted property keys and values, as written in Doris scripts, keep their meaning.
+        val quoted = dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne("SELECT 1 INTO OUTFILE 's3://b/p' FORMAT AS PARQUET PROPERTIES (\"k\" = \"v\")")
+        assertEquals("SELECT 1 INTO OUTFILE 's3://b/p' FORMAT AS PARQUET PROPERTIES ('k'='v')", quoted.sql("doris"))
+    }
 }

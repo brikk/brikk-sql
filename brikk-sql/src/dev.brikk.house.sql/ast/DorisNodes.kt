@@ -107,6 +107,18 @@ class DorisTemporaryPartition(initArgs: Args = emptyMap()) : Expression(initArgs
  * text; `method` is a [Var] (AUTO / COMPLETE); `partitions` a list of identifiers.
  * `REFRESH TABLE t` stays on sqlglot's [Refresh].
  */
+/**
+ * Doris and StarRocks `SELECT ... INTO OUTFILE 'uri' [FORMAT AS fmt] [PROPERTIES (...)]`, in a query's
+ * `outfile`: [this] is the URI literal, `format` a [Var], `properties` a [Properties].
+ */
+class DorisOutfile(initArgs: Args = emptyMap()) : Expression(initArgs) {
+    override val argTypes get() = ARG_TYPES
+
+    companion object {
+        private val ARG_TYPES = argTypesOf("this" to true, "format" to false, "properties" to false)
+    }
+}
+
 class DorisRefresh(initArgs: Args = emptyMap()) : Expression(initArgs) {
     override val argTypes get() = ARG_TYPES
 
@@ -361,6 +373,7 @@ internal fun registerNativeDorisNodes(
     entries["DorisVariantField"] = ExpressionRegistry.Entry(module) { DorisVariantField() }
     entries["DorisTemporaryPartition"] = ExpressionRegistry.Entry(module) { DorisTemporaryPartition() }
     entries["DorisRefresh"] = ExpressionRegistry.Entry(module) { DorisRefresh() }
+    entries["DorisOutfile"] = ExpressionRegistry.Entry(module) { DorisOutfile() }
     entries["DorisIndexParameters"] = ExpressionRegistry.Entry(module) { DorisIndexParameters() }
     entries["DorisAddPartition"] = ExpressionRegistry.Entry(module) { DorisAddPartition() }
     entries["DorisDropPartition"] = ExpressionRegistry.Entry(module) { DorisDropPartition() }

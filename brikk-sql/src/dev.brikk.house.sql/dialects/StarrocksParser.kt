@@ -113,6 +113,12 @@ open class StarrocksParser(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
 
+    // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
+    override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>
+        get() = super.queryModifierParsers + (TokenType.INTO to { p -> (p as StarrocksParser).parseDorisOutfile() })
+
+    override fun parseInto(): Expression? = if (isIntoOutfile()) null else super.parseInto()
+
     // sqlglot: StarRocks.INDEX_OFFSET = 1 (mirrored by StarrocksGenerator.dialectIndexOffset)
     override val indexOffset: Int get() = 1
 

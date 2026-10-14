@@ -2466,7 +2466,7 @@ open class Parser(
     ): Expression? = parseInternal(parseMethod, rawTokens, sql).firstOrNull()
 
     // sqlglot: Parser._parse_into
-    protected fun parseInto(): Expression? {
+    protected open fun parseInto(): Expression? {
         if (!match(TokenType.INTO)) return null
 
         val temp = match(TokenType.TEMPORARY)
