@@ -20,7 +20,8 @@ data class DocsEntry(
 /**
  * Where one engine's documentation for a pinned release line lives: [base] (ending in `/`) holds the pages
  * of [version]. [statements] are tried in order, so a specific form comes before a general one
- * (`SET PASSWORD` before `SET`); [tableFunctions] maps a table function's lowercase name to its page.
+ * (`SET PASSWORD` before `SET`); [tableFunctions] maps a table function's lowercase name to its page, and
+ * [engines] a table engine's (`ENGINE = MergeTree`).
  */
 @Serializable
 data class EngineDocs(
@@ -29,6 +30,7 @@ data class EngineDocs(
     val base: String,
     val statements: List<DocsEntry>,
     val tableFunctions: Map<String, String> = emptyMap(),
+    val engines: Map<String, String> = emptyMap(),
 ) {
     init {
         require(base.endsWith("/")) { "Docs base must end with '/': $base" }
@@ -39,4 +41,4 @@ data class EngineDocs(
 }
 
 /** The bundled engine documentation, by core dialect name. */
-val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS).associateBy { it.dialect }
+val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS, CLICKHOUSE_DOCS).associateBy { it.dialect }

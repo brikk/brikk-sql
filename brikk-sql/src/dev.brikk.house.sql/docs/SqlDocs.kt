@@ -15,7 +15,8 @@ data class DocsLink(val title: String, val summary: String?, val url: String, va
 /**
  * brikk-native: the engine documentation page for the SQL construct at an offset, from [ENGINE_DOCS]: a
  * statement form named by the statement's leading words (`CREATE JOB`), a clause named anywhere in it
- * (`INTO OUTFILE`), or a table function called in a relation position (`FROM s3(...)`). Read from the
+ * (`INTO OUTFILE`), a table function called in a relation position (`FROM s3(...)`) or a table engine
+ * (`ENGINE = MergeTree`). Read from the
  * dialect's own tokens and statement ranges, so quotes, comments and statement boundaries are the dialect's.
  */
 object SqlDocs {
@@ -33,6 +34,7 @@ object SqlDocs {
         fun link(title: String, summary: String?, path: String, first: Int, last: Int) =
             DocsLink(title, summary, docs.url(path), range.start + tokens[first].start, range.start + tokens[last].end + 1)
         tableFunction(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at) }
+        engine(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at) }
         for (entry in docs.statements) {
             val starts = if (entry.clause) tokens.indices.toList() else listOf(0)
             for (start in starts) {
@@ -50,6 +52,13 @@ object SqlDocs {
         val path = docs.tableFunctions[tokens[at].text.lowercase()] ?: return null
         val before = tokens.getOrNull(at - 1)?.takeIf { it.isWord(text) }?.text?.uppercase() ?: return null
         return path.takeIf { before in RELATION_POSITIONS }
+    }
+
+    /** The page of the table engine named at [at] after `ENGINE [=]`, or null. */
+    private fun engine(docs: EngineDocs, tokens: List<Token>, at: Int, text: String): String? {
+        val path = docs.engines[tokens[at].text.lowercase()] ?: return null
+        val keyword = if (tokens.getOrNull(at - 1)?.tokenType == TokenType.EQ) at - 2 else at - 1
+        return path.takeIf { tokens.getOrNull(keyword)?.takeIf { it.isWord(text) }?.text.equals("ENGINE", ignoreCase = true) }
     }
 
     /** The number of [tokens] from [from] that [elements] match, preferring the longest; null when they do not. */
@@ -104,4 +113,4 @@ object SqlDocs {
 }
 
 /** Every bundled [DocsEntry] with its absolute URL, for checks that the pages resolve. */
-fun EngineDocs.urls(): List<String> = (statements.map(DocsEntry::path) + tableFunctions.values).distinct().map(::url)
+fun EngineDocs.urls(): List<String> = (statements.map(DocsEntry::path) + tableFunctions.values + engines.values).distinct().map(::url)

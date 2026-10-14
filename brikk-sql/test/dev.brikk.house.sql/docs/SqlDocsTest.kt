@@ -44,6 +44,29 @@ class SqlDocsTest {
         assertNull(at("SELECT local<caret>(1) FROM t"))
     }
 
+    private val clickhouse = "https://clickhouse.com/docs/"
+
+    @Test
+    fun clickhouseStatementsClausesEnginesAndTableFunctionsLinkTheirPages() {
+        for ((sql, page) in listOf(
+            "CREATE <caret>TABLE t (x UInt8) ENGINE = MergeTree ORDER BY x" to "reference/statements/create/table",
+            "CREATE TABLE t (x UInt8) ENGINE = <caret>ReplacingMergeTree ORDER BY x" to "reference/engines/table-engines/mergetree-family/replacingmergetree",
+            "CREATE TABLE t (x UInt8) ENGINE = ReplicatedMergeTree<caret>('/p', 'r') ORDER BY x" to "reference/engines/table-engines/mergetree-family/replication",
+            "CREATE TABLE t (x UInt8) ENGINE Memory<caret>" to "reference/engines/table-engines/special/memory",
+            "CREATE MATERIALIZED <caret>VIEW v TO t AS SELECT 1" to "reference/statements/create/view",
+            "INSERT INTO <caret>FUNCTION s3('https://b/p.csv', 'CSV') SELECT 1" to "reference/statements/insert-into",
+            "INSERT INTO FUNCTION <caret>s3('https://b/p.csv', 'CSV') SELECT 1" to "reference/functions/table-functions/s3",
+            "SELECT 1 <caret>SETTINGS max_threads = 1" to "concepts/features/configuration/settings/settings-query-level",
+            "SELECT 1 FORMAT<caret> JSONEachRow" to "reference/statements/select/format",
+            "SELECT * FROM <caret>generateRandom('a UInt8')" to "reference/functions/table-functions/generate",
+            "SELECT * FROM icebergS3<caret>('https://b/t')" to "reference/functions/table-functions/iceberg",
+            "SELECT * FROM t CROSS JOIN <caret>numbers(3) AS n" to "reference/functions/table-functions/numbers",
+            "<caret>OPTIMIZE TABLE t FINAL" to "reference/statements/optimize",
+        )) assertEquals(clickhouse + page, at(sql, "clickhouse")?.url, sql)
+        assertNull(at("SELECT <caret>MergeTree FROM t", "clickhouse"))
+        assertNull(at("SELECT * FROM <caret>viewExplain('EXPLAIN', '', (SELECT 1))", "clickhouse"))
+    }
+
     @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
