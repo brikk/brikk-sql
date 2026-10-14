@@ -102,6 +102,15 @@ class RelationResolveTest : RelationTestCase() {
         assertTrue(marks.toString(), marks.none { it == "bad" || it == "missing" })
     }
 
+    fun testAQualifierNamingARelationOfItsQueryIsQuietAndAnyOtherStays() {
+        enableResolveInspection()
+        registerPgRelations(testRootDisposable)
+        val marks = unresolvedIn("SELECT unknown_table.c FROM unknown_table; SELECT stray.c FROM unknown_table")
+        // The table's name is reported where it is named, not again where it qualifies a column.
+        assertEquals(marks.toString(), 2, marks.count { it == "unknown_table" })
+        assertTrue(marks.toString(), "stray" in marks)
+    }
+
     /** What the resolve inspection reports in [sql] once the relation features are on. */
     private fun unresolvedIn(sql: String): List<String> {
         open(sql)

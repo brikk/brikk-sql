@@ -7,9 +7,11 @@ import com.intellij.database.model.DasObject
 import com.intellij.database.model.DasTable
 import com.intellij.database.model.DataType
 import com.intellij.database.model.ObjectKind
+import com.intellij.database.util.DasUtil
 import com.intellij.database.symbols.DasColumnSymbol
 import com.intellij.database.symbols.DasPsiSymbol
 import com.intellij.database.types.DasSimpleTypeClass
+import com.intellij.database.types.DasTableType
 import com.intellij.database.types.DasType
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
@@ -24,7 +26,9 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
 import com.intellij.sql.psi.SqlAsExpression
+import com.intellij.sql.psi.SqlClause
 import com.intellij.sql.psi.SqlExpression
+import com.intellij.sql.psi.SqlFromClause
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlParenthesizedExpression
 import com.intellij.sql.psi.SqlQueryExpression
@@ -81,7 +85,9 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * derived tables the platform may not follow, on columns it reports absent itself, and on columns it
  * cannot know: ones that may come, through any number of derived tables, CTEs and enclosing queries,
  * from a relation that is unknown, out of scope, listed without columns or not introspected yet. A
- * column absent from a fully known source and an unknown table name stay reported. Every other
+ * column absent from a fully known source and an unknown table name stay reported; a qualifier
+ * naming a relation of its query does not. Where the platform knows every source of a column (tables
+ * it resolves with their columns, table functions it types), its report stands. Every other
  * inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
@@ -101,19 +107,54 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
         val range = name.textRange ?: return false
         val start = analysis.source.textOffset(range.startOffset)
         val end = analysis.source.textOffset(range.endOffset)
-        return analysis.referencesAt(start, end).any { analysis.decides(it, file, absent = tool == "SqlResolve") }
+        return analysis.referencesAt(start, end).any { analysis.decides(it, name, absent = tool == "SqlResolve") }
     }
 
-    private fun RelationAnalysis.decides(reference: ScopeReference, file: PsiFile, absent: Boolean): Boolean = when (reference.kind) {
+    private fun RelationAnalysis.decides(reference: ScopeReference, name: PsiElement, absent: Boolean): Boolean = when (reference.kind) {
         ReferenceKind.COLUMN -> when (reference.resolution) {
             Resolution.RESOLVED, Resolution.AMBIGUOUS ->
                 reference.columns.isNotEmpty() && (absent || reference.columns.all { manages(it, reference.start) })
             // Absent where the facts prove it, the analysis reports it itself, once. Where they cannot, through
             // any number of derived tables, CTEs and enclosing queries from a relation that is unknown, out of
-            // scope, listed without columns or not introspected yet, nothing proves it absent.
-            Resolution.UNRESOLVED -> absent && (diagnoses(reference.start, reference.end) || reference.knowledge != Knowledge.FULL)
+            // scope, listed without columns or not introspected yet, nothing proves it absent, unless the
+            // platform knows every source: then its report is right.
+            Resolution.UNRESOLVED -> absent && (diagnoses(reference.start, reference.end) ||
+                reference.knowledge != Knowledge.FULL && !platformKnowsSources(name))
         }
-        ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
+        // A qualifier naming a relation of its query (`t.c` over `cat.db.t`) is bound by SQL scoping, whatever the catalog holds.
+        ReferenceKind.QUALIFIER -> reference.relation?.let(::manages) == true || absent && reference.resolution == Resolution.RESOLVED
+        ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
+    }
+
+    /**
+     * Whether the platform knows every relation a column at [element] may come from, in its query and the
+     * queries enclosing it, through derived tables and the file's CTEs: tables it resolves with their
+     * columns and table functions it types.
+     */
+    private fun platformKnowsSources(element: PsiElement): Boolean {
+        val visited = HashSet<PsiElement>()
+        val froms = generateSequence(PsiTreeUtil.getParentOfType(element, SqlQueryExpression::class.java)) {
+            PsiTreeUtil.getParentOfType(it, SqlQueryExpression::class.java)
+        }.mapNotNull { it.tableExpression?.fromClause }.toList()
+        return froms.isNotEmpty() && froms.all { platformKnows(it, visited) }
+    }
+
+    private fun platformKnows(from: PsiElement, visited: MutableSet<PsiElement>): Boolean {
+        if (!visited.add(from)) return true
+        val tables = PsiTreeUtil.findChildrenOfType(from, SqlReferenceExpression::class.java)
+            .filter { it.referenceElementType.targetKind == ObjectKind.TABLE && it.parent !is SqlReferenceExpression }
+        val functions = PsiTreeUtil.findChildrenOfType(from, SqlFunctionCallExpression::class.java)
+            .filter { PsiTreeUtil.getParentOfType(it, SqlClause::class.java, SqlFunctionCallExpression::class.java) is SqlFromClause }
+        return functions.all { ((it.dasType as? DasTableType)?.columnCount ?: 0) > 0 } && tables.all { table ->
+            when (val target = table.resolve()) {
+                is DasTable -> DasUtil.getColumns(target).isNotEmpty
+                null -> false
+                // A CTE: what its queries read.
+                else -> target.containingFile == from.containingFile &&
+                    PsiTreeUtil.findChildrenOfType(PsiTreeUtil.getParentOfType(target, SqlAsExpression::class.java, false) ?: target, SqlQueryExpression::class.java)
+                        .all { query -> query.tableExpression?.fromClause?.let { platformKnows(it, visited) } ?: true }
+            }
+        }
     }
 
     private companion object {

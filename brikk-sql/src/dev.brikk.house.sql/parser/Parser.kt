@@ -2873,8 +2873,8 @@ open class Parser(
         match(TokenType.STAR)
 
         // sqlglot: parse_partition or SUPPORTS_PARTITION_SELECTION (base: false)
-        if ((parsePartition || supportsPartitionSelection) && match(TokenType.PARTITION, advance = false)) {
-            this_.set("partition", this.parsePartition())
+        if (parsePartition || supportsPartitionSelection) {
+            parseTablePartitionSelection()?.let { this_.set("partition", it) }
         }
 
         if (schema) {
@@ -6286,6 +6286,10 @@ open class Parser(
             )
         )
     }
+
+    /** brikk: the partitions a table reference selects, `PARTITION (p, ...)`, or null; dialects with more forms override it. */
+    open fun parseTablePartitionSelection(): Expression? =
+        if (match(TokenType.PARTITION, advance = false)) parsePartition() else null
 
     // sqlglot: Parser._parse_partition
     open fun parsePartition(): Expression? {
