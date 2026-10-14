@@ -1344,9 +1344,9 @@ object ClickhouseParserTables {
         }
     }
 
-    // sqlglot: ClickHouseParser.FUNC_TOKENS
+    // sqlglot: ClickHouseParser.FUNC_TOKENS, and brikk-native DICTIONARY: the dictionary(...) table function
     val FUNC_TOKENS: Set<TokenType> = BaseParserTables.FUNC_TOKENS + setOf(
-        TokenType.AND, TokenType.FILE, TokenType.OR, TokenType.SET, TokenType.VIEW,
+        TokenType.AND, TokenType.FILE, TokenType.OR, TokenType.SET, TokenType.VIEW, TokenType.DICTIONARY,
     )
 
     // sqlglot: ClickHouseParser.RESERVED_TOKENS = base - {SELECT}

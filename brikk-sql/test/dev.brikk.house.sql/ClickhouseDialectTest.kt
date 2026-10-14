@@ -133,4 +133,31 @@ class ClickhouseDialectTest {
         )
         assertEquals(listOf("id", "ts"), (bound.args["this"] as dev.brikk.house.sql.ast.Schema).expressionsArg.map { (it as dev.brikk.house.sql.ast.Expression).sql("clickhouse") })
     }
+
+    /** Table functions stand wherever a table does: joined with an alias, ON or USING, beside ARRAY JOIN, and dictionary(...) too. */
+    @Test
+    fun tableFunctionsAreJoinOperands() {
+        for (sql in listOf(
+            "SELECT * FROM db1.one_column AS a CROSS JOIN numbers(3) AS t",
+            "SELECT * FROM db1.one_column AS a JOIN numbers(3) AS t ON a.x = t.number",
+            "SELECT * FROM db1.one_column AS a JOIN numbers(3) AS t USING (number)",
+            "SELECT * FROM db1.one_column AS a LEFT JOIN s3('https://x', 'TSV', 'a UInt64') AS t ON a.x = t.a",
+            "SELECT * FROM db1.one_column AS a ARRAY JOIN arr AS e CROSS JOIN numbers(3) AS t",
+            "SELECT * FROM dictionary('db1.dictionary_demo')",
+            "SELECT * FROM dictionary('db1.dictionary_demo') AS t",
+            "SELECT * FROM db1.one_column AS a CROSS JOIN dictionary('db1.d') AS t",
+        )) assertEquals(sql, roundTrip(sql), sql)
+    }
+
+    /** A table function's argument may be a query: view(...), and view(...) inside remote(...) or cluster(...). */
+    @Test
+    fun tableFunctionsTakeQueryArguments() {
+        for (sql in listOf(
+            "SELECT * FROM view(SELECT 1 AS field_a, 'sample' AS field_b)",
+            "SELECT * FROM view(SELECT 1 AS field_a) AS t",
+            "SELECT * FROM remote('h', view(SELECT 1 AS a))",
+            "SELECT * FROM cluster('c', view(SELECT 1 AS field_a))",
+            "SELECT * FROM viewExplain('EXPLAIN', '', (SELECT 1))",
+        )) assertEquals(sql, roundTrip(sql), sql)
+    }
 }
