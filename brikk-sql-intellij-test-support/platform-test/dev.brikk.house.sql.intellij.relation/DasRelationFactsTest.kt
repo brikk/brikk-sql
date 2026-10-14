@@ -168,13 +168,14 @@ class DasRelationFactsTest : RelationTestCase() {
         assertEmpty(reported(null))
     }
 
-    fun testOnlyTheSameTablesColumnIsDecorated() {
+    fun testOnlyTheSameTablesColumnIsDecoratedAndAnotherSchemasIsDropped() {
         val other = checkNotNull(orders.parent?.parent).schemas.createOrGet("other").tables.createOrGet("orders").columns.createOrGet("id")
         DbPsiFacade.getInstance(project).clearCaches()
         open("FROM shop.public.orders |> SELECT <caret>")
         OtherCompletion.offer(myFixture.file, LookupElementBuilder.create(other, "id").withTailText(" other schema"), testRootDisposable)
+        // The scope is fully known and reads only shop.public.orders: the other schema's table's column is not visible.
         val tails = myFixture.completeBasic().orEmpty().filter { it.lookupString == "id" }.map { LookupElementPresentation.renderElement(it).tailText }
-        assertSameElements(tails, " other schema", "  column (orders)")
+        assertEquals(listOf("  column (orders)"), tails)
         open("FROM shop.public.orders |> SELECT <caret>")
         val same = DasUtil.getColumns(orders).single { it.name == "id" }
         OtherCompletion.offer(myFixture.file, LookupElementBuilder.create(same, "id").withTailText(" same table"), testRootDisposable)

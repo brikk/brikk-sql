@@ -1,6 +1,11 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.codeInsight.completion.CompletionContributor
+import com.intellij.codeInsight.completion.CompletionContributorEP
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
+import com.intellij.openapi.extensions.DefaultPluginDescriptor
+import com.intellij.openapi.extensions.LoadingOrder
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.database.Dbms
 import com.intellij.database.dataSource.DatabaseDriverManager
 import com.intellij.database.dataSource.LocalDataSource
@@ -139,8 +144,16 @@ class RealSqlContractTest : RelationTestCase() {
         SqlResolveExtension.EP_NAME.point.registerExtension(object : ExternalRelationResolveExtension(profile) {}, testRootDisposable)
         SqlInspectionSuppressorDelegate.EP_NAME.point.registerExtension(object : ExternalRelationInspectionSuppressor(profile) {}, testRootDisposable)
         GotoDeclarationHandler.EP_NAME.point.registerExtension(object : ExternalRelationGotoDeclarationHandler(profile) {}, testRootDisposable)
-        // The daemon instantiates annotators by their class: these have no-arg constructors.
+        // The daemon instantiates annotators, and completion its contributors, by their class: these have no-arg constructors.
         val postgresql = profile.language == postgres
+        // Completion on PostgreSQL only: registering a MySQL contributor leaves later PostgreSQL tests' contributor list stale.
+        if (postgresql) {
+            val completion = PgRelationCompletion::class.java
+            CompletionContributor.EP.point.registerExtension(
+                CompletionContributorEP(profile.language.id, completion.name, DefaultPluginDescriptor(PluginId.getId("brikk.test"), completion.classLoader)),
+                LoadingOrder.FIRST, testRootDisposable,
+            )
+        }
         LanguageAnnotators.INSTANCE.addExplicitExtension(profile.language, if (postgresql) PgRelationAnnotator() else MysqlRelationAnnotator(), testRootDisposable)
         ExternalLanguageAnnotators.INSTANCE.addExplicitExtension(
             profile.language, if (postgresql) PgLocalParseAnnotator() else MysqlLocalParseAnnotator(), testRootDisposable,
@@ -196,6 +209,45 @@ class RealSqlContractTest : RelationTestCase() {
             )) assertFalse(sql, nopeReported(target, sql))
         } finally {
             target.close()
+        }
+    }
+
+    fun testColumnCompletionOffersOnlyTheTableTheConsolesNamespaceReadsWhereTheScopeIsKnown() {
+        register(pgRelations, Dbms.POSTGRES)
+        val model = RealSqlModel(
+            tables = mapOf("shop.sales.events" to listOf("id", "label", "sales_only"), "shop.audit.events" to listOf("id", "label", "audit_only")),
+            bare = emptyList(),
+            absent = emptyList(),
+        )
+        val source = dataSource(Dbms.POSTGRES, "postgresql", model)
+        val file = myFixture.configureByText("same-named-${UUID.randomUUID()}.sql", "SELECT e.<caret> FROM events e").virtualFile
+        setSqlDialectMapping(project, file, postgres as SqlLanguageDialect, testRootDisposable)
+        myFixture.configureFromExistingVirtualFile(file)
+        val recording = RecordingConsole(project, file, source)
+        try {
+            fun offered(schema: String): List<String> {
+                recording.console.setSearchPath(SearchPath.of(ObjectPath.create("shop", ObjectKind.DATABASE).append(schema, ObjectKind.SCHEMA)))
+                return myFixture.completeBasic()?.map { it.lookupString }.orEmpty().also { myFixture.lookup?.hideLookup(true) }
+            }
+            val sales = offered("sales")
+            assertTrue(sales.toString(), sales.containsAll(listOf("id", "label", "sales_only")) && "audit_only" !in sales)
+            val audit = offered("audit")
+            assertTrue(audit.toString(), audit.containsAll(listOf("id", "label", "audit_only")) && "sales_only" !in audit)
+            // The platform also offers the shadowed schema's table's columns; the analysis, knowing the scope, drops them.
+            val shop = ObjectPath.create("shop", ObjectKind.DATABASE)
+            recording.console.setSearchPath(SearchPath.of(listOf(shop.append("audit", ObjectKind.SCHEMA), shop.append("sales", ObjectKind.SCHEMA))))
+            val shadowed = myFixture.completeBasic()?.map { it.lookupString }.orEmpty().also { myFixture.lookup?.hideLookup(true) }
+            assertTrue(shadowed.toString(), "audit_only" in shadowed && "sales_only" !in shadowed)
+            // Where the scope is not fully known (a relation nobody has loaded), the platform's items stay.
+            myFixture.configureByText("partial-${UUID.randomUUID()}.sql", "SELECT <caret> FROM events e, ghost g")
+            setSqlDialectMapping(project, myFixture.file.virtualFile, postgres as SqlLanguageDialect, testRootDisposable)
+            RecordingConsole(project, myFixture.file.virtualFile, source).use { partial ->
+                partial.console.setSearchPath(SearchPath.of(listOf(shop.append("audit", ObjectKind.SCHEMA), shop.append("sales", ObjectKind.SCHEMA))))
+                val open = myFixture.completeBasic()?.map { it.lookupString }.orEmpty()
+                assertTrue(open.toString(), "audit_only" in open && "sales_only" in open)
+            }
+        } finally {
+            recording.close()
         }
     }
 

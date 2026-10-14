@@ -26,6 +26,7 @@ import dev.brikk.house.sql.intellij.completion.lookup
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.scope.ColumnOrigin
 import dev.brikk.house.sql.scope.CompletionItem
+import dev.brikk.house.sql.scope.Knowledge
 import dev.brikk.house.sql.scope.PositionKind
 import dev.brikk.house.sql.scope.ReferenceKind
 import dev.brikk.house.sql.scope.RelationScope
@@ -39,7 +40,8 @@ import org.jetbrains.annotations.ApiStatus
  * column, a data source column of the same table, a declaration or pass-through in the SQL) is
  * decorated with the column's label, and only columns no item stands for are created, in their
  * label's lookup kind; nothing is offered twice, and columns of different relations stay distinct.
- * Labels come from the providers' or the profile's [RelationColumnLabels]. Register a no-arg
+ * Where the scope is fully known, another contributor's provider or data source column no visible column
+ * matches is dropped. Labels come from the providers' or the profile's [RelationColumnLabels]. Register a no-arg
  * subclass for the language with `order="first"`.
  */
 @ApiStatus.Experimental
@@ -55,7 +57,7 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
         val completion = RelationScope.complete(text, profile.dialect, analysis.facts.merged, offset, statement, ProgressManager::checkCanceled)
         val sink = result.withPrefixMatcher(completion.prefix).caseInsensitive()
         when (completion.position) {
-            PositionKind.COLUMN -> completeColumns(parameters, sink, completion.items, analysis)
+            PositionKind.COLUMN -> completeColumns(parameters, sink, completion.items, analysis, completion.knowledge == Knowledge.FULL)
             PositionKind.RELATION -> completeRelations(sink, completion.items, analysis)
             else -> {}
         }
@@ -77,9 +79,11 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
 
     /**
      * The columns of [items], create-or-decorate. Even with none, the provider columns other items stand
-     * for and the analysis does not see here are hidden: it places every provider column.
+     * for and the analysis does not see here are hidden: it places every provider column. Where the scope
+     * is [known] fully, so are a data source's columns it does not see (another namespace's same-named
+     * table's, say); never where it is partial or unknown.
      */
-    private fun completeColumns(parameters: CompletionParameters, sink: CompletionResultSet, items: List<CompletionItem>, analysis: RelationAnalysis) {
+    private fun completeColumns(parameters: CompletionParameters, sink: CompletionResultSet, items: List<CompletionItem>, analysis: RelationAnalysis, known: Boolean) {
         val candidates = LinkedHashMap<Identity, Candidate>()
         for (item in items) {
             val column = item.column ?: continue
@@ -96,7 +100,7 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             create = { facts -> byFacts.getValue(facts).let { inserting(SqlColumnCompletion.create(facts, profile.styles[it.label.kind]), it.item) } },
             // A provider column no visible column matches is not visible here as itself: an outer or shadowed
             // relation's, or one a set operation or USING merges into a column of its own.
-            hides = { symbolOf(it) != null },
+            hides = { symbolOf(it) != null || known && dasColumnOf(it) != null },
         ) { element -> match(element, candidates.values, analysis, parameters)?.facts }
     }
 
@@ -115,6 +119,12 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
     private fun symbolOf(element: LookupElement): RelationColumnSymbol? =
         ((element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object`) as? RelationColumnSymbol ?: element.psiElement as? RelationColumnSymbol
 
+    /** The data source column [element] stands for, or null. */
+    private fun dasColumnOf(element: LookupElement): DasColumn? {
+        val target = (element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object` ?: element.psiElement
+        return ((target as? DasSymbol)?.dasObject ?: target) as? DasColumn
+    }
+
     /** The visible column another contributor's [element] stands for, or null. */
     private fun match(element: LookupElement, candidates: Collection<Candidate>, analysis: RelationAnalysis, parameters: CompletionParameters): Candidate? {
         val target = (element.`object` as? SqlResolveResult)?.targetSymbol ?: element.`object` ?: element.psiElement
@@ -125,7 +135,7 @@ public abstract class ExternalRelationCompletionContributor(private val profile:
             val relation = ((element.`object` as? SqlResolveResult)?.qualifier as? SqlNameElement)?.name ?: symbol.column.relation
             return same.firstOrNull { it.column.relation == relation } ?: same.singleOrNull()
         }
-        val das = ((target as? DasSymbol)?.dasObject ?: target) as? DasColumn
+        val das = dasColumnOf(element)
         if (das != null) {
             val table = das.table?.let(::dasTablePath) ?: return null
             return candidates.filter {
