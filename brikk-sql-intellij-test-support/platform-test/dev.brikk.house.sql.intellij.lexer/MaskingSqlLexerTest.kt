@@ -189,6 +189,16 @@ class CastTargetMaskTest : FixtureTestCase() {
         assertContainsElements(nonBlank("SELECT CAST(x AS \"INTEGER\"), 1").map { it.first }, "AS \"INTEGER\"", ")", ",")
     }
 
+    fun testParenthesesInsideAngleBracketsAreBalanced() {
+        val tokens = nonBlank("SELECT CAST(x AS ARRAY<VARCHAR(120)>) FROM db.t").map { it.first }
+        assertEquals(listOf("SELECT", "CAST", "(", "x", "AS ARRAY<VARCHAR(120)>", ")", "FROM", "db", ".", "t"), tokens)
+        val nested = nonBlank("SELECT CAST(x AS MAP<VARCHAR(10), ARRAY<DECIMAL(10, 2)>>), 1").map { it.first }
+        assertContainsElements(nested, "AS MAP<VARCHAR(10), ARRAY<DECIMAL(10, 2)>>", ")", ",")
+        // An unclosed bracket still stops at the cast's own parenthesis.
+        assertEquals(listOf("SELECT", "CAST", "(", "x", "AS ARRAY<VARCHAR(120)", ")", "FROM", "t"),
+            nonBlank("SELECT CAST(x AS ARRAY<VARCHAR(120)) FROM t").map { it.first })
+    }
+
     fun testAnUnclosedTypeArgumentStopsAtTheStatementEnd() {
         val tokens = nonBlank("SELECT CAST(x AS ARRAY<INT ; SELECT 1").map { it.first.trim() }
         assertEquals(listOf("SELECT", "CAST", "(", "x", "AS ARRAY<INT", ";", "SELECT", "1"), tokens)

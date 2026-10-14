@@ -406,11 +406,18 @@ public abstract class MaskingSqlLexer(
         val at = offsetAfterWhitespace(base, base.tokenStart)
         if (base.bufferSequence.getOrNull(at) != open) return
         var depth = 0
+        // Parentheses inside angle brackets (`ARRAY<VARCHAR(120)>`) nest; an unmatched one ends the scan.
+        var parentheses = 0
         while (base.tokenType != null) {
             val text = base.tokenText
-            if (text == ";" || text == ")" && open != '(') break
+            if (text == ";" || text == ")" && open != '(' && parentheses == 0) break
             for (c in text) {
-                if (c == open) depth++ else if (c == close) depth--
+                when {
+                    c == open -> depth++
+                    c == close -> depth--
+                    open != '(' && c == '(' -> parentheses++
+                    open != '(' && c == ')' -> parentheses--
+                }
             }
             val end = base.tokenEnd
             base.advance()
