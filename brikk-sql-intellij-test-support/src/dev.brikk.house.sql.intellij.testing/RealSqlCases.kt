@@ -77,31 +77,91 @@ public data class RealSqlCase(
 /**
  * The tables cases name. [tables] are introspected, by dotted path and columns; [bare] are in the
  * model without columns (listed, never introspected); [absent] are named by SQL but not in the model
- * at all. Paths are `catalog.schema.table`; a target without catalogs drops the first part.
+ * at all; [namespaces] are listed namespaces (`catalog` or `catalog.schema`) that may hold nothing.
+ * Paths are `catalog.schema.table`; a target without catalogs drops the first part.
  */
 @ApiStatus.Experimental
 public data class RealSqlModel(
     val tables: Map<String, List<String>>,
     val bare: List<String>,
     val absent: List<String>,
+    val namespaces: List<String> = emptyList(),
 ) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before namespaces.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(tables: Map<String, List<String>>, bare: List<String>, absent: List<String>) : this(tables, bare, absent, emptyList())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(tables: Map<String, List<String>> = this.tables, bare: List<String> = this.bare, absent: List<String> = this.absent): RealSqlModel =
+        copy(tables, bare, absent, namespaces)
+
     public companion object {
+        /** The external table [STATES] vary. */
+        public const val EXTERNAL_TABLE: String = "ext_catalog.archive_db.facts"
+
         public val STANDARD: RealSqlModel = RealSqlModel(
             tables = mapOf(
                 "shop.sales.orders" to listOf("order_id", "user_id", "amount", "status", "created_at"),
                 "shop.sales.users" to listOf("user_id", "name", "country", "signup_at"),
                 "shop.sales.items" to listOf("item_id", "order_id", "sku", "qty", "price"),
-                "ext_catalog.archive_db.facts" to listOf("ts", "uid", "kind"),
+                EXTERNAL_TABLE to listOf("ts", "uid", "kind"),
             ),
             bare = listOf("shop.sales.archive"),
             absent = listOf("shop.sales.ghost"),
         )
+
+        /**
+         * [STANDARD] with [EXTERNAL_TABLE] in each state a catalog can hold a table nobody has loaded:
+         * introspected, listed without columns, its schema listed without it, its catalog listed empty.
+         */
+        public val STATES: Map<String, RealSqlModel> = run {
+            val others = STANDARD.tables - EXTERNAL_TABLE
+            mapOf(
+                "introspected" to STANDARD,
+                "columnless" to STANDARD.copy(tables = others, bare = STANDARD.bare + EXTERNAL_TABLE),
+                "schema-without-table" to STANDARD.copy(tables = others, namespaces = listOf("ext_catalog.archive_db")),
+                "catalog-empty" to STANDARD.copy(tables = others, namespaces = listOf("ext_catalog")),
+            )
+        }
     }
 }
 
 /** The shared pack of realistic statements every SQL plugin must highlight without a false error. */
 @ApiStatus.Experimental
 public object RealSqlCases {
+    /**
+     * Columns read through derived tables, CTEs and enclosing queries over [RealSqlModel.EXTERNAL_TABLE],
+     * checked in every [RealSqlModel.STATES] state: never a column error, whatever the table's state. The
+     * table's own name may be reported where the model lacks it.
+     */
+    public val EXTERNAL: List<RealSqlCase> = listOf(
+        RealSqlCase(
+            "external-star-in-derived",
+            "SELECT uid, * FROM (SELECT ts AS ts1, *, 0 AS k FROM ext_catalog.archive_db.facts) AS u",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES),
+            reported = setOf("facts", "archive_db"),
+        ),
+        RealSqlCase(
+            "external-star-in-cte-of-derived",
+            "WITH c AS (SELECT * FROM (SELECT ts AS ts1, *, 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts1, uid, kind FROM c",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES),
+            reported = setOf("facts", "archive_db"),
+        ),
+        RealSqlCase(
+            "external-enclosing-query",
+            "SELECT u.uid FROM (SELECT f.uid, f.kind FROM ext_catalog.archive_db.facts f) AS u WHERE u.kind IS NOT NULL",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES),
+            reported = setOf("facts", "archive_db"),
+        ),
+        RealSqlCase(
+            "external-except-star-in-cte-of-derived",
+            "WITH c AS (SELECT * FROM (SELECT ts AS ts, * EXCEPT (ts), 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts, uid FROM c",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.STAR_EXCEPT),
+            reported = setOf("facts", "archive_db"),
+        ),
+    )
+
+
     public val ALL: List<RealSqlCase> = listOf(
         // Stars through derived tables and CTEs.
         RealSqlCase(

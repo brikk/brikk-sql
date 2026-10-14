@@ -79,8 +79,10 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * directly through a provider's relations, and the provider relations SQL names (such as a slot
  * call). The resolve inspection also on every column the analysis resolves, through stars and
  * derived tables the platform may not follow, on columns it reports absent itself, and on columns it
- * cannot know (a star over a table whose columns were never introspected) in a statement whose
- * relations are all known. Every other inspection, and every other reference, stays. Register a no-arg subclass as
+ * cannot know: ones that may come, through any number of derived tables, CTEs and enclosing queries,
+ * from a relation that is unknown, out of scope, listed without columns or not introspected yet. A
+ * column absent from a fully known source and an unknown table name stay reported. Every other
+ * inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
 @ApiStatus.Experimental
@@ -106,11 +108,10 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
         ReferenceKind.COLUMN -> when (reference.resolution) {
             Resolution.RESOLVED, Resolution.AMBIGUOUS ->
                 reference.columns.isNotEmpty() && (absent || reference.columns.all { manages(it, reference.start) })
-            // Absent where the facts prove it, the analysis reports it itself, once. Where they cannot (a star
-            // over a table whose columns were never introspected), nothing proves it absent; unless a relation
-            // of the statement is unknown, which is the error to fix first.
-            Resolution.UNRESOLVED -> absent && (diagnoses(reference.start, reference.end) ||
-                reference.knowledge != Knowledge.FULL && statementReferences(reference.start).none { it.kind != ReferenceKind.COLUMN && it.resolution != Resolution.RESOLVED })
+            // Absent where the facts prove it, the analysis reports it itself, once. Where they cannot, through
+            // any number of derived tables, CTEs and enclosing queries from a relation that is unknown, out of
+            // scope, listed without columns or not introspected yet, nothing proves it absent.
+            Resolution.UNRESOLVED -> absent && (diagnoses(reference.start, reference.end) || reference.knowledge != Knowledge.FULL)
         }
         ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
     }

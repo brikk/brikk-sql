@@ -35,8 +35,9 @@ import java.util.UUID
 
 /**
  * The real-SQL contract on the library's substrates: PostgreSQL and MySQL files attached to a data source
- * holding [RealSqlModel.STANDARD], with the platform's resolve inspection, the shared relation features
- * over the data source's tables and the native-error annotator's local parse.
+ * holding [RealSqlModel.STANDARD] (and, on PostgreSQL, which has catalogs, each of [RealSqlModel.STATES]),
+ * with the platform's resolve inspection, the shared relation features over the data source's tables and
+ * the native-error annotator's local parse.
  */
 class RealSqlContractTest : RelationTestCase() {
     private val sources = mutableListOf<LocalDataSource>()
@@ -49,21 +50,31 @@ class RealSqlContractTest : RelationTestCase() {
         ).run()
     }
 
-    /** A data source of [dbms] over the standard model; MySQL has no catalogs, so its paths drop the first part. */
-    private fun dataSource(dbms: Dbms, driver: String): LocalDataSource {
+    /** A data source of [dbms] holding [content]; MySQL has no catalogs, so its paths drop the first part. */
+    private fun dataSource(dbms: Dbms, driver: String, content: RealSqlModel = RealSqlModel.STANDARD): LocalDataSource {
         val model = ModelFactory.BLACK_HOLE.createModel(dbms)
-        fun table(path: String) = path.split('.').let { (catalog, schema, name) ->
+        val pg = model.root is PgRoot
+        /** [path] as the model's levels see it. */
+        fun levels(path: String) = path.split('.').let { if (pg) it else it.drop(1) }
+        fun table(path: String) = levels(path).let { names ->
             when (val root = model.root) {
-                is PgRoot -> root.databases.createOrGet(catalog).schemas.createOrGet(schema).tables.createOrGet(name)
-                is MysqlRoot -> root.schemas.createOrGet(schema).tables.createOrGet(name)
+                is PgRoot -> root.databases.createOrGet(names[0]).schemas.createOrGet(names[1]).tables.createOrGet(names[2])
+                is MysqlRoot -> root.schemas.createOrGet(names[0]).tables.createOrGet(names[1])
                 else -> error("No model for $dbms")
             }
         }
-        for ((path, columns) in RealSqlModel.STANDARD.tables) {
+        for ((path, columns) in content.tables) {
             val table = table(path)
             for (column in columns) table.columns.createOrGet(column)
         }
-        for (path in RealSqlModel.STANDARD.bare) table(path)
+        for (path in content.bare) table(path)
+        for (namespace in content.namespaces) {
+            val names = levels("$namespace.x").dropLast(1)
+            when (val root = model.root) {
+                is PgRoot -> root.databases.createOrGet(names[0]).also { database -> names.getOrNull(1)?.let(database.schemas::createOrGet) }
+                is MysqlRoot -> names.firstOrNull()?.let(root.schemas::createOrGet)
+            }
+        }
         val source = LocalDataSource().apply {
             name = "real sql ${UUID.randomUUID()}"
             databaseDriver = checkNotNull(DatabaseDriverManager.getInstance().getDriver(driver))
@@ -71,11 +82,10 @@ class RealSqlContractTest : RelationTestCase() {
             isAutoSynchronize = false
             this.model = model
             // The platform resolves only what the introspection scope selects, as after a real introspection.
-            val levels = if (model.root is PgRoot) listOf(ObjectKind.DATABASE, ObjectKind.SCHEMA) else listOf(ObjectKind.SCHEMA)
-            val namespaces = (RealSqlModel.STANDARD.tables.keys + RealSqlModel.STANDARD.bare).map { path ->
-                path.split('.').dropLast(1).let { if (model.root is PgRoot) it else it.drop(1) }
-            }.distinct()
-            setIntrospectionScope(namespaces.map { CatalogScopes.select(levels, it) }.reduce(CatalogScopes::widen))
+            val kinds = if (pg) listOf(ObjectKind.DATABASE, ObjectKind.SCHEMA) else listOf(ObjectKind.SCHEMA)
+            val namespaces = ((content.tables.keys + content.bare).map { levels(it).dropLast(1) } +
+                content.namespaces.map { levels("$it.x").dropLast(1) }).filter { it.isNotEmpty() }.distinct()
+            setIntrospectionScope(namespaces.map { CatalogScopes.select(kinds, it) }.reduce(CatalogScopes::widen))
         }
         LocalDataSourceManager.getInstance(project).addDataSource(source)
         DbPsiFacade.getInstance(project).clearCaches()
@@ -87,8 +97,19 @@ class RealSqlContractTest : RelationTestCase() {
         override val dialect: String,
         override val features: Set<RealSqlFeature>,
         private val language: Language,
-        private val source: LocalDataSource,
+        private val dbms: Dbms,
+        private val driver: String,
     ) : RealSqlTarget {
+        private var source = dataSource(dbms, driver)
+
+        override fun install(model: RealSqlModel) {
+            console?.close()
+            console = null
+            LocalDataSourceManager.getInstance(project).removeDataSource(source)
+            sources -= source
+            source = dataSource(dbms, driver, model)
+        }
+
         override val fixture: CodeInsightTestFixture get() = myFixture
 
         /** The open file's console, on the current namespace a user would pick. */
@@ -133,9 +154,10 @@ class RealSqlContractTest : RelationTestCase() {
             RealSqlFeature.UNNEST, RealSqlFeature.LATERAL_SUBQUERY, RealSqlFeature.VALUES_COLUMN_ALIASES, RealSqlFeature.CREATE_TABLE_AS,
             RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DOUBLE_QUOTED_IDENTIFIERS,
         )
-        val target = Target("postgres", features, postgres, dataSource(Dbms.POSTGRES, "postgresql"))
+        val target = Target("postgres", features, postgres, Dbms.POSTGRES, "postgresql")
         try {
             RealSqlContract(target).check()
+            RealSqlContract(target).checkModelStates()
         } finally {
             target.close()
         }
@@ -147,7 +169,7 @@ class RealSqlContractTest : RelationTestCase() {
             RealSqlFeature.GROUP_BY_ALIAS, RealSqlFeature.NATURAL_JOIN, RealSqlFeature.INTERSECT_EXCEPT, RealSqlFeature.NAMED_WINDOW,
             RealSqlFeature.LATERAL_SUBQUERY, RealSqlFeature.CREATE_TABLE_AS, RealSqlFeature.BACKTICK_IDENTIFIERS,
         )
-        val target = Target("mysql", features, mysql, dataSource(Dbms.MYSQL, "mysql.8"))
+        val target = Target("mysql", features, mysql, Dbms.MYSQL, "mysql.8")
         try {
             RealSqlContract(target).check()
         } finally {
