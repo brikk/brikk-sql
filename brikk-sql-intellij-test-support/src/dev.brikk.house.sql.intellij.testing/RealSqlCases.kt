@@ -47,6 +47,9 @@ public enum class RealSqlFeature {
     /** Doris functions and syntax (`FROM_SECOND`, multi-catalog). */
     DORIS,
 
+    /** `a.b` reading field `b` of a ROW or struct column `a` (Trino, DuckDB, BigQuery). */
+    ROW_FIELD_ACCESS,
+
     /** PostgreSQL's set-returning functions in FROM (`generate_series`). */
     SET_RETURNING_FUNCTIONS,
 
@@ -303,6 +306,21 @@ public object RealSqlCases {
     )
 
     public val ALL: List<RealSqlCase> = listOf(
+        // Computed columns passed on through a chain of CTEs and read by CASE, GROUP BY and ORDER BY.
+        RealSqlCase(
+            "cte-chain-computed-case",
+            "WITH a AS (SELECT *, round(amount / 7) AS bucket FROM sales.orders), " +
+                "b AS (SELECT *, CASE WHEN bucket > 2 THEN 'x' ELSE 'y' END AS tag FROM a), " +
+                "c AS (SELECT *, CASE WHEN tag = 'x' THEN 7 ELSE 9 END AS score FROM b), " +
+                "d AS (SELECT tag, count(*) AS n, sum(score) AS total FROM c GROUP BY tag) " +
+                "SELECT *, CASE tag WHEN 'x' THEN 7 ELSE 9 END AS rank_order FROM d WHERE tag = 'x' ORDER BY rank_order",
+        ),
+        // A ROW column's field, of a table listed without columns: nothing proves the column absent.
+        RealSqlCase(
+            "row-field-of-columnless-table",
+            "SELECT payload.member, count(*) FROM sales.archive GROUP BY 1",
+            needs = setOf(RealSqlFeature.ROW_FIELD_ACCESS),
+        ),
         // Stars through derived tables and CTEs.
         RealSqlCase(
             "star-derived",

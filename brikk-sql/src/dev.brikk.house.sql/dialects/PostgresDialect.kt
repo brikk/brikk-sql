@@ -13,6 +13,9 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
  */
 // sqlglot: dialects.postgres.Postgres
 open class PostgresDialect : Dialect() {
+    // brikk-native: see Dialect.dottedFieldAccess.
+    override val dottedFieldAccess: Boolean get() = false
+
 
     override val name: String get() = "postgres"
 

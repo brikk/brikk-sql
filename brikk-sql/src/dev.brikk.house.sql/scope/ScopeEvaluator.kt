@@ -818,8 +818,10 @@ internal class ScopeEvaluator(
             return
         }
         if (field.knowledge != Knowledge.FULL) {
-            // It may be a struct column of a relation whose columns are not all known.
-            reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, field.knowledge, start = first)
+            // It may be a struct column of a relation whose columns are not all known, where `a.b` reads a
+            // field; elsewhere it can only name a relation, and none of the query's has that name.
+            val knowledge = if (dialect.dottedFieldAccess) field.knowledge else Knowledge.FULL
+            reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, knowledge, start = first)
             record(identifier, null, Lookup(emptyList(), Knowledge.UNKNOWN))
             return
         }

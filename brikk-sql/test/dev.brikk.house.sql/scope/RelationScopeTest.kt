@@ -332,6 +332,18 @@ class RelationScopeTest {
     }
 
     @Test
+    fun anUnknownQualifierMayBeARowColumnOnlyWhereADotReadsAField() {
+        val sql = "SELECT r.member FROM ext.s.unloaded"
+        fun qualifier(dialect: String) = RelationScope.analyze(sql, dialect, RelationFacts()).references.single { it.kind == ReferenceKind.QUALIFIER }
+        for (dialect in listOf("trino", "duckdb", "bigquery", "clickhouse", "doris")) assertEquals(Knowledge.UNKNOWN, qualifier(dialect).knowledge, dialect)
+        // PostgreSQL reads a field as (r).member and MySQL has no row columns: r can only name a relation.
+        for (dialect in listOf("postgres", "mysql")) {
+            assertEquals(Knowledge.FULL, qualifier(dialect).knowledge, dialect)
+            assertEquals(emptyList(), RelationScope.analyze(sql, dialect, RelationFacts()).diagnostics.map { it.message }, dialect)
+        }
+    }
+
+    @Test
     fun completionReplacesTheTypedPrefix() {
         val sql = "FROM events() |> WHERE eve"
         val completion = RelationScope.complete(sql, "duckdb", facts, sql.length)

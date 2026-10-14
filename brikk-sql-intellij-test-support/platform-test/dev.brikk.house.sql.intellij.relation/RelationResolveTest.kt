@@ -1,5 +1,7 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
+
 import com.intellij.database.symbols.DasColumnSymbol
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiPolyVariantReference
@@ -109,6 +111,26 @@ class RelationResolveTest : RelationTestCase() {
         // The table's name is reported where it is named, not again where it qualifies a column.
         assertEquals(marks.toString(), 2, marks.count { it == "unknown_table" })
         assertTrue(marks.toString(), "stray" in marks)
+    }
+
+    fun testARowFieldOverAnUnknownRelationIsQuietWhereADotReadsAField() {
+        enableResolveInspection()
+        // Analyzed as DuckDB, where r.member may read a field of a ROW column of the unknown table.
+        val duckdb = TestRelationProfile(postgres, "duckdb")
+        SqlInspectionSuppressorDelegate.EP_NAME.point.registerExtension(object : ExternalRelationInspectionSuppressor(duckdb) {}, testRootDisposable)
+        val marks = unresolvedIn("SELECT r.member FROM unknown_table")
+        assertTrue(marks.toString(), marks.none { it == "r" || it == "member" })
+        assertTrue(marks.toString(), "unknown_table" in marks)
+    }
+
+    fun testColumnsOfAStatementCoreCannotReadAreQuietOverUnknownRelations() {
+        enableResolveInspection()
+        // Analyzed as MySQL, which cannot read PostgreSQL's ~ operator: no analysis covers the statement.
+        val mysqlRead = TestRelationProfile(postgres, "mysql")
+        SqlInspectionSuppressorDelegate.EP_NAME.point.registerExtension(object : ExternalRelationInspectionSuppressor(mysqlRead) {}, testRootDisposable)
+        val marks = unresolvedIn("SELECT x FROM unknown_table WHERE x ~ 'a'")
+        assertTrue(marks.toString(), "x" !in marks)
+        assertTrue(marks.toString(), "unknown_table" in marks)
     }
 
     /** What the resolve inspection reports in [sql] once the relation features are on. */
