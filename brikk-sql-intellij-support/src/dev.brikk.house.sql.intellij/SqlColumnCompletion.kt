@@ -13,7 +13,10 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * What a column completion item shows: its type, three-state [nullable] (null when it cannot
- * be proved), the alias of the relation supplying it and where the facts come from. [source]
+ * be proved), the alias of the relation supplying it and where the facts come from. A known
+ * nullable type shows Kotlin's `?`, so give [nullable] only with a Kotlin [typeName]; nothing
+ * else about nullability shows, and without a [typeName] no type shows (a decorated item keeps
+ * its own). [source]
  * identifies the supplying relation, opaquely and by equality; with [name] it is the column's
  * identity for matching, deduplication and the lookup object. The alias is only shown.
  */
@@ -26,12 +29,8 @@ public data class SqlColumnFacts(
     val originLabel: String = "brikk column",
     val source: Any? = null,
 ) {
-    internal val typeText: String
-        get() = (typeName ?: "unknown type") + when (nullable) {
-            true -> "?"
-            false -> ""
-            null -> " (nullability unknown)"
-        }
+    internal val typeText: String?
+        get() = typeName?.let { if (nullable == true) "$it?" else it }
 
     internal val tailText: String
         get() = "  $originLabel" + relationAlias?.takeIf { it.isNotBlank() }?.let { " ($it)" }.orEmpty()
@@ -68,8 +67,10 @@ public object SqlColumnCompletion {
         object : LookupElementDecorator<LookupElement>(candidate) {
             override fun renderElement(presentation: LookupElementPresentation) {
                 super.renderElement(presentation)
-                presentation.setTypeText(column.typeText)
-                presentation.isTypeGrayed = true
+                column.typeText?.let {
+                    presentation.setTypeText(it)
+                    presentation.isTypeGrayed = true
+                }
                 presentation.setTailText(column.tailText, true)
             }
         }

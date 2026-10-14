@@ -65,7 +65,8 @@ class RelationNativeAdapterFeaturesTest : RelationTestCase() {
 
     fun testColumnsASetOperationOrUsingMergesAreOfferedAsTheirOwn() {
         assertEquals(listOf("id" to "  computed column (UNION ALL)"), offered("SELECT id FROM src() UNION ALL SELECT id FROM rhs() ORDER BY i<caret>", "id"))
-        assertEquals(listOf("id" to "  computed column (USING)"), offered("SELECT q.<caret> FROM (SELECT id FROM src() FULL JOIN rhs() USING (id)) q", "id"))
+        // A merged key passed on through q shows under q, the relation showing it; a set operation's output has none to show.
+        assertEquals(listOf("id" to "  computed column (q)"), offered("SELECT q.<caret> FROM (SELECT id FROM src() FULL JOIN rhs() USING (id)) q", "id"))
         assertEmpty(offered("SELECT id FROM src() UNION ALL SELECT id, code FROM rhs() ORDER BY i<caret>", "id"))
     }
 

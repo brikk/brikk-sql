@@ -598,6 +598,36 @@ class DorisDialectTest {
     }
 
     @Test
+    fun aScheduledJobKeepsItsStatementForTheAnalysis() {
+        // Doris createScheduledJob: CREATE JOB name [PROPERTIES (...)] ON SCHEDULE (EVERY n unit [STARTS ..] [ENDS ..] | AT ..)
+        // [COMMENT '..'] DO <dml>.
+        for (sql in listOf(
+            "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO internal.app.t SELECT * FROM ext_catalog.archive_db.facts WHERE uid = 1",
+            "CREATE JOB db.j ON SCHEDULE EVERY 1 DAY STARTS '2026-01-01 00:00:00' ENDS '2027-01-01 00:00:00' COMMENT 'nightly' DO INSERT INTO t SELECT uid FROM facts",
+            "CREATE JOB j PROPERTIES ('timeout_second'='60') ON SCHEDULE EVERY 5 MINUTE DO INSERT INTO t SELECT 1",
+        )) {
+            assertTrue(parseOne(sql, "doris") is dev.brikk.house.sql.ast.DorisCreateJob, sql)
+            assertEquals(sql, roundTrip(sql))
+        }
+        val sql = "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO internal.app.t SELECT * EXCEPT (kind) FROM ext_catalog.archive_db.facts WHERE uid = 1"
+        val scope = dev.brikk.house.sql.scope.RelationScope.analyze(sql, "doris", dev.brikk.house.sql.scope.RelationFacts())
+        // The column EXCEPT removes is read from the star's source too.
+        assertEquals(listOf("kind", "uid"), scope.references.filter { it.kind == dev.brikk.house.sql.scope.ReferenceKind.COLUMN }.map { it.name })
+        // A streaming job's FROM ... TO clause is not modeled: it stays an opaque command.
+        assertTrue(parseOne("CREATE JOB j ON STREAMING FROM KAFKA (x = 'y') TO DATABASE d", "doris") is dev.brikk.house.sql.ast.Command)
+    }
+
+    @Test
+    fun anInsertMayWriteThroughATableFunctionGivenProperties() {
+        // Doris insertIntoTVF: INSERT INTO tvf(key = value, ...) query; a column list keeps its meaning.
+        val sql = "INSERT INTO s3(\"uri\" = \"s3://bucket/path/\", \"format\" = \"csv\") SELECT ts, uid FROM ext_catalog.archive_db.facts WHERE kind = 'a'"
+        assertEquals("INSERT INTO S3('uri' = 's3://bucket/path/', 'format' = 'csv') SELECT ts, uid FROM ext_catalog.archive_db.facts WHERE kind = 'a'", roundTrip(sql))
+        val scope = dev.brikk.house.sql.scope.RelationScope.analyze(sql, "doris", dev.brikk.house.sql.scope.RelationFacts())
+        assertEquals(listOf("ts", "uid", "kind"), scope.references.filter { it.kind == dev.brikk.house.sql.scope.ReferenceKind.COLUMN }.map { it.name })
+        assertEquals("INSERT INTO t (a, b) SELECT 1, 2", roundTrip("INSERT INTO t (a, b) SELECT 1, 2"))
+    }
+
+    @Test
     fun aQueryCanSelectPartitionsOfATable() {
         // Doris relationPrimary: name specifiedPartition? alias; specifiedPartition is
         // TEMPORARY? PARTITION (identifier | identifierList) | TEMPORARY? PARTITIONS identifierList.

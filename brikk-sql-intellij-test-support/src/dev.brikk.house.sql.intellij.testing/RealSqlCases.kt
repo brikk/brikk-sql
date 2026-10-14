@@ -5,7 +5,7 @@ import org.jetbrains.annotations.ApiStatus
 /** Syntax a dialect may lack; a case needing one runs only where the target has it. */
 @ApiStatus.Experimental
 public enum class RealSqlFeature {
-    /** `* EXCEPT (a, b)` in a projection. */
+    /** `* EXCEPT (a, b)` in a projection, or as the dialect spells it (DuckDB's `* EXCLUDE (a, b)`). */
     STAR_EXCEPT,
 
     /** `* REPLACE (expr AS a)` in a projection. */
@@ -46,15 +46,58 @@ public enum class RealSqlFeature {
 
     /** Doris functions and syntax (`FROM_SECOND`, multi-catalog). */
     DORIS,
+
+    /** `a.b` reading field `b` of a ROW or struct column `a` (Trino, DuckDB, BigQuery). */
+    ROW_FIELD_ACCESS,
+
+    /** PostgreSQL's set-returning functions in FROM (`generate_series`). */
+    SET_RETURNING_FUNCTIONS,
+
+    /** ClickHouse table functions (`numbers`, `s3`, `url`) and `INSERT INTO FUNCTION`. */
+    CLICKHOUSE_TABLE_FUNCTIONS,
+
+    /** Doris table functions given properties (`numbers("number" = "10")`, `s3(...)`), read and written. */
+    DORIS_TABLE_FUNCTIONS,
+
+    /** DuckDB's file and range table functions (`read_parquet`, `read_csv`, `range`). */
+    DUCKDB_TABLE_FUNCTIONS,
+
+    /** Trino's `TABLE(system.sequence(...))` and `UNNEST`. */
+    TRINO_TABLE_FUNCTIONS,
 }
 
-/** A completion check: at `<caret>` in [sql], [offered] are all offered. */
+/**
+ * A completion check: at `<caret>` in [sql], [offered] are all offered and none of [notOffered] (another
+ * namespace's columns, say). [variants] replaces the SQL for a dialect.
+ */
 @ApiStatus.Experimental
-public data class RealSqlCompletion(val sql: String, val offered: Set<String>) {
+public data class RealSqlCompletion(
+    val sql: String,
+    val offered: Set<String>,
+    val notOffered: Set<String> = emptySet(),
+    val variants: Map<String, String> = emptyMap(),
+) {
     init {
-        require("<caret>" in sql) { "A completion needs a <caret>" }
+        require((variants.values + sql).all { "<caret>" in it }) { "A completion needs a <caret>" }
     }
+
+    // Binary compatibility (AGENTS.md): the constructor and copy from before notOffered and variants.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(sql: String, offered: Set<String>) : this(sql, offered, emptySet(), emptyMap())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(sql: String = this.sql, offered: Set<String> = this.offered): RealSqlCompletion = copy(sql, offered, notOffered, variants)
+
+    /** The SQL for [dialect]. */
+    public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
 }
+
+/** The dialects spelling `* EXCEPT (...)` `* EXCLUDE (...)`. */
+private val STAR_EXCLUDE_DIALECTS = listOf("duckdb", "snowflake")
+
+/** [sql]'s `* EXCEPT (...)` as each dialect spelling it otherwise writes it, for [RealSqlCase.variants]. */
+private fun starExceptVariants(sql: String): Map<String, String> =
+    STAR_EXCLUDE_DIALECTS.associateWith { sql.replace("* EXCEPT (", "* EXCLUDE (") }
 
 /**
  * One realistic statement over [RealSqlModel.STANDARD]: it must highlight with no error or warning,
@@ -158,6 +201,7 @@ public object RealSqlCases {
             "external-except-star-in-cte-of-derived",
             "WITH c AS (SELECT * FROM (SELECT ts AS ts, * EXCEPT (ts), 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts, uid FROM c",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.STAR_EXCEPT),
+            variants = starExceptVariants("WITH c AS (SELECT * FROM (SELECT ts AS ts, * EXCEPT (ts), 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts, uid FROM c"),
             reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
         RealSqlCase(
@@ -173,10 +217,110 @@ public object RealSqlCases {
             needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS),
             reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
+        // Doris runs a scheduled job's statement, and writes through a table function given properties.
+        RealSqlCase(
+            "external-scheduled-job",
+            "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO shop.sales.archive SELECT * EXCEPT (kind) FROM ext_catalog.archive_db.facts WHERE uid = 1",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS, RealSqlFeature.STAR_EXCEPT),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
+        ),
+        RealSqlCase(
+            "external-insert-into-table-function",
+            "INSERT INTO s3(\"uri\" = \"s3://bucket/path/\", \"format\" = \"csv\") SELECT ts, uid FROM ext_catalog.archive_db.facts WHERE kind = 'a'",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
+        ),
     )
 
 
+    /**
+     * Table functions, read alone, joined to a table under an alias, through `t.*` and `t.col`, and written
+     * where the dialect writes through one: a known function is no unknown function, its columns are open
+     * unless its schema is known, and a table function target counts no columns against the query.
+     */
+    public val TABLE_FUNCTIONS: List<RealSqlCase> = listOf(
+        RealSqlCase("srf-read", "SELECT g FROM generate_series(1, 3) AS g", needs = setOf(RealSqlFeature.SET_RETURNING_FUNCTIONS)),
+        RealSqlCase(
+            "srf-joined",
+            "SELECT o.order_id, g.n FROM sales.orders o JOIN generate_series(1, 3) AS g(n) ON g.n = o.order_id",
+            needs = setOf(RealSqlFeature.SET_RETURNING_FUNCTIONS),
+        ),
+        RealSqlCase("srf-star", "SELECT t.* FROM generate_series(1, 3) AS t", needs = setOf(RealSqlFeature.SET_RETURNING_FUNCTIONS)),
+
+        RealSqlCase("clickhouse-tf-read", "SELECT number FROM numbers(10)", needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "clickhouse-tf-joined",
+            "SELECT t.number, o.order_id FROM numbers(3) AS t JOIN sales.orders AS o ON o.order_id = t.number",
+            needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase("clickhouse-tf-star", "SELECT t.* FROM s3('https://bucket.example/path/data.csv', 'CSV') AS t", needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS)),
+        RealSqlCase("clickhouse-tf-open-column", "SELECT t.c1 FROM url('https://example.com/data.csv', 'CSV') AS t", needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "clickhouse-insert-into-function",
+            "INSERT INTO FUNCTION s3('https://bucket.example/path/out.csv', 'CSV') SELECT order_id, amount FROM sales.orders",
+            needs = setOf(RealSqlFeature.CLICKHOUSE_TABLE_FUNCTIONS),
+        ),
+
+        RealSqlCase("doris-tf-read", "SELECT number FROM numbers(\"number\" = \"10\")", needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "doris-tf-joined",
+            "SELECT t.number, o.order_id FROM numbers(\"number\" = \"3\") AS t JOIN sales.orders o ON o.order_id = t.number",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "doris-tf-star",
+            "SELECT t.* FROM s3(\"uri\" = \"s3://bucket/path/data.csv\", \"format\" = \"csv\") AS t",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "doris-tf-open-column",
+            "SELECT t.c1 FROM s3(\"uri\" = \"s3://bucket/path/data.csv\", \"format\" = \"csv\") AS t",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "doris-insert-into-table-function",
+            "INSERT INTO s3(\"uri\" = \"s3://bucket/path/out/\", \"format\" = \"csv\") SELECT order_id, amount FROM sales.orders",
+            needs = setOf(RealSqlFeature.DORIS_TABLE_FUNCTIONS),
+        ),
+
+        RealSqlCase("duckdb-tf-read", "SELECT * FROM read_parquet('data/orders.parquet')", needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "duckdb-tf-joined",
+            "SELECT t.order_id, u.name FROM read_csv('data/orders.csv') AS t JOIN sales.users u ON u.user_id = t.user_id",
+            needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase("duckdb-tf-star", "SELECT t.* FROM read_parquet('data/*.parquet') AS t", needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS)),
+        RealSqlCase("duckdb-range", "SELECT r.range FROM range(3) AS r", needs = setOf(RealSqlFeature.DUCKDB_TABLE_FUNCTIONS)),
+
+        RealSqlCase("trino-sequence", "SELECT * FROM TABLE(system.sequence(start => 1, stop => 10))", needs = setOf(RealSqlFeature.TRINO_TABLE_FUNCTIONS)),
+        RealSqlCase(
+            "trino-sequence-aliased",
+            "SELECT s.sequential_number FROM TABLE(system.sequence(start => 1, stop => 3)) AS s",
+            needs = setOf(RealSqlFeature.TRINO_TABLE_FUNCTIONS),
+        ),
+        RealSqlCase(
+            "trino-unnest-joined",
+            "SELECT o.order_id, u.x FROM sales.orders o CROSS JOIN UNNEST(ARRAY[1, 2]) AS u(x)",
+            needs = setOf(RealSqlFeature.TRINO_TABLE_FUNCTIONS),
+        ),
+    )
+
     public val ALL: List<RealSqlCase> = listOf(
+        // Computed columns passed on through a chain of CTEs and read by CASE, GROUP BY and ORDER BY.
+        RealSqlCase(
+            "cte-chain-computed-case",
+            "WITH a AS (SELECT *, round(amount / 7) AS bucket FROM sales.orders), " +
+                "b AS (SELECT *, CASE WHEN bucket > 2 THEN 'x' ELSE 'y' END AS tag FROM a), " +
+                "c AS (SELECT *, CASE WHEN tag = 'x' THEN 7 ELSE 9 END AS score FROM b), " +
+                "d AS (SELECT tag, count(*) AS n, sum(score) AS total FROM c GROUP BY tag) " +
+                "SELECT *, CASE tag WHEN 'x' THEN 7 ELSE 9 END AS rank_order FROM d WHERE tag = 'x' ORDER BY rank_order",
+        ),
+        // A ROW column's field, of a table listed without columns: nothing proves the column absent.
+        RealSqlCase(
+            "row-field-of-columnless-table",
+            "SELECT payload.member, count(*) FROM sales.archive GROUP BY 1",
+            needs = setOf(RealSqlFeature.ROW_FIELD_ACCESS),
+        ),
         // Stars through derived tables and CTEs.
         RealSqlCase(
             "star-derived",
@@ -208,12 +352,19 @@ public object RealSqlCases {
             "star-except",
             "SELECT e.user_id, e.amount FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e",
             needs = setOf(RealSqlFeature.STAR_EXCEPT),
-            completions = listOf(RealSqlCompletion("SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e", setOf("user_id"))),
+            variants = starExceptVariants("SELECT e.user_id, e.amount FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e"),
+            completions = listOf(
+                RealSqlCompletion(
+                    "SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e", setOf("user_id"), notOffered = setOf("status"),
+                    variants = starExceptVariants("SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e"),
+                ),
+            ),
         ),
         RealSqlCase(
             "star-except-in-cte-with-expression",
             "WITH c AS (SELECT upper(status) AS status, * EXCEPT (status) FROM sales.orders) SELECT status, user_id FROM c",
             needs = setOf(RealSqlFeature.STAR_EXCEPT),
+            variants = starExceptVariants("WITH c AS (SELECT upper(status) AS status, * EXCEPT (status) FROM sales.orders) SELECT status, user_id FROM c"),
         ),
         RealSqlCase(
             "star-replace",

@@ -9,6 +9,10 @@ import com.intellij.psi.PsiFile
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlElementTypes
 import com.intellij.sql.psi.SqlTokens
+import com.intellij.psi.util.CachedValueProvider
+import com.intellij.psi.util.CachedValuesManager
+import dev.brikk.house.sql.ast.Command
+import dev.brikk.house.sql.parser.parseOne
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -19,18 +23,38 @@ import org.jetbrains.annotations.ApiStatus
  * is hidden. With [SubstrateErrors.LENIENT_ONLY] (a stock substrate, such as a ClickHouse family on
  * the platform ClickHouse grammar, whose errors are the dialect's) only errors inside a lenient
  * fallback are: a top-level generic `SQL_STATEMENT` holding tokens and parameters but no grammar
- * structure, as `parseLenientStatement` and the boundary gates build.
+ * structure, as `parseLenientStatement` and the boundary gates build; and, given a [coreDialect], those
+ * in a statement core parses cleanly, which the grammar rejects only where it lacks a construct (such as
+ * a query argument the platform parses lazily, after the boundary gate). Core's own parse reports real
+ * errors, through the native-error annotator's local parse.
  */
 @ApiStatus.Experimental
 public abstract class SubstrateErrorFilter(
     private val language: Language,
     private val scope: SubstrateErrors = SubstrateErrors.ALL,
+    private val coreDialect: String? = null,
 ) : HighlightErrorFilter() {
+    // Binary compatibility (AGENTS.md): the constructor from before coreDialect.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(language: Language, scope: SubstrateErrors = SubstrateErrors.ALL) : this(language, scope, null)
+
     final override fun shouldHighlightErrorElement(element: PsiErrorElement): Boolean {
         if (element.containingFile?.language?.isKindOf(language) != true) return true
         return when (scope) {
             SubstrateErrors.ALL -> false
-            SubstrateErrors.LENIENT_ONLY -> generateSequence(element.parent) { it.parent }.takeWhile { it !is PsiFile }.none(::isLenientFallback)
+            SubstrateErrors.LENIENT_ONLY -> {
+                val enclosing = generateSequence(element.parent) { it.parent }.takeWhile { it !is PsiFile }.toList()
+                enclosing.none(::isLenientFallback) && enclosing.lastOrNull()?.let { coreParses(it) } != true
+            }
+        }
+    }
+
+    /** Whether core parses [statement], a top-level statement, as one it models, without errors. */
+    private fun coreParses(statement: PsiElement): Boolean {
+        val dialect = coreDialect ?: return false
+        return CachedValuesManager.getCachedValue(statement) {
+            val parsed = runCatching { parseOne(statement.text, dialect) }.getOrNull()
+            CachedValueProvider.Result.create(parsed != null && parsed !is Command, statement)
         }
     }
 }

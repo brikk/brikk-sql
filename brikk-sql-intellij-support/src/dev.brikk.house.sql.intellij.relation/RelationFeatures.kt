@@ -86,8 +86,9 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * cannot know: ones that may come, through any number of derived tables, CTEs and enclosing queries,
  * from a relation that is unknown, out of scope, listed without columns or not introspected yet. A
  * column absent from a fully known source and an unknown table name stay reported; a qualifier
- * naming a relation of its query does not. Where the platform knows every source of a column (tables
- * it resolves with their columns, table functions it types), its report stands. Every other
+ * naming a relation of its query does not, nor one that may name a ROW column of such a relation where
+ * `a.b` reads a field, nor a column of a statement beyond core's grammar. Where the platform knows every
+ * source of a column (tables it resolves with their columns, table functions it types), its report stands. Every other
  * inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
@@ -107,7 +108,19 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
         val range = name.textRange ?: return false
         val start = analysis.source.textOffset(range.startOffset)
         val end = analysis.source.textOffset(range.endOffset)
-        return analysis.referencesAt(start, end).any { analysis.decides(it, name, absent = tool == "SqlResolve") }
+        val references = analysis.referencesAt(start, end)
+        if (references.isEmpty()) return tool == "SqlResolve" && unread(analysis, element, name, start)
+        return references.any { analysis.decides(it, name, absent = tool == "SqlResolve") }
+    }
+
+    /**
+     * Whether [element] is a column the analysis cannot read at all, in a statement it read nothing of (one
+     * beyond core's grammar), whose sources the platform does not all know: nothing proves it absent.
+     */
+    private fun unread(analysis: RelationAnalysis, element: PsiElement, name: PsiElement, start: Int): Boolean {
+        val reference = element as? SqlReferenceExpression ?: PsiTreeUtil.getParentOfType(name, SqlReferenceExpression::class.java) ?: return false
+        if (reference.referenceElementType.targetKind != ObjectKind.COLUMN) return false
+        return analysis.statementReferences(start).isEmpty() && !platformKnowsSources(name)
     }
 
     private fun RelationAnalysis.decides(reference: ScopeReference, name: PsiElement, absent: Boolean): Boolean = when (reference.kind) {
@@ -122,7 +135,9 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
                 reference.knowledge != Knowledge.FULL && !platformKnowsSources(name))
         }
         // A qualifier naming a relation of its query (`t.c` over `cat.db.t`) is bound by SQL scoping, whatever the catalog holds.
-        ReferenceKind.QUALIFIER -> reference.relation?.let(::manages) == true || absent && reference.resolution == Resolution.RESOLVED
+        // One naming no relation may name a ROW column of a relation nobody has loaded, where `a.b` reads a field.
+        ReferenceKind.QUALIFIER -> reference.relation?.let(::manages) == true || absent && (reference.resolution == Resolution.RESOLVED ||
+            reference.knowledge != Knowledge.FULL && !platformKnowsSources(name))
         ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
     }
 

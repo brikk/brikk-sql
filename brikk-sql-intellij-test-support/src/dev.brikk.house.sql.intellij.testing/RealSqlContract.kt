@@ -39,7 +39,7 @@ public interface RealSqlTarget {
  * [AssertionError].
  */
 @ApiStatus.Experimental
-public class RealSqlContract(private val target: RealSqlTarget, private val cases: List<RealSqlCase> = RealSqlCases.ALL) {
+public class RealSqlContract(private val target: RealSqlTarget, private val cases: List<RealSqlCase> = RealSqlCases.ALL + RealSqlCases.TABLE_FUNCTIONS) {
     /** Checks every applicable case. */
     public fun check() {
         val failures = cases.filter { target.features.containsAll(it.needs) }.flatMap(::failures)
@@ -77,10 +77,14 @@ public class RealSqlContract(private val target: RealSqlTarget, private val case
             if (allowed.any { it.contains(range) }) null
             else "${case.name}: ${info.severity} '${document.getText(range)}' ${info.description}"
         }
-        val missing = case.completions.mapNotNull { completion ->
-            target.open(completion.sql)
+        val missing = case.completions.flatMap { completion ->
+            val sql = completion.sqlFor(target.dialect)
+            target.open(sql)
             val offered = fixture.completeBasic()?.map { it.lookupString }?.toSet() ?: emptySet()
-            (completion.offered - offered).takeIf { it.isNotEmpty() }?.let { "${case.name}: not offered $it at ${completion.sql}" }
+            listOfNotNull(
+                (completion.offered - offered).takeIf { it.isNotEmpty() }?.let { "${case.name}: not offered $it at $sql" },
+                completion.notOffered.filter { it in offered }.takeIf { it.isNotEmpty() }?.let { "${case.name}: offered $it, which must not be, at $sql" },
+            )
         }
         return reports + missing
     }

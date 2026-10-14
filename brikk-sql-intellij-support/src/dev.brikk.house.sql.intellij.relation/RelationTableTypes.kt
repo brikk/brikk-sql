@@ -1,11 +1,18 @@
 package dev.brikk.house.sql.intellij.relation
 
+import com.intellij.database.model.properties.DataTypeFactory
 import com.intellij.database.types.DasTypeSystemBase
+import com.intellij.database.types.DasTypeSystems
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.sql.dialects.SqlLanguageDialectEx
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlTableType
 import com.intellij.sql.psi.impl.SqlTableTypeBase
 import dev.brikk.house.sql.scope.ColumnSource
+import dev.brikk.house.sql.scope.Knowledge
+import dev.brikk.house.sql.scope.RelationFacts
+import dev.brikk.house.sql.scope.RelationScope
 import dev.brikk.house.sql.scope.RelationKind
 import dev.brikk.house.sql.scope.ScopeColumn
 import org.jetbrains.annotations.ApiStatus
@@ -48,4 +55,31 @@ public object RelationTableTypes {
         }
         return table
     }
+
+    /**
+     * The table type of [call], a table function in a FROM position, for a plugin's function-call element to
+     * return: a slot's as [of] gives it; else, where the analysis knows the call's columns (call facts, such
+     * as [TableFunctionFacts], a structure argument or a query the dialect reads them from), those columns
+     * with their SQL types; else the empty table type, which leaves its columns open, where the platform would
+     * invent one named after the call. Null outside a FROM position.
+     */
+    public fun ofTableFunction(call: SqlFunctionCallExpression, profile: RelationScopeProfile): SqlTableType? {
+        if (call.parent?.node?.elementType != SqlCompositeElementTypes.SQL_TABLE_PROCEDURE_CALL_EXPRESSION) return null
+        of(call, profile)?.let { return it }
+        val file = call.containingFile ?: return null
+        val facts = RelationAnalysis.of(file, profile, lastKnown = true)?.facts?.merged ?: RelationFacts()
+        val sql = "SELECT $ALIAS. FROM ${call.text} AS $ALIAS"
+        val completion = RelationScope.complete(sql, profile.dialect, facts, "SELECT $ALIAS.".length, checkCanceled = ProgressManager::checkCanceled)
+        if (completion.knowledge != Knowledge.FULL || completion.items.isEmpty()) return SqlTableTypeBase.EMPTY_TABLE
+        val types = (file.language as? SqlLanguageDialectEx)?.dbms?.let(DasTypeSystems::getTypeSystem)
+        var table: SqlTableType = SqlTableTypeBase.EMPTY_TABLE
+        for (item in completion.items) {
+            val column = item.column ?: continue
+            val type = column.sqlType?.let { sqlType -> types?.createDasType(DataTypeFactory.of(sqlType)) } ?: DasTypeSystemBase.UNKNOWN
+            table = table.add(SqlTableTypeBase.createType(call, type, column.name, false, false, true, null, null))
+        }
+        return table
+    }
+
+    private const val ALIAS = "brikk_call"
 }

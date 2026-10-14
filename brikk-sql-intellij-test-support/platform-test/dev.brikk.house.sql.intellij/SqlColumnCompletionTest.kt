@@ -72,7 +72,8 @@ class SqlColumnCompletionTest : BasePlatformTestCase() {
 
     fun testSameNamedColumnsOfTwoRelationsStayDistinct() {
         val items = complete(listOf(PlatformColumn("id", "a")), listOf(idOfA, idOfB)).filter { it.lookupString == "id" }
-        assertSameElements(items.map { render(it).typeText }, "Long", "String (nullability unknown)")
+        // Nullability that cannot be proved is never shown, in words or otherwise.
+        assertSameElements(items.map { render(it).typeText }, "Long", "String")
     }
 
     fun testACandidateMatchingNoColumnIsLeftAsIs() {

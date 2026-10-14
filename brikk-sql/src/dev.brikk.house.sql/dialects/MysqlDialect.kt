@@ -13,6 +13,9 @@ import dev.brikk.house.sql.parser.TokenizerConfig
  */
 // sqlglot: dialects.mysql.MySQL
 class MysqlDialect : Dialect() {
+    // brikk-native: see Dialect.dottedFieldAccess.
+    override val dottedFieldAccess: Boolean get() = false
+
 
     override val name: String get() = "mysql"
     override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE

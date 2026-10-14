@@ -135,6 +135,15 @@ open class Dialect {
     // brikk-native: a derived table renames repeated output names with `_1`, `_2`, ... suffixes (DuckDB).
     internal open val deduplicatesDerivedColumnNames: Boolean get() = false
 
+    // brikk-native: `a.b` may read field `b` of a ROW or struct column `a` (Trino, DuckDB, BigQuery,
+    // ClickHouse tuples, Doris structs); PostgreSQL writes `(a).b` and MySQL has no such columns, so there
+    // `a` can only name a relation.
+    internal open val dottedFieldAccess: Boolean get() = true
+
+    // brikk-native: a table function's arguments may declare its columns, by a structure string or a
+    // query (ClickHouse `file('x', 'CSV', 'a UInt32')`, `values('a UInt8', ...)`, `view(SELECT ...)`).
+    internal open val tableFunctionArgumentsDeclareColumns: Boolean get() = false
+
     // sqlglot: Dialect.SUPPORTS_STRUCT_STAR_EXPANSION (BigQuery, RisingWave)
     open val supportsStructStarExpansion: Boolean get() = false
 

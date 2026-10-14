@@ -320,6 +320,30 @@ class RelationScopeTest {
     }
 
     @Test
+    fun completionOffersAColumnPassedOnByASelectListOnceUnderTheRelationShowingIt() {
+        val chain = "WITH extract_fields AS (SELECT CAST(a AS BOOLEAN) AS flag_a, k FROM db.src), final_projection AS (SELECT * FROM extract_fields), " +
+            "grouped AS (SELECT k, MAX(flag_a) AS top FROM final_projection GROUP BY k, <caret>) SELECT * FROM grouped"
+        val known = RelationFacts(tables = mapOf("db.src" to RelationFact(listOf(ColumnFact("a"), ColumnFact("k")))))
+        // The select list's own k, which GROUP BY may name in Doris, is final_projection's k: one item, whatever db.src's columns.
+        for (facts in listOf(RelationFacts(), known)) for (sql in listOf(chain, "CREATE MATERIALIZED VIEW db.mv AS $chain")) {
+            val completion = RelationScope.complete(sql.replace("<caret>", ""), "doris", facts, sql.indexOf("<caret>"))
+            assertEquals(listOf("flag_a" to "final_projection", "k" to "final_projection"), completion.items.map { it.name to it.column?.relation }, sql)
+        }
+    }
+
+    @Test
+    fun anUnknownQualifierMayBeARowColumnOnlyWhereADotReadsAField() {
+        val sql = "SELECT r.member FROM ext.s.unloaded"
+        fun qualifier(dialect: String) = RelationScope.analyze(sql, dialect, RelationFacts()).references.single { it.kind == ReferenceKind.QUALIFIER }
+        for (dialect in listOf("trino", "duckdb", "bigquery", "clickhouse", "doris")) assertEquals(Knowledge.UNKNOWN, qualifier(dialect).knowledge, dialect)
+        // PostgreSQL reads a field as (r).member and MySQL has no row columns: r can only name a relation.
+        for (dialect in listOf("postgres", "mysql")) {
+            assertEquals(Knowledge.FULL, qualifier(dialect).knowledge, dialect)
+            assertEquals(emptyList(), RelationScope.analyze(sql, dialect, RelationFacts()).diagnostics.map { it.message }, dialect)
+        }
+    }
+
+    @Test
     fun completionReplacesTheTypedPrefix() {
         val sql = "FROM events() |> WHERE eve"
         val completion = RelationScope.complete(sql, "duckdb", facts, sql.length)

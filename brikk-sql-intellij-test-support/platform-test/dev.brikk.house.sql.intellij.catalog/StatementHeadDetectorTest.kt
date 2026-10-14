@@ -6,6 +6,7 @@ class StatementHeadDetectorTest : TestCase() {
     private val duckdb = StatementHeadDetector(StatementRules.DUCKDB, "duckdb")
     private val trino = StatementHeadDetector(StatementRules.TRINO, "trino")
     private val doris = StatementHeadDetector(StatementRules.DORIS, "doris")
+    private val clickhouse = StatementHeadDetector(StatementRules.CLICKHOUSE, "clickhouse")
 
     private fun StatementHeadDetector.heads(script: String) = detect(script).map { it.rule.pattern }
 
@@ -65,6 +66,49 @@ class StatementHeadDetectorTest : TestCase() {
         assertEquals(StatementEffect.Namespace(2, 1), trino.detect("CREATE SCHEMA a.b").single().effect)
         assertEquals(StatementEffect.Namespace(1, 1), doris.detect("REFRESH CATALOG c").single().effect)
         assertEquals(StatementEffect.Namespace(1, 0), doris.detect("CREATE CATALOG c PROPERTIES ('type'='hms')").single().effect)
+    }
+
+    fun testTableViewAndSchemaDdlReloadTheNamespaceHoldingWhatItChanges() {
+        fun effects(detector: StatementHeadDetector, script: String) = detector.detect(script).map { it.effect to it.name }
+        val table = StatementEffect.Namespace(3)
+        for (sql in listOf(
+            "CREATE TABLE live(x INT)", "create or replace temp table live AS SELECT 1", "CREATE TABLE IF NOT EXISTS live(x INT)",
+            "ALTER TABLE live ADD COLUMN y INT", "DROP TABLE IF EXISTS live", "CREATE OR REPLACE VIEW live AS SELECT 1",
+            "ALTER VIEW live RENAME TO other", "DROP VIEW live",
+        )) assertEquals(sql, listOf(table to listOf("live")), effects(duckdb, sql))
+        assertEquals(listOf(table to listOf("lake", "main", "t")), effects(duckdb, "CREATE TABLE lake.main.t(x INT)"))
+        assertEquals(listOf(StatementEffect.Namespace(2) to listOf("web")), effects(duckdb, "CREATE SCHEMA IF NOT EXISTS web"))
+        assertEquals(listOf(StatementEffect.Namespace(2) to listOf("lake", "web")), effects(duckdb, "DROP SCHEMA lake.web CASCADE"))
+        // The function inventory rules still come first.
+        assertEquals(StatementEffect.FunctionInventory(sessionFacts = true), duckdb.detect("CREATE TEMP MACRO m() AS 1").single().effect)
+
+        for (sql in listOf(
+            "CREATE TABLE hive.web.t (x int)", "CREATE OR REPLACE TABLE hive.web.t AS SELECT 1", "CREATE MATERIALIZED VIEW hive.web.t AS SELECT 1",
+            "ALTER TABLE hive.web.t ADD COLUMN y int", "ALTER MATERIALIZED VIEW hive.web.t RENAME TO u", "DROP VIEW IF EXISTS hive.web.t",
+            "DROP MATERIALIZED VIEW hive.web.t",
+        )) assertEquals(sql, listOf(table to listOf("hive", "web", "t")), effects(trino, sql))
+        assertEquals(listOf(StatementEffect.Namespace(2) to listOf("hive", "web")), effects(trino, "ALTER SCHEMA hive.web RENAME TO www"))
+
+        for (sql in listOf(
+            "CREATE TABLE t (k INT) DISTRIBUTED BY HASH(k) BUCKETS 1", "CREATE EXTERNAL TABLE t (k INT) ENGINE=hive", "CREATE TEMPORARY TABLE t (k INT)",
+            "CREATE TABLE IF NOT EXISTS t LIKE s", "CREATE OR REPLACE VIEW t AS SELECT 1", "CREATE MATERIALIZED VIEW t AS SELECT 1",
+            "ALTER TABLE t ADD COLUMN v INT", "ALTER VIEW t AS SELECT 2", "DROP TABLE IF EXISTS t FORCE", "DROP VIEW t", "DROP MATERIALIZED VIEW t",
+        )) assertEquals(sql, listOf(table to listOf("t")), effects(doris, sql))
+        for (sql in listOf("CREATE DATABASE IF NOT EXISTS app", "CREATE SCHEMA app", "DROP DATABASE app FORCE", "ALTER DATABASE app RENAME app2")) {
+            assertEquals(sql, listOf(StatementEffect.Namespace(2) to listOf("app")), effects(doris, sql))
+        }
+
+        val chTable = StatementEffect.Namespace(2)
+        for (sql in listOf(
+            "CREATE TABLE db.t (x UInt8) ENGINE = Memory", "CREATE OR REPLACE TABLE db.t ENGINE = Memory AS SELECT 1", "CREATE TEMPORARY TABLE db.t (x UInt8)",
+            "CREATE VIEW db.t AS SELECT 1", "CREATE MATERIALIZED VIEW IF NOT EXISTS db.t TO db.s AS SELECT 1", "CREATE DICTIONARY db.t (k UInt64) PRIMARY KEY k",
+            "ALTER TABLE db.t ON CLUSTER c ADD COLUMN y UInt8", "DROP TABLE IF EXISTS db.t SYNC", "DROP DICTIONARY db.t", "RENAME TABLE db.t TO db.u",
+            "EXCHANGE TABLES db.t AND db.u", "ATTACH TABLE db.t", "DETACH VIEW db.t",
+        )) assertEquals(sql, listOf(chTable to listOf("db", "t")), effects(clickhouse, sql))
+        for (sql in listOf("CREATE DATABASE IF NOT EXISTS db", "DROP DATABASE db", "ATTACH DATABASE db", "DETACH DATABASE db", "RENAME DATABASE db TO db2")) {
+            assertEquals(sql, listOf(StatementEffect.Namespace(1) to listOf("db")), effects(clickhouse, sql))
+        }
+        assertEquals(emptyList<Any>(), effects(clickhouse, "SELECT 1; INSERT INTO db.t VALUES (1); OPTIMIZE TABLE db.t; TRUNCATE TABLE db.t"))
     }
 
     fun testMalformedPatternsAreRejected() {

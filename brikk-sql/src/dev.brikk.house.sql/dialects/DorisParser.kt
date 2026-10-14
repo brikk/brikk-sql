@@ -23,6 +23,8 @@ import dev.brikk.house.sql.ast.GeneratedAsIdentityColumnConstraint
 import dev.brikk.house.sql.ast.Interval
 import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.OnProperty
+import dev.brikk.house.sql.ast.EQ
+import dev.brikk.house.sql.ast.DorisCreateJob
 import dev.brikk.house.sql.ast.Partition
 import dev.brikk.house.sql.ast.PartitionByListProperty
 import dev.brikk.house.sql.ast.PartitionByRangeProperty
@@ -206,13 +208,20 @@ open class DorisParser(
     override val typeTokens: Set<TokenType> get() = DorisParserTables.TYPE_TOKENS
 
     // brikk-native (docs/brikk-extensions.md #19): Doris INSERT targets may select a temporary partition:
-    // INSERT INTO t TEMPORARY PARTITION (p, ...) [(columns)] SELECT ...
+    // INSERT INTO t TEMPORARY PARTITION (p, ...) [(columns)] SELECT ..., or be a table function given
+    // properties (insertIntoTVF): INSERT INTO s3("uri" = "...", ...) SELECT ...
     override fun parseDmlTarget(
         schema: kotlin.Boolean,
         joins: kotlin.Boolean,
         aliasTokens: Collection<TokenType>?,
         parsePartition: kotlin.Boolean,
     ): Expression? {
+        if (parsePartition && nextToken.tokenType == TokenType.L_PAREN) {
+            val start = index
+            val call = parseFunction()
+            if (call is Anonymous && call.expressionsArg.isNotEmpty() && call.expressionsArg.all { it is EQ }) return call
+            retreat(start)
+        }
         val target = super.parseDmlTarget(schema, joins, aliasTokens, parsePartition)
         if (!parsePartition || !match(TokenType.TEMPORARY)) return target
 
@@ -873,6 +882,43 @@ open class DorisParser(
                 )
             )
         )
+
+    // brikk-native (docs/brikk-extensions.md #19): CREATE JOB with a schedule runs a statement the
+    // analysis must read (DorisParser.g4 createScheduledJob); a streaming job stays a Command.
+    override fun parseCreate(): Expression {
+        if (!currToken.text.equals("JOB", ignoreCase = true)) return super.parseCreate()
+        val start = index
+        return parseScheduledJob() ?: run {
+            retreat(start)
+            super.parseCreate()
+        }
+    }
+
+    private fun parseScheduledJob(): Expression? {
+        advance()
+        val name = parseTableParts(schema = true)
+        val properties = if (matchTextSeq("PROPERTIES")) expression(Properties(args("expressions" to parseWrappedProperties()))) else null
+        if (!matchTextSeq("ON", "SCHEDULE")) return null
+        val first = currToken
+        when {
+            matchTextSeq("EVERY") -> {
+                parseNumber() ?: return null
+                parseVar(anyToken = true) ?: return null
+                if (matchTextSeq("STARTS")) parseString() ?: parseVar(anyToken = true) ?: return null
+                if (matchTextSeq("ENDS")) parseString() ?: return null
+            }
+            matchTextSeq("AT") -> parseString() ?: parseVar(anyToken = true) ?: return null
+            else -> return null
+        }
+        val schedule = findSql(first, prevToken)
+        val comment = if (matchTextSeq("COMMENT")) parseString() ?: return null else null
+        if (!matchTextSeq("DO")) return null
+        val statement = parseStatement() ?: return null
+        if (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) return null
+        return expression(DorisCreateJob(args(
+            "this" to name, "properties" to properties, "schedule" to Var(args("this" to schedule)), "comment" to comment, "expression" to statement,
+        )))
+    }
 
     // BUILD INDEX idx ON t [PARTITIONS (..)] | PAUSE | RESUME MATERIALIZED VIEW JOB ON mv |
     // CANCEL MATERIALIZED VIEW TASK n ON mv | RECOVER TABLE | DATABASE | PARTITION ... — the

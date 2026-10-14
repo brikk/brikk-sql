@@ -1301,6 +1301,11 @@ open class DorisGenerator(
             reg(DorisModifyEngine::class) { e -> "MODIFY ENGINE TO ${sql(e, "this")}${dg().propertiesClause(e)}" }
             reg(DorisModifyComment::class) { e -> "MODIFY COMMENT ${sql(e, "this")}" }
             reg(DorisBuildIndex::class) { e -> dg().dorisbuildindexSql(e as DorisBuildIndex) }
+            reg(DorisCreateJob::class) { e ->
+                val properties = (e.args["properties"] as? Properties)?.let { " ${properties(it, prefix = "PROPERTIES")}" }.orEmpty()
+                val comment = e.args["comment"]?.let { " COMMENT ${sql(e, "comment")}" }.orEmpty()
+                "CREATE JOB ${sql(e, "this")}$properties ON SCHEDULE ${e.text("schedule")}$comment DO ${sql(e, "expression")}"
+            }
             reg(DorisMaterializedViewJob::class) { e -> "${e.text("kind")} MATERIALIZED VIEW JOB ON ${sql(e, "this")}" }
             reg(DorisCancelMaterializedViewTask::class) { e ->
                 "CANCEL MATERIALIZED VIEW TASK ${sql(e, "this")} ON ${sql(e, "table")}"
