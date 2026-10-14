@@ -10,6 +10,7 @@ import com.intellij.database.introspection.IntrospectionTask
 import com.intellij.database.introspection.prepareOneElementRefreshTask
 import com.intellij.database.model.DasModel
 import com.intellij.database.model.basic.BasicElement
+import com.intellij.database.model.basic.BasicNamespace
 import com.intellij.database.model.basic.BasicModel
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.LoaderContext
@@ -206,9 +207,28 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
     }
 
     private fun resolve(file: PsiFile, dataSource: LocalDataSource, path: List<String>): NamespaceTarget? {
-        val model = DbPsiFacade.getInstance(project).findDataSource(dataSource.uniqueId)?.model ?: dataSource.model
-        val current = if (profile.usesCurrentNamespace) dataSources.consoleNamespace(file) else emptyList()
-        return pathResolver.resolve(model.modelRoots.toList(), path, current)
+        val model = modelOf(dataSource)
+        return pathResolver.resolve(model.modelRoots.toList(), path, currentNamespace(file, model))
+    }
+
+    private fun modelOf(dataSource: LocalDataSource): DasModel =
+        DbPsiFacade.getInstance(project).findDataSource(dataSource.uniqueId)?.model ?: dataSource.model
+
+    /**
+     * The namespace a relative path is under: the console's current one, else the one the model marks current
+     * (the connection's default catalog and schema, as a listing reports them).
+     */
+    private fun currentNamespace(file: PsiFile, model: DasModel): List<String> {
+        if (!profile.usesCurrentNamespace) return emptyList()
+        dataSources.consoleNamespace(file).takeIf { it.isNotEmpty() }?.let { return it }
+        val names = ArrayList<String>()
+        var nodes = model.modelRoots.toList()
+        while (names.size < profile.levels.size) {
+            val current = nodes.firstOrNull { (it as? BasicNamespace)?.isCurrent == true } ?: break
+            names += current.name
+            nodes = profile.childrenOf(current)
+        }
+        return names
     }
 
     /** Whether [target] must load: it is childless, or a namespace whose children may be only some of them. */
@@ -269,14 +289,12 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
             val ancestor = resolve(file, dataSource, path.take(length)) ?: continue
             return if (needsLoad(dataSource, ancestor)) Step.Load(ancestor) else Step.Unknown
         }
-        // A first name may be under the console's namespace, whose children may not be listed yet.
-        if (profile.usesCurrentNamespace) {
-            val current = dataSources.consoleNamespace(file)
-            for (length in current.size downTo 1) {
-                val namespace = resolve(file, dataSource, current.take(length)) ?: continue
-                if (needsLoad(dataSource, namespace)) return Step.Load(namespace)
-                break
-            }
+        // A first name may be under the current namespace, whose children may not be listed yet.
+        val current = currentNamespace(file, modelOf(dataSource))
+        for (length in current.size downTo 1) {
+            val namespace = resolve(file, dataSource, current.take(length)) ?: continue
+            if (needsLoad(dataSource, namespace)) return Step.Load(namespace)
+            break
         }
         val inventory = inventories[dataSource.uniqueId] ?: return Step.ListRoots
         return if (inventory.rootsListed) Step.Unknown else Step.ListRoots

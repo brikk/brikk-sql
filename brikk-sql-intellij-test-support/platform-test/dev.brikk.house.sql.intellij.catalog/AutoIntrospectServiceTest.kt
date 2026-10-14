@@ -164,6 +164,24 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         }
     }
 
+    /** The engine's default catalog, as the listing marks it current: where a first name is looked for without a console. */
+    private fun listCurrentCatalog() {
+        databases().createOrGet("primary").isCurrent = true
+        databases().createOrGet("lake_one")
+    }
+
+    fun testAFirstNameIsLookedForUnderTheEnginesDefaultCatalog() {
+        useService(Profile(usesCurrentNamespace = true))
+        clearModel()
+        assertTrue(service.requestPath(myFixture.file, listOf("web")))
+        nextRefresh().finish(::listCurrentCatalog)
+        nextRefresh().finish { databases().createOrGet("primary").schemas.createOrGet("web") }
+        nextRefresh().finish { databases().createOrGet("primary").schemas.createOrGet("web").tables.createOrGet("events") }
+        awaitIdle()
+        assertTrue(selects(listOf("primary", "web")))
+        assertFalse("lake_one stays as listed", selects(listOf("lake_one")))
+    }
+
     fun testClearingTheModelForgetsWhatWasLoaded() {
         assertTrue(service.requestPath(myFixture.file, listOf("hive")))
         nextRefresh().finish { hive.schemas.createOrGet("web") }
