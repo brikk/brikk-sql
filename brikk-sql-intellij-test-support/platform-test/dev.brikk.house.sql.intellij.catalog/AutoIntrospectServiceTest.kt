@@ -146,6 +146,19 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertNoRefresh()
     }
 
+    /** A top-level refresh after DETACH lists the top level: a name it no longer holds stays unknown, nothing lists again. */
+    fun testATopLevelRefreshCountsAsTheListing() {
+        databases().remove { it.name == "hive" }
+        assertTrue(service.refreshChanged(source, emptyList()))
+        val refresh = nextRefresh()
+        // Completion right after DETACH, while the refresh of the top level runs: it lists what there is, so nothing lists again.
+        assertFalse(service.requestPath(myFixture.file, listOf("hive", "web")))
+        assertNull(pending())
+        refresh.finish()
+        awaitIdle()
+        assertNoRefresh()
+    }
+
     fun testANameStillMissingAfterListingStaysUnknownWithoutRetrying() {
         clearModel()
         assertTrue(service.requestPath(myFixture.file, listOf("nowhere", "web")))

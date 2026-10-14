@@ -376,7 +376,13 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         val element = if (path.isEmpty()) (model as? BasicModel)?.root
         else pathResolver.resolve(model.modelRoots.toList(), path)?.takeIf { wasLoaded(dataSource, it) }?.node as? BasicElement
         val task = element?.let { prepareOneElementRefreshTask(dataSource.uniqueId, it) } ?: return@recoverEditorOperation false
-        enqueue(Request(key, dataSource, task, file = null, claimed = false))
+        val queued = enqueue(Request(key, dataSource, task, file = null, claimed = false))
+        // A refresh of the top level lists it, before any discovery queued after it: a name it does not hold is not listed for again.
+        if (queued && path.isEmpty()) {
+            inventoryOf(dataSource, model)
+            inventories[dataSource.uniqueId]?.rootsListed = true
+        }
+        queued
     }.getOrElse { e ->
         LOG.warn("Refreshing $path of ${dataSource.name} failed", e)
         false
@@ -465,6 +471,8 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
             finish(request, loaded)
         }
         if (loaded && request.key.path.isNotEmpty()) this.loaded += request.key
+        // A failed refresh of the top level did not list it after all.
+        if (!synced && request.key.path.isEmpty()) inventories[request.dataSource.uniqueId]?.rootsListed = false
         // Also after an empty result: what it was asked for is now known not to exist.
         if (synced) request.file?.let { highlightAgain(it) }
     }
