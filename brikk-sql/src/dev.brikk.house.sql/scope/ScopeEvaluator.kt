@@ -18,7 +18,10 @@ import dev.brikk.house.sql.ast.Intersect
 import dev.brikk.house.sql.ast.Join
 import dev.brikk.house.sql.ast.Lambda
 import dev.brikk.house.sql.ast.Lateral
+import dev.brikk.house.sql.ast.EQ
+import dev.brikk.house.sql.ast.Func
 import dev.brikk.house.sql.ast.Literal
+import dev.brikk.house.sql.ast.Tuple
 import dev.brikk.house.sql.ast.Ntile
 import dev.brikk.house.sql.ast.Paren
 import dev.brikk.house.sql.ast.Pivot
@@ -345,7 +348,10 @@ internal class ScopeEvaluator(
 
     private fun table(node: Table, env: Env, lateral: Frame): Binding {
         val function = node.thisArg as? Anonymous
-        if (function != null) return tableFunction(node, function, env, lateral)
+        if (function != null) return tableFunction(node, function, function.name, function.expressionsArg.filterIsInstance<Expression>(), env, lateral)
+        // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.
+        val call = (node.thisArg as? Expression)?.takeIf { it is Func }
+        if (call != null) return tableFunction(node, call, call.key, listOfNotNull(call.thisArg as? Expression) + call.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         val name = node.thisArg as? Identifier ?: return unknownRelation(node.name, RelationKind.OTHER)
         if (caretMarker != null && caretMarker in name.name && caretCtes == null) caretCtes = env.ctes.filterNot { it.synthetic }
         if (node.db.isEmpty() && node.catalog.isEmpty()) {
@@ -382,26 +388,53 @@ internal class ScopeEvaluator(
         return Binding(label, true, relation, fact.columns.map { it.visible(key, label, RelationKind.TABLE) }, path(parts, key))
     }
 
-    private fun tableFunction(node: Table, function: Anonymous, env: Env, lateral: Frame): Binding {
-        val arguments = function.expressionsArg.filterIsInstance<Expression>()
-        for (argument in arguments) {
+    private fun tableFunction(node: Table, function: Expression, name: String, arguments: List<Expression>, env: Env, lateral: Frame): Binding {
+        val rows = arguments.map { argument ->
             val query = (argument as? Subquery)?.thisArg as? Expression ?: argument.takeIf { it is Select || it is SetOperation }
-            if (query != null) query(query, env.withOuter(env.outer)) else expression(argument, lateral, env)
+            when {
+                query != null -> query(query, env.withOuter(env.outer))
+                // A named argument (`structure = '...'`, `"uri" = "..."`): its name is no column.
+                argument is EQ && argument.thisArg is Column && (argument.thisArg as Column).table.isEmpty() -> {
+                    expression(argument.args["expression"] as? Expression, lateral, env)
+                    null
+                }
+                else -> {
+                    expression(argument, lateral, env)
+                    null
+                }
+            }
         }
-        val name = function.name
         val qualified = node.db.isNotEmpty() || node.catalog.isNotEmpty()
         val (kind, key, fact) = when {
             !qualified && arguments.isEmpty() && name in facts.slots -> Triple(RelationKind.SLOT, name, facts.slots.getValue(name))
             !qualified && name in facts.calls -> Triple(RelationKind.CALL, name, facts.calls.getValue(name))
             else -> Triple(RelationKind.FUNCTION, null, null)
         }
-        val relation = ScopeRelation(name, kind, fact?.knowledge ?: Knowledge.UNKNOWN, key, fact?.provenance)
+        val declared = if (fact == null && dialect.tableFunctionArgumentsDeclareColumns) declaredColumns(name, arguments, rows) else null
+        val relation = ScopeRelation(name, kind, fact?.knowledge ?: if (declared != null) Knowledge.FULL else Knowledge.UNKNOWN, key, fact?.provenance)
         names.range(function)?.let { span ->
             references += ScopeReference(ReferenceKind.TABLE, name, span.first, span.last + 1,
                 if (fact != null) Resolution.RESOLVED else Resolution.UNRESOLVED, relation.knowledge, relation = relation.takeIf { fact != null })
         }
         val label = stored(name, quoted = false)
-        return Binding(label, true, relation.copy(name = label), fact?.columns.orEmpty().map { it.visible(name, label, kind) })
+        val columns = declared ?: fact?.columns.orEmpty().map { it.visible(name, label, kind) }
+        return Binding(label, true, relation.copy(name = label), columns)
+    }
+
+    /**
+     * The columns a call's arguments declare, or null: a query's for `view(query)`, else those of its
+     * structure string, named `structure` or the first string argument that is a list of typed columns.
+     */
+    private fun declaredColumns(name: String, arguments: List<Expression>, rows: List<Row?>): List<ScopeColumn>? {
+        val label = stored(name, quoted = false)
+        if (name.equals("view", ignoreCase = true)) {
+            return rows.singleOrNull()?.takeIf { it.knowledge == Knowledge.FULL }?.columns?.map { it.through(label, RelationKind.FUNCTION) }
+        }
+        fun text(argument: Expression?) = (argument as? Literal)?.takeIf { it.isString }?.name
+        val named = arguments.filterIsInstance<EQ>().firstOrNull { ((it.thisArg as? Column)?.name).equals("structure", ignoreCase = true) }
+        val structures = if (named != null) listOfNotNull(text(named.args["expression"] as? Expression)) else arguments.mapNotNull(::text)
+        val columns = structures.firstNotNullOfOrNull { TableFunctionStructure.parse(it, dialect.name) } ?: return null
+        return columns.map { it.visible(name, label, RelationKind.FUNCTION) }
     }
 
     private fun cte(name: Identifier?, env: Env): Pair<Cte, Row>? {
@@ -712,6 +745,13 @@ internal class ScopeEvaluator(
         node.expressionsArg.filterIsInstance<Expression>().forEach { expression(it, env.outer, env) }
         // Unnamed VALUES columns get dialect-specific names (col0, _col0, column1): only an alias's names are known.
         val names = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
+        // ClickHouse's values('a UInt8, b String', row, ...) declares its columns before the rows.
+        if (names.isEmpty() && dialect.tableFunctionArgumentsDeclareColumns) {
+            val structure = ((node.expressionsArg.singleOrNull() as? Tuple)?.expressionsArg?.firstOrNull() as? Literal)?.takeIf { it.isString }
+            structure?.let { TableFunctionStructure.parse(it.name, dialect.name) }?.let { columns ->
+                return Row(columns.map { ScopeColumn(it.name, "", ColumnOrigin.DECLARED, Nullability.UNKNOWN, it.sqlType) }, Knowledge.FULL)
+            }
+        }
         return Row(names.map { computed(stored(it), Nullability.UNKNOWN, "VALUES").copy(declaration = declared(it)) }, if (names.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
     }
 
