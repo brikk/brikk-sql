@@ -160,7 +160,26 @@ open class DorisParser(
     override val functions: Map<String, (List<Expression?>) -> Expression>
         get() = DorisParserTables.FUNCTIONS
 
-    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's minus GROUP_CONCAT)
+    /**
+     * brikk-native: Doris `GROUP_CONCAT`, in its comma form (`[DISTINCT] str[, sep] [ORDER BY ...]`, built by
+     * [buildDorisGroupConcat]) or MySQL's `... SEPARATOR sep` form, which is read as MySQL reads it and given
+     * the comma form's shape, its ORDER BY moved onto the separator.
+     */
+    internal fun parseDorisGroupConcat(): Expression? {
+        val start = index
+        val arguments = parseCsv { parseLambda() }
+        if (currToken.tokenType != TokenType.SEPARATOR) return buildDorisGroupConcat(arguments)
+        retreat(start)
+        val mysql = parseGroupConcat() as? GroupConcat ?: return null
+        val order = mysql.thisArg as? Order ?: return mysql
+        val separator = mysql.args["separator"] as? Expression ?: Literal.string(",")
+        return expression(GroupConcat(args(
+            "this" to order.thisArg,
+            "separator" to Order(args("this" to separator, "expressions" to order.expressionsArg)),
+        )))
+    }
+
+    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's GROUP_CONCAT replaced by Doris's)
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = DorisParserTables.FUNCTION_PARSERS
 
@@ -1043,9 +1062,9 @@ object DorisParserTables {
         }
     }
 
-    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's minus GROUP_CONCAT)
+    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's GROUP_CONCAT replaced by Doris's)
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> =
-        MysqlParserTables.FUNCTION_PARSERS - "GROUP_CONCAT"
+        MysqlParserTables.FUNCTION_PARSERS + ("GROUP_CONCAT" to { p -> (p as DorisParser).parseDorisGroupConcat() })
 
     // sqlglot: DorisParser.NO_PAREN_FUNCTIONS (mysql's minus CURRENT_DATE)
     val NO_PAREN_FUNCTIONS: Map<TokenType, () -> Expression> =

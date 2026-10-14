@@ -852,4 +852,19 @@ class DorisDialectTest {
             assertEquals(once, dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(once).sql("doris"), "stable: $sql")
         }
     }
+
+    /** G2: Doris also takes the MySQL SEPARATOR form, which renders as its comma form. */
+    @Test
+    fun groupConcatTakesASeparatorKeyword() {
+        for ((sql, expected) in listOf(
+            "SELECT GROUP_CONCAT(c SEPARATOR ',') FROM t" to "SELECT GROUP_CONCAT(c, ',') FROM t",
+            "SELECT GROUP_CONCAT(CONCAT('''', x, '''') SEPARATOR ',\n  ') FROM t" to "SELECT GROUP_CONCAT(CONCAT('''', x, ''''), ',\\n  ') FROM t",
+            "SELECT GROUP_CONCAT(DISTINCT c SEPARATOR '|') FROM t" to "SELECT GROUP_CONCAT(DISTINCT c, '|') FROM t",
+            "SELECT GROUP_CONCAT(c ORDER BY k DESC SEPARATOR '|') FROM t" to "SELECT GROUP_CONCAT(c, '|' ORDER BY k DESC) FROM t",
+        )) {
+            val once = dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(sql).sql("doris")
+            assertEquals(expected, once, sql)
+            assertEquals(once, dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(once).sql("doris"), "stable: $sql")
+        }
+    }
 }
