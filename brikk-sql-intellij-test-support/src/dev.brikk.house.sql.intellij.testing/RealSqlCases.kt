@@ -58,8 +58,9 @@ public data class RealSqlCompletion(val sql: String, val offered: Set<String>) {
 
 /**
  * One realistic statement over [RealSqlModel.STANDARD]: it must highlight with no error or warning,
- * except on the names in [reported] (a table the model lacks, say). It runs where the target has every
- * feature in [needs]; [variants] replaces the SQL for a dialect.
+ * except inside the SQL fragments in [reported] (the qualified name of a table the model lacks, say;
+ * the same name elsewhere still counts). It runs where the target has every feature in [needs];
+ * [variants] replaces the SQL for a dialect.
  */
 @ApiStatus.Experimental
 public data class RealSqlCase(
@@ -139,25 +140,38 @@ public object RealSqlCases {
             "external-star-in-derived",
             "SELECT uid, * FROM (SELECT ts AS ts1, *, 0 AS k FROM ext_catalog.archive_db.facts) AS u",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES),
-            reported = setOf("facts", "archive_db"),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
         RealSqlCase(
             "external-star-in-cte-of-derived",
             "WITH c AS (SELECT * FROM (SELECT ts AS ts1, *, 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts1, uid, kind FROM c",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES),
-            reported = setOf("facts", "archive_db"),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
         RealSqlCase(
             "external-enclosing-query",
             "SELECT u.uid FROM (SELECT f.uid, f.kind FROM ext_catalog.archive_db.facts f) AS u WHERE u.kind IS NOT NULL",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES),
-            reported = setOf("facts", "archive_db"),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
         RealSqlCase(
             "external-except-star-in-cte-of-derived",
             "WITH c AS (SELECT * FROM (SELECT ts AS ts, * EXCEPT (ts), 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts, uid FROM c",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.STAR_EXCEPT),
-            reported = setOf("facts", "archive_db"),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
+        ),
+        RealSqlCase(
+            "external-table-name-qualifier",
+            "SELECT facts.uid FROM ext_catalog.archive_db.facts GROUP BY facts.uid",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
+        ),
+        // Doris accepts a view body without AS.
+        RealSqlCase(
+            "external-view-cte-without-as",
+            "CREATE OR REPLACE VIEW shop.sales.v WITH c AS (SELECT * FROM ext_catalog.archive_db.facts) SELECT uid, kind FROM c",
+            needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DORIS),
+            reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
     )
 
@@ -215,7 +229,7 @@ public object RealSqlCases {
             "star-over-absent-table-in-derived",
             "SELECT g.whatever FROM (SELECT * FROM sales.ghost) AS g WHERE g.other = 1",
             // The missing table itself may be reported; nothing downstream.
-            reported = setOf("ghost"),
+            reported = setOf("sales.ghost"),
         ),
         RealSqlCase(
             "three-part-name",

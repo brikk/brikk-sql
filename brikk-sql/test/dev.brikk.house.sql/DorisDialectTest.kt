@@ -580,6 +580,24 @@ class DorisDialectTest {
     }
 
     @Test
+    fun aViewBodyMayStartWithWithoutAs() {
+        // Doris createView: ... (COMMENT STRING_LITERAL)? AS? query; the query may start with a CTE.
+        val sql = "CREATE OR REPLACE VIEW internal.app.v WITH c AS (SELECT * FROM ext_catalog.archive_db.facts) SELECT uid, kind FROM c"
+        val create = parseOne(sql, "doris")
+        assertTrue(create is Create, "$sql parsed as ${create::class.simpleName}")
+        assertEquals(
+            "CREATE OR REPLACE VIEW internal.app.v AS WITH c AS (SELECT * FROM ext_catalog.archive_db.facts) SELECT uid, kind FROM c",
+            create.sql("doris"),
+        )
+        assertEquals("CREATE VIEW v AS SELECT 1", roundTrip("CREATE VIEW v SELECT 1"))
+        val facts = dev.brikk.house.sql.scope.RelationFacts(tables = mapOf("ext_catalog.archive_db.facts" to
+            dev.brikk.house.sql.scope.RelationFact(listOf(dev.brikk.house.sql.scope.ColumnFact("uid"), dev.brikk.house.sql.scope.ColumnFact("kind")))))
+        val columns = dev.brikk.house.sql.scope.RelationScope.analyze(sql, "doris", facts).references
+            .filter { it.kind == dev.brikk.house.sql.scope.ReferenceKind.COLUMN }
+        assertEquals(listOf("uid" to true, "kind" to true), columns.map { it.name to (it.resolution == dev.brikk.house.sql.scope.Resolution.RESOLVED) })
+    }
+
+    @Test
     fun aQueryCanSelectPartitionsOfATable() {
         // Doris relationPrimary: name specifiedPartition? alias; specifiedPartition is
         // TEMPORARY? PARTITION (identifier | identifierList) | TEMPORARY? PARTITIONS identifierList.

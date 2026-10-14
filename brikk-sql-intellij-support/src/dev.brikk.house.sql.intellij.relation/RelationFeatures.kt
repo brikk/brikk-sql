@@ -81,7 +81,8 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * derived tables the platform may not follow, on columns it reports absent itself, and on columns it
  * cannot know: ones that may come, through any number of derived tables, CTEs and enclosing queries,
  * from a relation that is unknown, out of scope, listed without columns or not introspected yet. A
- * column absent from a fully known source and an unknown table name stay reported. Every other
+ * column absent from a fully known source and an unknown table name stay reported; a qualifier
+ * naming a relation of its query does not. Every other
  * inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
@@ -113,7 +114,9 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
             // scope, listed without columns or not introspected yet, nothing proves it absent.
             Resolution.UNRESOLVED -> absent && (diagnoses(reference.start, reference.end) || reference.knowledge != Knowledge.FULL)
         }
-        ReferenceKind.QUALIFIER, ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
+        // A qualifier naming a relation of its query (`t.c` over `cat.db.t`) is bound by SQL scoping, whatever the catalog holds.
+        ReferenceKind.QUALIFIER -> reference.relation?.let(::manages) == true || absent && reference.resolution == Resolution.RESOLVED
+        ReferenceKind.TABLE -> reference.relation?.let(::manages) == true
     }
 
     private companion object {

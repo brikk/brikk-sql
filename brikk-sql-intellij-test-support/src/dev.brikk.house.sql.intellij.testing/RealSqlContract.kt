@@ -67,9 +67,15 @@ public class RealSqlContract(private val target: RealSqlTarget, private val case
         val fixture = target.fixture
         DaemonCodeAnalyzer.getInstance(fixture.project).restart()
         val document = fixture.editor.document
+        val allowed = case.reported.flatMap { fragment ->
+            generateSequence(document.text.indexOf(fragment).takeIf { it >= 0 }) { at ->
+                document.text.indexOf(fragment, at + 1).takeIf { it >= 0 }
+            }.map { TextRange(it, it + fragment.length) }
+        }
         val reports = fixture.doHighlighting(HighlightSeverity.WARNING).mapNotNull { info ->
-            val text = document.getText(TextRange(info.startOffset, info.endOffset))
-            if (text in case.reported) null else "${case.name}: ${info.severity} '$text' ${info.description}"
+            val range = TextRange(info.startOffset, info.endOffset)
+            if (allowed.any { it.contains(range) }) null
+            else "${case.name}: ${info.severity} '${document.getText(range)}' ${info.description}"
         }
         val missing = case.completions.mapNotNull { completion ->
             target.open(completion.sql)
