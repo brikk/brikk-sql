@@ -144,6 +144,8 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         val task: IntrospectionTask,
         override val file: VirtualFile?,
         val claimed: Boolean,
+        /** The path as typed that this load serves. */
+        val requested: List<String> = key.path,
     ) : Work {
         override val label: String get() = key.path.joinToString(".")
     }
@@ -440,7 +442,9 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
                 dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
                 storageOf(dataSource)?.updateDataSource(dataSource)
             }
-            synced = sync(request)
+            // A namespace whose children are namespaces the dialect may list itself, cheaply, instead of the platform's refresh.
+            val listed = if (request.claimed && request.key.path.size < profile.levels.size) list(dataSource, request.key.path, request.requested) else null
+            synced = listed ?: sync(request)
             loaded = synced && (!request.claimed || readAction { isLoaded(request) })
             LOG.info("Auto-introspection ${if (loaded) "loaded" else if (synced) "found nothing in" else "failed to load"} " +
                 "${request.dataSource.name}: ${request.label}")
@@ -493,14 +497,7 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
                     Step.ListRoots -> {
                         val inventory = inventories[discovery.dataSource.uniqueId] ?: return
                         inventory.rootsListed = true
-                        val listed = try {
-                            listNamespaces(discovery.dataSource)
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            LOG.warn("Listing the namespaces of ${discovery.dataSource.name} failed", e)
-                            false
-                        }
+                        val listed = list(discovery.dataSource, emptyList(), discovery.path) ?: false
                         LOG.info("Auto-introspection ${if (listed) "listed" else "failed to list"} the top-level namespaces of ${discovery.dataSource.name}")
                         if (!listed) {
                             inventory.rootsListed = false
@@ -514,7 +511,7 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
                             val task = prepareOneElementRefreshTask(discovery.dataSource.uniqueId, element) ?: return@readAction null
                             val key = AutoIntrospectEngine.Key(discovery.dataSource.uniqueId, step.target.path)
                             if (!engine.claim(key)) return@readAction null
-                            Request(key, discovery.dataSource, task, file = null, claimed = true)
+                            Request(key, discovery.dataSource, task, file = null, claimed = true, requested = discovery.path)
                         } ?: run {
                             skipped(label, "${step.target.path.joinToString(".")} is in flight, loaded, or failed too recently")
                             return
@@ -542,6 +539,26 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
             }
         }
     }
+
+    private suspend fun list(dataSource: LocalDataSource, parent: List<String>, requested: List<String>): Boolean? = try {
+        listNamespaces(dataSource, parent, requested)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        LOG.warn("Listing the namespaces of ${dataSource.name} under $parent failed", e)
+        false
+    }
+
+    /**
+     * Lists the namespaces of [dataSource] under [parent] (empty: the top level) into its model, cheaply: names
+     * only, nothing below them, for finding [requested] (the path as typed); true when it succeeded, null to leave
+     * it to the platform. By default the top level is [listNamespaces] and a namespace's children the platform's
+     * one-element refresh. A dialect may list them itself (Doris's `SHOW DATABASES FROM catalog`) on a connection
+     * of its own, never a console's, and write the names; a listed namespace counts as loaded. Runs off the EDT, in
+     * the data source's worker; the top level at most once after each clear of its model.
+     */
+    protected open suspend fun listNamespaces(dataSource: LocalDataSource, parent: List<String>, requested: List<String>): Boolean? =
+        if (parent.isEmpty()) listNamespaces(dataSource) else null
 
     /**
      * Lists [dataSource]'s top-level namespaces into its model, cheaply: names only, nothing below them; true

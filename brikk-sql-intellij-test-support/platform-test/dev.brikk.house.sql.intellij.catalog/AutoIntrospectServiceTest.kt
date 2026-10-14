@@ -98,7 +98,8 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
     /** A dialect listing its namespaces itself (Doris's SHOW CATALOGS): then the targeted load runs as usual. */
     fun testADialectMayListTheTopLevelItself() {
         var listings = 0
-        useService(Profile()) { dataSource ->
+        useService(Profile()) { dataSource, parent, _ ->
+            if (parent.isNotEmpty()) return@useService null
             listings++
             // As a dialect writes the names it queried: on the EDT.
             com.intellij.openapi.application.ApplicationManager.getApplication().invokeAndWait {
@@ -113,6 +114,27 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         awaitIdle()
         assertEquals(1, listings)
         assertTrue(selects(listOf("hive")))
+    }
+
+    /** Doris's SHOW DATABASES FROM catalog: a dialect lists the catalog being typed itself, then the schema loads as usual. */
+    fun testADialectMayListACatalogsNamespacesItself() {
+        val asked = ArrayList<Pair<List<String>, List<String>>>()
+        useService(Profile()) { _, parent, requested ->
+            if (parent.isEmpty()) return@useService null
+            asked += parent to requested
+            com.intellij.openapi.application.ApplicationManager.getApplication().invokeAndWait {
+                hive.schemas.createOrGet("web")
+                DbPsiFacade.getInstance(project).clearCaches()
+            }
+            true
+        }
+        assertTrue(service.requestPath(myFixture.file, listOf("hive", "web")))
+        nextRefresh().finish { hive.schemas.createOrGet("web").tables.createOrGet("pages") }
+        awaitIdle()
+        assertEquals(listOf(listOf("hive") to listOf("hive", "web")), asked)
+        assertEquals("the listed catalog counts as loaded", AutoIntrospectEngine.State.Done, service.engine.state(AutoIntrospectEngine.Key(source.uniqueId, listOf("hive"))))
+        assertFalse(service.requestPath(myFixture.file, listOf("hive")))
+        assertNoRefresh()
     }
 
     fun testANameStillMissingAfterListingStaysUnknownWithoutRetrying() {
