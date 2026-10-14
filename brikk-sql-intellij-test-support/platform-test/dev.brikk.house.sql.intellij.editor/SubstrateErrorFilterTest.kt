@@ -35,6 +35,7 @@ class ErrorRecordingDefinition : CHouseFamilyParserDefinition(CHouseFixtureDiale
 
 class LenientErrorFilter : SubstrateErrorFilter(CHouseFixtureDialect, SubstrateErrors.LENIENT_ONLY)
 class AllErrorFilter : SubstrateErrorFilter(CHouseFixtureDialect)
+class CoreJudgedErrorFilter : SubstrateErrorFilter(CHouseFixtureDialect, SubstrateErrors.LENIENT_ONLY, "clickhouse")
 
 /** On a stock substrate the grammar's errors are the dialect's, so only lenient fallbacks hide theirs. */
 class SubstrateErrorFilterTest : CHouseFixtureTestCase() {
@@ -66,6 +67,22 @@ class SubstrateErrorFilterTest : CHouseFixtureTestCase() {
             val filter = LenientErrorFilter()
             assertFalse(show, filter.shouldHighlightErrorElement(lenient))
             assertTrue(show, grammar.all(filter::shouldHighlightErrorElement))
+        }
+    }
+
+    fun testGivenACoreDialectAGrammarErrorInAStatementCoreParsesIsHiddenAndARealOneStays() {
+        // A table function as a join operand, and a query argument the platform parses lazily.
+        for (accepted in listOf("SELECT * FROM db1.one_column a CROSS JOIN numbers(3) AS t", "SELECT * FROM view(SELECT 1)")) {
+            configureCHouse("$accepted;\nSELECT 1 FROM;")
+            val (hidden, kept) = PsiTreeUtil.findChildrenOfType(myFixture.file, PsiErrorElement::class.java)
+                .partition { it.textOffset < myFixture.editor.document.text.indexOf(';') }
+            assertTrue(accepted, hidden.isNotEmpty())
+            assertNotEmpty(kept)
+            val filter = CoreJudgedErrorFilter()
+            assertTrue(accepted, hidden.none(filter::shouldHighlightErrorElement))
+            assertTrue(accepted, kept.all(filter::shouldHighlightErrorElement))
+            // Without a core dialect the grammar's error stays.
+            assertTrue(accepted, hidden.all(LenientErrorFilter()::shouldHighlightErrorElement))
         }
     }
 
