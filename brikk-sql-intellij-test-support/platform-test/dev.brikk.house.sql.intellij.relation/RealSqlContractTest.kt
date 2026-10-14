@@ -31,6 +31,8 @@ import dev.brikk.house.sql.intellij.catalog.DasRelationFacts
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.diagnostics.NativeErrorAnnotator
 import dev.brikk.house.sql.intellij.diagnostics.TestProfile
+import dev.brikk.house.sql.intellij.testing.RealSqlCase
+import dev.brikk.house.sql.intellij.testing.RealSqlCompletion
 import dev.brikk.house.sql.intellij.testing.RealSqlContract
 import dev.brikk.house.sql.intellij.testing.RealSqlFeature
 import dev.brikk.house.sql.intellij.testing.RealSqlModel
@@ -248,6 +250,25 @@ class RealSqlContractTest : RelationTestCase() {
             }
         } finally {
             recording.close()
+        }
+    }
+
+    fun testACompletionFailsOnANameThatMustNotBeOfferedAndSpellsItsDialectsSql() {
+        register(pgRelations, Dbms.POSTGRES)
+        val target = Target("postgres", emptySet(), postgres, Dbms.POSTGRES, "postgresql")
+        try {
+            val completion = RealSqlCompletion(
+                "SELECT o.<caret> FROM sales.users o", setOf("order_id"), notOffered = setOf("name"),
+                variants = mapOf("postgres" to "SELECT o.<caret> FROM sales.orders o"),
+            )
+            assertEquals(emptyList<String>(), RealSqlContract(target).failures(RealSqlCase("orders", "SELECT 1", completions = listOf(completion))))
+            val leaking = completion.copy(notOffered = setOf("amount", "status", "nowhere"))
+            assertEquals(
+                listOf("orders: offered [amount, status], which must not be, at SELECT o.<caret> FROM sales.orders o"),
+                RealSqlContract(target).failures(RealSqlCase("orders", "SELECT 1", completions = listOf(leaking))),
+            )
+        } finally {
+            target.close()
         }
     }
 

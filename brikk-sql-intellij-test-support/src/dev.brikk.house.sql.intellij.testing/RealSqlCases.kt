@@ -5,7 +5,7 @@ import org.jetbrains.annotations.ApiStatus
 /** Syntax a dialect may lack; a case needing one runs only where the target has it. */
 @ApiStatus.Experimental
 public enum class RealSqlFeature {
-    /** `* EXCEPT (a, b)` in a projection. */
+    /** `* EXCEPT (a, b)` in a projection, or as the dialect spells it (DuckDB's `* EXCLUDE (a, b)`). */
     STAR_EXCEPT,
 
     /** `* REPLACE (expr AS a)` in a projection. */
@@ -48,13 +48,38 @@ public enum class RealSqlFeature {
     DORIS,
 }
 
-/** A completion check: at `<caret>` in [sql], [offered] are all offered. */
+/**
+ * A completion check: at `<caret>` in [sql], [offered] are all offered and none of [notOffered] (another
+ * namespace's columns, say). [variants] replaces the SQL for a dialect.
+ */
 @ApiStatus.Experimental
-public data class RealSqlCompletion(val sql: String, val offered: Set<String>) {
+public data class RealSqlCompletion(
+    val sql: String,
+    val offered: Set<String>,
+    val notOffered: Set<String> = emptySet(),
+    val variants: Map<String, String> = emptyMap(),
+) {
     init {
-        require("<caret>" in sql) { "A completion needs a <caret>" }
+        require((variants.values + sql).all { "<caret>" in it }) { "A completion needs a <caret>" }
     }
+
+    // Binary compatibility (AGENTS.md): the constructor and copy from before notOffered and variants.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(sql: String, offered: Set<String>) : this(sql, offered, emptySet(), emptyMap())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(sql: String = this.sql, offered: Set<String> = this.offered): RealSqlCompletion = copy(sql, offered, notOffered, variants)
+
+    /** The SQL for [dialect]. */
+    public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
 }
+
+/** The dialects spelling `* EXCEPT (...)` `* EXCLUDE (...)`. */
+private val STAR_EXCLUDE_DIALECTS = listOf("duckdb", "snowflake")
+
+/** [sql]'s `* EXCEPT (...)` as each dialect spelling it otherwise writes it, for [RealSqlCase.variants]. */
+private fun starExceptVariants(sql: String): Map<String, String> =
+    STAR_EXCLUDE_DIALECTS.associateWith { sql.replace("* EXCEPT (", "* EXCLUDE (") }
 
 /**
  * One realistic statement over [RealSqlModel.STANDARD]: it must highlight with no error or warning,
@@ -158,6 +183,7 @@ public object RealSqlCases {
             "external-except-star-in-cte-of-derived",
             "WITH c AS (SELECT * FROM (SELECT ts AS ts, * EXCEPT (ts), 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts, uid FROM c",
             needs = setOf(RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.STAR_EXCEPT),
+            variants = starExceptVariants("WITH c AS (SELECT * FROM (SELECT ts AS ts, * EXCEPT (ts), 0 AS k FROM ext_catalog.archive_db.facts) AS u) SELECT ts, uid FROM c"),
             reported = setOf(RealSqlModel.EXTERNAL_TABLE),
         ),
         RealSqlCase(
@@ -208,12 +234,19 @@ public object RealSqlCases {
             "star-except",
             "SELECT e.user_id, e.amount FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e",
             needs = setOf(RealSqlFeature.STAR_EXCEPT),
-            completions = listOf(RealSqlCompletion("SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e", setOf("user_id"))),
+            variants = starExceptVariants("SELECT e.user_id, e.amount FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e"),
+            completions = listOf(
+                RealSqlCompletion(
+                    "SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e", setOf("user_id"), notOffered = setOf("status"),
+                    variants = starExceptVariants("SELECT e.<caret> FROM (SELECT * EXCEPT (status) FROM sales.orders) AS e"),
+                ),
+            ),
         ),
         RealSqlCase(
             "star-except-in-cte-with-expression",
             "WITH c AS (SELECT upper(status) AS status, * EXCEPT (status) FROM sales.orders) SELECT status, user_id FROM c",
             needs = setOf(RealSqlFeature.STAR_EXCEPT),
+            variants = starExceptVariants("WITH c AS (SELECT upper(status) AS status, * EXCEPT (status) FROM sales.orders) SELECT status, user_id FROM c"),
         ),
         RealSqlCase(
             "star-replace",
