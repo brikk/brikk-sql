@@ -133,6 +133,14 @@ class RelationResolveTest : RelationTestCase() {
         assertTrue(marks.toString(), "unknown_table" in marks)
     }
 
+    fun testATablesOwnClausesNamingAnUndeclaredColumnStayReported() {
+        enableResolveInspection()
+        registerPgRelations(testRootDisposable)
+        val marks = unresolvedIn("CREATE TABLE t2 (k BIGINT, v INT, PRIMARY KEY (nope), UNIQUE (v, missing))")
+        assertTrue(marks.toString(), marks.containsAll(listOf("nope", "missing")))
+        assertTrue(marks.toString(), marks.none { it == "k" || it == "v" })
+    }
+
     /** What the resolve inspection reports in [sql] once the relation features are on. */
     private fun unresolvedIn(sql: String): List<String> {
         open(sql)

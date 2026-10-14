@@ -67,8 +67,8 @@ public enum class RealSqlFeature {
 }
 
 /**
- * A completion check: at `<caret>` in [sql], [offered] are all offered and none of [notOffered] (another
- * namespace's columns, say). [variants] replaces the SQL for a dialect.
+ * A completion check: at `<caret>` in [sql], [offered] are all offered, none of [notOffered] (another
+ * namespace's columns, say) and each of [once] exactly once. [variants] replaces the SQL for a dialect.
  */
 @ApiStatus.Experimental
 public data class RealSqlCompletion(
@@ -76,17 +76,31 @@ public data class RealSqlCompletion(
     val offered: Set<String>,
     val notOffered: Set<String> = emptySet(),
     val variants: Map<String, String> = emptyMap(),
+    val once: Set<String> = emptySet(),
 ) {
     init {
         require((variants.values + sql).all { "<caret>" in it }) { "A completion needs a <caret>" }
     }
 
-    // Binary compatibility (AGENTS.md): the constructor and copy from before notOffered and variants.
+    // Binary compatibility (AGENTS.md): the constructor and copy from before once.
     @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
-    public constructor(sql: String, offered: Set<String>) : this(sql, offered, emptySet(), emptyMap())
+    public constructor(sql: String, offered: Set<String>, notOffered: Set<String> = emptySet(), variants: Map<String, String> = emptyMap()) :
+        this(sql, offered, notOffered, variants, emptySet())
 
     @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
-    public fun copy(sql: String = this.sql, offered: Set<String> = this.offered): RealSqlCompletion = copy(sql, offered, notOffered, variants)
+    public fun copy(
+        sql: String = this.sql,
+        offered: Set<String> = this.offered,
+        notOffered: Set<String> = this.notOffered,
+        variants: Map<String, String> = this.variants,
+    ): RealSqlCompletion = copy(sql, offered, notOffered, variants, once)
+
+    // Binary compatibility (AGENTS.md): the constructor and copy from before notOffered and variants.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(sql: String, offered: Set<String>) : this(sql, offered, emptySet(), emptyMap(), emptySet())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(sql: String = this.sql, offered: Set<String> = this.offered): RealSqlCompletion = copy(sql, offered, notOffered, variants, once)
 
     /** The SQL for [dialect]. */
     public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
@@ -103,7 +117,8 @@ private fun starExceptVariants(sql: String): Map<String, String> =
  * One realistic statement over [RealSqlModel.STANDARD]: it must highlight with no error or warning,
  * except inside the SQL fragments in [reported] (the qualified name of a table the model lacks, say;
  * the same name elsewhere still counts). It runs where the target has every feature in [needs];
- * [variants] replaces the SQL for a dialect.
+ * [variants] replaces the SQL for a dialect. A name in [missed] is a real miss the target must report
+ * (allowed like [reported]).
  */
 @ApiStatus.Experimental
 public data class RealSqlCase(
@@ -113,7 +128,29 @@ public data class RealSqlCase(
     val variants: Map<String, String> = emptyMap(),
     val completions: List<RealSqlCompletion> = emptyList(),
     val reported: Set<String> = emptySet(),
+    val missed: Set<String> = emptySet(),
 ) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before missed.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(
+        name: String,
+        sql: String,
+        needs: Set<RealSqlFeature> = emptySet(),
+        variants: Map<String, String> = emptyMap(),
+        completions: List<RealSqlCompletion> = emptyList(),
+        reported: Set<String> = emptySet(),
+    ) : this(name, sql, needs, variants, completions, reported, emptySet())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(
+        name: String = this.name,
+        sql: String = this.sql,
+        needs: Set<RealSqlFeature> = this.needs,
+        variants: Map<String, String> = this.variants,
+        completions: List<RealSqlCompletion> = this.completions,
+        reported: Set<String> = this.reported,
+    ): RealSqlCase = copy(name, sql, needs, variants, completions, reported, missed)
+
     /** The SQL for [dialect]. */
     public fun sqlFor(dialect: String): String = variants[dialect] ?: sql
 }
@@ -539,6 +576,35 @@ public object RealSqlCases {
             completions = listOf(RealSqlCompletion(
                 "SELECT <caret> FROM (select FROM_SECOND(ts) AS ts2, * , 0 AS src_flag FROM ext_catalog.archive_db.facts) AS d",
                 setOf("uid", "ts2"),
+            )),
+        ),
+        // Computed columns of a derived table declared after the caret: each once, whether a function computes it or not.
+        RealSqlCase(
+            "doris-computed-after-caret",
+            "SELECT d.ts2, d.k FROM (SELECT FROM_SECOND(ts) AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d",
+            needs = setOf(RealSqlFeature.DORIS, RealSqlFeature.THREE_PART_NAMES),
+            completions = listOf(RealSqlCompletion(
+                "SELECT <caret> FROM (SELECT FROM_SECOND(ts) AS ts2, *, 0 AS k FROM ext_catalog.archive_db.facts) AS d",
+                setOf("ts2", "k"), once = setOf("ts2", "k"),
+            )),
+        ),
+        // A table's own column list is fully known: its clauses naming an undeclared column are real misses.
+        RealSqlCase(
+            "doris-create-table-own-clauses",
+            "CREATE TABLE sales.t2 (k BIGINT, v INT, INDEX i (v) USING INVERTED) DUPLICATE KEY(wrong_col) DISTRIBUTED BY HASH(k) BUCKETS 1",
+            needs = setOf(RealSqlFeature.DORIS),
+            missed = setOf("wrong_col"),
+        ),
+        RealSqlCase(
+            "create-table-own-constraints",
+            "CREATE TABLE sales.t2 (k BIGINT, v INT, PRIMARY KEY (k), UNIQUE (missing_col))",
+            missed = setOf("missing_col"),
+        ),
+        RealSqlCase(
+            "computed-after-caret-over-columnless-table",
+            "SELECT d.x2, d.k FROM (SELECT upper(status) AS x2, *, 0 AS k FROM sales.archive) AS d",
+            completions = listOf(RealSqlCompletion(
+                "SELECT <caret> FROM (SELECT upper(status) AS x2, *, 0 AS k FROM sales.archive) AS d", setOf("x2", "k"), once = setOf("x2", "k"),
             )),
         ),
     )

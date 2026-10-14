@@ -72,16 +72,20 @@ public class RealSqlContract(private val target: RealSqlTarget, private val case
                 document.text.indexOf(fragment, at + 1).takeIf { it >= 0 }
             }.map { TextRange(it, it + fragment.length) }
         }
-        val reports = fixture.doHighlighting(HighlightSeverity.WARNING).mapNotNull { info ->
+        val highlights = fixture.doHighlighting(HighlightSeverity.WARNING)
+        val texts = highlights.map { document.getText(TextRange(it.startOffset, it.endOffset)) }
+        val reports = highlights.mapNotNull { info ->
             val range = TextRange(info.startOffset, info.endOffset)
-            if (allowed.any { it.contains(range) }) null
+            if (allowed.any { it.contains(range) } || document.getText(range) in case.missed) null
             else "${case.name}: ${info.severity} '${document.getText(range)}' ${info.description}"
-        }
+        } + case.missed.filter { it !in texts }.map { "${case.name}: real miss '$it' not reported" }
         val missing = case.completions.flatMap { completion ->
             val sql = completion.sqlFor(target.dialect)
             target.open(sql)
-            val offered = fixture.completeBasic()?.map { it.lookupString }?.toSet() ?: emptySet()
+            val items = fixture.completeBasic()?.map { it.lookupString }.orEmpty()
+            val offered = items.toSet()
             listOfNotNull(
+                completion.once.filter { name -> items.count { it == name } > 1 }.takeIf { it.isNotEmpty() }?.let { "${case.name}: offered more than once $it at $sql" },
                 (completion.offered - offered).takeIf { it.isNotEmpty() }?.let { "${case.name}: not offered $it at $sql" },
                 completion.notOffered.filter { it in offered }.takeIf { it.isNotEmpty() }?.let { "${case.name}: offered $it, which must not be, at $sql" },
             )
