@@ -107,6 +107,8 @@ class OtherCompletion : CompletionContributor() {
             file.putUserData(ITEM, item)
             val plugin = DefaultPluginDescriptor(PluginId.getId("brikk.test.other"), OtherCompletion::class.java.classLoader)
             CompletionContributor.EP.point.registerExtension(CompletionContributorEP(postgres.id, OtherCompletion::class.java.name, plugin), LoadingOrder.LAST, until)
+            // Reading the language's contributors now rebuilds the cached list; otherwise completion may keep a stale one without this.
+            CompletionContributor.forLanguage(file.language)
         }
     }
 }
