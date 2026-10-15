@@ -41,6 +41,20 @@ import dev.brikk.house.sql.scope.ColumnFact
 import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
 import java.util.UUID
+import com.intellij.database.model.DasColumn
+import com.intellij.psi.PsiFile
+import dev.brikk.house.sql.intellij.catalog.CatalogSource
+import dev.brikk.house.sql.intellij.catalog.LiveCatalogSelection
+import dev.brikk.house.sql.intellij.catalog.LiveFunction
+import dev.brikk.house.sql.intellij.catalog.LiveInventory
+import dev.brikk.house.sql.intellij.catalog.LiveMergePolicy
+import dev.brikk.house.sql.intellij.catalog.merge
+import dev.brikk.house.sql.intellij.completion.completableFunctions
+import dev.brikk.house.sql.metadata.FunctionDef
+import dev.brikk.house.sql.metadata.FunctionKind
+import dev.brikk.house.sql.metadata.FunctionOverload
+import dev.brikk.house.sql.metadata.FunctionPresentation
+import java.time.Instant
 
 /** DuckDB's shape: a PostgreSQL-family dialect whose dbms falls back to PostgreSQL, with DuckDB's builtins. */
 object BuiltinsFixtureDialect : PgFamilyDialect("BrikkBuiltinsFixtureSQL") {
@@ -52,6 +66,14 @@ object BuiltinsFixtureDialect : PgFamilyDialect("BrikkBuiltinsFixtureSQL") {
 object BuiltinsFixtureCompletion : SqlCompletionProfile {
     override val language get() = BuiltinsFixtureDialect
     override val metadata = DUCKDB_METADATA
+
+    /** A live catalog selection for fixture files, merged as a plugin's live catalog merges it; null: the bundled functions. */
+    var selection: LiveCatalogSelection? = null
+
+    override fun functions(file: PsiFile): List<FunctionPresentation> {
+        val bundled = snapshot(file)
+        return selection?.let { LiveMergePolicy.REPLACE.merge(it, bundled, bundled.completableFunctions()).functions } ?: bundled.completableFunctions()
+    }
 }
 
 /** The relation analysis of fixture files, whose call facts stand for table-function layouts a plugin knows. */
@@ -80,6 +102,7 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
     override fun setUp() {
         super.setUp()
         builtinsRelations.fake.facts = RelationFacts()
+        BuiltinsFixtureCompletion.selection = null
         LanguageParserDefinitions.INSTANCE.addExplicitExtension(BuiltinsFixtureDialect, BuiltinsFixtureParserDefinition(), testRootDisposable)
         SyntaxHighlighterFactory.LANGUAGE_FACTORY.addExplicitExtension(BuiltinsFixtureDialect, BuiltinsFixtureHighlighterFactory(), testRootDisposable)
         val fallback = DbmsExtension.FallbackBean().apply {
@@ -205,6 +228,48 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         assertEmpty(reports(declaration + "SELECT abs(number_value), abs(CAST(number_value = number_value AS INTEGER)) FROM parameter_inputs"))
         assertTrue(reports(declaration + "SELECT abs(CAST(missing_number = number_value AS INTEGER)) FROM parameter_inputs").any { it.startsWith("missing_number:") })
         assertTrue(reports("SELECT list_value(filename = 1)").any { it.startsWith("filename:") })
+    }
+
+    fun testALabelIsTheParameterEvenWhereAColumnOfItsNameIsInScope() {
+        val declaration = "CREATE TABLE label_inputs (filename VARCHAR, header VARCHAR);\n"
+        for (operator in listOf("=", ":=")) {
+            val sql = declaration + "SELECT * FROM label_inputs AS i CROSS JOIN read_parquet('synthetic.parquet', filename $operator i.filename)"
+            val found = reports(sql)
+            assertEmpty("$sql: $found", found)
+            val label = label("filename", operator).resolveSymbol()
+            assertEquals("$operator: $label", ObjectKind.ARGUMENT, label?.kind)
+            assertEquals("filename", label?.name)
+            assertFalse("$operator: $label", label?.dasObject is DasColumn)
+            // The value is SQL: its column is the table's.
+            val value = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlReferenceExpression::class.java).single { it.text == "i.filename" }
+            assertEquals(ObjectKind.COLUMN, value.resolveSymbol()?.kind)
+        }
+        // `=` elsewhere compares: both sides stay the table's columns.
+        assertEmpty(reports(declaration + "SELECT abs(CAST(filename = header AS INTEGER)) FROM label_inputs"))
+        assertEquals(ObjectKind.COLUMN, label("filename", "=").resolveSymbol()?.kind)
+    }
+
+    fun testTheLabelsAreTheParametersOfTheFunctionTheFileSelects() {
+        fun reader(name: String, option: String) = LiveFunction(
+            FunctionDef(name, FunctionKind.TABLE_VALUED, overloads = listOf(FunctionOverload(listOf("VARCHAR", "BOOLEAN"), "TABLE", argNames = listOf("col0", option), positionalCount = 1))),
+        )
+        val inventory = LiveInventory("1.5.6", listOf(reader("read_parquet", "live_only_option"), reader("live_reader", "live_option")), signatures = true)
+        BuiltinsFixtureCompletion.selection = LiveCatalogSelection(CatalogSource.Live(Instant.EPOCH), inventory)
+        try {
+            for ((sql, key) in listOf(
+                "SELECT * FROM read_parquet('synthetic.parquet', live_only_option = true)" to "live_only_option",
+                "SELECT * FROM live_reader('synthetic.parquet', live_option := true)" to "live_option",
+            )) {
+                val found = reports(sql)
+                assertEmpty("$sql: $found", found)
+                val operator = if (":=" in sql) ":=" else "="
+                assertEquals(sql, ObjectKind.ARGUMENT, label(key, operator).resolveSymbol()?.kind)
+            }
+            // The live signature replaced the bundled one, whose parameter it lacks.
+            assertTrue(reports("SELECT * FROM read_parquet('synthetic.parquet', filename = true)").any { it.startsWith("filename:") })
+        } finally {
+            BuiltinsFixtureCompletion.selection = null
+        }
     }
 
     fun testUnknownFunctionsAndTypesStillReport() {

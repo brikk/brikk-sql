@@ -497,9 +497,10 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   fallback where nothing native binds a name: what completion offers resolves (a table function in a
   FROM position, any other kind elsewhere), and the snapshot's types (`MetadataSnapshot.types`,
   aliases included) resolve as type names. A named argument's label resolves to the parameter of that
-  name the function's overloads in the file's snapshot take by name: `name := value` in any such call,
-  `name = value` only in a table function's call in a FROM position (elsewhere `=` compares); its value
-  keeps its own resolution. Platform builtins, definitions in the file and the data source's routines
+  name the function completion selects for the file takes by name (`FunctionPresentation.namedParameters`,
+  so a live catalog's signatures count): `name := value` in any such call, `name = value` only in a table
+  function's call in a FROM position, where it is the parameter even beside a column of that name
+  (elsewhere `=` compares); its value keeps its own resolution. Platform builtins, definitions in the file and the data source's routines
   and types keep their binding and type; unknown names and labels stay reported.
   - `PgFamilyResolveExtension` (`com.intellij.sql.resolveExtension`): that fallback, which the
     platform asks after its own resolution.

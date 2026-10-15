@@ -48,7 +48,7 @@ import org.jetbrains.annotations.ApiStatus
  *    position, any other kind elsewhere. A name the platform dialect's builtins have keeps their resolution,
  *    as does one a definition in the file or a routine of the data source binds.
  *  - the label of a named argument of a call that fallback binds resolves to the parameter of that name, which
- *    one of the function's overloads in the file's snapshot takes by name (after its positional ones): with
+ *    the function completion selects for the file takes by name ([FunctionPresentation.namedParameters]): with
  *    `:=` in any such call ([PgFamilyDialect.processNamedArgumentCandidates]), with `=` only in a table
  *    function's call in a FROM position, where SQL reads `name = value` as a named argument; anywhere else `=`
  *    compares. An unknown name stays unresolved.
@@ -81,9 +81,9 @@ public class EngineBuiltins(
         val labelled = equalsLabelledCall(element)
         val symbol = when {
             labelled != null -> (labelled.nameElement?.resolveSymbol() as? EngineFunction)?.parameter(name)
-            // Made afresh from the file's snapshot: a live catalog may change the function's parameters.
+            // Made afresh from the function completion selects for the file: a live catalog may change its parameters.
             call != null && call.nameElement === element -> function(dialect, file, call, name)?.let { function ->
-                EngineFunction(function.name, dialect.dbms, namedParameters(file, function))
+                EngineFunction(function.name, dialect.dbms, function.namedParameters)
             }
             processor.isExpected(ObjectKind.OBJECT_TYPE) && PsiTreeUtil.getParentOfType(element, SqlTypeElement::class.java) != null ->
                 completion.snapshot(file).type(name)?.let { type -> symbols.computeIfAbsent("type:${type.name}") { EngineType(type.name, dialect.dbms) } }
@@ -104,14 +104,15 @@ public class EngineBuiltins(
         return call.takeIf { it.parent?.node?.elementType == SqlCompositeElementTypes.SQL_TABLE_PROCEDURE_CALL_EXPRESSION }
     }
 
-    /** The parameters an overload of [function] in [file]'s snapshot takes by name (after its positional ones), as the engine spells them. */
-    private fun namedParameters(file: PsiFile, function: FunctionPresentation): List<String> {
-        val snapshot = completion.snapshot(file)
-        val ignoreCase = !snapshot.functions.caseSensitive
-        val defs = snapshot.functions.getAll(function.name) + snapshot.extensionFunctions.orEmpty().filter { it.name.equals(function.name, ignoreCase) }
-        return defs.filter { it.kind == function.kind }
-            .flatMap { def -> def.overloads.flatMap { overload -> overload.argNames.orEmpty().let { it.drop(overload.positionalCount ?: it.size) } } }
-            .distinctBy { if (ignoreCase) it.lowercase() else it }
+    /**
+     * Whether [element] labels a named argument the fallback binds: the `name` of a table function's
+     * `name = value` in a FROM position, the function bound to the engine's, which takes `name`. Such a label is
+     * the parameter whatever columns are in scope ([PgFamilyDialect.isResolveTargetNotAccepted]).
+     */
+    internal fun isNamedArgumentLabel(element: SqlReferenceExpression): Boolean {
+        val call = equalsLabelledCall(element) ?: return false
+        val name = element.name ?: return false
+        return (call.nameElement?.resolveSymbol() as? EngineFunction)?.parameter(name) != null
     }
 
     /** The columns of [call], an engine table function the fallback binds in a FROM position; null for any other call. */

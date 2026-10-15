@@ -1,13 +1,16 @@
 package dev.brikk.house.sql.intellij.dialect
 
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.symbols.DasSymbol
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiElement
 import com.intellij.psi.tree.IElementType
 import com.intellij.sql.dialects.base.TokensHelper
 import com.intellij.sql.dialects.functions.SqlFunctionsUtil
 import com.intellij.sql.dialects.postgres.PgDialect
 import com.intellij.sql.dialects.postgres.PgDialectBase
 import com.intellij.sql.dialects.postgres.PgTokens
+import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.util.Processor
 import org.jetbrains.annotations.ApiStatus
 
@@ -33,6 +36,17 @@ public abstract class PgFamilyDialect(id: String) : PgDialectBase(id) {
 
     override fun createTokensHelper(): TokensHelper =
         TokensHelper(PgTokens::class.java, SqlFunctionsUtil.loadFunctionDefinition(PgDialect.INSTANCE))
+
+    /**
+     * A named argument's label in a table function's `name = value` is the engine function's parameter, never a
+     * column of the same name ([EngineBuiltins]); every other target stays the platform's to judge.
+     */
+    override fun isResolveTargetNotAccepted(
+        symbol: DasSymbol?, type: ObjectKind, expectedTypes: Set<ObjectKind>, place: PsiElement?, strict: Boolean, isCompletion: Boolean,
+    ): Boolean {
+        val label = type == ObjectKind.COLUMN && !isCompletion && place is SqlReferenceExpression && builtins?.isNamedArgumentLabel(place) == true
+        return label || super.isResolveTargetNotAccepted(symbol, type, expectedTypes, place, strict, isCompletion)
+    }
 
     /** An engine function [builtins] bind takes the parameters its metadata names, so `name := value` labels them. */
     override fun processNamedArgumentCandidates(callableSymbol: DasSymbol?, processor: Processor<in DasSymbol>, project: Project): Boolean {
