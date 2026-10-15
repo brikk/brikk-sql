@@ -13,7 +13,19 @@ class DuckdbDump(
     val settings: List<DuckdbSettingRow>? = null,
     val extensions: List<DuckdbExtensionRow>? = null,
     val extensionFunctions: List<DuckdbExtensionFunctionRow>? = null,
-)
+    val types: List<DuckdbTypeRow>? = null,
+) {
+    // Binary compatibility (AGENTS.md): the constructor from before types.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(
+        engineVersion: String,
+        functions: List<DuckdbFunctionRow>,
+        keywords: List<DuckdbKeywordRow>? = null,
+        settings: List<DuckdbSettingRow>? = null,
+        extensions: List<DuckdbExtensionRow>? = null,
+        extensionFunctions: List<DuckdbExtensionFunctionRow>? = null,
+    ) : this(engineVersion, functions, keywords, settings, extensions, extensionFunctions, null)
+}
 
 /**
  * This release's built-in metadata. [MetadataSnapshot.functions] holds the internal (built-in)
@@ -38,7 +50,7 @@ class DuckdbDump(
  * overload shape, linked to a `pragma_<name>` table function when one exists. Extension rows
  * map the same way per extension, into [MetadataSnapshot.extensionFunctions] and pragmas
  * carrying their extension. A keyword category it does not know reads as
- * [KeywordCategory.UNKNOWN].
+ * [KeywordCategory.UNKNOWN]. [MetadataSnapshot.types] are the type rows, aliases included.
  */
 fun DuckdbDump.toSnapshot(): MetadataSnapshot {
     val builtIn = functions.filter { it.internal }
@@ -60,6 +72,7 @@ fun DuckdbDump.toSnapshot(): MetadataSnapshot {
             byExtension.flatMap { (extension, rows) -> functionDefs(rows).map { it.copy(extension = extension) } }
         },
         grammarForms = DUCKDB_GRAMMAR_FORMS,
+        types = types?.map { TypeDef(it.name, it.logicalType, it.category) },
     )
 }
 

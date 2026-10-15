@@ -1,6 +1,10 @@
 package dev.brikk.house.sql
 
+import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DialectMetadata
+import dev.brikk.house.sql.metadata.DuckdbDump
+import dev.brikk.house.sql.metadata.FunctionCatalog
+import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.EngineDocs
 import dev.brikk.house.sql.metadata.PropertyDef
 import dev.brikk.house.sql.metadata.TRINO_METADATA
@@ -68,5 +72,22 @@ class BinaryCompatibilityTest {
         val docs = EngineDocs::class.java.getConstructor(*shape).newInstance("x", "1", "https://x/", emptyList<Any>(), emptyMap<String, String>(), emptyMap<String, String>(), null)
         assertEquals(emptyList(), docs.properties)
         EngineDocs::class.java.getMethod("copy", *shape)
+    }
+
+    @Test
+    fun metadataSnapshotKeepsItsShapeFromBeforeTypes() {
+        val list = List::class.java
+        val snapshot = MetadataSnapshot::class.java
+            .getConstructor(String::class.java, FunctionCatalog::class.java, Class.forName("dev.brikk.house.sql.metadata.KeywordCatalog"), list, list, list, list, list, list)
+            .newInstance("1", DUCKDB_METADATA.default.functions, null, null, null, null, null, null, null)
+        assertEquals(null, snapshot.types)
+    }
+
+    @Test
+    fun duckdbDumpKeepsItsShapeFromBeforeTypes() {
+        val list = List::class.java
+        val dump = DuckdbDump::class.java.getConstructor(String::class.java, list, list, list, list, list)
+            .newInstance("1", emptyList<Any>(), null, null, null, null)
+        assertEquals(null, dump.types)
     }
 }

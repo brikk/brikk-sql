@@ -75,24 +75,30 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
         val tables = LinkedHashMap<String, RelationFact>()
         for (table in DasUtil.getTables(dataSource)) {
             val key = dasTablePath(table)
-            val columns = DasUtil.getColumns(table).map { column ->
-                ColumnFact(
-                    name = column.name,
-                    sqlType = column.dasType.specification.takeIf { it.isNotBlank() },
-                    nullability = if (column.isNotNull) Nullability.NON_NULL else Nullability.NULLABLE,
-                    origin = ColumnOrigin.PHYSICAL_TABLE,
-                    provenance = key + COLUMN + column.name,
-                )
-            }.toList()
-            tables.putIfAbsent(key, RelationFact(columns, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL, provenance = key))
+            tables.putIfAbsent(key, dasRelationFact(table, key))
         }
         return RelationFacts(tables = tables, catalog = CatalogKnowledge.OPEN)
     }
+}
 
-    private companion object {
-        /** Separates a column's name from its table's path in a provenance id. */
-        const val COLUMN = "#"
-    }
+/** Separates a column's name from its table's path in a provenance id. */
+private const val COLUMN = "#"
+
+/**
+ * [table] as a physical relation fact identified by [key]: its columns with their SQL type and nullability, all
+ * of them; a table without columns (never introspected to that level) is unknown, proving no column absent.
+ */
+internal fun dasRelationFact(table: DasTable, key: String): RelationFact {
+    val columns = DasUtil.getColumns(table).map { column ->
+        ColumnFact(
+            name = column.name,
+            sqlType = column.dasType.specification.takeIf { it.isNotBlank() },
+            nullability = if (column.isNotNull) Nullability.NON_NULL else Nullability.NULLABLE,
+            origin = ColumnOrigin.PHYSICAL_TABLE,
+            provenance = key + COLUMN + column.name,
+        )
+    }.toList()
+    return RelationFact(columns, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL, provenance = key)
 }
 
 /** [table]'s key in relation facts: its catalog, schema and name as stored, as far as the model has them. */
