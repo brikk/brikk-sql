@@ -25,12 +25,12 @@ import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.sql.dialects.SqlLanguageDialect
 import dev.brikk.house.sql.intellij.completion.completableFunctions
 import dev.brikk.house.sql.intellij.dialect.SqlDialectEntry
 import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
+import dev.brikk.house.sql.intellij.editorShowsFile
 import dev.brikk.house.sql.intellij.notifyEscaped
 import dev.brikk.house.sql.intellij.recoverEditorOperation
 import dev.brikk.house.sql.metadata.DialectMetadata
@@ -630,8 +630,7 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         val project = e.project ?: return@recoverEditorOperation null
         val editor = e.getData(CommonDataKeys.EDITOR) ?: return@recoverEditorOperation null
         val file = e.getData(CommonDataKeys.PSI_FILE) ?: return@recoverEditorOperation null
-        if (editor.project != project || file.project != project) return@recoverEditorOperation null
-        if (PsiDocumentManager.getInstance(project).getDocument(file) != editor.document) return@recoverEditorOperation null
+        if (!editorShowsFile(project, editor, file)) return@recoverEditorOperation null
         val injections = InjectedLanguageManager.getInstance(project)
         val injected = if (injections.isInjectedFragment(file)) null else injections.findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
         (injected ?: file).takeIf { it.language is SqlLanguageDialect }
