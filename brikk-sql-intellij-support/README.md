@@ -760,7 +760,10 @@ completion. A plugin implements one `LiveCatalogProfile` (minimum: `dbms`, `prod
 - `HarvestConnectionInterceptor(serviceClass)` as `<database.connectionInterceptor>`;
 - `LiveCatalogCleanup(serviceClass)` as a `DataSourceStorage$Listener` in both `projectListeners` and
   `applicationListeners`;
-- optionally `RefreshLiveCatalogAction(serviceClass)` as an action.
+- optionally `RefreshLiveCatalogAction(serviceClass)` as an action. In the editor popup it is absent unless
+  the SQL at the caret (the file, or SQL injected there) is the engine's own dialect served by a data source
+  of the dbms, or generic SQL an explicit console or resolution scope binds to one; elsewhere (Find Action,
+  menus) it also refreshes the project's only data source of the dbms.
 
 The dialect's `LiveCatalogHarvester` holds its SQL and parsing: over a `CatalogRowSource` it returns a
 `Harvest` (the server's `LiveInventory` and the connection's `SessionFacts`), or null when what it read

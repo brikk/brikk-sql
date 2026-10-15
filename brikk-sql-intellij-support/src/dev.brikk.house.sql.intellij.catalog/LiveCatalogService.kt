@@ -12,6 +12,7 @@ import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.dataSource.connection.ConnectionRequestor
 import com.intellij.database.datagrid.DataProducer
 import com.intellij.database.datagrid.DataRequest
+import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -25,7 +26,10 @@ import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import com.intellij.sql.dialects.SqlLanguageDialect
 import dev.brikk.house.sql.intellij.completion.completableFunctions
+import dev.brikk.house.sql.intellij.dialect.SqlDialectEntry
+import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import dev.brikk.house.sql.intellij.notifyEscaped
 import dev.brikk.house.sql.intellij.recoverEditorOperation
 import dev.brikk.house.sql.metadata.DialectMetadata
@@ -234,6 +238,12 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     }
 
     internal fun dataSourceOf(file: PsiFile): LocalDataSource? = dataSources.resolve(file).dataSource
+
+    /** Which data source serves [file], and why. */
+    internal fun resolutionOf(file: PsiFile): DataSourceResolution = dataSources.resolve(file)
+
+    /** The dialect the resolver's dbms speaks, if [SqlDialectRegistry] knows it. */
+    internal val dialect: SqlDialectEntry? get() = SqlDialectRegistry.forDbms(dataSources.dbms)
 
     internal fun consoleSessionOf(file: PsiFile): DatabaseSession? = dataSources.consoleSession(file)
 
@@ -557,8 +567,10 @@ internal class RefreshDebouncer(private val scope: CoroutineScope, private val d
 
 /**
  * Refreshes the live catalog of the editor's data source, or of the project's only data source of the
- * dbms. In the editor popup it shows only where a data source of the dbms serves the file. Register a
- * no-arg subclass naming the plugin's service class.
+ * dbms. In the editor popup it is absent unless the SQL at the caret (the file, or SQL injected there) is
+ * served by a data source of the dbms: SQL of the engine's dialect ([SqlDialectRegistry]) as the resolver
+ * finds it, generic SQL only through an explicit console or resolution scope, never another engine's SQL,
+ * another file or a missing editor. Register a no-arg subclass naming the plugin's service class.
  */
 @ApiStatus.Experimental
 public abstract class RefreshLiveCatalogAction(private val service: Class<out LiveCatalogService>) : AnAction(), DumbAware {
@@ -567,7 +579,7 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
     override fun update(e: AnActionEvent) {
         val project = e.project
         val catalog = ApplicationManager.getApplication().getService(service)
-        val target = if (project != null && catalog?.profile?.enabled == true) target(project, catalog, e.getData(CommonDataKeys.PSI_FILE)) else null
+        val target = if (project != null && catalog?.profile?.enabled == true) target(project, catalog, e) else null
         e.presentation.isVisible = project != null && (target != null || e.place != ActionPlaces.EDITOR_POPUP)
         e.presentation.isEnabled = target != null
     }
@@ -576,18 +588,45 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         val project = e.project ?: return
         val catalog = ApplicationManager.getApplication().getService(service) ?: return
         val file = e.getData(CommonDataKeys.PSI_FILE)
-        val dataSource = target(project, catalog, file) ?: return
+        val dataSource = target(project, catalog, e) ?: return
         // The editor's console session, when connected, also reads what that session loaded.
         val session = file?.let(catalog::consoleSessionOf)?.takeIf { it.connectionPoint.dataSource == dataSource && it.isConnected }
         catalog.refreshInBackground(project, dataSource, session)
     }
 
-    private fun target(project: Project, catalog: LiveCatalogService, file: PsiFile?): LocalDataSource? {
+    private fun target(project: Project, catalog: LiveCatalogService, e: AnActionEvent): LocalDataSource? {
+        if (e.place == ActionPlaces.EDITOR_POPUP) return popupTarget(catalog, e)
+        val file = e.getData(CommonDataKeys.PSI_FILE)
         if (file != null) return catalog.dataSourceOf(file)
         return recoverEditorOperation {
             LocalDataSourceManager.getInstance(project).dataSources.filter { catalog.accepts(it.dbms) }.singleOrNull()
         }.getOrNull()
     }
+
+    /** The data source serving the SQL at the editor popup's caret, by its dialect; null where none plainly does. */
+    private fun popupTarget(catalog: LiveCatalogService, e: AnActionEvent): LocalDataSource? {
+        val sql = sqlAtCaret(e) ?: return null
+        val dialect = SqlDialectRegistry.forLanguage(sql.language)
+        val resolution = catalog.resolutionOf(sql)
+        return when {
+            // The engine's own SQL: the project's only data source of the dbms serves it too.
+            dialect != null && dialect == catalog.dialect -> resolution.dataSource
+            // Another engine's SQL is never this one's.
+            dialect != null -> null
+            // Generic SQL names no engine: only an explicit console or scope binds it.
+            resolution is DataSourceResolution.Console || resolution is DataSourceResolution.FileMapping -> resolution.dataSource
+            else -> null
+        }
+    }
+
+    /** The SQL file at the editor's caret: SQL injected there, else the editor's file when it is SQL. */
+    private fun sqlAtCaret(e: AnActionEvent): PsiFile? = recoverEditorOperation {
+        val file = e.getData(CommonDataKeys.PSI_FILE) ?: return@recoverEditorOperation null
+        val injected = e.getData(CommonDataKeys.EDITOR)?.let { editor ->
+            InjectedLanguageManager.getInstance(file.project).findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
+        }
+        (injected ?: file).takeIf { it.language is SqlLanguageDialect }
+    }.getOrNull()
 }
 
 /**
