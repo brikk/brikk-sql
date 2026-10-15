@@ -100,8 +100,9 @@ own wrapper class. Checks fail with an `AssertionError`.
 
 `PluginRegistrationContract(pluginId, servicePackage).check(project)` reads the installed plugin's `plugin.xml`, the
 descriptors it includes and the optional descriptors of enabled dependencies from its jars, as IntelliJ does, and
-instantiates every extension and light service: a registration under a wrong namespace, a missing adapter, an adapter
-that does not instantiate the class the XML names, and an open or failing light service all fail. A plugin adopts it
+instantiates every extension, declared service (`applicationService`, `projectService`) and light service: a
+registration under a wrong namespace, a missing adapter, an adapter that does not instantiate the class the XML names,
+a declared service that does not load or instantiate, and an open or failing light service all fail. A plugin adopts it
 with one light test calling it. `DocumentationProviderContract` (see the support README's language layer) checks the
 engine documentation provider the same way.
 

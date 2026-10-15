@@ -21,7 +21,8 @@ import java.util.zip.ZipFile
  * Every registration of an installed plugin works as IntelliJ loads it: its `plugin.xml`, the descriptors it
  * includes and the optional descriptors of enabled dependencies are read from the plugin's own jars, each
  * extension registration has an extension point and an adapter of the plugin, and every adapter instantiates
- * through its bean (a lazy instance's class, a configurable) to the class the XML names. Every light service
+ * through its bean (a lazy instance's class, a configurable) to the class the XML names. Every service the XML
+ * declares (`applicationService`, `projectService`) instantiates through its container, and every light service
  * (`@Service`) in the plugin's classes under [servicePackage] is final and instantiates at each of its levels.
  * Run [check] from a light platform test of the plugin; every problem is reported together.
  */
@@ -45,63 +46,57 @@ public class PluginRegistrationContract(private val pluginId: String, private va
                 if (entry.name.startsWith(prefix) && entry.name.endsWith(".class")) classes += entry.name.removeSuffix(".class").replace('/', '.')
             }
         }
-        val root = checkNotNull(documents["META-INF/plugin.xml"]) { "$pluginId's installed plugin.xml is missing" }
-        check(root.getChildTextTrim("id") == pluginId) { "The installed plugin.xml is ${root.getChildTextTrim("id")}'s" }
-        val descriptors = mutableListOf(root)
-        for (include in root.getChildren("include")) {
-            val href = include.getAttributeValue("href").removePrefix("/")
-            descriptors += checkNotNull(documents[href]) { "plugin.xml includes $href, which the plugin does not hold" }
-        }
-        for (depends in root.getChildren("depends")) {
-            val config = depends.getAttributeValue("config-file") ?: continue
-            if (PluginManagerCore.getPlugin(PluginId.getId(depends.textTrim))?.isEnabled != true) continue
-            descriptors += checkNotNull(documents["META-INF/$config"]) { "plugin.xml names $config, which the plugin does not hold" }
-        }
         val services = classes.mapNotNull { name -> runCatching { loader.loadClass(name) }.getOrNull()?.takeIf { it.isAnnotationPresent(Service::class.java) } }
-        return check(project, descriptors, services)
+        return check(project, documents, services)
     }
 
     /**
-     * Checks [descriptors] (`idea-plugin` elements) of the plugin registered as [pluginId] and the light
-     * [services]: the part of [check] after reading the installed jars. Returns the registrations and services checked.
+     * Checks the plugin registered as [pluginId] from [documents], its jars' `META-INF` descriptors by path
+     * (`META-INF/plugin.xml` and those it includes or names), and the light [services]: [check] after reading
+     * the installed jars. Returns the registrations and services checked.
      */
-    public fun check(project: Project, descriptors: List<Element>, services: List<Class<*>>): Pair<Int, Int> {
+    public fun check(project: Project, documents: Map<String, Element>, services: List<Class<*>>): Pair<Int, Int> {
         val id = PluginId.getId(pluginId)
         val failures = ArrayList<String>()
-        var extensions = 0
-        for (descriptor in descriptors) for (group in descriptor.getChildren("extensions")) {
+        val descriptors = descriptors(documents)
+        // By extension point across every descriptor: a plugin may register one point in several groups or files.
+        val byPoint = descriptors.flatMap { it.getChildren("extensions") }.flatMap { group ->
             val namespace = group.getAttributeValue("defaultExtensionNs") ?: group.getAttributeValue("xmlns")
-            for ((name, registrations) in group.children.groupBy { "$namespace.${it.name}" }) {
-                extensions += registrations.size
-                val application = ApplicationManager.getApplication()
-                val area = listOf(application.extensionArea, project.extensionArea).firstOrNull { it.hasExtensionPoint(name) }
-                if (area == null) {
-                    failures += "no extension point $name (wrong namespace?)"
-                    continue
-                }
-                @Suppress("UNCHECKED_CAST")
-                val point = area.getExtensionPoint<Any>(name) as ExtensionPointImpl<Any>
-                val adapters = point.sortedAdapters.filter { it.pluginDescriptor.pluginId == id }
-                if (adapters.size < registrations.size) failures += "$name: ${registrations.size} registration(s), ${adapters.size} adapter(s)"
-                val instances = adapters.mapNotNull { adapter ->
-                    runCatching {
-                        val bean = checkNotNull(adapter.createInstance<Any>(point.componentManager))
-                        val instance: Any = when (bean) {
-                            is ConfigurableEP<*> -> checkNotNull(bean.createConfigurable())
-                            is BaseKeyedLazyInstance<*> -> checkNotNull(bean.instance)
-                            is KeyedLazyInstance<*> -> checkNotNull(bean.instance)
-                            else -> bean
-                        }
-                        if (instance is UnnamedConfigurable) instance.disposeUIResources()
-                        instance
-                    }.onFailure { failures += "$name: $adapter does not instantiate: $it" }.getOrNull()
-                }
-                for (registration in registrations) {
-                    val expected = CLASS_ATTRIBUTES.firstNotNullOfOrNull { registration.getAttributeValue(it) } ?: registration.getChildTextTrim("className")
-                    // An instance attribute may name a field rather than a class: only names of loadable classes are compared.
-                    if (expected == null || adapters.none { runCatching { it.pluginDescriptor.pluginClassLoader?.loadClass(expected) ?: Class.forName(expected) }.isSuccess }) continue
-                    if (instances.none { it.javaClass.name == expected }) failures += "$name did not instantiate $expected"
-                }
+            group.children.map { "$namespace.${it.name}" to it }
+        }.groupBy({ it.first }, { it.second })
+        for ((name, registrations) in byPoint) {
+            SERVICE_LEVELS[name]?.let { level ->
+                registrations.mapNotNullTo(failures) { declaredServiceProblem(project, id, level, it) }
+                continue
+            }
+            val application = ApplicationManager.getApplication()
+            val area = listOf(application.extensionArea, project.extensionArea).firstOrNull { it.hasExtensionPoint(name) }
+            if (area == null) {
+                failures += "no extension point $name (wrong namespace?)"
+                continue
+            }
+            @Suppress("UNCHECKED_CAST")
+            val point = area.getExtensionPoint<Any>(name) as ExtensionPointImpl<Any>
+            val adapters = point.sortedAdapters.filter { it.pluginDescriptor.pluginId == id }
+            if (adapters.size < registrations.size) failures += "$name: ${registrations.size} registration(s), ${adapters.size} adapter(s)"
+            val instances = adapters.mapNotNull { adapter ->
+                runCatching {
+                    val bean = checkNotNull(adapter.createInstance<Any>(point.componentManager))
+                    val instance: Any = when (bean) {
+                        is ConfigurableEP<*> -> checkNotNull(bean.createConfigurable())
+                        is BaseKeyedLazyInstance<*> -> checkNotNull(bean.instance)
+                        is KeyedLazyInstance<*> -> checkNotNull(bean.instance)
+                        else -> bean
+                    }
+                    if (instance is UnnamedConfigurable) instance.disposeUIResources()
+                    instance
+                }.onFailure { failures += "$name: $adapter does not instantiate: $it" }.getOrNull()
+            }
+            for (registration in registrations) {
+                val expected = CLASS_ATTRIBUTES.firstNotNullOfOrNull { registration.getAttributeValue(it) } ?: registration.getChildTextTrim("className")
+                // An instance attribute may name a field rather than a class: only names of loadable classes are compared.
+                if (expected == null || adapters.none { runCatching { it.pluginDescriptor.pluginClassLoader?.loadClass(expected) ?: Class.forName(expected) }.isSuccess }) continue
+                if (instances.none { it.javaClass.name == expected }) failures += "$name did not instantiate $expected"
             }
         }
         var checked = 0
@@ -115,10 +110,38 @@ public class PluginRegistrationContract(private val pluginId: String, private va
             }
         }
         if (failures.isNotEmpty()) throw AssertionError("${failures.size} registration problem(s) in $pluginId:\n" + failures.joinToString("\n"))
-        return extensions to checked
+        return byPoint.values.sumOf { it.size } to checked
+    }
+
+    /** `META-INF/plugin.xml` and the descriptors it includes (`<xi:include>` or `<include>`) or names for enabled dependencies. */
+    private fun descriptors(documents: Map<String, Element>): List<Element> {
+        val root = checkNotNull(documents["META-INF/plugin.xml"]) { "$pluginId's installed plugin.xml is missing" }
+        check(root.getChildTextTrim("id") == pluginId) { "The installed plugin.xml is ${root.getChildTextTrim("id")}'s" }
+        // The local name: Doris, DuckDB and Trino include their PIPE descriptors as `xi:include`.
+        val included = root.children.filter { it.name == "include" }.map { include ->
+            val href = include.getAttributeValue("href").removePrefix("/")
+            checkNotNull(documents[href]) { "plugin.xml includes $href, which the plugin does not hold" }
+        }
+        val optional = root.getChildren("depends").mapNotNull { depends ->
+            val config = depends.getAttributeValue("config-file") ?: return@mapNotNull null
+            if (PluginManagerCore.getPlugin(PluginId.getId(depends.textTrim))?.isEnabled != true) return@mapNotNull null
+            checkNotNull(documents["META-INF/$config"]) { "plugin.xml names $config, which the plugin does not hold" }
+        }
+        return listOf(root) + included + optional
+    }
+
+    /** What is wrong with a declared [level] service [declaration]: its class does not load or it does not instantiate; null when nothing is. */
+    private fun declaredServiceProblem(project: Project, id: PluginId, level: Service.Level, declaration: Element): String? {
+        val implementation = declaration.getAttributeValue("serviceImplementation") ?: return "${declaration.name} declares no serviceImplementation"
+        val type = declaration.getAttributeValue("serviceInterface") ?: implementation
+        val loader = PluginManagerCore.getPlugin(id)?.pluginClassLoader ?: javaClass.classLoader
+        val service = runCatching { Class.forName(type, true, loader) }.getOrElse { return "${declaration.name} $type does not load: $it" }
+        val manager = if (level == Service.Level.APP) ApplicationManager.getApplication() else project
+        return runCatching { checkNotNull(manager.getService(service)) }.exceptionOrNull()?.let { "${declaration.name} $implementation does not instantiate: $it" }
     }
 
     private companion object {
         val CLASS_ATTRIBUTES = listOf("implementation", "implementationClass", "instance", "serviceImplementation")
+        val SERVICE_LEVELS = mapOf("com.intellij.applicationService" to Service.Level.APP, "com.intellij.projectService" to Service.Level.PROJECT)
     }
 }
