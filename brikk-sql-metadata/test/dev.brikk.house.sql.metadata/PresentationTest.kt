@@ -55,6 +55,21 @@ class PresentationTest {
     }
 
     @Test
+    fun namedParametersAreThoseAfterTheOverloadsPositionalOnes() {
+        val def = FunctionDef(
+            "reader", FunctionKind.TABLE_VALUED,
+            overloads = listOf(
+                FunctionOverload(listOf("VARCHAR", "BOOLEAN"), "TABLE", argNames = listOf("col0", "header"), positionalCount = 1),
+                FunctionOverload(listOf("VARCHAR[]", "BOOLEAN", "VARCHAR"), "TABLE", argNames = listOf("col0", "header", "sep"), positionalCount = 1),
+                FunctionOverload(listOf("INTEGER"), "TABLE", argNames = listOf("x")),
+            ),
+        )
+        assertEquals(listOf("header", "sep"), def.presentation().namedParameters)
+        assertTrue("filename" in duckdb.single { it.name == "read_parquet" && it.kind == FunctionKind.TABLE_VALUED }.namedParameters)
+        assertEquals(emptyList(), duckdb.named("abs").single().namedParameters)
+    }
+
+    @Test
     fun aZeroArgumentRegisteredFunctionIsACall() {
         assertEquals(setOf(CALL), duckdb.named("version").single().syntaxes)
     }

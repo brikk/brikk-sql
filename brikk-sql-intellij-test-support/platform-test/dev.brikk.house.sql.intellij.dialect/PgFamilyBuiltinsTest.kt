@@ -4,6 +4,7 @@ import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.database.Dbms
 import com.intellij.database.DbmsExtension
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.types.DasTypeSystemBase
 import com.intellij.icons.AllIcons
 import com.intellij.lang.LanguageParserDefinitions
@@ -23,6 +24,7 @@ import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
 import com.intellij.sql.dialects.BuiltinFunction
 import com.intellij.sql.psi.SqlCreateStatement
 import com.intellij.sql.psi.SqlFunctionCallExpression
+import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
 import com.intellij.sql.psi.impl.SqlResolveExtension
 import com.intellij.sql.psi.SqlTableType
@@ -39,6 +41,20 @@ import dev.brikk.house.sql.scope.ColumnFact
 import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
 import java.util.UUID
+import com.intellij.database.model.DasColumn
+import com.intellij.psi.PsiFile
+import dev.brikk.house.sql.intellij.catalog.CatalogSource
+import dev.brikk.house.sql.intellij.catalog.LiveCatalogSelection
+import dev.brikk.house.sql.intellij.catalog.LiveFunction
+import dev.brikk.house.sql.intellij.catalog.LiveInventory
+import dev.brikk.house.sql.intellij.catalog.LiveMergePolicy
+import dev.brikk.house.sql.intellij.catalog.merge
+import dev.brikk.house.sql.intellij.completion.completableFunctions
+import dev.brikk.house.sql.metadata.FunctionDef
+import dev.brikk.house.sql.metadata.FunctionKind
+import dev.brikk.house.sql.metadata.FunctionOverload
+import dev.brikk.house.sql.metadata.FunctionPresentation
+import java.time.Instant
 
 /** DuckDB's shape: a PostgreSQL-family dialect whose dbms falls back to PostgreSQL, with DuckDB's builtins. */
 object BuiltinsFixtureDialect : PgFamilyDialect("BrikkBuiltinsFixtureSQL") {
@@ -50,6 +66,14 @@ object BuiltinsFixtureDialect : PgFamilyDialect("BrikkBuiltinsFixtureSQL") {
 object BuiltinsFixtureCompletion : SqlCompletionProfile {
     override val language get() = BuiltinsFixtureDialect
     override val metadata = DUCKDB_METADATA
+
+    /** A live catalog selection for fixture files, merged as a plugin's live catalog merges it; null: the bundled functions. */
+    var selection: LiveCatalogSelection? = null
+
+    override fun functions(file: PsiFile): List<FunctionPresentation> {
+        val bundled = snapshot(file)
+        return selection?.let { LiveMergePolicy.REPLACE.merge(it, bundled, bundled.completableFunctions()).functions } ?: bundled.completableFunctions()
+    }
 }
 
 /** The relation analysis of fixture files, whose call facts stand for table-function layouts a plugin knows. */
@@ -78,6 +102,7 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
     override fun setUp() {
         super.setUp()
         builtinsRelations.fake.facts = RelationFacts()
+        BuiltinsFixtureCompletion.selection = null
         LanguageParserDefinitions.INSTANCE.addExplicitExtension(BuiltinsFixtureDialect, BuiltinsFixtureParserDefinition(), testRootDisposable)
         SyntaxHighlighterFactory.LANGUAGE_FACTORY.addExplicitExtension(BuiltinsFixtureDialect, BuiltinsFixtureHighlighterFactory(), testRootDisposable)
         val fallback = DbmsExtension.FallbackBean().apply {
@@ -164,6 +189,109 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         val row = call.dasType as SqlTableType
         assertEquals(listOf("x", "y"), (0 until row.columnCount).map(row::getColumnName))
         assertFalse("$row", row is SqlTableTypeBase.UnresolvedRefType)
+    }
+
+    /** The label [key] before [operator] in the open file, as the reference the platform makes of it. */
+    private fun label(key: String, operator: String): SqlReferenceExpression {
+        val leaf = checkNotNull(myFixture.file.findElementAt(myFixture.file.text.indexOf("$key $operator")))
+        return checkNotNull(PsiTreeUtil.getParentOfType(leaf, SqlReferenceExpression::class.java, false)) { "$key: ${leaf.parent}" }
+    }
+
+    fun testReaderNamedArgumentLabelsBindToTheReadersParameters() {
+        val failures = mutableListOf<String>()
+        for ((call, keys) in listOf("read_parquet('input.parquet'" to listOf("filename", "file_row_number"), "read_csv('input.csv'" to listOf("header", "filename"))) {
+            for (operator in listOf("=", ":=")) {
+                val sql = "SELECT * FROM $call, ${keys.joinToString(", ") { "$it $operator true" }})"
+                failures += reports(sql).map { "$sql -> $it" }
+                for (key in keys) {
+                    val symbol = label(key, operator).resolveSymbol()
+                    if (symbol?.kind != ObjectKind.ARGUMENT || symbol.name != key) failures += "$sql: $key binds to $symbol"
+                }
+            }
+        }
+        assertEmpty(failures.joinToString("\n"), failures)
+    }
+
+    fun testArgumentValuesUnknownLabelsAndScalarEqualitiesKeepTheirResolution() {
+        val declaration = "CREATE TABLE parameter_inputs (flag_value BOOLEAN, number_value INTEGER);\n"
+        for (operator in listOf("=", ":=")) {
+            val sql = declaration + "SELECT * FROM parameter_inputs p CROSS JOIN read_parquet('input.parquet', filename $operator p.flag_value)"
+            val found = reports(sql)
+            assertEmpty("$sql: $found", found)
+            val value = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlReferenceExpression::class.java).single { it.text == "p.flag_value" }
+            assertEquals(ObjectKind.COLUMN, value.resolveSymbol()?.kind)
+            assertTrue(reports("SELECT * FROM read_parquet('input.parquet', filename $operator missing_flag)").any { it.startsWith("missing_flag:") })
+            // An unknown option keeps today's policy: reported, never bound.
+            assertTrue(reports("SELECT * FROM read_parquet('input.parquet', not_an_option $operator true)").any { it.startsWith("not_an_option:") })
+        }
+        // `=` names nothing outside a table function's arguments: a scalar's equality compares columns.
+        assertEmpty(reports(declaration + "SELECT abs(number_value), abs(CAST(number_value = number_value AS INTEGER)) FROM parameter_inputs"))
+        assertTrue(reports(declaration + "SELECT abs(CAST(missing_number = number_value AS INTEGER)) FROM parameter_inputs").any { it.startsWith("missing_number:") })
+        assertTrue(reports("SELECT list_value(filename = 1)").any { it.startsWith("filename:") })
+    }
+
+    fun testALabelIsTheParameterEvenWhereAColumnOfItsNameIsInScope() {
+        val declaration = "CREATE TABLE label_inputs (filename VARCHAR, header VARCHAR);\n"
+        for (operator in listOf("=", ":=")) {
+            val sql = declaration + "SELECT * FROM label_inputs AS i CROSS JOIN read_parquet('synthetic.parquet', filename $operator i.filename)"
+            val found = reports(sql)
+            assertEmpty("$sql: $found", found)
+            val label = label("filename", operator).resolveSymbol()
+            assertEquals("$operator: $label", ObjectKind.ARGUMENT, label?.kind)
+            assertEquals("filename", label?.name)
+            assertFalse("$operator: $label", label?.dasObject is DasColumn)
+            // The value is SQL: its column is the table's.
+            val value = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlReferenceExpression::class.java).single { it.text == "i.filename" }
+            assertEquals(ObjectKind.COLUMN, value.resolveSymbol()?.kind)
+        }
+        // `=` elsewhere compares: both sides stay the table's columns.
+        assertEmpty(reports(declaration + "SELECT abs(CAST(filename = header AS INTEGER)) FROM label_inputs"))
+        assertEquals(ObjectKind.COLUMN, label("filename", "=").resolveSymbol()?.kind)
+    }
+
+    fun testTheLabelsAreTheParametersOfTheFunctionTheFileSelects() {
+        fun reader(name: String, option: String) = LiveFunction(
+            FunctionDef(name, FunctionKind.TABLE_VALUED, overloads = listOf(FunctionOverload(listOf("VARCHAR", "BOOLEAN"), "TABLE", argNames = listOf("col0", option), positionalCount = 1))),
+        )
+        val inventory = LiveInventory("1.5.6", listOf(reader("read_parquet", "live_only_option"), reader("live_reader", "live_option")), signatures = true)
+        BuiltinsFixtureCompletion.selection = LiveCatalogSelection(CatalogSource.Live(Instant.EPOCH), inventory)
+        try {
+            for ((sql, key) in listOf(
+                "SELECT * FROM read_parquet('synthetic.parquet', live_only_option = true)" to "live_only_option",
+                "SELECT * FROM live_reader('synthetic.parquet', live_option := true)" to "live_option",
+            )) {
+                val found = reports(sql)
+                assertEmpty("$sql: $found", found)
+                val operator = if (":=" in sql) ":=" else "="
+                assertEquals(sql, ObjectKind.ARGUMENT, label(key, operator).resolveSymbol()?.kind)
+            }
+            // The live signature replaced the bundled one, whose parameter it lacks.
+            assertTrue(reports("SELECT * FROM read_parquet('synthetic.parquet', filename = true)").any { it.startsWith("filename:") })
+        } finally {
+            BuiltinsFixtureCompletion.selection = null
+        }
+    }
+
+    fun testAQualifiedLeftSideIsAColumnEvenWhenItsNameIsAParameter() {
+        // A selected table function taking a positional boolean and a named `flag`: `i.flag = true` is that boolean.
+        val function = FunctionDef(
+            "flag_reader", FunctionKind.TABLE_VALUED,
+            overloads = listOf(FunctionOverload(listOf("BOOLEAN", "BOOLEAN"), "TABLE", argNames = listOf("col0", "flag"), positionalCount = 1)),
+        )
+        val inventory = LiveInventory("1.5.6", listOf(LiveFunction(function)), signatures = true)
+        BuiltinsFixtureCompletion.selection = LiveCatalogSelection(CatalogSource.Live(Instant.EPOCH), inventory)
+        try {
+            val sql = "CREATE TABLE label_inputs (flag BOOLEAN);\nSELECT * FROM label_inputs AS i CROSS JOIN flag_reader(i.flag = true, flag = true)"
+            val found = reports(sql)
+            assertEmpty("$sql: $found", found)
+            val qualified = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlReferenceExpression::class.java).single { it.text == "i.flag" }
+            assertEquals(ObjectKind.COLUMN, qualified.resolveSymbol()?.kind)
+            val bare = PsiTreeUtil.getParentOfType(myFixture.file.findElementAt(sql.indexOf(", flag =") + 2), SqlReferenceExpression::class.java, false)
+            assertEquals("flag", bare?.text)
+            assertEquals(ObjectKind.ARGUMENT, bare?.resolveSymbol()?.kind)
+        } finally {
+            BuiltinsFixtureCompletion.selection = null
+        }
     }
 
     fun testUnknownFunctionsAndTypesStillReport() {
