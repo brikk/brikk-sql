@@ -213,6 +213,14 @@ class SqlDocsTest {
     }
 
     @Test
+    fun aStatementBeginningWithWithIsItsMainStatement() {
+        assertEquals("${doris}sql-statements/data-query/SELECT/", at("WITH c AS (SELECT 1 AS k), d (k) AS (SELECT 2) <caret>SELECT * FROM c, d")?.url)
+        assertEquals("${doris}sql-statements/data-modification/DML/INSERT/", at("WITH RECURSIVE c AS (SELECT 1) INSERT <caret>INTO t SELECT * FROM c")?.url)
+        assertNull(at("<caret>WITH c AS (SELECT 1) SELECT * FROM c"))
+        assertNull(at("WITH c AS (<caret>SELECT 1) SELECT * FROM c"))
+    }
+
+    @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)

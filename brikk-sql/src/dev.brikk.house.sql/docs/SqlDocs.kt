@@ -40,8 +40,10 @@ private object DocsRecognizer {
             DocsLink(title, summary, docs.url(path), range.start + tokens[first].start, range.start + tokens[last].end + 1, kind)
         tableFunction(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at, DocsKind.TABLE_FUNCTION) }
         engine(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at, DocsKind.ENGINE) }
+        // The statement a leading WITH qualifies starts after its common table expressions.
+        val main = mainStatement(tokens, text)
         for (entry in docs.statements) {
-            val starts = if (entry.clause) tokens.indices.toList() else listOf(0)
+            val starts = if (entry.clause) tokens.indices.toList() else listOfNotNull(main)
             for (start in starts) {
                 if (start > at) break
                 val used = match(entry.words, tokens, text, start) ?: continue
@@ -114,6 +116,28 @@ private object DocsRecognizer {
         if (tokens.getOrNull(keyword)?.takeIf { it.isWord(text) }?.text.equals("ENGINE", ignoreCase = true).not()) return null
         if (tokens.first().text.uppercase() !in setOf("CREATE", "ATTACH", "REPLACE")) return null
         return path.takeIf { depth(tokens, keyword) == 0 }
+    }
+
+    /**
+     * The index of the main statement's first token: 0, or after `WITH [RECURSIVE] name [(columns)] AS [...] (query) [, ...]`;
+     * null while that is unfinished.
+     */
+    private fun mainStatement(tokens: List<Token>, text: String): Int? {
+        if (tokens.firstOrNull()?.takeIf { it.isWord(text) }?.text?.uppercase() != "WITH") return 0
+        var depth = 0
+        for (i in 1 until tokens.size) {
+            when (tokens[i].tokenType) {
+                TokenType.L_PAREN -> depth++
+                TokenType.R_PAREN -> {
+                    depth--
+                    val next = tokens.getOrNull(i + 1) ?: return null
+                    // A column list is followed by AS; a query by a comma or the main statement.
+                    if (depth == 0 && next.tokenType != TokenType.COMMA && !next.text.equals("AS", ignoreCase = true)) return i + 1
+                }
+                else -> {}
+            }
+        }
+        return null
     }
 
     /** Whether tokens from [from] are `[IF [NOT] EXISTS] name[.name...]` followed by one of [follows] (words, upper case, or symbols). */
