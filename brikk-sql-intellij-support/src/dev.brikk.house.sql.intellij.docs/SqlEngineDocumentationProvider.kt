@@ -36,15 +36,22 @@ import org.jetbrains.annotations.ApiStatus
  * code. A subclass may pass its metadata instead, which must have docs.
  */
 @ApiStatus.Experimental
-public open class SqlEngineDocumentationProvider private constructor(private val fixed: DialectMetadata?) : AbstractDocumentationProvider() {
+public open class SqlEngineDocumentationProvider private constructor(private val fixed: Fixed?) : AbstractDocumentationProvider() {
     /** Docs found from each file's language. */
     public constructor() : this(null)
 
-    public constructor(metadata: DialectMetadata) : this(metadata.also { requireNotNull(it.docs) { "${it.dialect} bundles no engine documentation" } })
+    public constructor(metadata: DialectMetadata) : this(Fixed(metadata))
+
+    /** The metadata a subclass passes, which must have docs. */
+    private class Fixed(val metadata: DialectMetadata) {
+        init {
+            requireNotNull(metadata.docs) { "${metadata.dialect} bundles no engine documentation" }
+        }
+    }
 
     /** The metadata for SQL in [file]: this provider's own, or that of the file's dialect. */
     private fun metadataFor(file: PsiFile): DialectMetadata? =
-        fixed ?: SqlDialectRegistry.forLanguage(file.language)?.coreDialect?.let(::bundledMetadata)
+        fixed?.metadata ?: SqlDialectRegistry.forLanguage(file.language)?.coreDialect?.let(::bundledMetadata)
 
     final override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?, targetOffset: Int): PsiElement? {
         val context = contextElement ?: return null
