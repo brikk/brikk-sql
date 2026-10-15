@@ -17,7 +17,8 @@ import dev.brikk.house.sql.docs.PropertySite
 import dev.brikk.house.sql.docs.sqlDocsAt
 import dev.brikk.house.sql.docs.sqlPropertyAt
 import dev.brikk.house.sql.metadata.DialectMetadata
-import dev.brikk.house.sql.metadata.EngineDocs
+import dev.brikk.house.sql.metadata.bundledMetadata
+import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -28,15 +29,27 @@ import org.jetbrains.annotations.ApiStatus
  * opens. Names inside references, such as columns and tables, keep the platform's own documentation; so
  * does everything the engine does not document. On a key of a property list the docs describe
  * (`PROPERTIES ("replication_num" = ...)`, a table function's arguments), it shows the key's summary, the release
- * it came in, its known values and the list's page. Works in injected SQL of the language. Register a no-arg
- * subclass as the language's `lang.documentationProvider` with `order="first"`.
+ * it came in, its known values and the list's page. Works in injected SQL of the language.
+ *
+ * Register this class itself as the language's `lang.documentationProvider` with `order="first"`: it finds
+ * the docs of the file's language through [SqlDialectRegistry] and [bundledMetadata], so a plugin writes no
+ * code. A subclass may pass its metadata instead, which must have docs.
  */
 @ApiStatus.Experimental
-public abstract class SqlEngineDocumentationProvider(private val metadata: DialectMetadata) : AbstractDocumentationProvider() {
-    private val docs: EngineDocs = requireNotNull(metadata.docs) { "${metadata.dialect} bundles no engine documentation" }
+public open class SqlEngineDocumentationProvider private constructor(private val fixed: DialectMetadata?) : AbstractDocumentationProvider() {
+    /** Docs found from each file's language. */
+    public constructor() : this(null)
+
+    public constructor(metadata: DialectMetadata) : this(metadata.also { requireNotNull(it.docs) { "${it.dialect} bundles no engine documentation" } })
+
+    /** The metadata for SQL in [file]: this provider's own, or that of the file's dialect. */
+    private fun metadataFor(file: PsiFile): DialectMetadata? =
+        fixed ?: SqlDialectRegistry.forLanguage(file.language)?.coreDialect?.let(::bundledMetadata)
 
     final override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?, targetOffset: Int): PsiElement? {
         val context = contextElement ?: return null
+        val metadata = metadataFor(file) ?: return null
+        val docs = metadata.docs ?: return null
         // A key of a property list the docs describe: its summary, release, values and the list's page.
         sqlPropertyAt(file.text, docs, targetOffset, metadata.default::tableFunction, ProgressManager::checkCanceled)
             ?.takeIf { !it.value && it.quoted && it.definition != null }?.let { return PropertyDocsElement(it, context) }
