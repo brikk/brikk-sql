@@ -5,6 +5,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.extensions.impl.ExtensionPointImpl
+import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.FileTypeManager
 import com.intellij.openapi.options.ConfigurableEP
 import com.intellij.openapi.options.UnnamedConfigurable
 import com.intellij.openapi.project.Project
@@ -21,9 +23,10 @@ import java.util.zip.ZipFile
  * Every registration of an installed plugin works as IntelliJ loads it: its `plugin.xml`, the descriptors it
  * includes and the optional descriptors of enabled dependencies are read from the plugin's own jars, each
  * extension registration has an extension point and an adapter of the plugin, and every adapter instantiates
- * through its bean (a lazy instance's class, a configurable) to the class the XML names. Every service the XML
- * declares (`applicationService`, `projectService`) instantiates through its container, and every light service
- * (`@Service`) in the plugin's classes under [servicePackage] is final and instantiates at each of its levels.
+ * through its bean (a lazy instance's class, a configurable, the file type the platform registered) to the class
+ * the XML names. Every service the XML declares (`applicationService`, `projectService`) instantiates through
+ * its container, and every light service (`@Service`) in the plugin's classes under [servicePackage] is final
+ * and instantiates at each of its levels.
  * Run [check] from a light platform test of the plugin; every problem is reported together.
  */
 @ApiStatus.Experimental
@@ -82,7 +85,7 @@ public class PluginRegistrationContract(private val pluginId: String, private va
             val point = area.getExtensionPoint<Any>(name) as ExtensionPointImpl<Any>
             val adapters = point.sortedAdapters.filter { it.pluginDescriptor.pluginId == id }
             if (adapters.size < registrations.size) failures += "$name: ${registrations.size} registration(s), ${adapters.size} adapter(s)"
-            val instances = adapters.mapNotNull { adapter ->
+            val instances = if (name == FILE_TYPE) registrations.mapNotNull { registeredFileType(it, failures) } else adapters.mapNotNull { adapter ->
                 runCatching {
                     val bean = checkNotNull(adapter.createInstance<Any>(point.componentManager))
                     val instance: Any = when (bean) {
@@ -133,6 +136,16 @@ public class PluginRegistrationContract(private val pluginId: String, private va
         return listOf(root) + included + optional
     }
 
+    /**
+     * The file type the platform registered for a `fileType` [registration], found by its name through
+     * `FileTypeManager`, which instantiates it from the bean (by constructor or the `fieldName` singleton).
+     */
+    private fun registeredFileType(registration: Element, failures: MutableList<String>): FileType? {
+        val typeName = registration.getAttributeValue("name")
+        return FileTypeManager.getInstance().findFileTypeByName(typeName)
+            .also { if (it == null) failures += "$FILE_TYPE: no file type named $typeName is registered" }
+    }
+
     /** The ids of the plugins [root] depends on optionally that are not enabled. */
     private fun unloadedOptionalDependencies(root: Element): Set<String> =
         root.getChildren("depends").filter { it.getAttributeValue("optional") == "true" }.map { it.textTrim }
@@ -150,6 +163,7 @@ public class PluginRegistrationContract(private val pluginId: String, private va
 
     private companion object {
         val CLASS_ATTRIBUTES = listOf("implementation", "implementationClass", "instance", "serviceImplementation")
+        const val FILE_TYPE = "com.intellij.fileType"
         val SERVICE_LEVELS = mapOf("com.intellij.applicationService" to Service.Level.APP, "com.intellij.projectService" to Service.Level.PROJECT)
     }
 }
