@@ -14,6 +14,7 @@ import com.intellij.database.dataSource.LocalDataSource
 import com.intellij.database.dataSource.LocalDataSourceManager
 import com.intellij.database.dataSource.url.template.UrlTemplate
 import com.intellij.database.datagrid.DataAuditor
+import com.intellij.database.datagrid.DataProducer
 import com.intellij.database.datagrid.DataRequest
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.icons.AllIcons
@@ -22,6 +23,7 @@ import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.util.Disposer
+import com.intellij.testFramework.LoggedErrorProcessor
 import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.RunAll
 import com.intellij.testFramework.TestActionEvent
@@ -58,6 +60,8 @@ class StreamingCancelTest : BasePlatformTestCase() {
     private lateinit var dataSource: LocalDataSource
     private var installed: Cancel? = null
     private val sessions = LinkedHashMap<JdbcConsole, DatabaseSession>()
+    /** Sessions a test left busy by failing one of the platform's own steps on purpose. */
+    private val faulted = HashSet<DatabaseSession>()
     private val fetching = CopyOnWriteArrayList<DataRequest>()
     private val finished = CopyOnWriteArrayList<DataRequest>()
     private val executionErrors = CopyOnWriteArrayList<Pair<DataRequest, String>>()
@@ -102,7 +106,7 @@ class StreamingCancelTest : BasePlatformTestCase() {
 
     override fun tearDown() = RunAll(
         { installed?.unregisterActions(ActionManager.getInstance()) },
-        { PlatformTestUtil.waitWithEventsDispatching("the sessions end their requests", { sessions.values.all { it.isIdle } }, 30) },
+        { PlatformTestUtil.waitWithEventsDispatching("the sessions end their requests", { sessions.values.all { it.isIdle || it in faulted } }, 30) },
         { sessions.forEach { (console, session) -> DatabaseSessionViewService.getInstance().destroyView(console); Disposer.dispose(console); Disposer.dispose(session) } },
         { LocalDataSourceManager.getInstance(project).removeDataSource(dataSource) },
         { errors.assertNone() },
@@ -253,6 +257,51 @@ class StreamingCancelTest : BasePlatformTestCase() {
             steps("@next") == steps("@${SlowStreamDriver.HELD}"))
         Files.createFile(Path.of("$log.release"))
         console.run("SELECT 42")
+    }
+
+    fun testADisconnectThatCannotBeSentHoldsTheNextRequestUntilTheConnectionCancelEnds() {
+        val console = open()
+        console.run("SELECT 1")
+        val refusal = "the disconnect cannot be sent"
+        val refused = CountDownLatch(1)
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun jobSubmitted(request: DataRequest, producer: DataProducer) {
+                if (request is DataRequest.Disconnect && refused.count > 0) {
+                    refused.countDown()
+                    throw IllegalStateException(refusal)
+                }
+            }
+        }, testRootDisposable)
+        // The message bus logs a failing listener; in tests that log rethrows, which makes sending the disconnect
+        // fail. The session counts the job, which never finishes.
+        val logging = LoggedErrorProcessor.executeWith(object : LoggedErrorProcessor() {
+            override fun processError(category: String, message: String, details: Array<out String>, t: Throwable?): Set<Action> =
+                if (generateSequence(t) { it.cause }.any { it.message == refusal }) setOf(Action.RETHROW) else super.processError(category, message, details, t)
+        })
+        Disposer.register(testRootDisposable) { logging.finish() }
+        faulted += console.databaseSession
+        val thrown = CopyOnWriteArrayList<Throwable>()
+        val worker = Executor { work -> Thread { try { work.run() } catch (e: Throwable) { thrown += e } }.start() }
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), worker, 1.seconds)
+        val held = stream(console, SlowStreamDriver.HELD)
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        assertTrue("the disconnect was refused past the deadline", refused.await(10, TimeUnit.SECONDS))
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { held in finished }, 10)
+        val waiting = System.nanoTime()
+        while (System.nanoTime() - waiting < 2_000_000_000) Thread.sleep(20)
+        assertEmpty("the successor waits for the connection cancel", steps("next"))
+        assertTrue("the connection stays", console.databaseSession.isConnected)
+        Files.createFile(Path.of("$log.release"))
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        val order = Files.readAllLines(log)
+        assertTrue("the successor opens its statement after the connection cancel: $order",
+            order.indexOf("${SlowStreamDriver.HELD} cancel returns") < order.indexOf("next execute"))
+        assertEquals("on the same connection", steps("@next"), steps("@${SlowStreamDriver.HELD}"))
+        assertTrue("the refusal propagates once the engine can go on: $thrown",
+            thrown.size == 1 && generateSequence(thrown.single()) { it.cause }.any { it.message == refusal })
     }
 
     fun testAStockCleanupHandledPastTheDeadlineStillHoldsTheNextRequest() {

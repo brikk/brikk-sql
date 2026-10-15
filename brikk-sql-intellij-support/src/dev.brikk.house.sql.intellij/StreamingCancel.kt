@@ -124,18 +124,21 @@ private class StreamingRequest(
      * before this returns.
      */
     fun cancel() {
+        var cancelling: Future<*>? = null
         try {
             if (!isCurrent()) return
-            val cancelling = ApplicationManager.getApplication().executeOnPooledThread(Callable { connection.remoteConnection.cancelAll() })
-            if (uninterruptibly { finishes(cancelling) }) {
+            val running = ApplicationManager.getApplication().executeOnPooledThread(Callable { connection.remoteConnection.cancelAll() })
+            cancelling = running
+            if (uninterruptibly { finishes(running) }) {
                 if (isCurrent()) awaitHandled(CancelRunningStatementsAction.createCancelRequest(session) as DataRequest, "stock cancel")
             } else {
                 LOG.warn("Cancelling the statements of a streaming request took over $deadline; disconnecting its console")
                 awaitHandled(DataRequest.Disconnect(session), "disconnect")
-                // Without a new connection for the next request, the cancel must end first.
-                if (engine.runsOn(connection)) uninterruptibly { finishes(cancelling, wait = true) }
             }
         } finally {
+            // Whatever ended this, the engine goes on only once the connection cancel has ended or the engine no
+            // longer runs on that connection (a next request then gets a new one, which the cancel cannot reach).
+            cancelling?.let { if (engine.runsOn(connection)) uninterruptibly { finishes(it, wait = true) } }
             release()
         }
     }

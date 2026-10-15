@@ -42,7 +42,7 @@ no internal-API annotation.
   stock cleanup. The wait has no time limit for the stock cleanup (the engine reports handling it on
   its own thread). A `cancelAll` still running after 30 s disconnects the console instead (the stock
   Disconnect, which also drops queued requests), and the next request runs on a new connection that
-  call cannot reach. A request queued while the original still runs is dropped when the stock
+  call cannot reach; if the console cannot be disconnected, the wait lasts until `cancelAll` ends. A request queued while the original still runs is dropped when the stock
   cleanup runs, as a stock cancel drops it. If the work cannot be submitted, the press runs the stock
   cancel. Other consoles and connections are not touched. Any other press (another dbms, a
   request still waiting for results, a second press on a cancelled session) runs the wrapped action.
