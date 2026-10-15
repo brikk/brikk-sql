@@ -4,6 +4,7 @@ import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionContributorEP
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageDocumentation
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
@@ -95,6 +96,19 @@ class SharedWiringContractsTest : BasePlatformTestCase() {
         assertTrue(message, failure is AssertionError)
         assertTrue(message, "projectService dev.sort.missing.NoSuchService does not load" in message)
         assertTrue(message, "projectService ${UnregisteredDeclaredService::class.java.name} does not instantiate" in message)
+    }
+
+    /** Doris's descriptor: Kotlin's plugin-mode marker in plugin.xml, Kotlin an optional dependency not loaded here. */
+    fun testAPointOfAnUnloadedOptionalDependencyIsSkippedAndAWrongNamespaceStillFails() {
+        val kotlin = """<depends optional="true" config-file="kotlin.xml">org.jetbrains.kotlin</depends>
+            |<extensions defaultExtensionNs="org.jetbrains.kotlin"><supportsKotlinPluginMode supportsK1="false" supportsK2="true"/></extensions>""".trimMargin()
+        assertNull(PluginManagerCore.getPlugin(PluginId.getId("org.jetbrains.kotlin"))?.takeIf { it.isEnabled })
+        assertEquals(1 to 0, PluginRegistrationContract(id, "unused").check(project, documents(kotlin, ""), emptyList()))
+        val wrong = kotlin + """<extensions defaultExtensionNs="org.jetbrains.kotlinx"><supportsKotlinPluginMode supportsK2="true"/></extensions>"""
+        val failure = runCatching { PluginRegistrationContract(id, "unused").check(project, documents(wrong, ""), emptyList()) }.exceptionOrNull()
+        val message = failure?.message.orEmpty()
+        assertTrue(message, failure is AssertionError && "no extension point org.jetbrains.kotlinx.supportsKotlinPluginMode" in message)
+        assertFalse(message, "org.jetbrains.kotlin.supportsKotlinPluginMode" in message)
     }
 
     fun testAWrongNamespaceAMissingAdapterAndAnOpenLightServiceFail() {
