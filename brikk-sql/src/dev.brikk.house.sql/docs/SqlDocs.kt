@@ -33,8 +33,9 @@ private object DocsRecognizer {
         val tokens = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text, checkCanceled).tokens
             .filter { it.tokenType != TokenType.SEMICOLON }
         val local = offset - range.start
-        val at = tokens.indexOfFirst { local >= it.start && local <= it.end + 1 }.takeIf { it >= 0 } ?: return null
-        if (!tokens[at].isWord(text)) return null
+        // The word holding the caret (half-open), else the word the caret ends.
+        val at = tokens.indexOfFirst { local >= it.start && local < it.end + 1 && it.isWord(text) }.takeIf { it >= 0 }
+            ?: tokens.indexOfFirst { local == it.end + 1 && it.isWord(text) }.takeIf { it >= 0 } ?: return null
         fun link(title: String, summary: String?, path: String, first: Int, last: Int, kind: DocsKind) =
             DocsLink(title, summary, docs.url(path), range.start + tokens[first].start, range.start + tokens[last].end + 1, kind)
         tableFunction(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at, DocsKind.TABLE_FUNCTION) }

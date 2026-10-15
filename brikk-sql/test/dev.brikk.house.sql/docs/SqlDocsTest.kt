@@ -167,6 +167,16 @@ class SqlDocsTest {
     }
 
     @Test
+    fun theTokenHoldingTheCaretDecidesThenTheWordItEnds() {
+        val mergeTree = "${clickhouse}reference/engines/table-engines/mergetree-family/mergetree"
+        assertEquals(mergeTree, at("CREATE TABLE t (x UInt8) ENGINE=<caret>MergeTree ORDER BY x", "clickhouse")?.url)
+        assertEquals(mergeTree, at("CREATE TABLE t (x UInt8) ENGINE=MergeTree<caret> ORDER BY x", "clickhouse")?.url)
+        val sr = "https://docs.starrocks.io/docs/sql-reference/sql-functions/table-functions/"
+        assertEquals("${sr}generate_series/", at("SELECT * FROM TABLE(<caret>generate_series(1, 3))", "starrocks")?.url)
+        assertNull(at("CREATE TABLE t (x UInt8) ENGINE <caret>= MergeTree", "clickhouse"))
+    }
+
+    @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)
