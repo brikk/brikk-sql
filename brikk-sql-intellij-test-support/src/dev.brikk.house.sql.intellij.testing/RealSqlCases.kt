@@ -50,6 +50,9 @@ public enum class RealSqlFeature {
     /** `a.b` reading field `b` of a ROW or struct column `a` (Trino, DuckDB, BigQuery). */
     ROW_FIELD_ACCESS,
 
+    /** Table constraints in a CREATE TABLE's column list: `PRIMARY KEY (k), UNIQUE (v)`. */
+    INLINE_TABLE_CONSTRAINTS,
+
     /** PostgreSQL's set-returning functions in FROM (`generate_series`). */
     SET_RETURNING_FUNCTIONS,
 
@@ -598,7 +601,20 @@ public object RealSqlCases {
         RealSqlCase(
             "create-table-own-constraints",
             "CREATE TABLE sales.t2 (k BIGINT, v INT, PRIMARY KEY (k), UNIQUE (missing_col))",
+            needs = setOf(RealSqlFeature.INLINE_TABLE_CONSTRAINTS),
             missed = setOf("missing_col"),
+        ),
+        RealSqlCase(
+            "doris-create-table-unique-key",
+            "CREATE TABLE sales.t3 (k BIGINT, v INT) UNIQUE KEY(missing_key) DISTRIBUTED BY HASH(k) BUCKETS 1",
+            needs = setOf(RealSqlFeature.DORIS),
+            missed = setOf("missing_key"),
+        ),
+        RealSqlCase(
+            "doris-create-table-inverted-index",
+            "CREATE TABLE sales.t4 (k BIGINT, v INT, INDEX i (missing_idx) USING INVERTED) DUPLICATE KEY(k) DISTRIBUTED BY HASH(k) BUCKETS 1",
+            needs = setOf(RealSqlFeature.DORIS),
+            missed = setOf("missing_idx"),
         ),
         RealSqlCase(
             "computed-after-caret-over-columnless-table",

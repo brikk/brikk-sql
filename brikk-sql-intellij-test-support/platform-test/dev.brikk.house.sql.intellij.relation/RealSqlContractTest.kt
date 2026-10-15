@@ -172,7 +172,7 @@ class RealSqlContractTest : RelationTestCase() {
         val features = setOf(
             RealSqlFeature.NATURAL_JOIN, RealSqlFeature.FULL_JOIN, RealSqlFeature.INTERSECT_EXCEPT, RealSqlFeature.NAMED_WINDOW,
             RealSqlFeature.UNNEST, RealSqlFeature.LATERAL_SUBQUERY, RealSqlFeature.VALUES_COLUMN_ALIASES, RealSqlFeature.CREATE_TABLE_AS,
-            RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DOUBLE_QUOTED_IDENTIFIERS, RealSqlFeature.SET_RETURNING_FUNCTIONS,
+            RealSqlFeature.THREE_PART_NAMES, RealSqlFeature.DOUBLE_QUOTED_IDENTIFIERS, RealSqlFeature.SET_RETURNING_FUNCTIONS, RealSqlFeature.INLINE_TABLE_CONSTRAINTS,
         )
         val target = Target("postgres", features, postgres, Dbms.POSTGRES, "postgresql")
         try {
@@ -340,7 +340,7 @@ class RealSqlContractTest : RelationTestCase() {
         register(mysqlRelations, Dbms.MYSQL)
         val features = setOf(
             RealSqlFeature.GROUP_BY_ALIAS, RealSqlFeature.NATURAL_JOIN, RealSqlFeature.INTERSECT_EXCEPT, RealSqlFeature.NAMED_WINDOW,
-            RealSqlFeature.LATERAL_SUBQUERY, RealSqlFeature.CREATE_TABLE_AS, RealSqlFeature.BACKTICK_IDENTIFIERS,
+            RealSqlFeature.LATERAL_SUBQUERY, RealSqlFeature.CREATE_TABLE_AS, RealSqlFeature.BACKTICK_IDENTIFIERS, RealSqlFeature.INLINE_TABLE_CONSTRAINTS,
         )
         val target = Target("mysql", features, mysql, Dbms.MYSQL, "mysql.8")
         try {

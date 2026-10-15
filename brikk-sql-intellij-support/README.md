@@ -513,6 +513,16 @@ On 263 it calls `SqlDialectMappingUtilsKt.setDialectMappingSync` reflectively: a
 of the `intellij.database.sql.core.impl` module with no internal-API annotation, absent before
 263, where the old setter only updates storage.
 
+`SqlEngineDocumentationProvider(metadata)` (`docs`): quick documentation (Ctrl+Q) and external documentation
+(Shift+F1) of the statement forms, clauses, table functions and table engines the dialect's
+`DialectMetadata.docs` maps to engine pages, recognized by core's `sqlDocsAt`; references and function calls
+keep the platform's own documentation. Register a no-arg subclass as the language's
+`lang.documentationProvider` with `order="first"`; a dialect without docs fails there. That every bundled
+page answers, documents what links to it, and (where the site shows a version badge) still shows
+`EngineDocs.release` is checked against the live sites on demand:
+
+    BRIKK_DOCS_CHECK=1 ./kotlin test -m brikk-sql --include-classes='dev.brikk.house.sql.docs.EngineDocsPagesTest'
+
 ## Catalog kit (`dev.brikk.house.sql.intellij.catalog`, experimental)
 
 Database Tools integration for a dialect's own dbms. Register no-arg subclasses (the model facade

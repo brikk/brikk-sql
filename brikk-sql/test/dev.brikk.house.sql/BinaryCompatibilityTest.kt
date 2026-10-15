@@ -1,5 +1,7 @@
 package dev.brikk.house.sql
 
+import dev.brikk.house.sql.metadata.DialectMetadata
+import dev.brikk.house.sql.metadata.TRINO_METADATA
 import dev.brikk.house.sql.scope.CatalogKnowledge
 import dev.brikk.house.sql.scope.RelationFacts
 import dev.brikk.house.sql.shape.SqlScriptParameters
@@ -37,5 +39,13 @@ class BinaryCompatibilityTest {
         val constructor = SqlScriptParameters::class.java.getConstructor(*shape)
         assertEquals(SqlScriptParameters("x", "clickhouse", emptyList()), constructor.newInstance("x", "clickhouse", emptyList<Any>(), null, null))
         SqlScriptParameters::class.java.getMethod("copy", *shape)
+    }
+
+    @Test
+    fun dialectMetadataKeepsItsShapeFromBeforeDocs() {
+        val metadata = DialectMetadata::class.java.getConstructor(String::class.java, List::class.java, String::class.java)
+            .newInstance("x", TRINO_METADATA.snapshots, TRINO_METADATA.default.engineVersion)
+        assertEquals(null, metadata.docs)
+        assertEquals(TRINO_METADATA.default.engineVersion, metadata.default.engineVersion)
     }
 }
