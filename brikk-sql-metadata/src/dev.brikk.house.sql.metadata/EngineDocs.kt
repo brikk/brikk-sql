@@ -70,7 +70,8 @@ sealed interface DocsPattern {
 
 /**
  * Where one engine's documentation lives: [base] (ending in `/`) holds the pages of [version], the release
- * line they document (`current` where the site documents only its current release). [statements] are
+ * line they document (`current` or `latest` where the site documents only its current release, then
+ * [release] is the release those pages showed when they were checked). [statements] are
  * tried in order, so a specific form comes before a general one (`SET PASSWORD` before `SET`);
  * [tableFunctions] maps a table function's lowercase name to its page, and [engines] a table engine's
  * (`ENGINE = MergeTree`). A dialect's docs hang off its [DialectMetadata.docs].
@@ -82,6 +83,7 @@ data class EngineDocs(
     val statements: List<DocsEntry>,
     val tableFunctions: Map<String, String> = emptyMap(),
     val engines: Map<String, String> = emptyMap(),
+    val release: String? = null,
 ) {
     init {
         require(base.endsWith("/")) { "Docs base must end with '/': $base" }

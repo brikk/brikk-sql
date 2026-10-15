@@ -19,12 +19,12 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         // Materialized views (asynchronous, as Doris 4.x creates them).
         // A sync materialized view is CREATE MATERIALIZED VIEW name AS query; anything else between them makes it async.
         DocsEntry("CREATE MATERIALIZED VIEW", "${STATEMENTS}table-and-view/sync-materialized-view/CREATE-MATERIALIZED-VIEW/",
-            "CREATE MATERIALIZED VIEW", "Creates a synchronous materialized view, a rollup of one table.", afterName = setOf("AS")),
+            "CREATE SYNC MATERIALIZED VIEW", "Creates a synchronous materialized view, a rollup of one table.", afterName = setOf("AS")),
         DocsEntry("CREATE MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/CREATE-ASYNC-MATERIALIZED-VIEW/",
-            "CREATE MATERIALIZED VIEW", "Creates an asynchronous materialized view.",
+            "CREATE ASYNC MATERIALIZED VIEW", "Creates an asynchronous materialized view.",
             afterName = setOf("(", "BUILD", "REFRESH", "KEY", "DUPLICATE", "UNIQUE", "COMMENT", "PARTITION", "DISTRIBUTED", "PROPERTIES")),
-        DocsEntry("ALTER MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/ALTER-ASYNC-MATERIALIZED-VIEW/", "ALTER MATERIALIZED VIEW"),
-        DocsEntry("DROP MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/DROP-ASYNC-MATERIALIZED-VIEW/", "DROP MATERIALIZED VIEW"),
+        DocsEntry("ALTER MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/ALTER-ASYNC-MATERIALIZED-VIEW/", "ALTER ASYNC MATERIALIZED VIEW"),
+        DocsEntry("DROP MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/DROP-ASYNC-MATERIALIZED-VIEW/", "DROP ASYNC MATERIALIZED VIEW"),
         DocsEntry("REFRESH MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/REFRESH-MATERIALIZED-VIEW/", "REFRESH MATERIALIZED VIEW"),
         DocsEntry("CANCEL MATERIALIZED VIEW TASK", "${STATEMENTS}table-and-view/async-materialized-view/CANCEL-MATERIALIZED-VIEW-TASK/",
             "CANCEL MATERIALIZED VIEW TASK"),
@@ -43,7 +43,7 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         DocsEntry("SHOW TABLES", "${STATEMENTS}table-and-view/table/SHOW-TABLES/", "SHOW TABLES"),
         DocsEntry("SHOW PARTITIONS", "${STATEMENTS}table-and-view/table/SHOW-PARTITIONS/", "SHOW PARTITIONS"),
         DocsEntry("DESC|DESCRIBE FUNCTION", "${STATEMENTS}function/DESC-FUNCTION/", "DESC FUNCTION"),
-        DocsEntry("DESC|DESCRIBE", "${STATEMENTS}table-and-view/table/DESC-TABLE/", "DESC TABLE"),
+        DocsEntry("DESC|DESCRIBE", "${STATEMENTS}table-and-view/table/DESC-TABLE/", "DESCRIBE"),
         // Catalogs, databases and the session's context.
         DocsEntry("CREATE CATALOG", "${STATEMENTS}catalog/CREATE-CATALOG/", "CREATE CATALOG", "Connects an external data source as a catalog."),
         DocsEntry("ALTER CATALOG", "${STATEMENTS}catalog/ALTER-CATALOG/", "ALTER CATALOG"),

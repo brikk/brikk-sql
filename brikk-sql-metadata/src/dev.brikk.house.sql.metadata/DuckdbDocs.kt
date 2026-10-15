@@ -9,16 +9,17 @@ private const val STATEMENTS = "sql/statements/"
 val DUCKDB_DOCS: EngineDocs = EngineDocs(
     dialect = "duckdb",
     version = "current",
+    release = "1.5",
     base = "https://duckdb.org/docs/current/",
     statements = listOf(
         // Databases and extensions.
-        DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "core_extensions/ducklake", "ATTACH (DuckLake)",
+        DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "core_extensions/ducklake", "DuckLake",
             "Attaches a DuckLake catalog: tables in Parquet files with their metadata in a catalog database.", literalPrefix = "ducklake:"),
         DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "${STATEMENTS}attach", "ATTACH", "Attaches a database file or another database system."),
         DocsEntry("DETACH", "${STATEMENTS}attach", "DETACH"),
         DocsEntry("USE", "${STATEMENTS}use", "USE"),
         DocsEntry("UPDATE EXTENSIONS", "${STATEMENTS}update_extensions", "UPDATE EXTENSIONS"),
-        DocsEntry("[FORCE] INSTALL|LOAD", "${STATEMENTS}load_and_install", "INSTALL / LOAD", "Installs or loads an extension."),
+        DocsEntry("[FORCE] INSTALL|LOAD", "${STATEMENTS}load_and_install", "LOAD / INSTALL", "Installs or loads an extension."),
         DocsEntry("[FORCE] CHECKPOINT", "${STATEMENTS}checkpoint", "CHECKPOINT"),
         DocsEntry("VACUUM", "${STATEMENTS}vacuum", "VACUUM"),
         // Schema objects.
@@ -51,11 +52,11 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("EXPLAIN", "guides/meta/explain", "EXPLAIN"),
         DocsEntry("ANALYZE", "${STATEMENTS}analyze", "ANALYZE"),
         DocsEntry("CALL", "${STATEMENTS}call", "CALL"),
-        DocsEntry("PREPARE|EXECUTE|DEALLOCATE", "${STATEMENTS}prepare", "Prepared statements"),
+        DocsEntry("PREPARE|EXECUTE|DEALLOCATE", "${STATEMENTS}prepare", "PREPARE, EXECUTE, and DEALLOCATE"),
         DocsEntry("SET|RESET [GLOBAL|SESSION|LOCAL] VARIABLE", "${STATEMENTS}set_variable", "SET VARIABLE"),
         DocsEntry("SET|RESET", "${STATEMENTS}set", "SET", "Changes a configuration option."),
-        DocsEntry("BEGIN|COMMIT|ROLLBACK|ABORT|END [TRANSACTION]", "${STATEMENTS}transactions", "Transactions"),
-        DocsEntry("START TRANSACTION", "${STATEMENTS}transactions", "Transactions"),
+        DocsEntry("BEGIN|COMMIT|ROLLBACK|ABORT|END [TRANSACTION]", "${STATEMENTS}transactions", "Transaction Management"),
+        DocsEntry("START TRANSACTION", "${STATEMENTS}transactions", "Transaction Management"),
         // Clauses.
         DocsEntry("PIVOT", "${STATEMENTS}pivot", "PIVOT", "Turns distinct values of a column into columns.", clause = true),
         DocsEntry("UNPIVOT", "${STATEMENTS}unpivot", "UNPIVOT", "Turns columns into rows.", clause = true),

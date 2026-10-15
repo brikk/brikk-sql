@@ -9,6 +9,7 @@ private const val STATEMENTS = "sql-reference/sql-statements/"
 val STARROCKS_DOCS: EngineDocs = EngineDocs(
     dialect = "starrocks",
     version = "latest",
+    release = "4.1",
     base = "https://docs.starrocks.io/docs/",
     statements = listOf(
         // Tables, views and materialized views.
@@ -31,7 +32,7 @@ val STARROCKS_DOCS: EngineDocs = EngineDocs(
         DocsEntry("DROP VIEW", "${STATEMENTS}View/DROP_VIEW/", "DROP VIEW"),
         DocsEntry("SHOW CREATE TABLE", "${STATEMENTS}table_bucket_part_index/SHOW_CREATE_TABLE/", "SHOW CREATE TABLE"),
         DocsEntry("SHOW [FULL] TABLES", "${STATEMENTS}table_bucket_part_index/SHOW_TABLES/", "SHOW TABLES"),
-        DocsEntry("DESC|DESCRIBE", "${STATEMENTS}table_bucket_part_index/DESCRIBE/", "DESCRIBE"),
+        DocsEntry("DESC|DESCRIBE", "${STATEMENTS}table_bucket_part_index/DESCRIBE/", "DESC"),
         // Catalogs, databases and the session.
         DocsEntry("CREATE EXTERNAL CATALOG", "${STATEMENTS}Catalog/CREATE_EXTERNAL_CATALOG/", "CREATE EXTERNAL CATALOG",
             "Connects an external data source as a catalog."),
