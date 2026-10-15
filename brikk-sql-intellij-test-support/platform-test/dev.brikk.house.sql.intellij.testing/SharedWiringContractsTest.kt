@@ -2,18 +2,23 @@ package dev.brikk.house.sql.intellij.testing
 
 import com.intellij.codeInsight.completion.CompletionContributor
 import com.intellij.codeInsight.completion.CompletionContributorEP
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.Language
 import com.intellij.lang.LanguageDocumentation
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.extensions.DefaultPluginDescriptor
+import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.impl.FileTypeBean
 import com.intellij.openapi.util.JDOMUtil
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.registerOrReplaceServiceInstance
 import dev.brikk.house.sql.intellij.docs.SqlEngineDocumentationProvider
+import javax.swing.Icon
 
 class ContractCompletion : CompletionContributor()
 
@@ -26,6 +31,23 @@ open class OpenLightService
 class DeclaredAppService
 
 class DeclaredProjectService
+
+/** A singleton file type, registered with `fieldName="INSTANCE"` as Transpiler registers its own. */
+object ContractFileType : FileType {
+    override fun getName(): String = "Contract Self-Test"
+    override fun getDescription(): String = "Contract self-test files"
+    override fun getDefaultExtension(): String = "contractselftest"
+    override fun getIcon(): Icon? = null
+    override fun isBinary(): Boolean = false
+}
+
+object OtherContractFileType : FileType {
+    override fun getName(): String = "Other Contract Self-Test"
+    override fun getDescription(): String = "Other contract self-test files"
+    override fun getDefaultExtension(): String = "othercontractselftest"
+    override fun getIcon(): Icon? = null
+    override fun isBinary(): Boolean = false
+}
 
 /** Declared in XML but registered in no container, as when the declaration's class was renamed. */
 class UnregisteredDeclaredService
@@ -109,6 +131,39 @@ class SharedWiringContractsTest : BasePlatformTestCase() {
         val message = failure?.message.orEmpty()
         assertTrue(message, failure is AssertionError && "no extension point org.jetbrains.kotlinx.supportsKotlinPluginMode" in message)
         assertFalse(message, "org.jetbrains.kotlin.supportsKotlinPluginMode" in message)
+    }
+
+    /** Registers [type] as the platform loads a `fileType` registration of this plugin. */
+    private fun registerFileType(type: FileType) {
+        val plugin = DefaultPluginDescriptor(PluginId.getId(id), type.javaClass.classLoader)
+        val bean = FileTypeBean().apply {
+            name = type.name
+            implementationClass = type.javaClass.name
+            fieldName = "INSTANCE"
+            extensions = type.defaultExtension
+            pluginDescriptor = plugin
+        }
+        WriteAction.run<Throwable> { ExtensionPointName<FileTypeBean>("com.intellij.fileType").point.registerExtension(bean, plugin, testRootDisposable) }
+    }
+
+    private fun fileTypeXml(name: String, implementation: Class<*>) =
+        """<extensions defaultExtensionNs="com.intellij"><fileType name="$name" implementationClass="${implementation.name}" fieldName="INSTANCE" extensions="x"/></extensions>"""
+
+    fun testASingletonFileTypePassesThroughThePlatformsRegistration() {
+        registerFileType(ContractFileType)
+        assertEquals(1 to 0, PluginRegistrationContract(id, "unused").check(project, documents(fileTypeXml(ContractFileType.name, ContractFileType::class.java), ""), emptyList()))
+    }
+
+    fun testAFileTypeOfAnotherClassOrNoneRegisteredFails() {
+        registerFileType(OtherContractFileType)
+        val mismatch = runCatching {
+            PluginRegistrationContract(id, "unused").check(project, documents(fileTypeXml(OtherContractFileType.name, ContractFileType::class.java), ""), emptyList())
+        }.exceptionOrNull()
+        assertTrue("$mismatch", mismatch is AssertionError && "com.intellij.fileType did not instantiate ${ContractFileType::class.java.name}" in mismatch.message.orEmpty())
+        val missing = runCatching {
+            PluginRegistrationContract(id, "unused").check(project, documents(fileTypeXml(ContractFileType.name, ContractFileType::class.java), ""), emptyList())
+        }.exceptionOrNull()
+        assertTrue("$missing", missing is AssertionError && "no file type named ${ContractFileType.name} is registered" in missing.message.orEmpty())
     }
 
     fun testAWrongNamespaceAMissingAdapterAndAnOpenLightServiceFail() {
