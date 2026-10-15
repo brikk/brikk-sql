@@ -2,6 +2,9 @@ package dev.brikk.house.sql.intellij.docs
 
 import com.intellij.codeInsight.documentation.DocumentationManager
 import com.intellij.lang.LanguageDocumentation
+import com.intellij.lang.documentation.AbstractDocumentationProvider
+import com.intellij.lang.documentation.ide.IdeDocumentationTargetProvider
+import com.intellij.lang.documentation.psi.PsiElementDocumentationTarget
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
@@ -43,13 +46,54 @@ class SqlEngineDocumentationProviderTest : RelationTestCase() {
         assertEquals("${pages}sql-functions/table-valued-functions/numbers/", url(target()))
     }
 
-    fun testReferencesKeepTheirOwnDocumentationAndOtherTokensGetNone() {
-        open("SELECT k FROM or<caret>ders")
-        assertFalse(url(target()).orEmpty().startsWith(pages))
+    /** The elements of the documentation targets at the caret as Ctrl+Q finds them on 261 and later. */
+    private fun ideTargets(): List<PsiElement?> =
+        IdeDocumentationTargetProvider.getInstance(project).documentationTargets(myFixture.editor, myFixture.file, myFixture.caretOffset)
+            .map { (it as? PsiElementDocumentationTarget)?.targetElement }
+
+    private fun PsiElement?.isEngineDocs() = this?.javaClass?.simpleName == "EngineDocsElement"
+
+    fun testCtrlQFindsTheEnginePage() {
+        open("INSERT IN<caret>TO t SELECT 1")
+        val target = ideTargets().singleOrNull()
+        assertTrue("$target", target.isEngineDocs())
+        assertEquals("${pages}sql-statements/data-modification/DML/INSERT/", url(target))
+    }
+
+    fun testATableAndAFunctionKeepThePlatformsOwnDocumentation() {
+        open("CREATE TABLE orders (k INT);\nSELECT k FROM or<caret>ders")
+        val table = target()
+        assertNotNull("the platform documents the table", table)
+        assertFalse(table.isEngineDocs())
+        assertTrue(table?.text.orEmpty(), "orders" in table?.text.orEmpty())
+        assertTrue(ideTargets().let { it.isNotEmpty() && it.none { element -> element.isEngineDocs() } })
+        open("SELECT ab<caret>s(-1)")
+        val function = target()
+        assertNotNull("the platform documents the function", function)
+        assertFalse(function.isEngineDocs())
+        assertTrue(ideTargets().let { it.isNotEmpty() && it.none { element -> element.isEngineDocs() } })
+    }
+
+    fun testOtherTokensGetNoEnginePage() {
         open("SELECT k <caret>FROM orders")
-        assertFalse(url(target()).orEmpty().startsWith(pages))
+        assertFalse(target().isEngineDocs())
         open("SELECT 'CREATE <caret>JOB'")
-        assertFalse(url(target()).orEmpty().startsWith(pages))
+        assertFalse(target().isEngineDocs())
+    }
+
+    /** A provider after this one that documents every element: it answers wherever the engine docs have nothing. */
+    class LaterDocs : AbstractDocumentationProvider() {
+        override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?, targetOffset: Int): PsiElement? = contextElement
+    }
+
+    fun testAProviderAfterThisOneStillAnswersOnAReferenceTheEngineDocsLeave() {
+        LanguageDocumentation.INSTANCE.addExplicitExtension(postgres, LaterDocs(), testRootDisposable)
+        // An unresolved table: the platform has nothing, so the later provider must get it, not an engine page.
+        open("SELECT k FROM or<caret>ders")
+        assertEquals("orders", target()?.text)
+        // Asked first, the engine docs answer where they have a page.
+        open("INSERT IN<caret>TO t SELECT 1")
+        assertTrue(target().isEngineDocs())
     }
 
     fun testADialectWithoutDocsFailsWhenRegistered() {
