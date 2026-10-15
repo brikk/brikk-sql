@@ -17,8 +17,12 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         DocsEntry("RESUME JOB", "${STATEMENTS}job/RESUME-JOB/", "RESUME JOB"),
         DocsEntry("CANCEL TASK", "${STATEMENTS}job/CANCEL-TASK/", "CANCEL TASK"),
         // Materialized views (asynchronous, as Doris 4.x creates them).
+        // A sync materialized view is CREATE MATERIALIZED VIEW name AS query; anything else between them makes it async.
+        DocsEntry("CREATE MATERIALIZED VIEW", "${STATEMENTS}table-and-view/sync-materialized-view/CREATE-MATERIALIZED-VIEW/",
+            "CREATE MATERIALIZED VIEW", "Creates a synchronous materialized view, a rollup of one table.", afterName = setOf("AS")),
         DocsEntry("CREATE MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/CREATE-ASYNC-MATERIALIZED-VIEW/",
-            "CREATE MATERIALIZED VIEW", "Creates an asynchronous materialized view."),
+            "CREATE MATERIALIZED VIEW", "Creates an asynchronous materialized view.",
+            afterName = setOf("(", "BUILD", "REFRESH", "KEY", "DUPLICATE", "UNIQUE", "COMMENT", "PARTITION", "DISTRIBUTED", "PROPERTIES")),
         DocsEntry("ALTER MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/ALTER-ASYNC-MATERIALIZED-VIEW/", "ALTER MATERIALIZED VIEW"),
         DocsEntry("DROP MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/DROP-ASYNC-MATERIALIZED-VIEW/", "DROP MATERIALIZED VIEW"),
         DocsEntry("REFRESH MATERIALIZED VIEW", "${STATEMENTS}table-and-view/async-materialized-view/REFRESH-MATERIALIZED-VIEW/", "REFRESH MATERIALIZED VIEW"),
@@ -53,6 +57,9 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         DocsEntry("USE", "${STATEMENTS}session/context/USE-DATABASE/", "USE"),
         // Session variables.
         DocsEntry("SET PASSWORD", "${STATEMENTS}account-management/SET-PASSWORD/", "SET PASSWORD"),
+        DocsEntry("SET LDAP_ADMIN_PASSWORD", "${STATEMENTS}account-management/SET-LDAP_ADMIN_PASSWORD/", "SET LDAP_ADMIN_PASSWORD"),
+        DocsEntry("SET DEFAULT STORAGE VAULT", "${STATEMENTS}cluster-management/storage-management/SET-DEFAULT-STORAGE-VAULT/", "SET DEFAULT STORAGE VAULT"),
+        DocsEntry("SET TRANSACTION", null, "SET TRANSACTION"),
         DocsEntry("SET PROPERTY", "${STATEMENTS}account-management/SET-PROPERTY/", "SET PROPERTY"),
         DocsEntry("SET", "${STATEMENTS}session/variable/SET-VARIABLE/", "SET", "Sets a session or global variable."),
         DocsEntry("UNSET", "${STATEMENTS}session/variable/UNSET-VARIABLE/", "UNSET VARIABLE"),
@@ -86,9 +93,8 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
     tableFunctions = mapOf(
         "backends" to "backends/", "frontends" to "frontends/", "frontends_disks" to "frontends_disks/", "catalogs" to "catalogs/",
         "mv_infos" to "mv_infos/", "jobs" to "jobs/", "tasks" to "tasks/", "partitions" to "partitions/", "numbers" to "numbers/",
-        "s3" to "s3/", "hdfs" to "hdfs/", "local" to "local/", "http" to "http/", "file" to "file/", "query" to "query/",
-        "partition_values" to "partition-values/", "hudi_meta" to "hudi-meta/", "iceberg_meta" to "iceberg-meta/", "cdc_stream" to "cdc-stream/",
-        "parquet_meta" to "parquet-meta/", "parquet_metadata" to "parquet-meta/", "parquet_schema" to "parquet-meta/",
-        "parquet_file_metadata" to "parquet-meta/", "parquet_kv_metadata" to "parquet-meta/", "parquet_bloom_probe" to "parquet-meta/",
+        "s3" to "s3/", "local" to "local/", "http" to "http/", "file" to "file/", "query" to "query/",
+        "partition_values" to "partition-values/", "hudi_meta" to "hudi-meta/", "cdc_stream" to "cdc-stream/",
+        "parquet_meta" to "parquet-meta/",
     ).mapValues { (_, page) -> TABLE_FUNCTIONS + page },
 )

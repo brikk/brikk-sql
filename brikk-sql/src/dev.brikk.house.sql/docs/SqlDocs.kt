@@ -48,8 +48,11 @@ private object DocsRecognizer {
                 val prefix = entry.literalPrefix
                 if (prefix != null && !tokens.getOrNull(start + used).isStringStarting(prefix)) continue
                 if (entry.clause && !clausePosition(tokens, start, start + used)) continue
+                entry.afterName?.let { follows -> if (!followsName(tokens, start + used, text, follows)) continue }
                 if (at < start + used) {
-                    return link(entry.title, entry.summary, entry.path, start, start + used - 1, if (entry.clause) DocsKind.CLAUSE else DocsKind.STATEMENT)
+                    // A form documented nowhere links nothing, rather than a more general page.
+                    val path = entry.path ?: return null
+                    return link(entry.title, entry.summary, path, start, start + used - 1, if (entry.clause) DocsKind.CLAUSE else DocsKind.STATEMENT)
                 }
             }
         }
@@ -111,6 +114,19 @@ private object DocsRecognizer {
         if (tokens.getOrNull(keyword)?.takeIf { it.isWord(text) }?.text.equals("ENGINE", ignoreCase = true).not()) return null
         if (tokens.first().text.uppercase() !in setOf("CREATE", "ATTACH", "REPLACE")) return null
         return path.takeIf { depth(tokens, keyword) == 0 }
+    }
+
+    /** Whether tokens from [from] are `[IF [NOT] EXISTS] name[.name...]` followed by one of [follows] (words, upper case, or symbols). */
+    private fun followsName(tokens: List<Token>, from: Int, text: String, follows: Set<String>): Boolean {
+        var at = from
+        fun word(index: Int) = tokens.getOrNull(index)?.takeIf { it.isWord(text) }?.text?.uppercase()
+        if (word(at) == "IF") at += if (word(at + 1) == "NOT") 3 else 2
+        fun name(index: Int) = tokens.getOrNull(index)?.let { it.tokenType == TokenType.IDENTIFIER || it.isWord(text) } == true
+        if (!name(at)) return false
+        at++
+        while (tokens.getOrNull(at)?.tokenType == TokenType.DOT && name(at + 1)) at += 2
+        val next = tokens.getOrNull(at) ?: return false
+        return next.text.uppercase() in follows
     }
 
     /** The bracket depth of token [index]. */

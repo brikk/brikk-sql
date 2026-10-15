@@ -18,7 +18,7 @@ class EngineDocsPagesTest {
     fun theBundledPagesResolve() {
         if (System.getenv("BRIKK_DOCS_CHECK") != "1") return println("EngineDocsPagesTest: set BRIKK_DOCS_CHECK=1 to check the docs pages")
         val urls = METADATA.values.mapNotNull { it.docs }.flatMap { docs ->
-            (docs.statements.map { it.path } + docs.tableFunctions.values + docs.engines.values).distinct().map(docs::url)
+            (docs.statements.mapNotNull { it.path } + docs.tableFunctions.values + docs.engines.values).distinct().map(docs::url)
         }.distinct()
         val pool = Executors.newFixedThreadPool(8)
         try {

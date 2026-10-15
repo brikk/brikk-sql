@@ -7,15 +7,19 @@ package dev.brikk.house.sql.metadata
  * relative to [EngineDocs.base], its [title] and an optional one-line [summary]. A [clause] is named in a
  * clause position of a statement (`INTO OUTFILE`); otherwise the words begin the statement. With a
  * [literalPrefix], the words must be followed by a string literal starting with it (`ATTACH 'ducklake:...'`).
- * The pattern is compiled, and checked, when the entry is made.
+ * With [afterName], they must be followed by an object's name ([IF [NOT] EXISTS] and a dotted name) and
+ * then one of these words or symbols: Doris's sync and async `CREATE MATERIALIZED VIEW` differ only there.
+ * A null [path] is a form the engine documents nowhere: it links nothing, rather than a more general page
+ * (`SET TRANSACTION`, not the page of `SET`). The pattern is compiled, and checked, when the entry is made.
  */
 data class DocsEntry(
     val pattern: String,
-    val path: String,
+    val path: String?,
     val title: String,
     val summary: String? = null,
     val clause: Boolean = false,
     val literalPrefix: String? = null,
+    val afterName: Set<String>? = null,
 ) {
     /** [pattern], compiled. */
     val words: List<DocsPattern> = DocsPattern.parse(pattern)

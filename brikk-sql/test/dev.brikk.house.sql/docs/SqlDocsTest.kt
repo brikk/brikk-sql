@@ -191,6 +191,28 @@ class SqlDocsTest {
     }
 
     @Test
+    fun eachFormLinksItsOwnPage() {
+        val mv = "${doris}sql-statements/table-and-view/"
+        assertEquals("${mv}sync-materialized-view/CREATE-MATERIALIZED-VIEW/", at("CREATE MATERIALIZED <caret>VIEW mv AS SELECT k, sum(v) FROM t GROUP BY k")?.url)
+        assertEquals("${mv}async-materialized-view/CREATE-ASYNC-MATERIALIZED-VIEW/",
+            at("CREATE MATERIALIZED <caret>VIEW db.mv BUILD IMMEDIATE REFRESH AUTO ON MANUAL AS SELECT 1")?.url)
+        assertEquals("${mv}async-materialized-view/CREATE-ASYNC-MATERIALIZED-VIEW/", at("CREATE MATERIALIZED <caret>VIEW IF NOT EXISTS mv (k) AS SELECT 1")?.url)
+        assertNull(at("CREATE MATERIALIZED <caret>VIEW"), "not yet decided")
+        for (name in listOf("parquet_metadata", "parquet_schema", "parquet_file_metadata", "parquet_kv_metadata", "parquet_bloom_probe", "hdfs", "iceberg_meta")) {
+            assertNull(at("SELECT * FROM <caret>$name(\"uri\" = \"s3://b/p\")"), name)
+        }
+        assertEquals("${doris}sql-statements/cluster-management/storage-management/SET-DEFAULT-STORAGE-VAULT/", at("SET <caret>DEFAULT STORAGE VAULT v")?.url)
+        assertEquals("${doris}sql-statements/account-management/SET-LDAP_ADMIN_PASSWORD/", at("<caret>SET LDAP_ADMIN_PASSWORD PASSWORD('x')")?.url)
+        assertEquals("${doris}sql-statements/account-management/SET-PASSWORD/", at("<caret>SET PASSWORD = PASSWORD('x')")?.url)
+        assertNull(at("<caret>SET TRANSACTION ISOLATION LEVEL READ COMMITTED"), "no page for it, and not a variable")
+        val ch = "${clickhouse}reference/functions/table-functions/"
+        assertEquals("${ch}icebergCluster", at("SELECT * FROM <caret>icebergS3Cluster('c', 'https://b/t')", "clickhouse")?.url)
+        assertEquals("${ch}paimonCluster", at("SELECT * FROM <caret>paimonAzureCluster('c', 'x')", "clickhouse")?.url)
+        assertEquals("${ch}iceberg", at("SELECT * FROM <caret>icebergS3('https://b/t')", "clickhouse")?.url)
+        assertNull(at("<caret>WATCH lv", "clickhouse"))
+    }
+
+    @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)
