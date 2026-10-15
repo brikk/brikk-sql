@@ -105,7 +105,8 @@ public class AutoIntrospectEngine(
  * Introspects, one level, what a path typed in an editor names when the model lists it but has not
  * loaded its children, or loaded only some of them (single tables loaded on demand). The data source's
  * introspection scope gains exactly that namespace, so what loads stays loaded, and only that model
- * element is refreshed, never the whole scope. A path the model does not hold yet (the model was
+ * element is refreshed, never the whole scope; a namespace whose children the dialect lists itself
+ * ([listNamespaces]) stays out of the scope. A path the model does not hold yet (the model was
  * cleared, or a namespace was never listed) is discovered step by step: the top-level namespaces are
  * listed once, cheaply, then each level down to the path's is loaded, and a name still missing after
  * that stays unknown. While a request runs, its file shows a banner ([IntrospectBannerProvider]); when
@@ -456,12 +457,15 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
         var loaded = false
         try {
             val dataSource = request.dataSource
-            if (request.claimed) {
+            // A namespace whose children are namespaces the dialect may list itself, cheaply, instead of the platform's
+            // refresh. Asked first: a namespace it lists stays out of the persisted scope, where a bare node may read as
+            // the user selecting all it holds, so the next manual refresh would load all of it.
+            val listed = if (request.claimed && request.key.path.size < profile.levels.size) list(dataSource, request.key.path, request.requested) else null
+            if (listed == null && request.claimed) {
+                // The platform's one-element refresh loads only what the scope selects.
                 dataSource.introspectionScope = CatalogScopes.widen(dataSource.introspectionScope, CatalogScopes.select(profile.levels, request.key.path))
                 storageOf(dataSource)?.updateDataSource(dataSource)
             }
-            // A namespace whose children are namespaces the dialect may list itself, cheaply, instead of the platform's refresh.
-            val listed = if (request.claimed && request.key.path.size < profile.levels.size) list(dataSource, request.key.path, request.requested) else null
             synced = listed ?: sync(request)
             loaded = synced && (!request.claimed || readAction { isLoaded(request) })
             LOG.info("Auto-introspection ${if (loaded) "loaded" else if (synced) "found nothing in" else "failed to load"} " +

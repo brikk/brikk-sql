@@ -159,6 +159,69 @@ class AutoIntrospectServiceTest : AutoIntrospectTestCase() {
         assertNoRefresh()
     }
 
+    /**
+     * Doris's flow: the top level and the first catalog's databases are listed together (the first catalog marked
+     * loaded), a second external catalog's databases on demand. Neither listing may leave a bare catalog in the
+     * persisted scope, which a dialect reads as the user ticking the whole catalog: the next manual refresh would
+     * then load every database of it.
+     */
+    fun testCatalogsADialectListsItselfStayOutOfThePersistedScope() {
+        useService(Profile()) { dataSource, parent, _ ->
+            com.intellij.openapi.application.ApplicationManager.getApplication().invokeAndWait {
+                val roots = ((dataSource.model as BasicModel).root as PgRoot).databases
+                when (parent) {
+                    emptyList<String>() -> {
+                        roots.createOrGet("ext_one").schemas.createOrGet("sales")
+                        roots.createOrGet("ext_two")
+                    }
+                    listOf("ext_two") -> {
+                        roots.createOrGet("ext_two").schemas.createOrGet("archive_db")
+                        roots.createOrGet("ext_two").schemas.createOrGet("unrelated_db")
+                    }
+                }
+                DbPsiFacade.getInstance(project).clearCaches()
+            }
+            if (parent.isEmpty()) service.markLoaded(dataSource, listOf("ext_one"))
+            true
+        }
+        clearModel()
+        assertTrue(service.requestPath(myFixture.file, listOf("ext_one", "sales")))
+        nextRefresh().finish { databases().createOrGet("ext_one").schemas.createOrGet("sales").tables.createOrGet("orders") }
+        awaitIdle()
+        // Completing `ext_two.`: its databases are listed, cheaply, and nothing below them loads.
+        assertTrue(service.requestPath(myFixture.file, listOf("ext_two")))
+        awaitIdle()
+        assertNoRefresh()
+        assertEquals(listOf("archive_db", "unrelated_db"), databases().createOrGet("ext_two").schemas.map { it.name }.sorted())
+        assertNotNull("ext_one is selected through its loaded database", scopeNode(listOf("ext_one"))?.getGroup(ObjectKind.SCHEMA))
+        val listed = scopeNode(listOf("ext_two"))
+        assertTrue("a listed catalog is not selected bare: ${source.introspectionScope}", listed == null || listed.getGroup(ObjectKind.SCHEMA) != null)
+        // Then a database of it loads, alone.
+        assertTrue(service.requestPath(myFixture.file, listOf("ext_two", "archive_db")))
+        nextRefresh().finish { databases().createOrGet("ext_two").schemas.createOrGet("archive_db").tables.createOrGet("facts") }
+        awaitIdle()
+        assertNotNull(scopeNode(listOf("ext_two"))?.getGroup(ObjectKind.SCHEMA))
+        assertTrue(selects(listOf("ext_two", "archive_db")))
+        assertFalse("unrelated_db stays out of the scope", selects(listOf("ext_two", "unrelated_db")))
+        // Nothing the user had selected is dropped.
+        assertTrue(selects(listOf("memory")) && selects(listOf("loaded", "web")))
+        // A manual refresh of everything runs under that scope and leaves it as it is.
+        val scope = source.introspectionScope
+        assertTrue(service.refreshChanged(source, emptyList()))
+        nextRefresh().finish()
+        awaitIdle()
+        assertSame(scope, source.introspectionScope)
+    }
+
+    /** Without a dialect listing, the platform's refresh of a catalog still has the catalog in its scope. */
+    fun testThePlatformsCatalogRefreshStillWidensTheScope() {
+        assertTrue(service.requestPath(myFixture.file, listOf("hive")))
+        val refresh = nextRefresh()
+        assertTrue("the platform's refresh of the catalog needs it in the scope", selects(listOf("hive")))
+        refresh.finish { hive.schemas.createOrGet("web") }
+        awaitIdle()
+    }
+
     fun testANameStillMissingAfterListingStaysUnknownWithoutRetrying() {
         clearModel()
         assertTrue(service.requestPath(myFixture.file, listOf("nowhere", "web")))
