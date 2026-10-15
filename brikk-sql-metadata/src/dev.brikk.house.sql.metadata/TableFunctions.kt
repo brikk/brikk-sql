@@ -7,9 +7,25 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ColumnDef(val name: String, val type: String)
 
-/** A property a table function accepts; [values] lists a closed set of values when known. */
+/**
+ * A property key a table function or a `PROPERTIES` list takes: [values] lists its values when they form a
+ * known set, [summary] says what it does in a sentence, and [since] is the earliest release (line) that has it,
+ * when known.
+ */
 @Serializable
-data class PropertyDef(val name: String, val values: List<String> = emptyList())
+data class PropertyDef(
+    val name: String,
+    val values: List<String> = emptyList(),
+    val summary: String? = null,
+    val since: String? = null,
+) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before summary and since.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(name: String, values: List<String> = emptyList()) : this(name, values, null, null)
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(name: String = this.name, values: List<String> = this.values): PropertyDef = copy(name, values, summary, since)
+}
 
 /** The columns a table function returns, as far as they are known without running it. */
 @Serializable

@@ -74,7 +74,8 @@ sealed interface DocsPattern {
  * [release] is the release those pages showed when they were checked). [statements] are
  * tried in order, so a specific form comes before a general one (`SET PASSWORD` before `SET`);
  * [tableFunctions] maps a table function's lowercase name to its page, and [engines] a table engine's
- * (`ENGINE = MergeTree`). A dialect's docs hang off its [DialectMetadata.docs].
+ * (`ENGINE = MergeTree`). [properties] are the engine's `PROPERTIES (...)` lists and the keys they take.
+ * A dialect's docs hang off its [DialectMetadata.docs].
  */
 data class EngineDocs(
     val dialect: String,
@@ -84,7 +85,31 @@ data class EngineDocs(
     val tableFunctions: Map<String, String> = emptyMap(),
     val engines: Map<String, String> = emptyMap(),
     val release: String? = null,
+    val properties: List<PropertyList> = emptyList(),
 ) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before properties.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(
+        dialect: String,
+        version: String,
+        base: String,
+        statements: List<DocsEntry>,
+        tableFunctions: Map<String, String> = emptyMap(),
+        engines: Map<String, String> = emptyMap(),
+        release: String? = null,
+    ) : this(dialect, version, base, statements, tableFunctions, engines, release, emptyList())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(
+        dialect: String = this.dialect,
+        version: String = this.version,
+        base: String = this.base,
+        statements: List<DocsEntry> = this.statements,
+        tableFunctions: Map<String, String> = this.tableFunctions,
+        engines: Map<String, String> = this.engines,
+        release: String? = this.release,
+    ): EngineDocs = copy(dialect, version, base, statements, tableFunctions, engines, release, properties)
+
     init {
         require(base.endsWith("/")) { "Docs base must end with '/': $base" }
     }
@@ -92,3 +117,33 @@ data class EngineDocs(
     /** The absolute URL of [path]. */
     fun url(path: String): String = base + path
 }
+
+/**
+ * A `PROPERTIES (...)`-style list of `"key" = "value"` pairs and the keys it takes ([keys]), documented on
+ * [path] (relative to [EngineDocs.base]). The list is the parenthesis after [opener] (`PROPERTIES`, `KAFKA`,
+ * `S3`; alternatives `A|B`, and `BROKER "name" (...)` counts as BROKER) at the top level of a statement
+ * whose [context] words (a [DocsPattern]) begin it, or, for a [clause], stand anywhere before the opener
+ * (`INTO OUTFILE`). A [variant] applies only when the list sets its key to its value (`"type" = "hms"`);
+ * the keys of a statement's lists without a variant always apply. A key named `prefix.*` stands for every
+ * key beginning `prefix.`. Keys outside the lists are the engine's to judge: they are never errors.
+ */
+data class PropertyList(
+    val title: String,
+    val context: String,
+    val path: String,
+    val keys: List<PropertyDef>,
+    val opener: String = "PROPERTIES",
+    val clause: Boolean = false,
+    val variant: Pair<String, String>? = null,
+) {
+    /** [context], compiled. */
+    val words: List<DocsPattern> = DocsPattern.parse(context)
+
+    /** [opener]'s alternatives, upper case. */
+    val openers: Set<String> = opener.split('|').map(String::uppercase).toSet()
+}
+
+/** The definition of [key] among [this], exact or through a `prefix.*` family, ignoring case. */
+fun List<PropertyDef>.definitionOf(key: String): PropertyDef? =
+    firstOrNull { it.name.equals(key, ignoreCase = true) }
+        ?: firstOrNull { it.name.endsWith(".*") && key.startsWith(it.name.dropLast(1), ignoreCase = true) }
