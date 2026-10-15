@@ -33,9 +33,11 @@ no internal-API annotation.
   (ClickHouse JDBC 0.10). Once results stream, the platform keeps the statement only on the engine's
   thread, so this cancels the statements of the console engine's own connection
   (`RemoteConnection.cancelAll`: the streaming one, and any idle statement the engine keeps open on that
-  connection) off the EDT, while that connection still runs the captured request, and only then sends
-  the stock cancel request, so its cleanup cannot close the statement first. Other consoles and
-  connections are not touched. Any other press (another dbms, a request still waiting for results, a
+  connection) off the EDT, and only then sends the stock cancel request, so its cleanup cannot close the
+  statement first. Each step runs only if the engine still runs the captured request on that
+  connection, so a request that has ended, and its successor, get neither (the stock cancel request
+  is not bound to a request: between the last check and the engine handling it, the platform offers no
+  lock). Other consoles and connections are not touched. Any other press (another dbms, a request still waiting for results, a
   second press on a cancelled session) runs the wrapped action. Database Tools keeps an engine's
   execution state private, with no public alternative: it is read from `JdbcEngine`'s single
   `AtomicReference<State>` field (`myState` on 261, `state` on 263); without it, the stock cancel runs.

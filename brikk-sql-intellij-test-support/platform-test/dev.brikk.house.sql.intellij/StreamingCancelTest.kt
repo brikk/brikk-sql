@@ -144,9 +144,11 @@ class StreamingCancelTest : BasePlatformTestCase() {
         installed = Cancel(dbms).also { it.registerActions(ActionManager.getInstance()) }
     }
 
+    private fun cancelEvent(console: JdbcConsole) =
+        TestActionEvent.createTestEvent(SimpleDataContext.builder().add(CommonDataKeys.PROJECT, project).add(SessionClientHolder.CLIENT_KEY, console).build())
+
     private fun pressCancel(console: JdbcConsole) {
-        val context = SimpleDataContext.builder().add(CommonDataKeys.PROJECT, project).add(SessionClientHolder.CLIENT_KEY, console).build()
-        checkNotNull(ActionManager.getInstance().getAction(CooperativeActionConfiguration.CANCEL)).actionPerformed(TestActionEvent.createTestEvent(context))
+        checkNotNull(ActionManager.getInstance().getAction(CooperativeActionConfiguration.CANCEL)).actionPerformed(cancelEvent(console))
     }
 
     /** The driver's steps for the slow query tagged [tag]. */
@@ -181,6 +183,39 @@ class StreamingCancelTest : BasePlatformTestCase() {
         PlatformTestUtil.waitWithEventsDispatching("the other console's query completes", { independent in finished }, 30)
         assertEmpty(errorsOf(independent))
         assertEquals("the other console's statement read its results to the end", listOf("execute", "end"), steps("other").distinct())
+    }
+
+    fun testACaptureThatIsStaleWhenItsWorkerBeginsCancelsNothing() {
+        val console = open()
+        console.run("SELECT 1")
+        val workers = ArrayList<Runnable>()
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), workers::add)
+        val first = stream(console, "first")
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        PlatformTestUtil.waitWithEventsDispatching("the captured request completes", { first in finished }, 30)
+        val successor = stream(console, "next")
+        workers.single().run()
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals(listOf("execute", "end"), steps("first").distinct())
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertFalse(console.databaseSession.isCancelled)
+    }
+
+    fun testARequestReplacedWhileTheDriverCancelsGetsNoStockCleanup() {
+        val console = open()
+        console.run("SELECT 1")
+        install(dataSource.dbms)
+        val held = stream(console, SlowStreamDriver.HELD)
+        pressCancel(console)
+        PlatformTestUtil.waitWithEventsDispatching("the driver cancel ends the request and is still running", { held in finished }, 10)
+        assertEquals(listOf("execute", "cancel", "close"), steps(SlowStreamDriver.HELD))
+        val successor = stream(console, "next")
+        Files.createFile(Path.of("$log.release"))
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertFalse(console.databaseSession.isCancelled)
     }
 
     fun testAnotherDbmsKeepsTheStockCancel() {

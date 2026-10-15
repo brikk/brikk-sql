@@ -21,7 +21,8 @@ import java.util.logging.Logger
  * JDBC 0.10 streams a running query's results: `cancel` stops the stream unless the statement is already
  * closed (then it does nothing), and closing a stream that was not cancelled first reads it to its end.
  * Every step of such a statement is appended, after the word following [MARKER] in its query, to the file
- * `-Dbrikk.slowstream.log` names. Runs in the
+ * `-Dbrikk.slowstream.log` names. Cancelling the query tagged [HELD] returns only once the file named
+ * as the log plus `.release` exists. Runs in the
  * IDE's remote JDBC process; `jdbc:brikk-slow:<file>` is DuckDB's `jdbc:duckdb:<file>`.
  */
 class SlowStreamDriver : Driver {
@@ -62,7 +63,11 @@ class SlowStreamDriver : Driver {
             "getMoreResults" -> rows?.let { rows = null; it.close(); false } ?: method.invoke(real, *args)
             "getUpdateCount" -> if (rows != null) -1 else method.invoke(real, *args)
             "cancel" -> {
-                if (closed) log("cancel ignored: closed") else rows?.let { log("cancel"); it.cancelled = true }
+                if (closed) log("cancel ignored: closed") else rows?.let {
+                    log("cancel")
+                    it.cancelled = true
+                    if (tag == HELD) awaitRelease()
+                }
                 method.invoke(real, *args)
             }
             "close" -> {
@@ -115,6 +120,13 @@ class SlowStreamDriver : Driver {
         const val ROWS: Int = 200
         const val ROW_MILLIS: Long = 50
         const val LOG_PROPERTY: String = "brikk.slowstream.log"
+        const val HELD: String = "held"
+
+        private fun awaitRelease() {
+            val release = Path.of(System.getProperty(LOG_PROPERTY) + ".release")
+            val started = System.nanoTime()
+            while (!Files.exists(release) && System.nanoTime() - started < 30_000_000_000) Thread.sleep(20)
+        }
 
         private fun log(step: String) {
             val file = System.getProperty(LOG_PROPERTY) ?: return
