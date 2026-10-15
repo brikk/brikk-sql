@@ -59,6 +59,7 @@ public class PluginRegistrationContract(private val pluginId: String, private va
         val id = PluginId.getId(pluginId)
         val failures = ArrayList<String>()
         val descriptors = descriptors(documents)
+        val unloadedOptional = unloadedOptionalDependencies(descriptors.first())
         // By extension point across every descriptor: a plugin may register one point in several groups or files.
         val byPoint = descriptors.flatMap { it.getChildren("extensions") }.flatMap { group ->
             val namespace = group.getAttributeValue("defaultExtensionNs") ?: group.getAttributeValue("xmlns")
@@ -72,7 +73,9 @@ public class PluginRegistrationContract(private val pluginId: String, private va
             val application = ApplicationManager.getApplication()
             val area = listOf(application.extensionArea, project.extensionArea).firstOrNull { it.hasExtensionPoint(name) }
             if (area == null) {
-                failures += "no extension point $name (wrong namespace?)"
+                // A point of an optional dependency that is not loaded (Kotlin's supportsKotlinPluginMode marker),
+                // which the platform leaves unregistered.
+                if (name.substringBeforeLast('.') !in unloadedOptional) failures += "no extension point $name (wrong namespace?)"
                 continue
             }
             @Suppress("UNCHECKED_CAST")
@@ -129,6 +132,11 @@ public class PluginRegistrationContract(private val pluginId: String, private va
         }
         return listOf(root) + included + optional
     }
+
+    /** The ids of the plugins [root] depends on optionally that are not enabled. */
+    private fun unloadedOptionalDependencies(root: Element): Set<String> =
+        root.getChildren("depends").filter { it.getAttributeValue("optional") == "true" }.map { it.textTrim }
+            .filterTo(HashSet()) { PluginManagerCore.getPlugin(PluginId.getId(it))?.isEnabled != true }
 
     /** What is wrong with a declared [level] service [declaration]: its class does not load or it does not instantiate; null when nothing is. */
     private fun declaredServiceProblem(project: Project, id: PluginId, level: Service.Level, declaration: Element): String? {
