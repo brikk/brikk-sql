@@ -66,6 +66,16 @@ class DialectMetadata(
     data class Selection(val snapshot: MetadataSnapshot, val exact: Boolean)
 }
 
+/** The bundled metadata of the core dialect named [dialect] (`doris`, `duckdb`, ...), or null when none is bundled. */
+fun bundledMetadata(dialect: String): DialectMetadata? = when (dialect) {
+    "clickhouse" -> CLICKHOUSE_METADATA
+    "doris" -> DORIS_METADATA
+    "duckdb" -> DUCKDB_METADATA
+    "starrocks" -> STARROCKS_METADATA
+    "trino" -> TRINO_METADATA
+    else -> null
+}
+
 /** A dialect with one bundled snapshot, which is also its default. */
 internal fun singleSnapshot(dialect: String, snapshot: MetadataSnapshot, docs: EngineDocs? = null) =
     DialectMetadata(dialect, listOf(snapshot), defaultVersion = snapshot.engineVersion, docs = docs)
