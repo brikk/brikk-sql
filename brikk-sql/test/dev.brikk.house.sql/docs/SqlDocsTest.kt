@@ -5,14 +5,11 @@ import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.STARROCKS_METADATA
 import dev.brikk.house.sql.metadata.TRINO_METADATA
-import java.net.HttpURLConnection
-import java.net.InetAddress
-import java.net.URI
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-private val METADATA = listOf(DORIS_METADATA, CLICKHOUSE_METADATA, DUCKDB_METADATA, STARROCKS_METADATA, TRINO_METADATA).associateBy { it.dialect }
+internal val METADATA = listOf(DORIS_METADATA, CLICKHOUSE_METADATA, DUCKDB_METADATA, STARROCKS_METADATA, TRINO_METADATA).associateBy { it.dialect }
 
 class SqlDocsTest {
     @Test
@@ -123,27 +120,5 @@ class SqlDocsTest {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)
         assertNull(at("CREATE <caret>JOB j", "trino"))
-    }
-
-    /** Every bundled page resolves; skipped offline. */
-    @Test
-    fun theBundledPagesResolve() {
-        val online = runCatching { InetAddress.getByName("doris.apache.org") }.isSuccess && System.getenv("BRIKK_OFFLINE") == null
-        if (!online) return println("SqlDocsTest: offline, page check skipped")
-        val failures = METADATA.values.mapNotNull { it.docs }.flatMap { docs ->
-            (docs.statements.map { it.path } + docs.tableFunctions.values + docs.engines.values).distinct().map(docs::url)
-        }.mapNotNull { url ->
-            val code = runCatching {
-                (URI(url).toURL().openConnection() as HttpURLConnection).run {
-                    instanceFollowRedirects = true
-                    connectTimeout = 15_000
-                    readTimeout = 15_000
-                    setRequestProperty("User-Agent", "brikk-sql docs check")
-                    responseCode.also { disconnect() }
-                }
-            }.getOrDefault(-1)
-            "$code $url".takeIf { code != 200 }
-        }
-        assertEquals(emptyList(), failures)
     }
 }
