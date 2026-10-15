@@ -45,9 +45,17 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         override val levels = listOf(ObjectKind.DATABASE, ObjectKind.SCHEMA)
     }
 
-    class Service(project: Project, scope: CoroutineScope, override val profile: CatalogProfile, private val time: TestTimeSource) :
-        AutoIntrospectService(project, scope) {
+    class Service(
+        project: Project,
+        scope: CoroutineScope,
+        override val profile: CatalogProfile,
+        private val time: TestTimeSource,
+        private val listing: ((dataSource: LocalDataSource, parent: List<String>, requested: List<String>) -> Boolean?)? = null,
+    ) : AutoIntrospectService(project, scope) {
         override fun createEngine() = AutoIntrospectEngine(1.minutes, time)
+
+        override suspend fun listNamespaces(dataSource: LocalDataSource, parent: List<String>, requested: List<String>): Boolean? =
+            listing?.invoke(dataSource, parent, requested) ?: super.listNamespaces(dataSource, parent, requested)
     }
 
     /** Reads of its introspection scope can be held until a second read arrives, to expose unserialized updates. */
@@ -109,10 +117,10 @@ abstract class AutoIntrospectTestCase : BasePlatformTestCase() {
         ).run()
     }
 
-    protected fun useService(profile: CatalogProfile) {
+    protected fun useService(profile: CatalogProfile, listing: ((LocalDataSource, List<String>, List<String>) -> Boolean?)? = null) {
         val scope = backgroundErrors.newScope(testRootDisposable)
         serviceScope = scope
-        service = Service(project, scope, profile, time)
+        service = Service(project, scope, profile, time, listing)
         project.registerOrReplaceServiceInstance(Service::class.java, service, testRootDisposable)
     }
 
