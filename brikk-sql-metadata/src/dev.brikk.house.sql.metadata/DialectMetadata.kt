@@ -6,7 +6,8 @@ package dev.brikk.house.sql.metadata
  * [extensionFunctions] are functions that loadable extensions add on top of [functions]
  * (each with [FunctionDef.extension]); they stay out of [functions], so its lookups answer
  * for the base engine only. [tableFunctions] adds call-site knowledge to table functions;
- * [grammarForms] say how the parser accepts function-shaped names (see [completionEntries]).
+ * [grammarForms] say how the parser accepts function-shaped names (see [completionEntries]). [types] are the
+ * built-in type names, aliases included.
  */
 class MetadataSnapshot(
     val engineVersion: String,
@@ -18,11 +19,37 @@ class MetadataSnapshot(
     val extensionFunctions: List<FunctionDef>? = null,
     val tableFunctions: List<TableFunctionInfo>? = null,
     val grammarForms: List<GrammarForm>? = null,
+    val types: List<TypeDef>? = null,
 ) {
+    // Binary compatibility (AGENTS.md): the constructor from before types.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(
+        engineVersion: String,
+        functions: FunctionCatalog,
+        keywords: KeywordCatalog? = null,
+        pragmas: List<PragmaDef>? = null,
+        settings: List<SettingDef>? = null,
+        extensions: List<ExtensionDef>? = null,
+        extensionFunctions: List<FunctionDef>? = null,
+        tableFunctions: List<TableFunctionInfo>? = null,
+        grammarForms: List<GrammarForm>? = null,
+    ) : this(engineVersion, functions, keywords, pragmas, settings, extensions, extensionFunctions, tableFunctions, grammarForms, null)
+
+    private val typesByName: Map<String, TypeDef> by lazy { types.orEmpty().associateBy { functions.nameKey(it.name) } }
+
     /** The [TableFunctionInfo] for [name], matched by the dialect's name policy. */
     fun tableFunction(name: String): TableFunctionInfo? =
         functions.nameKey(name).let { key -> tableFunctions?.find { functions.nameKey(it.name) == key } }
+
+    /** The built-in type or alias [name], matched by the dialect's name policy; null when unknown or [types] is. */
+    fun type(name: String): TypeDef? = typesByName[functions.nameKey(name)]
 }
+
+/**
+ * A type name the engine accepts: a type or an alias of one ([logicalType] is the type it names) and the
+ * engine's [category] of it (`NUMERIC`, `STRING`, ...) when it has one.
+ */
+data class TypeDef(val name: String, val logicalType: String, val category: String? = null)
 
 /** Every bundled snapshot of one dialect, oldest first, and where the engine's documentation lives ([docs]), if bundled. */
 class DialectMetadata(

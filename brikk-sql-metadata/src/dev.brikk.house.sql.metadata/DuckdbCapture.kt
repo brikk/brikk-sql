@@ -136,6 +136,23 @@ val DUCKDB_EXTENSIONS: DuckdbCapture<DuckdbExtensionRow> = DuckdbCapture(
 }
 
 /**
+ * One built-in `duckdb_types()` name: a type or an alias of one, the [logicalType] it names and the engine's
+ * [category] (`NUMERIC`, `STRING`, ...), which some types lack.
+ */
+data class DuckdbTypeRow(val name: String, val logicalType: String, val category: String? = null)
+
+val DUCKDB_TYPES: DuckdbCapture<DuckdbTypeRow> = DuckdbCapture(
+    name = "types",
+    sql = """
+        SELECT DISTINCT type_name, logical_type, type_category
+        FROM duckdb_types()
+        WHERE internal AND database_name = 'system'
+        ORDER BY ALL
+    """.trimIndent(),
+    columns = listOf("type_name", "logical_type", "type_category"),
+) { row -> DuckdbTypeRow(row.required(0), row.required(1), row[2]) }
+
+/**
  * A `duckdb_functions()` row that appeared after `LOAD [extension]` on a fresh engine, where
  * `duckdb_extensions()` reported [extensionVersion] (empty for a statically linked one). The
  * vendored `duckdb-extension-functions-<version>.tsv` holds `extension`, `extension_version`,

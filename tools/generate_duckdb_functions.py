@@ -110,6 +110,10 @@ def extension_function_row(r: dict[str, str | None]) -> tuple[str, int]:
     return f"DuckdbExtensionFunctionRow({kstr(r['extension'])}, {kstr(r['extension_version'])}, {function})", cost + 3
 
 
+def type_row(r: dict[str, str | None]) -> tuple[str, int]:
+    return f"DuckdbTypeRow({kstr(r['type_name'])}, {kstr(r['logical_type'])}, {knullable(r['type_category'])})", 4
+
+
 def chunked(name: str, element_type: str, literals: list[tuple[str, int]]) -> tuple[str, list[str]]:
     """A `chunk() + chunk() ...` expression plus the private chunk functions it calls."""
     chunks: list[list[str]] = [[]]
@@ -137,6 +141,7 @@ CAPTURES = {
     "settings": ("settings", "DuckdbSettingRow", setting_row),
     "extensions": ("extensions", "DuckdbExtensionRow", extension_row),
     "extension-functions": ("extensionFunctions", "DuckdbExtensionFunctionRow", extension_function_row),
+    "types": ("types", "DuckdbTypeRow", type_row),
 }
 
 
