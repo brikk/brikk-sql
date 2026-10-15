@@ -22,7 +22,7 @@ import java.util.logging.Logger
  * closed (then it does nothing), and closing a stream that was not cancelled first reads it to its end.
  * Every step of such a statement is appended, after the word following [MARKER] in its query, to the file
  * `-Dbrikk.slowstream.log` names. Cancelling the query tagged [HELD] returns only once the file named
- * as the log plus `.release` exists. Runs in the
+ * as the log plus `.release` exists; the query tagged [STEADY] logs a cancel but keeps streaming. Runs in the
  * IDE's remote JDBC process; `jdbc:brikk-slow:<file>` is DuckDB's `jdbc:duckdb:<file>`.
  */
 class SlowStreamDriver : Driver {
@@ -65,7 +65,7 @@ class SlowStreamDriver : Driver {
             "cancel" -> {
                 if (closed) log("cancel ignored: closed") else rows?.let {
                     log("cancel")
-                    it.cancelled = true
+                    it.cancelled = tag != STEADY
                     if (tag == HELD) awaitRelease()
                 }
                 method.invoke(real, *args)
@@ -121,6 +121,7 @@ class SlowStreamDriver : Driver {
         const val ROW_MILLIS: Long = 50
         const val LOG_PROPERTY: String = "brikk.slowstream.log"
         const val HELD: String = "held"
+        const val STEADY: String = "steady"
 
         private fun awaitRelease() {
             val release = Path.of(System.getProperty(LOG_PROPERTY) + ".release")

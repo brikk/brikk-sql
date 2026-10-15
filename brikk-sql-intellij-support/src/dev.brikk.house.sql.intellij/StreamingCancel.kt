@@ -21,11 +21,11 @@ import kotlin.coroutines.cancellation.CancellationException
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Claims Cancel for a console of [dataSources]' dbms whose request is streaming its results, and leaves
- * every other press to the wrapped action. Once results stream, the stock cancel only stops fetching at
- * the next chunk and closes the statement; a driver may then read the rest of the results while the
- * server keeps running the query (ClickHouse JDBC 0.10), and its `cancel` does nothing once the
- * statement is closed. The platform no longer holds the streaming statement where a cancel can reach it,
+ * Claims Cancel for a console of exactly [dataSources]' dbms (not the aliases it also accepts) whose
+ * request is streaming its results, and leaves every other press to the wrapped action. Once results
+ * stream, the stock cancel only stops fetching at the next chunk and closes the statement; a driver may
+ * then read the rest of the results while the server keeps running the query (ClickHouse JDBC 0.10),
+ * and its `cancel` does nothing once the statement is closed. The platform no longer holds the streaming statement where a cancel can reach it,
  * so this cancels the statements of the console engine's own connection (`RemoteConnection.cancelAll`),
  * off the EDT, and only then sends the stock cancel request, whose cleanup can no longer close the
  * statement before it is cancelled. Both steps happen only while the engine still runs the captured
@@ -40,7 +40,8 @@ public class StreamingCancelInterceptor(
     override fun perform(event: AnActionEvent, delegate: () -> Unit): ExecutionClaim {
         val session = DatabaseSessionManager.findSession(event) ?: return ExecutionClaim.DECLINED
         // A second press on a cancelled session is the stock offer to deactivate the data source.
-        if (session.isCancelled || !dataSources.accepts(session.connectionPoint.dataSource.dbms)) return ExecutionClaim.DECLINED
+        // Exactly the configured dbms, not its registry aliases: another plugin's or the stock dbms keeps its own cancel.
+        if (session.isCancelled || session.connectionPoint.dataSource.dbms.name != dataSources.dbms.name) return ExecutionClaim.DECLINED
         val request = StreamingRequest.of(session) ?: return ExecutionClaim.DECLINED
         worker.execute(request::cancel)
         return ExecutionClaim.HANDLED

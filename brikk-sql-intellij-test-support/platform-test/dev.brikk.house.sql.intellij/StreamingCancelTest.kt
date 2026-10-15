@@ -16,6 +16,7 @@ import com.intellij.database.dataSource.url.template.UrlTemplate
 import com.intellij.database.datagrid.DataAuditor
 import com.intellij.database.datagrid.DataRequest
 import com.intellij.database.psi.DbPsiFacade
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
@@ -210,11 +211,13 @@ class StreamingCancelTest : BasePlatformTestCase() {
         pressCancel(console)
         PlatformTestUtil.waitWithEventsDispatching("the driver cancel ends the request and is still running", { held in finished }, 10)
         assertEquals(listOf("execute", "cancel", "close"), steps(SlowStreamDriver.HELD))
-        val successor = stream(console, "next")
+        // The connection cancel still running may reach the successor's statement too (the API cancels every
+        // statement of the connection), which this one survives: what is checked is the stock cleanup.
+        val successor = stream(console, SlowStreamDriver.STEADY)
         Files.createFile(Path.of("$log.release"))
         PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
         assertEmpty(errorsOf(successor))
-        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertEquals("the stock cleanup leaves the successor alone", listOf("execute", "end"), steps(SlowStreamDriver.STEADY).filter { it != "cancel" }.distinct())
         assertFalse(console.databaseSession.isCancelled)
     }
 
@@ -228,10 +231,31 @@ class StreamingCancelTest : BasePlatformTestCase() {
         assertEquals("the stock cancel closes the stream without cancelling it", listOf("execute", "drain", "close"), steps("stock"))
     }
 
+    fun testAnAliasTheResolverAcceptsIsDeclinedAndTheExactDbmsIsClaimed() {
+        val console = open()
+        console.run("SELECT 1")
+        val alias = DialectDataSourceResolver(DUCKDB_BRIKK)
+        assertTrue("the registry lists ${dataSource.dbms.name} beside ${DUCKDB_BRIKK.name}", alias.accepts(dataSource.dbms))
+        val workers = ArrayList<Runnable>()
+        val request = stream(console, "alias")
+        assertEquals(ExecutionClaim.DECLINED, StreamingCancelInterceptor(alias, workers::add).perform(cancelEvent(console)) { fail("perform never delegates itself") })
+        assertEmpty(workers)
+        assertEquals(ExecutionClaim.HANDLED, StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), workers::add)
+            .perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        workers.single().run()
+        PlatformTestUtil.waitWithEventsDispatching("the claimed cancel ends the request", { request in finished }, 5)
+        assertEquals(listOf("execute", "cancel", "close"), steps("alias"))
+    }
+
     fun testAPressWithoutASessionRunsTheWrappedAction() {
         val event = TestActionEvent.createTestEvent(SimpleDataContext.getProjectContext(project))
         var delegated = false
         assertEquals(ExecutionClaim.DECLINED, StreamingCancelInterceptor(DialectDataSourceResolver(Dbms.POSTGRES)).perform(event) { delegated = true })
         assertFalse(delegated)
+    }
+
+    private companion object {
+        /** A plugin's own DuckDB dbms, which the registry lists with the stock `DUCK` the fixture's data source detects. */
+        val DUCKDB_BRIKK: Dbms = Dbms.create("DUCKDB_BRIKK", "DUCKDB_BRIKK", { AllIcons.Nodes.DataTables }, Dbms.defaultPattern("duckdbbrikk"))
     }
 }

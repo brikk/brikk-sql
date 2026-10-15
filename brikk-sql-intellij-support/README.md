@@ -28,12 +28,13 @@ no internal-API annotation.
   a fallback. `delegate` runs at most once, during `perform`, as the event is not valid afterwards). Register a subclass as `dynamicActionConfigurationCustomizer`;
   ids the IDE lacks are skipped, and unloading beneath a peer detaches as for Execute.
 - `StreamingCancelConfiguration(DialectDataSourceResolver(dbms))` (experimental): Cancel for a
-  console of that dbms whose request streams its results. The stock cancel only stops fetching and
+  console of exactly that dbms (not the aliases the resolver also accepts, such as the stock
+  `CLICKHOUSE` for `CLICKHOUSE_BRIKK`) whose request streams its results. The stock cancel only stops fetching and
   closes the statement there, which a driver may drain while the server keeps running the query
   (ClickHouse JDBC 0.10). Once results stream, the platform keeps the statement only on the engine's
   thread, so this cancels the statements of the console engine's own connection
-  (`RemoteConnection.cancelAll`: the streaming one, and any idle statement the engine keeps open on that
-  connection) off the EDT, and only then sends the stock cancel request, so its cleanup cannot close the
+  (`RemoteConnection.cancelAll`: the streaming one, any idle statement the engine keeps open on that
+  connection, and one the connection opens while the call runs) off the EDT, and only then sends the stock cancel request, so its cleanup cannot close the
   statement first. Each step runs only if the engine still runs the captured request on that
   connection, so a request that has ended, and its successor, get neither (the stock cancel request
   is not bound to a request: between the last check and the engine handling it, the platform offers no
