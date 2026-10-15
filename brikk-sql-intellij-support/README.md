@@ -516,7 +516,9 @@ of the `intellij.database.sql.core.impl` module with no internal-API annotation,
 `SqlEngineDocumentationProvider(metadata)` (`docs`): quick documentation (Ctrl+Q) and external documentation
 (Shift+F1) of the statement forms, clauses, table functions and table engines the dialect's
 `DialectMetadata.docs` maps to engine pages, recognized by core's `sqlDocsAt`; references and function calls
-keep the platform's own documentation. Register a no-arg subclass as the language's
+keep the platform's own documentation. On a key of a `PROPERTIES (...)` list or a table function's arguments
+(`EngineDocs.properties`, core's `sqlPropertyAt`) it shows the key's summary, release, values and page; the
+dialect's `SqlCompletionContributor` completes those keys and values. Register a no-arg subclass as the language's
 `lang.documentationProvider` with `order="first"`; a dialect without docs fails there. That every bundled
 page answers, documents what links to it, and (where the site shows a version badge) still shows
 `EngineDocs.release` is checked against the live sites on demand:

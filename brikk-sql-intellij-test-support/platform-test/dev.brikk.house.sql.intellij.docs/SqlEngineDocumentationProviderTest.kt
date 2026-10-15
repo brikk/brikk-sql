@@ -96,6 +96,24 @@ class SqlEngineDocumentationProviderTest : RelationTestCase() {
         assertTrue(target().isEngineDocs())
     }
 
+    fun testAPropertyKeyShowsItsSummaryReleaseValuesAndPage() {
+        open("CREATE TABLE t (k INT) PROPERTIES ('storage_me<caret>dium' = 'SSD')")
+        val target = target()
+        assertEquals("${pages}sql-statements/table-and-view/table/CREATE-TABLE/", url(target))
+        val doc = target?.let { DocumentationManager.getProviderFromElement(it).generateDoc(it, null) }.orEmpty()
+        assertTrue(doc, "storage_medium" in doc && "initial storage medium" in doc && "2.0" in doc && "SSD, HDD" in doc && "CREATE TABLE properties" in doc)
+        // A value, and a key no list knows, get no documentation of their own.
+        open("CREATE TABLE t (k INT) PROPERTIES ('storage_medium' = 'S<caret>SD')")
+        assertFalse(url(target()).orEmpty().contains("CREATE-TABLE"))
+        open("CREATE TABLE t (k INT) PROPERTIES ('no_such<caret>_key' = '1')")
+        assertFalse(url(target()).orEmpty().contains("CREATE-TABLE"))
+    }
+
+    fun testATableFunctionsArgumentKeyShowsItsSummary() {
+        open("SELECT * FROM s3('for<caret>mat' = 'csv')")
+        assertEquals("${pages}sql-functions/table-valued-functions/s3/", url(target()))
+    }
+
     fun testADialectWithoutDocsFailsWhenRegistered() {
         val failure = runCatching { object : SqlEngineDocumentationProvider(TRINO_METADATA) {} }.exceptionOrNull()
         assertTrue("$failure", failure is IllegalArgumentException && "trino" in failure.message.orEmpty())
