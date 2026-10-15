@@ -39,7 +39,7 @@ import dev.brikk.house.sql.docs.sqlPropertyAt
 import org.jetbrains.annotations.ApiStatus
 
 /**
- * Completes the profile's functions, keywords and table-function properties from metadata.
+ * Completes the profile's functions and keywords from metadata (property keys only with [PROPERTY_COMPLETION]).
  * It reads no indexes, so it also completes while they are built. Register it for the dialect's
  * language with a no-arg subclass and `order="first"`: it runs the contributors after it and
  * offers only the keywords none of them offered.
@@ -59,7 +59,7 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         } ?: FunctionPosition.UNKNOWN
         val inCode = context?.inCode != false
         val functions = if (inCode) completeFunctions(parameters, result, reads, position, context) else emptySet()
-        completeTableFunctionArguments(parameters, result, reads)
+        if (PROPERTY_COMPLETION) completeTableFunctionArguments(parameters, result, reads)
         if (!result.isStopped) completeKeywords(parameters, result, reads, functions, position.takeIf { inCode })
     }
 
@@ -189,6 +189,13 @@ private fun completeFunctions(
     reads.serverOnlyFunctions.forEach { offer(it, serverOnly = true) }
     return names
 }
+
+/**
+ * Whether completion offers the keys and values of property lists (a table function's `"key" = "value"`
+ * arguments, a statement's `PROPERTIES (...)`) and keeps the autopopup on in their strings. Off for now: the
+ * feature is paused until it is specified again; the metadata and the documentation of keys stay.
+ */
+internal const val PROPERTY_COMPLETION: Boolean = false
 
 /**
  * Property names inside the parentheses of a table function taking `"key" = "value"`

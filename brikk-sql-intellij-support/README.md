@@ -356,9 +356,9 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later
   contributor already offers. Keywords from later contributors (bold plain-text items whose words are
   all in the catalog) are spelled in the same case, keeping their insertion; an explicit keyword case in
-  the user's SQL code style wins over the profile's, for both. Inside the call of a table
-  function with metadata `TableFunctionInfo`, its property names, and their known values
-  right of `=`; outside a string the item is inserted in the profile's `propertyQuote`.
+  the user's SQL code style wins over the profile's, for both. Property keys and values (a table
+  function's `"key" = "value"` arguments, a statement's `PROPERTIES (...)`) are not completed for now,
+  and the autopopup is not forced in their strings; the metadata and their quick documentation stay.
   Function kinds follow the position, judged from the core tokens of the statement before the typed
   name (`tablePositions`, by default `TablePositions.of(dialect)`). `STANDARD` places tables after FROM,
   any join and PIPE `|> CALL`, after a comma continuing their list, and inside `TABLE(`; `IS DISTINCT
@@ -518,7 +518,7 @@ of the `intellij.database.sql.core.impl` module with no internal-API annotation,
 `DialectMetadata.docs` maps to engine pages, recognized by core's `sqlDocsAt`; references and function calls
 keep the platform's own documentation. On a key of a `PROPERTIES (...)` list or a table function's arguments
 (`EngineDocs.properties`, core's `sqlPropertyAt`) it shows the key's summary, release, values and page; the
-dialect's `SqlCompletionContributor` completes those keys and values. A plugin adopts it with XML only:
+dialect's completion leaves those keys and values out for now. A plugin adopts it with XML only:
 `<lang.documentationProvider language="DorisSQL" implementationClass="dev.brikk.house.sql.intellij.docs.SqlEngineDocumentationProvider" order="first"/>`;
 the provider finds the docs of the file's language through `SqlDialectRegistry` and `bundledMetadata`. Its test is
 `DocumentationProviderContract(myFixture, language, testRootDisposable).check(statement, docsHost, table)` from the test kit. That every bundled
