@@ -106,6 +106,18 @@ a declared service that does not load or instantiate, and an open or failing lig
 with one light test calling it. `DocumentationProviderContract` (see the support README's language layer) checks the
 engine documentation provider the same way.
 
+## Editor popup
+
+`EditorPopupContract(myFixture, itemId, childIds).check(openValid)` expands the registered `EditorPopupMenu`
+(or another `parent`) as the IDE renders a popup: the action or group registered as `itemId`, and each child, is
+rendered, enabled and visible in the editor `openValid` opens, and absent (not disabled) with that file but no
+editor, with that editor but no file, in an empty context, with that file and another file's editor, and in each
+unrelated file (a text file by default), with and without a selection. The recipe it accepts is the platform's
+`com.intellij.ide.actions.NonEmptyActionGroup` with children setting `isEnabledAndVisible` from their own
+applicability; a plain group stays behind as an empty submenu. A plugin adopts it with one light test passing its
+IDs and a lambda opening its valid SQL or PIPE context; plugin-specific contexts (a selection rule, an injection)
+stay in its own tests, using `context(editor, file)`, `assertShown` and `assertAbsent`.
+
 ## Lexer restarts
 
 `assertRestartsMatchFullLex(::MyLexer, text)` lexes `text` in full and again from every token
