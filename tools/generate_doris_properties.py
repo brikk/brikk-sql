@@ -226,6 +226,10 @@ VALUES = {
     "partition_sync_time_unit": ["DAY", "MONTH", "YEAR"],
     "timezone": None,
     "partial_update_new_key_behavior": ["APPEND", "ERROR"],
+    # PropertyAnalyzer.analyzeStorageFormat: V1 is rejected as deprecated.
+    "storage_format": ["V2", "V3", "default"],
+    # PropertyAnalyzer.analyzeInvertedIndexFileStorageFormat.
+    "inverted_index_storage_format": ["V1", "V2", "V3", "default"],
     "strict_mode": ["true", "false"],
 }
 
@@ -291,11 +295,42 @@ CATALOG_SOURCES = {
 }
 RESOURCE_CLASSES = {"spark": "Spark", "odbc_catalog": "OdbcCatalog", "s3": "S3", "jdbc": "Jdbc", "hdfs": "Hdfs", "hms": "HMS", "es": "Es"}
 
+# Table keys PropertyAnalyzer (branch-4.1) reads that the 4.x CREATE TABLE page does not document.
+UNDOCUMENTED_TABLE_KEYS = [
+    ("storage_format", "The segment storage format: V2, or V3 (V2 with column metadata stored apart).", None),
+    ("inverted_index_storage_format", "The storage format of the table's inverted index files; default takes the FE configuration's.", None),
+    ("file_cache_ttl_seconds", "How long, in seconds, newly loaded data stays in the file cache; compute-storage decoupled mode only.", None),
+]
 add("CREATE TABLE properties", "CREATE [EXTERNAL] [TEMPORARY] TABLE", PAGES["CREATE-TABLE"] + "/",
-    table(section(ct, r"^\*\*<table_property>\*\*", r"^## ")), TABLE)
+    table(section(ct, r"^\*\*<table_property>\*\*", r"^## ")) + UNDOCUMENTED_TABLE_KEYS, TABLE)
+table_keys = lists[-1]["keys"]
 mv = lines_of("CREATE-ASYNC-MATERIALIZED-VIEW")
 add("CREATE MATERIALIZED VIEW properties", "CREATE MATERIALIZED VIEW", PAGES["CREATE-ASYNC-MATERIALIZED-VIEW"] + "/",
     table(section(mv, r"^\*\*9\. `<table_property>`", r"^## ")), MV)
+
+# The page: "Properties used by internal tables, most of which can be used by materialized views". CreateMTMVInfo
+# (branch-4.1) builds the view as a Duplicate-model OLAP table and passes its other properties on to it, so it takes
+# the table keys but those of another model, and rejects dynamic partition keys. Its own keys come first and win.
+MV_EXCLUDED = {
+    # Unique-model keys.
+    "function_column.sequence_col", "function_column.sequence_type", "enable_unique_key_merge_on_write",
+    "enable_mow_light_delete", "enable_unique_key_skip_bitmap_column",
+    # Chooses the model of a table that names none; a view's model is set.
+    "enable_duplicate_without_keys_by_default",
+}
+
+
+def version(v):
+    return tuple(map(int, v.split(".")))
+
+
+mv_keys = lists[-1]["keys"]
+mv_floor = min((k["since"] for k in mv_keys if k["since"]), key=version)
+for k in table_keys:
+    if k["name"] in MV_EXCLUDED or k["name"].startswith("dynamic_partition.") or any(m["name"] == k["name"] for m in mv_keys):
+        continue
+    # Not before views existed, whenever the table took the key.
+    mv_keys.append(dict(k, since=k["since"] and max(k["since"], mv_floor, key=version)))
 
 sj = page("CREATE-STREAMING-JOB", PAGES["CREATE-STREAMING-JOB"]).splitlines()
 groups, i = [], 0

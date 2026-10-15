@@ -16,6 +16,16 @@ class StatementPropertyCompletionTest : CompletionTestCase() {
         assertDoesntContain(items, "replication_num", "kafka_topic")
     }
 
+    fun testAnAsyncViewOffersItsOwnAndItsModelsTableKeysOnce() {
+        val items = offered(
+            "CREATE MATERIALIZED VIEW mv BUILD IMMEDIATE REFRESH AUTO ON MANUAL DISTRIBUTED BY RANDOM BUCKETS 1 " +
+                "PROPERTIES ('grace_period' = '10', '<caret>') AS SELECT 1 AS k",
+        )
+        assertContainsElements(items, "replication_num", "storage_medium", "storage_format", "inverted_index_storage_format", "file_cache_ttl_seconds", "use_for_rewrite")
+        assertDoesntContain(items, "grace_period", "function_column.sequence_col", "enable_unique_key_merge_on_write", "dynamic_partition.enable")
+        assertEquals(items.distinct(), items)
+    }
+
     fun testKnownValuesAreOfferedRightOfEquals() {
         val items = offered("CREATE TABLE t (k INT) PROPERTIES ('storage_medium' = '<caret>')")
         assertSameElements(items.filter { it in setOf("SSD", "HDD", "storage_medium") }, "SSD", "HDD")

@@ -70,4 +70,24 @@ class DorisPropertiesTest {
         assertTrue(http.none { it.name == "http.header.xxx" })
         assertTrue(DORIS_METADATA.default.tableFunction("local")?.properties.orEmpty().none { it.name == "json_paths" })
     }
+
+    @Test
+    fun anAsyncViewTakesTheTableKeysOfItsDuplicateModelAfterItsOwn() {
+        val table = list("CREATE TABLE properties").keys
+        val view = list("CREATE MATERIALIZED VIEW properties").keys
+        assertEquals("grace_period", view.first().name)
+        assertEquals(view.map { it.name }.distinct(), view.map { it.name })
+        // An inherited key keeps its summary and values, but not a release before views existed.
+        assertEquals(table.definitionOf("storage_medium")?.copy(since = "2.1"), view.definitionOf("storage_medium"))
+        assertEquals("2.0", table.definitionOf("replication_num")?.since)
+        assertEquals("2.1", view.definitionOf("replication_num")?.since)
+        assertEquals("3.0", view.definitionOf("file_cache_ttl_seconds")?.since)
+        assertEquals(listOf("V2", "V3", "default"), view.definitionOf("storage_format")?.values)
+        // Unique-model keys and dynamic partitions are the table's only.
+        for (key in listOf("function_column.sequence_col", "enable_unique_key_merge_on_write", "enable_duplicate_without_keys_by_default")) {
+            assertNotNull(table.definitionOf(key), key)
+            assertNull(view.definitionOf(key), key)
+        }
+        assertNull(view.definitionOf("dynamic_partition.enable"))
+    }
 }

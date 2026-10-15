@@ -109,6 +109,14 @@ class SqlEngineDocumentationProviderTest : RelationTestCase() {
         assertFalse(url(target()).orEmpty().contains("CREATE-TABLE"))
     }
 
+    fun testATableKeyInAnAsyncViewShowsTheViewsPageAndItsValues() {
+        open("CREATE MATERIALIZED VIEW mv PROPERTIES ('storage_for<caret>mat' = 'V2') AS SELECT 1 AS k")
+        val target = target()
+        assertEquals("${pages}sql-statements/table-and-view/async-materialized-view/CREATE-ASYNC-MATERIALIZED-VIEW/", url(target))
+        val doc = target?.let { DocumentationManager.getProviderFromElement(it).generateDoc(it, null) }.orEmpty()
+        assertTrue(doc, "V2, V3, default" in doc && "2.1" in doc && "CREATE MATERIALIZED VIEW properties" in doc)
+    }
+
     fun testATableFunctionsArgumentKeyShowsItsSummary() {
         open("SELECT * FROM s3('for<caret>mat' = 'csv')")
         assertEquals("${pages}sql-functions/table-valued-functions/s3/", url(target()))
