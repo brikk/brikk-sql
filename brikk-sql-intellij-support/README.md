@@ -37,11 +37,14 @@ no internal-API annotation.
   connection) off the EDT, then sends the stock cancel request and waits until it is handled, so its
   cleanup cannot close the statement first. Each step runs only while the engine still runs the
   captured request on that connection. The engine runs one request at a time and reports a finished
-  request on its own thread before it starts the next; while the cancel runs (at most 30 s), that
-  report of the captured request waits for it, so no next request opens a statement during
-  `cancelAll` or meets the stock cleanup. A request submitted while it still runs is queued as usual
-  and dropped only when the stock cleanup runs (the original request was still running), as a stock
-  cancel drops it. Other consoles and connections are not touched. Any other press (another dbms, a
+  request on its own thread before it starts the next; that report of the captured request waits
+  until the cancel is done, so no next request opens a statement during `cancelAll` or meets the
+  stock cleanup. The wait has no time limit for the stock cleanup (the engine reports handling it on
+  its own thread). A `cancelAll` still running after 30 s disconnects the console instead (the stock
+  Disconnect, which also drops queued requests), and the next request runs on a new connection that
+  call cannot reach. A request queued while the original still runs is dropped when the stock
+  cleanup runs, as a stock cancel drops it. If the work cannot be submitted, the press runs the stock
+  cancel. Other consoles and connections are not touched. Any other press (another dbms, a
   request still waiting for results, a second press on a cancelled session) runs the wrapped action.
   Database Tools keeps an engine's execution state private, with no public alternative: it is read
   from `JdbcEngine`'s single `AtomicReference<State>` field (`myState` on 261, `state` on 263);

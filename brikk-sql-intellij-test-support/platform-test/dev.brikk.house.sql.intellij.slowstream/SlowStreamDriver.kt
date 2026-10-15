@@ -14,6 +14,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
 import java.util.Properties
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.logging.Logger
 
 /**
@@ -22,17 +23,24 @@ import java.util.logging.Logger
  * closed (then it does nothing), and closing a stream that was not cancelled first reads it to its end.
  * Every step of such a statement is appended, after the word following [MARKER] in its query, to the file
  * `-Dbrikk.slowstream.log` names. Cancelling the query tagged [HELD] returns only once the file named
- * as the log plus `.release` exists, and logs that it returns. Runs in the
+ * as the log plus `.release` exists, and logs that it returns; cancelling the query tagged [LAGGING]
+ * returns at once and stops it [LAG_MILLIS] later, as a server ends a killed query. `@<tag> <n>` names
+ * the query's connection. Runs in the
  * IDE's remote JDBC process; `jdbc:brikk-slow:<file>` is DuckDB's `jdbc:duckdb:<file>`.
  */
 class SlowStreamDriver : Driver {
     private val duckdb = Class.forName("org.duckdb.DuckDBDriver").getDeclaredConstructor().newInstance() as Driver
 
-    override fun connect(url: String, info: Properties): Connection? =
-        if (acceptsURL(url)) proxy(duckdb.connect("jdbc:duckdb:" + url.removePrefix(PREFIX), info), Connection::class.java) { real, method, args ->
+    private val connections = AtomicInteger()
+
+    override fun connect(url: String, info: Properties): Connection? {
+        if (!acceptsURL(url)) return null
+        val id = connections.incrementAndGet()
+        return proxy(duckdb.connect("jdbc:duckdb:" + url.removePrefix(PREFIX), info), Connection::class.java) { real, method, args ->
             val result = method.invoke(real, *args)
-            if (method.name == "createStatement" && result is Statement) proxy(result, Statement::class.java, SlowStatement(result)) else result
-        } else null
+            if (method.name == "createStatement" && result is Statement) proxy(result, Statement::class.java, SlowStatement(result, id)) else result
+        }
+    }
 
     override fun acceptsURL(url: String): Boolean = url.startsWith(PREFIX)
     override fun getPropertyInfo(url: String, info: Properties): Array<DriverPropertyInfo> = emptyArray()
@@ -41,7 +49,7 @@ class SlowStreamDriver : Driver {
     override fun jdbcCompliant(): Boolean = false
     override fun getParentLogger(): Logger = Logger.getLogger("brikk.slowstream")
 
-    private class SlowStatement(private val real: Statement) : (Statement, Method, Array<Any?>) -> Any? {
+    private class SlowStatement(private val real: Statement, private val connection: Int) : (Statement, Method, Array<Any?>) -> Any? {
         @Volatile private var closed = false
         @Volatile private var rows: SlowRows? = null
         @Volatile private var tag = ""
@@ -56,6 +64,7 @@ class SlowStreamDriver : Driver {
                     val stream = SlowRows(statement, real.executeQuery("SELECT range AS n FROM range($ROWS)"), ::log)
                     rows = stream
                     log("execute")
+                    Companion.log("@$tag $connection")
                     if (method.name == "execute") true else stream.proxy
                 }
             }
@@ -65,7 +74,7 @@ class SlowStreamDriver : Driver {
             "cancel" -> {
                 if (closed) log("cancel ignored: closed") else rows?.let {
                     log("cancel")
-                    it.cancelled = true
+                    if (tag == LAGGING) Thread { Thread.sleep(LAG_MILLIS); it.cancelled = true }.start() else it.cancelled = true
                     if (tag == HELD) {
                         awaitRelease()
                         log("cancel returns")
@@ -124,6 +133,8 @@ class SlowStreamDriver : Driver {
         const val ROW_MILLIS: Long = 50
         const val LOG_PROPERTY: String = "brikk.slowstream.log"
         const val HELD: String = "held"
+        const val LAGGING: String = "lagging"
+        const val LAG_MILLIS: Long = 300
 
         private fun awaitRelease() {
             val release = Path.of(System.getProperty(LOG_PROPERTY) + ".release")

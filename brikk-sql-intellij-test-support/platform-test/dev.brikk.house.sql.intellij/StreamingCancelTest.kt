@@ -36,8 +36,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A real console streams a query's results from the IDE's remote JDBC process through [SlowStreamDriver],
@@ -227,6 +232,70 @@ class StreamingCancelTest : BasePlatformTestCase() {
         assertEmpty(errorsOf(successor))
         assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
         assertFalse(console.databaseSession.isCancelled)
+    }
+
+    fun testAConnectionCancelPastTheDeadlineDisconnectsBeforeTheNextRequestRuns() {
+        val console = open()
+        console.run("SELECT 1")
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), deadline = 1.seconds)
+        stream(console, SlowStreamDriver.HELD)
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        // Queued while the connection cancel runs: the disconnect drops it with the connection.
+        console.submit("SELECT '${SlowStreamDriver.MARKER} queued'")
+        PlatformTestUtil.waitWithEventsDispatching("the console disconnects past the deadline", { !console.databaseSession.isConnected }, 10)
+        assertFalse("the connection cancel is still running", "cancel returns" in steps(SlowStreamDriver.HELD))
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty("nothing ran on the disconnected connection", steps("queued"))
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertFalse("the successor runs on a new connection, out of the running cancel's reach",
+            steps("@next") == steps("@${SlowStreamDriver.HELD}"))
+        Files.createFile(Path.of("$log.release"))
+        console.run("SELECT 42")
+    }
+
+    fun testAStockCleanupHandledPastTheDeadlineStillHoldsTheNextRequest() {
+        val console = open()
+        console.run("SELECT 1")
+        val cleanup = CountDownLatch(1)
+        val cleanupStarted = CountDownLatch(1)
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun requestCancelStarted(context: DataRequest.Context, cancelRequest: DataRequest.Cancel?) {
+                cleanupStarted.countDown()
+                cleanup.await(30, TimeUnit.SECONDS)
+            }
+        }, testRootDisposable)
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), deadline = 1.seconds)
+        val lagging = stream(console, SlowStreamDriver.LAGGING)
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        assertTrue("the stock cleanup reaches the still running request", cleanupStarted.await(10, TimeUnit.SECONDS))
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { lagging in finished }, 10)
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        val ended = System.nanoTime()
+        while (System.nanoTime() - ended < 2_000_000_000) Thread.sleep(20)
+        assertEmpty("the successor waits past the deadline for the stock cleanup", steps("next"))
+        cleanup.countDown()
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertEquals(steps("@next"), steps("@${SlowStreamDriver.LAGGING}"))
+    }
+
+    fun testARejectedSubmissionReleasesTheCapture() {
+        val console = open()
+        console.run("SELECT 1")
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), { throw RejectedExecutionException("full") })
+        val request = stream(console, "rejected")
+        var delegated = false
+        assertEquals(ExecutionClaim.DECLINED, interceptor.perform(cancelEvent(console)) { delegated = true })
+        assertFalse("perform leaves the stock cancel to its caller", delegated)
+        PlatformTestUtil.waitWithEventsDispatching("the request completes, held by nothing", { request in finished }, 30)
+        console.run("SELECT 42")
+    }
+
+    fun testTheConstructorBeforeTheDeadlineRemains() {
+        assertNotNull(StreamingCancelInterceptor::class.java.getConstructor(DialectDataSourceResolver::class.java, Executor::class.java))
     }
 
     fun testAnotherDbmsKeepsTheStockCancel() {
