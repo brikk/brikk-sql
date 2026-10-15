@@ -27,6 +27,7 @@ import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.annotations.ApiStatus
@@ -138,8 +139,19 @@ private class StreamingRequest(
         } finally {
             // Whatever ended this, the engine goes on only once the connection cancel has ended or the engine no
             // longer runs on that connection (a next request then gets a new one, which the cancel cannot reach).
-            cancelling?.let { if (engine.runsOn(connection)) uninterruptibly { finishes(it, wait = true) } }
+            var cancelled: CancellationException? = null
+            cancelling?.let { running ->
+                val retired = try {
+                    !engine.runsOn(connection)
+                } catch (e: IllegalStateException) {
+                    // The engine's connection closing meanwhile: who owns it is unknown, so the cancel must end first.
+                    if (e is CancellationException) cancelled = e
+                    false
+                }
+                if (!retired) uninterruptibly { finishes(running, wait = true) }
+            }
             release()
+            cancelled?.let { throw it }
         }
     }
 

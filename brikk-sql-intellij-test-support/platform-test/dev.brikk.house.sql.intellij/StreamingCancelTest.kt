@@ -4,10 +4,13 @@ import com.intellij.database.DataBus
 import com.intellij.database.Dbms
 import com.intellij.database.connection.throwable.info.ErrorInfo
 import com.intellij.database.console.JdbcConsole
+import com.intellij.database.console.JdbcEngine
 import com.intellij.database.console.client.SessionClientHolder
 import com.intellij.database.console.session.DatabaseSession
 import com.intellij.database.console.session.DatabaseSessionManager
 import com.intellij.database.console.session.DatabaseSessionViewService
+import com.intellij.database.dataSource.DatabaseConnection
+import com.intellij.database.dataSource.DatabaseConnectionManager
 import com.intellij.database.dataSource.DatabaseDriverImpl
 import com.intellij.database.dataSource.DatabaseDriverManager
 import com.intellij.database.dataSource.LocalDataSource
@@ -17,6 +20,7 @@ import com.intellij.database.datagrid.DataAuditor
 import com.intellij.database.datagrid.DataProducer
 import com.intellij.database.datagrid.DataRequest
 import com.intellij.database.psi.DbPsiFacade
+import com.intellij.database.util.GuardedRef
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -42,6 +46,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import kotlin.time.Duration.Companion.seconds
@@ -259,7 +264,17 @@ class StreamingCancelTest : BasePlatformTestCase() {
         console.run("SELECT 42")
     }
 
-    fun testADisconnectThatCannotBeSentHoldsTheNextRequestUntilTheConnectionCancelEnds() {
+    fun testADisconnectThatCannotBeSentHoldsTheNextRequestUntilTheConnectionCancelEnds() = disconnectRefused(ownershipFails = false)
+
+    /** As the platform closing the engine's connection meanwhile makes it: asking who owns it fails. */
+    fun testAnOwnershipCheckThatFailsAfterTheRefusedDisconnectHoldsTheNextRequestUntilTheConnectionCancelEnds() =
+        disconnectRefused(ownershipFails = true)
+
+    /**
+     * The connection cancel is held past the deadline and the disconnect cannot be sent; with [ownershipFails],
+     * reading the engine's connection on the cancel's worker fails from then on too.
+     */
+    private fun disconnectRefused(ownershipFails: Boolean) {
         val console = open()
         console.run("SELECT 1")
         val refusal = "the disconnect cannot be sent"
@@ -281,9 +296,29 @@ class StreamingCancelTest : BasePlatformTestCase() {
         Disposer.register(testRootDisposable) { logging.finish() }
         faulted += console.databaseSession
         val thrown = CopyOnWriteArrayList<Throwable>()
-        val worker = Executor { work -> Thread { try { work.run() } catch (e: Throwable) { thrown += e } }.start() }
+        var workerThread: Thread? = null
+        val worker = Executor { work -> Thread { try { work.run() } catch (e: Throwable) { thrown += e } }.also { workerThread = it }.start() }
         val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), worker, 1.seconds)
         val held = stream(console, SlowStreamDriver.HELD)
+        val ownershipFailures = AtomicInteger()
+        if (ownershipFails) {
+            val engine = DatabaseConnectionManager.getInstance().activeConnections.mapNotNull { it.requestor as? JdbcEngine }
+                .single { it.requestContextIfAny?.request === held }
+            // The engine's connection holder on 263, whose get() fails once it is closed.
+            val field = JdbcEngine::class.java.getDeclaredField("guardedConnection").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST") val original = field.get(engine) as GuardedRef<DatabaseConnection>
+            field.set(engine, object : GuardedRef<DatabaseConnection>(original.get()) {
+                override fun get(): DatabaseConnection {
+                    if (Thread.currentThread() === workerThread && refused.count == 0L) {
+                        ownershipFailures.incrementAndGet()
+                        throw IllegalStateException("the connection is closing")
+                    }
+                    return super.get()
+                }
+
+                override fun close(value: DatabaseConnection) = original.close()
+            })
+        }
         assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
         val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
         assertTrue("the disconnect was refused past the deadline", refused.await(10, TimeUnit.SECONDS))
@@ -300,6 +335,7 @@ class StreamingCancelTest : BasePlatformTestCase() {
         assertTrue("the successor opens its statement after the connection cancel: $order",
             order.indexOf("${SlowStreamDriver.HELD} cancel returns") < order.indexOf("next execute"))
         assertEquals("on the same connection", steps("@next"), steps("@${SlowStreamDriver.HELD}"))
+        assertEquals("the ownership check failed while finishing", ownershipFails, ownershipFailures.get() > 0)
         assertTrue("the refusal propagates once the engine can go on: $thrown",
             thrown.size == 1 && generateSequence(thrown.single()) { it.cause }.any { it.message == refusal })
     }
