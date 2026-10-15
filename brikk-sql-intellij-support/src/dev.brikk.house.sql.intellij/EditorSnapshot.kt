@@ -2,10 +2,14 @@ package dev.brikk.house.sql.intellij
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiFile
 import java.util.concurrent.CancellationException
 import org.jetbrains.annotations.ApiStatus
 
@@ -55,3 +59,11 @@ public inline fun <T> recoverEditorOperation(operation: () -> T): Result<T> = tr
 } catch (e: Exception) {
     Result.failure(e)
 }
+
+/**
+ * Whether [editor] shows [file] itself in [project]: both belong to it and the editor's document is the file's (a
+ * host editor with its host file, an injected editor with its injected file). An editor popup entry reads the
+ * caret only then, never against another file's text.
+ */
+internal fun editorShowsFile(project: Project, editor: Editor, file: PsiFile): Boolean =
+    editor.project == project && file.project == project && PsiDocumentManager.getInstance(project).getDocument(file) == editor.document

@@ -3,6 +3,7 @@ package dev.brikk.house.sql.intellij.pipe
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.database.console.JdbcConsoleProvider
 import com.intellij.lang.injection.InjectedLanguageManager
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -18,6 +19,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBUI
 import dev.brikk.house.sql.intellij.SqlExecutionRefusal
+import dev.brikk.house.sql.intellij.editorShowsFile
 import dev.brikk.house.sql.intellij.selectionExecuteOption
 import dev.brikk.house.sql.parser.PipeStageCut
 import dev.brikk.house.sql.parser.PipeStageSplitter
@@ -80,6 +82,8 @@ public abstract class PipeRunToStageAction(private val dialect: PipeDialect) : A
 private inline fun <T> AnActionEvent.target(operation: (PsiFile, Editor) -> T): T? {
     val file = getData(CommonDataKeys.PSI_FILE) ?: return null
     val editor = getData(CommonDataKeys.EDITOR) ?: return null
+    // The editor popup offers an entry only for the editor showing the file, never another file's caret.
+    if (place == ActionPlaces.EDITOR_POPUP && !editorShowsFile(project ?: return null, editor, file)) return null
     return operation(file, editor)
 }
 
