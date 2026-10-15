@@ -2,6 +2,7 @@ package dev.brikk.house.sql.intellij.dialect
 
 import com.intellij.database.Dbms
 import com.intellij.database.model.DasObject
+import com.intellij.database.model.DasTable
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.symbols.DasPredefinedSymbol
 import com.intellij.database.symbols.DasSymbol
@@ -22,6 +23,7 @@ import com.intellij.sql.psi.SqlTableType
 import com.intellij.sql.psi.SqlTypeElement
 import com.intellij.sql.psi.impl.SqlTableTypeBase
 import com.intellij.sql.psi.impl.SqlTableTypeBase.UnresolvedRefType
+import dev.brikk.house.sql.intellij.catalog.dasRelationFact
 import dev.brikk.house.sql.intellij.completion.SqlCompletionProfile
 import dev.brikk.house.sql.intellij.relation.RelationAnalysis
 import dev.brikk.house.sql.intellij.relation.RelationScopeProfile
@@ -87,8 +89,8 @@ public class EngineBuiltins(
      * When the width of the row [query] projects depends on an engine table function's open row ([tableType]), as
      * the shared relation analysis finds through stars, derived tables and CTEs ([withClause], the WITH of an
      * enclosing statement, scopes it): the number of its columns that are known, the least its width can be. Null
-     * when its width is known or it reads no open row. The tables it names count as known here: their width is
-     * the platform's to judge, so only an engine row leaves it open.
+     * when its width is known or it reads no open row. The tables it names have the columns the platform resolves
+     * them to, so a known table's star counts towards that least width.
      */
     internal fun openRowMinimumWidth(query: SqlQueryExpression, withClause: PsiElement?): Int? {
         val file = query.containingFile ?: return null
@@ -97,9 +99,12 @@ public class EngineBuiltins(
         if (!readsOpenRow) return null
         val sql = listOfNotNull(withClause?.text, query.text).joinToString(" ")
         val base = relations?.let { RelationAnalysis.of(file, it, lastKnown = true)?.facts?.merged } ?: RelationFacts()
+        // The tables the platform resolves, with the columns it knows of them (a local CREATE TABLE, the data
+        // source's model); the provider facts stand where they have the table, and any other table stays unknown.
         val tables = listOfNotNull(withClause, query).flatMap { PsiTreeUtil.findChildrenOfType(it, SqlReferenceExpression::class.java) }
             .filter { it.referenceElementType.targetKind == ObjectKind.TABLE && it.parent !is SqlReferenceExpression }
-            .associate { it.text to RelationFact(knowledge = Knowledge.FULL) }
+            .mapNotNull { reference -> (reference.reference?.resolve() as? DasTable)?.let { reference.text to dasRelationFact(it, reference.text) } }
+            .toMap()
         val facts = base.copy(tables = tables + base.tables)
         val output = RelationScope.analyze(sql, completion.metadata.dialect, facts, checkCanceled = ProgressManager::checkCanceled).output ?: return null
         return output.columns.size.takeIf { output.knowledge != Knowledge.FULL }

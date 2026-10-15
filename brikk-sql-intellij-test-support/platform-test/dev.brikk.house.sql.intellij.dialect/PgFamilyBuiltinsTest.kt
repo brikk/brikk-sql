@@ -126,7 +126,7 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
 
     /** The platform's INSERT value count reports in [sql]. */
     private fun countReports(sql: String): List<String> {
-        reports(sql, HighlightSeverity.WARNING)
+        myFixture.configureFromExistingVirtualFile(LightVirtualFile("builtins-${UUID.randomUUID()}.sql", BuiltinsFixtureDialect, sql))
         return myFixture.doHighlighting(HighlightSeverity.WARNING).filter { it.inspectionToolId?.removeSuffix("Inspection") == "SqlInsertValues" }
             .map { "${myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset))}: ${it.description}" }
     }
@@ -152,6 +152,9 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
             val found = countReports("$destination INSERT INTO dst $query")
             assertEmpty("$query: $found", found)
         }
+        // A known table's star within the target's width, beside an open row: still unknown.
+        val withinTarget = countReports("CREATE TABLE dst (a INTEGER, b INTEGER, c INTEGER); CREATE TABLE known_src (x INTEGER, y INTEGER); INSERT INTO dst SELECT k.*, r.* FROM known_src AS k, read_parquet('input.parquet') AS r")
+        assertEmpty(withinTarget.toString(), withinTarget)
         val statementWith = countReports("CREATE TABLE dst (a INTEGER, b INTEGER); WITH src AS (SELECT * FROM read_parquet('input.parquet')) INSERT INTO dst SELECT * FROM src")
         assertEmpty(statementWith.toString(), statementWith)
     }
@@ -165,6 +168,10 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
             "CREATE TABLE dst (a INTEGER, b INTEGER); WITH src AS (SELECT 1 AS a FROM read_parquet('synthetic.parquet')) INSERT INTO dst SELECT * FROM src" to 1,
             // An open star leaves the width unknown, but no less than the explicit items: two are already too many.
             "CREATE TABLE dst (a INTEGER); INSERT INTO dst SELECT 1, 2, * FROM read_parquet('synthetic.parquet')" to 2,
+            // ... nor than a known table's star: known_src's two columns already overflow one target column,
+            // given as the table or as an explicit target column list.
+            "CREATE TABLE dst (a INTEGER); CREATE TABLE known_src (x INTEGER, y INTEGER); INSERT INTO dst SELECT k.*, r.* FROM known_src AS k, read_parquet('synthetic.parquet') AS r" to 2,
+            "CREATE TABLE dst (a INTEGER, b INTEGER, c INTEGER); CREATE TABLE known_src (x INTEGER, y INTEGER); INSERT INTO dst (a) SELECT k.*, r.* FROM known_src AS k, read_parquet('synthetic.parquet') AS r" to 2,
         )) {
             val found = countReports(sql)
             assertTrue("$sql: $found", found.any { it.endsWith("got $actual") })
