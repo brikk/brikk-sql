@@ -12,6 +12,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.docs.DocsLink
+import dev.brikk.house.sql.docs.DocsKind
 import dev.brikk.house.sql.docs.sqlDocsAt
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.EngineDocs
@@ -36,6 +37,8 @@ public abstract class SqlEngineDocumentationProvider(metadata: DialectMetadata) 
         // A reference's own documentation stays; only a call's name may be a table function.
         if (reference != null && (reference.parent as? SqlFunctionCallExpression)?.nameElement !== reference) return null
         val link = sqlDocsAt(file.text, docs, targetOffset, ProgressManager::checkCanceled) ?: return null
+        // A call's name keeps the platform's function documentation unless the call is a table function.
+        if (reference != null && link.kind != DocsKind.TABLE_FUNCTION) return null
         return EngineDocsElement(link, context)
     }
 

@@ -9,7 +9,10 @@ import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
 
 /** A construct's engine documentation: its [title], one-line [summary] when known and [url]; it is named at `[start, end)`. */
-data class DocsLink(val title: String, val summary: String?, val url: String, val start: Int, val end: Int)
+data class DocsLink(val title: String, val summary: String?, val url: String, val start: Int, val end: Int, val kind: DocsKind)
+
+/** What a [DocsLink] documents. */
+enum class DocsKind { STATEMENT, CLAUSE, TABLE_FUNCTION, ENGINE }
 
 /**
  * brikk-native: the page of [docs] (a dialect's [dev.brikk.house.sql.metadata.DialectMetadata.docs]) for the
@@ -32,10 +35,10 @@ private object DocsRecognizer {
         val local = offset - range.start
         val at = tokens.indexOfFirst { local >= it.start && local <= it.end + 1 }.takeIf { it >= 0 } ?: return null
         if (!tokens[at].isWord(text)) return null
-        fun link(title: String, summary: String?, path: String, first: Int, last: Int) =
-            DocsLink(title, summary, docs.url(path), range.start + tokens[first].start, range.start + tokens[last].end + 1)
-        tableFunction(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at) }
-        engine(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at) }
+        fun link(title: String, summary: String?, path: String, first: Int, last: Int, kind: DocsKind) =
+            DocsLink(title, summary, docs.url(path), range.start + tokens[first].start, range.start + tokens[last].end + 1, kind)
+        tableFunction(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at, DocsKind.TABLE_FUNCTION) }
+        engine(docs, tokens, at, text)?.let { path -> return link(tokens[at].text, null, path, at, at, DocsKind.ENGINE) }
         for (entry in docs.statements) {
             val starts = if (entry.clause) tokens.indices.toList() else listOf(0)
             for (start in starts) {
@@ -43,7 +46,10 @@ private object DocsRecognizer {
                 val used = match(entry.words, tokens, text, start) ?: continue
                 val prefix = entry.literalPrefix
                 if (prefix != null && !tokens.getOrNull(start + used).isStringStarting(prefix)) continue
-                if (at < start + used) return link(entry.title, entry.summary, entry.path, start, start + used - 1)
+                if (entry.clause && !clausePosition(tokens, start, start + used)) continue
+                if (at < start + used) {
+                    return link(entry.title, entry.summary, entry.path, start, start + used - 1, if (entry.clause) DocsKind.CLAUSE else DocsKind.STATEMENT)
+                }
             }
         }
         return null
@@ -97,11 +103,36 @@ private object DocsRecognizer {
         return false
     }
 
-    /** The page of the table engine named at [at] after `ENGINE [=]`, or null. */
+    /** The page of the table engine named at [at] after `ENGINE [=]` of a CREATE or ATTACH statement, or null. */
     private fun engine(docs: EngineDocs, tokens: List<Token>, at: Int, text: String): String? {
         val path = docs.engines[tokens[at].text.lowercase()] ?: return null
         val keyword = if (tokens.getOrNull(at - 1)?.tokenType == TokenType.EQ) at - 2 else at - 1
-        return path.takeIf { tokens.getOrNull(keyword)?.takeIf { it.isWord(text) }?.text.equals("ENGINE", ignoreCase = true) }
+        if (tokens.getOrNull(keyword)?.takeIf { it.isWord(text) }?.text.equals("ENGINE", ignoreCase = true).not()) return null
+        if (tokens.first().text.uppercase() !in setOf("CREATE", "ATTACH", "REPLACE")) return null
+        return path.takeIf { depth(tokens, keyword) == 0 }
+    }
+
+    /** The bracket depth of token [index]. */
+    private fun depth(tokens: List<Token>, index: Int): Int = tokens.take(index).sumOf {
+        when (it.tokenType) {
+            TokenType.L_PAREN -> 1
+            TokenType.R_PAREN -> -1
+            else -> 0
+        }.toInt()
+    }
+
+    /**
+     * Whether clause words at `[start, end)` stand where a clause can: after the end of a value (a name, a
+     * literal, a closing bracket) and before what a clause takes, not as a column, an alias or a function
+     * (`SELECT format FROM t`, `SELECT a, format('x')`, `WHERE sample = 1`).
+     */
+    private fun clausePosition(tokens: List<Token>, start: Int, end: Int): Boolean {
+        val before = tokens.getOrNull(start - 1)
+        if (before != null && before.tokenType !in VALUE_ENDS) return false
+        val after = tokens.getOrNull(end) ?: return false
+        if (after.tokenType in NOT_AFTER_CLAUSE) return false
+        // A column named like the clause, aliased or followed by FROM: `SELECT x sample FROM t`.
+        return after.text.uppercase() !in setOf("FROM", "AS")
     }
 
     /** The number of [tokens] from [from] that [elements] match, preferring the longest; null when they do not. */
@@ -127,6 +158,12 @@ private object DocsRecognizer {
             text.regionMatches(start, this.text, 0, this.text.length, ignoreCase = true)
 
     private val WORD = Regex("[A-Za-z_][A-Za-z0-9_$]*")
+
+    /** Tokens a value ends with, after which a clause may begin. */
+    private val VALUE_ENDS = setOf(TokenType.VAR, TokenType.IDENTIFIER, TokenType.NUMBER, TokenType.STRING, TokenType.R_PAREN, TokenType.R_BRACKET)
+
+    /** Tokens that show the word before them is a value, not a clause. */
+    private val NOT_AFTER_CLAUSE = setOf(TokenType.COMMA, TokenType.DOT, TokenType.R_PAREN, TokenType.EQ)
 
     /** Words that end a FROM list, walking back: another clause holds what follows them. */
     private val CLAUSE_WORDS = setOf("SELECT", "WHERE", "GROUP", "HAVING", "ORDER", "QUALIFY", "WINDOW", "LIMIT", "ON", "USING", "SET", "VALUES", "INTO", "BY", "TABLE")

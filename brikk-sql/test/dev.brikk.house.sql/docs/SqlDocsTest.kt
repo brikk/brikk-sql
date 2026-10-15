@@ -143,6 +143,30 @@ class SqlDocsTest {
     }
 
     @Test
+    fun clauseAndEngineWordsUsedAsFunctionsOrColumnsLinkNothing() {
+        for ((dialect, sql) in listOf(
+            "clickhouse" to "SELECT for<caret>mat('x', 1)",
+            "clickhouse" to "SELECT for<caret>mat FROM t",
+            "clickhouse" to "SELECT a, for<caret>mat FROM t",
+            "clickhouse" to "SELECT set<caret>tings FROM system.query_log",
+            "clickhouse" to "SELECT sam<caret>ple FROM t",
+            "clickhouse" to "SELECT x FROM t WHERE sam<caret>ple = 1",
+            "clickhouse" to "SELECT engine = Merge<caret>Tree FROM t",
+            "clickhouse" to "SELECT eng<caret>ine FROM system.tables",
+            "duckdb" to "SELECT piv<caret>ot FROM t",
+            "duckdb" to "SELECT a, unpiv<caret>ot FROM t",
+        )) assertNull(at(sql, dialect), sql)
+        // The clauses themselves still link.
+        assertEquals("${clickhouse}reference/statements/select/format", at("SELECT a FROM t FOR<caret>MAT JSONEachRow", "clickhouse")?.url)
+        assertEquals("${clickhouse}concepts/features/configuration/settings/settings-query-level",
+            at("SELECT a FROM t SET<caret>TINGS max_threads = 1", "clickhouse")?.url)
+        assertEquals("${clickhouse}reference/statements/select/sample", at("SELECT a FROM t SAM<caret>PLE 0.1", "clickhouse")?.url)
+        assertEquals("${clickhouse}reference/engines/table-engines/mergetree-family/mergetree",
+            at("CREATE TABLE t (x UInt8) ENGINE = Merge<caret>Tree ORDER BY x", "clickhouse")?.url)
+        assertEquals("${duckdb}sql/statements/pivot", at("SELECT * FROM t PIV<caret>OT (sum(v) FOR k IN ('a', 'b'))", "duckdb")?.url)
+    }
+
+    @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)
