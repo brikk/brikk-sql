@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.intellij
 
+import com.intellij.database.DataBus
 import com.intellij.database.actions.CancelRunningStatementsAction
 import com.intellij.database.console.JdbcEngine
 import com.intellij.database.console.client.SessionClient
@@ -7,15 +8,21 @@ import com.intellij.database.console.session.DatabaseSession
 import com.intellij.database.console.session.DatabaseSessionManager
 import com.intellij.database.dataSource.DatabaseConnection
 import com.intellij.database.dataSource.DatabaseConnectionManager
+import com.intellij.database.datagrid.DataAuditor
 import com.intellij.database.datagrid.DataRequest
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
+import com.intellij.openapi.util.Disposer
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import java.lang.reflect.Field
 import java.lang.reflect.ParameterizedType
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.cancellation.CancellationException
 import org.jetbrains.annotations.ApiStatus
@@ -62,23 +69,58 @@ private class StreamingRequest(
     private val context: DataRequest.Context,
     private val connection: DatabaseConnection,
 ) {
+    @Volatile private var ended = false
+    private val done = CountDownLatch(1)
+    private val watch = Disposer.newDisposable("streaming cancel")
+
+    init {
+        // The engine runs its requests one after another and reports a finished request on its own thread before
+        // it starts the next: holding that report until the cancel is done keeps the next request from opening a
+        // statement while the connection's statements are being cancelled, or from meeting the stock cleanup.
+        DataBus.addRootAuditor(session.project, object : DataAuditor {
+            override fun requestFinished(context: DataRequest.Context) {
+                if (context !== this@StreamingRequest.context) return
+                ended = true
+                if (!done.await(HOLD_SECONDS, TimeUnit.SECONDS)) LOG.warn("A streaming cancel did not finish in $HOLD_SECONDS s")
+            }
+        }, watch)
+    }
+
     /**
-     * Cancels the statements of the engine's connection, then sends the stock cancel request, each only while
-     * the engine still runs the captured request (a script's request goes on with its next statement).
+     * Cancels the statements of the engine's connection, then sends the stock cancel request and waits until it is
+     * handled, each only while the engine still runs the captured request (a script's request goes on with its
+     * next statement). The engine does not start another request before this returns.
      */
     fun cancel() {
-        if (!isCurrent()) return
         try {
-            connection.remoteConnection.cancelAll()
-        } catch (e: Exception) {
-            if (e is ControlFlowException || e is CancellationException) throw e
-            LOG.warn("Cancelling a streaming request failed", e)
+            if (!isCurrent()) return
+            try {
+                connection.remoteConnection.cancelAll()
+            } catch (e: Exception) {
+                if (e is ControlFlowException || e is CancellationException) throw e
+                LOG.warn("Cancelling a streaming request failed", e)
+            } finally {
+                if (isCurrent()) cleanUp()
+            }
         } finally {
-            if (isCurrent()) session.messageBus.dataProducer.processRequest(CancelRunningStatementsAction.createCancelRequest(session))
+            done.countDown()
+            Disposer.dispose(watch)
         }
     }
 
-    private fun isCurrent(): Boolean = engine.requestContextIfAny === context && engine.runsOn(connection)
+    private fun cleanUp() {
+        val request = CancelRunningStatementsAction.createCancelRequest(session)
+        session.messageBus.dataProducer.processRequest(request)
+        try {
+            request.promise.blockingGet(HOLD_SECONDS.toInt(), TimeUnit.SECONDS)
+        } catch (e: TimeoutException) {
+            LOG.warn("The stock cancel of a streaming request was not handled in $HOLD_SECONDS s", e)
+        } catch (_: ExecutionException) {
+            // The stock cancel reports its own failure (it offers to deactivate the data source).
+        }
+    }
+
+    private fun isCurrent(): Boolean = !ended && engine.requestContextIfAny === context && engine.runsOn(connection)
 
     companion object {
         /** [session]'s request if its console engine is streaming results over its own ready connection. */
@@ -91,6 +133,9 @@ private class StreamingRequest(
         }
     }
 }
+
+/** How long a finished request waits for its cancel, and the cancel for the stock cleanup, at most. */
+private const val HOLD_SECONDS = 30L
 
 private const val STREAMING = "STREAMING"
 

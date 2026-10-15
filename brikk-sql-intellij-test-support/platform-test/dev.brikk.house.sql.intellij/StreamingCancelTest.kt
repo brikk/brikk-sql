@@ -194,7 +194,8 @@ class StreamingCancelTest : BasePlatformTestCase() {
         val first = stream(console, "first")
         assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
         PlatformTestUtil.waitWithEventsDispatching("the captured request completes", { first in finished }, 30)
-        val successor = stream(console, "next")
+        // The engine starts the successor only once the cancel has run.
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
         workers.single().run()
         PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
         assertEmpty(errorsOf(successor))
@@ -203,21 +204,28 @@ class StreamingCancelTest : BasePlatformTestCase() {
         assertFalse(console.databaseSession.isCancelled)
     }
 
-    fun testARequestReplacedWhileTheDriverCancelsGetsNoStockCleanup() {
+    fun testARequestSubmittedWhileTheDriverCancelsIsLeftAlone() {
         val console = open()
         console.run("SELECT 1")
         install(dataSource.dbms)
         val held = stream(console, SlowStreamDriver.HELD)
         pressCancel(console)
-        PlatformTestUtil.waitWithEventsDispatching("the driver cancel ends the request and is still running", { held in finished }, 10)
-        assertEquals(listOf("execute", "cancel", "close"), steps(SlowStreamDriver.HELD))
-        // The connection cancel still running may reach the successor's statement too (the API cancels every
-        // statement of the connection), which this one survives: what is checked is the stock cleanup.
-        val successor = stream(console, SlowStreamDriver.STEADY)
+        val pressed = System.nanoTime()
+        while ("cancel" !in steps(SlowStreamDriver.HELD) && System.nanoTime() - pressed < 5_000_000_000) Thread.sleep(20)
+        // The driver cancel has stopped the request and is still running when the next request is submitted.
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { held in finished }, 10)
+        val ended = System.nanoTime()
+        while (steps("next").isEmpty() && System.nanoTime() - ended < 2_000_000_000) Thread.sleep(20)
+        assertEmpty("the successor waits for the connection cancel", steps("next"))
         Files.createFile(Path.of("$log.release"))
         PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEquals(listOf("execute", "cancel", "close", "cancel returns"), steps(SlowStreamDriver.HELD))
+        val order = Files.readAllLines(log)
+        assertTrue("the successor opens its statement after the connection cancel: $order",
+            order.indexOf("${SlowStreamDriver.HELD} cancel returns") < order.indexOf("next execute"))
         assertEmpty(errorsOf(successor))
-        assertEquals("the stock cleanup leaves the successor alone", listOf("execute", "end"), steps(SlowStreamDriver.STEADY).filter { it != "cancel" }.distinct())
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
         assertFalse(console.databaseSession.isCancelled)
     }
 
