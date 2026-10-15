@@ -1,15 +1,14 @@
 package dev.brikk.house.sql.metadata
 
-import kotlinx.serialization.Serializable
-
 /**
- * A documented SQL construct: the words naming it, as a pattern (`A|B` accepts either, `[...]` makes
- * words optional: `CREATE [OR REPLACE] VIEW`), the page documenting it relative to [EngineDocs.base], its
- * [title] and an optional one-line [summary]. A [clause] is named anywhere in a statement (`INTO OUTFILE`);
- * otherwise the words begin the statement. With a [literalPrefix], the words must be followed by a string
- * literal starting with it (`ATTACH 'ducklake:...'`).
+ * A documented SQL construct: the words naming it, as a [pattern] of whole words, each word's
+ * alternatives written `A|B` (`CREATE TABLE|VIEW` is CREATE then TABLE or VIEW; alternation never
+ * spans words) and `[...]` making words optional (`CREATE [OR REPLACE] VIEW`); the page documenting it
+ * relative to [EngineDocs.base], its [title] and an optional one-line [summary]. A [clause] is named in a
+ * clause position of a statement (`INTO OUTFILE`); otherwise the words begin the statement. With a
+ * [literalPrefix], the words must be followed by a string literal starting with it (`ATTACH 'ducklake:...'`).
+ * The pattern is compiled, and checked, when the entry is made.
  */
-@Serializable
 data class DocsEntry(
     val pattern: String,
     val path: String,
@@ -17,15 +16,45 @@ data class DocsEntry(
     val summary: String? = null,
     val clause: Boolean = false,
     val literalPrefix: String? = null,
-)
+) {
+    /** [pattern], compiled. */
+    val words: List<DocsPattern> = DocsPattern.parse(pattern)
+}
+
+/** One element of a [DocsEntry.pattern]: a word with its alternatives, or optional words. */
+sealed interface DocsPattern {
+    data class Word(val choices: Set<String>) : DocsPattern
+
+    data class Optional(val elements: List<DocsPattern>) : DocsPattern
+
+    companion object {
+        internal fun parse(pattern: String): List<DocsPattern> {
+            val words = Regex("""\[|]|[^\s\[\]]+""").findAll(pattern).map { it.value }.toList()
+            var at = 0
+            fun sequence(nested: Boolean): List<DocsPattern> = buildList {
+                while (at < words.size) {
+                    when (val word = words[at++]) {
+                        "[" -> add(Optional(sequence(nested = true)))
+                        "]" -> if (nested) return@buildList else throw IllegalArgumentException("Unbalanced ] in '$pattern'")
+                        else -> add(Word(word.split('|').map(String::uppercase).toSet()))
+                    }
+                }
+                require(!nested) { "Unbalanced [ in '$pattern'" }
+            }
+            val elements = sequence(nested = false)
+            require(elements.any { it is Word }) { "'$pattern' has no required word" }
+            return elements
+        }
+    }
+}
 
 /**
- * Where one engine's documentation for a pinned release line lives: [base] (ending in `/`) holds the pages
- * of [version]. [statements] are tried in order, so a specific form comes before a general one
- * (`SET PASSWORD` before `SET`); [tableFunctions] maps a table function's lowercase name to its page, and
- * [engines] a table engine's (`ENGINE = MergeTree`).
+ * Where one engine's documentation lives: [base] (ending in `/`) holds the pages of [version], the release
+ * line they document (`current` where the site documents only its current release). [statements] are
+ * tried in order, so a specific form comes before a general one (`SET PASSWORD` before `SET`);
+ * [tableFunctions] maps a table function's lowercase name to its page, and [engines] a table engine's
+ * (`ENGINE = MergeTree`). A dialect's docs hang off its [DialectMetadata.docs].
  */
-@Serializable
 data class EngineDocs(
     val dialect: String,
     val version: String,
@@ -41,6 +70,3 @@ data class EngineDocs(
     /** The absolute URL of [path]. */
     fun url(path: String): String = base + path
 }
-
-/** The bundled engine documentation, by core dialect name. */
-val ENGINE_DOCS: Map<String, EngineDocs> = listOf(DORIS_DOCS, CLICKHOUSE_DOCS, DUCKDB_DOCS, STARROCKS_DOCS).associateBy { it.dialect }

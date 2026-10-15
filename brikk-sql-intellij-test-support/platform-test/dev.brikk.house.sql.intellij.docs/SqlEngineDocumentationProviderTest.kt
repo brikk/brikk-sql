@@ -9,9 +9,11 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.impl.source.tree.injected.InjectedLanguageUtil
 import dev.brikk.house.sql.intellij.relation.RelationTestCase
 import dev.brikk.house.sql.intellij.relation.postgres
+import dev.brikk.house.sql.metadata.DORIS_METADATA
+import dev.brikk.house.sql.metadata.TRINO_METADATA
 
 /** A provider reading PostgreSQL files as Doris, so the shared Doris docs map applies. */
-class DorisReadDocs : SqlEngineDocumentationProvider("doris")
+class DorisReadDocs : SqlEngineDocumentationProvider(DORIS_METADATA)
 
 class SqlEngineDocumentationProviderTest : RelationTestCase() {
     private val pages = "https://doris.apache.org/docs/4.x/sql-manual/"
@@ -48,6 +50,11 @@ class SqlEngineDocumentationProviderTest : RelationTestCase() {
         assertFalse(url(target()).orEmpty().startsWith(pages))
         open("SELECT 'CREATE <caret>JOB'")
         assertFalse(url(target()).orEmpty().startsWith(pages))
+    }
+
+    fun testADialectWithoutDocsFailsWhenRegistered() {
+        val failure = runCatching { object : SqlEngineDocumentationProvider(TRINO_METADATA) {} }.exceptionOrNull()
+        assertTrue("$failure", failure is IllegalArgumentException && "trino" in failure.message.orEmpty())
     }
 
     fun testInjectedSqlGetsTheEnginesPages() {

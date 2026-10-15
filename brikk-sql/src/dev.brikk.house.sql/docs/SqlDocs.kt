@@ -1,7 +1,6 @@
 package dev.brikk.house.sql.docs
 
-import dev.brikk.house.sql.metadata.DocsEntry
-import dev.brikk.house.sql.metadata.ENGINE_DOCS
+import dev.brikk.house.sql.metadata.DocsPattern
 import dev.brikk.house.sql.metadata.EngineDocs
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.Token
@@ -13,16 +12,18 @@ import dev.brikk.house.sql.parser.TokenizerConfigs
 data class DocsLink(val title: String, val summary: String?, val url: String, val start: Int, val end: Int)
 
 /**
- * brikk-native: the engine documentation page for the SQL construct at an offset, from [ENGINE_DOCS]: a
- * statement form named by the statement's leading words (`CREATE JOB`), a clause named anywhere in it
- * (`INTO OUTFILE`), a table function called in a relation position (`FROM s3(...)`) or a table engine
- * (`ENGINE = MergeTree`). Read from the
- * dialect's own tokens and statement ranges, so quotes, comments and statement boundaries are the dialect's.
+ * brikk-native: the page of [docs] (a dialect's [dev.brikk.house.sql.metadata.DialectMetadata.docs]) for the
+ * SQL construct at [offset] of [sql], or null when nothing documented is certainly there: a statement form
+ * named by the statement's leading words (`CREATE JOB`), a clause named in it (`INTO OUTFILE`), a table
+ * function called in a relation position (`FROM s3(...)`) or a table engine (`ENGINE = MergeTree`). Read
+ * from the dialect's own tokens and statement ranges, so quotes, comments and statement boundaries are the
+ * dialect's.
  */
-object SqlDocs {
-    /** The documentation for what [offset] of [sql] names in [dialect], or null when nothing documented is there. */
-    fun at(sql: String, dialect: String, offset: Int, checkCanceled: () -> Unit = {}): DocsLink? {
-        val docs = ENGINE_DOCS[dialect] ?: return null
+fun sqlDocsAt(sql: String, docs: EngineDocs, offset: Int, checkCanceled: () -> Unit = {}): DocsLink? = DocsRecognizer.at(sql, docs, offset, checkCanceled)
+
+private object DocsRecognizer {
+    fun at(sql: String, docs: EngineDocs, offset: Int, checkCanceled: () -> Unit): DocsLink? {
+        val dialect = docs.dialect
         if (offset !in 0..sql.length) return null
         val range = SqlScriptSnapshot.parse(sql, dialect, checkCanceled).at(minOf(offset, maxOf(sql.length - 1, 0))) ?: return null
         val text = sql.substring(range.start, range.end)
@@ -39,7 +40,7 @@ object SqlDocs {
             val starts = if (entry.clause) tokens.indices.toList() else listOf(0)
             for (start in starts) {
                 if (start > at) break
-                val used = match(Pattern.of(entry.pattern), tokens, text, start) ?: continue
+                val used = match(entry.words, tokens, text, start) ?: continue
                 val prefix = entry.literalPrefix
                 if (prefix != null && !tokens.getOrNull(start + used).isStringStarting(prefix)) continue
                 if (at < start + used) return link(entry.title, entry.summary, entry.path, start, start + used - 1)
@@ -64,15 +65,15 @@ object SqlDocs {
     }
 
     /** The number of [tokens] from [from] that [elements] match, preferring the longest; null when they do not. */
-    private fun match(elements: List<Pattern>, tokens: List<Token>, text: String, from: Int): Int? {
+    private fun match(elements: List<DocsPattern>, tokens: List<Token>, text: String, from: Int): Int? {
         if (elements.isEmpty()) return 0
         val rest = elements.drop(1)
         return when (val first = elements.first()) {
-            is Pattern.Word -> {
+            is DocsPattern.Word -> {
                 val token = tokens.getOrNull(from)
                 if (token != null && token.isWord(text) && token.text.uppercase() in first.choices) match(rest, tokens, text, from + 1)?.plus(1) else null
             }
-            is Pattern.Optional -> match(first.elements + rest, tokens, text, from) ?: match(rest, tokens, text, from)
+            is DocsPattern.Optional -> match(first.elements + rest, tokens, text, from) ?: match(rest, tokens, text, from)
         }
     }
 
@@ -85,38 +86,8 @@ object SqlDocs {
         tokenType != TokenType.IDENTIFIER && tokenType != TokenType.STRING && WORD.matches(this.text) &&
             text.regionMatches(start, this.text, 0, this.text.length, ignoreCase = true)
 
-    private sealed interface Pattern {
-        data class Word(val choices: Set<String>) : Pattern
-        data class Optional(val elements: List<Pattern>) : Pattern
-
-        companion object {
-            private val cache = HashMap<String, List<Pattern>>()
-
-            fun of(pattern: String): List<Pattern> = synchronized(cache) { cache.getOrPut(pattern) { parse(pattern) } }
-
-            private fun parse(pattern: String): List<Pattern> {
-                val words = Regex("""\[|]|[^\s\[\]]+""").findAll(pattern).map { it.value }.toList()
-                var at = 0
-                fun sequence(nested: Boolean): List<Pattern> = buildList {
-                    while (at < words.size) {
-                        when (val word = words[at++]) {
-                            "[" -> add(Optional(sequence(nested = true)))
-                            "]" -> if (nested) return@buildList else throw IllegalArgumentException("Unbalanced ] in '$pattern'")
-                            else -> add(Word(word.split('|').map(String::uppercase).toSet()))
-                        }
-                    }
-                    require(!nested) { "Unbalanced [ in '$pattern'" }
-                }
-                return sequence(nested = false)
-            }
-        }
-    }
-
     private val WORD = Regex("[A-Za-z_][A-Za-z0-9_$]*")
 
     /** The words after which a call is a relation: `FROM f(...)`, `JOIN f(...)`, `INSERT INTO [FUNCTION] f(...)`, `TABLE(f(...))`. */
     private val RELATION_POSITIONS = setOf("FROM", "JOIN", "FUNCTION", "INTO", "TABLE", "LATERAL")
 }
-
-/** Every bundled [DocsEntry] with its absolute URL, for checks that the pages resolve. */
-fun EngineDocs.urls(): List<String> = (statements.map(DocsEntry::path) + tableFunctions.values + engines.values).distinct().map(::url)

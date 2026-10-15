@@ -12,25 +12,30 @@ import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.psi.SqlFunctionCallExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.docs.DocsLink
-import dev.brikk.house.sql.docs.SqlDocs
+import dev.brikk.house.sql.docs.sqlDocsAt
+import dev.brikk.house.sql.metadata.DialectMetadata
+import dev.brikk.house.sql.metadata.EngineDocs
 import org.jetbrains.annotations.ApiStatus
 
 /**
  * Quick documentation and external documentation (Shift+F1) for the SQL constructs the engine documents,
- * in core [dialect]: a statement form, a clause or a table function ([SqlDocs]) shows its name, a one-line
+ * from the dialect's [DialectMetadata.docs] (a dialect without them fails here): a statement form, a clause or
+ * a table function ([sqlDocsAt]) shows its name, a one-line
  * summary when known and a link to the engine's page for the pinned release, which external documentation
  * opens. Names inside references, such as columns and tables, keep the platform's own documentation; so
  * does everything the engine does not document. Works in injected SQL of the language. Register a no-arg
  * subclass as the language's `lang.documentationProvider` with `order="first"`.
  */
 @ApiStatus.Experimental
-public abstract class SqlEngineDocumentationProvider(private val dialect: String) : AbstractDocumentationProvider() {
+public abstract class SqlEngineDocumentationProvider(metadata: DialectMetadata) : AbstractDocumentationProvider() {
+    private val docs: EngineDocs = requireNotNull(metadata.docs) { "${metadata.dialect} bundles no engine documentation" }
+
     final override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?, targetOffset: Int): PsiElement? {
         val context = contextElement ?: return null
         val reference = PsiTreeUtil.getParentOfType(context, SqlReferenceExpression::class.java, false)
         // A reference's own documentation stays; only a call's name may be a table function.
         if (reference != null && (reference.parent as? SqlFunctionCallExpression)?.nameElement !== reference) return null
-        val link = SqlDocs.at(file.text, dialect, targetOffset, ProgressManager::checkCanceled) ?: return null
+        val link = sqlDocsAt(file.text, docs, targetOffset, ProgressManager::checkCanceled) ?: return null
         return EngineDocsElement(link, context)
     }
 

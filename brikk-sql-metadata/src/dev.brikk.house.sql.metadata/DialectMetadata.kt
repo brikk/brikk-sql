@@ -24,12 +24,21 @@ class MetadataSnapshot(
         functions.nameKey(name).let { key -> tableFunctions?.find { functions.nameKey(it.name) == key } }
 }
 
-/** Every bundled snapshot of one dialect, oldest first. */
+/** Every bundled snapshot of one dialect, oldest first, and where the engine's documentation lives ([docs]), if bundled. */
 class DialectMetadata(
     val dialect: String,
     snapshots: List<MetadataSnapshot>,
     defaultVersion: String,
+    val docs: EngineDocs? = null,
 ) {
+    // Binary compatibility (AGENTS.md): the constructor from before docs.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(dialect: String, snapshots: List<MetadataSnapshot>, defaultVersion: String) : this(dialect, snapshots, defaultVersion, null)
+
+    init {
+        require(docs == null || docs.dialect == dialect) { "$dialect's docs are ${docs?.dialect}'s" }
+    }
+
     val snapshots: List<MetadataSnapshot> = snapshots.sortedBy { it.version }
 
     /** The snapshot used when the server version is unknown. */
@@ -58,8 +67,8 @@ class DialectMetadata(
 }
 
 /** A dialect with one bundled snapshot, which is also its default. */
-internal fun singleSnapshot(dialect: String, snapshot: MetadataSnapshot) =
-    DialectMetadata(dialect, listOf(snapshot), defaultVersion = snapshot.engineVersion)
+internal fun singleSnapshot(dialect: String, snapshot: MetadataSnapshot, docs: EngineDocs? = null) =
+    DialectMetadata(dialect, listOf(snapshot), defaultVersion = snapshot.engineVersion, docs = docs)
 
 private val MetadataSnapshot.version: Version
     get() = requireNotNull(parseVersion(engineVersion)?.takeUnless { it.prerelease }) {

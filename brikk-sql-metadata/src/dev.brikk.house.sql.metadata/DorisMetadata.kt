@@ -10,4 +10,5 @@ val DORIS_METADATA: DialectMetadata = singleSnapshot(
         tableFunctions = DORIS_TABLE_FUNCTIONS,
         grammarForms = DORIS_GRAMMAR_FORMS,
     ),
+    DORIS_DOCS,
 )

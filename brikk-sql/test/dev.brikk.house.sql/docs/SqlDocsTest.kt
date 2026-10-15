@@ -1,6 +1,10 @@
 package dev.brikk.house.sql.docs
 
-import dev.brikk.house.sql.metadata.ENGINE_DOCS
+import dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA
+import dev.brikk.house.sql.metadata.DORIS_METADATA
+import dev.brikk.house.sql.metadata.DUCKDB_METADATA
+import dev.brikk.house.sql.metadata.STARROCKS_METADATA
+import dev.brikk.house.sql.metadata.TRINO_METADATA
 import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URI
@@ -8,9 +12,20 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
+private val METADATA = listOf(DORIS_METADATA, CLICKHOUSE_METADATA, DUCKDB_METADATA, STARROCKS_METADATA, TRINO_METADATA).associateBy { it.dialect }
+
 class SqlDocsTest {
+    @Test
+    fun docsHangOffEachDialectsMetadata() {
+        for (metadata in listOf(DORIS_METADATA, CLICKHOUSE_METADATA, DUCKDB_METADATA, STARROCKS_METADATA)) {
+            assertEquals(metadata.dialect, metadata.docs?.dialect)
+        }
+        assertNull(TRINO_METADATA.docs)
+    }
+
     /** The link at `<caret>` in [sql]. */
-    private fun at(sql: String, dialect: String = "doris") = SqlDocs.at(sql.replace("<caret>", ""), dialect, sql.indexOf("<caret>"))
+    private fun at(sql: String, dialect: String = "doris") =
+        METADATA[dialect]?.docs?.let { sqlDocsAt(sql.replace("<caret>", ""), it, sql.indexOf("<caret>")) }
 
     private val doris = "https://doris.apache.org/docs/4.x/sql-manual/"
 
@@ -107,7 +122,7 @@ class SqlDocsTest {
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)
-        assertNull(at("CREATE <caret>JOB j", "postgres"))
+        assertNull(at("CREATE <caret>JOB j", "trino"))
     }
 
     /** Every bundled page resolves; skipped offline. */
@@ -115,7 +130,9 @@ class SqlDocsTest {
     fun theBundledPagesResolve() {
         val online = runCatching { InetAddress.getByName("doris.apache.org") }.isSuccess && System.getenv("BRIKK_OFFLINE") == null
         if (!online) return println("SqlDocsTest: offline, page check skipped")
-        val failures = ENGINE_DOCS.values.flatMap { it.urls() }.mapNotNull { url ->
+        val failures = METADATA.values.mapNotNull { it.docs }.flatMap { docs ->
+            (docs.statements.map { it.path } + docs.tableFunctions.values + docs.engines.values).distinct().map(docs::url)
+        }.mapNotNull { url ->
             val code = runCatching {
                 (URI(url).toURL().openConnection() as HttpURLConnection).run {
                     instanceFollowRedirects = true
