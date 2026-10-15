@@ -16,7 +16,7 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("USE", "${STATEMENTS}use", "USE"),
         DocsEntry("UPDATE EXTENSIONS", "${STATEMENTS}update_extensions", "UPDATE EXTENSIONS"),
         DocsEntry("[FORCE] INSTALL|LOAD", "${STATEMENTS}load_and_install", "INSTALL / LOAD", "Installs or loads an extension."),
-        DocsEntry("CHECKPOINT|FORCE CHECKPOINT", "${STATEMENTS}checkpoint", "CHECKPOINT"),
+        DocsEntry("[FORCE] CHECKPOINT", "${STATEMENTS}checkpoint", "CHECKPOINT"),
         DocsEntry("VACUUM", "${STATEMENTS}vacuum", "VACUUM"),
         // Schema objects.
         DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] TABLE", "${STATEMENTS}create_table", "CREATE TABLE"),
@@ -51,7 +51,8 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("PREPARE|EXECUTE|DEALLOCATE", "${STATEMENTS}prepare", "Prepared statements"),
         DocsEntry("SET|RESET [GLOBAL|SESSION|LOCAL] VARIABLE", "${STATEMENTS}set_variable", "SET VARIABLE"),
         DocsEntry("SET|RESET", "${STATEMENTS}set", "SET", "Changes a configuration option."),
-        DocsEntry("BEGIN|COMMIT|ROLLBACK|ABORT|START TRANSACTION", "${STATEMENTS}transactions", "Transactions"),
+        DocsEntry("BEGIN|COMMIT|ROLLBACK|ABORT|END [TRANSACTION]", "${STATEMENTS}transactions", "Transactions"),
+        DocsEntry("START TRANSACTION", "${STATEMENTS}transactions", "Transactions"),
         // Clauses.
         DocsEntry("PIVOT", "${STATEMENTS}pivot", "PIVOT", "Turns distinct values of a column into columns.", clause = true),
         DocsEntry("UNPIVOT", "${STATEMENTS}unpivot", "UNPIVOT", "Turns columns into rows.", clause = true),

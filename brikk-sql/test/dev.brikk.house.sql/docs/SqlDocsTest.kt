@@ -1,12 +1,14 @@
 package dev.brikk.house.sql.docs
 
 import dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA
+import dev.brikk.house.sql.metadata.DocsEntry
 import dev.brikk.house.sql.metadata.DORIS_METADATA
 import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.STARROCKS_METADATA
 import dev.brikk.house.sql.metadata.TRINO_METADATA
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 
 internal val METADATA = listOf(DORIS_METADATA, CLICKHOUSE_METADATA, DUCKDB_METADATA, STARROCKS_METADATA, TRINO_METADATA).associateBy { it.dialect }
@@ -174,6 +176,18 @@ class SqlDocsTest {
         val sr = "https://docs.starrocks.io/docs/sql-reference/sql-functions/table-functions/"
         assertEquals("${sr}generate_series/", at("SELECT * FROM TABLE(<caret>generate_series(1, 3))", "starrocks")?.url)
         assertNull(at("CREATE TABLE t (x UInt8) ENGINE <caret>= MergeTree", "clickhouse"))
+    }
+
+    @Test
+    fun alternativesBelongToOneWordAndEachBareWordLinks() {
+        for ((sql, page) in listOf(
+            "<caret>CHECKPOINT" to "checkpoint", "FORCE <caret>CHECKPOINT" to "checkpoint",
+            "<caret>BEGIN" to "transactions", "BEGIN <caret>TRANSACTION" to "transactions", "<caret>COMMIT" to "transactions",
+            "<caret>ROLLBACK" to "transactions", "<caret>ABORT" to "transactions", "START <caret>TRANSACTION" to "transactions",
+        )) assertEquals("${duckdb}sql/statements/$page", at(sql, "duckdb")?.url, sql)
+        // Alternatives spanning words, as `CHECKPOINT|FORCE CHECKPOINT` reads, are refused when the entry is made.
+        assertFailsWith<IllegalArgumentException> { DocsEntry("CHECKPOINT|FORCE CHECKPOINT", "p", "t") }
+        assertFailsWith<IllegalArgumentException> { DocsEntry("BEGIN|START TRANSACTION|BEGIN", "p", "t") }
     }
 
     @Test

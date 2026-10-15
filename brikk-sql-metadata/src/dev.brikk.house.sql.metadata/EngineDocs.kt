@@ -28,6 +28,13 @@ sealed interface DocsPattern {
     data class Optional(val elements: List<DocsPattern>) : DocsPattern
 
     companion object {
+        private fun flatten(elements: List<DocsPattern>): List<Word> = elements.flatMap {
+            when (it) {
+                is Word -> listOf(it)
+                is Optional -> flatten(it.elements)
+            }
+        }
+
         internal fun parse(pattern: String): List<DocsPattern> {
             val words = Regex("""\[|]|[^\s\[\]]+""").findAll(pattern).map { it.value }.toList()
             var at = 0
@@ -43,6 +50,15 @@ sealed interface DocsPattern {
             }
             val elements = sequence(nested = false)
             require(elements.any { it is Word }) { "'$pattern' has no required word" }
+            // A word offered both as an alternative and again later is alternation meant across words
+            // (`CHECKPOINT|FORCE CHECKPOINT`); write `[FORCE] CHECKPOINT`.
+            val flat = flatten(elements)
+            for ((index, word) in flat.withIndex()) {
+                val repeated = flat.drop(index + 1).firstOrNull { later -> later.choices.any { it in word.choices } }
+                require(repeated == null || word.choices.size == 1 && repeated.choices.size == 1) {
+                    "'$pattern' offers ${word.choices.intersect(repeated?.choices.orEmpty())} in two words: alternatives belong to one word"
+                }
+            }
             return elements
         }
     }
