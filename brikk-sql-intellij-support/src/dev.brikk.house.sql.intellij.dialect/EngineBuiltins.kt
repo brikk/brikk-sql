@@ -98,6 +98,8 @@ public class EngineBuiltins(
      * the platform binds itself, through [PgFamilyDialect.processNamedArgumentCandidates].
      */
     private fun equalsLabelledCall(element: SqlReferenceExpression): SqlFunctionCallExpression? {
+        // A label is a bare name: `i.flag = true` compares a column, whatever parameters share its last part.
+        if (element.qualifierExpression != null) return null
         val argument = element.parent as? SqlBinaryExpression ?: return null
         if (argument.lOperand !== element || argument is SqlNamedParameterValueExpression || argument.opSign != SqlTokens.SQL_OP_EQ) return null
         val call = (argument.parent as? SqlExpressionList)?.parent as? SqlFunctionCallExpression ?: return null

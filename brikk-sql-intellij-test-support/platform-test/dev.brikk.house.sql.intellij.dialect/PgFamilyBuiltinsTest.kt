@@ -272,6 +272,28 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         }
     }
 
+    fun testAQualifiedLeftSideIsAColumnEvenWhenItsNameIsAParameter() {
+        // A selected table function taking a positional boolean and a named `flag`: `i.flag = true` is that boolean.
+        val function = FunctionDef(
+            "flag_reader", FunctionKind.TABLE_VALUED,
+            overloads = listOf(FunctionOverload(listOf("BOOLEAN", "BOOLEAN"), "TABLE", argNames = listOf("col0", "flag"), positionalCount = 1)),
+        )
+        val inventory = LiveInventory("1.5.6", listOf(LiveFunction(function)), signatures = true)
+        BuiltinsFixtureCompletion.selection = LiveCatalogSelection(CatalogSource.Live(Instant.EPOCH), inventory)
+        try {
+            val sql = "CREATE TABLE label_inputs (flag BOOLEAN);\nSELECT * FROM label_inputs AS i CROSS JOIN flag_reader(i.flag = true, flag = true)"
+            val found = reports(sql)
+            assertEmpty("$sql: $found", found)
+            val qualified = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlReferenceExpression::class.java).single { it.text == "i.flag" }
+            assertEquals(ObjectKind.COLUMN, qualified.resolveSymbol()?.kind)
+            val bare = PsiTreeUtil.getParentOfType(myFixture.file.findElementAt(sql.indexOf(", flag =") + 2), SqlReferenceExpression::class.java, false)
+            assertEquals("flag", bare?.text)
+            assertEquals(ObjectKind.ARGUMENT, bare?.resolveSymbol()?.kind)
+        } finally {
+            BuiltinsFixtureCompletion.selection = null
+        }
+    }
+
     fun testUnknownFunctionsAndTypesStillReport() {
         assertTrue(reports("SELECT * FROM not_a_builtin_reader('input')").toString(), reports("SELECT * FROM not_a_builtin_reader('input')").any { it.startsWith("not_a_builtin_reader:") })
         assertTrue(reports("SELECT not_a_builtin_scalar(1)").any { it.startsWith("not_a_builtin_scalar:") })
