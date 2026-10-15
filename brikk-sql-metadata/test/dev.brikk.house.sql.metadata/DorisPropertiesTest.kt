@@ -47,4 +47,27 @@ class DorisPropertiesTest {
         assertTrue("hive.metastore.uris" in list("CREATE CATALOG properties (hms)").keys.map { it.name })
         assertTrue("hms" in list("CREATE CATALOG properties").keys.definitionOf("type")!!.values)
     }
+
+    @Test
+    fun aKeysReleaseComesFromTheCodeOwningItsListNotFromAnotherStatement() {
+        // user is a JDBC resource key from 2.0; the CDC source of CREATE JOB names it only from 4.0.
+        assertEquals("2.0", list("CREATE RESOURCE properties (jdbc)").keys.definitionOf("user")?.since)
+        assertEquals("4.0", list("CREATE JOB source properties").keys.definitionOf("user")?.since)
+        assertEquals("4.0", list("CREATE JOB properties").keys.definitionOf("session.query_timeout")?.since)
+        // The Doris catalog's code never names them, so no release is claimed.
+        assertNull(list("CREATE CATALOG properties (doris)").keys.definitionOf("password")?.since)
+        // Each table function by its own code: http came in 4.0, s3 before.
+        val format = { function: String -> DORIS_METADATA.default.tableFunction(function)?.properties?.definitionOf("format")?.since }
+        assertEquals("2.0", format("s3"))
+        assertEquals("4.0", format("http"))
+    }
+
+    @Test
+    fun pagePlaceholdersAndOtherTypesExamplesAreNotKeys() {
+        assertTrue(list("CREATE CATALOG properties (jdbc)").keys.none { it.name == "hive.metastore.uris" || it.name == "hosts" })
+        val http = DORIS_METADATA.default.tableFunction("http")?.properties.orEmpty()
+        assertEquals("http.header.*", http.definitionOf("http.header.Authorization")?.name)
+        assertTrue(http.none { it.name == "http.header.xxx" })
+        assertTrue(DORIS_METADATA.default.tableFunction("local")?.properties.orEmpty().none { it.name == "json_paths" })
+    }
 }

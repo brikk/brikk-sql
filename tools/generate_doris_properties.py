@@ -64,30 +64,53 @@ def page(name, path):
 
 
 def literals(line):
-    out = subprocess.run(["git", "-C", doris, "grep", "-h", "-o", "-E", r'"[a-zA-Z_][a-zA-Z0-9_.*\-]*"', f"origin/branch-{line}", "--",
+    """Each FE string literal of the line and the files naming it, paths from org/apache/doris/."""
+    out = subprocess.run(["git", "-C", doris, "grep", "-o", "-E", r'"[a-zA-Z_][a-zA-Z0-9_.*\-]*"', f"origin/branch-{line}", "--",
                           "fe/fe-core/src/main/java", "fe/fe-common/src/main/java"], capture_output=True, text=True, check=True).stdout
-    return {l.strip('"') for l in out.split()}
+    found = {}
+    for row in out.splitlines():
+        path, _, literal = row.split(":", 1)[1].rpartition(":")
+        found.setdefault(literal.strip('"'), set()).add(path.split("org/apache/doris/", 1)[-1])
+    return found
+
+
+def files(line):
+    out = subprocess.run(["git", "-C", doris, "ls-tree", "-r", "--name-only", f"origin/branch-{line}", "--",
+                          "fe/fe-core/src/main/java", "fe/fe-common/src/main/java"], capture_output=True, text=True, check=True).stdout
+    return [f.split("org/apache/doris/", 1)[-1] for f in out.splitlines()]
 
 
 LIT = {line: literals(line) for line in LINES}
+FILES = {line: files(line) for line in LINES}
 
 
-def in_line(key, line):
-    names = LIT[line]
-    k = key.rstrip("*").rstrip(".")
-    if k in names or k + "." in names:
-        return True
-    # A dotted key Doris builds from a prefix and a name: function_column.sequence_col, broker.kerberos_keytab.
-    head, _, tail = k.partition(".")
-    return bool(tail) and (head in names or head + "." in names) and tail in names
+class Source:
+    """
+    The FE code that owns a list or a table function: the list exists from the first line where a file matches
+    [marker], and one of its keys from the first line after that where a file matching [evidence] names it in full.
+    A literal elsewhere (another statement's key of the same name) is no evidence, and a key the owning code names
+    only after other code did (code that moved) gets no release.
+    """
+
+    def __init__(self, marker, evidence=None):
+        self.marker, self.evidence = re.compile(marker), re.compile(evidence or marker)
+
+    def line_of(self, key):
+        literal = key.removesuffix("*")
+        floor = next((line for line in LINES if any(self.marker.search(f) for f in FILES[line])), None)
+        if floor is None:
+            return None
+        for i, line in enumerate(LINES[LINES.index(floor):], LINES.index(floor)):
+            if any(self.evidence.search(f) for f in LIT[line].get(literal, ())):
+                # Named elsewhere before the owning code names it: code that moved, so no evidence of a release.
+                return line if line == floor or not any(literal in LIT[earlier] for earlier in LINES[:i]) else None
+        return None
 
 
-def since(key, summary):
-    line = next((l for l in LINES if in_line(key, l)), None)
+def since(key, summary, source):
+    """The release a page states for [key], or else the line its owning [source] first names it in; None when neither."""
     stated = re.search(r"[Ss]upported (?:since|from) (?:Doris |version )?(\d+\.\d+(?:\.\d+)?)", summary or "")
-    if stated and (line is None or tuple(map(int, stated.group(1).split("."))) >= tuple(map(int, line.split(".")))):
-        return stated.group(1)
-    return line
+    return stated.group(1) if stated else source.line_of(key) if source else None
 
 
 def clean(t):
@@ -178,7 +201,7 @@ def numbered(body):
 def example_keys(text):
     """Keys of the CREATE CATALOG examples, without placeholders such as your-nameservice."""
     keys = []
-    for m in re.finditer(r"CREATE CATALOG.*?\)\s*;", text, re.S | re.I):
+    for m in re.finditer(r"CREATE CATALOG(?:(?!```).)*?\)\s*;", text, re.S | re.I):
         for k in re.findall(r"[\"']([a-z_][a-z0-9_.\-]*)[\"']\s*=", m.group(0)):
             if k not in keys and "your" not in k and k != "type":
                 keys.append(k)
@@ -216,10 +239,11 @@ SUMMARIES = {
     "kafka_offsets": "The starting offset of each partition in kafka_partitions: a number, OFFSET_BEGINNING, OFFSET_END or a time.",
 }
 # Page keys that stand for a family: property.client.id, broker.username.
-RENAMES = {"property": None, "broker.property_key": "broker.*"}
+# http.header.xxx is the page's placeholder for http.header.<name>; json_paths a typo of jsonpaths on the local page.
+RENAMES = {"property": None, "broker.property_key": "broker.*", "http.header.xxx": "http.header.*", "json_paths": None}
 
 
-def entries(raw):
+def entries(raw, source):
     seen, out = set(), []
     for k, summary, default in raw:
         if k in RENAMES:
@@ -234,23 +258,44 @@ def entries(raw):
         if values is None and re.search(r"\b(true|false)\b", (default or "") + " " + (summary or "")) and re.search(
                 r"(?i)whether|default (?:is |value is )?`?(true|false)|^`?\"?(true|false)", (summary or "") + " " + (default or "")):
             values = BOOLEAN
-        out.append({"name": k, "summary": summary or None, "since": since(k, summary), "values": values or []})
+        out.append({"name": k, "summary": summary or None, "since": since(k, summary, source), "values": values or []})
     return out
 
 
 lists = []
 
 
-def add(title, context, path, raw, opener="PROPERTIES", clause=False, variant=None):
-    lists.append({"title": title, "context": context, "opener": opener, "path": path, "clause": clause, "variant": variant, "keys": entries(raw)})
+def add(title, context, path, raw, source, opener="PROPERTIES", clause=False, variant=None):
+    lists.append({"title": title, "context": context, "opener": opener, "path": path, "clause": clause, "variant": variant, "keys": entries(raw, source)})
 
 
 ct = lines_of("CREATE-TABLE")
+# The FE code owning each list, paths from org/apache/doris/ (see Source).
+TABLE = Source(r"common/util/PropertyAnalyzer\.java$", r"common/util/PropertyAnalyzer\.java$|/CreateTable[A-Za-z]*\.java$|catalog/TableProperty\.java$")
+MV = Source(r"/CreateMTMV[A-Za-z]*\.java$", r"common/util/PropertyAnalyzer\.java$|^mtmv/|MTMV[A-Za-z]*\.java$")
+JOB = Source(r"/StreamingJobProperties\.java$", r"job/extensions/insert/streaming/")
+JOB_SOURCE = Source(r"job/cdc/DataSourceConfigKeys\.java$", r"job/cdc/")
+ROUTINE_LOAD = Source(r"/CreateRoutineLoad(Stmt|Info)\.java$", r"^load/routineload/|/CreateRoutineLoad[A-Za-z]*\.java$")
+EXPORT_CODE = r"/Export(Stmt|Command)\.java$|^load/ExportJob\.java$"
+EXPORT = Source(EXPORT_CODE)
+OUTFILE = Source(r"/OutFileClause\.java$", r"/OutFileClause\.java$|datasource/property/fileformat/")
+CATALOG = Source(r"datasource/CatalogFactory\.java$", r"datasource/CatalogFactory\.java$|/CreateCatalog[A-Za-z]*\.java$|datasource/ExternalCatalog\.java$")
+CATALOG_SOURCES = {
+    "hms": Source(r"/HMSExternalCatalog\.java$", r"^datasource/hive/|^datasource/property/(metastore|constants)/[A-Za-z]*(HMS|Hive)"),
+    "iceberg": Source(r"/IcebergExternalCatalog\.java$", r"^datasource/iceberg/|^datasource/property/(metastore|constants)/[A-Za-z]*Iceberg"),
+    "paimon": Source(r"/PaimonExternalCatalog\.java$", r"^datasource/paimon/|^datasource/property/(metastore|constants)/[A-Za-z]*Paimon"),
+    "jdbc": Source(r"/JdbcExternalCatalog\.java$", r"^datasource/jdbc/|^catalog/JdbcResource\.java$"),
+    "es": Source(r"/EsExternalCatalog\.java$", r"^datasource/es/|^catalog/EsResource\.java$|^external/elasticsearch/"),
+    "max_compute": Source(r"/MaxComputeExternalCatalog\.java$", r"^datasource/maxcompute/|MaxCompute[A-Za-z]*\.java$"),
+    "doris": Source(r"/RemoteDorisExternalCatalog\.java$", r"^datasource/doris/"),
+}
+RESOURCE_CLASSES = {"spark": "Spark", "odbc_catalog": "OdbcCatalog", "s3": "S3", "jdbc": "Jdbc", "hdfs": "Hdfs", "hms": "HMS", "es": "Es"}
+
 add("CREATE TABLE properties", "CREATE [EXTERNAL] [TEMPORARY] TABLE", PAGES["CREATE-TABLE"] + "/",
-    table(section(ct, r"^\*\*<table_property>\*\*", r"^## ")))
+    table(section(ct, r"^\*\*<table_property>\*\*", r"^## ")), TABLE)
 mv = lines_of("CREATE-ASYNC-MATERIALIZED-VIEW")
 add("CREATE MATERIALIZED VIEW properties", "CREATE MATERIALIZED VIEW", PAGES["CREATE-ASYNC-MATERIALIZED-VIEW"] + "/",
-    table(section(mv, r"^\*\*9\. `<table_property>`", r"^## ")))
+    table(section(mv, r"^\*\*9\. `<table_property>`", r"^## ")), MV)
 
 sj = page("CREATE-STREAMING-JOB", PAGES["CREATE-STREAMING-JOB"]).splitlines()
 groups, i = [], 0
@@ -262,66 +307,108 @@ for i, l in enumerate(sj):
                 break
             body.append(m)
         groups.append(table(body))
-add("CREATE JOB properties", "CREATE JOB", PAGES["CREATE-STREAMING-JOB"] + "/", groups[2])
-add("CREATE JOB source properties", "CREATE JOB", PAGES["CREATE-STREAMING-JOB"] + "/", groups[0], opener="MYSQL|POSTGRES", clause=True)
+add("CREATE JOB properties", "CREATE JOB", PAGES["CREATE-STREAMING-JOB"] + "/", groups[2], JOB)
+add("CREATE JOB source properties", "CREATE JOB", PAGES["CREATE-STREAMING-JOB"] + "/", groups[0], JOB_SOURCE, opener="MYSQL|POSTGRES", clause=True)
 
 rl = lines_of("CREATE-ROUTINE-LOAD")
 rl_path = PAGES["CREATE-ROUTINE-LOAD"] + "/"
-add("CREATE ROUTINE LOAD job properties", "CREATE ROUTINE LOAD", rl_path, numbered(section(rl, r"^\*\*4\. `<job_properties>`", r"^\*\*5\.")))
+add("CREATE ROUTINE LOAD job properties", "CREATE ROUTINE LOAD", rl_path, numbered(section(rl, r"^\*\*4\. `<job_properties>`", r"^\*\*5\.")), ROUTINE_LOAD)
 add("CREATE ROUTINE LOAD Kafka properties", "CREATE ROUTINE LOAD", rl_path,
     numbered(section(rl, r"^\*\*3\. `<data_source_properties>`", r"^## ")) +
     numbered(section(rl, r"^\*\*5\. Optional properties", r"^\*\*6\.")) +
     [("property.*", "A Kafka client property, passed on to librdkafka without the property. prefix.", None)],
-    opener="KAFKA", clause=True)
+    ROUTINE_LOAD, opener="KAFKA", clause=True)
 
 ex = lines_of("EXPORT")
 ex_path = PAGES["EXPORT"] + "/"
-add("EXPORT properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^\*\*3\. `<properties>`", r"^\*\*4\.")))
-add("EXPORT broker properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^- \*\*BROKER", r"^- \*\*HDFS")), opener="BROKER", clause=True)
-add("EXPORT HDFS properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^- \*\*HDFS", r"^- \*\*S3")), opener="HDFS", clause=True)
-add("EXPORT S3 properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^- \*\*S3", r"^## ")), opener="S3", clause=True)
+add("EXPORT properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^\*\*3\. `<properties>`", r"^\*\*4\.")), EXPORT)
+add("EXPORT broker properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^- \*\*BROKER", r"^- \*\*HDFS")),
+    Source(EXPORT_CODE, EXPORT_CODE + r"|/BrokerDesc\.java$"), opener="BROKER", clause=True)
+add("EXPORT HDFS properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^- \*\*HDFS", r"^- \*\*S3")),
+    Source(EXPORT_CODE, EXPORT_CODE + r"|^datasource/property/storage/HdfsProperties\.java$"), opener="HDFS", clause=True)
+add("EXPORT S3 properties", "EXPORT TABLE", ex_path, bullets(section(ex, r"^- \*\*S3", r"^## ")),
+    Source(EXPORT_CODE, EXPORT_CODE + r"|^datasource/property/(constants|storage)/S3Properties\.java$"), opener="S3", clause=True)
 
 of = lines_of("OUTFILE")
 add("OUTFILE properties", "INTO OUTFILE", PAGES["OUTFILE"] + "/",
-    bullets(section(of, r"^\*\*Properties related to export file itself", r"^## Return")), clause=True)
+    bullets(section(of, r"^\*\*Properties related to export file itself", r"^## Return")), OUTFILE, clause=True)
 
 CATALOG_TYPES = {"hms": "cat-hive-catalog", "iceberg": "cat-iceberg-catalog", "paimon": "cat-paimon-catalog",
                  "jdbc": "cat-jdbc-catalog-overview", "es": "cat-es-catalog", "max_compute": "cat-maxcompute-catalog",
                  "doris": "cat-doris-catalog"}
 add("CREATE CATALOG properties", "CREATE CATALOG", PAGES["CREATE-CATALOG"] + "/",
-    [("type", "The kind of external data source the catalog connects.", None), ("resource", "A resource whose properties the catalog takes.", None)])
+    [("type", "The kind of external data source the catalog connects.", None), ("resource", "A resource whose properties the catalog takes.", None)], CATALOG)
 lists[-1]["keys"][0]["values"] = list(CATALOG_TYPES) + ["trino-connector"]
 cc = page("CREATE-CATALOG", PAGES["CREATE-CATALOG"])
-jdbc_examples = [(k, None, None) for k in dict.fromkeys(re.findall(r"[\"']([a-z_][a-z0-9_.\-]*)[\"']\s*=", cc)) if k != "type"]
+# The page's JDBC examples only: its other examples belong to other types.
+jdbc_examples = example_keys("\n".join(m.group(0) for m in re.finditer(r"CREATE CATALOG(?:(?!```).)*?\)\s*;", cc, re.S | re.I)
+                                       if re.search(r"[\"']type[\"']\s*=\s*[\"']jdbc[\"']", m.group(0))))
 for catalog_type, name in CATALOG_TYPES.items():
     text = page(name, PAGES[name])
     # Only the ES page tabulates the catalog's own keys; the other pages' tables are cache modules and session variables.
     raw = (tables(text)[:10] if catalog_type == "es" else []) + example_keys(text) + (jdbc_examples if catalog_type == "jdbc" else [])
-    add(f"CREATE CATALOG properties ({catalog_type})", "CREATE CATALOG", PAGES[name] + "/", raw, variant=["type", catalog_type])
+    add(f"CREATE CATALOG properties ({catalog_type})", "CREATE CATALOG", PAGES[name] + "/", raw, CATALOG_SOURCES[catalog_type],
+        variant=["type", catalog_type])
 
 rs = lines_of("CREATE-RESOURCE")
 RESOURCE_TYPES = [("spark", r"^\*\*1\.", r"^\*\*2\."), ("odbc_catalog", r"^\*\*2\.", r"^\*\*3\."), ("s3", r"^\*\*3\.", r"^\*\*4\."),
                   ("jdbc", r"^\*\*4\.", r"^\*\*5\."), ("hdfs", r"^\*\*5\.", r"^\*\*6\."), ("hms", r"^\*\*6\.", r"^\*\*7\."), ("es", r"^\*\*7\.", r"^## ")]
 rs_path = PAGES["CREATE-RESOURCE"] + "/"
-add("CREATE RESOURCE properties", "CREATE [EXTERNAL] RESOURCE", rs_path, [("type", "The kind of resource.", None)])
+add("CREATE RESOURCE properties", "CREATE [EXTERNAL] RESOURCE", rs_path, [("type", "The kind of resource.", None)],
+    Source(r"^catalog/Resource\.java$"))
 lists[-1]["keys"][0]["values"] = [t for t, _, _ in RESOURCE_TYPES]
 for resource_type, start, end in RESOURCE_TYPES:
     add(f"CREATE RESOURCE properties ({resource_type})", "CREATE [EXTERNAL] RESOURCE", rs_path,
-        bullets(section(rs, start, end)), variant=["type", resource_type])
+        bullets(section(rs, start, end)), Source(rf"^catalog/{RESOURCE_CLASSES[resource_type]}Resource\.java$"), variant=["type", resource_type])
 
-# Summaries and since of the table functions' keys (their keys and values are in DorisTableFunctions.kt).
+# Summaries and since of the table functions' keys (their keys and values are in DorisTableFunctions.kt), each
+# function's since from its own class, and for the file readers their shared base and file-format code.
+FILE_READER = r"|/ExternalFileTableValuedFunction\.java$|common/util/FileFormatConstants\.java$|datasource/property/fileformat/"
+TVF_CLASSES = {
+    "s3": ("S3TableValuedFunction", FILE_READER + r"|^datasource/property/(constants|storage)/S3Properties\.java$"),
+    "hdfs": ("HdfsTableValuedFunction", FILE_READER), "local": ("LocalTableValuedFunction", FILE_READER),
+    "http": ("HttpTableValuedFunction", FILE_READER), "file": ("FileTableValuedFunction", FILE_READER),
+    "http_stream": ("HttpStreamTableValuedFunction", FILE_READER), "group_commit": ("GroupCommitTableValuedFunction", ""),
+    "cdc_stream": ("CdcStreamTableValuedFunction", r"|job/cdc/"), "query": ("QueryTableValueFunction", ""),
+    "partition_values": ("PartitionValuesTableValuedFunction", ""), "hudi_meta": ("HudiTableValuedFunction", ""),
+    "parquet_meta": ("ParquetMetadataTableValuedFunction", FILE_READER), "parquet_file_metadata": ("ParquetMetadataTableValuedFunction", FILE_READER),
+    "parquet_kv_metadata": ("ParquetMetadataTableValuedFunction", FILE_READER), "parquet_bloom_probe": ("ParquetMetadataTableValuedFunction", FILE_READER),
+    "jobs": ("JobsTableValuedFunction", ""), "tasks": ("TasksTableValuedFunction", ""), "mv_infos": ("MvInfosTableValuedFunction", ""),
+    "partitions": ("PartitionsTableValuedFunction", ""), "numbers": ("NumbersTableValuedFunction", ""),
+    "backends": ("BackendsTableValuedFunction", ""), "frontends": ("FrontendsTableValuedFunction", ""),
+    "frontends_disks": ("FrontendsDisksTableValuedFunction", ""), "catalogs": ("CatalogsTableValuedFunction", ""),
+}
+
+
+def tvf_source(function):
+    if function not in TVF_CLASSES:
+        return None
+    cls, extra = TVF_CLASSES[function]
+    own = rf"^tablefunction/{cls}\.java$"
+    return Source(own, own + extra)
+
+
 tvf = {}
 for function, slug in TVF_PAGES.items():
-    rows = tables(page("tvf-" + slug, TVF + slug))
+    source = tvf_source(function)
     keys = {}
-    for k, summary, _ in rows:
+    for k, summary, _ in tables(page("tvf-" + slug, TVF + slug)):
+        if k in RENAMES:
+            if RENAMES[k] is None:
+                continue
+            k = RENAMES[k]
         if not keys.get(k, {}).get("summary"):
-            keys[k] = {"summary": summary or None, "since": since(k, summary)}
+            keys[k] = {"summary": summary or None, "since": since(k, summary, source)}
     tvf[function] = {"path": TVF + slug + "/", "keys": keys}
 handwritten = open(os.path.join(os.path.dirname(__file__), "..", "brikk-sql-metadata", "src", "dev.brikk.house.sql.metadata",
                                 "DorisTableFunctions.kt")).read()
-handwritten_since = {k: since(k, None) for k in sorted(set(re.findall(r'PropertyDef\("([^"]+)"', handwritten)))}
-
+handwritten_keys = sorted(set(re.findall(r'PropertyDef\("([^"]+)"', handwritten)))
+handwritten_since = {}
+for function in sorted(set(re.findall(r'TableFunctionInfo\(\s*"([a-z_0-9]+)"', handwritten)) | set(TVF_PAGES)):
+    source = tvf_source(function)
+    found = {k: v for k in handwritten_keys if source and (v := source.line_of(k))}
+    if found:
+        handwritten_since[function] = found
 
 def kt(s):
     return "null" if s is None else json.dumps(s, ensure_ascii=False).replace("$", "\\$")
@@ -368,10 +455,10 @@ for function, data in tvf.items():
     out.append("    )),")
 out.append(")")
 out.append("")
-out.append("/** The since of every key DorisTableFunctions.kt lists, from the FE sources. */")
-out.append("internal val DORIS_TABLE_FUNCTION_KEY_SINCE: Map<String, String?> = mapOf(")
-for k, v in handwritten_since.items():
-    out.append(f"    {kt(k)} to {kt(v)},")
+out.append("/** Per table function, the since of the keys DorisTableFunctions.kt lists, from that function's FE code. */")
+out.append("internal val DORIS_TABLE_FUNCTION_KEY_SINCE: Map<String, Map<String, String>> = mapOf(")
+for function, found in handwritten_since.items():
+    out.append(f"    {kt(function)} to mapOf(" + ", ".join(f"{kt(k)} to {kt(v)}" for k, v in found.items()) + "),")
 out.append(")")
 out.append("")
 target = os.path.join(os.path.dirname(__file__), "..", "brikk-sql-metadata", "src", "dev.brikk.house.sql.metadata", "GeneratedDorisProperties.kt")

@@ -73,12 +73,13 @@ private val PARQUET_BLOOM_PROBE_COLUMNS = columns(
 )
 
 /**
- * [function] with its keys' summaries and since from the 4.x docs and the FE sources
+ * [function] with its keys' summaries and since from the 4.x docs and its own FE code
  * (GeneratedDorisProperties.kt), and the keys its page documents that the list above lacks.
  */
 private fun documented(function: TableFunctionInfo): TableFunctionInfo {
     val page = DORIS_TABLE_FUNCTION_KEYS[function.name]?.second.orEmpty()
-    fun PropertyDef.annotated() = copy(summary = summary ?: page[name]?.first, since = since ?: page[name]?.second ?: DORIS_TABLE_FUNCTION_KEY_SINCE[name])
+    val sources = DORIS_TABLE_FUNCTION_KEY_SINCE[function.name].orEmpty()
+    fun PropertyDef.annotated() = copy(summary = summary ?: page[name]?.first, since = since ?: page[name]?.second ?: sources[name])
     val listed = function.properties.map { it.annotated() }
     val documentedOnly = if (function.properties.isEmpty()) emptyList()
     else page.filterKeys { key -> listed.none { it.name == key } }.map { (key, info) -> PropertyDef(key, emptyList(), info.first, info.second) }

@@ -22,7 +22,7 @@ public abstract class SqlCompletionConfidence(private val profile: SqlCompletion
     final override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
         !psiFile.language.isKindOf(profile.language) -> ThreeState.UNSURE
         tableFunctionCallAt(profile.snapshot(psiFile), contextElement, offset) != null -> ThreeState.NO
-        profile.metadata.docs?.let { sqlPropertyAt(psiFile.text, it, offset, checkCanceled = ProgressManager::checkCanceled) } != null -> ThreeState.NO
+        profile.metadata.docs?.takeIf { it.properties.isNotEmpty() }?.let { sqlPropertyAt(psiFile.text, it, offset, checkCanceled = ProgressManager::checkCanceled) } != null -> ThreeState.NO
         profile.functionGates.digitPrefix && prefixIsDigitLed(psiFile, offset) -> ThreeState.YES
         else -> ThreeState.UNSURE
     }
