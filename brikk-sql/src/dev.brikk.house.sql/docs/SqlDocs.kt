@@ -53,8 +53,48 @@ private object DocsRecognizer {
     private fun tableFunction(docs: EngineDocs, tokens: List<Token>, at: Int, text: String): String? {
         if (tokens.getOrNull(at + 1)?.tokenType != TokenType.L_PAREN) return null
         val path = docs.tableFunctions[tokens[at].text.lowercase()] ?: return null
-        val before = tokens.getOrNull(at - 1)?.takeIf { it.isWord(text) }?.text?.uppercase() ?: return null
-        return path.takeIf { before in RELATION_POSITIONS }
+        // The call's name may be qualified (`jdbc0.native_query(...)`): what comes before the qualifiers decides.
+        var first = at
+        while (tokens.getOrNull(first - 1)?.tokenType == TokenType.DOT && tokens.getOrNull(first - 2)?.let { it.isWord(text) || it.tokenType == TokenType.IDENTIFIER } == true) first -= 2
+        return path.takeIf { relationPosition(tokens, first, at, text) }
+    }
+
+    /**
+     * Whether a call starting at token [first] is a relation: after FROM, JOIN, LATERAL or a comma of a FROM
+     * list, inside `FROM TABLE(...)`, after ClickHouse's `INSERT INTO FUNCTION`, or as an insert target given
+     * `"key" = "value"` properties (Doris). A table being created or inserted into by name is none.
+     */
+    private fun relationPosition(tokens: List<Token>, first: Int, name: Int, text: String): Boolean {
+        fun word(index: Int) = tokens.getOrNull(index)?.takeIf { it.isWord(text) }?.text?.uppercase()
+        val before = tokens.getOrNull(first - 1) ?: return false
+        if (before.tokenType == TokenType.L_PAREN) return word(first - 2) == "TABLE" && fromItem(tokens, first - 2, text)
+        if (before.tokenType == TokenType.COMMA) return fromItem(tokens, first, text)
+        return when (word(first - 1)) {
+            "FROM", "JOIN" -> true
+            "LATERAL" -> fromItem(tokens, first - 1, text)
+            "FUNCTION" -> word(first - 2) == "INTO"
+            "INTO" -> tokens.getOrNull(name + 2)?.tokenType == TokenType.STRING && tokens.getOrNull(name + 3)?.tokenType == TokenType.EQ
+            else -> false
+        }
+    }
+
+    /** Whether token [index] begins an item of a FROM clause: right after FROM or JOIN, or after a comma of the FROM list. */
+    private fun fromItem(tokens: List<Token>, index: Int, text: String): Boolean {
+        var depth = 0
+        for (i in index - 1 downTo 0) {
+            val token = tokens[i]
+            when (token.tokenType) {
+                TokenType.R_PAREN -> depth++
+                TokenType.L_PAREN -> if (depth == 0) return false else depth--
+                else -> if (depth == 0 && token.isWord(text)) {
+                    when (token.text.uppercase()) {
+                        "FROM", "JOIN" -> return true
+                        in CLAUSE_WORDS -> return false
+                    }
+                }
+            }
+        }
+        return false
     }
 
     /** The page of the table engine named at [at] after `ENGINE [=]`, or null. */
@@ -88,6 +128,6 @@ private object DocsRecognizer {
 
     private val WORD = Regex("[A-Za-z_][A-Za-z0-9_$]*")
 
-    /** The words after which a call is a relation: `FROM f(...)`, `JOIN f(...)`, `INSERT INTO [FUNCTION] f(...)`, `TABLE(f(...))`. */
-    private val RELATION_POSITIONS = setOf("FROM", "JOIN", "FUNCTION", "INTO", "TABLE", "LATERAL")
+    /** Words that end a FROM list, walking back: another clause holds what follows them. */
+    private val CLAUSE_WORDS = setOf("SELECT", "WHERE", "GROUP", "HAVING", "ORDER", "QUALIFY", "WINDOW", "LIMIT", "ON", "USING", "SET", "VALUES", "INTO", "BY", "TABLE")
 }

@@ -116,6 +116,33 @@ class SqlDocsTest {
     }
 
     @Test
+    fun aNameBeingDefinedOrInsertedIntoIsNoTableFunction() {
+        for ((dialect, sql) in listOf(
+            "doris" to "CREATE TABLE <caret>jobs(k INT) DISTRIBUTED BY HASH(k)",
+            "doris" to "INSERT INTO <caret>tasks(k) VALUES(1)",
+            "doris" to "INSERT OVERWRITE TABLE <caret>numbers(k) SELECT 1",
+            "clickhouse" to "CREATE TABLE <caret>url(x String) ENGINE=Memory",
+            "clickhouse" to "INSERT INTO <caret>values(x) VALUES(1)",
+            "duckdb" to "CREATE TABLE <caret>read_csv(x INT)",
+            "starrocks" to "CREATE TABLE <caret>files(k INT)",
+            "doris" to "SELECT * FROM t WHERE k IN (SELECT <caret>numbers(1))",
+        )) assertNull(at(sql, dialect), sql)
+    }
+
+    @Test
+    fun tableFunctionsInRelationListsAndTableCallsLink() {
+        val sr = "https://docs.starrocks.io/docs/sql-reference/sql-functions/table-functions/"
+        assertEquals("${sr}generate_series/", at("SELECT * FROM TABLE(gen<caret>erate_series(1, 3))", "starrocks")?.url)
+        assertEquals("${sr}native_query/", at("SELECT * FROM TABLE(jdbc0.native<caret>_query('SELECT 1'))", "starrocks")?.url)
+        assertEquals("${duckdb}data/csv/overview", at("SELECT * FROM t, read<caret>_csv('x.csv') AS c", "duckdb")?.url)
+        assertEquals("${duckdb}data/csv/overview", at("SELECT * FROM t AS a, LATERAL read<caret>_csv('x.csv')", "duckdb")?.url)
+        assertNull(at("SELECT a, read<caret>_csv('x.csv') FROM t", "duckdb"))
+        // Doris writes through a table function given properties; ClickHouse through INSERT INTO FUNCTION.
+        assertEquals("${doris}sql-functions/table-valued-functions/s3/", at("INSERT INTO <caret>s3(\"uri\" = \"s3://b/p/\") SELECT 1")?.url)
+        assertEquals("${clickhouse}reference/functions/table-functions/s3", at("INSERT INTO FUNCTION <caret>s3('https://b/p.csv', 'CSV') SELECT 1", "clickhouse")?.url)
+    }
+
+    @Test
     fun nothingIsOfferedForUnrelatedTokensOrUnknownDialects() {
         for (sql in listOf("SELECT k FROM <caret>t", "SELECT 'CREATE <caret>JOB'", "SELECT 1 -- CREATE <caret>JOB", "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO <caret>t SELECT 1",
             "SELECT k <caret>FROM t", "SELECT `create` FROM t WHERE k = <caret>1")) assertNull(at(sql), sql)
