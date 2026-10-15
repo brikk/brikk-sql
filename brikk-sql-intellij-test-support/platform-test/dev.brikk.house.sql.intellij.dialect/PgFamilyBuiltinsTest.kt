@@ -4,6 +4,7 @@ import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.database.Dbms
 import com.intellij.database.DbmsExtension
+import com.intellij.database.types.DasTypeSystemBase
 import com.intellij.icons.AllIcons
 import com.intellij.lang.LanguageParserDefinitions
 import com.intellij.lang.annotation.HighlightSeverity
@@ -19,8 +20,13 @@ import com.intellij.sql.dialects.base.SqlParserDefinitionBase
 import com.intellij.sql.dialects.base.SqlSyntaxHighlighterFactory
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
+import com.intellij.sql.dialects.BuiltinFunction
+import com.intellij.sql.psi.SqlCreateStatement
 import com.intellij.sql.psi.SqlFunctionCallExpression
+import com.intellij.sql.psi.SqlResolveResult
+import com.intellij.sql.psi.impl.SqlResolveExtension
 import com.intellij.sql.psi.SqlTableType
+import com.intellij.sql.psi.impl.SqlTableTypeBase
 import com.intellij.sql.psi.stubs.elementTypes.SqlFileElementType
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -80,6 +86,7 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         }
         ExtensionPointName<DbmsExtension.FallbackBean>("com.intellij.database.extensionFallback").point.registerExtension(fallback, testRootDisposable)
         SqlInspectionSuppressorDelegate.EP_NAME.point.registerExtension(PgFamilyInspectionSuppressor(), testRootDisposable)
+        SqlResolveExtension.EP_NAME.point.registerExtension(PgFamilyResolveExtension(), testRootDisposable)
         for (name in listOf("SqlResolveInspection", "SqlTypeInspection", "SqlInsertValuesInspection")) {
             val tool = LocalInspectionEP.LOCAL_INSPECTION.extensionList.single { it.implementationClass.endsWith(".$name") }
             myFixture.enableInspections(tool.instantiateTool() as LocalInspectionTool)
@@ -115,6 +122,48 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
     fun testATableFunctionInAScalarPositionAndAScalarInAFromPositionStillReport() {
         assertTrue(reports("SELECT read_parquet('input.parquet')").any { it.startsWith("read_parquet:") })
         assertTrue(reports("SELECT * FROM list_value(1, 2)").any { it.startsWith("list_value:") })
+    }
+
+    /** [reports] but `LANGUAGE sql`, which the fixture's catalog lacks: the routines' languages are beside the point. */
+    private fun definitionReports(sql: String) = reports(sql).filterNot { it == "sql: Unable to resolve language 'sql'" }
+
+    /** The call of [name] in the open file. */
+    private fun call(name: String) = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlFunctionCallExpression::class.java).single { it.nameElement?.name == name }
+
+    /** [call]'s name binds to its CREATE FUNCTION in the file alone: no engine placeholder, hidden or not. */
+    private fun assertBindsToTheLocalDefinition(call: SqlFunctionCallExpression) {
+        val results = checkNotNull(call.nameElement?.reference).multiResolve(false).map { it as SqlResolveResult }
+        assertEquals(results.toString(), 1, results.size)
+        val result = results.single()
+        assertFalse(result.isHidden)
+        assertFalse("${result.targetSymbol}", result.targetSymbol is BuiltinFunction)
+        val definition = checkNotNull(PsiTreeUtil.getParentOfType(result.element, SqlCreateStatement::class.java, false)) { "${result.element}" }
+        assertSame(myFixture.file, definition.containingFile)
+        assertTrue(definition.text, definition.text.startsWith("CREATE FUNCTION ${call.nameElement?.name}("))
+    }
+
+    fun testALocalDefinitionOfAnEngineFunctionNameKeepsItsBindingAndType() {
+        val sql = "CREATE FUNCTION list_value(a integer) RETURNS integer LANGUAGE sql AS 'SELECT 1';\n" +
+            "CREATE FUNCTION my_local_fn(a integer) RETURNS integer LANGUAGE sql AS 'SELECT 1';\n" +
+            "SELECT list_value(1), my_local_fn(1)"
+        val found = definitionReports(sql)
+        assertEmpty(found.joinToString("\n"), found)
+        for (name in listOf("list_value", "my_local_fn")) assertBindsToTheLocalDefinition(call(name))
+        val control = call("my_local_fn").dasType
+        assertFalse(control.toString(), control == DasTypeSystemBase.UNKNOWN)
+        assertEquals(control.specification, call("list_value").dasType.specification)
+    }
+
+    fun testALocalTableFunctionOfAnEngineFunctionNameKeepsItsRow() {
+        val sql = "CREATE FUNCTION read_csv(p text) RETURNS TABLE (x integer, y text) LANGUAGE sql AS 'SELECT 1, ''a''';\n" +
+            "SELECT x, y FROM read_csv('input.csv')"
+        val found = definitionReports(sql)
+        assertEmpty(found.joinToString("\n"), found)
+        val call = call("read_csv")
+        assertBindsToTheLocalDefinition(call)
+        val row = call.dasType as SqlTableType
+        assertEquals(listOf("x", "y"), (0 until row.columnCount).map(row::getColumnName))
+        assertFalse("$row", row is SqlTableTypeBase.UnresolvedRefType)
     }
 
     fun testUnknownFunctionsAndTypesStillReport() {

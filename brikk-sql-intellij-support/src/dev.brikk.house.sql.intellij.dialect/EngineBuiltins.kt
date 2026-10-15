@@ -39,14 +39,15 @@ import org.jetbrains.annotations.ApiStatus
 
 /**
  * The engine's own functions and types for the platform's resolution and typing of a family dialect's files,
- * where the platform dialect it builds on lacks them ([PgFamilyDialect.builtins]):
+ * as a fallback where nothing native binds a name ([PgFamilyDialect.builtins], [PgFamilyResolveExtension]):
  *  - an unqualified call of a function [completion] offers in the file resolves: a table function in a FROM
- *    position, any other kind elsewhere. A name the platform dialect's builtins have keeps their resolution.
+ *    position, any other kind elsewhere. A name the platform dialect's builtins have keeps their resolution,
+ *    as does one a definition in the file or a routine of the data source binds.
  *  - an unqualified type name the file's snapshot knows ([dev.brikk.house.sql.metadata.MetadataSnapshot.type])
- *    resolves.
- *  - such a table function's call in a FROM position has the columns [relations] knows
+ *    resolves where no native type does.
+ *  - a table function's call bound by that fallback, in a FROM position, has the columns [relations] knows
  *    ([RelationTableTypes.ofTableFunction]), else the platform's open type of a relation it cannot know, never
- *    one column named after the call ([PgFamilyElementFactory]).
+ *    one column named after the call ([PgFamilyElementFactory]). A natively bound call keeps its native type.
  *
  * Everything else, unknown names included, keeps the platform's resolution and diagnostics.
  */
@@ -57,8 +58,12 @@ public class EngineBuiltins(
 ) {
     private val symbols = ConcurrentHashMap<String, DasSymbol>()
 
-    /** Offers [reference]'s engine function or type to [processor]; false when the processor stops. */
-    internal fun process(dialect: SqlLanguageDialectEx, processor: SqlScopeProcessor, state: ResolveState, reference: PsiReference): Boolean {
+    /**
+     * Offers [reference]'s engine function or type to [processor] when the platform's own stages bound nothing;
+     * false when the processor stops.
+     */
+    internal fun process(dialect: SqlLanguageDialectEx, processor: SqlScopeProcessor, reference: PsiReference): Boolean {
+        if (!processor.isResultEmpty) return true
         val name = processor.referenceName ?: return true
         val element = reference.element as? SqlReferenceExpression ?: return true
         if (element.qualifierExpression != null) return true
@@ -66,18 +71,20 @@ public class EngineBuiltins(
         val call = element.parent as? SqlFunctionCallExpression
         val symbol = when {
             call != null && call.nameElement === element -> function(dialect, file, call, name)?.let { function ->
-                symbols.computeIfAbsent("routine:${function.name}") { BuiltinFunction(function.name, null, emptyMap(), emptyList(), dialect.dbms) }
+                symbols.computeIfAbsent("routine:${function.name}") { EngineFunction(function.name, dialect.dbms) }
             }
             processor.isExpected(ObjectKind.OBJECT_TYPE) && PsiTreeUtil.getParentOfType(element, SqlTypeElement::class.java) != null ->
                 completion.snapshot(file).type(name)?.let { type -> symbols.computeIfAbsent("type:${type.name}") { EngineType(type.name, dialect.dbms) } }
             else -> null
         }
-        return symbol == null || processor.executeTarget(symbol, null, null, state)
+        return symbol == null || processor.executeTarget(symbol, null, null, ResolveState.initial())
     }
 
-    /** The columns of [call], an engine table function in a FROM position; null for any other call. */
+    /** The columns of [call], an engine table function the fallback binds in a FROM position; null for any other call. */
     internal fun tableType(dialect: SqlLanguageDialectEx, call: SqlFunctionCallExpression): SqlTableType? {
-        val name = call.nameElement?.takeIf { it.qualifierExpression == null }?.name ?: return null
+        val nameElement = call.nameElement?.takeIf { it.qualifierExpression == null } ?: return null
+        if (nameElement.resolveSymbol() !is EngineFunction) return null
+        val name = nameElement.name ?: return null
         val file = call.containingFile ?: return null
         if (function(dialect, file, call, name)?.kind != FunctionKind.TABLE_VALUED) return null
         val known = relations?.let { RelationTableTypes.ofTableFunction(call, it) }?.takeIf { it.columnCount > 0 }
@@ -120,6 +127,9 @@ public class EngineBuiltins(
         }
     }
 }
+
+/** A built-in function of the engine, as the fallback's resolve target. */
+private class EngineFunction(name: String, dbms: Dbms) : BuiltinFunction(name, null, emptyMap(), emptyList(), dbms)
 
 /** A built-in type of the engine, as a resolve target. */
 private class EngineType(private val name: String, private val dbms: Dbms) : DasPredefinedSymbol() {

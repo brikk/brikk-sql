@@ -479,12 +479,15 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
   operators, system variables and builtin functions; the subclass supplies `getDbms`. Keep its
   `Dbms` outside the dialect object, whose base constructor already asks for it. The engine's own
   functions and types resolve in the platform's resolution and inspections when it overrides
-  `builtins` with an `EngineBuiltins(completionProfile, relationProfile)`, created `by lazy`: what
-  completion offers resolves (a table function in a FROM position, any other kind elsewhere; names the
-  platform PostgreSQL builtins have keep theirs), and the snapshot's types (`MetadataSnapshot.types`,
-  aliases included) resolve as type names. Unknown names stay reported.
+  `builtins` with an `EngineBuiltins(completionProfile, relationProfile)`, created `by lazy`, as a
+  fallback where nothing native binds a name: what completion offers resolves (a table function in a
+  FROM position, any other kind elsewhere), and the snapshot's types (`MetadataSnapshot.types`,
+  aliases included) resolve as type names. Platform builtins, definitions in the file and the data
+  source's routines and types keep their binding and type; unknown names stay reported.
+  - `PgFamilyResolveExtension` (`com.intellij.sql.resolveExtension`): that fallback, which the
+    platform asks after its own resolution.
   - `PgFamilyElementFactory(stock)` (`dialect`): return it from the parser definition's
-    `createElementFactory` so an engine table function in a FROM position has the columns the relation
+    `createElementFactory` so an engine table function the fallback binds in a FROM position has the columns the relation
     profile knows (`RelationTableTypes.ofTableFunction`), else the platform's open type of a relation it
     cannot know, never one column named after the call; every other call keeps the platform's typing.
   - `PgFamilyInspectionSuppressor` (`com.intellij.sql.inspectionSuppressorDelegate`): where the shared
