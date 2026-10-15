@@ -5,6 +5,8 @@ import com.intellij.database.model.DasObject
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.symbols.DasPredefinedSymbol
 import com.intellij.database.symbols.DasSymbol
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiReference
 import com.intellij.psi.ResolveState
@@ -13,16 +15,23 @@ import com.intellij.sql.dialects.BuiltinFunction
 import com.intellij.sql.dialects.SqlLanguageDialectEx
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlFunctionCallExpression
+import com.intellij.sql.psi.SqlQueryExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlScopeProcessor
 import com.intellij.sql.psi.SqlTableType
 import com.intellij.sql.psi.SqlTypeElement
 import com.intellij.sql.psi.impl.SqlTableTypeBase
+import com.intellij.sql.psi.impl.SqlTableTypeBase.UnresolvedRefType
 import dev.brikk.house.sql.intellij.completion.SqlCompletionProfile
+import dev.brikk.house.sql.intellij.relation.RelationAnalysis
 import dev.brikk.house.sql.intellij.relation.RelationScopeProfile
 import dev.brikk.house.sql.intellij.relation.RelationTableTypes
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionPresentation
+import dev.brikk.house.sql.scope.Knowledge
+import dev.brikk.house.sql.scope.RelationFact
+import dev.brikk.house.sql.scope.RelationFacts
+import dev.brikk.house.sql.scope.RelationScope
 import java.util.concurrent.ConcurrentHashMap
 import org.jetbrains.annotations.ApiStatus
 
@@ -72,6 +81,28 @@ public class EngineBuiltins(
         val known = relations?.let { RelationTableTypes.ofTableFunction(call, it) }?.takeIf { it.columnCount > 0 }
         // The platform's type for a relation whose columns it cannot know, as for an unresolved table: open.
         return known ?: call.nameElement?.reference?.let(SqlTableTypeBase::createUnresolvedTableType)
+    }
+
+    /**
+     * When the width of the row [query] projects depends on an engine table function's open row ([tableType]), as
+     * the shared relation analysis finds through stars, derived tables and CTEs ([withClause], the WITH of an
+     * enclosing statement, scopes it): the number of its columns that are known, the least its width can be. Null
+     * when its width is known or it reads no open row. The tables it names count as known here: their width is
+     * the platform's to judge, so only an engine row leaves it open.
+     */
+    internal fun openRowMinimumWidth(query: SqlQueryExpression, withClause: PsiElement?): Int? {
+        val file = query.containingFile ?: return null
+        val readsOpenRow = PsiTreeUtil.findChildrenOfType(query, SqlFunctionCallExpression::class.java).any { it.dasType is UnresolvedRefType } ||
+            withClause != null && PsiTreeUtil.findChildrenOfType(withClause, SqlFunctionCallExpression::class.java).any { it.dasType is UnresolvedRefType }
+        if (!readsOpenRow) return null
+        val sql = listOfNotNull(withClause?.text, query.text).joinToString(" ")
+        val base = relations?.let { RelationAnalysis.of(file, it, lastKnown = true)?.facts?.merged } ?: RelationFacts()
+        val tables = listOfNotNull(withClause, query).flatMap { PsiTreeUtil.findChildrenOfType(it, SqlReferenceExpression::class.java) }
+            .filter { it.referenceElementType.targetKind == ObjectKind.TABLE && it.parent !is SqlReferenceExpression }
+            .associate { it.text to RelationFact(knowledge = Knowledge.FULL) }
+        val facts = base.copy(tables = tables + base.tables)
+        val output = RelationScope.analyze(sql, completion.metadata.dialect, facts, checkCanceled = ProgressManager::checkCanceled).output ?: return null
+        return output.columns.size.takeIf { output.knowledge != Knowledge.FULL }
     }
 
     /** The function [call] (named [name]) calls in [file], of a kind its position takes, unless the platform dialect has the name. */

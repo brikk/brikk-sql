@@ -124,6 +124,15 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         assertTrue(reports("SELECT CAST(0 AS not_a_builtin_type)").any { it.startsWith("not_a_builtin_type:") })
     }
 
+    /** The platform's INSERT value count reports in [sql]. */
+    private fun countReports(sql: String): List<String> {
+        reports(sql, HighlightSeverity.WARNING)
+        return myFixture.doHighlighting(HighlightSeverity.WARNING).filter { it.inspectionToolId?.removeSuffix("Inspection") == "SqlInsertValues" }
+            .map { "${myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset))}: ${it.description}" }
+    }
+
+    private val destination = "CREATE TABLE dst (source_label VARCHAR, record_key UINTEGER, payload_text VARCHAR, status_text VARCHAR);"
+
     fun testAReaderRowStaysOpenForAnInsertSelect() {
         val sql = """
             CREATE TABLE insert_probe (source_label VARCHAR, record_key UINTEGER, payload_text VARCHAR, status_text VARCHAR);
@@ -131,16 +140,35 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         """.trimIndent()
         val found = reports(sql, HighlightSeverity.WARNING)
         assertEmpty(found.joinToString("\n"), found)
-        val qualified = reports(sql.replace("* EXCLUDE(record_key) FROM read_parquet('input.parquet')", "r.* FROM read_parquet('input.parquet') AS r"), HighlightSeverity.WARNING)
-        assertEmpty(qualified.joinToString("\n"), qualified)
     }
 
-    fun testAnInsertCountWithoutAStarOverAReaderStillReports() {
-        val found = reports(
-            "CREATE TABLE count_probe (first_value VARCHAR, second_value VARCHAR, third_value VARCHAR); INSERT INTO count_probe SELECT 'a', 'b' FROM read_parquet('input.parquet')",
-            HighlightSeverity.WARNING,
-        )
-        assertTrue(found.toString(), found.any { "value(s) expected" in it })
+    fun testAWidthThatDependsOnAReaderRowIsNotCounted() {
+        for (query in listOf(
+            "SELECT 'local', r.* FROM read_parquet('input.parquet') AS r",
+            "SELECT * FROM (SELECT * FROM read_parquet('input.parquet')) AS src",
+            "SELECT 'local', src.* FROM (SELECT * FROM read_parquet('input.parquet')) AS src",
+            "WITH src AS (SELECT * FROM read_parquet('input.parquet')) SELECT * FROM src",
+        )) {
+            val found = countReports("$destination INSERT INTO dst $query")
+            assertEmpty("$query: $found", found)
+        }
+        val statementWith = countReports("CREATE TABLE dst (a INTEGER, b INTEGER); WITH src AS (SELECT * FROM read_parquet('input.parquet')) INSERT INTO dst SELECT * FROM src")
+        assertEmpty(statementWith.toString(), statementWith)
+    }
+
+    fun testAKnownWidthNextToAReaderStillCounts() {
+        for ((sql, actual) in listOf(
+            "CREATE TABLE dst (a INTEGER, b INTEGER); INSERT INTO dst SELECT * FROM (SELECT 1 AS a FROM read_parquet('synthetic.parquet')) AS src" to 1,
+            "CREATE TABLE dst (a BIGINT, b BIGINT); INSERT INTO dst SELECT count(*) FROM read_parquet('synthetic.parquet')" to 1,
+            "CREATE TABLE dst (a INTEGER, b INTEGER, c INTEGER); CREATE TABLE k (x INTEGER); INSERT INTO dst SELECT k.* FROM k, read_parquet('synthetic.parquet') AS r" to 1,
+            "CREATE TABLE dst (a VARCHAR, b VARCHAR, c VARCHAR); INSERT INTO dst SELECT 'a', 'b' FROM read_parquet('synthetic.parquet')" to 2,
+            "CREATE TABLE dst (a INTEGER, b INTEGER); WITH src AS (SELECT 1 AS a FROM read_parquet('synthetic.parquet')) INSERT INTO dst SELECT * FROM src" to 1,
+            // An open star leaves the width unknown, but no less than the explicit items: two are already too many.
+            "CREATE TABLE dst (a INTEGER); INSERT INTO dst SELECT 1, 2, * FROM read_parquet('synthetic.parquet')" to 2,
+        )) {
+            val found = countReports(sql)
+            assertTrue("$sql: $found", found.any { it.endsWith("got $actual") })
+        }
     }
 
     fun testAKnownTableFunctionLayoutIsKeptAndItsMismatchReports() {

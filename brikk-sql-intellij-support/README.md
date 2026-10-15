@@ -487,9 +487,11 @@ A dialect plugin keeps its rule tables and small subclasses; the machinery is he
     `createElementFactory` so an engine table function in a FROM position has the columns the relation
     profile knows (`RelationTableTypes.ofTableFunction`), else the platform's open type of a relation it
     cannot know, never one column named after the call; every other call keeps the platform's typing.
-  - `PgFamilyInspectionSuppressor` (`com.intellij.sql.inspectionSuppressorDelegate`): an INSERT value
-    count over a star expanding such an open row is unknown, so the platform's count is not reported
-    there; any other count, a star over known columns included, stands.
+  - `PgFamilyInspectionSuppressor` (`com.intellij.sql.inspectionSuppressorDelegate`): where the shared
+    relation analysis finds that an INSERT query's width depends on such an open row (through stars,
+    derived tables and CTEs), the width is unknown and the platform's count is not reported, unless the
+    known columns already exceed the target's. Any other count stands: explicit projections, `count(*)`,
+    stars over known rows, derived tables of a known width.
 - `CHouseFamilyDialect(id)` (`dialect`): a ClickHouse-grammar dialect that behaves as the platform
   ClickHouse dialect (tokens, builtin functions with special forms and combinator suffixes, types,
   operators, system variables, separators, resolution); a raw data leaf is never reparsed alone, as
