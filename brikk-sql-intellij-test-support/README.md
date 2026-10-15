@@ -108,7 +108,7 @@ engine documentation provider the same way.
 
 ## Editor popup
 
-`EditorPopupContract(myFixture, itemId, childIds).check(openValid)` expands the registered `EditorPopupMenu`
+`EditorPopupContract(myFixture, itemId, childIds).check { openValid() }` expands the registered `EditorPopupMenu`
 (or another `parent`) as the IDE renders a popup: the action or group registered as `itemId`, and each child, is
 rendered, enabled and visible in the editor `openValid` opens, and absent (not disabled) with that file but no
 editor, with that editor but no file, in an empty context, with that file and another file's editor, and in each

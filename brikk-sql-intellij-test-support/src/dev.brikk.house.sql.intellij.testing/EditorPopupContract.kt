@@ -37,7 +37,7 @@ public class EditorPopupContract(
      * context, with that file and an editor of another file, and in each of [unrelated] (file name to text), with
      * and without a selection.
      */
-    public fun check(openValid: () -> Unit, unrelated: Map<String, String> = mapOf("popup-notes.txt" to "SELECT 1")) {
+    public fun check(unrelated: Map<String, String> = mapOf("popup-notes.txt" to "SELECT 1"), openValid: () -> Unit) {
         val failures = ArrayList<String>()
         openValid()
         val file = fixture.file

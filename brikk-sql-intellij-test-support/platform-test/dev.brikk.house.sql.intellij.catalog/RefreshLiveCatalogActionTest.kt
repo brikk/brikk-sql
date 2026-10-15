@@ -145,7 +145,7 @@ class RefreshLiveCatalogActionTest : BasePlatformTestCase() {
         val popup = ActionManager.getInstance().getAction(IdeActions.GROUP_EDITOR_POPUP) as DefaultActionGroup
         popup.add(action)
         try {
-            EditorPopupContract(myFixture, REFRESH).check({ open("query.sql", "SELECT 1<caret>", dialect = "PostgreSQL") })
+            EditorPopupContract(myFixture, REFRESH).check { open("query.sql", "SELECT 1<caret>", dialect = "PostgreSQL") }
         } finally {
             popup.remove(action)
             ActionManager.getInstance().unregisterAction(REFRESH)

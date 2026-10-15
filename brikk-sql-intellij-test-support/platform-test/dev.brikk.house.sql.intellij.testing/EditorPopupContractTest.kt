@@ -69,14 +69,14 @@ class EditorPopupContractTest : BasePlatformTestCase() {
         myFixture.configureFromExistingVirtualFile(myFixture.file.virtualFile)
     }
 
-    private fun failure(): String = runCatching { contract.check(::openSql) }.exceptionOrNull().let { failure ->
+    private fun failure(): String = runCatching { contract.check { openSql() } }.exceptionOrNull().let { failure ->
         assertTrue("$failure", failure is AssertionError)
         failure?.message.orEmpty()
     }
 
     fun testANonEmptyGroupOfApplicableChildrenShowsOnlyWhereTheyApply() {
         register(NonEmptyActionGroup().apply { isPopup = true }, ContractSqlAction())
-        contract.check(::openSql)
+        contract.check { openSql() }
     }
 
     fun testAPlainGroupStaysAsAnEmptySubmenu() {
