@@ -25,6 +25,7 @@ import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.sql.dialects.SqlLanguageDialect
 import dev.brikk.house.sql.intellij.completion.completableFunctions
@@ -619,12 +620,20 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
         }
     }
 
-    /** The SQL file at the editor's caret: SQL injected there, else the editor's file when it is SQL. */
+    /**
+     * The SQL file at the editor's caret: SQL injected there, else the editor's file when it is SQL. Only an
+     * editor showing the file itself counts: a host editor with its host file, or an injected editor with its
+     * injected file; a missing editor, another project's, or one of another document (a host editor with an
+     * injected file, say) gives nothing rather than a caret read against the wrong text.
+     */
     private fun sqlAtCaret(e: AnActionEvent): PsiFile? = recoverEditorOperation {
+        val project = e.project ?: return@recoverEditorOperation null
+        val editor = e.getData(CommonDataKeys.EDITOR) ?: return@recoverEditorOperation null
         val file = e.getData(CommonDataKeys.PSI_FILE) ?: return@recoverEditorOperation null
-        val injected = e.getData(CommonDataKeys.EDITOR)?.let { editor ->
-            InjectedLanguageManager.getInstance(file.project).findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
-        }
+        if (editor.project != project || file.project != project) return@recoverEditorOperation null
+        if (PsiDocumentManager.getInstance(project).getDocument(file) != editor.document) return@recoverEditorOperation null
+        val injections = InjectedLanguageManager.getInstance(project)
+        val injected = if (injections.isInjectedFragment(file)) null else injections.findInjectedElementAt(file, editor.caretModel.offset)?.containingFile
         (injected ?: file).takeIf { it.language is SqlLanguageDialect }
     }.getOrNull()
 }
