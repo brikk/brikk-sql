@@ -516,7 +516,9 @@ of the `intellij.database.sql.core.impl` module with no internal-API annotation,
 `SqlEngineDocumentationProvider(metadata)` (`docs`): quick documentation (Ctrl+Q) and external documentation
 (Shift+F1) of the statement forms, clauses, table functions and table engines the dialect's
 `DialectMetadata.docs` maps to engine pages, recognized by core's `sqlDocsAt`; references and function calls
-keep the platform's own documentation. A plugin adopts it with XML only:
+keep the platform's own documentation. On a key of a `PROPERTIES (...)` list or a table function's arguments
+(`EngineDocs.properties`, core's `sqlPropertyAt`) it shows the key's summary, release, values and page; the
+dialect's `SqlCompletionContributor` completes those keys and values. A plugin adopts it with XML only:
 `<lang.documentationProvider language="DorisSQL" implementationClass="dev.brikk.house.sql.intellij.docs.SqlEngineDocumentationProvider" order="first"/>`;
 the provider finds the docs of the file's language through `SqlDialectRegistry` and `bundledMetadata`. Its test is
 `DocumentationProviderContract(myFixture, language, testRootDisposable).check(statement, docsHost, table)` from the test kit. That every bundled

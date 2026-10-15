@@ -1,6 +1,8 @@
 package dev.brikk.house.sql
 
 import dev.brikk.house.sql.metadata.DialectMetadata
+import dev.brikk.house.sql.metadata.EngineDocs
+import dev.brikk.house.sql.metadata.PropertyDef
 import dev.brikk.house.sql.metadata.TRINO_METADATA
 import dev.brikk.house.sql.scope.CatalogKnowledge
 import dev.brikk.house.sql.scope.RelationFacts
@@ -47,5 +49,24 @@ class BinaryCompatibilityTest {
             .newInstance("x", TRINO_METADATA.snapshots, TRINO_METADATA.default.engineVersion)
         assertEquals(null, metadata.docs)
         assertEquals(TRINO_METADATA.default.engineVersion, metadata.default.engineVersion)
+    }
+
+    @Test
+    fun propertyDefKeepsItsShapeFromBeforeSummaryAndSince() {
+        val list = List::class.java
+        val exact = PropertyDef::class.java.getConstructor(String::class.java, list)
+        assertEquals(PropertyDef("k", listOf("v")), exact.newInstance("k", listOf("v")))
+        val copy = PropertyDef::class.java.getMethod("copy", String::class.java, list)
+        val def = PropertyDef("k", emptyList(), "s", "2.0")
+        assertEquals(def.copy(name = "j"), copy.invoke(def, "j", emptyList<String>()))
+    }
+
+    @Test
+    fun engineDocsKeepsItsShapeFromBeforeProperties() {
+        val string = String::class.java
+        val shape = arrayOf(string, string, string, List::class.java, Map::class.java, Map::class.java, string)
+        val docs = EngineDocs::class.java.getConstructor(*shape).newInstance("x", "1", "https://x/", emptyList<Any>(), emptyMap<String, String>(), emptyMap<String, String>(), null)
+        assertEquals(emptyList(), docs.properties)
+        EngineDocs::class.java.getMethod("copy", *shape)
     }
 }

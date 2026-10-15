@@ -34,6 +34,8 @@ import dev.brikk.house.sql.metadata.KeywordCatalog
 import dev.brikk.house.sql.metadata.KeywordCategory
 import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TableFunctionInfo
+import dev.brikk.house.sql.metadata.definitionOf
+import dev.brikk.house.sql.docs.sqlPropertyAt
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -197,16 +199,16 @@ private fun completeTableFunctionArguments(parameters: CompletionParameters, res
     val position = parameters.position
     val offset = parameters.offset
     val profile = reads.profile
-    val (call, function) = tableFunctionCallAt(reads.snapshot, position, offset) ?: return
+    val (call, function) = tableFunctionCallAt(reads.snapshot, position, offset) ?: return completeStatementProperties(parameters, result, reads)
     val binary = PsiTreeUtil.getParentOfType(position, SqlBinaryExpression::class.java)?.takeIf { call.textRange.contains(it.textRange) }
     val key = binary?.lOperand?.takeIf { left ->
         offset > left.textRange.endOffset &&
             '=' in binary.text.substring(0, (offset - binary.textRange.startOffset).coerceIn(0, binary.textLength))
     }?.text?.trim(*QUOTES)
     val (kind, candidates) = if (key == null) {
-        SqlLookupKind.TABLE_FUNCTION_PROPERTY to function.properties.map { it.name }
+        SqlLookupKind.TABLE_FUNCTION_PROPERTY to function.properties.map { it.name.removeSuffix("*") }
     } else {
-        SqlLookupKind.TABLE_FUNCTION_VALUE to function.properties.firstOrNull { it.name.equals(key, ignoreCase = true) }?.values.orEmpty()
+        SqlLookupKind.TABLE_FUNCTION_VALUE to function.properties.definitionOf(key)?.values.orEmpty()
     }
     if (candidates.isEmpty()) return
     val typed = position.text.orEmpty().take((offset - position.textRange.startOffset).coerceAtLeast(0))
@@ -216,6 +218,31 @@ private fun completeTableFunctionArguments(parameters: CompletionParameters, res
     val style = profile.styles[kind]
     val insert = if (quoted) null else QuotingInsertHandler(profile.propertyQuote)
     for (name in candidates) sink.addElement(style.lookup(name, name, style.typeText(function.name), insertHandler = insert))
+}
+
+/**
+ * Keys of the statement's `PROPERTIES (...)` list (or `FROM KAFKA (...)`, `WITH S3 (...)`) the dialect's docs
+ * describe, without those the list already sets, and the known values on the right of `=`. A list the docs do not
+ * know offers nothing; keys it lacks are the engine's to judge.
+ */
+private fun completeStatementProperties(parameters: CompletionParameters, result: CompletionResultSet, reads: ProfileReads) {
+    val profile = reads.profile
+    // No lists, no parse: a dialect without them pays nothing per keystroke (table functions are handled above).
+    val docs = profile.metadata.docs?.takeIf { it.properties.isNotEmpty() } ?: return
+    val file = parameters.originalFile
+    val site = sqlPropertyAt(file.text, docs, parameters.offset, reads.snapshot::tableFunction, ProgressManager::checkCanceled) ?: return
+    val owner = site.title.removeSuffix(" properties")
+    val (kind, candidates) = if (site.value) {
+        SqlLookupKind.TABLE_FUNCTION_VALUE to site.definition?.values.orEmpty().map { it to site.key.orEmpty() }
+    } else {
+        SqlLookupKind.TABLE_FUNCTION_PROPERTY to site.keys.filter { it.name.lowercase() !in site.used || it.name.equals(site.key, ignoreCase = true) }
+            .map { it.name.removeSuffix("*") to owner }
+    }
+    if (candidates.isEmpty()) return
+    val sink = result.withPrefixMatcher(site.prefix).caseInsensitive()
+    val style = profile.styles[kind]
+    val insert = if (site.quoted) null else QuotingInsertHandler(profile.propertyQuote)
+    for ((name, of) in candidates) sink.addElement(style.lookup(name, name, style.typeText(of), insertHandler = insert))
 }
 
 private class QuotingInsertHandler(private val quote: Char) : InsertHandler<LookupElement> {

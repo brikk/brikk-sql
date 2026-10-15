@@ -97,4 +97,5 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         "partition_values" to "partition-values/", "hudi_meta" to "hudi-meta/", "cdc_stream" to "cdc-stream/",
         "parquet_meta" to "parquet-meta/",
     ).mapValues { (_, page) -> TABLE_FUNCTIONS + page },
+    properties = DORIS_PROPERTY_LISTS,
 )
