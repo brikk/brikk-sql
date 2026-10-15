@@ -1,11 +1,14 @@
 package dev.brikk.house.sql.intellij.dialect
 
+import com.intellij.database.symbols.DasSymbol
+import com.intellij.openapi.project.Project
 import com.intellij.psi.tree.IElementType
 import com.intellij.sql.dialects.base.TokensHelper
 import com.intellij.sql.dialects.functions.SqlFunctionsUtil
 import com.intellij.sql.dialects.postgres.PgDialect
 import com.intellij.sql.dialects.postgres.PgDialectBase
 import com.intellij.sql.dialects.postgres.PgTokens
+import com.intellij.util.Processor
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -30,4 +33,10 @@ public abstract class PgFamilyDialect(id: String) : PgDialectBase(id) {
 
     override fun createTokensHelper(): TokensHelper =
         TokensHelper(PgTokens::class.java, SqlFunctionsUtil.loadFunctionDefinition(PgDialect.INSTANCE))
+
+    /** An engine function [builtins] bind takes the parameters its metadata names, so `name := value` labels them. */
+    override fun processNamedArgumentCandidates(callableSymbol: DasSymbol?, processor: Processor<in DasSymbol>, project: Project): Boolean {
+        val function = callableSymbol as? EngineFunction ?: return super.processNamedArgumentCandidates(callableSymbol, processor, project)
+        return function.parameters.all(processor::process)
+    }
 }

@@ -4,6 +4,7 @@ import com.intellij.codeInspection.LocalInspectionEP
 import com.intellij.codeInspection.LocalInspectionTool
 import com.intellij.database.Dbms
 import com.intellij.database.DbmsExtension
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.types.DasTypeSystemBase
 import com.intellij.icons.AllIcons
 import com.intellij.lang.LanguageParserDefinitions
@@ -23,6 +24,7 @@ import com.intellij.sql.inspections.suppression.SqlInspectionSuppressorDelegate
 import com.intellij.sql.dialects.BuiltinFunction
 import com.intellij.sql.psi.SqlCreateStatement
 import com.intellij.sql.psi.SqlFunctionCallExpression
+import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlResolveResult
 import com.intellij.sql.psi.impl.SqlResolveExtension
 import com.intellij.sql.psi.SqlTableType
@@ -164,6 +166,45 @@ class PgFamilyBuiltinsTest : BasePlatformTestCase() {
         val row = call.dasType as SqlTableType
         assertEquals(listOf("x", "y"), (0 until row.columnCount).map(row::getColumnName))
         assertFalse("$row", row is SqlTableTypeBase.UnresolvedRefType)
+    }
+
+    /** The label [key] before [operator] in the open file, as the reference the platform makes of it. */
+    private fun label(key: String, operator: String): SqlReferenceExpression {
+        val leaf = checkNotNull(myFixture.file.findElementAt(myFixture.file.text.indexOf("$key $operator")))
+        return checkNotNull(PsiTreeUtil.getParentOfType(leaf, SqlReferenceExpression::class.java, false)) { "$key: ${leaf.parent}" }
+    }
+
+    fun testReaderNamedArgumentLabelsBindToTheReadersParameters() {
+        val failures = mutableListOf<String>()
+        for ((call, keys) in listOf("read_parquet('input.parquet'" to listOf("filename", "file_row_number"), "read_csv('input.csv'" to listOf("header", "filename"))) {
+            for (operator in listOf("=", ":=")) {
+                val sql = "SELECT * FROM $call, ${keys.joinToString(", ") { "$it $operator true" }})"
+                failures += reports(sql).map { "$sql -> $it" }
+                for (key in keys) {
+                    val symbol = label(key, operator).resolveSymbol()
+                    if (symbol?.kind != ObjectKind.ARGUMENT || symbol.name != key) failures += "$sql: $key binds to $symbol"
+                }
+            }
+        }
+        assertEmpty(failures.joinToString("\n"), failures)
+    }
+
+    fun testArgumentValuesUnknownLabelsAndScalarEqualitiesKeepTheirResolution() {
+        val declaration = "CREATE TABLE parameter_inputs (flag_value BOOLEAN, number_value INTEGER);\n"
+        for (operator in listOf("=", ":=")) {
+            val sql = declaration + "SELECT * FROM parameter_inputs p CROSS JOIN read_parquet('input.parquet', filename $operator p.flag_value)"
+            val found = reports(sql)
+            assertEmpty("$sql: $found", found)
+            val value = PsiTreeUtil.findChildrenOfType(myFixture.file, SqlReferenceExpression::class.java).single { it.text == "p.flag_value" }
+            assertEquals(ObjectKind.COLUMN, value.resolveSymbol()?.kind)
+            assertTrue(reports("SELECT * FROM read_parquet('input.parquet', filename $operator missing_flag)").any { it.startsWith("missing_flag:") })
+            // An unknown option keeps today's policy: reported, never bound.
+            assertTrue(reports("SELECT * FROM read_parquet('input.parquet', not_an_option $operator true)").any { it.startsWith("not_an_option:") })
+        }
+        // `=` names nothing outside a table function's arguments: a scalar's equality compares columns.
+        assertEmpty(reports(declaration + "SELECT abs(number_value), abs(CAST(number_value = number_value AS INTEGER)) FROM parameter_inputs"))
+        assertTrue(reports(declaration + "SELECT abs(CAST(missing_number = number_value AS INTEGER)) FROM parameter_inputs").any { it.startsWith("missing_number:") })
+        assertTrue(reports("SELECT list_value(filename = 1)").any { it.startsWith("filename:") })
     }
 
     fun testUnknownFunctionsAndTypesStillReport() {
