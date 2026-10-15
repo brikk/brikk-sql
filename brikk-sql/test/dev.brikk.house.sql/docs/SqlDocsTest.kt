@@ -20,6 +20,9 @@ class SqlDocsTest {
             assertEquals(metadata.dialect, metadata.docs?.dialect)
         }
         assertNull(TRINO_METADATA.docs)
+        // Sites without versioned paths are named as they are: their current or latest pages.
+        assertEquals(mapOf("doris" to "4.x", "clickhouse" to "current", "duckdb" to "current", "starrocks" to "latest"),
+            listOf(DORIS_METADATA, CLICKHOUSE_METADATA, DUCKDB_METADATA, STARROCKS_METADATA).associate { it.dialect to it.docs?.version })
     }
 
     /** The link at `<caret>` in [sql]. */

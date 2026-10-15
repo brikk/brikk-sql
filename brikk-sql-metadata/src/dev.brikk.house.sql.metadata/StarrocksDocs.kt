@@ -2,10 +2,13 @@ package dev.brikk.house.sql.metadata
 
 private const val STATEMENTS = "sql-reference/sql-statements/"
 
-/** StarRocks documentation: the site's unversioned pages are the latest release line, 4.1. */
+/**
+ * StarRocks' latest documentation, its unversioned pages (4.1 on 2026-10-14). The site has no `docs/4.1/`
+ * path yet: the links follow the latest release until it does.
+ */
 val STARROCKS_DOCS: EngineDocs = EngineDocs(
     dialect = "starrocks",
-    version = "4.1",
+    version = "latest",
     base = "https://docs.starrocks.io/docs/",
     statements = listOf(
         // Tables, views and materialized views.

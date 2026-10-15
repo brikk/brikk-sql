@@ -1,12 +1,12 @@
 package dev.brikk.house.sql.metadata
 
 /**
- * ClickHouse documentation. The site documents only the current release, so the pages are those of the
- * pinned 26.x line while it is current; every page was checked against the site.
+ * ClickHouse's current documentation (26.x on 2026-10-14, the line the bundled metadata pins). The site
+ * documents only its current release, so the links follow it.
  */
 val CLICKHOUSE_DOCS: EngineDocs = EngineDocs(
     dialect = "clickhouse",
-    version = "26.x",
+    version = "current",
     base = "https://clickhouse.com/docs/",
     statements = listOf(
         DocsEntry("CREATE [OR REPLACE] [TEMPORARY] TABLE", "reference/statements/create/table", "CREATE TABLE", "Creates a table: its columns, engine, ordering, partitioning and settings."),

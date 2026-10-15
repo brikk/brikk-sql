@@ -2,10 +2,13 @@ package dev.brikk.house.sql.metadata
 
 private const val STATEMENTS = "sql/statements/"
 
-/** DuckDB 1.5 documentation: the site's "current" pages are 1.5's (1.4 is "lts"). */
+/**
+ * DuckDB's current documentation (1.5 on 2026-10-14; 1.4 is "lts"). The site has no `docs/1.5/` path yet:
+ * the links follow the current release until it does.
+ */
 val DUCKDB_DOCS: EngineDocs = EngineDocs(
     dialect = "duckdb",
-    version = "1.5",
+    version = "current",
     base = "https://duckdb.org/docs/current/",
     statements = listOf(
         // Databases and extensions.
