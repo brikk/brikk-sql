@@ -72,7 +72,9 @@ private object PropertyRecognizer {
 
         // The string at the offset, closed or still open, and what stands before it.
         val at = tokens.indexOfFirst { it.tokenType == TokenType.STRING && local > it.start && local <= it.end }.takeIf { it >= 0 && open == null }
-        val previous = before.getOrNull(if (at != null) at - 1 else before.lastIndex) ?: return null
+        // A key typed without quotes yet: the word the caret ends.
+        val word = before.lastOrNull()?.takeIf { at == null && open == null && it.end + 1 == local && it.isWord(text) && before.size - 1 != paren }
+        val previous = before.getOrNull(if (at != null) at - 1 else before.lastIndex - (if (word != null) 1 else 0)) ?: return null
         val stringStart = when {
             open != null -> open
             at != null -> tokens[at].start
@@ -81,12 +83,12 @@ private object PropertyRecognizer {
         val stringEnd = at?.let { tokens[it].end + 1 } ?: local
         val value = previous.tokenType == TokenType.EQ
         if (!value && previous.tokenType != TokenType.COMMA && before.indexOf(previous) != paren) return null
-        val prefix = stringStart?.let { text.substring(it + 1, local) } ?: ""
+        val prefix = stringStart?.let { text.substring(it + 1, local) } ?: word?.text.orEmpty()
         val key = if (value) before.getOrNull(before.indexOf(previous) - 1)?.takeIf { it.tokenType == TokenType.STRING }?.text ?: return null
         else at?.let { tokens[it].text } ?: prefix.ifEmpty { null }
         return PropertySite(
             title, url, keys, key, value,
-            range.start + (stringStart ?: local), range.start + stringEnd, prefix, stringStart != null, pairs.keys,
+            range.start + (stringStart ?: word?.start ?: local), range.start + stringEnd, prefix, stringStart != null, pairs.keys,
         )
     }
 
