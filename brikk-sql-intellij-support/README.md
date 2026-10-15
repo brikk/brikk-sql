@@ -27,6 +27,20 @@ no internal-API annotation.
   cancel would cancel on the client, then `KILL QUERY` on the server, and run the stock cancel only as
   a fallback. `delegate` runs at most once, during `perform`, as the event is not valid afterwards). Register a subclass as `dynamicActionConfigurationCustomizer`;
   ids the IDE lacks are skipped, and unloading beneath a peer detaches as for Execute.
+- `StreamingCancelConfiguration(DialectDataSourceResolver(dbms))` (experimental): Cancel for a
+  console of that dbms whose request streams its results. The stock cancel only stops fetching and
+  closes the statement there, which a driver may drain while the server keeps running the query
+  (ClickHouse JDBC 0.10). Once results stream, the platform keeps the statement only on the engine's
+  thread, so this cancels the statements of the console engine's own connection
+  (`RemoteConnection.cancelAll`: the streaming one, and any idle statement the engine keeps open on that
+  connection) off the EDT, and only then sends the stock cancel request, so its cleanup cannot close the
+  statement first. Each step runs only if the engine still runs the captured request on that
+  connection, so a request that has ended, and its successor, get neither (the stock cancel request
+  is not bound to a request: between the last check and the engine handling it, the platform offers no
+  lock). Other consoles and connections are not touched. Any other press (another dbms, a request still waiting for results, a
+  second press on a cancelled session) runs the wrapped action. Database Tools keeps an engine's
+  execution state private, with no public alternative: it is read from `JdbcEngine`'s single
+  `AtomicReference<State>` field (`myState` on 261, `state` on 263); without it, the stock cancel runs.
 - `EditorSnapshot`: refuse stale document identity/revisions, including edit/revert,
   with `SqlExecutionRefusal`. Cancellation propagates unchanged. `captureAfterSave`
   pins the revision after a save that resets the stamp, refusing edits made before it.
