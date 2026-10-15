@@ -38,6 +38,8 @@ internal fun grammarForm(
  * One completion entry: a function name (or alias) under one kind. [signature] and
  * [returnType] come from the first overload (`signature` lists argument types, `...` for
  * variadic), null without overloads. [extension] is set for functions an extension adds.
+ * [namedParameters] are the parameters any overload takes by name, after its positional ones
+ * ([FunctionOverload.positionalCount]), as the engine spells them.
  */
 data class FunctionPresentation(
     val name: String,
@@ -50,7 +52,37 @@ data class FunctionPresentation(
     val extension: String?,
     val syntaxes: Set<InvocationSyntax>,
     val template: String? = null,
-)
+    val namedParameters: List<String> = emptyList(),
+) {
+    // Binary compatibility (AGENTS.md): the constructor and copy from before namedParameters.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(
+        name: String,
+        isAlias: Boolean,
+        kind: FunctionKind,
+        nativeKind: String?,
+        signature: String?,
+        returnType: String?,
+        overloadCount: Int,
+        extension: String?,
+        syntaxes: Set<InvocationSyntax>,
+        template: String? = null,
+    ) : this(name, isAlias, kind, nativeKind, signature, returnType, overloadCount, extension, syntaxes, template, emptyList())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(
+        name: String = this.name,
+        isAlias: Boolean = this.isAlias,
+        kind: FunctionKind = this.kind,
+        nativeKind: String? = this.nativeKind,
+        signature: String? = this.signature,
+        returnType: String? = this.returnType,
+        overloadCount: Int = this.overloadCount,
+        extension: String? = this.extension,
+        syntaxes: Set<InvocationSyntax> = this.syntaxes,
+        template: String? = this.template,
+    ): FunctionPresentation = copy(name, isAlias, kind, nativeKind, signature, returnType, overloadCount, extension, syntaxes, template, namedParameters)
+}
 
 /** This def presented under [asName] (its name or one of its aliases), called as `name(...)`. */
 fun FunctionDef.presentation(asName: String = name): FunctionPresentation {
@@ -65,6 +97,7 @@ fun FunctionDef.presentation(asName: String = name): FunctionPresentation {
         overloadCount = overloads.size,
         extension = extension,
         syntaxes = setOf(InvocationSyntax.CALL),
+        namedParameters = overloads.flatMap { overload -> overload.argNames.orEmpty().let { it.drop(overload.positionalCount ?: it.size) } }.distinct(),
     )
 }
 

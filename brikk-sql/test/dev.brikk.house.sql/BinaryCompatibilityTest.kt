@@ -4,6 +4,9 @@ import dev.brikk.house.sql.metadata.DUCKDB_METADATA
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.DuckdbDump
 import dev.brikk.house.sql.metadata.FunctionCatalog
+import dev.brikk.house.sql.metadata.FunctionKind
+import dev.brikk.house.sql.metadata.FunctionPresentation
+import dev.brikk.house.sql.metadata.InvocationSyntax
 import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.EngineDocs
 import dev.brikk.house.sql.metadata.PropertyDef
@@ -89,5 +92,16 @@ class BinaryCompatibilityTest {
         val dump = DuckdbDump::class.java.getConstructor(String::class.java, list, list, list, list, list)
             .newInstance("1", emptyList<Any>(), null, null, null, null)
         assertEquals(null, dump.types)
+    }
+
+    @Test
+    fun functionPresentationKeepsItsShapeFromBeforeNamedParameters() {
+        val string = String::class.java
+        val shape = arrayOf(string, Boolean::class.java, FunctionKind::class.java, string, string, string, Int::class.java, string, Set::class.java, string)
+        val syntaxes = setOf(InvocationSyntax.CALL)
+        val old = FunctionPresentation::class.java.getConstructor(*shape).newInstance("f", false, FunctionKind.SCALAR, null, null, null, 0, null, syntaxes, null)
+        assertEquals(FunctionPresentation("f", false, FunctionKind.SCALAR, null, null, null, 0, null, syntaxes), old)
+        val named = old.copy(namedParameters = listOf("p"))
+        assertEquals(named.copy(name = "g"), FunctionPresentation::class.java.getMethod("copy", *shape).invoke(named, "g", false, FunctionKind.SCALAR, null, null, null, 0, null, syntaxes, null))
     }
 }
