@@ -516,8 +516,10 @@ of the `intellij.database.sql.core.impl` module with no internal-API annotation,
 `SqlEngineDocumentationProvider(metadata)` (`docs`): quick documentation (Ctrl+Q) and external documentation
 (Shift+F1) of the statement forms, clauses, table functions and table engines the dialect's
 `DialectMetadata.docs` maps to engine pages, recognized by core's `sqlDocsAt`; references and function calls
-keep the platform's own documentation. Register a no-arg subclass as the language's
-`lang.documentationProvider` with `order="first"`; a dialect without docs fails there. That every bundled
+keep the platform's own documentation. A plugin adopts it with XML only:
+`<lang.documentationProvider language="DorisSQL" implementationClass="dev.brikk.house.sql.intellij.docs.SqlEngineDocumentationProvider" order="first"/>`;
+the provider finds the docs of the file's language through `SqlDialectRegistry` and `bundledMetadata`. Its test is
+`DocumentationProviderContract(myFixture, language, testRootDisposable).check(statement, docsHost, table)` from the test kit. That every bundled
 page answers, documents what links to it, and (where the site shows a version badge) still shows
 `EngineDocs.release` is checked against the live sites on demand:
 

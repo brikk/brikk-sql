@@ -16,6 +16,8 @@ import dev.brikk.house.sql.docs.DocsKind
 import dev.brikk.house.sql.docs.sqlDocsAt
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.EngineDocs
+import dev.brikk.house.sql.metadata.bundledMetadata
+import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import org.jetbrains.annotations.ApiStatus
 
 /**
@@ -24,18 +26,29 @@ import org.jetbrains.annotations.ApiStatus
  * a table function ([sqlDocsAt]) shows its name, a one-line
  * summary when known and a link to the engine's page for the pinned release, which external documentation
  * opens. Names inside references, such as columns and tables, keep the platform's own documentation; so
- * does everything the engine does not document. Works in injected SQL of the language. Register a no-arg
- * subclass as the language's `lang.documentationProvider` with `order="first"`.
+ * does everything the engine does not document. Works in injected SQL of the language.
+ *
+ * Register this class itself as the language's `lang.documentationProvider` with `order="first"`: it finds
+ * the docs of the file's language through [SqlDialectRegistry] and [bundledMetadata], so a plugin writes no
+ * code. A subclass may pass its metadata instead, which must have docs.
  */
 @ApiStatus.Experimental
-public abstract class SqlEngineDocumentationProvider(metadata: DialectMetadata) : AbstractDocumentationProvider() {
-    private val docs: EngineDocs = requireNotNull(metadata.docs) { "${metadata.dialect} bundles no engine documentation" }
+public open class SqlEngineDocumentationProvider private constructor(private val fixed: EngineDocs?) : AbstractDocumentationProvider() {
+    /** Docs found from each file's language. */
+    public constructor() : this(null)
+
+    public constructor(metadata: DialectMetadata) : this(requireNotNull(metadata.docs) { "${metadata.dialect} bundles no engine documentation" })
+
+    /** The docs for SQL in [file]: this provider's own, or those of the file's dialect. */
+    private fun docsFor(file: PsiFile): EngineDocs? =
+        fixed ?: SqlDialectRegistry.forLanguage(file.language)?.coreDialect?.let(::bundledMetadata)?.docs
 
     final override fun getCustomDocumentationElement(editor: Editor, file: PsiFile, contextElement: PsiElement?, targetOffset: Int): PsiElement? {
         val context = contextElement ?: return null
         val reference = PsiTreeUtil.getParentOfType(context, SqlReferenceExpression::class.java, false)
         // A reference's own documentation stays; only a call's name may be a table function.
         if (reference != null && (reference.parent as? SqlFunctionCallExpression)?.nameElement !== reference) return null
+        val docs = docsFor(file) ?: return null
         val link = sqlDocsAt(file.text, docs, targetOffset, ProgressManager::checkCanceled) ?: return null
         // A call's name keeps the platform's function documentation unless the call is a table function.
         if (reference != null && link.kind != DocsKind.TABLE_FUNCTION) return null
