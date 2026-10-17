@@ -2,8 +2,10 @@
 #
 # Publish a RELEASE of the SQL modules to Maven Central (Central Portal).
 #
-#   ./publish-release.sh <version> [module ...]
+#   ./publish-release.sh [--local] <version> [module ...]
 #   ./publish-release.sh 0.19.0 brikk-sql-verify brikk-sql-oracle
+# --local installs the same formal release coordinates into Maven Local instead, unsigned and without
+# credentials (the selection only, its in-repo dependencies already installed at that version).
 # With no module arguments, publish every aligned SQL module (core, metadata, the verify family and
 # oracle). A selection publishes only the named modules; their in-repo dependencies must already be
 # released at the same version.
@@ -33,9 +35,14 @@ SQL_MODULES=(
   brikk-sql-oracle
 )
 
+LOCAL=false
+if [ "${1:-}" = "--local" ]; then
+  LOCAL=true
+  shift
+fi
 VERSION="${1:-}"
 if [ "$#" -lt 1 ]; then
-  echo "usage: $0 <version> [module ...]; modules: ${SQL_MODULES[*]}" >&2
+  echo "usage: $0 [--local] <version> [module ...]; modules: ${SQL_MODULES[*]}" >&2
   exit 2
 fi
 python3 tools/release_config.py validate "$VERSION"
@@ -46,6 +53,7 @@ if [ "${#MODULES[@]}" -eq 0 ]; then
   MODULES=("${SQL_MODULES[@]}")
 fi
 TASKS=()
+SELECTED=()
 declare -A SEEN=()
 for module in "${MODULES[@]}"; do
   supported=false
@@ -62,7 +70,22 @@ for module in "${MODULES[@]}"; do
   fi
   SEEN[$module]=1
   TASKS+=(":${module}:publishToMavenCentral")
+  SELECTED+=(-m "$module")
 done
+
+if [ "$LOCAL" = true ]; then
+  TMPL="publish.module-template.yaml"
+  BACKUP="$(mktemp "$PWD/.publish-base.XXXXXX.module-template.yaml")"
+  cp "$TMPL" "$BACKUP"
+  restore() { cp "$BACKUP" "$TMPL"; rm -f "$BACKUP"; }
+  trap restore EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  python3 tools/release_config.py template "$VERSION" "./$(basename "$BACKUP")" --local > "$TMPL"
+  echo ">> Installing formal release ${VERSION} into Maven Local: ${MODULES[*]}"
+  ./kotlin publish mavenLocal "${SELECTED[@]}" --non-transitive
+  exit 0
+fi
 
 # Env-var name compatibility. The name the toolchain reads changed between versions:
 #   - 0.11 reads KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME/PASSWORD   (NO underscore)

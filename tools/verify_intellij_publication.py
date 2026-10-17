@@ -51,8 +51,10 @@ if __name__ == '__main__':
     parser.add_argument('--repository', type=Path, default=Path.home() / '.m2/repository')
     args = parser.parse_args()
     versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-metadata-jvm': args.core_version,
-                'brikk-sql-intellij-support': args.version}
+                'brikk-sql-verify-api': args.core_version, 'brikk-sql-intellij-support': args.version}
+    # Support exports the verification API (native validators answer with its results), never an engine.
     verify(args.repository, args.version, 'brikk-sql-intellij-support', 'dev/brikk/house/sql/intellij/',
-           [('dev.brikk.house', 'brikk-sql-jvm'), ('dev.brikk.house', 'brikk-sql-metadata-jvm'), STDLIB], sources=True, versions=versions)
+           [('dev.brikk.house', 'brikk-sql-jvm'), ('dev.brikk.house', 'brikk-sql-metadata-jvm'),
+            ('dev.brikk.house', 'brikk-sql-verify-api'), STDLIB], sources=True, versions=versions)
     verify(args.repository, args.version, 'brikk-sql-intellij-test-support', 'dev/brikk/house/sql/intellij/testing/',
            [('dev.brikk.house', 'brikk-sql-intellij-support'), STDLIB], sources=False, versions=versions)

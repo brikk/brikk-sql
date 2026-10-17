@@ -33,17 +33,18 @@ def development_version(template_text: str) -> str:
     return match.group(1)
 
 
-def release_template(version: str, base_template: str) -> str:
-    """Use native template inheritance, not text edits or a separate YAML parser."""
+def release_template(version: str, base_template: str, local: bool = False) -> str:
+    """Use native template inheritance, not text edits or a separate YAML parser. [local] only sets the
+    version: a formal candidate for Maven Local, neither signed nor bound for Central."""
     validate_version(version)
     # JSON double-quoted strings are also YAML scalars, including escaped paths.
+    central = "" if local else "    mavenCentral: { enabled: true, publishingMode: auto }\n    signArtifacts: true\n"
     return (
         "# Temporary release overrides; publish-release.sh restores the base on exit.\n"
         f"apply:\n  - {json.dumps(base_template)}\n"
         "settings:\n  publishing:\n"
         f"    version: {json.dumps(version)}\n"
-        "    mavenCentral: { enabled: true, publishingMode: auto }\n"
-        "    signArtifacts: true\n"
+        f"{central}"
     )
 
 
@@ -55,11 +56,12 @@ def main() -> None:
     template = commands.add_parser("template")
     template.add_argument("version")
     template.add_argument("base_template")
+    template.add_argument("--local", action="store_true")
     args = parser.parse_args()
     try:
         validate_version(args.version)
         if args.command == "template":
-            print(release_template(args.version, args.base_template), end="")
+            print(release_template(args.version, args.base_template, args.local), end="")
     except ValueError as error:
         parser.error(str(error))
 

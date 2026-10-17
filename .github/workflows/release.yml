@@ -7,6 +7,8 @@ name: Release to Maven Central
 # A manual run can select comma-separated modules to complete a partial release.
 #
 # The full test suite (test.yml) must be green first; a red gate blocks the release (EVAL-03).
+# A manual run marked `preverified` (its source already verified by the targeted checks) skips that
+# gate; it still installs the formal release locally and checks its POMs before anything reaches Central.
 
 on:
   push:
@@ -20,6 +22,11 @@ on:
         description: 'Optional comma-separated SQL modules; empty releases all aligned SQL modules'
         required: false
         default: ''
+      preverified:
+        description: 'Source already verified: skip the full test gate, keep the release checks'
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -30,10 +37,13 @@ permissions:
 
 jobs:
   test:
+    if: ${{ !inputs.preverified }}
     uses: ./.github/workflows/test.yml
 
   release:
     needs: test
+    # A skipped gate counts only for a preverified manual run; a failed or cancelled one never does.
+    if: ${{ !cancelled() && (needs.test.result == 'success' || (inputs.preverified && needs.test.result == 'skipped')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -68,6 +78,15 @@ jobs:
           brikk.mavencentral.user=${{ secrets.KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME || secrets.KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME }}
           brikk.mavencentral.pass=${{ secrets.KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD || secrets.KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD }}
           EOF
+
+      - name: Install the formal release locally and check it
+        env:
+          RELEASE_VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          python3 -m unittest discover -s tools -p 'test_*release*.py'
+          ./publish-release.sh --local "$RELEASE_VERSION"
+          python3 tools/verify_release_candidates.py "$RELEASE_VERSION"
+          python3 tools/verify_verifier_publication.py "$RELEASE_VERSION"
 
       - name: Publish release to Maven Central
         # The toolchain env-var name for Central creds differs by version: 0.11 reads the
