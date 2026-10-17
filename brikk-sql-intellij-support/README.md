@@ -882,7 +882,7 @@ previous approval of a plugin-local implementation does not establish approval o
 
 | API | Used by | Why | Marketplace |
 | --- | --- | --- | --- |
-| `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | selects generic JDBC introspection rather than fallback-engine introspection | unapproved shared usages; release blocked pending audit and owner decision |
+| `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | selects generic JDBC introspection rather than fallback-engine introspection | owner confirmed 15 ignored usages for Trino on 2026-10-17; no approval transfers to another plugin |
 
 `InternalApiContainmentTest` (in the test kit's platform tests) reads every class of this jar in
 full, signatures, method bodies, lambdas and annotation values, and fails if a class outside the kit
@@ -892,6 +892,12 @@ owner's supertypes). It also fails if the kit's internal API differs from the te
 this table mirrors. The same test keeps the library free of the Kotlin IDE plugin: it fails on any
 reference to `org.jetbrains.kotlin.*` (the plugin, its PSI and the analysis API; the standard library
 is `kotlin.*`), as a type anywhere or as a class name in a constant (`Class.forName`).
+
+This is a containment check, not a call-site approval check: references to methods of an internal
+type collapse to that type. It therefore does not prove that a refactor preserved the previous
+number of internal calls. Plugin release auditing must inspect every verifier finding separately.
+The owner also confirmed 11 ignored factory usages in Doris's own introspector; that does not
+approve the additional shared gate or `DbDataSource.getDelegate()`.
 
 `isBuiltinCatalogObject` (catalog kit) reads `BasicElement.getModel`, `BasicModModel.getTextStorage`
 and `DataSourceSnapshotManager.MINICAT_STORAGE`, the platform's own test for a builtin resolve result

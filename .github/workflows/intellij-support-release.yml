@@ -7,9 +7,14 @@ on:
         description: 'SQL IntelliJ support release version'
         required: true
       core_version:
-        description: 'Optional core/metadata version to publish alongside the helper'
+        description: 'Formal core/metadata/verify-api version used by support'
         required: false
         default: ''
+      publish_core:
+        description: 'Publish NEW core prerequisites too; false for a support-only patch against released core'
+        type: boolean
+        required: false
+        default: false
       preverified:
         description: 'Source already verified: skip the full test gate, keep the release checks'
         type: boolean
@@ -42,18 +47,26 @@ jobs:
         env:
           SUPPORT_VERSION: ${{ inputs.version }}
           CORE_VERSION: ${{ inputs.core_version }}
+          PUBLISH_CORE: ${{ inputs.publish_core }}
         run: |
           python3 -m unittest discover -s tools -p 'test_*release*.py'
           if [ -z "$CORE_VERSION" ]; then
             echo "::error::A Central release of support needs core_version (support takes released core, metadata and verify-api)"
             exit 1
           fi
-          python3 tools/publish_intellij_support.py "$SUPPORT_VERSION" --core-version "$CORE_VERSION" --local
+          args=("$SUPPORT_VERSION" --core-version "$CORE_VERSION")
+          artifacts=brikk-sql-intellij-support,brikk-sql-intellij-test-support
+          if [ "$PUBLISH_CORE" = true ]; then
+            artifacts="brikk-sql,brikk-sql-jvm,brikk-sql-metadata,brikk-sql-metadata-jvm,brikk-sql-verify-api,$artifacts"
+          else
+            args+=(--skip-core-publication)
+          fi
+          python3 tools/publish_intellij_support.py "${args[@]}" --local
           python3 tools/verify_release_candidates.py "$CORE_VERSION" --support-version "$SUPPORT_VERSION" \
-            --only brikk-sql,brikk-sql-jvm,brikk-sql-metadata,brikk-sql-metadata-jvm,brikk-sql-verify-api,brikk-sql-intellij-support,brikk-sql-intellij-test-support
+            --only "$artifacts"
           python3 tools/verify_intellij_publication.py "$SUPPORT_VERSION" --core-version "$CORE_VERSION"
 
-      - name: Publish only core prerequisites and SQL IntelliJ support
+      - name: Publish SQL IntelliJ support and explicitly requested new core prerequisites
         env:
           KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME: ${{ secrets.KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME || secrets.KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME }}
           KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD: ${{ secrets.KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD || secrets.KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_PASSWORD }}
@@ -61,9 +74,13 @@ jobs:
           KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE: ${{ secrets.KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE || secrets.KOTLIN_TOOLCHAIN_SIGNING_PASSPHRASE }}
           SUPPORT_VERSION: ${{ inputs.version }}
           CORE_VERSION: ${{ inputs.core_version }}
+          PUBLISH_CORE: ${{ inputs.publish_core }}
         run: |
           args=("$SUPPORT_VERSION")
           if [ -n "$CORE_VERSION" ]; then
             args+=(--core-version "$CORE_VERSION")
+          fi
+          if [ "$PUBLISH_CORE" != true ]; then
+            args+=(--skip-core-publication)
           fi
           python3 tools/publish_intellij_support.py "${args[@]}"
