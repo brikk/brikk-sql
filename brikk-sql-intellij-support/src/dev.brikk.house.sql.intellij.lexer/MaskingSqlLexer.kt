@@ -8,7 +8,6 @@ import com.intellij.sql.psi.SqlLanguage
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.shape.ParamStyle
 import dev.brikk.house.sql.shape.SqlScriptParameters
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A lexer that bridges dialect syntax to the platform grammar of its [base] lexer. A [rule] either
@@ -31,7 +30,6 @@ import org.jetbrains.annotations.ApiStatus
  * as [LookAheadLexer] encodes it, capped so the sign bit stays clear. [start] hands the base only
  * its bits, as [LookAheadLexer] hands its base only the low 16.
  */
-@ApiStatus.Experimental
 public abstract class MaskingSqlLexer(
     base: Lexer,
     private val castMask: CastTargetMask? = null,
@@ -448,7 +446,6 @@ private class FreshPoint(val offset: Int, val state: Int)
  * as a one-argument function. Any target is masked unless, after whitespace and comments, `AS` is
  * followed by `;`, `)`, `,` or the end of the text: input still being typed keeps those tokens.
  */
-@ApiStatus.Experimental
 public data class CastTargetMask(
     /** Upper-case function names, each followed by `(`. */
     val functions: Set<String> = setOf("TRY_CAST"),
@@ -468,7 +465,6 @@ public data class CastTargetMask(
 private fun Char.isWordPart(): Boolean = isLetterOrDigit() || this == '_'
 
 /** The `:` of an IDE bind kept in a masked span (`MaskingSqlLexer`'s `parameterDialect`). */
-@ApiStatus.Experimental
 public val KEPT_BIND_COLON: IElementType = IElementType("KEPT_BIND_COLON", SqlLanguage.INSTANCE)
 
 

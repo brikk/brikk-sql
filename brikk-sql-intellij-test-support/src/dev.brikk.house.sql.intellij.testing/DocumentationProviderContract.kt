@@ -7,7 +7,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.psi.PsiElement
 import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture
-import org.jetbrains.annotations.ApiStatus
 import java.net.URI
 import java.util.UUID
 
@@ -17,7 +16,6 @@ import java.util.UUID
  * `IdeDocumentationTargetProvider` (what Ctrl+Q uses on 261 and later). Run [check] from a light platform test
  * of the plugin; every problem is reported together.
  */
-@ApiStatus.Experimental
 public class DocumentationProviderContract(
     private val fixture: CodeInsightTestFixture,
     private val language: SqlLanguageDialect,

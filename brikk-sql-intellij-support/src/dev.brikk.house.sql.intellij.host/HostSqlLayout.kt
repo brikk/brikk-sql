@@ -2,7 +2,6 @@ package dev.brikk.house.sql.intellij.host
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiLanguageInjectionHost
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * One piece of SQL in a host string: [range] of the host element's text either kept, as the host
@@ -10,7 +9,6 @@ import org.jetbrains.annotations.ApiStatus
  * marker for an interpolation. A [placeholder] replacement stands for something not known yet; its
  * text is never reported as an error.
  */
-@ApiStatus.Experimental
 public data class HostSqlEntry(val range: TextRange, val replacement: String? = null, val placeholder: Boolean = false) {
     init {
         require(placeholder.not() || replacement != null) { "A placeholder needs replacement text" }
@@ -18,7 +16,6 @@ public data class HostSqlEntry(val range: TextRange, val replacement: String? = 
 }
 
 /** A trim the host language applies to the string at runtime, such as Kotlin's `trimIndent()` and `trimMargin()`. */
-@ApiStatus.Experimental
 public sealed interface HostSqlTrim {
     /** Drops a blank first and last line and the indent common to the non-blank lines. */
     public data object Indent : HostSqlTrim
@@ -36,7 +33,6 @@ public sealed interface HostSqlTrim {
  * order covering the string's content, then [trims] in the order the host applies them. Trimmed
  * lines join with `\n`, as Kotlin's do; untrimmed text keeps its line breaks, `\r\n` included.
  */
-@ApiStatus.Experimental
 public data class HostSqlEntries(val entries: List<HostSqlEntry>, val trims: List<HostSqlTrim> = emptyList()) {
     init {
         require(entries.zipWithNext().all { (a, b) -> a.range.endOffset <= b.range.startOffset }) { "Entries must be in host order without overlap" }
@@ -47,14 +43,12 @@ public data class HostSqlEntries(val entries: List<HostSqlEntry>, val trims: Lis
  * One injection place: [range] of the host element's text injected as it is, after [prefix], text
  * of no host origin (replacements, line breaks a trim joins with). [suffix] is only on the last place.
  */
-@ApiStatus.Experimental
 public data class HostSqlPlace(val prefix: String, val range: TextRange, val suffix: String = "")
 
 /**
  * A host string's SQL [text] and where it comes from: each character's host offset, or none for
  * text of no host origin; [places] for an injection, and the [placeholders] as ranges of [text].
  */
-@ApiStatus.Experimental
 public class HostSqlLayout internal constructor(
     public val text: String,
     public val places: List<HostSqlPlace>,
@@ -77,7 +71,6 @@ public class HostSqlLayout internal constructor(
 }
 
 /** Builds the SQL of host strings from [HostSqlEntries], with exact host origins through escapes and trims. */
-@ApiStatus.Experimental
 public object HostSqlInjection {
     /** The injection places of [entries] in [host]; see [layout]. */
     public fun places(host: PsiLanguageInjectionHost, entries: HostSqlEntries): List<HostSqlPlace> = layout(host, entries).places

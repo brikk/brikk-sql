@@ -6,7 +6,6 @@ import dev.brikk.house.sql.metadata.OutputSchema
 import dev.brikk.house.sql.scope.ColumnFact
 import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * The table functions whose columns metadata knows whatever their arguments ([OutputSchema.Fixed], such as
@@ -14,7 +13,6 @@ import org.jetbrains.annotations.ApiStatus
  * function whose columns depend on its arguments or on external data is left to the analysis, open unless
  * its arguments declare them.
  */
-@ApiStatus.Experimental
 public class TableFunctionFacts(private val snapshot: (PsiFile) -> MetadataSnapshot?) : ExternalRelationFacts {
     @Volatile
     private var last: Pair<MetadataSnapshot, RelationFacts>? = null

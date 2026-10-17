@@ -20,7 +20,6 @@ import com.intellij.psi.impl.source.tree.injected.InjectedLanguageEditorUtil
 import dev.brikk.house.sql.intellij.CooperativeExecuteAction
 import dev.brikk.house.sql.intellij.pipe.PipeDialect
 import dev.brikk.house.sql.intellij.pipe.PipeExecuteInterceptor
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Execution contract of SQL a [PipeDialect] injects into host strings (its `hostSql`): Execute from
@@ -31,7 +30,6 @@ import org.jetbrains.annotations.ApiStatus
  * inspection-only PIPE SQL, and returns its editor with the caret inside that SQL. Call it from a
  * light platform test; a failed check throws [AssertionError].
  */
-@ApiStatus.Experimental
 public class HostSqlExecutionContract(private val dialect: PipeDialect, private val openHost: () -> Editor) {
     /** With the caret in the SQL, Execute is refused; with the caret outside every string, it goes to the stock action. */
     public fun refusesInspectionOnlySqlFromTheHostEditor() {

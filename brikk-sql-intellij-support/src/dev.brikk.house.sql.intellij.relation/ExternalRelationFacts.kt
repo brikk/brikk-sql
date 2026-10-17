@@ -10,10 +10,8 @@ import dev.brikk.house.sql.scope.ColumnOrigin
 import dev.brikk.house.sql.scope.Nullability
 import dev.brikk.house.sql.scope.RelationFacts
 import dev.brikk.house.sql.scope.ScopeColumn
-import org.jetbrains.annotations.ApiStatus
 
 /** What one provider knows about the relations SQL in a file can name. */
-@ApiStatus.Experimental
 public sealed interface RelationFactsResult {
     /** Copied [facts]; [revision] changes whenever they may (a model refresh, a new contract). */
     public data class Available(val facts: RelationFacts, val revision: Long) : RelationFactsResult
@@ -26,7 +24,6 @@ public sealed interface RelationFactsResult {
  * A source of relation facts for SQL in files: a host language's row types, a catalog, a data
  * source's tables. Facts are copies, never live model or PSI objects.
  */
-@ApiStatus.Experimental
 public interface ExternalRelationFacts {
     /** The facts for the SQL of [file] (an injected fragment when the SQL is injected), or null when this provider has none for it. */
     public fun facts(file: PsiFile): RelationFactsResult?
@@ -72,7 +69,6 @@ public interface ExternalRelationFacts {
  * analyzed in core [dialect] over the facts of [providers], merged in order (the first provider of
  * a slot, table or call key wins).
  */
-@ApiStatus.Experimental
 public interface RelationScopeProfile {
     public val language: Language
 
@@ -95,7 +91,6 @@ public interface RelationScopeProfile {
  * (icon and priority from the profile's styles, for items no other contributor offers) and its type. A declared column shows the
  * provider's display type, a physical one its SQL type, a computed one what computes it.
  */
-@ApiStatus.Experimental
 public data class RelationColumnLabels(
     val declared: String = "declared column",
     val declaredKind: SqlLookupKind = SqlLookupKind.RELATION_COLUMN,
@@ -129,7 +124,6 @@ public data class RelationColumnLabels(
 }
 
 /** A column's completion presentation: "[origin] ([relation])", its [type] and three-state [nullable], given only with a Kotlin [type]. */
-@ApiStatus.Experimental
 public data class RelationColumnLabel(
     val origin: String,
     val relation: String,

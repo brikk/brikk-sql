@@ -47,13 +47,11 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * One plugin's native error annotation. The minimum is [language], [dialect], [label] and
  * [validator]; everything a plugin did not do before is off by default.
  */
-@ApiStatus.Experimental
 public interface NativeErrorProfile {
     /** Files of exactly this language are annotated; its dialects are left to their own profiles. */
     public val language: Language
@@ -148,7 +146,6 @@ public interface NativeErrorProfile {
 }
 
 /** What one verification covers. */
-@ApiStatus.Experimental
 public enum class VerificationUnit {
     /** Each statement of core's statement ranges. */
     Statement,
@@ -164,7 +161,6 @@ public enum class VerificationUnit {
  * revision it was computed for, and a later pass at that revision reuses it. Cancellation propagates
  * unchanged. Register a no-arg subclass as the language's (and each host's) `externalAnnotator`.
  */
-@ApiStatus.Experimental
 public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfile) :
     ExternalAnnotator<NativeErrorAnnotator.Snapshot, NativeErrorAnnotator.Outcome>(), DumbAware {
 
@@ -469,7 +465,6 @@ public abstract class NativeErrorAnnotator(private val profile: NativeErrorProfi
  * with this filter rather than keeping both, and gives each derived language its own profile.
  * Register a no-arg subclass as the plugin's `highlightErrorFilter`.
  */
-@ApiStatus.Experimental
 public abstract class NativeErrorPsiFilter(private val profile: NativeErrorProfile) : HighlightErrorFilter() {
     final override fun shouldHighlightErrorElement(element: PsiErrorElement): Boolean {
         if (!profile.reportsPsiErrors) return true

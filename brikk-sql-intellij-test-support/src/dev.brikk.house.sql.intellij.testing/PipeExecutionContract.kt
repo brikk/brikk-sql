@@ -36,7 +36,6 @@ import dev.brikk.house.sql.intellij.pipe.PipeRunToStageIntention
 import dev.brikk.house.sql.intellij.pipe.PipeTranslation
 import dev.brikk.house.sql.intellij.pipe.lower
 import java.util.concurrent.CancellationException
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Execution contracts of a [PipeDialect], checked through the real Execute chain, parameter
@@ -45,7 +44,6 @@ import org.jetbrains.annotations.ApiStatus
  * check throws [AssertionError]. [setEnabled] changes the project's PIPE setting and [open] shows SQL
  * in an editor as a file of the dialect's language; undo their effects in the test.
  */
-@ApiStatus.Experimental
 public class PipeExecutionContract(
     private val dialect: PipeDialect,
     private val driverId: String,

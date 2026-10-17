@@ -19,7 +19,6 @@ import dev.brikk.house.sql.docs.sqlPropertyAt
 import dev.brikk.house.sql.metadata.DialectMetadata
 import dev.brikk.house.sql.metadata.bundledMetadata
 import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Quick documentation and external documentation (Shift+F1) for the SQL constructs the engine documents,
@@ -35,7 +34,6 @@ import org.jetbrains.annotations.ApiStatus
  * the docs of the file's language through [SqlDialectRegistry] and [bundledMetadata], so a plugin writes no
  * code. A subclass may pass its metadata instead, which must have docs.
  */
-@ApiStatus.Experimental
 public open class SqlEngineDocumentationProvider private constructor(private val fixed: Fixed?) : AbstractDocumentationProvider() {
     /** Docs found from each file's language. */
     public constructor() : this(null)

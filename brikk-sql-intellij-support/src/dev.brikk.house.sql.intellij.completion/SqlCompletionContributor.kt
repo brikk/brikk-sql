@@ -36,7 +36,6 @@ import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TableFunctionInfo
 import dev.brikk.house.sql.metadata.definitionOf
 import dev.brikk.house.sql.docs.sqlPropertyAt
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completes the profile's functions and keywords from metadata (property keys only with [PROPERTY_COMPLETION]).
@@ -44,7 +43,6 @@ import org.jetbrains.annotations.ApiStatus
  * language with a no-arg subclass and `order="first"`: it runs the contributors after it and
  * offers only the keywords none of them offered.
  */
-@ApiStatus.Experimental
 public abstract class SqlCompletionContributor(private val profile: SqlCompletionProfile) : CompletionContributor(), DumbAware {
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         if (parameters.completionType != CompletionType.BASIC || !parameters.originalFile.language.isKindOf(profile.language)) return

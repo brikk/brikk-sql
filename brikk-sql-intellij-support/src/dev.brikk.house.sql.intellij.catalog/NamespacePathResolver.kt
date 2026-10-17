@@ -2,10 +2,8 @@ package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.model.DasObject
 import com.intellij.database.model.ObjectKind
-import org.jetbrains.annotations.ApiStatus
 
 /** A model object and its absolute path in the model's own names, top level first (for example catalog, schema). */
-@ApiStatus.Experimental
 public data class NamespaceTarget(val path: List<String>, val node: DasObject)
 
 /**
@@ -18,7 +16,6 @@ public data class NamespaceTarget(val path: List<String>, val node: DasObject)
  * Names match exactly, else ignoring case. A path that does not resolve (still being typed, or a
  * typo) gives null.
  */
-@ApiStatus.Experimental
 public class NamespacePathResolver(
     public val levels: List<ObjectKind>,
     private val usesCurrentNamespace: Boolean,

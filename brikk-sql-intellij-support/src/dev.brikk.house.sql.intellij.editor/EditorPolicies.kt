@@ -13,7 +13,6 @@ import com.intellij.psi.util.CachedValueProvider
 import com.intellij.psi.util.CachedValuesManager
 import dev.brikk.house.sql.ast.Command
 import dev.brikk.house.sql.parser.parseOne
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Hides the substrate grammar's parse errors in files of [language]. Register a no-arg subclass as
@@ -28,7 +27,6 @@ import org.jetbrains.annotations.ApiStatus
  * a query argument the platform parses lazily, after the boundary gate). Core's own parse reports real
  * errors, through the native-error annotator's local parse.
  */
-@ApiStatus.Experimental
 public abstract class SubstrateErrorFilter(
     private val language: Language,
     private val scope: SubstrateErrors = SubstrateErrors.ALL,
@@ -60,7 +58,6 @@ public abstract class SubstrateErrorFilter(
 }
 
 /** Which substrate errors [SubstrateErrorFilter] hides. */
-@ApiStatus.Experimental
 public enum class SubstrateErrors {
     /** Every one: the substrate grammar is not the dialect's. */
     ALL,
@@ -82,7 +79,6 @@ private fun isLenientFallback(element: PsiElement): Boolean =
  * split like plain ones. Spans a masking lexer collapsed into one string token are never split.
  * Register a no-arg subclass as the language's `lang.quoteHandler`.
  */
-@ApiStatus.Experimental
 public abstract class SqlDialectQuoteHandler(private val enter: EnterInString) : SqlQuoteHandler.Concat() {
     public enum class EnterInString {
         /** A newline inside the literal, for dialects whose strings span lines. */

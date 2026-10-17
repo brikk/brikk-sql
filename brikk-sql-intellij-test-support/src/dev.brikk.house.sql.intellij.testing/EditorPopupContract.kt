@@ -14,7 +14,6 @@ import com.intellij.openapi.actionSystem.impl.Utils
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A plugin's editor popup entry, checked by expanding the registered [parent] group as the IDE renders a popup:
@@ -24,7 +23,6 @@ import org.jetbrains.annotations.ApiStatus
  * applicability; a plain group would stay as an empty submenu. Run [check] from a light platform test of the
  * plugin; every problem is reported together.
  */
-@ApiStatus.Experimental
 public class EditorPopupContract(
     private val fixture: CodeInsightTestFixture,
     private val item: String,

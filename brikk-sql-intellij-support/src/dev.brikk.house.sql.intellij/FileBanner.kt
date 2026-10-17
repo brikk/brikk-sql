@@ -10,10 +10,8 @@ import com.intellij.ui.EditorNotifications
 import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Function
 import javax.swing.JComponent
-import org.jetbrains.annotations.ApiStatus
 
 /** Per-file banner messages that live and die with their project. Keep one instance per banner. */
-@ApiStatus.Experimental
 public class FileBanner(id: String) {
     private val key = Key.create<ConcurrentHashMap<VirtualFile, String>>(id)
 
@@ -33,7 +31,6 @@ public class FileBanner(id: String) {
 }
 
 /** Shows [banner]'s message above the file's editors, with a Dismiss link. Register a no-arg subclass. */
-@ApiStatus.Experimental
 public abstract class FileBannerProvider(
     private val banner: FileBanner,
     private val status: EditorNotificationPanel.Status = EditorNotificationPanel.Status.Info,

@@ -9,7 +9,6 @@ import com.intellij.openapi.diagnostic.ControlFlowException
 import com.intellij.openapi.diagnostic.logger
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * How a console switches and reads back its current namespace, for a dbms whose namespaces are
@@ -17,7 +16,6 @@ import org.jetbrains.annotations.ApiStatus
  * `sqlSetSearchPath` to [switchSql] and `tryToLoadSearchPath` to [readBack]: the platform runs the
  * first when the user picks a namespace, and the second after each execution to re-sync the console.
  */
-@ApiStatus.Experimental
 public interface CatalogSearchPathStrategy {
     /** The statement that makes [path]'s current namespace the session's; null when it cannot be switched to. */
     public fun switchSql(path: SearchPath): String?
@@ -27,7 +25,6 @@ public interface CatalogSearchPathStrategy {
 }
 
 /** One way to read a current catalog or schema name. A probe that fails or finds nothing gives null. */
-@ApiStatus.Experimental
 public sealed interface NamespaceProbe {
     /** The first column of the first row of [sql], such as `select database()`. */
     public data class Value(val sql: String) : NamespaceProbe
@@ -53,7 +50,6 @@ public sealed interface NamespaceProbe {
  * too. Where a failed statement aborts the transaction (PostgreSQL and engines like it), list only
  * probes the server supports: a fallback probe that fails there breaks the user's transaction.
  */
-@ApiStatus.Experimental
 public class CatalogSchemaSearchPath(
     private val quote: Char,
     private val useSchema: String,

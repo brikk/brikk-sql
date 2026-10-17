@@ -7,13 +7,11 @@ import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.util.ui.JBUI
 import javax.swing.JComponent
 import javax.swing.JPanel
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A settings page with one checkbox for [settings]. `-D<vetoProperty>=false` disables the checkbox
  * and says why. Register a no-arg or project-argument subclass whose id matches [id].
  */
-@ApiStatus.Experimental
 public abstract class ToggleConfigurable(
     private val id: String,
     private val displayName: String,

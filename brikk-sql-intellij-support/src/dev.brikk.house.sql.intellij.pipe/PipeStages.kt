@@ -25,7 +25,6 @@ import dev.brikk.house.sql.parser.TokenizerConfigs
 import dev.brikk.house.sql.shape.ShapeCatalog
 import dev.brikk.house.sql.shape.ShapeError
 import dev.brikk.house.sql.shape.SqlFragment
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completes the profile's [PipeDialect.stagePhrases] right after a `|>`, hiding every other item
@@ -33,7 +32,6 @@ import org.jetbrains.annotations.ApiStatus
  * the caret. Items take the [SqlLookupKind.PIPE_STAGE] and [SqlLookupKind.PIPE_INPUT_COLUMN] rows
  * of [styles]. Register it for the dialect's language with a no-arg subclass.
  */
-@ApiStatus.Experimental
 public abstract class PipeStageCompletionContributor(
     private val dialect: PipeDialect,
     private val styles: SqlLookupStyles = SqlLookupStyles.DEFAULT,
@@ -145,7 +143,6 @@ private class PhrasePrefixMatcher(prefix: String) : PrefixMatcher(prefix) {
 }
 
 /** Colors the profile's stage phrase after every `|>` as a keyword, also in a statement still being typed. Register it for the dialect's language with a no-arg subclass. */
-@ApiStatus.Experimental
 public abstract class PipeStageKeywordAnnotator(private val dialect: PipeDialect) : Annotator {
     private val phrases by lazy {
         dialect.stagePhrases.map { it.split(' ') }.sortedByDescending { it.size }

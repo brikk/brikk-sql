@@ -4,14 +4,12 @@ import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.metadata.KeywordCatalog
 import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.presentation
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * How a live inventory combines with the bundled functions for completion. Without a harvest every
  * policy offers the bundled functions unchanged. Session functions are always offered, and win over a
  * server or bundled function of the same name and kind (a temporary macro shadowing a built-in).
  */
-@ApiStatus.Experimental
 public enum class LiveMergePolicy {
     /**
      * The live functions replace the bundled registry: a function with live signatures is presented
@@ -33,7 +31,6 @@ public enum class LiveMergePolicy {
 }
 
 /** What completion offers from one selection: the profile hooks' answers. */
-@ApiStatus.Experimental
 public class LiveCompletion(
     public val selection: LiveCatalogSelection,
     public val snapshot: MetadataSnapshot,
@@ -47,7 +44,6 @@ public class LiveCompletion(
  * Combines [selection] with [baseline], the functions offered without a harvest (usually
  * `snapshot.completableFunctions()`), under this policy. Names compare by the snapshot's case policy.
  */
-@ApiStatus.Experimental
 public fun LiveMergePolicy.merge(selection: LiveCatalogSelection, snapshot: MetadataSnapshot, baseline: List<FunctionPresentation>): LiveCompletion {
     val catalog = snapshot.functions
     fun key(name: String) = if (catalog.caseSensitive) name else name.uppercase()
@@ -91,4 +87,3 @@ public fun LiveMergePolicy.merge(selection: LiveCatalogSelection, snapshot: Meta
 /** One entry per name and kind, the first one winning. */
 private fun distinct(entries: List<FunctionPresentation>, key: (String) -> String): List<FunctionPresentation> =
     entries.distinctBy { key(it.name) to it.kind }
-

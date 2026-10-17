@@ -9,7 +9,6 @@ import com.intellij.lang.injection.general.SimpleInjection
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiLanguageInjectionHost
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A recognizer's claims, registered the way that keeps other injections off claimed strings: the
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.ApiStatus
  * `multiHostInjector`) cannot be kept off; SQL they inject into a claimed string is still
  * inspection-only ([HostSqlChannel.isInspectionOnly]).
  */
-@ApiStatus.Experimental
 public abstract class HostSqlInjector(
     private val channel: HostSqlChannel,
     /** The language of the SQL; the injection of an unavailable claim names it too. */

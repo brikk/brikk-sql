@@ -39,7 +39,6 @@ import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
 import dev.brikk.house.sql.scope.RelationScope
 import java.util.concurrent.ConcurrentHashMap
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * The engine's own functions and types for the platform's resolution and typing of a family dialect's files,
@@ -60,7 +59,6 @@ import org.jetbrains.annotations.ApiStatus
  *
  * Everything else, unknown names included, keeps the platform's resolution and diagnostics.
  */
-@ApiStatus.Experimental
 public class EngineBuiltins(
     private val completion: SqlCompletionProfile,
     private val relations: RelationScopeProfile? = null,

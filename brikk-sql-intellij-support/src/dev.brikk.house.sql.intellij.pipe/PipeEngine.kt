@@ -11,9 +11,7 @@ import dev.brikk.house.sql.shape.PipeLowering
 import dev.brikk.house.sql.shape.ShapeError
 import dev.brikk.house.sql.shape.TranspileResult
 import dev.brikk.house.sql.shape.lowerForExecution
-import org.jetbrains.annotations.ApiStatus
 
-@ApiStatus.Experimental
 public sealed interface PipeTranslation {
     /** Generated SQL, not approval: a non-null [blocker] forbids executing it. */
     public data class Lowered(public val result: TranspileResult, public val verdict: NativeVerdict?) : PipeTranslation {
@@ -37,7 +35,6 @@ public sealed interface PipeTranslation {
  * [PipeDialect.firstStage] allows; [substituted] says parameters already carry their values.
  * Boundaries are refused if either the profile's [PipeDialect.scriptRanges] or core rejects them.
  */
-@ApiStatus.Experimental
 public fun PipeDialect.lower(
     text: String,
     firstStage: Boolean = false,

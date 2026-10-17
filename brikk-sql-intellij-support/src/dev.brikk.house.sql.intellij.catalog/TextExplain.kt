@@ -57,10 +57,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import org.jetbrains.annotations.ApiStatus
 
 /** A dialect's text explain: which consoles, how its SQL is read, and how a helper connection reaches the console's namespace. */
-@ApiStatus.Experimental
 public interface TextExplainProfile {
     public val dbms: Dbms
 
@@ -100,7 +98,6 @@ public interface TextExplainProfile {
 }
 
 /** What [TextExplainService.explain] gives. */
-@ApiStatus.Experimental
 public sealed interface ExplainOutcome {
     public data class Plan(val text: String) : ExplainOutcome
 
@@ -120,7 +117,6 @@ public sealed interface ExplainOutcome {
  * popup with Copy. Register a project service subclass with the platform's `(Project, CoroutineScope)`
  * constructor, and a [TextExplainConfiguration] subclass naming it.
  */
-@ApiStatus.Experimental
 public abstract class TextExplainService(protected val project: Project, private val scope: CoroutineScope) {
     public abstract val profile: TextExplainProfile
 
@@ -293,7 +289,6 @@ public abstract class TextExplainService(protected val project: Project, private
  * Claims Explain Plan in the profile's consoles, shows it there, and leaves every other console to the
  * wrapped action. The statement is the selection, else the statement at the caret.
  */
-@ApiStatus.Experimental
 public class TextExplainInterceptor(private val service: Class<out TextExplainService>) : ActionInterceptor {
     override fun update(event: AnActionEvent): Boolean? = target(event)?.let { true }
 
@@ -318,7 +313,6 @@ public class TextExplainInterceptor(private val service: Class<out TextExplainSe
 }
 
 /** Wraps Explain Plan with [TextExplainInterceptor]. Register a no-arg subclass as `dynamicActionConfigurationCustomizer`. */
-@ApiStatus.Experimental
 public abstract class TextExplainConfiguration(service: Class<out TextExplainService>) : CooperativeActionConfiguration() {
     override val actionIds: List<String> = listOf(EXPLAIN_PLAN)
     override val interceptor: ActionInterceptor = TextExplainInterceptor(service)

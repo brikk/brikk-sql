@@ -7,7 +7,6 @@ import com.intellij.database.model.ModelFactory
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.model.basic.BasicElement
 import com.intellij.database.util.Version
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Routes a dbms to the platform's generic JDBC introspector. The platform introspects natively only
@@ -24,7 +23,6 @@ import org.jetbrains.annotations.ApiStatus
  * `DBIntrospector.Factory` is internal Database Tools API, which the platform offers no public
  * alternative to.
  */
-@ApiStatus.Experimental
 public abstract class GenericJdbcIntrospectorGate : DBIntrospector.Factory {
     final override fun isNative(): Boolean = true
 

@@ -20,4 +20,4 @@ settings:
       - -Xexplicit-api=strict
   publishing:
     artifactId: brikk-sql-intellij-test-support
-    version: 0.2.0-SNAPSHOT
+    version: 0.2.1-SNAPSHOT

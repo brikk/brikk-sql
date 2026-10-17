@@ -23,7 +23,6 @@ import com.intellij.sql.psi.SqlScopeProcessor
 import com.intellij.sql.psi.SqlTableType
 import com.intellij.sql.refactoring.extractFunction.SqlExtractFunctionHelper
 import java.lang.reflect.Method
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A dialect on the platform ClickHouse grammar that behaves as the platform ClickHouse dialect: its
@@ -37,7 +36,6 @@ import org.jetbrains.annotations.ApiStatus
  * as the platform dialect, as stock ClickHouse files do. A dbms with
  * `<extensionFallback fallbackDbms="CLICKHOUSE">` keeps the type system and model they read.
  */
-@ApiStatus.Experimental
 public abstract class CHouseFamilyDialect(id: String) : SqlLanguageDialectBase(id) {
     private val stock: CHouseDialect get() = CHouseDialect.INSTANCE
 

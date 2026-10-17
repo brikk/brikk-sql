@@ -32,7 +32,6 @@ import dev.brikk.house.sql.scope.PositionKind
 import dev.brikk.house.sql.scope.ReferenceKind
 import dev.brikk.house.sql.scope.RelationScope
 import dev.brikk.house.sql.scope.ScopeColumn
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completes the columns the analysis sees at the caret, create-or-decorate (and at a FROM position
@@ -45,7 +44,6 @@ import org.jetbrains.annotations.ApiStatus
  * matches is dropped, so each visible column is offered once, under the relation showing it. Labels come from the providers' or the profile's [RelationColumnLabels]. Register a no-arg
  * subclass for the language with `order="first"`.
  */
-@ApiStatus.Experimental
 public abstract class ExternalRelationCompletionContributor(private val profile: RelationScopeProfile) : CompletionContributor(), DumbAware {
     final override fun fillCompletionVariants(parameters: CompletionParameters, result: CompletionResultSet) {
         if (parameters.completionType != CompletionType.BASIC) return

@@ -43,7 +43,6 @@ import dev.brikk.house.sql.parser.TokenizerConfigs
 import dev.brikk.house.sql.parser.sourceOffset
 import dev.brikk.house.sql.shape.ShapeError
 import dev.brikk.house.sql.shape.TranspileResult
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Claims Execute for PIPE input in the dialect's consoles and never lets claimed input fall back to
@@ -74,7 +73,6 @@ internal fun injectedFiles(file: PsiFile, caret: Int, selection: SelectionModel)
         .distinct()
 }
 
-@ApiStatus.Experimental
 public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteInterceptor {
     override fun execute(event: AnActionEvent, option: DatabaseSettings.ExecOption): ExecutionClaim {
         if (executionFiles(event).any(dialect::isInspectionHost)) {
@@ -126,7 +124,6 @@ public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteI
 }
 
 /** Observes translated submissions, for example to map server errors back to authored PIPE text. */
-@ApiStatus.Experimental
 public interface PipeSubmitListener {
     /** Runs before the final destination and freshness checks; a refusal there still submits nothing. */
     public fun beforeSubmit(run: PipeRun) {}
@@ -136,14 +133,12 @@ public interface PipeSubmitListener {
 }
 
 /** One submission; [statements] follow the console's query order, null for statements not translated. */
-@ApiStatus.Experimental
 public class PipeRun internal constructor(public val console: JdbcConsole, public val editor: Editor, public val statements: List<PipeRunStatement?>)
 
 /**
  * [range] is the authored statement in the document. [sourceMap] maps a server error position on
  * [sql] to a range in [source]; null when parameter expansion changed the input.
  */
-@ApiStatus.Experimental
 public class PipeRunStatement(
     public val source: String,
     public val sql: String,

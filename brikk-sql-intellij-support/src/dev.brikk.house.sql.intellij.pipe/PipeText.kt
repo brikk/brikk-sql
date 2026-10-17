@@ -4,10 +4,8 @@ import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.parser.SyntacticRange
-import org.jetbrains.annotations.ApiStatus
 
 /** The SQL [text] that PIPE editor features read from [file], with offset mapping both ways. */
-@ApiStatus.Experimental
 public class PipeText private constructor(
     public val file: PsiFile,
     public val text: String,

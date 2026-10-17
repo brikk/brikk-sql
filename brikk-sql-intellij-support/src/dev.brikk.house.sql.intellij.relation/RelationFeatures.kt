@@ -52,7 +52,6 @@ import dev.brikk.house.sql.scope.Resolution
 import dev.brikk.house.sql.scope.ScopeColumn
 import dev.brikk.house.sql.scope.ScopeRange
 import dev.brikk.house.sql.scope.ScopeReference
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Gives the platform's references in [RelationScopeProfile.language] files light column symbols for
@@ -60,7 +59,6 @@ import org.jetbrains.annotations.ApiStatus
  * itself), so resolve, highlighting and completion see them. Register a no-arg subclass as
  * `com.intellij.sql.resolveExtension`.
  */
-@ApiStatus.Experimental
 public abstract class ExternalRelationResolveExtension(private val profile: RelationScopeProfile) : SqlResolveExtension {
     final override fun process(reference: SqlReference, processor: SqlScopeProcessor): Boolean {
         val psiReference: PsiReference = reference
@@ -94,7 +92,6 @@ public abstract class ExternalRelationResolveExtension(private val profile: Rela
  * inspection, and every other reference, stays. Register a no-arg subclass as
  * `com.intellij.sql.inspectionSuppressorDelegate`.
  */
-@ApiStatus.Experimental
 public abstract class ExternalRelationInspectionSuppressor(private val profile: RelationScopeProfile) : SqlInspectionSuppressorDelegate {
     final override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
         val tool = toolId.removeSuffix("Inspection")
@@ -197,7 +194,6 @@ public abstract class ExternalRelationInspectionSuppressor(private val profile: 
  * declares itself in its own join's USING list. Only where the analysis has no answer does the platform's own
  * resolution navigate. Register a no-arg subclass as `gotoDeclarationHandler`.
  */
-@ApiStatus.Experimental
 public abstract class ExternalRelationGotoDeclarationHandler(private val profile: RelationScopeProfile) : GotoDeclarationHandler {
     final override fun getGotoDeclarationTargets(sourceElement: PsiElement?, offset: Int, editor: Editor?): Array<PsiElement>? {
         val file = sourceElement?.containingFile ?: return null
@@ -274,7 +270,6 @@ public abstract class ExternalRelationGotoDeclarationHandler(private val profile
  * their exact ranges, injected fragments included. Register a no-arg subclass as the language's
  * `annotator`, or feed [relationDiagnostics] to a `NativeErrorProfile.fileDiagnostics` instead.
  */
-@ApiStatus.Experimental
 public abstract class ExternalRelationAnnotator(private val profile: RelationScopeProfile) : Annotator {
     final override fun annotate(element: PsiElement, holder: AnnotationHolder) {
         val file = element as? PsiFile ?: return
@@ -291,7 +286,6 @@ public abstract class ExternalRelationAnnotator(private val profile: RelationSco
  * The analysis's problems in [file]'s SQL (unescaped when injected), as core diagnostics; empty while
  * facts are pending, a provider's or the host string's ([RelationScopeProfile.hostSql]).
  */
-@ApiStatus.Experimental
 public fun relationDiagnostics(file: PsiFile, profile: RelationScopeProfile): List<SqlDiagnostic> =
     if (profile.hostSql?.isPending(file) == true) emptyList() else RelationAnalysis.of(file, profile)?.statements?.flatMap { (_, scope) -> scope.diagnostics.map { it.toSqlDiagnostic() } }.orEmpty()
 

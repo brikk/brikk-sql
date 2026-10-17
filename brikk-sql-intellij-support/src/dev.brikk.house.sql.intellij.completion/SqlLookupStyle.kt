@@ -9,10 +9,8 @@ import com.intellij.openapi.util.IconLoader
 import icons.DatabaseIcons
 import java.util.Locale
 import javax.swing.Icon
-import org.jetbrains.annotations.ApiStatus
 
 /** The kinds of completion item a dialect presents; each has one [SqlLookupStyle] in [SqlLookupStyles]. */
-@ApiStatus.Experimental
 public enum class SqlLookupKind {
     KEYWORD,
     FUNCTION,
@@ -44,7 +42,6 @@ public enum class SqlLookupKind {
 }
 
 /** Icons the platform lacks, in its new UI style; dark themes load the `_dark` variant. */
-@ApiStatus.Experimental
 public object SqlLookupIcons {
     /** A "W" in the platform's function circle. */
     public val WindowFunction: Icon = load("windowFunction")
@@ -57,7 +54,6 @@ public object SqlLookupIcons {
 }
 
 /** How a lookup string is spelled relative to the name metadata or the model gives. */
-@ApiStatus.Experimental
 public enum class LookupCase {
     AS_GIVEN,
     LOWER,
@@ -77,7 +73,6 @@ public enum class LookupCase {
  * argument types as tail text when [showsSignature], and their return type instead of
  * [typeText] when [showsReturnType] and one is known.
  */
-@ApiStatus.Experimental
 public data class SqlLookupStyle(
     val icon: Icon? = null,
     val typeText: String? = null,
@@ -92,7 +87,6 @@ public data class SqlLookupStyle(
  * One style per [SqlLookupKind]. [DEFAULT] is the proposed shared presentation; a dialect
  * replaces the rows it presents differently with [with].
  */
-@ApiStatus.Experimental
 public class SqlLookupStyles private constructor(private val styles: Map<SqlLookupKind, SqlLookupStyle>) {
     public operator fun get(kind: SqlLookupKind): SqlLookupStyle = styles.getValue(kind)
 
@@ -131,7 +125,6 @@ public class SqlLookupStyles private constructor(private val styles: Map<SqlLook
 }
 
 /** A plain item for [name] in this style, such as a catalog path segment. */
-@ApiStatus.Experimental
 public fun SqlLookupStyle.lookup(name: String, typeText: String? = this.typeText): LookupElement =
     lookup(name, name, typeText)
 

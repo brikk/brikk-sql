@@ -27,10 +27,8 @@ import java.awt.BorderLayout
 import java.awt.datatransfer.StringSelection
 import javax.swing.JButton
 import javax.swing.JPanel
-import org.jetbrains.annotations.ApiStatus
 
 /** Alt+Enter preview of the SQL a PIPE statement lowers to. Subclass with a no-arg class. */
-@ApiStatus.Experimental
 public abstract class PipePreviewIntention(private val dialect: PipeDialect) : IntentionAction {
     final override fun getText(): String = "${dialect.label}: preview generated SQL"
     final override fun getFamilyName(): String = dialect.label
@@ -43,7 +41,6 @@ public abstract class PipePreviewIntention(private val dialect: PipeDialect) : I
 }
 
 /** Alt+Enter run of the top-level stages up to the caret. Subclass with a no-arg class. */
-@ApiStatus.Experimental
 public abstract class PipeRunToStageIntention(private val dialect: PipeDialect) : IntentionAction {
     final override fun getText(): String = "${dialect.label}: run stages up to caret"
     final override fun getFamilyName(): String = dialect.label
@@ -56,7 +53,6 @@ public abstract class PipeRunToStageIntention(private val dialect: PipeDialect) 
 }
 
 /** Editor menu entry for [PipePreviewIntention]'s operation. Subclass with a no-arg class. */
-@ApiStatus.Experimental
 public abstract class PipePreviewAction(private val dialect: PipeDialect) : AnAction() {
     final override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
     final override fun update(e: AnActionEvent) {
@@ -68,7 +64,6 @@ public abstract class PipePreviewAction(private val dialect: PipeDialect) : AnAc
 }
 
 /** Editor menu entry for [PipeRunToStageIntention]'s operation. Subclass with a no-arg class. */
-@ApiStatus.Experimental
 public abstract class PipeRunToStageAction(private val dialect: PipeDialect) : AnAction() {
     final override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
     final override fun update(e: AnActionEvent) {

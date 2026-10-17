@@ -4,10 +4,8 @@ import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.verify.SqlVerifier
 import dev.brikk.house.sql.verify.VerifyError
 import dev.brikk.house.sql.verify.VerifyResult
-import org.jetbrains.annotations.ApiStatus
 
 /** A dialect's own check of SQL. It must have no side effects and let cancellation propagate. */
-@ApiStatus.Experimental
 public interface NativeSqlValidator {
     public val timing: ValidationTiming
 
@@ -42,14 +40,12 @@ public interface NativeSqlValidator {
 }
 
 /** The execution verdict of a verification: only a rejection blocks; no verdict lets the core lowering decide. */
-@ApiStatus.Experimental
 public fun VerifyResult.toNativeVerdict(): NativeVerdict = when (this) {
     VerifyResult.Accepted -> NativeVerdict.Accepted
     is VerifyResult.Rejected -> NativeVerdict.Rejected(errors.joinToString("\n") { it.message })
     is VerifyResult.Unverified, is VerifyResult.Unavailable -> NativeVerdict.Unavailable
 }
 
-@ApiStatus.Experimental
 public enum class ValidationTiming {
     /** Every lowering, preview included; named parameters stay masked until substituted. */
     Lowering,
@@ -58,7 +54,6 @@ public enum class ValidationTiming {
     Submission,
 }
 
-@ApiStatus.Experimental
 public sealed interface NativeVerdict {
     public data object Accepted : NativeVerdict
 

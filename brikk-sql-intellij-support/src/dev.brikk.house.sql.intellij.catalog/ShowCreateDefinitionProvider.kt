@@ -11,7 +11,6 @@ import dev.brikk.house.sql.shape.DefinedObject
 import dev.brikk.house.sql.shape.DefinitionQuery
 import dev.brikk.house.sql.shape.definitionQuery
 import kotlin.coroutines.cancellation.CancellationException
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Object definitions (the source the IDE shows for a table, view, ...) read from the server's catalog
@@ -21,7 +20,6 @@ import org.jetbrains.annotations.ApiStatus
  * the connection the platform hands over for loading sources, never a console's. Register a no-arg
  * subclass as `<definitionProvider dbms="X">`.
  */
-@ApiStatus.Experimental
 public abstract class ShowCreateDefinitionProvider(
     private val dialect: String,
     private val kinds: Map<ObjectKind, DefinedObject>,

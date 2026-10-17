@@ -12,7 +12,6 @@ import com.intellij.sql.dialects.postgres.PgDialectBase
 import com.intellij.sql.dialects.postgres.PgTokens
 import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.util.Processor
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A dialect on the PostgreSQL grammar whose operators, system variables and builtin functions are
@@ -22,7 +21,6 @@ import org.jetbrains.annotations.ApiStatus
  * The engine's own functions and types resolve too, where nothing native does, when [builtins] are given
  * and [PgFamilyResolveExtension] is registered; [PgFamilyElementFactory] types such a table function's row.
  */
-@ApiStatus.Experimental
 public abstract class PgFamilyDialect(id: String) : PgDialectBase(id) {
     /**
      * The engine's functions and types beyond the platform PostgreSQL dialect's; null resolves only those.

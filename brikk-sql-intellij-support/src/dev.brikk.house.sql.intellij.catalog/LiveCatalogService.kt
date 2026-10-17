@@ -50,10 +50,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.jetbrains.annotations.ApiStatus
 
 /** Which connections harvest. A refresh always does. */
-@ApiStatus.Experimental
 public enum class HarvestTrigger {
     /** The first connection of a connection identity in an IDE session; later ones do not. */
     ONCE_PER_SESSION,
@@ -72,7 +70,6 @@ public enum class HarvestTrigger {
  * A dialect's live function catalog. The minimum is [dbms], [productLabel], [metadata] and
  * [harvester]; the rest has defaults matching a names-and-signatures harvest kept in memory.
  */
-@ApiStatus.Experimental
 public interface LiveCatalogProfile {
     public val dbms: Dbms
 
@@ -136,7 +133,6 @@ public interface LiveCatalogProfile {
 }
 
 /** Why a refresh ran. */
-@ApiStatus.Experimental
 public sealed interface RefreshReason {
     /** The user asked for it. */
     public data object Manual : RefreshReason
@@ -146,7 +142,6 @@ public sealed interface RefreshReason {
 }
 
 /** How a refresh ended. */
-@ApiStatus.Experimental
 public sealed interface RefreshOutcome {
     /** The server's [inventory], and the facts of the [session] whose connection was harvested (none over a helper connection). */
     public data class Refreshed(val inventory: LiveInventory, val session: SessionFacts = SessionFacts.NONE) : RefreshOutcome
@@ -175,7 +170,6 @@ public sealed interface RefreshOutcome {
  * constructor. Harvests on a console's own connection also read that session's facts; a harvest on any
  * other connection, a refresh's helper connection included, updates only the shared inventory.
  */
-@ApiStatus.Experimental
 public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
     public abstract val profile: LiveCatalogProfile
 
@@ -496,21 +490,18 @@ internal class HelperRequestor : ConnectionRequestor by ConnectionRequestor.Anon
 }
 
 /** What marks a helper connection's requestor across plugins' copies of this library ([isHelperRequestor]). */
-@ApiStatus.Experimental
 public const val HELPER_REQUESTOR_KEY: String = "dev.brikk.house.sql.intellij.helper-connection"
 
 /**
  * A requestor for a helper connection: every plugin's copy of this library recognizes it
  * ([isHelperRequestor]), so harvests, connected-state checks and highlighting restarts skip it.
  */
-@ApiStatus.Experimental
 public fun helperRequestor(): ConnectionRequestor = HelperRequestor()
 
 /**
  * Whether [requestor] opened a helper connection, in this or another plugin's copy of this library:
  * by its key, or by the helper requestor's class name for copies before the key, never by class identity.
  */
-@ApiStatus.Experimental
 public fun isHelperRequestor(requestor: Any?): Boolean =
     requestor != null && (requestor.javaClass.name == HELPER_REQUESTOR_CLASS || requestor.toString() == HELPER_REQUESTOR_KEY)
 
@@ -521,7 +512,6 @@ private val HELPER_REQUESTOR_CLASS: String = HelperRequestor::class.java.name
  * service ([LiveCatalogService.connected]) as its trigger says, before the connection is handed over.
  * Register a no-arg subclass naming the plugin's service class.
  */
-@ApiStatus.Experimental
 public abstract class HarvestConnectionInterceptor(private val service: Class<out LiveCatalogService>) : DatabaseConnectionInterceptor {
     private val catalog: LiveCatalogService? get() = ApplicationManager.getApplication().getService(service)
 
@@ -573,7 +563,6 @@ internal class RefreshDebouncer(private val scope: CoroutineScope, private val d
  * finds it, generic SQL only through an explicit console or resolution scope, never another engine's SQL,
  * another file or a missing editor. Register a no-arg subclass naming the plugin's service class.
  */
-@ApiStatus.Experimental
 public abstract class RefreshLiveCatalogAction(private val service: Class<out LiveCatalogService>) : AnAction(), DumbAware {
     override fun getActionUpdateThread(): ActionUpdateThread = ActionUpdateThread.BGT
 
@@ -642,7 +631,6 @@ public abstract class RefreshLiveCatalogAction(private val service: Class<out Li
  * a listener of `com.intellij.database.dataSource.DataSourceStorage$Listener` under both
  * `projectListeners` and `applicationListeners` (project and global data sources).
  */
-@ApiStatus.Experimental
 public abstract class LiveCatalogCleanup(private val service: Class<out LiveCatalogService>) : DataSourceStorage.Listener {
     override fun dataSourceRemoved(dataSource: LocalDataSource) {
         ApplicationManager.getApplication().getService(service)?.forget(dataSource.uniqueId)

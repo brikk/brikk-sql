@@ -12,7 +12,6 @@ import com.intellij.sql.dialects.clickhouse.CHouseParserDefinition
 import com.intellij.sql.psi.stubs.elementTypes.SqlFileElementType
 import dev.brikk.house.sql.intellij.lexer.StatementBoundedSqlLexer
 import java.util.concurrent.ConcurrentHashMap
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Parsing for a `CHouseFamilyDialect` on the platform ClickHouse grammar. PSI comes from the
@@ -23,7 +22,6 @@ import org.jetbrains.annotations.ApiStatus
  * dialect rules. The lexer is a `StatementBoundedSqlLexer` over [createBaseLexer], so raw data
  * tails end with their statement.
  */
-@ApiStatus.Experimental
 public open class CHouseFamilyParserDefinition(
     dialect: SqlLanguageDialect,
     /** The core dialect whose script ranges bound statements. */

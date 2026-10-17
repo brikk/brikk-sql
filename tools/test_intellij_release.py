@@ -28,7 +28,8 @@ class ScopedReleaseTest(unittest.TestCase):
         wrapper.write_text('#!/usr/bin/env python3\nimport json,sys,os\nfrom pathlib import Path\n'
                            'Path("calls.json").write_text(json.dumps(sys.argv[1:]))\n'
                            'Path("observed-module").write_text(Path("brikk-sql-intellij-support/module.yaml").read_text())\n'
-                           'Path("observed-test-module").write_text(Path("brikk-sql-intellij-test-support/module.yaml").read_text())\n'
+                            'Path("observed-test-module").write_text(Path("brikk-sql-intellij-test-support/module.yaml").read_text())\n'
+                            'Path("observed-template").write_text(Path("publish.module-template.yaml").read_text())\n'
                            'sys.exit(int(os.environ.get("TEST_EXIT", "0")))\n')
         wrapper.chmod(0o755)
 
@@ -63,6 +64,21 @@ class ScopedReleaseTest(unittest.TestCase):
 
     def test_failed_toolchain_restores_templates(self):
         self.assertNotEqual(0, self.run_release(exit_code=23).returncode)
+        self.assert_restored()
+
+    def test_support_patch_does_not_republish_immutable_core(self):
+        result = self.run_release('--core-version', '0.20.0', '--skip-core-publication')
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support',
+                          '-m', 'brikk-sql-intellij-test-support', '--non-transitive'],
+                         json.loads((self.root / 'calls.json').read_text()))
+        self.assertIn('version: "0.20.0"', (self.root / 'observed-template').read_text())
+        self.assert_restored()
+
+    def test_skip_core_requires_an_explicit_core_version(self):
+        result = self.run_release('--skip-core-publication')
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse((self.root / 'calls.json').exists())
         self.assert_restored()
 
     def test_central_release_requires_core_version(self):

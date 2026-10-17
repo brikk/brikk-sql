@@ -19,7 +19,6 @@ import dev.brikk.house.sql.scope.ReferenceKind
 import dev.brikk.house.sql.scope.RelationFacts
 import dev.brikk.house.sql.scope.RelationScope
 import dev.brikk.house.sql.scope.Resolution
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Completion after a qualified path (`hive.` or `hive.web.` with the caret after the dot or in the
@@ -32,7 +31,6 @@ import org.jetbrains.annotations.ApiStatus
  * Register a no-arg subclass naming the plugin's service class as `completion.contributor` for the
  * dialect's language.
  */
-@ApiStatus.Experimental
 public abstract class QualifiedPathIntrospectContributor(private val service: Class<out AutoIntrospectService>) : CompletionContributor(), DumbAware {
     init {
         extend(CompletionType.BASIC, PlatformPatterns.psiElement(), object : CompletionProvider<CompletionParameters>() {

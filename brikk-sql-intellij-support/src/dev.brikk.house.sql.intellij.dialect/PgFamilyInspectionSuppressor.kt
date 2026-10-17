@@ -7,7 +7,6 @@ import com.intellij.sql.psi.SqlDmlInstruction
 import com.intellij.sql.psi.SqlInsertStatement
 import com.intellij.sql.psi.SqlQueryExpression
 import com.intellij.sql.psi.SqlWithClause
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Keeps the platform's INSERT value count from counting the row of an engine table function whose columns
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.ApiStatus
  * unknown, unless the columns known are already more than the INSERT target takes. Every other count stands:
  * explicit projections, stars over known rows, derived tables of a known width. Register it as `com.intellij.sql.inspectionSuppressorDelegate`.
  */
-@ApiStatus.Experimental
 public class PgFamilyInspectionSuppressor : SqlInspectionSuppressorDelegate {
     override fun isSuppressedFor(element: PsiElement, toolId: String): Boolean {
         if (toolId.removeSuffix("Inspection") != "SqlInsertValues") return false

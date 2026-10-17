@@ -4,7 +4,6 @@ import com.intellij.database.dataSource.DatabaseConnectionPoint
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.Properties
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * [point] as a helper connection (a verification, a catalog refresh, a text explain) connects to it:
@@ -13,7 +12,6 @@ import org.jetbrains.annotations.ApiStatus
  * A URL query parameter of the same name takes the helper's value too, since some drivers let the URL
  * win over properties (ClickHouse 0.9.8 with `compress=true`). Its data source stays [point]'s, unchanged.
  */
-@ApiStatus.Experimental
 public class HelperConnectionPoint(
     point: DatabaseConnectionPoint,
     private val properties: Map<String, String> = emptyMap(),

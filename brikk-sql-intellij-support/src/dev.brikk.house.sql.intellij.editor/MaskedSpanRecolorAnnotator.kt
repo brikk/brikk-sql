@@ -22,7 +22,6 @@ import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Recolors the spans a masking lexer turned into one comment, string or identifier token, so they
@@ -35,7 +34,6 @@ import org.jetbrains.annotations.ApiStatus
  * Words are keywords when the core tokenizer reads them as such, or, with [keywords], when they
  * are in that upper-case set. Register a no-arg subclass for the dialect's language.
  */
-@ApiStatus.Experimental
 public abstract class MaskedSpanRecolorAnnotator(
     private val language: Language,
     private val coreDialect: String,

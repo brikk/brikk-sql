@@ -4,10 +4,8 @@ import dev.brikk.house.sql.metadata.FunctionDef
 import dev.brikk.house.sql.metadata.KeywordDef
 import java.security.MessageDigest
 import java.time.Instant
-import org.jetbrains.annotations.ApiStatus
 
 /** A function a server reports, with the namespace it lives in (empty for built-ins). */
-@ApiStatus.Experimental
 public data class LiveFunction(val def: FunctionDef, val namespace: List<String> = emptyList())
 
 /**
@@ -16,7 +14,6 @@ public data class LiveFunction(val def: FunctionDef, val namespace: List<String>
  * only and proves availability, not overloads. [keywords] is null when the harvest reads none.
  * [extensions] are the loaded extensions or plugins the server reports, for display.
  */
-@ApiStatus.Experimental
 public data class LiveInventory(
     val serverVersion: String?,
     val functions: List<LiveFunction>,
@@ -29,7 +26,6 @@ public data class LiveInventory(
  * Facts that belong to one database session, such as temporary macros, extensions the session loaded
  * or catalogs it attached. They are kept per session in memory and never persisted.
  */
-@ApiStatus.Experimental
 public data class SessionFacts(val functions: List<LiveFunction> = emptyList(), val extensions: List<String> = emptyList()) {
     public companion object {
         public val NONE: SessionFacts = SessionFacts()
@@ -37,24 +33,20 @@ public data class SessionFacts(val functions: List<LiveFunction> = emptyList(), 
 }
 
 /** One harvest: the server's [shared] inventory and the [session] facts of the connection it ran on. */
-@ApiStatus.Experimental
 public data class Harvest(val shared: LiveInventory, val session: SessionFacts = SessionFacts.NONE)
 
 /** One row of a catalog query; columns are 1-based. */
-@ApiStatus.Experimental
 public fun interface CatalogRow {
     public fun string(column: Int): String?
 }
 
 /** Runs catalog queries, wherever their rows come from: a remote IDE connection, or plain JDBC in tests. */
-@ApiStatus.Experimental
 public fun interface CatalogRowSource {
     /** Runs [sql] and calls [onRow] once per row; failures propagate. */
     public fun forEachRow(sql: String, onRow: (CatalogRow) -> Unit)
 }
 
 /** A dialect's harvest: its SQL and how it reads the rows. */
-@ApiStatus.Experimental
 public fun interface LiveCatalogHarvester {
     /**
      * Reads one harvest over [rows]; null when what it read is incomplete (an empty inventory, a missing
@@ -67,7 +59,6 @@ public fun interface LiveCatalogHarvester {
  * Which server a data source's connections reach, as a hash: the live catalog cache key. A data
  * source whose URL or user changes gets another identity, so what was harvested before is not used.
  */
-@ApiStatus.Experimental
 @JvmInline
 public value class ConnectionIdentity(public val hash: String) {
     public companion object {
@@ -80,7 +71,6 @@ public value class ConnectionIdentity(public val hash: String) {
 }
 
 /** Where the inventory serving a data source came from. */
-@ApiStatus.Experimental
 public sealed interface CatalogSource {
     /** A complete harvest from the current connection identity, taken this IDE session. */
     public data class Live(val harvestedAt: Instant) : CatalogSource
@@ -96,7 +86,6 @@ public sealed interface CatalogSource {
  * The live catalog selected for a data source: [inventory] is null when [source] is [CatalogSource.Bundled].
  * [session] holds the facts of the asking session, if any.
  */
-@ApiStatus.Experimental
 public data class LiveCatalogSelection(
     val source: CatalogSource,
     val inventory: LiveInventory?,

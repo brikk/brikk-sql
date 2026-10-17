@@ -23,7 +23,6 @@ import com.intellij.database.model.meta.BasicMetaField
 import com.intellij.database.model.meta.BasicMetaModel
 import com.intellij.database.model.meta.BasicMetaObject
 import com.intellij.database.util.Version
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * The PostgreSQL model for a dbms whose dialect is PostgreSQL-based and whose `extensionFallback` is
@@ -35,7 +34,6 @@ import org.jetbrains.annotations.ApiStatus
  * Register a subclass as `<modelFacade dbms="..." implementationClass="..."/>`; the platform passes
  * the dbms to its one-argument constructor.
  */
-@ApiStatus.Experimental
 public abstract class PgFamilyModelFacade(dbms: Dbms, databasesAsCatalogs: Boolean = false) : ModelFacade(dbms) {
     private val helper: ModelHelper = if (databasesAsCatalogs) PgFamilyCatalogModelHelper else PgModelHelper
 

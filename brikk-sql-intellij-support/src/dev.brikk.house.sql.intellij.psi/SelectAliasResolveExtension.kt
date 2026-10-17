@@ -14,7 +14,6 @@ import com.intellij.sql.psi.SqlReferenceExpression
 import com.intellij.sql.psi.SqlScopeProcessor
 import com.intellij.sql.psi.impl.SqlResolveExtension
 import kotlin.reflect.KClass
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Lets unqualified references in [clauses] of a [dbms] query resolve to, and complete, the
@@ -22,7 +21,6 @@ import org.jetbrains.annotations.ApiStatus
  * families, which a plugin's own `Dbms` cannot join. Normal resolution runs first, so a column
  * of the same name still wins. Register a no-arg subclass as `com.intellij.sql.resolveExtension`.
  */
-@ApiStatus.Experimental
 public abstract class SelectAliasResolveExtension(
     private val dbms: Dbms,
     clauses: Set<KClass<out PsiElement>> = setOf(SqlHavingClause::class, SqlGroupByClause::class, SqlOrderByClause::class),

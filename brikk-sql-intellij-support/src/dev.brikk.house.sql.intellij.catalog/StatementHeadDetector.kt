@@ -4,10 +4,8 @@ import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
-import org.jetbrains.annotations.ApiStatus
 
 /** What an executed statement changes. */
-@ApiStatus.Experimental
 public sealed interface StatementEffect {
     /**
      * The functions a session can call: an installed or loaded extension, a created or dropped function
@@ -37,7 +35,6 @@ public sealed interface StatementEffect {
  * `<string>` matches one string literal and `$` the end of the statement (`PREPARE TRANSACTION <string> $`).
  * With [notifies], a refresh after the statement shows its result in the live catalog's notification group.
  */
-@ApiStatus.Experimental
 public class StatementRule(public val pattern: String, public val effect: StatementEffect, public val notifies: Boolean = false) {
     internal val elements: List<Element> = parse(pattern)
 
@@ -79,7 +76,6 @@ public class StatementRule(public val pattern: String, public val effect: Statem
 }
 
 /** A statement whose head matched [rule], with the qualified [name] after the head: unquoted parts, empty when none follows. */
-@ApiStatus.Experimental
 public data class DetectedStatement(val rule: StatementRule, val name: List<String>) {
     val effect: StatementEffect get() = rule.effect
 }
@@ -91,7 +87,6 @@ public data class DetectedStatement(val rule: StatementRule, val name: List<Stri
  * words of each statement are compared, whole. After the head, `IF [NOT] EXISTS` is skipped and the
  * qualified name read. Text the tokenizer cannot read past ends the scan there.
  */
-@ApiStatus.Experimental
 public class StatementHeadDetector(public val rules: List<StatementRule>, public val dialect: String) {
     private val config = TokenizerConfigs.forName(dialect)
 
@@ -166,7 +161,6 @@ public class StatementHeadDetector(public val rules: List<StatementRule>, public
 }
 
 /** Statement rules for the dialects of the Sortdev plugins; none notifies (see [StatementRule.notifying]). */
-@ApiStatus.Experimental
 public object StatementRules {
     /**
      * Transaction control most engines share: `BEGIN` and `START TRANSACTION` begin; `COMMIT`,

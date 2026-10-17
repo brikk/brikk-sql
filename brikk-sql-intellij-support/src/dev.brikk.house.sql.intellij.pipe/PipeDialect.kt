@@ -12,13 +12,11 @@ import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.shape.ParamStyle
 import dev.brikk.house.sql.shape.maskNamedParameters
 import dev.brikk.house.sql.shape.parseParameterOccurrences
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * One plugin's PIPE profile. The minimum is [dialect], [label], [vetoProperty], [language],
  * [isProjectEnabled] and [ownsSession]; every other member has a working default.
  */
-@ApiStatus.Experimental
 public interface PipeDialect {
     /** Core dialect name, as accepted by `Dialects.forName`. */
     public val dialect: String
@@ -91,7 +89,6 @@ public interface PipeDialect {
     public fun pipeText(file: PsiFile): PipeText = PipeText.of(file)
 }
 
-@ApiStatus.Experimental
 public enum class FirstStageRule {
     /** Any query head, e.g. `FROM t` or `SELECT a FROM t`. */
     AnyQuery,
@@ -101,25 +98,20 @@ public enum class FirstStageRule {
 }
 
 /** Vetoed by `-D<vetoProperty>=false`. */
-@get:ApiStatus.Experimental
 public val PipeDialect.isVetoed: Boolean get() = System.getProperty(vetoProperty).equals("false", ignoreCase = true)
 
 /** PIPE execution and editing in [project]. */
-@ApiStatus.Experimental
 public fun PipeDialect.isEnabled(project: Project): Boolean =
     !project.isDisposed && !project.isDefault && !isVetoed && isProjectEnabled(project)
 
 /** PIPE editing in [file]: the project setting, or a file the profile enables. */
-@ApiStatus.Experimental
 public fun PipeDialect.isEditingEnabled(file: PsiFile): Boolean =
     file.language.isKindOf(language) && !isVetoed && (enablesEditing(file) || isEnabled(file.project))
 
 /** Whether [text] holds a pipe outside literals and comments. */
-@ApiStatus.Experimental
 public fun PipeDialect.containsPipe(text: String): Boolean = "|>" in text && scriptRanges(text).any { it.hasPipe }
 
 /** The statement containing [offset]; the end of the last statement still belongs to it. */
-@ApiStatus.Experimental
 public fun PipeDialect.statementAt(text: String, offset: Int): SqlStatementRange? = scriptRanges(text).let { ranges ->
     ranges.firstOrNull { offset >= it.start && offset < it.end } ?: ranges.lastOrNull()?.takeIf { offset == it.end }
 }

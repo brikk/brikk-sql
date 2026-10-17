@@ -26,7 +26,6 @@ import java.sql.SQLException
 import java.util.Objects
 import java.util.WeakHashMap
 import java.util.concurrent.CancellationException
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Native verification against the data source that serves a file ([resolver]), for a
@@ -42,7 +41,6 @@ import org.jetbrains.annotations.ApiStatus
  * connected. Register a [VerificationConnectionListener] so that connecting and disconnecting
  * restart highlighting.
  */
-@ApiStatus.Experimental
 public class DataSourceVerification(
     private val resolver: DialectDataSourceResolver,
     private val timing: ValidationTiming = ValidationTiming.Lowering,
@@ -101,7 +99,6 @@ private fun DatabaseConnection.isUsers(): Boolean = !isHelperRequestor(requestor
  * A helper connection a [DataSourceVerification] opened for one verification. A verifier runs its
  * query with [queryString], may [cancel] it from another thread, and closes it.
  */
-@ApiStatus.Experimental
 public class DataSourceQueryConnection internal constructor(private val ref: GuardedRef<DatabaseConnection>) : AutoCloseable {
     @Volatile
     private var running: RemoteStatement? = null
@@ -135,7 +132,6 @@ public class DataSourceQueryConnection internal constructor(private val ref: Gua
  * is seen. Helper connections are ignored. Register it as an application listener of
  * `com.intellij.database.dataSource.DatabaseConnectionManager$Listener`.
  */
-@ApiStatus.Experimental
 public open class VerificationConnectionListener : DatabaseConnectionManager.Listener {
     override fun connectionChanged(connection: DatabaseConnection, added: Boolean) {
         if (!connection.isUsers()) return

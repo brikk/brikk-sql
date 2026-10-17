@@ -1,9 +1,7 @@
 package dev.brikk.house.sql.intellij.testing
 
-import org.jetbrains.annotations.ApiStatus
 
 /** Syntax a dialect may lack; a case needing one runs only where the target has it. */
-@ApiStatus.Experimental
 public enum class RealSqlFeature {
     /** `* EXCEPT (a, b)` in a projection, or as the dialect spells it (DuckDB's `* EXCLUDE (a, b)`). */
     STAR_EXCEPT,
@@ -73,7 +71,6 @@ public enum class RealSqlFeature {
  * A completion check: at `<caret>` in [sql], [offered] are all offered, none of [notOffered] (another
  * namespace's columns, say) and each of [once] exactly once. [variants] replaces the SQL for a dialect.
  */
-@ApiStatus.Experimental
 public data class RealSqlCompletion(
     val sql: String,
     val offered: Set<String>,
@@ -123,7 +120,6 @@ private fun starExceptVariants(sql: String): Map<String, String> =
  * [variants] replaces the SQL for a dialect. A name in [missed] is a real miss the target must report
  * (allowed like [reported]).
  */
-@ApiStatus.Experimental
 public data class RealSqlCase(
     val name: String,
     val sql: String,
@@ -164,7 +160,6 @@ public data class RealSqlCase(
  * at all; [namespaces] are listed namespaces (`catalog` or `catalog.schema`) that may hold nothing.
  * Paths are `catalog.schema.table`; a target without catalogs drops the first part.
  */
-@ApiStatus.Experimental
 public data class RealSqlModel(
     val tables: Map<String, List<String>>,
     val bare: List<String>,
@@ -211,7 +206,6 @@ public data class RealSqlModel(
 }
 
 /** The shared pack of realistic statements every SQL plugin must highlight without a false error. */
-@ApiStatus.Experimental
 public object RealSqlCases {
     /**
      * Columns read through derived tables, CTEs and enclosing queries over [RealSqlModel.EXTERNAL_TABLE],

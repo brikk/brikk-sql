@@ -13,7 +13,6 @@ import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.sql.dialects.base.SqlSyntaxHighlighterFactory
 import com.intellij.sql.psi.SqlTokens
 import java.util.concurrent.ConcurrentHashMap
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Wraps the SQL highlighter of [language] and colors plain identifiers whose text is one of the
@@ -21,7 +20,6 @@ import org.jetbrains.annotations.ApiStatus
  * other token keeps the wrapped highlighter's colors. Plugins register it through
  * [KeywordOverlayHighlighterFactory].
  */
-@ApiStatus.Experimental
 public class KeywordOverlayHighlighter(
     private val base: SyntaxHighlighter,
     language: Language,
@@ -46,7 +44,6 @@ private val overlayTypes = ConcurrentHashMap<Language, IElementType>()
  * The SQL highlighter factory of [dialect] with a [KeywordOverlayHighlighter] over [keywords].
  * Register a no-arg subclass as the dialect's `lang.syntaxHighlighterFactory`.
  */
-@ApiStatus.Experimental
 public abstract class KeywordOverlayHighlighterFactory(
     private val dialect: SqlLanguageDialect,
     private val keywords: Set<String>,

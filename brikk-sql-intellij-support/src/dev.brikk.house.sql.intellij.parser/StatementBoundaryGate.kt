@@ -13,7 +13,6 @@ import dev.brikk.house.sql.parser.SqlStatementRange
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfigs
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Keeps a parser's top-level statements to the [coreDialect]'s script ranges where the grammar's
@@ -21,7 +20,6 @@ import org.jetbrains.annotations.ApiStatus
  * and raw data never joins two. Hold one per parser instance. Core's ranges are read lazily,
  * shared with the lexer's pass over the same text.
  */
-@ApiStatus.Experimental
 public class StatementBoundaryGate(
     private val coreDialect: String,
     /** Whether a lenient statement makes every `:name` bind a parameter, as the dialect's IDE binds; kept binds always are. */

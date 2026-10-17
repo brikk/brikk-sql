@@ -13,14 +13,12 @@ import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.impl.SqlDasTypeAwareDeepRecursiveElement
 import com.intellij.sql.psi.impl.SqlFunctionCallExpressionImpl
 import com.intellij.sql.psi.impl.nestedDasType
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * [stock]'s elements, whose function calls take an engine table function's row from the file's
  * [PgFamilyDialect.builtins] ([EngineBuiltins]); every other call is typed as the platform types it. Return it
  * from the dialect's parser definition.
  */
-@ApiStatus.Experimental
 public class PgFamilyElementFactory(private val stock: SqlElementFactoryBase = PgElementFactory()) : SqlElementFactoryBase by stock {
     override fun createElementNode(type: IElementType): CompositeElement? =
         if (type == SqlCompositeElementTypes.SQL_FUNCTION_CALL) EngineFunctionCall(type) else stock.createElementNode(type)

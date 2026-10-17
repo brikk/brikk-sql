@@ -2,13 +2,11 @@ package dev.brikk.house.sql.intellij.dialect
 
 import com.intellij.database.Dbms
 import com.intellij.lang.Language
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * One core dialect and the IDE identities that speak it. [marker] is the spelling in a
  * `-- dialect: <marker>` line.
  */
-@ApiStatus.Experimental
 public data class SqlDialectEntry(
     /** Core dialect name, as accepted by `Dialects.forName`. */
     val coreDialect: String,
@@ -27,7 +25,6 @@ public data class SqlDialectEntry(
  * `Dbms` names, never another plugin's objects. Identities match exactly; stock platform ones sit
  * next to the plugins' own. `GenericSQL` never maps: many engines share it.
  */
-@ApiStatus.Experimental
 public object SqlDialectRegistry {
     /** Changes whenever [entries] change. */
     public const val VERSION: Int = 3

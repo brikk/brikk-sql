@@ -5,7 +5,6 @@ import dev.brikk.house.sql.metadata.FunctionDef
 import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.metadata.FunctionOverload
 import dev.brikk.house.sql.metadata.TRINO_METADATA
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Trino's `SHOW FUNCTIONS`: every function of the session path (built-ins, plugin functions, SQL
@@ -14,7 +13,6 @@ import org.jetbrains.annotations.ApiStatus
  * no variadic flags and no argument names (the command shows neither). Rows of a function type it does
  * not know, and names that are not identifiers, are left out.
  */
-@ApiStatus.Experimental
 public object TrinoFunctionHarvester : LiveCatalogHarvester {
     public const val SQL_VERSION: String = "SELECT version()"
     public const val SQL_FUNCTIONS: String = "SHOW FUNCTIONS"
@@ -71,7 +69,6 @@ public object TrinoFunctionHarvester : LiveCatalogHarvester {
  * A Trino plugin's live catalog: [TrinoFunctionHarvester] once per IDE session, replacing the bundled
  * registry, in memory. Off ([enabled] false) until the plugin turns it on.
  */
-@ApiStatus.Experimental
 public interface TrinoLiveCatalogProfile : LiveCatalogProfile {
     override val productLabel: String get() = "Trino"
     override val metadata: DialectMetadata get() = TRINO_METADATA

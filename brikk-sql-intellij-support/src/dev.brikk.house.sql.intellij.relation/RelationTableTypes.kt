@@ -15,14 +15,12 @@ import dev.brikk.house.sql.scope.RelationFacts
 import dev.brikk.house.sql.scope.RelationScope
 import dev.brikk.house.sql.scope.RelationKind
 import dev.brikk.house.sql.scope.ScopeColumn
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * The optional native adapter: a slot call's columns as the platform's own table type. A plugin
  * returns [of] from its function-call element's type computation (an element factory override);
  * PIPE stages, which have no such PSI, keep the analysis.
  */
-@ApiStatus.Experimental
 public object RelationTableTypes {
     /**
      * The table type of [call] when it is a slot (an unqualified call without arguments in a FROM

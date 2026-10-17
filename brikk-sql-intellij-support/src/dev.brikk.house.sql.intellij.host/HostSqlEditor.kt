@@ -24,7 +24,6 @@ import dev.brikk.house.sql.intellij.pipe.injectedFiles
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A gutter icon on each host string [channel] claims, named [name] in Settings | Editor | General |
@@ -32,7 +31,6 @@ import org.jetbrains.annotations.ApiStatus
  * IDE indexes, show the icon dimmed. The tooltip is the caller's. Register a no-arg subclass as a
  * `codeInsight.lineMarkerProvider` for the host language.
  */
-@ApiStatus.Experimental
 public abstract class HostSqlLineMarkerProvider(
     private val channel: HostSqlChannel,
     private val name: String,
@@ -78,7 +76,6 @@ public abstract class HostSqlLineMarkerProvider(
  * is missing or too old, say), with a link that fixes it; never a routine notice. Register a no-arg
  * subclass as an `editorNotificationProvider`.
  */
-@ApiStatus.Experimental
 public abstract class HostSqlActionBanner : EditorNotificationProvider, DumbAware {
     /** What [file] needs: a [message] and the [fixText] of a link running [fix]. */
     public data class Action(val message: String, val fixText: String, val fix: Runnable)
@@ -103,7 +100,6 @@ public abstract class HostSqlActionBanner : EditorNotificationProvider, DumbAwar
  * host string the editor's selection intersects or its caret touches. Register a no-arg subclass as
  * `com.intellij.database.runConsoleAvailable`.
  */
-@ApiStatus.Experimental
 public abstract class HostSqlRunConsoleVeto(private val channel: HostSqlChannel) : RunQueryIntentionActionAvailable {
     final override fun isAvailable(editor: Editor, file: PsiFile): Boolean = !inspectionOnly(editor, file)
 

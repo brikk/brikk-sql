@@ -7,14 +7,12 @@ import com.intellij.sql.psi.SqlCompositeElementTypes
 import dev.brikk.house.sql.intellij.parser.advanceLenient
 import dev.brikk.house.sql.intellij.parser.consumeLenient
 import dev.brikk.house.sql.parser.SqlStatementRange
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Parses PIPE statements as one node each, bounded by the dialect's statement ranges, so the
  * platform grammar never shreds them. Hold one per parser instance: it caches the ranges of the
  * text being parsed, which [PipeDialect.scriptRanges] returns in offset order, as core does.
  */
-@ApiStatus.Experimental
 public class PipeStatementGate(private val dialect: PipeDialect) {
     private var text: CharSequence? = null
     private var hasPipe = false

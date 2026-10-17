@@ -19,10 +19,8 @@ import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.util.PsiModificationTracker
 import dev.brikk.house.sql.intellij.pipe.PipeText
 import java.util.concurrent.atomic.AtomicLong
-import org.jetbrains.annotations.ApiStatus
 
 /** What a recognizer of the host language decided about one host string. */
-@ApiStatus.Experimental
 public sealed interface HostSqlClaim {
     /**
      * SQL in [entries], injected as [language]. [pending]: some entries are [HostSqlEntry.placeholder]s
@@ -51,7 +49,6 @@ public sealed interface HostSqlClaim {
 }
 
 /** What an injected SQL file of a channel is: see [HostSqlClaim.Injected]. [placeholders] are ranges of its unescaped text. */
-@ApiStatus.Experimental
 public data class HostSqlMarker(
     val pending: Boolean,
     val inspectionOnly: Boolean,
@@ -60,7 +57,6 @@ public data class HostSqlMarker(
 )
 
 /** A host string's state after its last injection: its claim, and the layout when injected. */
-@ApiStatus.Experimental
 public data class HostSqlState(val claim: HostSqlClaim, val layout: HostSqlLayout? = null)
 
 /**
@@ -70,7 +66,6 @@ public data class HostSqlState(val claim: HostSqlClaim, val layout: HostSqlLayou
  * of this library) never see each other's state. Keep one instance per plugin; register its claims
  * through a [HostSqlInjector], the one registration that keeps other injections off claimed strings.
  */
-@ApiStatus.Experimental
 public open class HostSqlChannel(public val id: String) {
     private val hostKey = Key.create<HostSqlState>("$id.host.sql.state")
     private val fileKey = Key.create<HostSqlMarker>("$id.host.sql.marker")
@@ -241,7 +236,6 @@ public open class HostSqlChannel(public val id: String) {
  * Hides parse errors on the placeholders of [channel]'s SQL: they stand for text not known yet.
  * Register a no-arg subclass as a `highlightErrorFilter`.
  */
-@ApiStatus.Experimental
 public abstract class HostSqlPlaceholderErrorFilter(private val channel: HostSqlChannel) : HighlightErrorFilter() {
     final override fun shouldHighlightErrorElement(element: PsiErrorElement): Boolean {
         val file = element.containingFile ?: return true

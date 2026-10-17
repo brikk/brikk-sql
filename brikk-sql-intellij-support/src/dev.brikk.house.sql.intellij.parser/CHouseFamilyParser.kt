@@ -2,7 +2,6 @@ package dev.brikk.house.sql.intellij.parser
 
 import com.intellij.lang.PsiBuilder
 import com.intellij.sql.dialects.clickhouse.CHouseParser
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * The platform ClickHouse grammar with its top-level statements kept to the [coreDialect]'s script
@@ -11,7 +10,6 @@ import org.jetbrains.annotations.ApiStatus
  * lenient statement, whose `:name` binds are parameters. Subclasses add their own statements in
  * [parseStatement].
  */
-@ApiStatus.Experimental
 public open class CHouseFamilyParser(coreDialect: String = "clickhouse") : CHouseParser() {
     private val boundaries = StatementBoundaryGate(coreDialect, colonParameters = true)
 

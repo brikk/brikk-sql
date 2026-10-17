@@ -25,10 +25,8 @@ import com.intellij.sql.psi.SqlJoinExpression
 import com.intellij.sql.psi.SqlQueryExpression
 import com.intellij.sql.psi.SqlReferenceExpression
 import dev.brikk.house.sql.intellij.recoverEditorOperation
-import org.jetbrains.annotations.ApiStatus
 
 /** What a data source's model says about a reference that does not resolve. */
-@ApiStatus.Experimental
 public sealed interface ReferenceScope {
     /** The reference lies in [namespace] of [dataSource], listed but never introspected: the name may exist. */
     public data class OutOfScope(val dataSource: LocalDataSource, val namespace: NamespaceTarget) : ReferenceScope
@@ -55,7 +53,6 @@ public sealed interface ReferenceScope {
  * empty still counts as out of scope.
  * Call under read access; resolution may be slow.
  */
-@ApiStatus.Experimental
 public class OutOfScopeClassifier(private val service: AutoIntrospectService) {
     private val profile = service.profile
     private val dataSources = profile.dataSources
@@ -152,7 +149,6 @@ public class OutOfScopeClassifier(private val service: AutoIntrospectService) {
  * and other inspections' reports stay, as do names under introspected namespaces. Register a no-arg
  * subclass naming the plugin's service class as `daemon.highlightInfoFilter`.
  */
-@ApiStatus.Experimental
 public abstract class OutOfScopeReferenceFilter(private val service: Class<out AutoIntrospectService>) : HighlightInfoFilter {
     final override fun accept(highlightInfo: HighlightInfo, file: PsiFile?): Boolean {
         if (file !is SqlFile || !isUnresolvedReport(highlightInfo.description)) return true
@@ -191,7 +187,6 @@ public abstract class OutOfScopeReferenceFilter(private val service: Class<out A
  * introspected already. Register a no-arg subclass naming the plugin's service class and product label
  * (which names its family in the intention settings) as `intentionAction` for the dialect's language.
  */
-@ApiStatus.Experimental
 public abstract class IntrospectNamespaceIntention(
     private val service: Class<out AutoIntrospectService>,
     private val productLabel: String,

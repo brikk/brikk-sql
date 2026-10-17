@@ -11,13 +11,11 @@ import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.completionEntries
 import java.util.Collections
 import java.util.WeakHashMap
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * One plugin's completion profile. The minimum is [language] and [metadata]; every other member
  * has a working default. Gates and filters are off by default.
  */
-@ApiStatus.Experimental
 public interface SqlCompletionProfile {
     /** Completion applies to files of this language or its dialects. */
     public val language: Language
@@ -65,7 +63,6 @@ public interface SqlCompletionProfile {
 }
 
 /** Which keywords completion offers. */
-@ApiStatus.Experimental
 public enum class KeywordScope { NONE, RESERVED, ALL }
 
 /**
@@ -74,7 +71,6 @@ public enum class KeywordScope { NONE, RESERVED, ALL }
  * when [SqlCompletionConfidence] is registered. [autopopup], when set, offers functions in an
  * autopopup only at those expression positions; explicit completion always offers them.
  */
-@ApiStatus.Experimental
 public data class SqlFunctionGates(
     val qualifier: QualifierRule = QualifierRule.Unrestricted,
     val digitPrefix: Boolean = false,
@@ -86,7 +82,6 @@ public data class SqlFunctionGates(
 }
 
 /** Which functions completion offers after a qualifier (`t.<caret>`). */
-@ApiStatus.Experimental
 public sealed interface QualifierRule {
     /** The same functions as without a qualifier. */
     public data object Unrestricted : QualifierRule
@@ -104,7 +99,6 @@ public sealed interface QualifierRule {
  * Expression positions, recognized by the token before the word being typed: one of [operators]
  * or, ignoring case, one of [keywords].
  */
-@ApiStatus.Experimental
 public data class ExpressionPositions(val keywords: Set<String>, val operators: Set<String>) {
     public companion object {
         /** Standard SQL; `*` is left out, since after `SELECT *` a function is noise. */
@@ -124,7 +118,6 @@ private val completable: MutableMap<MetadataSnapshot, List<FunctionPresentation>
  * [completionEntries] without extension functions whose name the base engine already has, and
  * without table functions metadata marks as not queryable.
  */
-@ApiStatus.Experimental
 public fun MetadataSnapshot.completableFunctions(): List<FunctionPresentation> = completable.getOrPut(this) {
     completionEntries().filter { entry ->
         when {

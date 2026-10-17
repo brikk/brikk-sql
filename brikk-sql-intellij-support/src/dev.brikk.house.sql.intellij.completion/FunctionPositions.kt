@@ -5,7 +5,6 @@ import dev.brikk.house.sql.metadata.FunctionPresentation
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import java.util.Locale
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Where a table function stands, recognized by the keywords before the name being typed, ignoring
@@ -20,7 +19,6 @@ import org.jetbrains.annotations.ApiStatus
  * expressions. With [wrapper], a table function other than those in [unwrapped] is inserted as
  * `wrapper(name(...))` where it stands bare, as Trino requires `TABLE(...)` around them.
  */
-@ApiStatus.Experimental
 public data class TablePositions(
     val after: Set<String>,
     val parenthesized: Set<String> = emptySet(),

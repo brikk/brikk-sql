@@ -14,7 +14,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.impl.PsiManagerEx
 import com.intellij.util.xmlb.annotations.OptionTag
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A persisted project switch for a feature of [language]. Changing it reparses that language's
@@ -22,7 +21,6 @@ import org.jetbrains.annotations.ApiStatus
  * class carries `@Service` and `@State(name = "...", storages = [Storage(ToggleSettings.STORAGE)])`:
  * every plugin's switch lives in the project's workspace file, and another storage is reported.
  */
-@ApiStatus.Experimental
 public abstract class ToggleSettings(private val project: Project, private val language: Language) :
     SerializablePersistentStateComponent<ToggleSettings.Options>(Options()) {
 

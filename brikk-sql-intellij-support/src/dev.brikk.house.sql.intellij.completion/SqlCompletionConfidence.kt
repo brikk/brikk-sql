@@ -7,7 +7,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.util.ThreeState
 import dev.brikk.house.sql.docs.sqlPropertyAt
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Autopopup decisions for the profile's language. With [PROPERTY_COMPLETION] on, inside the parentheses
@@ -17,7 +16,6 @@ import org.jetbrains.annotations.ApiStatus
  * begin. Elsewhere it leaves the decision to the next confidence. Register it with
  * `order="first"` through a no-arg subclass.
  */
-@ApiStatus.Experimental
 public abstract class SqlCompletionConfidence(private val profile: SqlCompletionProfile) : CompletionConfidence(), DumbAware {
     final override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
         !psiFile.language.isKindOf(profile.language) -> ThreeState.UNSURE

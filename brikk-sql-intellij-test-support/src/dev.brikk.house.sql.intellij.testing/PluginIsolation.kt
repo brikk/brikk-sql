@@ -25,7 +25,6 @@ import java.util.Collections
 import java.util.IdentityHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.zip.ZipFile
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Checks that a dialect plugin built on this library stays apart from its siblings when they are
@@ -33,7 +32,6 @@ import org.jetbrains.annotations.ApiStatus
  * them for one plugin; each check takes what it reads, so a test can also call it directly. A check
  * fails with an `AssertionError`.
  */
-@ApiStatus.Experimental
 public object PluginIsolation {
     public const val PLUGIN_CLASS_LOADER: String = "com.intellij.ide.plugins.cl.PluginClassLoader"
 
@@ -225,7 +223,6 @@ public object PluginIsolation {
  * holding the wrapper class wrap the Execute actions with `CooperativeExecuteConfiguration`.
  * [kotlinPluginEnabled], when set, is whether the Kotlin plugin must be enabled in this run.
  */
-@ApiStatus.Experimental
 public class PluginIsolationContract(
     public val pluginId: String,
     public val siblingPluginIds: List<String>,
@@ -317,4 +314,3 @@ private fun assertSame(message: String, expected: Any?, actual: Any?) = expect(e
 private fun assertNotSame(message: String, unexpected: Any?, actual: Any?) = expect(unexpected !== actual) { "$message: <$actual>" }
 
 private fun assertTrue(message: String, condition: Boolean) = expect(condition) { message }
-

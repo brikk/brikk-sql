@@ -19,10 +19,8 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import org.jetbrains.annotations.ApiStatus
 
 /** How one harvest ended. */
-@ApiStatus.Experimental
 public sealed interface HarvestOutcome {
     public data class Complete(val harvest: Harvest) : HarvestOutcome
 

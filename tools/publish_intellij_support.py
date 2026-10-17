@@ -14,8 +14,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("version", type=validate_version)
     parser.add_argument("--core-version", type=validate_version)
+    parser.add_argument("--skip-core-publication", action="store_true",
+                        help="Use --core-version in metadata but publish only support and its test kit")
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
     args = parser.parse_args()
+    if args.skip_core_publication and not args.core_version:
+        parser.error("--skip-core-publication requires --core-version")
     if not args.local and not args.core_version:
         raise SystemExit("Central releases need --core-version: support depends on released core, metadata and verify-api")
     root = Path(__file__).resolve().parents[1]
@@ -37,7 +41,8 @@ def main():
     modules = intellij
     core_version = args.core_version or development_version(originals[template])
     # Support exports the verification API (validators answer with its results), never an engine.
-    if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql", "brikk-sql-verify-api"] + modules
+    if args.core_version and not args.skip_core_publication:
+        modules = ["brikk-sql-metadata", "brikk-sql", "brikk-sql-verify-api"] + modules
     try:
         backup.write_text(originals[template])
         if args.local:
@@ -51,7 +56,7 @@ def main():
             descriptor.write_text(released)
         if args.local:
             command = ["./kotlin", "publish", "mavenLocal"] + [v for m in modules for v in ("-m", m)]
-            if not args.core_version: command.append("--non-transitive")
+            if not args.core_version or args.skip_core_publication: command.append("--non-transitive")
         else:
             command = ["./kotlin", "task"] + [f":{m}:publishToMavenCentral" for m in modules]
         subprocess.run(command, cwd=root, check=True)

@@ -45,7 +45,8 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('version')
+    descriptor = Path(__file__).resolve().parents[1] / 'brikk-sql-intellij-support/module.yaml'
+    parser.add_argument('version', nargs='?', default=development_version(descriptor.read_text()))
     template = Path(__file__).resolve().parents[1] / 'publish.module-template.yaml'
     parser.add_argument('--core-version', default=development_version(template.read_text()))
     parser.add_argument('--repository', type=Path, default=Path.home() / '.m2/repository')

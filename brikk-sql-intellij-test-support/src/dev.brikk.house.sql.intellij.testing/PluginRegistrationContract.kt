@@ -14,7 +14,6 @@ import com.intellij.openapi.util.JDOMUtil
 import com.intellij.serviceContainer.BaseKeyedLazyInstance
 import com.intellij.util.KeyedLazyInstance
 import org.jdom.Element
-import org.jetbrains.annotations.ApiStatus
 import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.util.zip.ZipFile
@@ -29,7 +28,6 @@ import java.util.zip.ZipFile
  * and instantiates at each of its levels.
  * Run [check] from a light platform test of the plugin; every problem is reported together.
  */
-@ApiStatus.Experimental
 public class PluginRegistrationContract(private val pluginId: String, private val servicePackage: String) {
     /** Checks the installed plugin; returns the number of extension registrations and services checked. */
     public fun check(project: Project): Pair<Int, Int> {

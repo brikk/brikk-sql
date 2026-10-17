@@ -22,13 +22,11 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Which executed statements a dialect watches and what follows them. The minimum is [dbms] and
  * [statements]; with neither service class set, nothing follows.
  */
-@ApiStatus.Experimental
 public interface ExecutionObserverProfile {
     public val dbms: Dbms
 
@@ -55,7 +53,6 @@ public interface ExecutionObserverProfile {
 }
 
 /** Statements that ran in [session] on [dataSource]; [requestor] opened the session's connection. */
-@ApiStatus.Experimental
 public data class ExecutedStatements(
     val session: DatabaseSession,
     val dataSource: LocalDataSource,
@@ -70,7 +67,6 @@ public data class ExecutedStatements(
 }
 
 /** A namespace of [dataSource] to reload: [path] from the top level, empty for the top-level list itself. */
-@ApiStatus.Experimental
 public data class NamespaceChange(val dataSource: LocalDataSource, val path: List<String>)
 
 /**
@@ -84,7 +80,6 @@ public data class NamespaceChange(val dataSource: LocalDataSource, val path: Lis
  * after they ran, on the session's engine thread, from the project's root data bus (one subscription
  * sees every session); extensions loaded implicitly (DuckDB autoload) run no statement and are not seen.
  */
-@ApiStatus.Experimental
 public abstract class ExecutionObserver(protected val project: Project, private val scope: CoroutineScope) : DataAuditor, Disposable {
     public abstract val profile: ExecutionObserverProfile
 
@@ -180,7 +175,6 @@ public abstract class ExecutionObserver(protected val project: Project, private 
 }
 
 /** `postStartupActivity` that starts the plugin's [ExecutionObserver]. Register a no-arg subclass naming its service class. */
-@ApiStatus.Experimental
 public abstract class ExecutionObserverStartup(private val service: Class<out ExecutionObserver>) : ProjectActivity {
     override suspend fun execute(project: Project) {
         project.getService(service)?.start()

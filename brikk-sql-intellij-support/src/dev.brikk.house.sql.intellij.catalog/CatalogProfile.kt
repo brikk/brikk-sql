@@ -8,13 +8,11 @@ import com.intellij.database.util.TreePatternNode
 import com.intellij.database.util.TreePatternUtils
 import com.intellij.database.model.ObjectName
 import com.intellij.database.util.Casing
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * A dialect's catalog facts for auto-introspection and path completion. The minimum is [dbms],
  * [productLabel], [quoteChars] and [levels]; the rest has defaults.
  */
-@ApiStatus.Experimental
 public interface CatalogProfile {
     public val dbms: Dbms
 
@@ -57,12 +55,10 @@ public interface CatalogProfile {
 }
 
 /** The path resolver for this profile's levels, current-namespace rule, depth and children. */
-@get:ApiStatus.Experimental
 public val CatalogProfile.pathResolver: NamespacePathResolver
     get() = NamespacePathResolver(levels, usesCurrentNamespace, maxDeepenDepth, ::childrenOf)
 
 /** Introspection scopes, which select what a data source's introspection loads. */
-@ApiStatus.Experimental
 public object CatalogScopes {
     /**
      * Selects exactly the namespace at [path] (kinds [levels], top first; names beyond the levels are

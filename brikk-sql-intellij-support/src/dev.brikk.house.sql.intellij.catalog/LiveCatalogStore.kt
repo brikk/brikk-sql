@@ -19,13 +19,11 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Data source files written by an earlier, data-source-keyed format. On first use under a connection
  * identity, a data source's file is read, rewritten under that identity and deleted.
  */
-@ApiStatus.Experimental
 public interface LegacyCatalogFiles {
     /** The old file of [dataSourceId], whether or not it exists. */
     public fun file(dataSourceId: String): Path
@@ -48,7 +46,6 @@ public interface LegacyCatalogFiles {
  * With a [directory], every stored harvest is also written there, one file per data source and
  * identity, read lazily on first selection after a restart; without, the store is memory only.
  */
-@ApiStatus.Experimental
 public class LiveCatalogStore(
     private val directory: Path?,
     private val legacy: LegacyCatalogFiles? = null,

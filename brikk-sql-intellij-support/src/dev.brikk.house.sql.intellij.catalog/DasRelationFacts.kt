@@ -19,7 +19,6 @@ import dev.brikk.house.sql.scope.RelationFact
 import dev.brikk.house.sql.scope.RelationFacts
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * The tables and views of the data source [resolver] finds for a file, as physical relation facts:
@@ -33,7 +32,6 @@ import org.jetbrains.annotations.ApiStatus
  * console namespace. Facts are copies, rebuilt when the data source's model changes; a file
  * without a data source has none, and each data source and model state has its own revision.
  */
-@ApiStatus.Experimental
 public class DasRelationFacts(private val resolver: DialectDataSourceResolver) : ExternalRelationFacts {
     private val built = ConcurrentHashMap<String, Built>()
     private val revisions = AtomicLong()

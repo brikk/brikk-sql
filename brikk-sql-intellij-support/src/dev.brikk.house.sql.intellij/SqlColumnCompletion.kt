@@ -9,7 +9,6 @@ import dev.brikk.house.sql.intellij.completion.SqlLookupKind
 import dev.brikk.house.sql.intellij.completion.SqlLookupStyle
 import dev.brikk.house.sql.intellij.completion.SqlLookupStyles
 import dev.brikk.house.sql.intellij.completion.lookup
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * What a column completion item shows: its type, three-state [nullable] (null when it cannot
@@ -20,7 +19,6 @@ import org.jetbrains.annotations.ApiStatus
  * identifies the supplying relation, opaquely and by equality; with [name] it is the column's
  * identity for matching, deduplication and the lookup object. The alias is only shown.
  */
-@ApiStatus.Experimental
 public data class SqlColumnFacts(
     val name: String,
     val typeName: String?,
@@ -57,12 +55,10 @@ public object SqlColumnCompletion {
     }
 
     /** A new item for [column]; the facts give its type and tail text, [style] the rest. */
-    @ApiStatus.Experimental
     public fun create(column: SqlColumnFacts, style: SqlLookupStyle = SqlLookupStyles.DEFAULT[SqlLookupKind.BRIKK_COLUMN]): LookupElement =
         style.lookup(column.identity, column.name, column.typeText, column.tailText)
 
     /** [candidate], another contributor's item for [column], showing its facts; icon, insertion and priority stay. */
-    @ApiStatus.Experimental
     public fun decorate(candidate: LookupElement, column: SqlColumnFacts): LookupElement =
         object : LookupElementDecorator<LookupElement>(candidate) {
             override fun renderElement(presentation: LookupElementPresentation) {
@@ -79,7 +75,6 @@ public object SqlColumnCompletion {
      * A column of a PIPE stage's input, from the relation [source] identifies (see
      * [SqlColumnFacts.source]); without a known [typeName] the style's type text shows.
      */
-    @ApiStatus.Experimental
     public fun pipeInput(
         name: String,
         typeName: String? = null,
@@ -96,7 +91,6 @@ public object SqlColumnCompletion {
      * that is not visible here. Call it from a contributor registered with `order="first"`, since it
      * runs the remaining contributors.
      */
-    @ApiStatus.Experimental
     public fun createOrDecorate(
         parameters: CompletionParameters,
         result: CompletionResultSet,

@@ -4,7 +4,6 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.util.TextRange
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Where a [RealSqlContract] runs: a dialect's real files over [RealSqlModel.STANDARD] in a data
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.ApiStatus
  * data source (its console, or a resolve mapping), with the plugin's inspections, annotators and
  * relation features registered as in the product.
  */
-@ApiStatus.Experimental
 public interface RealSqlTarget {
     /** The key of the dialect's [RealSqlCase.variants], such as `postgres`, `mysql`, `doris`. */
     public val dialect: String
@@ -38,7 +36,6 @@ public interface RealSqlTarget {
  * Call [check] from a light platform test; a failed case is reported with all others in one
  * [AssertionError].
  */
-@ApiStatus.Experimental
 public class RealSqlContract(private val target: RealSqlTarget, private val cases: List<RealSqlCase> = RealSqlCases.ALL + RealSqlCases.TABLE_FUNCTIONS) {
     /** Checks every applicable case. */
     public fun check() {

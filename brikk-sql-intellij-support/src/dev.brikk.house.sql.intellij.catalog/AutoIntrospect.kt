@@ -41,13 +41,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Which namespaces were introspected automatically. A request is claimed once while in flight and
  * after it succeeds; after a failure it may be claimed again once [retryDelay] has passed.
  */
-@ApiStatus.Experimental
 public class AutoIntrospectEngine(
     private val retryDelay: Duration = 1.minutes,
     private val timeSource: TimeSource = TimeSource.Monotonic,
@@ -119,7 +117,6 @@ public class AutoIntrospectEngine(
  * (`prepareOneElementRefreshTask`) through `DataSourceSyncManager.tryPerformSync`, the sync entry
  * point that remains in 263.
  */
-@ApiStatus.Experimental
 public abstract class AutoIntrospectService(protected val project: Project, private val scope: CoroutineScope) {
     public abstract val profile: CatalogProfile
 
@@ -661,7 +658,6 @@ public abstract class AutoIntrospectService(protected val project: Project, priv
  * The banner of a file whose auto-introspection runs: "<product>: introspecting '<namespace>'…".
  * Register a no-arg subclass naming the plugin's service class as `editorNotificationProvider`.
  */
-@ApiStatus.Experimental
 public abstract class IntrospectBannerProvider(private val service: Class<out AutoIntrospectService>) : EditorNotificationProvider {
     final override fun collectNotificationData(project: Project, file: VirtualFile): Function<in FileEditor, out JComponent?>? {
         val requests = project.getService(service) ?: return null

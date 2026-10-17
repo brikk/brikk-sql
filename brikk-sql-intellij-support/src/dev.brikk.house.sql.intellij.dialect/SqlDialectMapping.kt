@@ -8,7 +8,6 @@ import com.intellij.sql.dialects.SqlLanguageDialect
 import com.intellij.util.FileContentUtil
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Maps [file], or the project with a null file, to [dialect], or clears the mapping with a null
@@ -16,7 +15,6 @@ import org.jetbrains.annotations.ApiStatus
  * mapping lives in the workspace model, set through `setDialectMappingSync`; the old setter only
  * updates storage there, so where that function cannot be called the result is false. Call on the EDT.
  */
-@ApiStatus.Experimental
 public fun setDialectMapping(project: Project, file: VirtualFile?, dialect: SqlLanguageDialect?): Boolean = WriteAction.compute<Boolean, RuntimeException> {
     val applied = when (val setter = workspaceSetter) {
         WorkspaceSetter.Absent -> {

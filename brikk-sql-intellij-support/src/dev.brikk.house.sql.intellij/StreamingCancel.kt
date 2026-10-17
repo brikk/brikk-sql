@@ -30,7 +30,6 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Claims Cancel for a console of exactly [dataSources]' dbms (not the aliases it also accepts) whose
@@ -45,7 +44,6 @@ import org.jetbrains.annotations.ApiStatus
  * before they are done: a connection cancel still running after [deadline] disconnects the console
  * instead, so the next request runs on a new connection. [worker] runs the steps off the EDT.
  */
-@ApiStatus.Experimental
 public class StreamingCancelInterceptor(
     private val dataSources: DialectDataSourceResolver,
     private val worker: Executor = Executor { ApplicationManager.getApplication().executeOnPooledThread(it) },
@@ -80,7 +78,6 @@ public class StreamingCancelInterceptor(
 }
 
 /** Wraps Cancel with [StreamingCancelInterceptor]. Register a no-arg subclass as `dynamicActionConfigurationCustomizer`. */
-@ApiStatus.Experimental
 public abstract class StreamingCancelConfiguration(dataSources: DialectDataSourceResolver) : CooperativeActionConfiguration() {
     override val actionIds: List<String> = listOf(CANCEL)
     override val interceptor: ActionInterceptor = StreamingCancelInterceptor(dataSources)

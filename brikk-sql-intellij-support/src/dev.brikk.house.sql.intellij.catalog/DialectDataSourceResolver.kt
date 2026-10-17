@@ -13,10 +13,8 @@ import com.intellij.sql.dialects.SqlImportUtil
 import com.intellij.sql.dialects.SqlResolveMappings
 import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
 import dev.brikk.house.sql.intellij.recoverEditorOperation
-import org.jetbrains.annotations.ApiStatus
 
 /** Which data source serves a file, and why. */
-@ApiStatus.Experimental
 public sealed interface DataSourceResolution {
     public val dataSource: LocalDataSource?
 
@@ -55,7 +53,6 @@ public sealed interface DataSourceResolution {
  *
  * Lookups that fail resolve to nothing; cancellation propagates.
  */
-@ApiStatus.Experimental
 public class DialectDataSourceResolver(
     public val dbms: Dbms,
     private val onlyDataSourceFallback: Boolean = true,

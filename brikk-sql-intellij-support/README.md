@@ -19,7 +19,7 @@ no internal-API annotation.
 - `CooperativeExecutePromoter`: promote the underlying database action via the
   public registered promoter, then map back to the installed wrapper (Execute and
   `CooperativeAction` wrappers alike).
-- `CooperativeActionConfiguration` (experimental): wraps any action ids (`EXPLAIN_PLAN`,
+- `CooperativeActionConfiguration`: wraps any action ids (`EXPLAIN_PLAN`,
   `CANCEL`, ...) around whatever is registered under them, so plugins chain instead of replacing
   one another with `overrides="true"`. Its `ActionInterceptor` claims its own events (`update`:
   true shows, false hides, null leaves it to the wrapped action; `perform` returns `DECLINED` to
@@ -27,7 +27,7 @@ no internal-API annotation.
   cancel would cancel on the client, then `KILL QUERY` on the server, and run the stock cancel only as
   a fallback. `delegate` runs at most once, during `perform`, as the event is not valid afterwards). Register a subclass as `dynamicActionConfigurationCustomizer`;
   ids the IDE lacks are skipped, and unloading beneath a peer detaches as for Execute.
-- `StreamingCancelConfiguration(DialectDataSourceResolver(dbms))` (experimental): Cancel for a
+- `StreamingCancelConfiguration(DialectDataSourceResolver(dbms))`: Cancel for a
   console of exactly that dbms (not the aliases the resolver also accepts, such as the stock
   `CLICKHOUSE` for `CLICKHOUSE_BRIKK`) whose request streams its results. The stock cancel only stops
   fetching and closes the statement there, which a driver may drain while the server keeps running the
@@ -61,7 +61,7 @@ no internal-API annotation.
 - `SqlColumnCompletion.create`: consistent column lookup presentation with type,
   three-state nullability, source alias and origin label. Same-named columns from
   different aliases retain distinct lookup identities. Consumers provide copied
-  facts, so the helper acquires no Kotlin IDE or engine dependency. Experimental additions
+   facts, so the helper acquires no Kotlin IDE or engine dependency. Additions
   take `SqlColumnFacts`, whose name and opaque `source` are a column's identity (the alias is
   only shown): `create(column, style)` with the style's icon and priority,
   `decorate(candidate, column)` keeping the candidate's icon and insertion, `pipeInput` for
@@ -74,7 +74,7 @@ no internal-API annotation.
 - `notifyEscaped`: plain-text notifications. `FileBanner` and `FileBannerProvider`:
   per-file editor banners scoped to their project.
 
-## PIPE (`dev.brikk.house.sql.intellij.pipe`, experimental)
+## PIPE (`dev.brikk.house.sql.intellij.pipe`)
 
 A plugin implements one `PipeDialect` profile (core dialect, label, veto property,
 language, project setting, session ownership; optional validator, statement ranges,
@@ -142,7 +142,7 @@ Foreign wrappers are traversed through platform `ActionWithDelegate`, never a ca
 to another plugin's private helper copy. Unloading beneath a peer detaches the
 wrapper but may retain its classloader until restart.
 
-## Native errors (`dev.brikk.house.sql.intellij.diagnostics`, experimental)
+## Native errors (`dev.brikk.house.sql.intellij.diagnostics`)
 
 A plugin implements one `NativeErrorProfile` (language, core dialect, label, `validator(file)`) and
 registers a no-arg `NativeErrorAnnotator` subclass as the language's `externalAnnotator`. Each
@@ -228,7 +228,7 @@ equal length); it never masks ClickHouse's `{name:Type}` server parameters, whic
 without positions); `NativeSqlValidator.of(verifier)` adapts a `brikk-sql-verify-<engine>`
 verifier, and `VerifyResult.toNativeVerdict` is the execution mapping.
 
-## SQL in host strings (`dev.brikk.house.sql.intellij.host`, experimental)
+## SQL in host strings (`dev.brikk.house.sql.intellij.host`)
 
 The mechanics of SQL injected into another language's strings, from abstract entries; a recognizer
 of the host language (the Brikk helper for Kotlin, say) decides what a string is. This layer has no
@@ -289,7 +289,7 @@ host-language dependency and knows nothing about Brikk.
   (`editorNotificationProvider`): a banner with a fix link only when the caller reports an action is
   needed; no routine banner.
 
-## Relations (`dev.brikk.house.sql.intellij.relation`, experimental)
+## Relations (`dev.brikk.house.sql.intellij.relation`)
 
 SQL features over relation facts from any provider, built on core's `RelationScope`
 (`dev.brikk.house.sql.scope`); this layer knows nothing about Brikk. A provider implements
@@ -362,7 +362,7 @@ returns it as its type, so ordinary SQL over a slot resolves through the platfor
 Each column is the column's symbol: SQL references resolve to it, and find usages and rename of the
 provider's declaration (a Kotlin property, say) find and rename them.
 
-## Completion (`dev.brikk.house.sql.intellij.completion`, experimental)
+## Completion (`dev.brikk.house.sql.intellij.completion`)
 
 A plugin implements one `SqlCompletionProfile` (language and `DialectMetadata`; optional
 snapshot choice, function list, server-only functions, keyword catalog, styles and gates) and
@@ -418,12 +418,12 @@ functions or keywords, and spans the dialect's lexer masks complete as code. A l
 the name (an unterminated string, quoted name or comment) leaves everything after it outside code,
 so the rest of the file gets no functions or keywords until it is closed.
 
-`SelectAliasResolveExtension(dbms, clauses)` (`dev.brikk.house.sql.intellij.psi`, experimental):
+`SelectAliasResolveExtension(dbms, clauses)` (`dev.brikk.house.sql.intellij.psi`):
 unqualified references in the given clauses (default HAVING, GROUP BY, ORDER BY) of a query in
 that DBMS see the SELECT-list aliases, as the platform does only for its own families. Register a
 no-arg subclass as `com.intellij.sql.resolveExtension`.
 
-## Language layer (experimental)
+## Language layer
 
 A dialect plugin keeps its rule tables and small subclasses; the machinery is here.
 
@@ -570,7 +570,7 @@ page answers, documents what links to it, and (where the site shows a version ba
 
     BRIKK_DOCS_CHECK=1 ./kotlin test -m brikk-sql --include-classes='dev.brikk.house.sql.docs.EngineDocsPagesTest'
 
-## Catalog kit (`dev.brikk.house.sql.intellij.catalog`, experimental)
+## Catalog kit (`dev.brikk.house.sql.intellij.catalog`)
 
 Database Tools integration for a dialect's own dbms. Register no-arg subclasses (the model facade
 takes the dbms the platform passes):
@@ -877,11 +877,12 @@ temporary macro DDL and `DROP MACRO` may change only the session's; `ATTACH`, `D
 (`CREATE`/`DROP CATALOG` and `SCHEMA`; function DDL) and Doris (`CREATE`/`DROP`/`REFRESH CATALOG`); none
 notifies.
 
-Internal API used, by class (the platform offers no public alternative):
+Internal API used, by class. These usages require explicit review and approval for each plugin;
+previous approval of a plugin-local implementation does not establish approval of a shared adapter:
 
 | API | Used by | Why | Marketplace |
 | --- | --- | --- | --- |
-| `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | the only seam for introspector selection | ignored for the Doris and Trino plugins; confirm it holds for classes in a bundled jar |
+| `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | selects generic JDBC introspection rather than fallback-engine introspection | unapproved shared usages; release blocked pending audit and owner decision |
 
 `InternalApiContainmentTest` (in the test kit's platform tests) reads every class of this jar in
 full, signatures, method bodies, lambdas and annotation values, and fails if a class outside the kit
@@ -922,6 +923,12 @@ source-preserving renderer has no source map and cannot borrow another rendering
 
 ## Build and publication
 
+Our public APIs do not carry `ApiStatus.Experimental`. Genuine IntelliJ API annotations are still
+reported by Plugin Verifier. A Compatible verdict does not establish Marketplace approval of them.
+For a support-only patch against already-published core, use `--skip-core-publication` to avoid
+republishing immutable core coordinates. Version 0.2.1 is the annotation-cleanup candidate; it is
+not approved for Central publication until the plugin API audit is reviewed.
+
 Compile against IDEA 261, with Java 21 bytecode. Linux x64 builds provision a pinned,
 SHA-256-verified IDEA 2026.1.3 SDK, or accept `BRIKK_INTELLIJ_SDK` pointing to a 261
 installation. SDK bytes are compile inputs only. The published POM exposes core,
@@ -930,8 +937,9 @@ platform copy.
 
 ```sh
 ./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support --transitive
-python3 tools/publish_intellij_support.py 0.2.0 --local
-python3 tools/publish_intellij_support.py 0.2.0 --core-version 0.20.0
+python3 tools/publish_intellij_support.py 0.2.1 --core-version 0.20.0 --skip-core-publication --local
+# After explicit publication approval:
+python3 tools/publish_intellij_support.py 0.2.1 --core-version 0.20.0 --skip-core-publication
 ```
 
 The last command requires the existing Central/signing environment. It publishes

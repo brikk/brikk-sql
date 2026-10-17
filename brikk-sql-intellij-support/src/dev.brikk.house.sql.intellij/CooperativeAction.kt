@@ -8,10 +8,8 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PerformWithDocumentsCommitted
 import com.intellij.openapi.actionSystem.impl.DynamicActionConfigurationCustomizer
-import org.jetbrains.annotations.ApiStatus
 
 /** Claims an action in its plugin's own contexts and leaves every other one to the action it wraps. */
-@ApiStatus.Experimental
 public interface ActionInterceptor {
     /** For [event]: true shows and enables the action, false hides it, null (the default) leaves it to the wrapped action. */
     public fun update(event: AnActionEvent): Boolean? = null
@@ -30,7 +28,6 @@ public interface ActionInterceptor {
  * Wraps [previous] (the stock action or another plugin's wrapper) with [interceptor]. Presentation,
  * shortcuts and update thread are the wrapped action's; once [detach]ed, it only passes through.
  */
-@ApiStatus.Experimental
 public open class CooperativeAction(private val previous: AnAction, private val interceptor: ActionInterceptor) :
     AnAction(), ActionWithDelegate<AnAction>, PerformWithDocumentsCommitted {
     init {
@@ -72,7 +69,6 @@ public open class CooperativeAction(private val previous: AnAction, private val 
  * wrapped action back when this wrapper is still the registered one, and otherwise leaves the wrapper
  * in its chain, passing through.
  */
-@ApiStatus.Experimental
 public abstract class CooperativeActionConfiguration : DynamicActionConfigurationCustomizer {
     private val installed = LinkedHashMap<String, CooperativeAction>()
 

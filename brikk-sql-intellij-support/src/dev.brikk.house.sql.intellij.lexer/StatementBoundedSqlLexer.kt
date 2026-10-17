@@ -7,7 +7,6 @@ import com.intellij.psi.TokenType
 import com.intellij.psi.tree.IElementType
 import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.parser.SqlStatementRange
-import org.jetbrains.annotations.ApiStatus
 
 /**
  * Lexes each statement of the [coreDialect]'s script ranges on its own with a base lexer from
@@ -26,7 +25,6 @@ import org.jetbrains.annotations.ApiStatus
  * its statement rather than of the rest of the text; a pass from the start of a text shares them
  * with the boundary gate's parse of the same text.
  */
-@ApiStatus.Experimental
 public class StatementBoundedSqlLexer(baseFactory: () -> Lexer, private val coreDialect: String) : LexerBase() {
     private val base: Lexer = baseFactory()
     private var buffer: CharSequence = ""
