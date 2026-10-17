@@ -56,7 +56,7 @@ from sqlglot.optimizer.annotate_types import (  # noqa: E402
 def sqlglot_version() -> str:
     try:
         return subprocess.run(
-            ["git", "-C", str(SQLGLOT), "describe", "--tags"],
+            ["git", "-C", str(SQLGLOT), "describe", "--tags", "--abbrev=9"],
             capture_output=True,
             text=True,
             check=True,
@@ -74,6 +74,18 @@ def lambda_source(fn) -> str:
 # Ordered (pattern, classify) rules over the normalized lambda source. First match
 # wins; more specific shapes must precede the generic _annotate_by_args rule.
 def classify(src: str) -> str:
+    if "def annotate_by_numeric_arg(" in src:
+        return "AnnotatorRef.NumericArg"
+    if "def annotate_int_as_double(" in src:
+        return "AnnotatorRef.IntAsDouble"
+    if "def _annotate_math_function(" in src:
+        return "AnnotatorRef.MathPostgres"
+    if "def _annotate_floor_ceil(" in src:
+        return "AnnotatorRef.FloorCeilHive" if 'expression.args.get("decimals")' in src else "AnnotatorRef.FloorCeilDuckdb"
+    if "def _annotate_at_time_zone(" in src:
+        return "AnnotatorRef.AtTimeZoneDuckdb"
+    if "def _annotate_date_trunc(" in src:
+        return "AnnotatorRef.DateTruncDuckdb"
     # presto Rand: conditional by_args/DOUBLE
     if "_annotate_by_args(e, \"this\") if e.this else self._set_type(e, exp.DType.DOUBLE)" in src:
         return "AnnotatorRef.RandThisOrDouble"

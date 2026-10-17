@@ -150,7 +150,7 @@ def main() -> None:
             blocks.append((block, 1 + len(overloads)))
 
     # Chunked private functions: a single top-level initializer risks the JVM's 64KB
-    # method limit (same scheme as GeneratedDuckdbFunctionCatalog.kt).
+    # method limit (same scheme as GeneratedDuckdb_<version>.kt).
     CHUNK_BUDGET = 400
     chunks: list[list[str]] = [[]]
     budget = 0

@@ -2,6 +2,7 @@ package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Comprehension
 import dev.brikk.house.sql.ast.Count
 import dev.brikk.house.sql.ast.DDL
 import dev.brikk.house.sql.ast.DML
@@ -55,10 +56,10 @@ private fun isTraversable(expression: Expression): Boolean =
     expression is Query || expression is DDL || expression is DML
 
 // sqlglot: scope.COLLECTIBLE_TYPES (Column, Dot, Table, Query, UDTF, CTE, Star,
-// TableColumn, JoinHint)
+// TableColumn, JoinHint, Comprehension)
 private fun isCollectible(node: Expression): Boolean =
     node is Column || node is Dot || node is Table || node is Query || node is UDTF ||
-        node is CTE || node is Star || node is TableColumn || node is JoinHint
+        node is CTE || node is Star || node is TableColumn || node is JoinHint || node is Comprehension
 
 /** Identity-keyed wrapper (Python uses `id(obj)`; Expression equality is structural). */
 class IdentityKey(val value: Any) {
@@ -98,9 +99,11 @@ class Scope(
     private var derivedTablesList: MutableList<Expression> = mutableListOf()
     private var udtfsList: MutableList<Expression> = mutableListOf()
     private var tablesList: MutableList<Table> = mutableListOf()
+    private var orderedSourcesList: MutableList<Expression> = mutableListOf()
     private var ctesList: MutableList<CTE> = mutableListOf()
     private var subqueriesList: MutableList<Expression> = mutableListOf()
     private var joinHintsList: MutableList<JoinHint> = mutableListOf()
+    private var comprehensionsList: MutableList<Comprehension> = mutableListOf()
     private var semiAntiJoinTables: MutableSet<String> = mutableSetOf()
     private var columnIndexList: MutableList<Column> = mutableListOf()
     private var selectedSourcesCache: LinkedHashMap<String, Pair<Expression, Any>>? = null
@@ -111,8 +114,9 @@ class Scope(
     private var referencesCache: MutableList<Pair<String, Expression>>? = null
 
     init {
-        this.sources.putAll(this.lateralSources)
         this.sources.putAll(this.cteSources)
+        // Visible lateral inputs shadow same-named CTE declarations.
+        this.sources.putAll(this.lateralSources)
     }
 
     // sqlglot: Scope.clear_column_cache — invalidate the column-classification caches
@@ -133,9 +137,11 @@ class Scope(
         derivedTablesList = mutableListOf()
         udtfsList = mutableListOf()
         tablesList = mutableListOf()
+        orderedSourcesList = mutableListOf()
         ctesList = mutableListOf()
         subqueriesList = mutableListOf()
         joinHintsList = mutableListOf()
+        comprehensionsList = mutableListOf()
         semiAntiJoinTables = mutableSetOf()
         columnIndexList = mutableListOf()
         selectedSourcesCache = null
@@ -170,6 +176,7 @@ class Scope(
     // sqlglot: Scope._collect (classification per COLLECTIBLE_TYPES)
     private fun collect() {
         tablesList = mutableListOf()
+        orderedSourcesList = mutableListOf()
         ctesList = mutableListOf()
         subqueriesList = mutableListOf()
         derivedTablesList = mutableListOf()
@@ -178,6 +185,7 @@ class Scope(
         tableColumnsList = mutableListOf()
         starsList = mutableListOf()
         joinHintsList = mutableListOf()
+        comprehensionsList = mutableListOf()
         semiAntiJoinTables = mutableSetOf()
         columnIndexList = mutableListOf()
 
@@ -188,7 +196,7 @@ class Scope(
 
         for (node in walk()) {
             // sqlglot: COLLECTIBLE_TYPES gate (Column, Dot, Table, Query, UDTF, CTE, Star,
-            // TableColumn, JoinHint)
+            // TableColumn, JoinHint, Comprehension)
             if (node === expression || !isCollectible(node)) continue
 
             when {
@@ -205,18 +213,25 @@ class Scope(
                         semiAntiJoinTables.add(node.aliasOrName)
                     }
                     tablesList.add(node)
+                    orderedSourcesList.add(node)
                 }
                 node is JoinHint -> joinHintsList.add(node)
                 node::class == Lateral::class ||
-                    (node is UDTF && (node.parent is From || node.parent is Join)) ->
+                    (node is UDTF && (node.parent is From || node.parent is Join)) -> {
                     udtfsList.add(node)
+                    orderedSourcesList.add(node)
+                }
                 node is CTE -> ctesList.add(node)
-                isDerivedTableNode(node) && isFromOrJoin(node) -> derivedTablesList.add(node)
+                isDerivedTableNode(node) && isFromOrJoin(node) -> {
+                    derivedTablesList.add(node)
+                    orderedSourcesList.add(node)
+                }
                 // sqlglot: exp.UNWRAPPED_QUERIES = (Select, SetOperation)
                 (node is Select || node is SetOperation) && !isFromOrJoin(node) &&
                     node !== innerQuery ->
                     subqueriesList.add(node)
                 node is TableColumn -> tableColumnsList.add(node)
+                node is Comprehension -> comprehensionsList.add(node)
                 // sqlglot: ROW_LEVEL_AGG_FUNCS = (exp.Count,)
                 node is Star &&
                     (truthy(node.args["except_"]) || node.parent !is Count) ->
@@ -250,6 +265,9 @@ class Scope(
 
     // sqlglot: Scope.tables
     val tables: List<Table> get() { ensureCollected(); return tablesList }
+
+    // sqlglot: Scope.comprehensions — local to this query scope, with the usual cache lifecycle.
+    val comprehensions: List<Comprehension> get() { ensureCollected(); return comprehensionsList }
 
     // sqlglot: Scope.ctes
     val ctes: List<CTE> get() { ensureCollected(); return ctesList }
@@ -363,17 +381,13 @@ class Scope(
         get() {
             var cached = referencesCache
             if (cached == null) {
+                ensureCollected()
                 cached = mutableListOf()
 
-                for (table in tables) {
-                    cached.add(table.aliasOrName to table)
-                }
-                for (expr in derivedTables + udtfs) {
-                    val pivots = expr.args["pivots"]
-                    cached.add(
-                        getSourceAlias(expr) to
-                            (if (truthy(pivots)) expr else expr.unnest())
-                    )
+                for (source in orderedSourcesList) {
+                    if (source is Table) cached.add(source.aliasOrName to source)
+                    else cached.add(getSourceAlias(source) to
+                        (if (truthy(source.args["pivots"])) source else source.unnest()))
                 }
 
                 referencesCache = cached

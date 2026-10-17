@@ -30,9 +30,9 @@ dependencies:
   # runtime scope; Amper's compile classpath doesn't need them, but the runtime resolver
   # must include the one for this host (linux-amd64). Declared explicitly so it is present
   # regardless of transitive runtime-scope handling.
-  - io.zonky.test.postgres:embedded-postgres-binaries-linux-amd64:14.22.0
-  - io.zonky.test.postgres:embedded-postgres-binaries-linux-arm64v8:14.22.0
-  - io.zonky.test.postgres:embedded-postgres-binaries-darwin-arm64v8:14.22.0
+  - io.zonky.test.postgres:embedded-postgres-binaries-linux-amd64:18.4.0
+  - io.zonky.test.postgres:embedded-postgres-binaries-linux-arm64v8:18.4.0
+  - io.zonky.test.postgres:embedded-postgres-binaries-darwin-arm64v8:18.4.0
 
 test-dependencies:
   # The verify gate re-generates every corpus SQL through brikk's own parser+generator:
@@ -54,6 +54,9 @@ settings:
       # chDB uses restricted FFM; without this the JDK 25 test JVM warns and native teardown
       # can segfault.
       freeJvmArgs: ["--enable-native-access=ALL-UNNAMED"]
+      systemProperties:
+        # SqlVerifiers' Doris parser for the corpus gates; the tests run from this module's directory.
+        brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar
   kotlin:
     version: 2.4.10
     serialization: json

@@ -14,6 +14,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.Token
+import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -116,6 +117,33 @@ open class Dialect {
     // sqlglot: Dialect.TABLES_REFERENCEABLE_AS_COLUMNS (BigQuery, Postgres)
     open val tablesReferenceableAsColumns: Boolean get() = false
 
+    // sqlglot: Dialect.USING_COLUMN_ORDER (#8536)
+    open val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.USING_LIST
+    open val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.MERGED
+
+    // brikk-native: column names compare case-insensitively even where table names do not (MySQL family).
+    internal open val caseInsensitiveColumns: Boolean get() = false
+
+    // brikk-native: which clauses may name a projection by its alias, where input columns come first.
+    // GROUP BY: not Presto/Trino or Hive. HAVING: not PostgreSQL or Presto/Trino. WHERE and later
+    // items of the same SELECT list (lateral aliases): DuckDB and ClickHouse, Spark 3.4+ for lateral.
+    internal open val groupByProjectionAliases: Boolean get() = true
+    internal open val havingProjectionAliases: Boolean get() = true
+    internal open val whereProjectionAliases: Boolean get() = false
+    internal open val lateralColumnAliases: Boolean get() = false
+
+    // brikk-native: a derived table renames repeated output names with `_1`, `_2`, ... suffixes (DuckDB).
+    internal open val deduplicatesDerivedColumnNames: Boolean get() = false
+
+    // brikk-native: `a.b` may read field `b` of a ROW or struct column `a` (Trino, DuckDB, BigQuery,
+    // ClickHouse tuples, Doris structs); PostgreSQL writes `(a).b` and MySQL has no such columns, so there
+    // `a` can only name a relation.
+    internal open val dottedFieldAccess: Boolean get() = true
+
+    // brikk-native: a table function's arguments may declare its columns, by a structure string or a
+    // query (ClickHouse `file('x', 'CSV', 'a UInt32')`, `values('a UInt8', ...)`, `view(SELECT ...)`).
+    internal open val tableFunctionArgumentsDeclareColumns: Boolean get() = false
+
     // sqlglot: Dialect.SUPPORTS_STRUCT_STAR_EXPANSION (BigQuery, RisingWave)
     open val supportsStructStarExpansion: Boolean get() = false
 
@@ -139,6 +167,45 @@ open class Dialect {
 
     // sqlglot: Dialect.tokenizer_class (tables only; the scanner is shared)
     open val tokenizerConfig: TokenizerConfig get() = TokenizerConfig.BASE
+
+    /**
+     * brikk-native: whether a statement separator may sit inside brackets (PostgreSQL rule
+     * actions do). When false, [dev.brikk.house.sql.parser.SqlScriptSnapshot] makes such a
+     * statement a boundary error rather than guessing where it ends.
+     */
+    open val semicolonsInBrackets: Boolean get() = true
+
+    /**
+     * brikk-native: whether `VALUES [lower, upper)` is a half-open partition range whose `[`
+     * closes with `)` (Doris). Editor bracket tracking then accepts that pairing after VALUES.
+     */
+    open val halfOpenPartitionRanges: Boolean get() = false
+
+    /**
+     * brikk-native: the PIPE stage phrases (as [dev.brikk.house.sql.parser.pipeStageKeywords] spells
+     * them) that the engine runs as core lowers them, by recorded evidence; null without evidence,
+     * when every parsed phrase stands. See [dev.brikk.house.sql.parser.pipeRunnableStageKeywords].
+     */
+    open val pipeRunnableStages: Set<String>? get() = null
+
+    /** brikk-native: whether `{name:Type}` is a server query parameter (ClickHouse). */
+    open val typedQueryParameters: Boolean get() = false
+
+    /** brikk-native: whether `?` after a complete operand is the ternary operator `cond ? a : b` (ClickHouse). */
+    open val questionMarkTernary: Boolean get() = false
+
+    /** brikk-native: every word of the tokenizer's keywords (`ORDER BY` gives `ORDER` and `BY`), for editor display. */
+    val editorKeywords: Set<String> by lazy {
+        tokenizerConfig.keywords
+            .filter { (word, type) -> type != TokenType.VAR && KEYWORD_PHRASE.matches(word) }
+            .keys.flatMap { it.split(' ') }.toSet()
+    }
+
+    /** brikk-native: the keyword spellings the parser reads as data types, e.g. `DOUBLE PRECISION`. */
+    val typeNames: Set<String> by lazy {
+        val types = parser().typeTokens
+        tokenizerConfig.keywords.filter { (word, type) -> type in types && KEYWORD_PHRASE.matches(word) }.keys
+    }
 
     // sqlglot: Dialect.TIME_MAPPING (dialect format specifier -> python strftime)
     open val timeMapping: Map<String, String> get() = emptyMap()
@@ -276,6 +343,8 @@ open class Dialect {
         return expression
     }
 }
+
+private val KEYWORD_PHRASE = Regex("[A-Za-z][A-Za-z0-9_]*( [A-Za-z][A-Za-z0-9_]*)*")
 
 /**
  * Thrown by every public entry point ([Dialects.forName], [transpile], [Expression.sql],

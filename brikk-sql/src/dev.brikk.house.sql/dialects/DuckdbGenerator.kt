@@ -6,10 +6,10 @@ import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.generator.GeneratorTables
 import dev.brikk.house.sql.generator.inheritStructFieldNames
 import dev.brikk.house.sql.optimizer.annotateTypes
-import dev.brikk.house.sql.parser.DuckdbTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.Int
@@ -47,7 +47,7 @@ open class DuckdbGenerator(
     identify: kotlin.Any = false,
     comments: Boolean = true,
     normalizeFunctions: kotlin.Any = "upper",
-    tokenizerConfig: TokenizerConfig = DuckdbTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB,
     // extra dispatch overlay for subclasses (sqlglot: further TRANSFORMS merges)
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
@@ -63,6 +63,9 @@ open class DuckdbGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
+
+    // brikk extension #55: DuckDB 1.5.6 has no STRAIGHT_JOIN.
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
 
     // sqlglot: DuckDBGenerator.SELECT_KINDS = ()
     override val selectKinds: Set<String> get() = emptySet()
@@ -82,6 +85,8 @@ open class DuckdbGenerator(
     override val structDelimiter: Pair<String, String> get() = "(" to ")"
     override val renameTableWithDb: Boolean get() = false
     override val semiAntiJoinWithSide: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
+    override val safeIntDivision: Boolean get() = true
     override val tablesampleKeywords: String get() = "USING SAMPLE"
     override val tablesampleSeedKeyword: String get() = "REPEATABLE"
     override val jsonKeyValuePairSep: String get() = ","
@@ -105,7 +110,44 @@ open class DuckdbGenerator(
     override val byteStart: String? get() = "e'"
     override val byteEnd: String? get() = "'"
     override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
-    override val escapedSequences: Map<String, String> get() = MysqlGenerator.ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
+
+    // DuckDB 1.5.6 rejects NUL in ordinary SQL source and in e'\x00' (its parser's
+    // pg_verifymbstr is unimplemented). CHR(0) creates the same text at execution time.
+    private fun nulTextSql(text: String, segment: (String) -> String): String {
+        val pieces = text.split('\u0000').map { if (it.isEmpty()) null else segment(it) }
+        val parts = mutableListOf<String>()
+        pieces.forEachIndexed { index, piece ->
+            if (index > 0) parts.add(func("CHR", Literal.number(0)))
+            if (piece != null) parts.add(piece)
+        }
+        val result = parts.joinToString(" || ")
+        return if (parts.size == 1) result else "($result)"
+    }
+
+    override fun literalSql(expression: Literal): String =
+        if (expression.isString && '\u0000' in expression.name) {
+            nulTextSql(expression.name) { super.literalSql(Literal.string(it)) }
+        } else super.literalSql(expression)
+
+    override fun bytestringSql(expression: ByteString): String =
+        if (expression.args["is_bytes"] == true) {
+            if (expression.name.any { it.code > 255 }) throw UnsupportedError("ByteString contains non-byte characters")
+            val text = expression.name.map { if (it.code in 32..126 && it != '\\') it.toString()
+                else "\\x" + it.code.toString(16).padStart(2, '0') }.joinToString("")
+            sql(Cast(args("this" to Literal.string(text), "to" to DataType.build(DType.BINARY))))
+        } else if ('\u0000' in expression.name) {
+            nulTextSql(expression.name) { segment ->
+                super.bytestringSql((expression.copy() as ByteString).also { it.set("this", segment) })
+            }
+        } else super.bytestringSql(expression)
+
+    override fun rawstringSql(expression: RawString): String =
+        if ('\u0000' in expression.name) {
+            nulTextSql(expression.name) { segment ->
+                super.rawstringSql((expression.copy() as RawString).also { it.set("this", segment) })
+            }
+        } else super.rawstringSql(expression)
 
     // sqlglot: DuckDB dialect-level flags read by the generator
     override val dialectNullOrdering: String get() = "nulls_are_last"
@@ -281,8 +323,9 @@ open class DuckdbGenerator(
         }
 
         // Modifiers are not supported for TIME, [TIME | TIMESTAMP] WITH TIME ZONE
-        if (expression.thisArg in setOf(DType.TIME, DType.TIMETZ, DType.TIMESTAMPTZ)) {
-            return (expression.thisArg as DType).value
+        if (expression.thisArg in setOf(DType.TIME, DType.TIMETZ, DType.TIMESTAMPTZ, DType.TIMESTAMPLTZ)) {
+            val type = expression.thisArg as DType
+            return typeMapping[type] ?: type.value
         }
 
         return datatypeSql(expression)
@@ -1524,7 +1567,25 @@ open class DuckdbGenerator(
             expression.set("sec", sec)
         }
 
+        (expression.args["zone"] as? Expression)?.let { zone ->
+            return sql(AtTimeZone(args("this" to expression, "zone" to zone.pop())))
+        }
         return renameFuncSql("MAKE_TIMESTAMP", expression)
+    }
+
+    // sqlglot: DuckDBGenerator.timeslice_sql, with source-aware StarRocks origin (#36).
+    open fun timeSliceSql(expression: TimeSlice): String {
+        val interval = Interval(args("this" to (expression.expressionArg as Expression).copy(),
+            "unit" to (expression.args["unit"] as Expression).copy()))
+        val input = (expression.thisArg as Expression).copy()
+        val bucket = if (sourceDialect.equals("starrocks", ignoreCase = true)) {
+            val timestamp = Cast(args("this" to input, "to" to DataType.build(DType.TIMESTAMP)))
+            val origin = Cast(args("this" to Literal.string("0001-01-01 00:00:00"), "to" to DataType.build(DType.TIMESTAMP)))
+            func("TIME_BUCKET", interval, timestamp, origin)
+        } else func("TIME_BUCKET", interval, input)
+        return if (expression.text("kind").uppercase() == "END") {
+            sql(Add(args("this" to bucket, "expression" to interval)))
+        } else bucket
     }
 
     // sqlglot: DuckDBGenerator.approxtopk_sql
@@ -1675,6 +1736,107 @@ open class DuckdbGenerator(
         return func("ARRAY_TO_STRING", transformed, (expression.expressionArg as? Expression)?.copy())
     }
 
+    // sqlglot: DuckDBGenerator.arrayslice_sql (#8524)
+    open fun arraySliceSql(expression: ArraySlice): String {
+        var start = expression.args["start"] as? Expression
+        var end = (expression.args["length"] ?: expression.args["end"]) as? Expression
+        val isLength = expression.args["is_length"] == true || expression.args["length"] != null
+        val originalStart = start?.copy()
+        val originalLength = end?.copy()
+        if (expression.args["zero_based"] == true) {
+            start = start?.let {
+                Case(args("ifs" to listOf(If(args(
+                    "this" to GTE(args("this" to it.copy(), "expression" to Literal.number(0))),
+                    "true" to Add(args("this" to it.copy(), "expression" to Literal.number(1))),
+                ))), "default" to it))
+            }
+            if (!isLength) end = end?.let {
+                Case(args("ifs" to listOf(If(args(
+                    "this" to LT(args("this" to it.copy(), "expression" to Literal.number(0))),
+                    "true" to Sub(args("this" to it.copy(), "expression" to Literal.number(1))),
+                ))), "default" to it))
+            }
+        }
+        fun integer(value: Expression?): Long? = when (value) {
+            is Literal -> value.takeUnless { it.isString }?.name?.toLongOrNull()
+            is Neg -> (value.thisArg as? Literal)?.takeUnless { it.isString }?.name?.toLongOrNull()
+                ?.takeUnless { it == Long.MIN_VALUE }?.let { -it }
+            else -> null
+        }
+        if (isLength && start != null && end != null) {
+            val startValue = integer(start)
+            if (startValue == null || startValue < 0) {
+                val size = ArraySize(args("this" to (expression.thisArg as Expression).copy()))
+                start = Case(args("ifs" to listOf(
+                    If(args("this" to LT(args("this" to start.copy(), "expression" to Neg(args("this" to size.copy())))),
+                        "true" to Add(args("this" to size.copy(), "expression" to Literal.number(1))))),
+                    If(args("this" to LT(args("this" to start.copy(), "expression" to Literal.number(0))),
+                        "true" to Add(args("this" to Add(args("this" to size.copy(), "expression" to start.copy())),
+                            "expression" to Literal.number(1))))),
+                ), "default" to start))
+            }
+            val normalizedStart = integer(start)
+            val length = integer(end)
+            end = if (normalizedStart != null && length != null &&
+                length >= 0 && normalizedStart <= Long.MAX_VALUE - length) {
+                Literal.number(normalizedStart + length - 1)
+            } else {
+                Sub(args("this" to Add(args("this" to start.copy(),
+                    "expression" to Cast(args("this" to end, "to" to DataType.build(DType.BIGINT))))),
+                    "expression" to Literal.number(1)))
+            }
+        }
+        val result = func("ARRAY_SLICE", expression.thisArg, start, end, expression.args["step"])
+        if (isLength && originalStart != null && originalLength != null) {
+            val invalid = mutableListOf<Expression>()
+            if (expression.args["zero_based"] != true && integer(originalStart) in listOf(null, 0L)) {
+                invalid += EQ(args("this" to originalStart.copy(), "expression" to Literal.number(0)))
+            }
+            if (integer(originalLength)?.let { it < 0 } != false) {
+                invalid += LT(args("this" to originalLength.copy(), "expression" to Literal.number(0)))
+            }
+            if (invalid.isNotEmpty()) {
+                // brikk extension (#35): Spark propagates NULLs, but invalid non-NULL
+                // start/length values must fail rather than become successful DuckDB slices.
+                val nullChecks: List<Expression> = listOf(expression.thisArg as Expression, originalStart, originalLength)
+                    .map { Is(args("this" to it.copy(), "expression" to Null())) }
+                val nulls = nullChecks.reduce { a, b -> Or(args("this" to a, "expression" to b)) }
+                val guard = invalid.reduce { a, b -> Or(args("this" to a, "expression" to b)) }
+                return sql(Case(args("ifs" to listOf(
+                    If(args("this" to nulls, "true" to Null())),
+                    If(args("this" to guard, "true" to func("ERROR", Literal.string("Spark SLICE requires a nonzero start and a non-negative length")))),
+                ), "default" to result)))
+            }
+        }
+        return result
+    }
+
+    // sqlglot: DuckDBGenerator.concatws_sql (#8523)
+    override fun concatwsSql(expression: ConcatWs): String {
+        val operands = expression.expressionsArg.filterIsInstance<Expression>()
+        val separator = operands.firstOrNull() ?: return super.concatwsSql(expression)
+        val values = operands.drop(1)
+        fun array(value: Expression) = value is ArrayNode || value.type?.isType(DType.ARRAY) == true
+        if (expression.args["flatten"] != true || values.none(::array)) return super.concatwsSql(expression)
+        val arrays = values.map { value ->
+            if (array(value)) {
+                Cast(args("this" to value.copy(), "to" to DataType(args(
+                    "this" to DType.ARRAY, "expressions" to listOf(DataType.build(DType.TEXT)), "nested" to true))))
+            } else {
+                if ((value.type == null || value.type?.isType(DType.UNKNOWN) == true) &&
+                    value !is Literal && value !is Null && value !is BooleanNode) {
+                    unsupported("Cannot transpile CONCAT_WS with unknown argument types to DuckDB.")
+                }
+                ArrayNode(args("expressions" to listOf(Cast(args("this" to value.copy(), "to" to DataType.build(DType.TEXT))))))
+            }
+        }
+        val combined = if (arrays.size == 1) arrays.single() else ArrayConcat(args(
+            "this" to arrays.first(), "expressions" to arrays.drop(1), "null_propagation" to false))
+        // Retain the existing constant-delimiter guard instead of bypassing its diagnostics.
+        val joined = arrayToStringSql(ArrayToString(args("this" to combined, "expression" to separator.copy())))
+        return func("CONCAT_WS", separator, joined)
+    }
+
     // sqlglot: DuckDBGenerator.arraydistinct_sql
     open fun arraydistinctSql(expression: ArrayDistinct): String {
         val arr = expression.thisArg
@@ -1740,6 +1902,146 @@ open class DuckdbGenerator(
 
         val filtered = flagStr.filter { it in supportedFlags }
         return filtered.ifEmpty { null }
+    }
+
+    private fun regexpNullChecks(expression: Expression, keys: List<String>): Expression = keys
+        .mapNotNull { expression.args[it] as? Expression }
+        .map<Expression, Expression> { Is(args("this" to it.copy(), "expression" to Null())) }
+        .reduce { a, b -> Or(args("this" to a, "expression" to b)) }
+
+    private fun embeddedRegexpPattern(pattern: Expression, parameters: Expression?): Expression {
+        val postgres = sourceDialect.equals("postgres", ignoreCase = true) || sourceDialect.equals("postgresql", ignoreCase = true)
+        var flags = if (parameters is Null) null else validateRegexpFlags(parameters,
+            if (sourceDialect.equals("mysql", ignoreCase = true)) "im" else "ims")
+        if (postgres) {
+            // PostgreSQL defaults to non-newline-sensitive matching; m/s are opposing
+            // modes, not independent RE2 switches. The last such flag selects the mode.
+            val newlineSensitive = flags?.lastOrNull { it == 'm' || it == 's' } == 'm'
+            flags = (if ('i' in flags.orEmpty()) "i" else "") + if (newlineSensitive) "m" else "s"
+        }
+        return if (flags == null) pattern.copy() else Concat(args("expressions" to listOf(
+            Literal.string("(?$flags)"), pattern.copy())))
+    }
+
+    private fun checkRegexpSearchBoundary(pattern: Expression, position: Expression?, function: String) {
+        if (!(sourceDialect.equals("postgres", ignoreCase = true) || sourceDialect.equals("postgresql", ignoreCase = true))) return
+        if (position != null && !(position.isInt && position.name == "1") && pattern !is Null &&
+            (!pattern.isString || "^" in pattern.name || "\\A" in pattern.name)) {
+            unsupported("$function starting-position lowering cannot preserve PostgreSQL start anchors")
+        }
+    }
+
+    // sqlglot: DuckDBGenerator.regexpcount_sql (#8474), with native-source empty/NULL rules.
+    open fun regexpCountSql(expression: RegexpCount): String {
+        val input = expression.thisArg as Expression
+        val pattern = expression.expressionArg as Expression
+        val position = expression.args["position"] as? Expression
+        val parameters = expression.args["parameters"] as? Expression
+        checkRegexpSearchBoundary(pattern, position, "REGEXP_COUNT")
+        val source = sourceDialect?.lowercase()
+        val postgres = source == "postgres" || source == "postgresql"
+        val nativeEmptyMatches = postgres || source == "trino" || source == "spark"
+        if (source in setOf("trino", "spark") && (position != null || parameters != null)) {
+            unsupported("Native $source REGEXP_COUNT only supports subject and pattern arguments")
+        }
+        val isEmpty = EQ(args("this" to pattern.copy(), "expression" to Literal.string("")))
+        val embedded = embeddedRegexpPattern(pattern, parameters)
+        val subject = if (position == null) input.copy() else Substring(args("this" to input.copy(), "start" to position.copy()))
+        val count = Length(args("this" to Anonymous(args("this" to "REGEXP_EXTRACT_ALL", "expressions" to listOf(subject, embedded)))))
+        val branches = mutableListOf<Expression>(If(args("this" to regexpNullChecks(expression,
+            listOf("this", "expression", "position", "parameters")), "true" to Null())))
+        if (position != null) {
+            branches += If(args("this" to LTE(args("this" to position.copy(), "expression" to Literal.number(0))),
+                "true" to func("ERROR", Literal.string("REGEXP_COUNT position must be positive"))))
+            if (postgres) branches += If(args("this" to GT(args("this" to position.copy(), "expression" to
+                Add(args("this" to Length(args("this" to input.copy())), "expression" to Literal.number(1))))),
+                "true" to Literal.number(0)))
+        }
+        // Test the ORIGINAL pattern, never the flags-prefixed expression.
+        if (!nativeEmptyMatches) branches += If(args("this" to isEmpty, "true" to Literal.number(0)))
+        return sql(Case(args("ifs" to branches, "default" to count)))
+    }
+
+    // sqlglot: DuckDBGenerator.regexpinstr_sql (#8474). Whole-match positions are 1-based.
+    open fun regexpInstrSql(expression: RegexpInstr): String {
+        val input = expression.thisArg as Expression
+        val pattern = expression.expressionArg as Expression
+        val position = expression.args["position"] as? Expression ?: Literal.number(1)
+        val occurrence = expression.args["occurrence"] as? Expression ?: Literal.number(1)
+        val option = expression.args["option"] as? Expression
+        val group = expression.args["group"] as? Expression
+        checkRegexpSearchBoundary(pattern, expression.args["position"] as? Expression, "REGEXP_INSTR")
+        if (pattern.isString && pattern.name.isNotEmpty() &&
+            runCatching { Regex(pattern.name).containsMatchIn("") }.getOrDefault(false)) {
+            unsupported("REGEXP_INSTR nonempty zero-width match positions are not supported in DuckDB")
+        }
+        if (group != null && !(group.isInt && group.name == "0") && group !is Null) {
+            unsupported("REGEXP_INSTR capture-group positions are not supported in DuckDB")
+        }
+        val source = sourceDialect?.lowercase()
+        val postgres = source == "postgres" || source == "postgresql"
+        val mysql = source == "mysql"
+        val isEmpty = EQ(args("this" to pattern.copy(), "expression" to Literal.string("")))
+        val embedded = embeddedRegexpPattern(pattern, expression.args["parameters"] as? Expression)
+        val subject = if (position.isInt && position.name == "1") input.copy() else
+            Substring(args("this" to input.copy(), "start" to position.copy()))
+        val offset = if (position.isInt && position.name == "1") Literal.number(0) else
+            Sub(args("this" to position.copy(), "expression" to Literal.number(1)))
+        fun matches(): Expression = Anonymous(args("this" to "REGEXP_EXTRACT_ALL",
+            "expressions" to listOf(subject.copy(), embedded.copy())))
+        fun sumLengths(function: String, end: Expression): Expression {
+            val values = Bracket(args("this" to Anonymous(args("this" to function,
+                "expressions" to listOf(subject.copy(), embedded.copy()))), "offset" to 1,
+                "expressions" to listOf(Slice(args("this" to Literal.number(1), "expression" to end)))))
+            val transform = Anonymous(args("this" to "LIST_TRANSFORM", "expressions" to listOf(values,
+                Lambda(args("this" to Length(args("this" to toIdentifier("x"))), "expressions" to listOf(toIdentifier("x")))))))
+            return Coalesce(args("this" to Anonymous(args("this" to "LIST_SUM", "expressions" to listOf(transform))),
+                "expressions" to listOf(Literal.number(0))))
+        }
+        var result: Expression = Add(args("this" to Add(args("this" to Add(args("this" to Literal.number(1),
+            "expression" to sumLengths("STRING_SPLIT_REGEX", occurrence.copy()))),
+            "expression" to sumLengths("REGEXP_EXTRACT_ALL", Sub(args("this" to occurrence.copy(), "expression" to Literal.number(1)))))),
+            "expression" to offset))
+        if (option != null) {
+            val endLength = Coalesce(args("this" to Length(args("this" to Bracket(args("this" to matches(), "offset" to 1,
+                "expressions" to listOf(occurrence.copy()))))), "expressions" to listOf(Literal.number(0))))
+            val delta = if (option.isInt && option.name == "1") endLength else If(args(
+                "this" to EQ(args("this" to option.copy(), "expression" to Literal.number(1))),
+                "true" to endLength, "false" to Literal.number(0)))
+            if (!(option.isInt && option.name == "0")) result = Add(args("this" to result, "expression" to delta))
+        }
+        val branches = mutableListOf<Expression>()
+        // MySQL validates the empty regex even when the subject is NULL.
+        if (mysql) branches += If(args("this" to isEmpty.copy(), "true" to func("ERROR",
+            Literal.string("MySQL REGEXP_INSTR rejects an empty pattern"))))
+        branches += If(args("this" to regexpNullChecks(expression,
+            listOf("this", "expression", "position", "occurrence", "option", "parameters", "group")), "true" to Null()))
+        branches += If(args("this" to Or(args("this" to LTE(args("this" to position.copy(), "expression" to Literal.number(0))),
+            "expression" to LTE(args("this" to occurrence.copy(), "expression" to Literal.number(0))))),
+            "true" to func("ERROR", Literal.string("REGEXP_INSTR position and occurrence must be positive"))))
+        if (option != null) branches += If(args("this" to And(args(
+            "this" to NEQ(args("this" to option.copy(), "expression" to Literal.number(0))),
+            "expression" to NEQ(args("this" to option.copy(), "expression" to Literal.number(1))))),
+            "true" to func("ERROR", Literal.string("REGEXP_INSTR option must be 0 or 1"))))
+        val lastBoundary = Add(args("this" to Length(args("this" to input.copy())), "expression" to Literal.number(1)))
+        if (postgres) branches += If(args("this" to GT(args("this" to position.copy(), "expression" to lastBoundary.copy())),
+            "true" to Literal.number(0)))
+        if (mysql) branches += If(args("this" to GT(args("this" to position.copy(), "expression" to Length(args("this" to input.copy())))),
+            "true" to func("ERROR", Literal.string("MySQL REGEXP_INSTR search position is out of bounds"))))
+        val emptyPosition = Sub(args("this" to Add(args("this" to position.copy(), "expression" to occurrence.copy())),
+            "expression" to Literal.number(1)))
+        val emptyResult = if (postgres || source == "spark") If(args("this" to
+            LTE(args("this" to emptyPosition.copy(), "expression" to lastBoundary)), "true" to emptyPosition,
+            "false" to Literal.number(0))) else Literal.number(0)
+        if (!mysql) branches += If(args("this" to isEmpty, "true" to emptyResult))
+        branches += If(args("this" to LT(args("this" to Length(args("this" to matches())), "expression" to occurrence.copy())),
+            "true" to Literal.number(0)))
+        // STRING_SPLIT_REGEX drops zero-width separators, so the length-summing
+        // algorithm must refuse such matches rather than report wrong positions.
+        branches += If(args("this" to Anonymous(args("this" to "LIST_CONTAINS",
+            "expressions" to listOf(matches(), Literal.string("")))), "true" to func("ERROR",
+            Literal.string("REGEXP_INSTR nonempty zero-width matches are not supported"))))
+        return sql(Cast(args("this" to Case(args("ifs" to branches, "default" to result)), "to" to DataType.build(DType.BIGINT))))
     }
 
     // sqlglot: DuckDBGenerator.regexplike_sql
@@ -2411,6 +2713,14 @@ open class DuckdbGenerator(
     }
 
     // sqlglot: DuckDBGenerator.tablesample_sql
+    override fun afterHavingModifierSqls(expression: Expression): List<String> =
+        super.afterHavingModifierSqls(expression) + sql(expression, "sample")
+
+    override fun afterLimitModifiers(expression: Expression): List<String> {
+        val locks = expressions(expression, key = "locks", sep = " ")
+        return listOf(if (locks.isEmpty()) "" else " $locks")
+    }
+
     override fun tablesampleSql(expression: TableSample, tablesampleKeyword: String?): String {
         var keyword = tablesampleKeyword
         if (expression.parent !is Select) {
@@ -2742,14 +3052,7 @@ open class DuckdbGenerator(
             // sqlglot: TRANSFORMS[exp.Array] (inherit_struct_field_names + inline_array_unless_query)
             reg(ArrayNode::class) { e ->
                 val array = inheritStructFieldNames(e) as ArrayNode
-                val elem = array.expressionsArg.firstOrNull() as? Expression
-                if (elem?.find(Select::class, Union::class, Except::class, Intersect::class) != null) {
-                    func("ARRAY", elem)
-                } else {
-                    "[" + expressions(
-                        array, dynamic = true, newLine = true, skipFirst = true, skipLast = true
-                    ) + "]"
-                }
+                inlineArrayUnlessQuerySql(array)
             }
             reg(ArrayFilter::class) { e -> dg().renameFuncSql("LIST_FILTER", e) }
             reg(ArraySum::class) { e -> dg().renameFuncSql("LIST_SUM", e) }
@@ -2871,6 +3174,7 @@ open class DuckdbGenerator(
             reg(TimestampFromParts::class) { e ->
                 dg().timestampfrompartsSql(e as TimestampFromParts)
             }
+            reg(TimeSlice::class) { e -> dg().timeSliceSql(e as TimeSlice) }
             reg(DateAdd::class) { e -> dg().dateDeltaSql(e) }
             reg(DateSub::class) { e -> dg().dateDeltaSql(e) }
             reg(DatetimeAdd::class) { e -> dg().dateDeltaSql(e) }
@@ -2889,8 +3193,11 @@ open class DuckdbGenerator(
             reg(ParseTime::class) { e -> dg().parsetimeSql(e as ParseTime) }
             reg(ParseJSON::class) { e -> dg().parsejsonSql(e as ParseJSON) }
             reg(ArrayDistinct::class) { e -> dg().arraydistinctSql(e as ArrayDistinct) }
+            reg(ArraySlice::class) { e -> dg().arraySliceSql(e as ArraySlice) }
             reg(ArrayToString::class) { e -> dg().arrayToStringSql(e as ArrayToString) }
             reg(RegexpLike::class) { e -> dg().regexplikeSql(e as RegexpLike) }
+            reg(RegexpCount::class) { e -> dg().regexpCountSql(e as RegexpCount) }
+            reg(RegexpInstr::class) { e -> dg().regexpInstrSql(e as RegexpInstr) }
             reg(RegexpReplace::class) { e -> dg().regexpreplaceSql(e as RegexpReplace) }
             reg(Round::class) { e -> dg().roundSql(e as Round) }
             // sqlglot: DuckDBGenerator.{getignorecase,compress,encrypt,decrypt,decryptraw,
@@ -3028,6 +3335,7 @@ open class DuckdbGenerator(
             reg(UnixToTimeStr::class) { e -> "CAST(TO_TIMESTAMP(${sql(e, "this")}) AS TEXT)" }
             reg(VariancePop::class) { e -> dg().renameFuncSql("VAR_POP", e) }
             reg(WeekOfYear::class) { e -> dg().renameFuncSql("WEEKOFYEAR", e) }
+            reg(YearOfWeekIso::class) { e -> sql(Extract(args("this" to Var(args("this" to "ISOYEAR")), "expression" to e.thisArg))) }
             reg(JSONObjectAgg::class) { e -> dg().renameFuncSql("JSON_GROUP_OBJECT", e) }
             reg(JSONBObjectAgg::class) { e -> dg().renameFuncSql("JSON_GROUP_OBJECT", e) }
             reg(DateBin::class) { e -> dg().renameFuncSql("TIME_BUCKET", e) }

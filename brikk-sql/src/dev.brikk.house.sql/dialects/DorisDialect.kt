@@ -5,6 +5,7 @@ import dev.brikk.house.sql.metadata.DORIS_FUNCTION_CATALOG
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.parser.DorisTokenizerTables
 import dev.brikk.house.sql.parser.ErrorLevel
+import dev.brikk.house.sql.parser.PIPE_STAGES_RUN_EVERYWHERE
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
@@ -16,14 +17,28 @@ import dev.brikk.house.sql.parser.TokenizerConfig
  */
 // sqlglot: dialects.doris.Doris
 class DorisDialect : Dialect() {
+    // brikk-native PIPE evidence (the Doris 4.1.4 FE parser accepted the lowered stages): CALL and
+    // NATURAL JOIN are not in the grammar; core refuses or blocks RENAME, PIVOT, UNPIVOT and TABLESAMPLE.
+    override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf("DROP", "SET", "UNION", "ASOF JOIN")
 
     override val name: String get() = "doris"
+    // sqlglot: inherited MySQL ordering; the Kotlin umbrella does not subclass MySQL.
+    override val usingColumnOrder: UsingColumnOrder get() = UsingColumnOrder.LEFT_TABLE
+
+    // brikk-native: no Doris construct puts `;` inside brackets outside strings and comments.
+    override val semicolonsInBrackets: Boolean get() = false
+
+    // brikk-native: DorisParser.g4 fixedPartitionDef `VALUES [ (...), (...) )`, also in ALTER ... ADD PARTITION.
+    override val halfOpenPartitionRanges: Boolean get() = true
 
     // sqlglot: Doris(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
 
     // sqlglot: Doris inherits MySQL.NORMALIZATION_STRATEGY (CASE_SENSITIVE)
     override val normalizationStrategy get() = NormalizationStrategy.CASE_SENSITIVE
+
+    // brikk-native: see Dialect.caseInsensitiveColumns.
+    override val caseInsensitiveColumns: Boolean get() = true
 
     // Generated from Doris's runtime function registry (tools/generate_doris_functions.py).
     override val functionCatalog: FunctionCatalog get() = DORIS_FUNCTION_CATALOG
@@ -43,11 +58,22 @@ class DorisDialect : Dialect() {
 
     companion object {
         /**
+         * brikk extension #53 (docs/brikk-extensions.md, NOT sqlglot parity): the GENERATED
+         * tables with the native Doris lexer's rules: untagged `$$` literals, nested block
+         * comments and hints, backslash-LF `--` continuation, and no `#` / `{# #}` comments.
+         */
+        internal val LEXICAL_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DORIS.withLexicalRules(
+            comments = DorisTokenizerTables.COMMENTS - setOf("#", "{#"),
+            nestedBlockComments = true,
+            dashCommentLineContinuation = true,
+            untaggedDollarStrings = true,
+        )
+
+        /**
          * brikk-native (docs/brikk-extensions.md #19, NOT sqlglot parity): Doris DDL type
          * keywords missing from sqlglot's Doris tokenizer, which is tuned for transpiling
-         * queries *into* Doris and never sees `SHOW CREATE TABLE` output. Layered over the
-         * GENERATED [DorisTokenizerTables.CONFIG] so the oracle-parity token corpus test
-         * keeps using the generated tables unchanged.
+         * queries *into* Doris and never sees `SHOW CREATE TABLE` output. Layered over
+         * [LEXICAL_CONFIG], so the generated tables stay unchanged.
          *
          * - `LARGEINT` -> INT128: StarRocks' mapping, never propagated to Doris upstream.
          * - `IPV4` / `IPV6`: existing TokenType/DType members (ClickHouse tokenizer has them).
@@ -59,7 +85,7 @@ class DorisDialect : Dialect() {
          * - `REFRESH` statement token; `BUILD` / `CANCEL` / `PAUSE` / `RECOVER` / `RESUME` as
          *   COMMAND so their statements degrade to Command rather than a parse error.
          */
-        val TOKENIZER_CONFIG: TokenizerConfig = DorisTokenizerTables.CONFIG.withKeywords(
+        val TOKENIZER_CONFIG: TokenizerConfig = LEXICAL_CONFIG.withKeywords(
             mapOf(
                 "LARGEINT" to TokenType.INT128,
                 "IPV4" to TokenType.IPV4,

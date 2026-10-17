@@ -120,6 +120,9 @@ open class SparkParser(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.SPARK
+    override val normalizeDecimalLiterals: Boolean get() = false
+    override val decimalLiteralsAllowNegativeScale: Boolean get() = false
+    override fun parseFieldDef(): Expression? = parseColumnDef(parseColumnOps(parseField(anyToken = true)))
 
     // sqlglot: SparkParser.FUNCTIONS
     override val functions: Map<String, (List<Expression?>) -> Expression>

@@ -1,5 +1,5 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
  "fixture": "qualify_columns",
  "schema": {
   "x": {
@@ -46,6 +46,7 @@
    "amt": "INT"
   }
  },
+ "infer_schema": false,
  "cases": [
   {
    "sql": "SELECT a FROM x",
@@ -57,11 +58,24 @@
   },
   {
    "sql": "SELECT a FROM zz GROUP BY a ORDER BY a",
-   "expected": "SELECT zz.a AS a FROM zz AS zz GROUP BY zz.a ORDER BY a"
+   "expected": "SELECT zz.a AS a FROM zz AS zz GROUP BY zz.a ORDER BY a",
+   "schema": {
+    "zz": {
+     "a": "INT"
+    }
+   }
   },
   {
    "sql": "SELECT x, p FROM (SELECT x from xx) xx CROSS JOIN yy",
-   "expected": "SELECT xx.x AS x, yy.p AS p FROM (SELECT xx.x AS x FROM xx AS xx) AS xx CROSS JOIN yy AS yy"
+   "expected": "SELECT xx.x AS x, yy.p AS p FROM (SELECT xx.x AS x FROM xx AS xx) AS xx CROSS JOIN yy AS yy",
+   "schema": {
+    "xx": {
+     "x": "INT"
+    },
+    "yy": {
+     "p": "INT"
+    }
+   }
   },
   {
    "sql": "SELECT a FROM x AS z",
@@ -126,6 +140,10 @@
   {
    "sql": "SELECT a AS j, b AS a FROM x ORDER BY 1",
    "expected": "SELECT x.a AS j, x.b AS a FROM x AS x ORDER BY j"
+  },
+  {
+   "sql": "SELECT a AS j, -b AS j FROM x GROUP BY 1, 2 ORDER BY 1, -b",
+   "expected": "SELECT x.a AS j, -x.b AS j FROM x AS x GROUP BY x.a, -x.b ORDER BY 1, -x.b"
   },
   {
    "sql": "SELECT SUM(a) AS c, SUM(b) AS d FROM x ORDER BY 1, 2",
@@ -200,8 +218,8 @@
    "expected": "SELECT DATE(x.a) AS _col_0, DATE(x.b) AS c FROM x AS x GROUP BY DATE(x.a), DATE(x.b)"
   },
   {
-   "sql": "SELECT (SELECT MIN(a) FROM UNNEST([1, 2])) AS f FROM x GROUP BY 1",
-   "expected": "SELECT (SELECT MIN(_0.a) AS _col_0 FROM UNNEST(ARRAY(1, 2)) AS _0) AS f FROM x AS x GROUP BY 1"
+   "sql": "SELECT (SELECT MIN(a) FROM UNNEST([1, 2]) AS t(a)) AS f FROM x GROUP BY 1",
+   "expected": "SELECT (SELECT MIN(t.a) AS _col_0 FROM UNNEST(ARRAY(1, 2)) AS t(a)) AS f FROM x AS x GROUP BY 1"
   },
   {
    "sql": "WITH x AS (select 'a' as a, 1 as b) SELECT x.a AS c, y.a as d, SUM(x.b) AS y, FROM x join x as y on x.a = y.a group by 1, 2",
@@ -282,8 +300,32 @@
    "dialect": "bigquery"
   },
   {
-   "sql": "SELECT x FROM READ_PARQUET('path.parquet', hive_partition=1)",
-   "expected": "SELECT _0.x AS x FROM READ_PARQUET('path.parquet', hive_partition = 1) AS _0"
+   "sql": "SELECT 1 AS z, z + 1 AS w FROM (SELECT * FROM t) c",
+   "expected": "SELECT 1 AS Z, C.Z + 1 AS W FROM (SELECT T.Z AS Z FROM T T) C",
+   "schema": {
+    "t": {
+     "z": "INT"
+    }
+   },
+   "title": "oracle cannot reference select aliases, so z is a source column",
+   "dialect": "oracle",
+   "dialect_supported": false
+  },
+  {
+   "sql": "SELECT t.x FROM READ_PARQUET('path.parquet', hive_partition=1) AS t",
+   "expected": "SELECT t.x AS x FROM READ_PARQUET('path.parquet', hive_partition = 1) AS t"
+  },
+  {
+   "sql": "SELECT 1 AS z FROM (SELECT * FROM t) c WHERE z > 0",
+   "expected": "SELECT 1 AS Z FROM (SELECT T.Z AS Z FROM T T) C WHERE C.Z > 0",
+   "schema": {
+    "t": {
+     "z": "INT"
+    }
+   },
+   "title": "oracle WHERE column sharing a projection alias name is a source column",
+   "dialect": "oracle",
+   "dialect_supported": false
   },
   {
    "sql": "select * from (values (1, 2))",
@@ -295,7 +337,12 @@
   },
   {
    "sql": "SELECT SOME_UDF(data).* FROM t",
-   "expected": "SELECT SOME_UDF(t.data).* FROM t AS t"
+   "expected": "SELECT SOME_UDF(t.data).* FROM t AS t",
+   "schema": {
+    "t": {
+     "data": "INT"
+    }
+   }
   },
   {
    "sql": "SELECT p.* FROM p UNION ALL SELECT p2.* FROM p2",
@@ -311,6 +358,13 @@
   {
    "sql": "SELECT s, arr1, arr2 FROM arrays_test LEFT ARRAY JOIN arr1, arrays_test.arr2",
    "expected": "SELECT arrays_test.s AS s, arrays_test.arr1 AS arr1, arrays_test.arr2 AS arr2 FROM arrays_test AS arrays_test LEFT ARRAY JOIN arrays_test.arr1, arrays_test.arr2",
+   "schema": {
+    "arrays_test": {
+     "s": "TEXT",
+     "arr1": "ARRAY<TEXT>",
+     "arr2": "ARRAY<TEXT>"
+    }
+   },
    "dialect": "clickhouse"
   },
   {
@@ -331,19 +385,36 @@
    "dialect": "postgres"
   },
   {
+   "sql": "SELECT r.v, r.idx FROM t, LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+   "expected": "SELECT r.v AS v, r.idx AS idx FROM t AS t, LATERAL UNNEST(t.a) WITH ORDINALITY AS r(v, idx)",
+   "dialect": "postgres"
+  },
+  {
    "sql": "SELECT generate_series FROM generate_series(0, 10) AS g",
    "expected": "SELECT g.generate_series AS generate_series FROM generate_series(0, 10) AS g(generate_series)",
    "dialect": "clickhouse"
   },
   {
-   "sql": "SELECT * FROM quarterly_sales PIVOT(SUM(amount) FOR quarter IN (ANY ORDER BY quarter)) ORDER BY empid",
-   "expected": "SELECT * FROM QUARTERLY_SALES AS QUARTERLY_SALES PIVOT(SUM(QUARTERLY_SALES.AMOUNT) FOR QUARTERLY_SALES.QUARTER IN (ANY ORDER BY QUARTER)) AS _0 ORDER BY _0.EMPID",
+   "sql": "SELECT empid FROM quarterly_sales PIVOT(SUM(amount) FOR quarter IN (ANY ORDER BY quarter))",
+   "expected": "SELECT _0.EMPID AS EMPID FROM QUARTERLY_SALES AS QUARTERLY_SALES PIVOT(SUM(QUARTERLY_SALES.AMOUNT) FOR QUARTERLY_SALES.QUARTER IN (ANY ORDER BY QUARTER)) AS _0",
+   "schema": {
+    "quarterly_sales": {
+     "amount": "DOUBLE",
+     "quarter": "INT",
+     "empid": "INT"
+    }
+   },
    "dialect": "snowflake",
    "dialect_supported": false
   },
   {
    "sql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY x) AS x FROM t",
-   "expected": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.x) AS x FROM t AS t"
+   "expected": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.x) AS x FROM t AS t",
+   "schema": {
+    "t": {
+     "x": "DOUBLE"
+    }
+   }
   },
   {
    "sql": "WITH t AS (SELECT 1 AS c) SELECT TO_JSON_STRING(t) FROM t",
@@ -353,6 +424,12 @@
   {
    "sql": "SELECT DATE_TRUNC(col1, WEEK(MONDAY)), col2 FROM t",
    "expected": "SELECT DATE_TRUNC(t.col1, WEEK(MONDAY)) AS _col_0, t.col2 AS col2 FROM t AS t",
+   "schema": {
+    "t": {
+     "col1": "DATE",
+     "col2": "TEXT"
+    }
+   },
    "dialect": "bigquery"
   },
   {
@@ -559,16 +636,42 @@
   {
    "sql": "SELECT id FROM t WHERE id > (SELECT AVG(id) FROM u WHERE u.name = t.name)",
    "expected": "SELECT t.id AS id FROM t AS t WHERE t.id > (SELECT AVG(u.id) AS _col_0 FROM u AS u WHERE u.name = t.name)",
+   "schema": {
+    "t": {
+     "id": "INT",
+     "name": "TEXT"
+    },
+    "u": {
+     "id": "INT",
+     "name": "TEXT"
+    }
+   },
    "title": "correlated aggregate resolves to local source without schema"
   },
   {
    "sql": "SELECT id FROM t WHERE id > (SELECT AVG(id) FROM t AS t2 WHERE t2.k = t.k)",
    "expected": "SELECT t.id AS id FROM t AS t WHERE t.id > (SELECT AVG(t2.id) AS _col_0 FROM t AS t2 WHERE t2.k = t.k)",
+   "schema": {
+    "t": {
+     "id": "INT",
+     "k": "INT"
+    }
+   },
    "title": "correlated aggregate with self-correlation via alias"
   },
   {
    "sql": "SELECT id FROM t WHERE id > (SELECT AVG(u) FROM u WHERE u.k = t.k)",
    "expected": "SELECT t.id AS id FROM t AS t WHERE t.id > (SELECT AVG(u.u) AS _col_0 FROM u AS u WHERE u.k = t.k)",
+   "schema": {
+    "t": {
+     "id": "INT",
+     "k": "INT"
+    },
+    "u": {
+     "u": "INT",
+     "k": "INT"
+    }
+   },
    "title": "correlated aggregate where inner column name matches outer table"
   },
   {
@@ -760,11 +863,21 @@
   },
   {
    "sql": "WITH player AS (SELECT player.name, player.asset.info FROM players) SELECT * FROM player",
-   "expected": "WITH player AS (SELECT players.player.name AS name, players.player.asset.info AS info FROM players AS players) SELECT player.name AS name, player.info AS info FROM player AS player"
+   "expected": "WITH player AS (SELECT players.player.name AS name, players.player.asset.info AS info FROM players AS players) SELECT player.name AS name, player.info AS info FROM player AS player",
+   "schema": {
+    "players": {
+     "player": "STRUCT<name TEXT, asset STRUCT<info TEXT>>"
+    }
+   }
   },
   {
    "sql": "WITH tesT AS (SELECT c1 FROM t1) SELECT c1 FROM test",
-   "expected": "WITH test AS (SELECT t1.c1 AS c1 FROM t1 AS t1) SELECT test.c1 AS c1 FROM test AS test"
+   "expected": "WITH test AS (SELECT t1.c1 AS c1 FROM t1 AS t1) SELECT test.c1 AS c1 FROM test AS test",
+   "schema": {
+    "t1": {
+     "c1": "INT"
+    }
+   }
   },
   {
    "sql": "SELECT * RENAME(a AS d) FROM x",
@@ -836,7 +949,15 @@
   },
   {
    "sql": "WITH cte AS (SELECT a.b.c.d.f.g FROM tbl1) SELECT g FROM (SELECT g FROM tbl2) tbl2 JOIN cte USING(g)",
-   "expected": "WITH cte AS (SELECT tbl1.a.b.c.d.f.g AS g FROM tbl1 AS tbl1) SELECT COALESCE(tbl2.g, cte.g) AS g FROM (SELECT tbl2.g AS g FROM tbl2 AS tbl2) AS tbl2 JOIN cte AS cte ON tbl2.g = cte.g"
+   "expected": "WITH cte AS (SELECT tbl1.a.b.c.d.f.g AS g FROM tbl1 AS tbl1) SELECT COALESCE(tbl2.g, cte.g) AS g FROM (SELECT tbl2.g AS g FROM tbl2 AS tbl2) AS tbl2 JOIN cte AS cte ON tbl2.g = cte.g",
+   "schema": {
+    "tbl1": {
+     "a": "STRUCT<b STRUCT<c STRUCT<d STRUCT<f STRUCT<g INT>>>>>"
+    },
+    "tbl2": {
+     "g": "INT"
+    }
+   }
   },
   {
    "sql": "SELECT x.b FROM x JOIN y USING (b) JOIN z USING (b)",
@@ -856,7 +977,13 @@
   },
   {
    "sql": "SELECT * FROM x JOIN y USING(b)",
-   "expected": "SELECT x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM x AS x JOIN y AS y ON x.b = y.b"
+   "expected": "SELECT x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM x AS x JOIN y AS y ON x.b = y.b",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT * FROM w, x JOIN y USING (b)",
+   "expected": "SELECT w.d AS d, w.e AS e, x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM w AS w, x AS x JOIN y AS y ON x.b = y.b",
+   "title": "USING columns after a comma join keep their position"
   },
   {
    "sql": "SELECT x.* FROM x JOIN y USING(b)",
@@ -864,7 +991,8 @@
   },
   {
    "sql": "SELECT * FROM x LEFT JOIN y USING(b)",
-   "expected": "SELECT x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM x AS x LEFT JOIN y AS y ON x.b = y.b"
+   "expected": "SELECT x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM x AS x LEFT JOIN y AS y ON x.b = y.b",
+   "dialect": "duckdb"
   },
   {
    "sql": "SELECT b FROM x JOIN y USING(b)",
@@ -933,7 +1061,8 @@
   },
   {
    "sql": "SELECT * FROM x NATURAL JOIN y",
-   "expected": "SELECT x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM x AS x JOIN y AS y ON x.b = y.b"
+   "expected": "SELECT x.a AS a, COALESCE(x.b, y.b) AS b, y.c AS c FROM x AS x JOIN y AS y ON x.b = y.b",
+   "dialect": "duckdb"
   },
   {
    "sql": "SELECT a FROM x NATURAL JOIN z",
@@ -972,7 +1101,12 @@
   },
   {
    "sql": "SELECT c FROM xx LATERAL VIEW EXPLODE (a) AS c",
-   "expected": "SELECT _0.c AS c FROM xx AS xx LATERAL VIEW EXPLODE(xx.a) _0 AS c"
+   "expected": "SELECT _0.c AS c FROM xx AS xx LATERAL VIEW EXPLODE(xx.a) _0 AS c",
+   "schema": {
+    "xx": {
+     "a": "ARRAY<INT>"
+    }
+   }
   },
   {
    "sql": "SELECT c FROM x LATERAL VIEW EXPLODE (a) t AS c",
@@ -1136,6 +1270,12 @@
   {
    "sql": "SELECT a AS b, b AS a FROM c",
    "expected": "SELECT C.A AS B, C.B AS A FROM C C",
+   "schema": {
+    "c": {
+     "a": "INT",
+     "b": "INT"
+    }
+   },
    "title": "Oracle does not support lateral alias expansion",
    "dialect": "oracle",
    "dialect_supported": false
@@ -1171,11 +1311,40 @@
   },
   {
    "sql": "SELECT * FROM ((SELECT c FROM t1) CROSS JOIN t2)",
-   "expected": "SELECT * FROM ((SELECT t1.c AS c FROM t1 AS t1) AS _0 CROSS JOIN t2 AS t2)"
+   "expected": "SELECT * FROM ((SELECT t1.c AS c FROM t1 AS t1) AS _0 CROSS JOIN t2 AS t2)",
+   "schema": {
+    "t1": {
+     "c": "INT"
+    }
+   }
   },
   {
    "sql": "SELECT * FROM ((SELECT * FROM x) INNER JOIN y ON a = c)",
-   "expected": "SELECT y.b AS b, y.c AS c, _0.a AS a, _0.b AS b FROM ((SELECT x.a AS a, x.b AS b FROM x AS x) AS _0 INNER JOIN y AS y ON _0.a = y.c)"
+   "expected": "SELECT _0.a AS a, _0.b AS b, y.b AS b, y.c AS c FROM ((SELECT x.a AS a, x.b AS b FROM x AS x) AS _0 INNER JOIN y AS y ON _0.a = y.c)"
+  },
+  {
+   "sql": "SELECT * FROM (SELECT a FROM x) AS s CROSS JOIN w",
+   "expected": "SELECT s.a AS a, w.d AS d, w.e AS e FROM (SELECT x.a AS a FROM x AS x) AS s CROSS JOIN w AS w"
+  },
+  {
+   "sql": "SELECT * FROM UNNEST(ARRAY(1, 2)) AS u(v) CROSS JOIN x",
+   "expected": "SELECT u.v AS v, x.a AS a, x.b AS b FROM UNNEST(ARRAY(1, 2)) AS u(v) CROSS JOIN x AS x"
+  },
+  {
+   "sql": "SELECT * FROM ((SELECT a FROM x) CROSS JOIN y) AS j",
+   "expected": "SELECT j.a AS a, j.b AS b, j.c AS c FROM (SELECT _0.a AS a, y.b AS b, y.c AS c FROM (SELECT x.a AS a FROM x AS x) AS _0 CROSS JOIN y AS y) AS j"
+  },
+  {
+   "sql": "SELECT * FROM ((x CROSS JOIN w) CROSS JOIN (SELECT c FROM y) AS s) AS j",
+   "expected": "SELECT j.a AS a, j.b AS b, j.d AS d, j.e AS e, j.c AS c FROM (SELECT x.a AS a, x.b AS b, w.d AS d, w.e AS e, s.c AS c FROM x AS x CROSS JOIN w AS w CROSS JOIN (SELECT y.c AS c FROM y AS y) AS s) AS j"
+  },
+  {
+   "sql": "SELECT * FROM ((x CROSS JOIN w) AS i CROSS JOIN (SELECT c FROM y) AS s) AS j",
+   "expected": "SELECT j.a AS a, j.b AS b, j.d AS d, j.e AS e, j.c AS c FROM (SELECT i.a AS a, i.b AS b, i.d AS d, i.e AS e, s.c AS c FROM (SELECT x.a AS a, x.b AS b, w.d AS d, w.e AS e FROM x AS x CROSS JOIN w AS w) AS i CROSS JOIN (SELECT y.c AS c FROM y AS y) AS s) AS j"
+  },
+  {
+   "sql": "SELECT * FROM ((SELECT a FROM x) CROSS JOIN (w CROSS JOIN (SELECT c FROM y) AS s) AS k) AS j",
+   "expected": "SELECT j.a AS a, j.d AS d, j.e AS e, j.c AS c FROM (SELECT _0.a AS a, k.d AS d, k.e AS e, k.c AS c FROM (SELECT x.a AS a FROM x AS x) AS _0 CROSS JOIN (SELECT w.d AS d, w.e AS e, s.c AS c FROM w AS w CROSS JOIN (SELECT y.c AS c FROM y AS y) AS s) AS k) AS j"
   },
   {
    "sql": "SELECT x.a, y.b, z.c FROM x LEFT JOIN (y INNER JOIN z ON y.c = z.c) ON x.b = y.b",
@@ -1258,22 +1427,63 @@
   {
    "sql": "SELECT * FROM x SEMI JOIN y USING (b)",
    "expected": "SELECT x.a AS a, x.b AS b FROM x AS x SEMI JOIN y AS y ON x.b = y.b",
-   "title": "SEMI JOIN table is excluded from the scope"
+   "title": "SEMI JOIN table is excluded from the scope",
+   "dialect": "duckdb"
   },
   {
    "sql": "SELECT * FROM x ANTI JOIN y USING (b)",
    "expected": "SELECT x.a AS a, x.b AS b FROM x AS x ANTI JOIN y AS y ON x.b = y.b",
-   "title": "ANTI JOIN table is excluded from the scope"
+   "title": "ANTI JOIN table is excluded from the scope",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT * FROM x LEFT SEMI JOIN y USING (b)",
+   "expected": "SELECT x.b AS b, x.a AS a FROM x AS x LEFT SEMI JOIN y AS y ON x.b = y.b",
+   "title": "SEMI join USING columns come first",
+   "dialect": "spark"
+  },
+  {
+   "sql": "SELECT * FROM x JOIN y USING (b) LEFT SEMI JOIN z USING (c)",
+   "expected": "SELECT y.c AS c, COALESCE(x.b, y.b) AS b, x.a AS a FROM x AS x JOIN y AS y ON x.b = y.b LEFT SEMI JOIN z AS z ON y.c = z.c",
+   "title": "SEMI join USING columns precede those of earlier joins",
+   "dialect": "spark"
   },
   {
    "sql": "SELECT * FROM x SEMI JOIN y USING (b) JOIN y USING (b)",
    "expected": "SELECT x.a AS a, COALESCE(x.b, y_2.b) AS b, y_2.c AS c FROM x AS x SEMI JOIN y AS y ON x.b = y.b JOIN y AS y_2 ON x.b = y_2.b",
-   "title": "SEMI + normal joins reinclude the table on scope"
+   "title": "SEMI + normal joins reinclude the table on scope",
+   "dialect": "duckdb"
   },
   {
    "sql": "SELECT * FROM x ANTI JOIN y USING (b) JOIN y USING (b)",
    "expected": "SELECT x.a AS a, COALESCE(x.b, y_2.b) AS b, y_2.c AS c FROM x AS x ANTI JOIN y AS y ON x.b = y.b JOIN y AS y_2 ON x.b = y_2.b",
-   "title": "ANTI + normal joins reinclude the table on scope"
+   "title": "ANTI + normal joins reinclude the table on scope",
+   "dialect": "duckdb"
+  },
+  {
+   "sql": "SELECT w.d FROM w ANTI JOIN y ON b > 0 JOIN z ON TRUE",
+   "expected": "SELECT w.d AS d FROM w AS w ANTI JOIN y AS y ON y.b > 0 JOIN z AS z ON TRUE",
+   "title": "unqualified column in ANTI JOIN's ON clause resolves to that join's own table, not a later join sharing the same column name"
+  },
+  {
+   "sql": "SELECT w.d FROM w SEMI JOIN y ON b > 0 JOIN z ON TRUE",
+   "expected": "SELECT w.d AS d FROM w AS w SEMI JOIN y AS y ON y.b > 0 JOIN z AS z ON TRUE",
+   "title": "unqualified column in SEMI JOIN's ON clause resolves to that join's own table, not a later join sharing the same column name"
+  },
+  {
+   "sql": "SELECT w.d FROM w ANTI JOIN x AS x1 ON a > 0 JOIN x AS x2 ON TRUE",
+   "expected": "SELECT w.d AS d FROM w AS w ANTI JOIN x AS x1 ON x1.a > 0 JOIN x AS x2 ON TRUE",
+   "title": "self-join -- ANTI JOIN's own alias wins over a later normal join of the same table"
+  },
+  {
+   "sql": "SELECT w.d FROM w ANTI JOIN (SELECT a FROM x) AS m ON a > 0 JOIN (SELECT a FROM x) AS n ON TRUE",
+   "expected": "SELECT w.d AS d FROM w AS w ANTI JOIN (SELECT x.a AS a FROM x AS x) AS m ON m.a > 0 JOIN (SELECT x.a AS a FROM x AS x) AS n ON TRUE",
+   "title": "derived table (subquery) as the ANTI JOIN's own source -- unqualified column resolves into the derived table, not a later derived source sharing the same column name"
+  },
+  {
+   "sql": "SELECT x.a FROM x SEMI JOIN y ON x.b = y.b JOIN z ON c > 0",
+   "expected": "SELECT x.a AS a FROM x AS x SEMI JOIN y AS y ON x.b = y.b JOIN z AS z ON z.c > 0",
+   "title": "unqualified column in a normal JOIN's ON clause that comes after a SEMI JOIN still sees that later join's own table, not the earlier SEMI JOIN's now out-of-scope table"
   },
   {
    "sql": "WITH t AS (SELECT 1 AS id, 100 AS jan, 200 AS feb, 7 AS north, 8 AS south) SELECT * FROM t UNPIVOT(revenue FOR month IN (jan, feb)) UNPIVOT(headcount FOR region IN (north, south))",
@@ -1445,6 +1655,12 @@
    "title": "preserve Snowflake positional reference beyond partial table alias list",
    "dialect": "snowflake",
    "dialect_supported": false
+  },
+  {
+   "sql": "SELECT * FROM y JOIN z USING (c, b)",
+   "expected": "SELECT COALESCE(y.b, z.b) AS b, COALESCE(y.c, z.c) AS c FROM y AS y JOIN z AS z ON y.c = z.c AND y.b = z.b",
+   "title": "MySQL lists multiple USING columns first in the left table's order",
+   "dialect": "mysql"
   }
  ]
 }

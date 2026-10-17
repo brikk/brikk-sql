@@ -5,7 +5,7 @@ import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertIs
 
 /** ASTRA-001: execute the generated SQL, not just its upstream string oracle. */
 class QualifyLoweringResultTest {
@@ -13,7 +13,7 @@ class QualifyLoweringResultTest {
         val lowered = Dialects.forName(target).generate(Dialects.forName("duckdb").parseOne(sql))
         assertFalse(lowered.contains("QUALIFY"), lowered)
         assertFalse(lowered.contains("DISTINCT ON"), lowered)
-        if (target == "trino") assertTrue(SqlVerifiers.forEngine("trino")!!.verify(lowered).accepted, lowered)
+        if (target == "trino") assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(lowered), lowered)
         DriverManager.getConnection("jdbc:duckdb:").use { connection ->
             fun execute(query: String): Pair<List<String>, List<List<Int>>> =
                 connection.createStatement().use { statement ->

@@ -14,7 +14,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /** The human explanation is deliberately excluded from the approval signature. */
-data class CorpusFailure(val case: String, val signature: String, val reason: String) {
+data class CorpusFailure(val case: String, val signature: String, val reason: String,
+    val expected: JsonElement? = null, val actual: JsonElement? = null) {
     companion object {
         fun sqlMismatch(case: String, expected: String, actual: String): CorpusFailure = mismatch(
             case, JsonPrimitive(expected), JsonPrimitive(actual), kind = "sql-mismatch",
@@ -30,7 +31,7 @@ data class CorpusFailure(val case: String, val signature: String, val reason: St
         ): CorpusFailure = CorpusFailure(case, signature(kind, buildJsonObject {
             put("expected", expected)
             put("actual", actual)
-        }), reason)
+        }), reason, expected, actual)
 
         fun exception(case: String, phase: String, error: Throwable): CorpusFailure = CorpusFailure(
             case,
@@ -87,6 +88,7 @@ internal fun parseCorpusLedger(root: JsonObject, caseKey: String): Map<String, C
             obj.getValue(caseKey).jsonPrimitive.content,
             if (id == null || signed.isNullOrBlank()) "" else signed,
             obj.getValue("reason").jsonPrimitive.content,
+            obj["expected"], obj["actual"],
         )
     }
     return LoadedCorpusLedger(JsonObject(root.filterKeys { it != "cases" }), entries)
@@ -108,6 +110,8 @@ internal fun serializeCorpusLedger(
                 put(caseKey, failure.case)
                 put("signature", failure.signature)
                 put("reason", failure.reason)
+                failure.expected?.let { put("expected", it) }
+                failure.actual?.let { put("actual", it) }
             })
         }
     })
@@ -174,7 +178,10 @@ abstract class LedgerGate {
         println(summary)
         val problems = validateCorpusLedger(ledger, failures, mismatchDetails)
         if (problems.isNotEmpty()) fail(
-            problems.joinToString("\n\n") + "\n\nActual ledger written to ${actualFile.absolutePath}",
+            (problems.joinToString("\n\n") + "\n\nActual ledger written to ${actualFile.absolutePath}").map {
+                // SQL literal controls must not become terminal/ANSI control codes.
+                if (it.code < 32 && it !in listOf('\n', '\t')) "\\u" + it.code.toString(16).padStart(4, '0') else it.toString()
+            }.joinToString(""),
         )
     }
 }

@@ -21,6 +21,7 @@ import dev.brikk.house.sql.ast.ArrayReverse
 import dev.brikk.house.sql.ast.ArraySlice
 import dev.brikk.house.sql.ast.ArraySum
 import dev.brikk.house.sql.ast.AssumeColumnConstraint
+import dev.brikk.house.sql.ast.AuthoredSyntax
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.CheckColumnConstraint
@@ -41,6 +42,13 @@ import dev.brikk.house.sql.ast.DateAdd
 import dev.brikk.house.sql.ast.DateDiff
 import dev.brikk.house.sql.ast.DateSub
 import dev.brikk.house.sql.ast.DateTrunc
+import dev.brikk.house.sql.ast.DayOfWeekIso
+import dev.brikk.house.sql.ast.BitwiseAndAgg
+import dev.brikk.house.sql.ast.BitwiseOrAgg
+import dev.brikk.house.sql.ast.BitwiseXorAgg
+import dev.brikk.house.sql.ast.IsInf
+import dev.brikk.house.sql.ast.WeekOfYear
+import dev.brikk.house.sql.ast.YearOfWeekIso
 import dev.brikk.house.sql.ast.DefinerProperty
 import dev.brikk.house.sql.ast.Detach
 import dev.brikk.house.sql.ast.Dot
@@ -285,7 +293,7 @@ private fun combineConnector(
 // sqlglot: parsers.clickhouse.ClickHouseParser
 open class ClickhouseParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.ClickhouseTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.CLICKHOUSE,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
@@ -328,7 +336,22 @@ open class ClickhouseParser(
     // Table overrides (sqlglot: ClickHouseParser class-level dict/set merges)
 
     override val functions: Map<String, (List<Expression?>) -> Expression>
-        get() = ClickhouseParserTables.FUNCTIONS
+        get() = ClickhouseParserTables.FUNCTIONS + calendarFunctions
+
+    private val calendarFunctions = mapOf(
+        "GROUPBITAND" to fromArgList(listOf("this"), false) { BitwiseAndAgg(it) },
+        "GROUPBITOR" to fromArgList(listOf("this"), false) { BitwiseOrAgg(it) },
+        "GROUPBITXOR" to fromArgList(listOf("this"), false) { BitwiseXorAgg(it) },
+        "ISINFINITE" to fromArgList(listOf("this"), false) { IsInf(it) },
+        "TODAYOFWEEK" to withoutCalendarOptions("toDayOfWeek") { DayOfWeekIso(it) },
+        "TOISOWEEK" to withoutCalendarOptions("toISOWeek") { WeekOfYear(it) },
+        "TOISOYEAR" to withoutCalendarOptions("toISOYear") { YearOfWeekIso(it) },
+    )
+
+    private fun withoutCalendarOptions(name: String, factory: (Args) -> Expression): (List<Expression?>) -> Expression = { values ->
+        if (values.size == 1) factory(args("this" to values[0]))
+        else Anonymous(args("this" to name, "expressions" to values))
+    }
 
     override val funcTokens: Set<TokenType> get() = ClickhouseParserTables.FUNC_TOKENS
 
@@ -584,7 +607,14 @@ open class ClickhouseParser(
             this_ = Var(args("this" to this_.name))
         }
 
-        return expression(Placeholder(args("this" to this_, "kind" to kind)))
+        val placeholder = expression(Placeholder(args("this" to this_, "kind" to kind)))
+        // brikk extension #54: server query parameters keep their authored spelling.
+        val open = tokens.getOrNull(startIndex - 1)
+        val close = prevToken
+        if (open?.tokenType == TokenType.L_BRACE && close.end < sql.length && sql[open.start] == '{') {
+            placeholder.authoredSyntax = AuthoredSyntax(sql.substring(open.start, close.end + 1), placeholder.copy())
+        }
+        return placeholder
     }
 
     // sqlglot: ClickHouseParser._parse_bracket
@@ -636,12 +666,13 @@ open class ClickhouseParser(
 
     // sqlglot: ClickHouseParser._parse_global_in
     open fun parseGlobalIn(this_: Expression?): Expression? {
+        val start = index - 1
         val isNegated = match(TokenType.NOT)
         var inExpr: Expression? = null
         if (match(TokenType.IN)) {
             inExpr = parseIn(this_)
             inExpr.set("is_global", true)
-        }
+        } else { retreat(start); return null }
         return if (isNegated) expression(Not(args("this" to inExpr))) else inExpr
     }
 
@@ -685,6 +716,10 @@ open class ClickhouseParser(
 
         return this_
     }
+
+    // brikk-native: ClickHouse DESCRIBE [TABLE] takes a table, a table function or a subquery, never a
+    // column list, so numbers(3) is a call (as in FROM), not the table numbers with a column (3).
+    override fun parseDescribeTarget(): Expression? = parseTable()
 
     // sqlglot: ClickHouseParser._parse_position
     override fun parsePosition(haystackFirst: Boolean): Expression =
@@ -1313,9 +1348,9 @@ object ClickhouseParserTables {
         }
     }
 
-    // sqlglot: ClickHouseParser.FUNC_TOKENS
+    // sqlglot: ClickHouseParser.FUNC_TOKENS, and brikk-native DICTIONARY: the dictionary(...) table function
     val FUNC_TOKENS: Set<TokenType> = BaseParserTables.FUNC_TOKENS + setOf(
-        TokenType.AND, TokenType.FILE, TokenType.OR, TokenType.SET, TokenType.VIEW,
+        TokenType.AND, TokenType.FILE, TokenType.OR, TokenType.SET, TokenType.VIEW, TokenType.DICTIONARY,
     )
 
     // sqlglot: ClickHouseParser.RESERVED_TOKENS = base - {SELECT}

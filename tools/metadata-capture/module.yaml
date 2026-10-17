@@ -1,0 +1,26 @@
+# Captures engine self-descriptions into vendor/data/ dumps for the brikk-sql-metadata
+# generators. Not published. Run from the project root:
+#   ./kotlin run -m metadata-capture -- <capture>   (see main.kt for the captures)
+product: jvm/app
+
+apply:
+  - ../../publish-targets.module-template.yaml
+
+dependencies:
+  - ../../brikk-sql-metadata
+  # The engine a DuckDB dump describes: bump this coordinate to capture another release.
+  - org.duckdb:duckdb_jdbc:1.5.6.0
+  # The Trino grammar keywords are read from (trino-parser brings trino-grammar).
+  - io.trino:trino-parser:483
+  # Runtime for the Trino grammar and the vendored Doris parser jar (loaded from vendor/lib).
+  - org.antlr:antlr4-runtime:4.13.2
+
+settings:
+  publishing:
+    enabled: false
+  jvm:
+    jdk:
+      version: 25
+  kotlin:
+    version: 2.4.10
+    serialization: json

@@ -161,6 +161,7 @@ open class HiveGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.HIVE
+    override val supportsFromFirstInsert: Boolean get() = true
 
     // ------------------------------------------------------------------
     // Flags (sqlglot: HiveGenerator class attributes)
@@ -201,7 +202,8 @@ open class HiveGenerator(
 
     // sqlglot: Hive.STRINGS_SUPPORT_ESCAPED_SEQUENCES = True + Hive.ESCAPED_SEQUENCES
     override val dialectStringsSupportEscapedSequences: Boolean get() = true
-    override val escapedSequences: Map<String, String> get() = ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String>
+        get() = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
 
     // sqlglot: Hive.ALTER_TABLE_SUPPORTS_CASCADE = True
     override val dialectAlterTableSupportsCascade: Boolean get() = true
@@ -839,6 +841,7 @@ open class HiveGenerator(
 
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
+            reg(StabilityProperty::class) { e -> if (e.name == "IMMUTABLE") "DETERMINISTIC" else "NOT DETERMINISTIC" }
             fun Generator.hg(): HiveGenerator = this as HiveGenerator
 
             // sqlglot: dialect.property_sql (string_key=True) — Hive quotes bare property keys

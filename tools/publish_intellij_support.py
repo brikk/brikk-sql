@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Scoped, restoring release overrides. Publishes support and optionally its core prerequisites."""
+"""Scoped, restoring release overrides. Publishes support, its test kit, and optionally its core prerequisites
+(core, metadata and the verification API)."""
 import argparse
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
-from release_config import validate_version, release_template
+from release_config import development_version, validate_version, release_template
 
 
 def main():
@@ -14,10 +16,13 @@ def main():
     parser.add_argument("--core-version", type=validate_version)
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
     args = parser.parse_args()
+    if not args.local and not args.core_version:
+        raise SystemExit("Central releases need --core-version: support depends on released core, metadata and verify-api")
     root = Path(__file__).resolve().parents[1]
-    support = root / "brikk-sql-intellij-support/module.yaml"
+    intellij = ["brikk-sql-intellij-support", "brikk-sql-intellij-test-support"]
+    descriptors = [root / m / "module.yaml" for m in intellij]
     template = root / "publish.module-template.yaml"
-    originals = {p: p.read_text() for p in (support, template)}
+    originals = {p: p.read_text() for p in (*descriptors, template)}
     backup = root / ".intellij-publish-base.module-template.yaml"
     if backup.exists():
         raise SystemExit("An interrupted/active release owns the backup; inspect it before proceeding")
@@ -29,20 +34,24 @@ def main():
             os.environ[new] = os.environ[old] = value
         if not os.environ.get("KOTLIN_TOOLCHAIN_SIGNING_KEY"):
             raise SystemExit("Missing KOTLIN_TOOLCHAIN_SIGNING_KEY")
-    modules = ["brikk-sql-intellij-support"]
-    if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql"] + modules
+    modules = intellij
+    core_version = args.core_version or development_version(originals[template])
+    # Support exports the verification API (validators answer with its results), never an engine.
+    if args.core_version: modules = ["brikk-sql-metadata", "brikk-sql", "brikk-sql-verify-api"] + modules
     try:
         backup.write_text(originals[template])
         if args.local:
-            template.write_text(f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    version: {json.dumps(args.core_version or "0.20.0-SNAPSHOT")}\n')
+            template.write_text(f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    version: {json.dumps(core_version)}\n')
         else:
-            template.write_text(release_template(args.core_version or "0.20.0-SNAPSHOT", f"./{backup.name}")
+            template.write_text(release_template(core_version, f"./{backup.name}")
                                if args.core_version else f'apply:\n  - ./{backup.name}\nsettings:\n  publishing:\n    mavenCentral: {{ enabled: true, publishingMode: auto }}\n    signArtifacts: true\n')
-        old_version = "    version: 0.1.0-SNAPSHOT"
-        if originals[support].count(old_version) != 1: raise SystemExit("Unexpected support development version")
-        support.write_text(originals[support].replace(old_version, f"    version: {args.version}"))
+        for descriptor in descriptors:
+            released, count = re.subn(r"^    version: \S+-SNAPSHOT$", f"    version: {args.version}", originals[descriptor], flags=re.M)
+            if count != 1: raise SystemExit(f"Unexpected development version in {descriptor}")
+            descriptor.write_text(released)
         if args.local:
             command = ["./kotlin", "publish", "mavenLocal"] + [v for m in modules for v in ("-m", m)]
+            if not args.core_version: command.append("--non-transitive")
         else:
             command = ["./kotlin", "task"] + [f":{m}:publishToMavenCentral" for m in modules]
         subprocess.run(command, cwd=root, check=True)

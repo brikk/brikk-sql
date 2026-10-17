@@ -728,6 +728,7 @@ object BaseParserTables {
         TokenType.ADJACENT to binaryRangeParser { dev.brikk.house.sql.ast.Adjacent(it) },
         TokenType.AMP_LT to binaryRangeParser { dev.brikk.house.sql.ast.ExtendsLeft(it) },
         TokenType.AMP_GT to binaryRangeParser { dev.brikk.house.sql.ast.ExtendsRight(it) },
+        TokenType.CARET_AT to binaryRangeParser { dev.brikk.house.sql.ast.StartsWith(it) },
     )
 
     // sqlglot: Parser.NO_PAREN_FUNCTION_PARSERS
@@ -749,6 +750,7 @@ object BaseParserTables {
     // sqlglot: Parser.FUNCTION_PARSERS (OPENJSON not ported yet — no base-corpus
     // coverage).
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> = buildMap {
+        put("WEIGHT_STRING") { p -> p.parseWeightString() }
         put("CONVERT") { parser -> parser.parseConvert(parser.strictCast) }
         put("STRING_AGG") { parser -> parser.parseStringAgg() }
         put("TRY_CONVERT") { parser -> parser.parseConvert(false, safe = true) }
@@ -1135,7 +1137,7 @@ object BaseParserTables {
     val TYPE_LITERAL_PARSERS: Map<dev.brikk.house.sql.ast.DType, (Parser, Expression?, Expression) -> Expression?> =
         mapOf(
             dev.brikk.house.sql.ast.DType.JSON to { parser, this_, _ ->
-                parser.expression(dev.brikk.house.sql.ast.ParseJSON(args("this" to this_)))
+                parser.expression(dev.brikk.house.sql.ast.ParseJSON(args("this" to this_, "is_literal" to true)))
             },
         )
 

@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "presto",
   "identity": [
     {
@@ -124,6 +124,11 @@
     {
       "sql": "SELECT * FROM x OFFSET 1 LIMIT 1",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM x OFFSET 1 ROW",
+      "expected": "SELECT * FROM x OFFSET 1",
       "pretty": false
     },
     {
@@ -397,7 +402,7 @@
       "write": {
         "duckdb": "CAST(x AS TIMETZ)",
         "postgres": "CAST(x AS TIMETZ(5))",
-        "presto": "CAST(x AS TIME(5) WITH TIME ZONE)",
+        "presto": "CAST(x AS TIME WITH TIME ZONE)",
         "redshift": "CAST(x AS TIME(5) WITH TIME ZONE)"
       }
     },
@@ -407,7 +412,7 @@
       "write": {
         "bigquery": "CAST(x AS TIMESTAMP)",
         "duckdb": "CAST(x AS TIMESTAMPTZ)",
-        "presto": "CAST(x AS TIMESTAMP(9) WITH TIME ZONE)",
+        "presto": "CAST(x AS TIMESTAMP WITH TIME ZONE)",
         "hive": "CAST(x AS TIMESTAMP)",
         "spark": "CAST(x AS TIMESTAMP)"
       }
@@ -998,7 +1003,7 @@
       "sql": "JSON '\"foo\"'",
       "read": {},
       "write": {
-        "bigquery": "PARSE_JSON('\"foo\"')",
+        "bigquery": "JSON '\"foo\"'",
         "postgres": "CAST('\"foo\"' AS JSON)",
         "presto": "JSON_PARSE('\"foo\"')",
         "snowflake": "PARSE_JSON('\"foo\"')"
@@ -1345,7 +1350,7 @@
       "sql": "JSON_FORMAT(JSON '\"x\"')",
       "read": {},
       "write": {
-        "bigquery": "TO_JSON_STRING(PARSE_JSON('\"x\"'))",
+        "bigquery": "TO_JSON_STRING(JSON '\"x\"')",
         "duckdb": "CAST(TO_JSON(JSON('\"x\"')) AS TEXT)",
         "presto": "JSON_FORMAT(JSON_PARSE('\"x\"'))",
         "spark": "REGEXP_EXTRACT(TO_JSON(FROM_JSON('[\"x\"]', SCHEMA_OF_JSON('[\"x\"]'))), '^.(.*).$', 1)"
@@ -1645,7 +1650,7 @@
     }
   ],
   "stats": {
-    "identity_count": 48,
+    "identity_count": 49,
     "transpile_count": 146,
     "skipped_dynamic": 3
   }

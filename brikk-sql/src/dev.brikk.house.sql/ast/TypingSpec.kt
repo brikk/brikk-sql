@@ -30,6 +30,13 @@ sealed class TypingSpec {
 }
 
 sealed class AnnotatorRef {
+    object NumericArg : AnnotatorRef()
+    object IntAsDouble : AnnotatorRef()
+    object MathPostgres : AnnotatorRef()
+    object FloorCeilDuckdb : AnnotatorRef()
+    object FloorCeilHive : AnnotatorRef()
+    object AtTimeZoneDuckdb : AnnotatorRef()
+    object DateTruncDuckdb : AnnotatorRef()
     /** self._annotate_binary(e) */
     object BinaryAnn : AnnotatorRef()
 

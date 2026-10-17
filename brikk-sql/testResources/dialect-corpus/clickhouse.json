@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "clickhouse",
   "identity": [
     {
@@ -358,6 +358,26 @@
       "pretty": false
     },
     {
+      "sql": "SELECT groupBitAnd(x) OVER (PARTITION BY y) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "toDayOfWeek(x, 3)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "toISOWeek(x, 'UTC')",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "toISOYear(x, 'UTC')",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT * FROM foo WHERE x GLOBAL IN (SELECT * FROM bar)",
       "expected": null,
       "pretty": false
@@ -660,6 +680,21 @@
       "pretty": false
     },
     {
+      "sql": "SELECT \"a\\\\\"",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT \"a\\\\\"\"b\"",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT `a\\\\b`",
+      "expected": "SELECT \"a\\\\b\"",
+      "pretty": false
+    },
+    {
       "sql": "SELECT xor(0, 1, 1, 0)",
       "expected": "SELECT xor(xor(xor(0, 1), 1), 0)",
       "pretty": false
@@ -690,7 +725,7 @@
       "pretty": false
     },
     {
-      "sql": "SELECT isNaN(x)",
+      "sql": "SELECT isInfinite(x)",
       "expected": null,
       "pretty": false
     },
@@ -1004,6 +1039,11 @@
     {
       "sql": "SELECT []",
       "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT * FROM t AS a JOIN s AS b ON a.id = b.id GLOBAL ANY LEFT JOIN u AS c ON a.id = c.id",
+      "expected": "SELECT * FROM t AS a JOIN s AS b ON a.id = b.id GLOBAL LEFT ANY JOIN u AS c ON a.id = c.id",
       "pretty": false
     },
     {
@@ -1433,6 +1473,11 @@
       "pretty": false
     },
     {
+      "sql": "SELECT groupBitAndIf(x, y) FROM t",
+      "expected": null,
+      "pretty": false
+    },
+    {
       "sql": "SELECT approx_top_sum(column, weight) FROM t",
       "expected": null,
       "pretty": false
@@ -1625,11 +1670,115 @@
   ],
   "transpile": [
     {
+      "sql": "varPop(x)",
+      "read": {
+        "": "VAR_POP(x)",
+        "clickhouse": "varPop(x)",
+        "duckdb": "VAR_POP(x)",
+        "postgres": "VAR_POP(x)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "toDayOfMonth(x)",
+      "read": {
+        "": "DAY_OF_MONTH(x)",
+        "snowflake": "DAYOFMONTH(x)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "toDayOfYear(x)",
+      "read": {
+        "": "DAY_OF_YEAR(x)",
+        "snowflake": "DAYOFYEAR(x)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "toDayOfWeek(x)",
+      "read": {
+        "": "DAYOFWEEK_ISO(x)",
+        "duckdb": "ISODOW(x)",
+        "snowflake": "DAYOFWEEKISO(x)"
+      },
+      "write": {
+        "duckdb": "ISODOW(x)",
+        "snowflake": "DAYOFWEEKISO(x)"
+      }
+    },
+    {
+      "sql": "toISOWeek(x)",
+      "read": {
+        "": "WEEK_OF_YEAR(x)",
+        "presto": "WEEK(x)",
+        "snowflake": "WEEKISO(x)"
+      },
+      "write": {
+        "duckdb": "WEEKOFYEAR(x)",
+        "snowflake": "WEEKISO(x)"
+      }
+    },
+    {
+      "sql": "toISOYear(x)",
+      "read": {
+        "": "YEAR_OF_WEEK_ISO(x)",
+        "snowflake": "YEAROFWEEKISO(x)"
+      },
+      "write": {
+        "duckdb": "EXTRACT(ISOYEAR FROM x)",
+        "snowflake": "YEAROFWEEKISO(x)"
+      }
+    },
+    {
       "sql": "trunc(3.14159, 2)",
       "read": {
         "postgres": "TRUNC(3.14159, 2)"
       },
       "write": {}
+    },
+    {
+      "sql": "SELECT 1 AS x LIMIT 1",
+      "read": {
+        "postgres": "SELECT 1 AS x FETCH FIRST ROW ONLY"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 AS x LIMIT 2 OFFSET 1",
+      "read": {
+        "postgres": "SELECT 1 AS x OFFSET 1 ROW FETCH FIRST 2 ROWS ONLY"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT 1 AS x ORDER BY x NULLS FIRST FETCH FIRST 1 ROWS ONLY UNION ALL SELECT 2 AS x",
+      "read": {},
+      "write": {
+        "clickhouse": "SELECT 1 AS x ORDER BY x NULLS FIRST FETCH FIRST 1 ROWS ONLY UNION ALL SELECT 2 AS x",
+        "duckdb": "(SELECT 1 AS x ORDER BY x NULLS FIRST LIMIT 1) UNION ALL SELECT 2 AS x",
+        "postgres": "(SELECT 1 AS x ORDER BY x NULLS FIRST FETCH FIRST 1 ROWS ONLY) UNION ALL SELECT 2 AS x",
+        "sqlite": "SELECT * FROM (SELECT 1 AS x ORDER BY x LIMIT 1) UNION ALL SELECT 2 AS x",
+        "tsql": "SELECT * FROM (SELECT 1 AS x ORDER BY x OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY) AS _l_0 UNION ALL SELECT 2 AS x"
+      }
+    },
+    {
+      "sql": "SELECT 2 AS x UNION ALL SELECT 1 AS x ORDER BY x NULLS FIRST FETCH FIRST 1 ROWS ONLY",
+      "read": {},
+      "write": {
+        "clickhouse": "SELECT 2 AS x UNION ALL SELECT 1 AS x ORDER BY x NULLS FIRST FETCH FIRST 1 ROWS ONLY",
+        "duckdb": "SELECT 2 AS x UNION ALL (SELECT 1 AS x ORDER BY x NULLS FIRST LIMIT 1)",
+        "postgres": "SELECT 2 AS x UNION ALL (SELECT 1 AS x ORDER BY x NULLS FIRST FETCH FIRST 1 ROWS ONLY)",
+        "sqlite": "SELECT 2 AS x UNION ALL SELECT * FROM (SELECT 1 AS x ORDER BY x LIMIT 1)",
+        "tsql": "SELECT 2 AS x UNION ALL SELECT * FROM (SELECT 1 AS x ORDER BY x OFFSET 0 ROWS FETCH FIRST 1 ROWS ONLY) AS _l_0"
+      }
+    },
+    {
+      "sql": "SELECT 1 AS x ORDER BY x NULLS FIRST LIMIT 1 OFFSET 1 UNION ALL SELECT 2 AS x",
+      "read": {},
+      "write": {
+        "tsql": "SELECT * FROM (SELECT 1 AS x ORDER BY x OFFSET 1 ROWS FETCH FIRST 1 ROWS ONLY) AS _l_0 UNION ALL SELECT 2 AS x"
+      }
     },
     {
       "sql": "SELECT SUBSTRING_INDEX('a.b.c.d', '.', 2)",
@@ -1802,7 +1951,16 @@
       },
       "write": {
         "clickhouse": "SELECT '\\0'",
-        "mysql": "SELECT '\u0000'"
+        "mysql": "SELECT '\\0'"
+      }
+    },
+    {
+      "sql": "SELECT \"a\\\\b\"",
+      "read": {
+        "postgres": "SELECT \"a\\b\""
+      },
+      "write": {
+        "postgres": "SELECT \"a\\b\""
       }
     },
     {
@@ -1977,11 +2135,52 @@
       }
     },
     {
+      "sql": "SELECT isNaN(x), arrayReverse(a)",
+      "read": {},
+      "write": {
+        "clickhouse": "SELECT isNaN(x), arrayReverse(a)",
+        "bigquery": "SELECT IS_NAN(x), ARRAY_REVERSE(a)"
+      }
+    },
+    {
       "sql": "SELECT IS_NAN(x), ISNAN(x)",
       "read": {},
       "write": {
         "clickhouse": "SELECT isNaN(x), isNaN(x)"
       }
+    },
+    {
+      "sql": "SELECT isInfinite(x)",
+      "read": {
+        "bigquery": "SELECT IS_INF(x)",
+        "duckdb": "SELECT ISINF(x)"
+      },
+      "write": {
+        "bigquery": "SELECT IS_INF(x)",
+        "duckdb": "SELECT ISINF(x)"
+      }
+    },
+    {
+      "sql": "SELECT POSITION(s, 'a') > 0",
+      "read": {
+        "snowflake": "SELECT CONTAINS(s, 'a')",
+        "duckdb": "SELECT CONTAINS(s, 'a')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT POSITION(LOWER(s), LOWER('a')) > 0",
+      "read": {
+        "bigquery": "SELECT CONTAINS_SUBSTR(s, 'a')"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT (POSITION(s, 'a') > 0) = (POSITION(t, 'b') > 0) FROM x WHERE NOT POSITION(s, 'a') > 0 AND y",
+      "read": {
+        "snowflake": "SELECT CONTAINS(s, 'a') = CONTAINS(t, 'b') FROM x WHERE NOT CONTAINS(s, 'a') AND y"
+      },
+      "write": {}
     },
     {
       "sql": "SELECT STARTS_WITH('a', 'b'), STARTSWITH('a', 'b')",
@@ -2307,8 +2506,8 @@
     }
   ],
   "stats": {
-    "identity_count": 323,
-    "transpile_count": 79,
-    "skipped_dynamic": 23
+    "identity_count": 332,
+    "transpile_count": 96,
+    "skipped_dynamic": 25
   }
 }

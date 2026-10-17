@@ -2,6 +2,8 @@ package dev.brikk.house.sql.dialects
 
 // Explicit kotlin imports shield builtins from same-named ast classes.
 import dev.brikk.house.sql.ast.*
+import dev.brikk.house.sql.ast.Array as ArrayNode
+import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
@@ -44,6 +46,11 @@ open class TrinoGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.TRINO
 
+    // brikk extension #55: Trino 483 rejects these lowered forms, or reads ASOF as an alias.
+    override val executesPipeCall: Boolean get() = false
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN", "ASOF", "NATURAL")
+    override val supportsTemporalPrecision: Boolean get() = true
+
     // sqlglot: TrinoGenerator.EXCEPT_INTERSECT_SUPPORT_ALL_CLAUSE = True
     override val exceptIntersectSupportAllClause: Boolean get() = true
 
@@ -52,6 +59,31 @@ open class TrinoGenerator(
 
     // sqlglot: Trino.CONCAT_WS_COALESCE = True
     override val dialectConcatWsCoalesce: Boolean get() = true
+
+    // sqlglot: TrinoGenerator.concatws_sql (#8391), companion to the Hive/Spark flatten flag.
+    override fun concatwsSql(expression: ConcatWs): String {
+        if (expression.args["flatten"] != true) return super.concatwsSql(expression)
+        val values = expression.expressionsArg.filterIsInstance<Expression>()
+        var hasArray = false
+        var hasUnknown = false
+        val arrays = values.drop(1).map { value ->
+            if (value is ArrayNode || value.type?.isType(DType.ARRAY) == true) {
+                hasArray = true
+                Coalesce(args("this" to Cast(args("this" to value.copy(), "to" to DataType(args(
+                    "this" to DType.ARRAY, "expressions" to listOf(DataType.build(DType.TEXT)), "nested" to true)))),
+                    "expressions" to listOf(ArrayNode(args("expressions" to emptyList<Expression>())))))
+            } else {
+                if ((value.type == null || value.type?.isType(DType.UNKNOWN) == true) &&
+                    value !is Literal && value !is Null && value !is BooleanNode) hasUnknown = true
+                ArrayNode(args("expressions" to listOf(Cast(args("this" to value.copy(), "to" to DataType.build(DType.TEXT))))))
+            }
+        }
+        if (hasUnknown) unsupported("Cannot transpile CONCAT_WS with unknown argument types to Trino.")
+        if (!hasArray) return super.concatwsSql(expression)
+        val combined = if (arrays.size == 1) arrays.single() else ArrayConcat(args(
+            "this" to arrays.first(), "expressions" to arrays.drop(1), "null_propagation" to false))
+        return func("CONCAT_WS", values.first(), combined)
+    }
 
     // sqlglot: Trino.LOG_BASE_FIRST = True
     override val dialectLogBaseFirst: Boolean? get() = true

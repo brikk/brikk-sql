@@ -16,6 +16,7 @@ import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GeneratedTypingMetadata
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
+import dev.brikk.house.sql.ast.JSONValue
 import dev.brikk.house.sql.ast.Lateral
 import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.Not
@@ -165,11 +166,10 @@ private fun coerceDateLiteral(l: Expression, unit: Expression?): DType {
 
 // sqlglot: annotate_types._coerce_date
 private fun coerceDate(l: Expression, unit: Expression?): Any {
-    if (!isDateUnit(unit)) {
+    if (l.isType(DType.DATE) && !isDateUnit(unit)) {
         return DType.DATETIME
     }
-    val type = l.type as? DataType
-    return type?.thisArg ?: DType.UNKNOWN
+    return l.type ?: DType.UNKNOWN
 }
 
 // sqlglot: annotate_types.BinaryCoercionFunc
@@ -382,6 +382,17 @@ class TypeAnnotator(
                 val expression = source.expression
 
                 if (expression is UDTF) {
+                    if (expression is Lateral && expression.thisArg is Unnest) {
+                        val unnest = expression.thisArg as Unnest
+                        val fields = LinkedHashMap<String, Any>()
+                        for ((name, input) in expression.aliasColumnNames.zip(unnest.expressionsArg.filterIsInstance<Expression>())) {
+                            val element = (input.type as? DataType)?.takeIf { it.isType(DType.ARRAY) }?.expressionsArg?.firstOrNull() as? DataType
+                            if (element != null && !element.isType(DType.STRUCT)) fields[name] = element
+                        }
+                        (unnest.args["offset"] as? Identifier)?.let { fields[it.name] = DType.BIGINT }
+                        scopeSourceSelects[key] = fields
+                        return fields
+                    }
                     var values: List<Expression> = emptyList()
 
                     if (expression is Lateral) {
@@ -586,6 +597,13 @@ class TypeAnnotator(
                 continue
             }
 
+            // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
+            // evidence, or its documented TEXT default (not a fabricated path type).
+            if (expr is JSONValue && dialect.name == "postgres") {
+                setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
+                continue
+            }
+
             val spec = expressionMetadata[expr::class]
 
             when {
@@ -603,9 +621,15 @@ class TypeAnnotator(
         var source: Any? = null
         var sourceScope: Scope? = scope
         while (sourceScope != null && source == null) {
-            source = sourceScope.sources[table]
+            // brikk extension (docs/brikk-extensions.md #44): an inherited CTE
+            // declaration is not a FROM binding. A nearer
+            // selected/lateral alias must win before looking into outer scopes.
+            if (table in sourceScope.selectedSources || table in sourceScope.lateralSources ||
+                table in sourceScope.semiOrAntiJoinTables) {
+                source = sourceScope.sources[table]
+            }
             if (source == null) {
-                sourceScope = sourceScope.parent
+                sourceScope = if (sourceScope.canBeCorrelated) sourceScope.parent else null
             }
         }
 
@@ -677,6 +701,39 @@ class TypeAnnotator(
     /** Dispatches a generated [AnnotatorRef] to its hand-ported implementation. */
     private fun runAnnotator(ref: AnnotatorRef, e: Expression) {
         when (ref) {
+            is AnnotatorRef.NumericArg -> {
+                val operand = e.thisArg as Expression
+                setType(e, if (operand.isType(DType.UNKNOWN) || operand.type?.thisArg in DataType.NUMERIC_TYPES)
+                    operand.type else DType.INT)
+            }
+            is AnnotatorRef.IntAsDouble -> annotateIntAsDouble(e)
+            is AnnotatorRef.MathPostgres -> {
+                if ((e.thisArg as Expression).isType(DType.FLOAT)) setType(e, DType.DOUBLE)
+                else annotateIntAsDouble(e)
+            }
+            is AnnotatorRef.FloorCeilDuckdb -> {
+                if ((e.thisArg as Expression).isType(DType.DECIMAL)) setType(e, DType.UNKNOWN)
+                else annotateIntAsDouble(e)
+            }
+            is AnnotatorRef.FloorCeilHive -> {
+                val operand = e.thisArg as Expression
+                setType(e, if (e.args["decimals"] != null || operand.isType(DType.DECIMAL, DType.UNKNOWN) ||
+                    (operand.unnest() as? Literal)?.isNumber == true) DType.UNKNOWN else DType.BIGINT)
+            }
+            is AnnotatorRef.AtTimeZoneDuckdb -> {
+                val operand = e.thisArg as Expression
+                setType(e, when {
+                    operand.isType(DType.DATE, DType.TIMESTAMP, DType.TIMESTAMPNTZ, DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS) -> DType.TIMESTAMPTZ
+                    operand.isType(DType.TIMESTAMPTZ) -> DType.TIMESTAMP
+                    operand.isType(DType.TIMETZ) -> DType.TIMETZ
+                    else -> DType.UNKNOWN
+                })
+            }
+            is AnnotatorRef.DateTruncDuckdb -> {
+                val operand = e.thisArg as Expression
+                setType(e, if (operand.isType(DType.DATE, DType.TIMESTAMP_S, DType.TIMESTAMP_MS, DType.TIMESTAMP_NS))
+                    DType.TIMESTAMP else operand.type)
+            }
             is AnnotatorRef.BinaryAnn -> annotateBinary(e)
             is AnnotatorRef.UnaryAnn -> annotateUnary(e)
             is AnnotatorRef.ByArgs ->
@@ -793,6 +850,12 @@ class TypeAnnotator(
             is AnnotatorRef.Compress -> annotateCompress(e)
             is AnnotatorRef.SetType -> setType(e, ref.dtype)
         }
+    }
+
+    private fun annotateIntAsDouble(e: Expression) {
+        val operand = e.thisArg as Expression
+        setType(e, if (operand.type?.thisArg in DataType.INTEGER_TYPES || operand.type?.thisArg in DataType.TEXT_TYPES)
+            DType.DOUBLE else operand.type)
     }
 
     // sqlglot: typing/mysql.py _annotate_bit_func (BIT_AND/BIT_OR/... family).

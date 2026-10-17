@@ -112,7 +112,19 @@ fun <E : Expression> qualifyTables(
         scope?.renameSource(null, newAliasName)
     }
 
-    for (scope in traverseScope(expression)) {
+    // sqlglot #8530: each expansion exposes more constructs; rebuild only after
+    // expanding every derived table in a pass, before assigning aliases/callbacks.
+    var scopes = traverseScope(expression)
+    while (true) {
+        var expanded = false
+        for (scope in scopes) for (derived in scope.derivedTables) {
+            if (expandJoinConstruct(derived)) expanded = true
+        }
+        if (!expanded) break
+        scopes = traverseScope(expression)
+    }
+
+    for (scope in scopes) {
         val parent = scope.parent
         val localColumns = scope.localColumns
         val canonicalAliases = mutableMapOf<String, String>()
@@ -150,14 +162,6 @@ fun <E : Expression> qualifyTables(
         }
 
         for (derivedTable in scope.derivedTables) {
-            val unnested = derivedTable.unnest()
-            if (unnested is Table) {
-                val joins = unnested.args["joins"]
-                unnested.set("joins", null)
-                (derivedTable.thisArg as Expression).replace(selectStarFrom(unnested.copy()))
-                (derivedTable.thisArg as Expression).set("joins", joins)
-            }
-
             setAlias(derivedTable, canonicalAliases, scope = scope)
             val pivot = (derivedTable.args["pivots"] as? List<*>)?.lastOrNull() as? Expression
             if (pivot != null) {
@@ -296,6 +300,25 @@ fun <E : Expression> qualifyTables(
     }
 
     return expression
+}
+
+// sqlglot: qualify_tables._expand_join_construct (#8530)
+private fun expandJoinConstruct(derived: Expression): Boolean {
+    val original = derived.thisArg as? Expression ?: return false
+    var source = original
+    val joins = mutableListOf<Expression>()
+    while (source is Subquery || source is Table) {
+        joins.addAll(0, (source.args["joins"] as? List<*>)?.filterIsInstance<Expression>().orEmpty())
+        val inner = source.thisArg
+        if (source is Table || source.alias.isNotEmpty() || (inner !is Subquery && inner !is Table)) break
+        source = inner as Expression
+    }
+    if (source !is Table && joins.isEmpty()) return false
+    source.set("joins", null)
+    val replacement = selectStarFrom(source.copy())
+    original.replace(replacement)
+    replacement.set("joins", joins.takeIf { it.isNotEmpty() })
+    return true
 }
 
 // sqlglot: parse + normalize of the db/catalog options in qualify_tables

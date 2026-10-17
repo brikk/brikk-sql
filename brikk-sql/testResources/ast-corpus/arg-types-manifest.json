@@ -1,6 +1,6 @@
 {
- "sqlglot_version": "v30.18.0-43-g3ca82489",
- "class_count": 1031,
+ "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
+ "class_count": 1037,
  "traits": [
   "AggFunc",
   "Binary",
@@ -129,6 +129,12 @@
     "expression": true
    }
   },
+  "Agg": {
+   "module": "sqlglot.expressions.aggregate",
+   "arg_types": {
+    "this": true
+   }
+  },
   "AlgorithmProperty": {
    "module": "sqlglot.expressions.properties",
    "arg_types": {
@@ -166,7 +172,7 @@
    "arg_types": {
     "this": false,
     "kind": true,
-    "actions": true,
+    "actions": false,
     "exists": false,
     "only": false,
     "options": false,
@@ -471,7 +477,8 @@
    "arg_types": {
     "expressions": false,
     "bracket_notation": false,
-    "struct_name_inheritance": false
+    "struct_name_inheritance": false,
+    "value_constructor": false
    }
   },
   "ArrayAgg": {
@@ -674,7 +681,8 @@
     "start": true,
     "end": false,
     "step": false,
-    "zero_based": false
+    "zero_based": false,
+    "is_length": false
    }
   },
   "ArraySort": {
@@ -1440,7 +1448,8 @@
    "arg_types": {
     "expressions": true,
     "safe": false,
-    "coalesce": false
+    "coalesce": false,
+    "flatten": false
    }
   },
   "ConditionalInsert": {
@@ -2718,6 +2727,14 @@
    "module": "sqlglot.expressions.temporal",
    "arg_types": {
     "this": true
+   }
+  },
+  "FromJson": {
+   "module": "sqlglot.expressions.json",
+   "arg_types": {
+    "this": true,
+    "expression": true,
+    "options": false
    }
   },
   "FromTimeZone": {
@@ -4044,6 +4061,13 @@
     "expressions": false
    }
   },
+  "ListStage": {
+   "module": "sqlglot.expressions.query",
+   "arg_types": {
+    "this": true,
+    "pattern": false
+   }
+  },
   "Literal": {
    "module": "sqlglot.expressions.core",
    "arg_types": {
@@ -4499,8 +4523,9 @@
   "MultitableInserts": {
    "module": "sqlglot.expressions.query",
    "arg_types": {
+    "with_": false,
     "expressions": true,
-    "kind": true,
+    "kind": false,
     "source": true
    }
   },
@@ -4902,7 +4927,8 @@
    "arg_types": {
     "this": true,
     "expression": false,
-    "safe": false
+    "safe": false,
+    "is_literal": false
    }
   },
   "ParseNumeric": {
@@ -5347,6 +5373,8 @@
     "kind": true,
     "this": true,
     "expression": true,
+    "to": false,
+    "default": false,
     "using": false
    }
   },
@@ -6238,6 +6266,13 @@
     "empty_delimiter_returns_whole": false
    }
   },
+  "SplitToTable": {
+   "module": "sqlglot.expressions.array",
+   "arg_types": {
+    "this": true,
+    "expression": true
+   }
+  },
   "SqlReadWriteProperty": {
    "module": "sqlglot.expressions.properties",
    "arg_types": {
@@ -6277,6 +6312,13 @@
    "module": "sqlglot.expressions.properties",
    "arg_types": {
     "this": true
+   }
+  },
+  "Stack": {
+   "module": "sqlglot.expressions.array",
+   "arg_types": {
+    "this": true,
+    "expressions": true
    }
   },
   "StandardHash": {
@@ -7532,6 +7574,13 @@
     "this": true
    }
   },
+  "WeightString": {
+   "module": "sqlglot.expressions.string",
+   "arg_types": {
+    "this": true,
+    "to": false
+   }
+  },
   "When": {
    "module": "sqlglot.expressions.dml",
    "arg_types": {
@@ -7600,6 +7649,7 @@
     "expressions": false,
     "recursive": false,
     "search": false,
+    "cycle": false,
     "udfs": false
    }
   },

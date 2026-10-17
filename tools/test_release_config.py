@@ -42,6 +42,12 @@ class ReleaseVersionTest(unittest.TestCase):
         self.assertIn("mavenCentral: { enabled: true, publishingMode: auto }", template)
         self.assertIn("signArtifacts: true", template)
 
+    def test_local_override_only_sets_the_version(self):
+        template = release_template("0.20.0", "./base.module-template.yaml", local=True)
+        self.assertIn('version: "0.20.0"', template)
+        self.assertNotIn("mavenCentral", template)
+        self.assertNotIn("signArtifacts", template)
+
 
 class ReleaseLauncherTest(unittest.TestCase):
     def setUp(self):
@@ -74,12 +80,32 @@ class ReleaseLauncherTest(unittest.TestCase):
             "KOTLIN_TOOLCHAIN_SIGNING_KEY": "test-key",
         }
 
-    def run_release(self, version="0.16.1", exit_code=0, modules=()):
+    def run_release(self, version="0.16.1", exit_code=0, modules=(), local=False, env=None):
         return subprocess.run(
-            ["bash", "publish-release.sh", version, *modules], cwd=self.root,
-            env={**self.env, "FAKE_EXIT_CODE": str(exit_code)},
+            ["bash", "publish-release.sh", *(["--local"] if local else []), version, *modules], cwd=self.root,
+            env={**(self.env if env is None else env), "FAKE_EXIT_CODE": str(exit_code)},
             text=True, capture_output=True,
         )
+
+    def test_local_release_installs_formal_selection_without_credentials_or_signing(self):
+        bare = {k: v for k, v in os.environ.items() if not k.startswith("KOTLIN_TOOLCHAIN_")}
+        result = self.run_release("0.20.0", modules=("brikk-sql-verify", "brikk-sql-oracle"), local=True, env=bare)
+        self.assertEqual(0, result.returncode, result.stderr)
+        observed = (self.root / "observed.yaml").read_text()
+        self.assertIn('version: "0.20.0"', observed)
+        self.assertNotIn("mavenCentral", observed)
+        self.assertNotIn("signArtifacts", observed)
+        self.assertEqual(["publish", "mavenLocal", "-m", "brikk-sql-verify", "-m", "brikk-sql-oracle", "--non-transitive"],
+                         (self.root / "observed-args.txt").read_text().splitlines())
+        self.assert_restored()
+
+    def test_local_release_rejects_snapshots_and_unknown_modules(self):
+        for version, modules in (("0.20.0-SNAPSHOT", ()), ("0.20.0", ("brikk-sql-intellij-support",))):
+            with self.subTest(version=version, modules=modules):
+                result = self.run_release(version, modules=modules, local=True)
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertFalse((self.root / "observed-args.txt").exists())
+                self.assert_restored()
 
     def assert_restored(self):
         self.assertEqual(self.original, (self.root / "publish.module-template.yaml").read_text())
@@ -91,12 +117,35 @@ class ReleaseLauncherTest(unittest.TestCase):
         self.assert_restored()
         self.assertEqual(self.original, (self.root / "observed-base.yaml").read_text())
         self.assertIn('version: "0.16.1"', (self.root / "observed.yaml").read_text())
+        self.assertEqual(["task"] + [f":{module}:publishToMavenCentral" for module in (
+            "brikk-sql", "brikk-sql-metadata",
+            "brikk-sql-verify-api", "brikk-sql-verify-trino", "brikk-sql-verify-duckdb", "brikk-sql-verify-doris",
+            "brikk-sql-verify-shardingsphere", "brikk-sql-verify-clickhouse", "brikk-sql-verify",
+            "brikk-sql-oracle",
+        )], (self.root / "observed-args.txt").read_text().splitlines())
+
+    def test_default_release_covers_every_published_sql_module(self):
+        published = {
+            module.parent.name for module in ROOT.glob("brikk-sql*/module.yaml")
+            if "publish.module-template.yaml" in module.read_text()
+        }
+        published -= {"brikk-sql-intellij-support", "brikk-sql-intellij-test-support"}
+        result = self.run_release()
+        self.assertEqual(0, result.returncode, result.stderr)
+        released = {
+            task.removeprefix(":").removesuffix(":publishToMavenCentral")
+            for task in (self.root / "observed-args.txt").read_text().splitlines()[1:]
+        }
+        self.assertEqual(published, released)
+
+    def test_one_engine_verifier_can_be_released_alone(self):
+        result = self.run_release("0.20.0", modules=("brikk-sql-verify-api", "brikk-sql-verify-duckdb"))
+        self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual([
-            "task", ":brikk-sql:publishToMavenCentral",
-            ":brikk-sql-metadata:publishToMavenCentral",
-            ":brikk-sql-verify:publishToMavenCentral",
-            ":brikk-sql-oracle:publishToMavenCentral",
+            "task", ":brikk-sql-verify-api:publishToMavenCentral",
+            ":brikk-sql-verify-duckdb:publishToMavenCentral",
         ], (self.root / "observed-args.txt").read_text().splitlines())
+        self.assert_restored()
 
     def test_failed_publication_restores_original(self):
         result = self.run_release(exit_code=17)
@@ -116,7 +165,8 @@ class ReleaseLauncherTest(unittest.TestCase):
     def test_invalid_and_duplicate_modules_never_invoke_toolchain(self):
         for modules in (
             ("brikk-sql-intellij-support",), ("brikk-sql-intellij-tooling",),
-            ("brikk-sql-verify; echo bad",), ("",),
+            ("brikk-sql-verify; echo bad",), ("",), ("brikk-sql brikk-sql-metadata",),
+            ("brikk-sql-verify-postgres",),
             ("brikk-sql-verify", "brikk-sql-verify"),
         ):
             with self.subTest(modules=modules):

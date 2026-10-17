@@ -201,7 +201,7 @@ private fun duckdbBuildExtractJsonWithPath(
 // sqlglot: parsers.duckdb.DuckDBParser
 open class DuckdbParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.DuckdbTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
@@ -678,7 +678,9 @@ object DuckdbParserTables {
         put("LIST_REVERSE_SORT", ::buildSortArrayDesc)
         put("LIST_SORT", fromArgList(listOf("this", "asc", "nulls_first"), false) { SortArray(it) })
         put("LIST_TRANSFORM", fromArgList(listOf("this", "expression"), false) { Transform(it) })
-        put("LIST_VALUE") { a -> ArrayNode(args("expressions" to a)) }
+        put("LIST_VALUE") { a -> ArrayNode(args("expressions" to a)).also {
+            it.set("value_constructor", a.singleOrNull() is dev.brikk.house.sql.ast.Query)
+        } }
         put(
             "MAKE_DATE",
             fromArgList(listOf("year", "month", "day", "allow_overflow"), false) { DateFromParts(it) },

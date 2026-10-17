@@ -7,6 +7,7 @@ import java.sql.Types
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /** DDB-001: test portable templates without pretending :name is native DuckDB SQL. */
@@ -41,7 +42,7 @@ class DuckdbTemplateBindingResultTest {
                     }
                     append(result.sql, cursor, result.sql.length)
                 }
-                assertTrue(SqlVerifiers.forEngine("duckdb")!!.verify(adapted).accepted, adapted)
+                assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(adapted), adapted)
                 connection.prepareStatement(adapted).use { statement ->
                     for (value in listOf<Int?>(7, null)) {
                         for (index in result.parameterOccurrences.indices) {

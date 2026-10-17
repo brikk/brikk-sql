@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "sqlite",
   "identity": [
     {
@@ -64,6 +64,31 @@
     },
     {
       "sql": "SELECT * FROM t WHERE a REGEXP 'x'",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(x ORDER BY y)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(x, ',' ORDER BY y)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(DISTINCT x ORDER BY y DESC)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(x, ',') OVER (PARTITION BY z ORDER BY y)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT SUM(z) OVER (PARTITION BY GROUP_CONCAT(x ORDER BY y)) FROM t GROUP BY z",
       "expected": null,
       "pretty": false
     },
@@ -629,9 +654,68 @@
   ],
   "transpile": [
     {
+      "sql": "SELECT GROUP_CONCAT(x, ',' ORDER BY y)",
+      "read": {},
+      "write": {
+        "mysql": "SELECT GROUP_CONCAT(x ORDER BY y SEPARATOR ',')",
+        "tsql": "SELECT STRING_AGG(x, ',') WITHIN GROUP (ORDER BY y)"
+      }
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(x, ',' ORDER BY y) OVER (PARTITION BY z)",
+      "read": {},
+      "write": {
+        "sqlite": {
+          "error": "UnsupportedError"
+        }
+      }
+    },
+    {
+      "sql": "SELECT GROUP_CONCAT(x, ',') FILTER(WHERE y > 0) OVER (PARTITION BY z)",
+      "read": {
+        "duckdb": "SELECT STRING_AGG(x, ',' ORDER BY y) FILTER (WHERE y > 0) OVER (PARTITION BY z)"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT DATE(d, '1 DAY') FROM t",
       "read": {
         "duckdb": "SELECT DATE_ADD(d, INTERVAL 1 DAY) FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT DATE(d, '-1 DAY') FROM t",
+      "read": {
+        "duckdb": "SELECT DATE_ADD(d, INTERVAL (-1) DAY) FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT DATE(d, (n) || ' DAY') FROM t",
+      "read": {
+        "duckdb": "SELECT DATE_ADD(d, INTERVAL (n) DAY) FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT DATE(d, (n + 1) || ' DAY') FROM t",
+      "read": {
+        "duckdb": "SELECT DATE_ADD(d, INTERVAL (n + 1) DAY) FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT DATE(d, (-n) || ' MONTH') FROM t",
+      "read": {
+        "duckdb": "SELECT DATE_ADD(d, INTERVAL (-n) MONTH) FROM t"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT DATE(d, (NULL) || ' DAY') FROM t",
+      "read": {
+        "duckdb": "SELECT DATE_ADD(d, INTERVAL (NULL) DAY) FROM t"
       },
       "write": {}
     },
@@ -1028,8 +1112,8 @@
     }
   ],
   "stats": {
-    "identity_count": 124,
-    "transpile_count": 49,
-    "skipped_dynamic": 1
+    "identity_count": 129,
+    "transpile_count": 57,
+    "skipped_dynamic": 3
   }
 }

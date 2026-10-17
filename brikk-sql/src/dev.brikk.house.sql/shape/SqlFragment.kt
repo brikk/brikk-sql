@@ -85,6 +85,13 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     /** Whether the fragment is written in pipe (`|>`) syntax at the top level. */
     val isPipe: Boolean by lazy { ast is PipeQuery }
 
+    /**
+     * Whether a pipe (`|>`) query occurs anywhere in the statement, including subqueries and
+     * CTEs. Unlike [isPipe], which checks only the root, this decides whether execution needs
+     * lowering.
+     */
+    val containsPipe: Boolean by lazy { ast.find<PipeQuery>() != null }
+
     /** Includes nested FROM-first queries, even when parsing produced ordinary Select nodes. */
     val hasFromFirstQuery: Boolean get() { ast; return parsedFromFirstQuery }
 
@@ -123,9 +130,18 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         pretty: Boolean = false,
         trackSourceMap: Boolean = false,
         desugarPipes: Boolean = false,
+    ): TranspileResult = transpile(target, pretty, trackSourceMap, desugarPipes, forExecution = false)
+
+    private fun transpile(
+        target: String,
+        pretty: Boolean,
+        trackSourceMap: Boolean,
+        desugarPipes: Boolean,
+        forExecution: Boolean,
     ): TranspileResult {
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
+        generator.forExecution = forExecution
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -133,6 +149,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             if (desugarPipes) dev.brikk.house.sql.ast.desugarPipes(ast, dialectObj, copy = true)
             else ast
         val out = generator.generate(tree, copy = true)
+        // After generation, which resets the findings.
+        if (desugarPipes) generator.checkLoweredPipeStages(ast)
         return TranspileResult(
             sql = out,
             unsupportedMessages = generator.unsupportedMessages.toList(),
@@ -153,7 +171,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * positions never lie. See the identity invariant `sourceMap.output === sql`.
      *
      * This is the contract editor/plugin callers want; it is a thin, intent-revealing
-     * wrapper over [transpileTo] with `desugarPipes = true`.
+     * rendering path used by [transpileTo] with `desugarPipes = true`. Unsupported
+     * PIVOT/UNPIVOT lowering refuses here rather than returning a query with that
+     * row/column-changing operator removed; diagnostic previews remain available
+     * through [transpileTo].
      *
      * Lowering and generation may throw [dev.brikk.house.sql.generator.UnsupportedError]
      * when a safe translation cannot be established. Callers must handle that refusal;
@@ -164,11 +185,12 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         pretty: Boolean = false,
         trackSourceMap: Boolean = true,
     ): TranspileResult =
-        transpileTo(
+        transpile(
             target = target,
             pretty = pretty,
             trackSourceMap = trackSourceMap,
             desugarPipes = true,
+            forExecution = true,
         )
 
     /**
@@ -242,6 +264,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         for (node in ast.walk(bfs = false)) {
             val key = when {
                 node is Parameter -> Key(ParamStyle.NAMED_AT, node.name.ifEmpty { null })
+                node is Placeholder && node.args["kind"] != null -> Key(ParamStyle.NAMED_TYPED, node.text("this"))
                 node is Placeholder && node.text("this").isNotEmpty() ->
                     Key(ParamStyle.NAMED_COLON, node.text("this"))
                 node is Placeholder -> Key(ParamStyle.POSITIONAL, null)
@@ -431,6 +454,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             prepared,
             dialect = dialectObj,
             schema = schema,
+            inferSchema = null, // Explicit legacy automatic policy; Engine accepts partial inputs.
             validateQualifyColumns = false,
         )
         val typeAnnotator = TypeAnnotator(
@@ -506,6 +530,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * catalog first (bound slots included) so `*` becomes explicit columns — for
      * engines without star/star-except support. Qualification keeps identifiers
      * unquoted for readability.
+     *
+     * For executable projection expansion, [inputs] must describe complete column
+     * layouts. A trait/minimum shape is useful analysis evidence, not proof that
+     * unlisted fields do not exist; this API does not encode the caller's closedness.
      */
     fun toStandardSql(
         target: String = dialect,
@@ -532,7 +560,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         // Source-aware: pass this fragment's dialect so same-dialect desugaring (the common
         // toStandardSql case, target defaults to `dialect`) stays faithful and never rewrites
         // native functions (e.g. ClickHouse lower stays LOWER, not lowerUTF8).
-        return targetDialect.generate(tree, sourceDialect = dialect.ifBlank { null })
+        val generator = targetDialect.generator(sourceDialect = dialect.ifBlank { null })
+        generator.forExecution = true
+        generator.checkLoweredPipeStages(ast)
+        return generator.generate(tree)
     }
 
     /**
@@ -718,6 +749,12 @@ enum class ParamStyle {
 
     /** `?` — anonymous [Placeholder]. */
     POSITIONAL,
+
+    /**
+     * `{name:Type}` — a ClickHouse server query parameter ([Placeholder] with a kind). The
+     * server binds it, so IDE prompting and masking skip it and generation keeps it as written.
+     */
+    NAMED_TYPED,
 }
 
 /**
@@ -814,6 +851,8 @@ data class FragmentContract(
  * collisions cannot be checked until the input is known. Repeated RENAME sources/targets and
  * unsupported source syntax are rejected even without schema. Dialects without native
  * RENAME support must refuse surviving modifiers during generation.
+ * Executable expansion requires complete input layouts: a minimum trait schema is
+ * not permission to discard runtime columns absent from that minimum.
  */
 fun expandStarModifiers(
     tree: Expression,
@@ -835,6 +874,7 @@ fun expandStarModifiers(
         tree,
         dialect = dialect,
         schema = schema,
+        inferSchema = null, // Engine's disposable preparation must retain best-effort qualification.
         validateQualifyColumns = false,
         quoteIdentifiers = false,
     )

@@ -114,6 +114,7 @@ object ExpressionRegistry {
         "Cast" to Entry(FUNCTIONS) { Cast() },
         "Case" to Entry(FUNCTIONS) { Case() },
         "If" to Entry(FUNCTIONS) { If() },
+        "WeightString" to Entry("sqlglot.expressions.string") { WeightString() },
         "Exists" to Entry(FUNCTIONS) { Exists() },
         "Collate" to Entry(FUNCTIONS) { Collate() },
         "ConnectByRoot" to Entry(FUNCTIONS) { ConnectByRoot() },

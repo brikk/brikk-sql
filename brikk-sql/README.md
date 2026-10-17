@@ -207,8 +207,9 @@ The full sqlglot semantic pipeline is ported and oracle-gated:
   `describe()`/`contract()` serializable payloads.
 - **Source mapping** — AST nodes carry original source positions; `transpileTo(target,
   trackSourceMap = true)` maps errors in *generated* SQL back to the original text.
-- **Native-grammar verification** — the [brikk-sql-verify](../brikk-sql-verify/) module (JVM) checks emitted
-  SQL against the target engine's real parser (Doris FE, Trino, DuckDB embedded).
+- **Native-grammar verification** — the [brikk-sql-verify](../brikk-sql-verify/) modules (JVM, one artifact per
+  engine plus an aggregate) check emitted SQL against the target engine's real parser (Doris FE, Trino,
+  DuckDB embedded).
 - **Function catalogs + semantics** — the [brikk-sql-metadata](../brikk-sql-metadata/) module (featherweight,
   ~100KB) ships each engine's registered functions with signatures where extractable,
   per-function `SemanticProfile`s (null propagation from Doris's own source; DuckDB

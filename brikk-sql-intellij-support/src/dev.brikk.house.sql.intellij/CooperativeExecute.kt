@@ -8,16 +8,16 @@ import java.util.Collections
 import java.util.IdentityHashMap
 
 /** Only DECLINED permits delegation. A claimed failure is handled or throws. */
-enum class ExecutionClaim { DECLINED, HANDLED }
+public enum class ExecutionClaim { DECLINED, HANDLED }
 
-fun interface ExecuteInterceptor {
-    fun execute(event: AnActionEvent, option: DatabaseSettings.ExecOption): ExecutionClaim
+public fun interface ExecuteInterceptor {
+    public fun execute(event: AnActionEvent, option: DatabaseSettings.ExecOption): ExecutionClaim
 }
 
 /** One fixed stock Selection option, independent of the user's three variants. */
-fun selectionExecuteOption(): DatabaseSettings.ExecOption = DatabaseSettings.ExecOption().apply { execSelection = 1 }
+public fun selectionExecuteOption(): DatabaseSettings.ExecOption = DatabaseSettings.ExecOption().apply { execSelection = 1 }
 
-open class CooperativeExecuteAction(
+public open class CooperativeExecuteAction(
     index: Int,
     private val previous: AnAction,
     private val interceptor: ExecuteInterceptor,
@@ -25,12 +25,12 @@ open class CooperativeExecuteAction(
 ) : RunQueryAction(index), ActionWithDelegate<AnAction>, PerformWithDocumentsCommitted {
     init { copyFrom(previous) }
     private val selectionOption = selectionExecuteOption()
-    @Volatile var detached: Boolean = false
+    @Volatile public var detached: Boolean = false
         private set
-    fun detach() { detached = true }
+    public fun detach() { detached = true }
     override fun getDelegate(): AnAction = previous
     override fun getExecOption(): DatabaseSettings.ExecOption = if (selection) selectionOption else super.getExecOption()
-    override fun update(e: AnActionEvent) = previous.update(e)
+    override fun update(e: AnActionEvent): Unit = previous.update(e)
     override fun getActionUpdateThread(): ActionUpdateThread = previous.actionUpdateThread
     override fun isDumbAware(): Boolean = previous.isDumbAware
     override fun isInInjectedContext(): Boolean = previous.isInInjectedContext
@@ -42,7 +42,7 @@ open class CooperativeExecuteAction(
 }
 
 /** Register once; project participation belongs to the interceptor, not registration. */
-abstract class CooperativeExecuteConfiguration : DynamicActionConfigurationCustomizer {
+public abstract class CooperativeExecuteConfiguration : DynamicActionConfigurationCustomizer {
     private val installed = LinkedHashMap<String, CooperativeExecuteAction>()
     protected abstract val interceptor: ExecuteInterceptor
     override fun registerActions(actionManager: ActionManager) {
@@ -61,24 +61,29 @@ abstract class CooperativeExecuteConfiguration : DynamicActionConfigurationCusto
         }
         installed.clear()
     }
-    companion object {
-        val IDS: List<String> = listOf("Console.Jdbc.Execute", "Console.Jdbc.Execute.2", "Console.Jdbc.Execute.3", "Console.Jdbc.Execute.Selection")
+    public companion object {
+        public val IDS: List<String> = listOf("Console.Jdbc.Execute", "Console.Jdbc.Execute.2", "Console.Jdbc.Execute.3", "Console.Jdbc.Execute.Selection")
     }
 }
 
-/** Foreign helper copies are traversed through the platform contract, never cast. */
-open class CooperativeExecutePromoter : ActionPromoter {
+private fun AnAction.isCooperative() = this is CooperativeExecuteAction || this is CooperativeAction
+
+/**
+ * Lets the database promoter rank this plugin's cooperative wrappers (Execute and [CooperativeAction])
+ * as the actions they wrap. Foreign helper copies are traversed through the platform contract, never cast.
+ */
+public open class CooperativeExecutePromoter : ActionPromoter {
     override fun promote(actions: List<AnAction>, context: DataContext): List<AnAction> {
         var ours = false
         val delegates = actions.map { action ->
             var current = action
-            var containsUs = current is CooperativeExecuteAction
+            var containsUs = current.isCooperative()
             val seen = Collections.newSetFromMap(IdentityHashMap<AnAction, Boolean>())
             while (seen.add(current)) {
                 val next = (current as? ActionWithDelegate<*>)?.delegate as? AnAction ?: break
                 if (next in seen) break
                 current = next
-                containsUs = containsUs || current is CooperativeExecuteAction
+                containsUs = containsUs || current.isCooperative()
             }
             ours = ours || containsUs
             if (containsUs) current else action

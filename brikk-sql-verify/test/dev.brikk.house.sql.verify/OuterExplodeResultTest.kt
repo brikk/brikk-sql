@@ -14,6 +14,7 @@ import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class OuterExplodeResultTest {
@@ -41,7 +42,7 @@ class OuterExplodeResultTest {
         for (target in listOf("presto", "trino")) {
             val generated = Dialects.forName(target).generate(tree, sourceDialect = read)
             assertFalse(generated.contains("EXPLODE"), generated)
-            assertTrue(SqlVerifiers.forEngine("trino")!!.verify(generated).accepted, generated)
+            assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("trino")!!.verify(generated), generated)
             assertEquals(columns, Dialects.forName(target).parseOne(generated).selects.map(Expression::aliasOrName), generated)
 
             // Opt-in real-engine gate: BRIKK_TRINO_CONTAINER=<Trino 483 container>.

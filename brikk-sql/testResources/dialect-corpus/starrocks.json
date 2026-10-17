@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "starrocks",
   "identity": [
     {
@@ -14,6 +14,11 @@
     },
     {
       "sql": "ALTER TABLE a SWAP WITH b",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "ALTER TABLE t PARTITION BY DATE_TRUNC('MONTH', dt) DISTRIBUTED BY HASH (a) BUCKETS 4",
       "expected": null,
       "pretty": false
     },
@@ -188,6 +193,12 @@
       "pretty": false
     },
     {
+      "sql": "ALTER TABLE t ADD COLUMN c INT TO r1, ADD COLUMN d INT",
+      "expected": null,
+      "pretty": false,
+      "check_command_warning": true
+    },
+    {
       "sql": "SELECT CAST(`a`.`b` AS INT) FROM foo",
       "expected": null,
       "pretty": false
@@ -260,6 +271,11 @@
     {
       "sql": "SELECT student, score, t.unnest FROM tests CROSS JOIN LATERAL UNNEST(scores) AS t",
       "expected": "SELECT student, score, t.unnest FROM tests CROSS JOIN LATERAL UNNEST(scores) AS t(unnest)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT LAG(x, 1, 0) IGNORE NULLS OVER (ORDER BY t)",
+      "expected": "SELECT LAG(x IGNORE NULLS, 1, 0) OVER (ORDER BY t)",
       "pretty": false
     },
     {
@@ -374,6 +390,31 @@
     },
     {
       "sql": "CREATE TABLE test_table (col1 DATE) PARTITION BY RANGE (col1) (START ('2019-01-01') END ('2021-01-01') EVERY (INTERVAL 1 YEAR), START ('2021-01-01') END ('2021-05-01') EVERY (INTERVAL 1 MONTH), START ('2021-05-01') END ('2021-05-04') EVERY (INTERVAL 1 DAY))",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TIME_SLICE(dt, 5, 'minute', 'floor')",
+      "expected": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE, FLOOR)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TIME_SLICE(dt, 5, 'minute', 'ceil')",
+      "expected": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE, CEIL)",
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE)",
+      "expected": null,
+      "pretty": false
+    },
+    {
+      "sql": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE, floor)",
+      "expected": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE, FLOOR)",
+      "pretty": false
+    },
+    {
+      "sql": "CREATE TABLE t (dt DATETIME) PARTITION BY TIME_SLICE(dt, INTERVAL 7 DAY) DISTRIBUTED BY HASH (dt)",
       "expected": null,
       "pretty": false
     },
@@ -543,11 +584,54 @@
       }
     },
     {
+      "sql": "SELECT LEAD(x IGNORE NULLS, 1, 0) OVER (ORDER BY t)",
+      "read": {
+        "duckdb": "SELECT LEAD(x, 1, 0 IGNORE NULLS) OVER (ORDER BY t NULLS FIRST)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY t)",
+      "read": {
+        "bigquery": "SELECT LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY t)"
+      },
+      "write": {}
+    },
+    {
+      "sql": "SELECT LAST_VALUE(x) OVER (ORDER BY t)",
+      "read": {
+        "bigquery": "SELECT LAST_VALUE(x RESPECT NULLS) OVER (ORDER BY t)"
+      },
+      "write": {}
+    },
+    {
       "sql": "SELECT * FROM t WHERE a BETWEEN 1 AND 5",
       "read": {},
       "write": {
         "starrocks": "SELECT * FROM t WHERE a BETWEEN 1 AND 5",
         "mysql": "SELECT * FROM t WHERE a BETWEEN 1 AND 5"
+      }
+    },
+    {
+      "sql": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE, CEIL)",
+      "read": {
+        "snowflake": "SELECT TIME_SLICE(dt, 5, 'MINUTE', 'END')"
+      },
+      "write": {
+        "starrocks": "SELECT TIME_SLICE(dt, INTERVAL 5 MINUTE, CEIL)",
+        "snowflake": "SELECT TIME_SLICE(dt, 5, 'MINUTE', 'END')",
+        "duckdb": "SELECT TIME_BUCKET(INTERVAL 5 MINUTE, dt) + INTERVAL 5 MINUTE"
+      }
+    },
+    {
+      "sql": "SELECT TIME_SLICE(dt, INTERVAL 1 DAY, FLOOR)",
+      "read": {
+        "snowflake": "SELECT TIME_SLICE(dt, 1, 'DAY', 'START')"
+      },
+      "write": {
+        "starrocks": "SELECT TIME_SLICE(dt, INTERVAL 1 DAY, FLOOR)",
+        "snowflake": "SELECT TIME_SLICE(dt, 1, 'DAY', 'START')",
+        "duckdb": "SELECT TIME_BUCKET(INTERVAL 1 DAY, dt)"
       }
     },
     {
@@ -568,8 +652,8 @@
     }
   ],
   "stats": {
-    "identity_count": 78,
-    "transpile_count": 18,
-    "skipped_dynamic": 6
+    "identity_count": 86,
+    "transpile_count": 23,
+    "skipped_dynamic": 9
   }
 }

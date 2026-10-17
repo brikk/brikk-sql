@@ -93,6 +93,11 @@ val Expression.selects: List<Expression>
             columns
         }
         // sqlglot: UDTF.selects (alias columns)
+        is Lateral -> {
+            val columns = udtfSelects(this)
+            val offset = (thisArg as? Unnest)?.args?.get("offset")
+            if (offset is Identifier) columns + offset else columns
+        }
         is UDTF -> udtfSelects(this)
         // sqlglot: DerivedTable.selects (covers Subquery and CTE)
         is DerivedTable -> {

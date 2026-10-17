@@ -1,6 +1,9 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.AddMonths
+import dev.brikk.house.sql.ast.Distinct
+import dev.brikk.house.sql.ast.Order
+import dev.brikk.house.sql.ast.GroupConcat
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.AggregateKeyProperty
 import dev.brikk.house.sql.ast.AggregateTypeColumnConstraint
@@ -20,6 +23,8 @@ import dev.brikk.house.sql.ast.GeneratedAsIdentityColumnConstraint
 import dev.brikk.house.sql.ast.Interval
 import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.OnProperty
+import dev.brikk.house.sql.ast.EQ
+import dev.brikk.house.sql.ast.DorisCreateJob
 import dev.brikk.house.sql.ast.Partition
 import dev.brikk.house.sql.ast.PartitionByListProperty
 import dev.brikk.house.sql.ast.PartitionByRangeProperty
@@ -147,6 +152,12 @@ open class DorisParser(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
+    override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>
+        get() = super.queryModifierParsers + (TokenType.INTO to { p -> (p as DorisParser).parseDorisOutfile() })
+
+    override fun parseInto(): Expression? = if (isIntoOutfile()) null else super.parseInto()
+
     // brikk extension (registry entry 7): Doris array subscripts are 1-based (ELEMENT_AT /
     // arr[i] start at 1); sqlglot inherits MySQL's INDEX_OFFSET = 0. Mirrored by
     // DorisGenerator.dialectIndexOffset so doris->doris round-trips and cross-dialect
@@ -157,7 +168,26 @@ open class DorisParser(
     override val functions: Map<String, (List<Expression?>) -> Expression>
         get() = DorisParserTables.FUNCTIONS
 
-    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's minus GROUP_CONCAT)
+    /**
+     * brikk-native: Doris `GROUP_CONCAT`, in its comma form (`[DISTINCT] str[, sep] [ORDER BY ...]`, built by
+     * [buildDorisGroupConcat]) or MySQL's `... SEPARATOR sep` form, which is read as MySQL reads it and given
+     * the comma form's shape, its ORDER BY moved onto the separator.
+     */
+    internal fun parseDorisGroupConcat(): Expression? {
+        val start = index
+        val arguments = parseCsv { parseLambda() }
+        if (currToken.tokenType != TokenType.SEPARATOR) return buildDorisGroupConcat(arguments)
+        retreat(start)
+        val mysql = parseGroupConcat() as? GroupConcat ?: return null
+        val order = mysql.thisArg as? Order ?: return mysql
+        val separator = mysql.args["separator"] as? Expression ?: Literal.string(",")
+        return expression(GroupConcat(args(
+            "this" to order.thisArg,
+            "separator" to Order(args("this" to separator, "expressions" to order.expressionsArg)),
+        )))
+    }
+
+    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's GROUP_CONCAT replaced by Doris's)
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = DorisParserTables.FUNCTION_PARSERS
 
@@ -178,13 +208,20 @@ open class DorisParser(
     override val typeTokens: Set<TokenType> get() = DorisParserTables.TYPE_TOKENS
 
     // brikk-native (docs/brikk-extensions.md #19): Doris INSERT targets may select a temporary partition:
-    // INSERT INTO t TEMPORARY PARTITION (p, ...) [(columns)] SELECT ...
+    // INSERT INTO t TEMPORARY PARTITION (p, ...) [(columns)] SELECT ..., or be a table function given
+    // properties (insertIntoTVF): INSERT INTO s3("uri" = "...", ...) SELECT ...
     override fun parseDmlTarget(
         schema: kotlin.Boolean,
         joins: kotlin.Boolean,
         aliasTokens: Collection<TokenType>?,
         parsePartition: kotlin.Boolean,
     ): Expression? {
+        if (parsePartition && nextToken.tokenType == TokenType.L_PAREN) {
+            val start = index
+            val call = parseFunction()
+            if (call is Anonymous && call.expressionsArg.isNotEmpty() && call.expressionsArg.all { it is EQ }) return call
+            retreat(start)
+        }
         val target = super.parseDmlTarget(schema, joins, aliasTokens, parsePartition)
         if (!parsePartition || !match(TokenType.TEMPORARY)) return target
 
@@ -196,6 +233,36 @@ open class DorisParser(
         )
         return if (schema) parseSchema(target) else target
     }
+
+    // brikk-native (docs/brikk-extensions.md #19): Doris has no WITH properties but `WITH (...)`; a
+    // bare WITH after a view's name starts its query (createView: ... AS? query), a CTE.
+    internal fun parseWithPropertyOrQuery(): kotlin.Any? {
+        if (match(TokenType.L_PAREN, advance = false)) return parseWithProperty()
+        retreat(index - 1)
+        return null
+    }
+
+    // brikk-native (docs/brikk-extensions.md #19): a table reference's partition selection
+    // (DorisParser.g4 specifiedPartition): TEMPORARY? PARTITION (p | (p, ...)) | TEMPORARY? PARTITIONS (p, ...).
+    override fun parseTablePartitionSelection(): Expression? {
+        val start = index
+        val temporary = match(TokenType.TEMPORARY)
+        val partition = when {
+            // The MySQL form, as sqlglot parses it.
+            matchPair(TokenType.PARTITION, TokenType.L_PAREN, advance = false) -> parsePartition()
+            match(TokenType.PARTITION) -> partitionOf(listOf(parseDisjunction()))
+            matchTextSeq("PARTITIONS") && match(TokenType.L_PAREN, advance = false) -> partitionOf(parseWrappedCsv({ parseDisjunction() }))
+            else -> null
+        }
+        if (partition == null) {
+            retreat(start)
+            return null
+        }
+        return if (temporary) expression(DorisTemporaryPartition(args("this" to partition))) else partition
+    }
+
+    private fun partitionOf(names: List<Expression?>): Expression =
+        expression(Partition(args("subpartition" to false, "expressions" to names.filterNotNull())))
 
     // brikk-native (docs/brikk-extensions.md #19): MySQL's ALTER actions + Doris partition /
     // rollup / swap actions (each falls back to the MySQL parser when its keyword is absent).
@@ -816,6 +883,43 @@ open class DorisParser(
             )
         )
 
+    // brikk-native (docs/brikk-extensions.md #19): CREATE JOB with a schedule runs a statement the
+    // analysis must read (DorisParser.g4 createScheduledJob); a streaming job stays a Command.
+    override fun parseCreate(): Expression {
+        if (!currToken.text.equals("JOB", ignoreCase = true)) return super.parseCreate()
+        val start = index
+        return parseScheduledJob() ?: run {
+            retreat(start)
+            super.parseCreate()
+        }
+    }
+
+    private fun parseScheduledJob(): Expression? {
+        advance()
+        val name = parseTableParts(schema = true)
+        val properties = if (matchTextSeq("PROPERTIES")) expression(Properties(args("expressions" to parseWrappedProperties()))) else null
+        if (!matchTextSeq("ON", "SCHEDULE")) return null
+        val first = currToken
+        when {
+            matchTextSeq("EVERY") -> {
+                parseNumber() ?: return null
+                parseVar(anyToken = true) ?: return null
+                if (matchTextSeq("STARTS")) parseString() ?: parseVar(anyToken = true) ?: return null
+                if (matchTextSeq("ENDS")) parseString() ?: return null
+            }
+            matchTextSeq("AT") -> parseString() ?: parseVar(anyToken = true) ?: return null
+            else -> return null
+        }
+        val schedule = findSql(first, prevToken)
+        val comment = if (matchTextSeq("COMMENT")) parseString() ?: return null else null
+        if (!matchTextSeq("DO")) return null
+        val statement = parseStatement() ?: return null
+        if (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) return null
+        return expression(DorisCreateJob(args(
+            "this" to name, "properties" to properties, "schedule" to Var(args("this" to schedule)), "comment" to comment, "expression" to statement,
+        )))
+    }
+
     // BUILD INDEX idx ON t [PARTITIONS (..)] | PAUSE | RESUME MATERIALIZED VIEW JOB ON mv |
     // CANCEL MATERIALIZED VIEW TASK n ON mv | RECOVER TABLE | DATABASE | PARTITION ... — the
     // leading words are COMMAND tokens (DorisDialect.TOKENIZER_CONFIG); anything that does
@@ -1003,15 +1107,16 @@ object DorisParserTables {
                 )
             )
         }
+        put("GROUP_CONCAT", ::buildDorisGroupConcat)
         put("SUBDATE", buildDateDeltaWithIntervalDefaultDay { a -> DateSub(a) })
         put("TO_DATE") { a ->
             TsOrDsToDate(args("this" to seqGet(a, 0), "format" to seqGet(a, 1), "safe" to seqGet(a, 2)))
         }
     }
 
-    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's minus GROUP_CONCAT)
+    // sqlglot: DorisParser.FUNCTION_PARSERS (mysql's GROUP_CONCAT replaced by Doris's)
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> =
-        MysqlParserTables.FUNCTION_PARSERS - "GROUP_CONCAT"
+        MysqlParserTables.FUNCTION_PARSERS + ("GROUP_CONCAT" to { p -> (p as DorisParser).parseDorisGroupConcat() })
 
     // sqlglot: DorisParser.NO_PAREN_FUNCTIONS (mysql's minus CURRENT_DATE)
     val NO_PAREN_FUNCTIONS: Map<TokenType, () -> Expression> =
@@ -1032,6 +1137,7 @@ object DorisParserTables {
             "AUTO" to { p, _ -> (p as DorisParser).parseAutoPartitionProperty() },
             "ROLLUP" to { p, _ -> (p as DorisParser).parseRollupProperty() },
             "LIKE" to { p, _ -> (p as DorisParser).parseCreateLikeDoris() },
+            "WITH" to { p, _ -> (p as DorisParser).parseWithPropertyOrQuery() },
         )
 
     // brikk-native (docs/brikk-extensions.md #19): aggregate-key column aggregators
@@ -1071,3 +1177,22 @@ object DorisParserTables {
     val TYPE_TOKENS: Set<TokenType> =
         MysqlParserTables.TYPE_TOKENS + setOf(TokenType.BITMAP, TokenType.HLL, TokenType.QUANTILE_STATE, TokenType.AGG_STATE)
 }
+
+/**
+ * brikk-native: Doris `GROUP_CONCAT([DISTINCT] str[, sep] [ORDER BY ...])`. The generic path reads
+ * `DISTINCT v, '|'` as one DISTINCT of two expressions; the last is the separator, as without DISTINCT,
+ * and a following ORDER BY moves with it.
+ */
+private fun buildDorisGroupConcat(a: List<Expression?>): Expression {
+    val first = seqGet(a, 0)
+    val order = first as? Order
+    val distinct = (order?.thisArg ?: first) as? Distinct
+    val values = distinct?.expressionsArg.orEmpty()
+    if (distinct == null || seqGet(a, 1) != null || values.size != 2) {
+        return GroupConcat(args("this" to first, "separator" to seqGet(a, 1), "on_overflow" to seqGet(a, 2)))
+    }
+    val value = Distinct(args("expressions" to listOf(values[0])))
+    val separator = values[1] as? Expression
+    return GroupConcat(args("this" to value, "separator" to (order?.let { Order(args("this" to separator, "expressions" to it.expressionsArg)) } ?: separator)))
+}
+

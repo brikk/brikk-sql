@@ -384,6 +384,8 @@ object GeneratorTables {
         reg(Try::class) { e -> trySql(e as Try) }
         reg(Case::class) { e -> caseSql(e as Case) }
         reg(If::class) { e -> ifSql(e as If) }
+        reg(WeightString::class) { e -> weightstringSql(e as WeightString) }
+        reg(MultitableInserts::class) { e -> multitableinsertsSql(e as MultitableInserts) }
         reg(Interval::class) { e -> intervalSql(e as Interval) }
         reg(IntervalSpan::class) { e -> "${sql(e, "this")} TO ${sql(e, "expression")}" }
         reg(Anonymous::class) { e -> anonymousSql(e as Anonymous) }
@@ -391,6 +393,7 @@ object GeneratorTables {
         reg(AtIndex::class) { e -> atindexSql(e as AtIndex) }
         reg(AtTimeZone::class) { e -> attimezoneSql(e as AtTimeZone) }
         reg(AtLocal::class) { e -> atlocalSql(e as AtLocal) }
+        reg(DorisOutfile::class) { e -> dorisoutfileSql(e as DorisOutfile) }
         reg(MatchPredicate::class) { e -> matchpredicateSql(e as MatchPredicate) }
         reg(UniquePredicate::class) { e -> uniquepredicateSql(e as UniquePredicate) }
         reg(FromTimeZone::class) { e -> fromtimezoneSql(e as FromTimeZone) }

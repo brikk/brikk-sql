@@ -1,3 +1,11 @@
 {
-    "cases": []
+    "cases": [
+        {
+            "id": "assertion:v1:sha256:063031bd98bf427fabdb20e34ea6acade71f11919e53cacb118d5d8e9bcfaa3f:1",
+            "key": "test_unnest#1",
+            "signature": "ast-mismatch:v1:sha256:888ec30989748e5fb1d5993ebe1b7548a0824bb9d7628d5b8f0f4408a46cd4d2",
+            "reason": "INF-02 compatibility: reviewed optional-schema lineage preserves the historical unique-unknown-source dependency chain through UNNEST to _data.col instead of the target's placeholder-only no-inference graph. This is best-effort dependency attribution, not column-existence/type proof. The explicit legacy wrapper and hand-owned inference/lineage contract remain protected. The old unresolved-USING ledger assertion is removed because its refreshed fixture now agrees; native unresolved-USING regressions remain intact.",
+            "issue": "INF-02", "status": "intentional-divergence"
+        }
+    ]
 }

@@ -24,9 +24,14 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 class PipeDesugarCorpusTest {
 
-    // brikk extensions: offsets consume the remaining limited slice, and WHERE
-    // stays after DISTINCT. Independent row-result tests cover both policies.
+    // brikk extensions: offsets consume the remaining limited slice, WHERE stays after DISTINCT,
+    // and PIVOT/UNPIVOT read the joined rows rather than the first table (sqlglot attaches them to
+    // the FROM table, ahead of the JOIN). Independent row-result tests cover these policies.
     private val corrections = mapOf(
+        "FROM x |> JOIN y on x.id = y.id |> PIVOT(SUM(x1) FOR quarter IN ('foo1', 'foo2'))" to
+            "WITH __tmp1 AS (SELECT * FROM x JOIN y ON x.id = y.id), __tmp2 AS (SELECT * FROM __tmp1 PIVOT(SUM(x1) FOR quarter IN ('foo1', 'foo2'))) SELECT * FROM __tmp2",
+        "FROM x |> JOIN y on x.id = y.id |> UNPIVOT(col FOR item IN (foo1, foo2))" to
+            "WITH __tmp1 AS (SELECT * FROM x JOIN y ON x.id = y.id), __tmp2 AS (SELECT * FROM __tmp1 UNPIVOT(col FOR item IN (foo1, foo2))) SELECT * FROM __tmp2",
         "FROM x |> SELECT x1, x2 |> LIMIT 2 OFFSET 2 |> LIMIT 4 OFFSET 2" to
             "WITH __tmp1 AS (SELECT x1, x2 FROM x) SELECT * FROM __tmp1 LIMIT 0 OFFSET 4",
         "FROM x |> DISTINCT |> WHERE x1 > 1" to

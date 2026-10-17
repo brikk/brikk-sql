@@ -1,0 +1,423 @@
+package dev.brikk.house.sql.intellij
+
+import com.intellij.database.DataBus
+import com.intellij.database.Dbms
+import com.intellij.database.connection.throwable.info.ErrorInfo
+import com.intellij.database.console.JdbcConsole
+import com.intellij.database.console.JdbcEngine
+import com.intellij.database.console.client.SessionClientHolder
+import com.intellij.database.console.session.DatabaseSession
+import com.intellij.database.console.session.DatabaseSessionManager
+import com.intellij.database.console.session.DatabaseSessionViewService
+import com.intellij.database.dataSource.DatabaseConnection
+import com.intellij.database.dataSource.DatabaseConnectionManager
+import com.intellij.database.dataSource.DatabaseDriverImpl
+import com.intellij.database.dataSource.DatabaseDriverManager
+import com.intellij.database.dataSource.LocalDataSource
+import com.intellij.database.dataSource.LocalDataSourceManager
+import com.intellij.database.dataSource.url.template.UrlTemplate
+import com.intellij.database.datagrid.DataAuditor
+import com.intellij.database.datagrid.DataProducer
+import com.intellij.database.datagrid.DataRequest
+import com.intellij.database.psi.DbPsiFacade
+import com.intellij.database.util.GuardedRef
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.application.PathManager
+import com.intellij.openapi.util.Disposer
+import com.intellij.testFramework.LoggedErrorProcessor
+import com.intellij.testFramework.PlatformTestUtil
+import com.intellij.testFramework.RunAll
+import com.intellij.testFramework.TestActionEvent
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.util.ui.classpath.SimpleClasspathElementFactory
+import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
+import dev.brikk.house.sql.intellij.catalog.FinishedQuery
+import dev.brikk.house.sql.intellij.slowstream.SlowStreamDriver
+import dev.brikk.house.sql.intellij.testing.BackgroundErrors
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
+import kotlin.time.Duration.Companion.seconds
+
+/**
+ * A real console streams a query's results from the IDE's remote JDBC process through [SlowStreamDriver],
+ * whose statements behave as ClickHouse JDBC 0.10's do: a closed statement ignores `cancel`, and closing a
+ * stream that was not cancelled reads it to the end. Cancel goes through the registered action chain.
+ */
+class StreamingCancelTest : BasePlatformTestCase() {
+    private class Cancel(dbms: Dbms) : StreamingCancelConfiguration(DialectDataSourceResolver(dbms))
+
+    private lateinit var errors: BackgroundErrors
+    private lateinit var work: Path
+    private lateinit var log: Path
+    private lateinit var dataSource: LocalDataSource
+    private var installed: Cancel? = null
+    private val sessions = LinkedHashMap<JdbcConsole, DatabaseSession>()
+    /** Sessions a test left busy by failing one of the platform's own steps on purpose. */
+    private val faulted = HashSet<DatabaseSession>()
+    private val fetching = CopyOnWriteArrayList<DataRequest>()
+    private val finished = CopyOnWriteArrayList<DataRequest>()
+    private val executionErrors = CopyOnWriteArrayList<Pair<DataRequest, String>>()
+
+    override fun setUp() {
+        super.setUp()
+        errors = BackgroundErrors(testRootDisposable)
+        work = Files.createDirectories(Path.of(PathManager.getSystemPath(), "streaming-cancel", UUID.randomUUID().toString()))
+        log = work.resolve("steps.log")
+        project.basePath?.let { Files.createDirectories(Path.of(it)) }
+        val jars = listOf("duckdb_jdbc", "kotlin-stdlib").map { name ->
+            System.getProperty("java.class.path").split(File.pathSeparator).first { name in Path.of(it).fileName.toString() }
+        } + slowStreamJar().toString()
+        val driver = DatabaseDriverManager.getInstance().createDriver("slow-stream-${UUID.randomUUID()}", "Slow stream",
+            UrlTemplate("default", "${SlowStreamDriver.PREFIX}{file}")) as DatabaseDriverImpl
+        driver.setDriverClass(SlowStreamDriver::class.java.name)
+        driver.vmOptions = "-Djava.io.tmpdir=${System.getProperty("java.io.tmpdir")} -D${SlowStreamDriver.LOG_PROPERTY}=$log"
+        driver.setAdditionalClasspathElements(jars.flatMap { SimpleClasspathElementFactory.createElements("jar://$it!/") })
+        dataSource = LocalDataSource().apply {
+            name = "slow stream ${UUID.randomUUID()}"
+            databaseDriver = driver
+            // In memory: each connection its own database, so independent consoles do not share a file.
+            url = SlowStreamDriver.PREFIX
+            isAutoSynchronize = false
+        }
+        LocalDataSourceManager.getInstance(project).addDataSource(dataSource)
+        DbPsiFacade.getInstance(project).clearCaches()
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun fetchStarted(context: DataRequest.Context, resultSetIndex: Int) {
+                fetching += context.request
+            }
+
+            override fun error(context: DataRequest.Context, error: ErrorInfo) {
+                executionErrors += context.request to error.toString()
+            }
+
+            override fun requestFinished(context: DataRequest.Context) {
+                finished += context.request
+            }
+        }, testRootDisposable)
+    }
+
+    override fun tearDown() = RunAll(
+        { installed?.unregisterActions(ActionManager.getInstance()) },
+        { PlatformTestUtil.waitWithEventsDispatching("the sessions end their requests", { sessions.values.all { it.isIdle || it in faulted } }, 30) },
+        { sessions.forEach { (console, session) -> DatabaseSessionViewService.getInstance().destroyView(console); Disposer.dispose(console); Disposer.dispose(session) } },
+        { LocalDataSourceManager.getInstance(project).removeDataSource(dataSource) },
+        { errors.assertNone() },
+        { work.toFile().deleteRecursively() },
+        { super.tearDown() },
+    ).run()
+
+    /** The driver's classes, for the remote JDBC process. */
+    private fun slowStreamJar(): Path {
+        val classes = Path.of(checkNotNull(SlowStreamDriver::class.java.getResource("SlowStreamDriver.class")).toURI()).parent
+        val pkg = SlowStreamDriver::class.java.packageName.replace('.', '/')
+        val jar = work.resolve("slow-stream.jar")
+        JarOutputStream(Files.newOutputStream(jar)).use { out ->
+            Files.list(classes).use { files ->
+                files.filter { it.toString().endsWith(".class") }.sorted().forEach { file ->
+                    out.putNextEntry(JarEntry("$pkg/${file.fileName}"))
+                    Files.copy(file, out)
+                    out.closeEntry()
+                }
+            }
+        }
+        return jar
+    }
+
+    private fun open(): JdbcConsole {
+        val file = myFixture.addFileToProject("slow-${UUID.randomUUID()}.sql", "SELECT 1")
+        val session = DatabaseSessionManager.openSession(project, dataSource, "slow ${UUID.randomUUID()}")
+        return JdbcConsole.newConsole(project).forFile(file.virtualFile).fromDataSource(dataSource).useSession(session).build()
+            .also { sessions[it] = session }
+    }
+
+    private val JdbcConsole.databaseSession: DatabaseSession get() = checkNotNull(sessions[this])
+
+    private fun JdbcConsole.submit(sql: String): DataRequest = FinishedQuery(this, sql).also { databaseSession.messageBus.dataProducer.processRequest(it) }
+
+    private fun errorsOf(request: DataRequest) = executionErrors.filter { it.first === request }.map { it.second }
+
+    private fun JdbcConsole.run(sql: String) {
+        val request = submit(sql)
+        PlatformTestUtil.waitWithEventsDispatching("'$sql' finishes", { request in finished }, 30)
+        assertEmpty(errorsOf(request))
+    }
+
+    private fun install(dbms: Dbms) {
+        installed = Cancel(dbms).also { it.registerActions(ActionManager.getInstance()) }
+    }
+
+    private fun cancelEvent(console: JdbcConsole) =
+        TestActionEvent.createTestEvent(SimpleDataContext.builder().add(CommonDataKeys.PROJECT, project).add(SessionClientHolder.CLIENT_KEY, console).build())
+
+    private fun pressCancel(console: JdbcConsole) {
+        checkNotNull(ActionManager.getInstance().getAction(CooperativeActionConfiguration.CANCEL)).actionPerformed(cancelEvent(console))
+    }
+
+    /** The driver's steps for the slow query tagged [tag]. */
+    private fun steps(tag: String): List<String> =
+        if (Files.exists(log)) Files.readAllLines(log).filter { it.startsWith("$tag ") }.map { it.removePrefix("$tag ") } else emptyList()
+
+    /** Starts the slow query tagged [tag] in [console] and waits until its results stream. */
+    private fun stream(console: JdbcConsole, tag: String): DataRequest {
+        val request = console.submit("SELECT '${SlowStreamDriver.MARKER} $tag'")
+        PlatformTestUtil.waitWithEventsDispatching("the results stream", { request in fetching }, 30)
+        return request
+    }
+
+    fun testStreamingCancelCancelsTheStatementBeforeTheCleanupLeavesAnotherConsoleAndRunsAgain() {
+        val other = open()
+        other.run("SELECT 1")
+        val console = open()
+        console.run("SELECT 1")
+        install(dataSource.dbms)
+        val independent = stream(other, "other")
+        val request = stream(console, "owned")
+        pressCancel(console)
+        // The EDT stays blocked: the statement is cancelled without it.
+        val blocked = System.nanoTime()
+        while ("cancel" !in steps("owned") && System.nanoTime() - blocked < 5_000_000_000) Thread.sleep(20)
+        assertTrue("cancelled off the EDT: ${steps("owned")}", "cancel" in steps("owned"))
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { request in finished }, 5)
+        assertEquals("cancelled while open, then closed without reading the rest", listOf("execute", "cancel", "close"), steps("owned"))
+        assertFalse("the other console still streams", independent in finished)
+        PlatformTestUtil.waitWithEventsDispatching("the session is idle", { console.databaseSession.isIdle }, 10)
+        console.run("SELECT 42")
+        PlatformTestUtil.waitWithEventsDispatching("the other console's query completes", { independent in finished }, 30)
+        assertEmpty(errorsOf(independent))
+        assertEquals("the other console's statement read its results to the end", listOf("execute", "end"), steps("other").distinct())
+    }
+
+    fun testACaptureThatIsStaleWhenItsWorkerBeginsCancelsNothing() {
+        val console = open()
+        console.run("SELECT 1")
+        val workers = ArrayList<Runnable>()
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), workers::add)
+        val first = stream(console, "first")
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        PlatformTestUtil.waitWithEventsDispatching("the captured request completes", { first in finished }, 30)
+        // The engine starts the successor only once the cancel has run.
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        workers.single().run()
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals(listOf("execute", "end"), steps("first").distinct())
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertFalse(console.databaseSession.isCancelled)
+    }
+
+    fun testARequestSubmittedWhileTheDriverCancelsIsLeftAlone() {
+        val console = open()
+        console.run("SELECT 1")
+        install(dataSource.dbms)
+        val held = stream(console, SlowStreamDriver.HELD)
+        pressCancel(console)
+        val pressed = System.nanoTime()
+        while ("cancel" !in steps(SlowStreamDriver.HELD) && System.nanoTime() - pressed < 5_000_000_000) Thread.sleep(20)
+        // The driver cancel has stopped the request and is still running when the next request is submitted.
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { held in finished }, 10)
+        val ended = System.nanoTime()
+        while (steps("next").isEmpty() && System.nanoTime() - ended < 2_000_000_000) Thread.sleep(20)
+        assertEmpty("the successor waits for the connection cancel", steps("next"))
+        Files.createFile(Path.of("$log.release"))
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEquals(listOf("execute", "cancel", "close", "cancel returns"), steps(SlowStreamDriver.HELD))
+        val order = Files.readAllLines(log)
+        assertTrue("the successor opens its statement after the connection cancel: $order",
+            order.indexOf("${SlowStreamDriver.HELD} cancel returns") < order.indexOf("next execute"))
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertFalse(console.databaseSession.isCancelled)
+    }
+
+    fun testAConnectionCancelPastTheDeadlineDisconnectsBeforeTheNextRequestRuns() {
+        val console = open()
+        console.run("SELECT 1")
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), deadline = 1.seconds)
+        stream(console, SlowStreamDriver.HELD)
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        // Queued while the connection cancel runs: the disconnect drops it with the connection.
+        console.submit("SELECT '${SlowStreamDriver.MARKER} queued'")
+        PlatformTestUtil.waitWithEventsDispatching("the console disconnects past the deadline", { !console.databaseSession.isConnected }, 10)
+        assertFalse("the connection cancel is still running", "cancel returns" in steps(SlowStreamDriver.HELD))
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty("nothing ran on the disconnected connection", steps("queued"))
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertFalse("the successor runs on a new connection, out of the running cancel's reach",
+            steps("@next") == steps("@${SlowStreamDriver.HELD}"))
+        Files.createFile(Path.of("$log.release"))
+        console.run("SELECT 42")
+    }
+
+    fun testADisconnectThatCannotBeSentHoldsTheNextRequestUntilTheConnectionCancelEnds() = disconnectRefused(ownershipFails = false)
+
+    /** As the platform closing the engine's connection meanwhile makes it: asking who owns it fails. */
+    fun testAnOwnershipCheckThatFailsAfterTheRefusedDisconnectHoldsTheNextRequestUntilTheConnectionCancelEnds() =
+        disconnectRefused(ownershipFails = true)
+
+    /**
+     * The connection cancel is held past the deadline and the disconnect cannot be sent; with [ownershipFails],
+     * reading the engine's connection on the cancel's worker fails from then on too.
+     */
+    private fun disconnectRefused(ownershipFails: Boolean) {
+        val console = open()
+        console.run("SELECT 1")
+        val refusal = "the disconnect cannot be sent"
+        val refused = CountDownLatch(1)
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun jobSubmitted(request: DataRequest, producer: DataProducer) {
+                if (request is DataRequest.Disconnect && refused.count > 0) {
+                    refused.countDown()
+                    throw IllegalStateException(refusal)
+                }
+            }
+        }, testRootDisposable)
+        // The message bus logs a failing listener; in tests that log rethrows, which makes sending the disconnect
+        // fail. The session counts the job, which never finishes.
+        val logging = LoggedErrorProcessor.executeWith(object : LoggedErrorProcessor() {
+            override fun processError(category: String, message: String, details: Array<out String>, t: Throwable?): Set<Action> =
+                if (generateSequence(t) { it.cause }.any { it.message == refusal }) setOf(Action.RETHROW) else super.processError(category, message, details, t)
+        })
+        Disposer.register(testRootDisposable) { logging.finish() }
+        faulted += console.databaseSession
+        val thrown = CopyOnWriteArrayList<Throwable>()
+        var workerThread: Thread? = null
+        val worker = Executor { work -> Thread { try { work.run() } catch (e: Throwable) { thrown += e } }.also { workerThread = it }.start() }
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), worker, 1.seconds)
+        val held = stream(console, SlowStreamDriver.HELD)
+        val ownershipFailures = AtomicInteger()
+        if (ownershipFails) {
+            val engine = DatabaseConnectionManager.getInstance().activeConnections.mapNotNull { it.requestor as? JdbcEngine }
+                .single { it.requestContextIfAny?.request === held }
+            // The engine's connection holder on 263, whose get() fails once it is closed.
+            val field = JdbcEngine::class.java.getDeclaredField("guardedConnection").apply { isAccessible = true }
+            @Suppress("UNCHECKED_CAST") val original = field.get(engine) as GuardedRef<DatabaseConnection>
+            field.set(engine, object : GuardedRef<DatabaseConnection>(original.get()) {
+                override fun get(): DatabaseConnection {
+                    if (Thread.currentThread() === workerThread && refused.count == 0L) {
+                        ownershipFailures.incrementAndGet()
+                        throw IllegalStateException("the connection is closing")
+                    }
+                    return super.get()
+                }
+
+                override fun close(value: DatabaseConnection) = original.close()
+            })
+        }
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        assertTrue("the disconnect was refused past the deadline", refused.await(10, TimeUnit.SECONDS))
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { held in finished }, 10)
+        val waiting = System.nanoTime()
+        while (System.nanoTime() - waiting < 2_000_000_000) Thread.sleep(20)
+        assertEmpty("the successor waits for the connection cancel", steps("next"))
+        assertTrue("the connection stays", console.databaseSession.isConnected)
+        Files.createFile(Path.of("$log.release"))
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        val order = Files.readAllLines(log)
+        assertTrue("the successor opens its statement after the connection cancel: $order",
+            order.indexOf("${SlowStreamDriver.HELD} cancel returns") < order.indexOf("next execute"))
+        assertEquals("on the same connection", steps("@next"), steps("@${SlowStreamDriver.HELD}"))
+        assertEquals("the ownership check failed while finishing", ownershipFails, ownershipFailures.get() > 0)
+        assertTrue("the refusal propagates once the engine can go on: $thrown",
+            thrown.size == 1 && generateSequence(thrown.single()) { it.cause }.any { it.message == refusal })
+    }
+
+    fun testAStockCleanupHandledPastTheDeadlineStillHoldsTheNextRequest() {
+        val console = open()
+        console.run("SELECT 1")
+        val cleanup = CountDownLatch(1)
+        val cleanupStarted = CountDownLatch(1)
+        DataBus.addRootAuditor(project, object : DataAuditor {
+            override fun requestCancelStarted(context: DataRequest.Context, cancelRequest: DataRequest.Cancel?) {
+                cleanupStarted.countDown()
+                cleanup.await(30, TimeUnit.SECONDS)
+            }
+        }, testRootDisposable)
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), deadline = 1.seconds)
+        val lagging = stream(console, SlowStreamDriver.LAGGING)
+        assertEquals(ExecutionClaim.HANDLED, interceptor.perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        assertTrue("the stock cleanup reaches the still running request", cleanupStarted.await(10, TimeUnit.SECONDS))
+        PlatformTestUtil.waitWithEventsDispatching("the cancelled request ends", { lagging in finished }, 10)
+        val successor = console.submit("SELECT '${SlowStreamDriver.MARKER} next'")
+        val ended = System.nanoTime()
+        while (System.nanoTime() - ended < 2_000_000_000) Thread.sleep(20)
+        assertEmpty("the successor waits past the deadline for the stock cleanup", steps("next"))
+        cleanup.countDown()
+        PlatformTestUtil.waitWithEventsDispatching("the successor completes", { successor in finished }, 30)
+        assertEmpty(errorsOf(successor))
+        assertEquals("the successor is neither cancelled nor cleaned up", listOf("execute", "end"), steps("next").distinct())
+        assertEquals(steps("@next"), steps("@${SlowStreamDriver.LAGGING}"))
+    }
+
+    fun testARejectedSubmissionReleasesTheCapture() {
+        val console = open()
+        console.run("SELECT 1")
+        val interceptor = StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), { throw RejectedExecutionException("full") })
+        val request = stream(console, "rejected")
+        var delegated = false
+        assertEquals(ExecutionClaim.DECLINED, interceptor.perform(cancelEvent(console)) { delegated = true })
+        assertFalse("perform leaves the stock cancel to its caller", delegated)
+        PlatformTestUtil.waitWithEventsDispatching("the request completes, held by nothing", { request in finished }, 30)
+        console.run("SELECT 42")
+    }
+
+    fun testTheConstructorBeforeTheDeadlineRemains() {
+        assertNotNull(StreamingCancelInterceptor::class.java.getConstructor(DialectDataSourceResolver::class.java, Executor::class.java))
+    }
+
+    fun testAnotherDbmsKeepsTheStockCancel() {
+        val console = open()
+        console.run("SELECT 1")
+        install(Dbms.ORACLE)
+        val request = stream(console, "stock")
+        pressCancel(console)
+        PlatformTestUtil.waitWithEventsDispatching("the stock cancel ends the request", { request in finished }, 30)
+        assertEquals("the stock cancel closes the stream without cancelling it", listOf("execute", "drain", "close"), steps("stock"))
+    }
+
+    fun testAnAliasTheResolverAcceptsIsDeclinedAndTheExactDbmsIsClaimed() {
+        val console = open()
+        console.run("SELECT 1")
+        val alias = DialectDataSourceResolver(DUCKDB_BRIKK)
+        assertTrue("the registry lists ${dataSource.dbms.name} beside ${DUCKDB_BRIKK.name}", alias.accepts(dataSource.dbms))
+        val workers = ArrayList<Runnable>()
+        val request = stream(console, "alias")
+        assertEquals(ExecutionClaim.DECLINED, StreamingCancelInterceptor(alias, workers::add).perform(cancelEvent(console)) { fail("perform never delegates itself") })
+        assertEmpty(workers)
+        assertEquals(ExecutionClaim.HANDLED, StreamingCancelInterceptor(DialectDataSourceResolver(dataSource.dbms), workers::add)
+            .perform(cancelEvent(console)) { fail("a streaming request is claimed") })
+        workers.single().run()
+        PlatformTestUtil.waitWithEventsDispatching("the claimed cancel ends the request", { request in finished }, 5)
+        assertEquals(listOf("execute", "cancel", "close"), steps("alias"))
+    }
+
+    fun testAPressWithoutASessionRunsTheWrappedAction() {
+        val event = TestActionEvent.createTestEvent(SimpleDataContext.getProjectContext(project))
+        var delegated = false
+        assertEquals(ExecutionClaim.DECLINED, StreamingCancelInterceptor(DialectDataSourceResolver(Dbms.POSTGRES)).perform(event) { delegated = true })
+        assertFalse(delegated)
+    }
+
+    private companion object {
+        /** A plugin's own DuckDB dbms, which the registry lists with the stock `DUCK` the fixture's data source detects. */
+        val DUCKDB_BRIKK: Dbms = Dbms.create("DUCKDB_BRIKK", "DUCKDB_BRIKK", { AllIcons.Nodes.DataTables }, Dbms.defaultPattern("duckdbbrikk"))
+    }
+}

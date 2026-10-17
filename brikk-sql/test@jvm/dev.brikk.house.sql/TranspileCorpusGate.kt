@@ -51,6 +51,9 @@ internal fun <T> transpileAssertionFailure(
     }
     val actual = try {
         generate(expression)
+    } catch (e: StackOverflowError) {
+        // Report the exact assertion instead of losing its SQL behind a huge stack trace.
+        return CorpusFailure.exception(case, "generation", e)
     } catch (e: Exception) {
         return if (expectsUnsupported && e is UnsupportedError) null
         else CorpusFailure.exception(case, "generation", e)

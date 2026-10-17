@@ -9,6 +9,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.StarrocksTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
+import dev.brikk.house.sql.parser.TokenType
 
 /**
  * Port of sqlglot's StarRocks dialect umbrella (reference/sqlglot/sqlglot/dialects/starrocks.py
@@ -24,6 +25,10 @@ import dev.brikk.house.sql.parser.TokenizerConfig
 class StarrocksDialect : Dialect() {
 
     override val name: String get() = "starrocks"
+    override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.MERGED_FIRST
+
+    // brikk-native: StarRocks.g4 partitionKeyDesc `VALUES [ (...), (...) )`, as in Doris.
+    override val halfOpenPartitionRanges: Boolean get() = true
 
     // sqlglot: StarRocks(MySQL) inherits MySQL.EXPRESSION_METADATA
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.MYSQL
@@ -31,10 +36,13 @@ class StarrocksDialect : Dialect() {
     // sqlglot: StarRocks inherits MySQL.NORMALIZATION_STRATEGY (CASE_SENSITIVE)
     override val normalizationStrategy get() = NormalizationStrategy.CASE_SENSITIVE
 
+    // brikk-native: see Dialect.caseInsensitiveColumns.
+    override val caseInsensitiveColumns: Boolean get() = true
+
     // Version-pinned StarRocks builtin function registry (see brikk-sql-metadata).
     override val functionCatalog: FunctionCatalog get() = STARROCKS_FUNCTION_CATALOG
 
-    override val tokenizerConfig: TokenizerConfig get() = StarrocksTokenizerTables.CONFIG
+    override val tokenizerConfig: TokenizerConfig get() = TOKENIZER_CONFIG
 
     // sqlglot: StarRocks.TIME_MAPPING (inherited from MySQL)
     override val timeMapping: Map<String, String> get() = MysqlDialect.TIME_MAPPING
@@ -49,4 +57,12 @@ class StarrocksDialect : Dialect() {
 
     override fun generator(pretty: Boolean, sourceDialect: String?): Generator =
         StarrocksGenerator(pretty = pretty, tokenizerConfig = tokenizerConfig, sourceDialect = sourceDialect)
+
+    companion object {
+        // sqlglot #8412: StarRocks has no INSERT IGNORE/index hint grammar; IGNORE
+        // must reach the window NULL-modifier parser as a contextual identifier.
+        val TOKENIZER_CONFIG: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.STARROCKS
+            // brikk-native: administrative statements degrade to an opaque Command (text kept), as Doris's do.
+            .withKeywords(mapOf("IGNORE" to TokenType.VAR, "ADMIN" to TokenType.COMMAND, "CANCEL" to TokenType.COMMAND, "SUBMIT" to TokenType.COMMAND))
+    }
 }

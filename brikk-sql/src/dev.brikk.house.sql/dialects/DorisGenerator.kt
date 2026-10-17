@@ -58,6 +58,10 @@ open class DorisGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    // brikk extension #55: the Doris 4.1.4 grammar rejects these lowered forms.
+    override val executesPipeCall: Boolean get() = false
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN", "NATURAL")
+
     // ------------------------------------------------------------------
     // Flags (sqlglot: DorisGenerator class attributes)
     // ------------------------------------------------------------------
@@ -967,6 +971,7 @@ open class DorisGenerator(
                 UniqueKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 PartitionedByProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 BuildProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
+                Property::class to GeneratorTables.PropLocation.POST_WITH,
                 // brikk-native (docs/brikk-extensions.md #19): Doris DDL clauses sqlglot lacks
                 // (RollupProperty is UNSUPPORTED in the base table; StarRocks lifts it the same way).
                 AggregateKeyProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
@@ -1296,6 +1301,11 @@ open class DorisGenerator(
             reg(DorisModifyEngine::class) { e -> "MODIFY ENGINE TO ${sql(e, "this")}${dg().propertiesClause(e)}" }
             reg(DorisModifyComment::class) { e -> "MODIFY COMMENT ${sql(e, "this")}" }
             reg(DorisBuildIndex::class) { e -> dg().dorisbuildindexSql(e as DorisBuildIndex) }
+            reg(DorisCreateJob::class) { e ->
+                val properties = (e.args["properties"] as? Properties)?.let { " ${properties(it, prefix = "PROPERTIES")}" }.orEmpty()
+                val comment = e.args["comment"]?.let { " COMMENT ${sql(e, "comment")}" }.orEmpty()
+                "CREATE JOB ${sql(e, "this")}$properties ON SCHEDULE ${e.text("schedule")}$comment DO ${sql(e, "expression")}"
+            }
             reg(DorisMaterializedViewJob::class) { e -> "${e.text("kind")} MATERIALIZED VIEW JOB ON ${sql(e, "this")}" }
             reg(DorisCancelMaterializedViewTask::class) { e ->
                 "CANCEL MATERIALIZED VIEW TASK ${sql(e, "this")} ON ${sql(e, "table")}"

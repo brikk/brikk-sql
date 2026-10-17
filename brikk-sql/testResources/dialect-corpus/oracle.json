@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "dialect": "oracle",
   "identity": [
     {
@@ -1216,6 +1216,14 @@
       "pretty": true
     },
     {
+      "sql": "INSERT WHEN k > 1 THEN INTO t VALUES (k) ELSE INTO u VALUES (k) SELECT k FROM x",
+      "read": {},
+      "write": {
+        "oracle": "INSERT ALL WHEN k > 1 THEN INTO t VALUES (k) ELSE INTO u VALUES (k) SELECT k FROM x",
+        "snowflake": "INSERT ALL WHEN k > 1 THEN INTO t VALUES (k) ELSE INTO u VALUES (k) SELECT k FROM x"
+      }
+    },
+    {
       "sql": "TRUNC(SYSDATE, 'YEAR')",
       "read": {},
       "write": {
@@ -1229,7 +1237,7 @@
       "write": {
         "oracle": "TRUNC(3.14159)",
         "postgres": "TRUNC(3.14159)",
-        "mysql": "TRUNCATE(3.14159)",
+        "mysql": "TRUNCATE(3.14159, 0)",
         "tsql": "ROUND(3.14159, 0, 1)"
       }
     },
@@ -1264,7 +1272,7 @@
   ],
   "stats": {
     "identity_count": 184,
-    "transpile_count": 33,
-    "skipped_dynamic": 9
+    "transpile_count": 34,
+    "skipped_dynamic": 12
   }
 }

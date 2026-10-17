@@ -16,9 +16,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
-import kotlin.test.assertTrue
 
 class DorisRenameSemanticsTest {
     private val shape = Shape.of("id" to "INT", "category" to "VARCHAR")
@@ -65,7 +65,7 @@ class DorisRenameSemanticsTest {
                     assertEquals(emptyList(), generator.unsupportedMessages, source)
                     assertFalse("RENAME" in sql, sql)
                     assertSame(sql, assertNotNull(generator.lastSourceMap).output)
-                    assertTrue(verifier.verify(sql).accepted, sql)
+                    assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
                     val bound = qualify(dialect.parseOne(sql), dialect = dialect, schema = mapping, inferSchema = false)
                     assertEquals(columns, bound.selects.map { it.aliasOrName }, sql)
                     assertEquals(expected, result(statement, sql), "$source\n$sql")
@@ -180,7 +180,7 @@ class DorisRenameSemanticsTest {
             val sql = generator.generate(tree, copy = true)
             assertEquals(emptyList(), generator.unsupportedMessages)
             assertSame(sql, assertNotNull(generator.lastSourceMap).output)
-            assertTrue(verifier.verify(sql).accepted, sql)
+            assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
             val bound = qualify(dialect.parseOne(sql), dialect = dialect, schema = mapping, inferSchema = false)
             assertEquals(listOf("new`name", "odd`field"), bound.selects.map { it.aliasOrName })
         }

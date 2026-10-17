@@ -104,4 +104,78 @@ class ClickhouseDialectTest {
             assertEquals(sql, roundTrip(sql))
         }
     }
+
+    /**
+     * ClickHouse ParserInsertQuery: `INSERT INTO [TABLE] FUNCTION tf(...) [PARTITION BY expr [AS alias]]
+     * [(columns)] [SETTINGS ...] VALUES | FORMAT | SELECT`; the column list follows the partition.
+     */
+    @Test
+    fun insertIntoFunctionTakesAPartitionThenAColumnList() {
+        for (sql in listOf(
+            "INSERT INTO FUNCTION null('id UInt64') (id) SELECT 1",
+            "INSERT INTO FUNCTION null('id UInt64, ts DateTime') PARTITION BY toYYYYMM(ts) (id, ts) SELECT id, ts FROM events",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a % 10 (a, b) SELECT 1, 2",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY cityHash64(a) AS p (a, b) SELECT 1, 2",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a % 10 (a) SETTINGS s3_truncate_on_insert = 1 SELECT 1",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a SELECT 1",
+            "INSERT INTO FUNCTION s3('x', 'CSV') PARTITION BY a % 10 SETTINGS s3_truncate_on_insert = 1 SELECT 1",
+        )) assertEquals(sql, roundTrip(sql), sql)
+        assertEquals("INSERT INTO FUNCTION remote('h', db.t) (a, b) SELECT 1, 2", roundTrip("INSERT INTO TABLE FUNCTION remote('h', db.t) (a, b) SELECT 1, 2"))
+        // A subquery in parentheses is the data, not a column list.
+        assertEquals(
+            "INSERT INTO FUNCTION null('id UInt64') PARTITION BY a % 10 (SELECT 1)",
+            roundTrip("INSERT INTO FUNCTION null('id UInt64') PARTITION BY a % 10 (SELECT 1)"),
+        )
+        // The plugin's IDE bind shape: :prefix is read as a parameter, and the columns stay columns.
+        val bound = parseOne(
+            "INSERT INTO FUNCTION null('id UInt64, ts DateTime') PARTITION BY concat(:prefix, toString(ts)) (id, ts) SELECT id, ts FROM events",
+            "clickhouse",
+        )
+        assertEquals(listOf("id", "ts"), (bound.args["this"] as dev.brikk.house.sql.ast.Schema).expressionsArg.map { (it as dev.brikk.house.sql.ast.Expression).sql("clickhouse") })
+    }
+
+    /** Table functions stand wherever a table does: joined with an alias, ON or USING, beside ARRAY JOIN, and dictionary(...) too. */
+    @Test
+    fun tableFunctionsAreJoinOperands() {
+        for (sql in listOf(
+            "SELECT * FROM db1.one_column AS a CROSS JOIN numbers(3) AS t",
+            "SELECT * FROM db1.one_column AS a JOIN numbers(3) AS t ON a.x = t.number",
+            "SELECT * FROM db1.one_column AS a JOIN numbers(3) AS t USING (number)",
+            "SELECT * FROM db1.one_column AS a LEFT JOIN s3('https://x', 'TSV', 'a UInt64') AS t ON a.x = t.a",
+            "SELECT * FROM db1.one_column AS a ARRAY JOIN arr AS e CROSS JOIN numbers(3) AS t",
+            "SELECT * FROM dictionary('db1.dictionary_demo')",
+            "SELECT * FROM dictionary('db1.dictionary_demo') AS t",
+            "SELECT * FROM db1.one_column AS a CROSS JOIN dictionary('db1.d') AS t",
+        )) assertEquals(sql, roundTrip(sql), sql)
+    }
+
+    /** A table function's argument may be a query: view(...), and view(...) inside remote(...) or cluster(...). */
+    @Test
+    fun tableFunctionsTakeQueryArguments() {
+        for (sql in listOf(
+            "SELECT * FROM view(SELECT 1 AS field_a, 'sample' AS field_b)",
+            "SELECT * FROM view(SELECT 1 AS field_a) AS t",
+            "SELECT * FROM remote('h', view(SELECT 1 AS a))",
+            "SELECT * FROM cluster('c', view(SELECT 1 AS field_a))",
+            "SELECT * FROM viewExplain('EXPLAIN', '', (SELECT 1))",
+        )) assertEquals(sql, roundTrip(sql), sql)
+    }
+
+    /** DESCRIBE [TABLE] takes a table function, never a column list: numbers (3) is a call, not a table with columns. */
+    @Test
+    fun describeTakesTableFunctions() {
+        for ((sql, expected) in listOf(
+            "DESCRIBE TABLE numbers(3)" to "DESCRIBE numbers(3)",
+            "DESCRIBE TABLE format('TSV', 'a UInt64, b String', '1\\tsample')" to "DESCRIBE format('TSV', 'a UInt64, b String', '1\\tsample')",
+            "DESCRIBE TABLE merge('db1', 'one_column')" to "DESCRIBE merge('db1', 'one_column')",
+            "DESCRIBE TABLE view(SELECT 1 AS a)" to "DESCRIBE view(SELECT 1 AS a)",
+            "DESCRIBE TABLE dictionary('db1.d')" to "DESCRIBE dictionary('db1.d')",
+            "DESCRIBE TABLE s3('https://x', 'TSV', 'a UInt64')" to "DESCRIBE s3('https://x', 'TSV', 'a UInt64')",
+            "DESCRIBE TABLE db1.one_column" to "DESCRIBE db1.one_column",
+        )) {
+            val once = roundTrip(sql)
+            assertEquals(expected, once, sql)
+            assertEquals(once, roundTrip(once), "stable: $sql")
+        }
+    }
 }

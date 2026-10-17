@@ -24,6 +24,12 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     private var peek: Char = NONE
     private var prevTokenLine: Int = -1
     private var editorMode: Boolean = false
+    private var textEnds: Boolean = true
+    private var checkCanceled: () -> Unit = {}
+    private var cancelBudget: Int = CANCEL_INTERVAL
+    private var breaksScanned: Int = 0
+    private var lastBreak: Int = -1
+    private val insertData = InsertDataState()
 
     // sqlglot: TokenizerCore.reset
     private fun reset() {
@@ -39,6 +45,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         end = false
         peek = NONE
         prevTokenLine = -1
+        cancelBudget = CANCEL_INTERVAL
+        breaksScanned = 0
+        lastBreak = -1
+        insertData.reset()
     }
 
     /**
@@ -46,7 +56,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
      *
      * sqlglot: TokenizerCore.tokenize
      */
-    fun tokenize(sql: String): List<Token> {
+    fun tokenize(sql: String): List<Token> = try {
+        scanAll(sql)
+    } catch (e: Canceled) {
+        throw e.signal
+    }
+
+    private fun scanAll(sql: String): List<Token> {
         reset()
         this.sql = sql
         this.size = sql.length
@@ -54,6 +70,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         try {
             scan()
         } catch (e: TokenError) {
+            throw e
+        } catch (e: Canceled) {
             throw e
         } catch (e: Exception) {
             val ctxStart = maxOf(current - 50, 0)
@@ -65,14 +83,35 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         return tokens
     }
 
+    /**
+     * [tokenizeForEditor] that calls [checkCanceled] periodically; whatever it throws (for
+     * example an IDE cancellation) propagates unchanged.
+     */
+    fun tokenizeForEditor(sql: String, checkCanceled: () -> Unit): EditorTokens {
+        val previous = this.checkCanceled
+        this.checkCanceled = checkCanceled
+        return try { tokenizeForEditor(sql) } finally { this.checkCanceled = previous }
+    }
+
+    /**
+     * [tokenizeForEditor] of [sql] as the start of a longer text: the end of [sql] is not a line end,
+     * so no rule decides from it what the rest of the text could change (docs/brikk-extensions.md #56).
+     */
+    fun tokenizeForEditorPrefix(sql: String, checkCanceled: () -> Unit): EditorTokens {
+        textEnds = false
+        return try { tokenizeForEditor(sql, checkCanceled) } finally { textEnds = true }
+    }
+
     /** Editor recovery stops at the failing lexical construct, never inside its tail. */
     fun tokenizeForEditor(sql: String): EditorTokens {
         val previous = editorMode
         editorMode = true
         return try {
-            EditorTokens(tokenize(sql).toList())
+            EditorTokens(scanAll(sql).toList())
         } catch (e: TokenError) {
             EditorTokens(tokens.toList(), start.coerceIn(0, sql.length), e.message ?: "Incomplete SQL token")
+        } catch (e: Canceled) {
+            throw e.signal
         } finally { editorMode = previous }
     }
 
@@ -83,8 +122,9 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         while (size != 0 && !end) {
             var cur = current
 
-            // Skip spaces here rather than iteratively calling advance() for performance reasons
-            while (cur < size) {
+            // Skip spaces here rather than iteratively calling advance() for performance reasons;
+            // a long run is skipped in chunks, so cancellation is checked inside it.
+            while (cur < size && cur - current < CANCEL_INTERVAL) {
                 val c = sql[cur]
                 if (c == ' ' || c == '\t') cur++ else break
             }
@@ -98,8 +138,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 when {
                     char in DIGIT_CHARS -> scanNumber()
                     identifiers.containsKey(char) -> scanIdentifier(identifiers.getValue(char))
+                    config.untaggedDollarStrings && char == '$' && peek == '$' -> if (!scanDollarString()) scanKeywords()
                     else -> scanKeywords()
                 }
+                if (editorMode && config.inlineInsertData) scanInsertData()
             }
 
             if (checkSemicolon && peek == ';') break
@@ -108,6 +150,276 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         if (tokens.isNotEmpty() && comments.isNotEmpty()) {
             tokens.last().comments.addAll(comments)
             comments = mutableListOf()
+        }
+    }
+
+    /**
+     * brikk extension #56: follows each statement's tokens and reads the inline data of an `INSERT`
+     * as one INSERT_DATA token once its header ends: right after the name of a depth-0
+     * `FORMAT <name>` (not `Values`), or after a `SETTINGS` clause on that name's line. There is no
+     * inline data after `INFILE` or `VALUES`, nor after a `SELECT` or `WITH` unless the query reads
+     * it through the `input(...)` table function.
+     */
+    private fun scanInsertData() {
+        val state = insertData
+        while (state.observed < tokens.size) {
+            val token = tokens[state.observed++]
+            val type = token.tokenType
+            when (type) {
+                TokenType.SEMICOLON -> if (state.depth == 0) { state.reset(state.observed); continue }
+                TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> state.depth++
+                TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> state.depth--
+                else -> {}
+            }
+            // Header words are keywords and names, never the contents of a string or quoted name.
+            val word = token.text.takeIf { type.isWordKind() && it.firstOrNull()?.isLetter() == true }?.uppercase()
+            if (state.head == null) state.head = word ?: ""
+            val previous = state.previous
+            state.previous = word
+            if (state.head != "INSERT" || state.noData) continue
+            // `name = value` settings the INSERT itself writes, before or after its FORMAT.
+            if (state.afterEquals) state.setting?.let { state.settingValues[it] = token.text }
+            state.afterEquals = type == TokenType.EQ
+            if (type != TokenType.EQ) state.setting = token.text.lowercase()
+            if (state.settings) {
+                if (settingsEnd(state, type) && state.observed == tokens.size) scanInsertDataAfter(current, state.quoting())
+                continue
+            }
+            if (type == TokenType.L_PAREN && previous == "INPUT") state.input = true
+            if (state.depth != 0) continue
+            when {
+                state.afterFormat -> {
+                    state.afterFormat = false
+                    if (word == "VALUES" || word == null && type != TokenType.IDENTIFIER || state.query && !state.input) {
+                        state.noData = true
+                    } else if (state.observed == tokens.size) {
+                        state.format = token.text.uppercase()
+                        if (wordAt(skipSpaces(current), "SETTINGS")) state.settings = true else scanInsertDataAfter(current, state.quoting())
+                    }
+                }
+                word in INSERT_WITHOUT_DATA -> state.noData = true
+                word == "SELECT" || word == "WITH" -> state.query = true
+                word == "FORMAT" -> state.afterFormat = true
+            }
+        }
+    }
+
+    /**
+     * Follows `SETTINGS name = value, ...` after a format name; true once a value ends the clause,
+     * that is, when no `,` follows it past whitespace, blank lines and comments. A value may be
+     * signed or a bracketed literal.
+     */
+    private fun settingsEnd(state: InsertDataState, type: TokenType): Boolean {
+        if (!state.settingValue) {
+            if (type == TokenType.EQ) state.settingValue = true
+            return false
+        }
+        when {
+            state.depth > 0 -> return false
+            type == TokenType.DASH || type == TokenType.PLUS -> return false
+        }
+        state.settingValue = false
+        // At the end of a prefix, the rest of the text decides: wait.
+        val next = skipTrivia(current) ?: return false
+        return next >= size || sql[next] != ','
+    }
+
+    /**
+     * The offset of the first character from [from] that is no whitespace or comment, or the text's
+     * end; null when the end of a prefix (or a comment it leaves open) comes first.
+     */
+    private fun skipTrivia(from: Int): Int? {
+        var at = from
+        while (true) {
+            while (at < size && sql[at].isWhitespace()) at++
+            if (at >= size) return if (textEnds) size else null
+            val comment = config.comments.entries.filter { sql.startsWith(it.key, at) }.maxByOrNull { it.key.length } ?: return at
+            val close = comment.value
+            val closed = if (close == null) sql.indexOfAny(charArrayOf('\n', '\r'), at) else sql.indexOf(close, at + comment.key.length).let { if (it < 0) it else it + close.length }
+            if (closed < 0) return if (textEnds) size else null
+            at = closed
+        }
+    }
+
+    private fun wordAt(offset: Int, word: String): Boolean =
+        sql.regionMatches(offset, word, 0, word.length, ignoreCase = true) &&
+            sql.getOrNull(offset + word.length)?.let { it.isLetterOrDigit() || it == '_' } != true
+
+    /**
+     * Reads inline data from [from], the end of the INSERT's header. Data starts after the spaces
+     * that follow the header and, when a line break follows them, after it, as ClickHouse's parser
+     * starts it; a `;` ending the header's line instead means there is no data. Data ends before a
+     * blank line, before a line holding only `;` (with spaces or tabs), or at the real end of the
+     * text; any other `;` is data. Without data, the token is empty at the header's end, so the
+     * line breaks and indentation before a terminator are never data.
+     */
+    private fun scanInsertDataAfter(from: Int, quoting: Quoting?) {
+        var dataStart = from
+        while (dataStart < size && isSpace(sql[dataStart])) dataStart++
+        // The end of a prefix leaves open whether data follows.
+        if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
+        if (sql[dataStart] == ';' && isLineEnd(skipSpaces(dataStart + 1))) return addInsertData(from, from)
+        if (isLineBreak(sql[dataStart])) dataStart = lineEnd(dataStart)
+        if (dataStart >= size) return if (textEnds) addInsertData(from, from) else Unit
+        if (isLoneSemicolonLine(dataStart) || isEmptyLine(dataStart)) return addInsertData(from, from)
+        addInsertData(dataStart, insertDataEnd(dataStart, quoting))
+    }
+
+    /**
+     * The end of data from [dataStart]: before a blank line or a `;` line, or the text's end. With
+     * [quoting] (CSV), those lines inside an open quoted field are data; a field still open at the
+     * end of the text makes the boundary unknown, a lexical failure.
+     */
+    private fun insertDataEnd(dataStart: Int, quoting: Quoting?): Int {
+        var at = dataStart
+        var fieldStart = true
+        var quote: Char? = null
+        var quoteStart = -1
+        while (true) {
+            if (at >= size) {
+                if (quote != null && textEnds) {
+                    start = quoteStart
+                    throw TokenError("Unclosed quoted field in INSERT data; statement boundary is unknown")
+                }
+                return size
+            }
+            val c = sql[at]
+            when {
+                quote != null -> {
+                    if (c == quote) {
+                        // A prefix ending at a quote leaves open whether it doubles: data runs to its end.
+                        if (at + 1 >= size && !textEnds) return size
+                        if (at + 1 < size && sql[at + 1] == quote) at++ else quote = null
+                        fieldStart = false
+                    }
+                    at++
+                }
+                isLineBreak(c) -> {
+                    val next = lineEnd(at)
+                    if (next >= size) return size
+                    if (isEmptyLine(next) || isLoneSemicolonLine(next)) return at
+                    at = next
+                    fieldStart = true
+                }
+                quoting == null -> at++
+                fieldStart && c in quoting.quotes -> {
+                    quote = c
+                    quoteStart = at++
+                }
+                sql.startsWith(quoting.delimiter, at) -> {
+                    at += quoting.delimiter.length
+                    fieldStart = true
+                }
+                c == ' ' || c == '\t' -> at++
+                else -> {
+                    fieldStart = false
+                    at++
+                }
+            }
+        }
+    }
+
+    /** How a CSV-escaped format quotes fields: the field delimiter and the quote characters, each escaped by doubling. */
+    private class Quoting(val delimiter: String, val quotes: Set<Char>)
+
+    /** Adds `[dataStart, dataEnd)` as the INSERT_DATA token, empty at the header's end when there is no data. */
+    private fun addInsertData(dataStart: Int, dataEnd: Int) {
+        while (current < dataStart) advance()
+        start = dataStart
+        while (current < dataEnd) advance()
+        add(TokenType.INSERT_DATA)
+        // The data ends the statement, at a `;` line or a blank line: the next one starts afresh.
+        insertData.reset(tokens.size)
+    }
+
+    private fun TokenType.isWordKind(): Boolean =
+        this != TokenType.IDENTIFIER && this != TokenType.STRING && !name.endsWith("_STRING")
+
+    private fun isSpace(c: Char): Boolean = c == ' ' || c == '\t' || c == '\u000C'
+
+    private fun skipSpaces(from: Int): Int {
+        var offset = from
+        while (offset < size && isSpace(sql[offset])) offset++
+        return offset
+    }
+
+    /** Whether a line ends at [offset]; the end of a prefix is not known to be one. */
+    private fun isLineEnd(offset: Int): Boolean = if (offset >= size) textEnds else isLineBreak(sql[offset])
+
+    private fun isEmptyLine(offset: Int): Boolean = offset < size && isLineBreak(sql[offset])
+
+    /** Whether the line at [offset] holds only `;`, with spaces or tabs. */
+    private fun isLoneSemicolonLine(offset: Int): Boolean {
+        val at = skipSpaces(offset)
+        return at < size && sql[at] == ';' && isLineEnd(skipSpaces(at + 1))
+    }
+
+    private fun isLineBreak(c: Char): Boolean = c == '\n' || c == '\r'
+
+    /** The offset after the line break at [offset], CRLF and LFCR counting as one. */
+    private fun lineEnd(offset: Int): Int {
+        val next = offset + 1
+        return if (next < size && isLineBreak(sql[next]) && sql[next] != sql[offset]) next + 1 else next
+    }
+
+    /** Statement context for [scanInsertData]. */
+    private class InsertDataState {
+        var observed = 0
+        var depth = 0
+        var head: String? = null
+        var previous: String? = null
+        var noData = false
+        var query = false
+        var input = false
+        var afterFormat = false
+        var settings = false
+        var settingValue = false
+        var format: String? = null
+        var setting: String? = null
+        var afterEquals = false
+        val settingValues = HashMap<String, String>()
+
+        /**
+         * How the format's fields may hold line breaks inside quotes (docs/brikk-extensions.md #56),
+         * from settings the INSERT writes, else ClickHouse's defaults; null when they cannot.
+         */
+        fun quoting(): Quoting? {
+            val name = format ?: return null
+            val delimiter = when {
+                name in CSV_FORMATS -> settingValues["format_csv_delimiter"]?.takeIf { it.length == 1 } ?: ","
+                name.startsWith("CUSTOMSEPARATED") && settingValues["format_custom_escaping_rule"].equals("CSV", ignoreCase = true) ->
+                    settingValues["format_custom_field_delimiter"]?.takeIf { it.isNotEmpty() } ?: "\t"
+                else -> return null
+            }
+            val quotes = buildSet {
+                if (enabled("format_csv_allow_double_quotes", default = true)) add('"')
+                if (enabled("format_csv_allow_single_quotes", default = false)) add('\'')
+            }
+            return Quoting(delimiter, quotes).takeIf { quotes.isNotEmpty() }
+        }
+
+        /** A boolean setting the INSERT writes (`1`, `0`, `true`, `false`, quoted or not), else [default]. */
+        private fun enabled(name: String, default: Boolean): Boolean = when (settingValues[name]?.lowercase()) {
+            "1", "true" -> true
+            "0", "false" -> false
+            else -> default
+        }
+
+        fun reset(observed: Int = 0) {
+            this.observed = observed
+            depth = 0
+            head = null
+            previous = null
+            noData = false
+            query = false
+            input = false
+            afterFormat = false
+            settings = false
+            settingValue = false
+            format = null
+            setting = null
+            afterEquals = false
+            settingValues.clear()
         }
     }
 
@@ -120,7 +432,16 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     }
 
     // sqlglot: TokenizerCore._advance
+    // Calls the cancellation hook after every CANCEL_INTERVAL scanned characters.
+    private fun progress(scannedChars: Int) {
+        cancelBudget -= scannedChars
+        if (cancelBudget > 0) return
+        cancelBudget = CANCEL_INTERVAL
+        try { checkCanceled() } catch (e: Throwable) { throw Canceled(e) }
+    }
+
     private fun advance(i: Int = 1, alnum: Boolean = false) {
+        val before = current
         val c = char
 
         if (c == '\n' || c == '\r') {
@@ -145,7 +466,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             var e2 = end
             var p2 = peek
 
-            while (p2.isLetterOrDigit()) {
+            while (p2.isLetterOrDigit() && cur - before < CANCEL_INTERVAL) {
                 c2 += 1
                 cur += 1
                 e2 = cur >= size
@@ -158,6 +479,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             peek = p2
             char = sql[cur - 1]
         }
+        if (current > before) progress(current - before)
     }
 
     // sqlglot: TokenizerCore._text
@@ -179,9 +501,11 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         // colStart is 1-based: distance from the char after the preceding newline.
         // lineStart backs out the newlines the token itself spans (multi-line strings).
         var newlinesInToken = 0
-        for (i in start until current) if (sql[i] == '\n') newlinesInToken++
+        for (i in start until current) {
+            if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlinesInToken++
+        }
         val lineStart = line - newlinesInToken
-        val colStart = start - sql.lastIndexOf('\n', start - 1)
+        val colStart = start - lineBreakBefore(start)
 
         tokens.add(
             Token(
@@ -212,6 +536,18 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             val commandText = sql.substring(commandStart, current).trim()
             if (commandText.isNotEmpty()) add(TokenType.STRING, commandText)
         }
+    }
+
+    // The last CR or LF before [offset]; token starts only move forward, so the scan is amortized.
+    private fun lineBreakBefore(offset: Int): Int {
+        if (offset < breaksScanned) return maxOf(sql.lastIndexOf('\n', offset - 1), sql.lastIndexOf('\r', offset - 1))
+        progress(offset - breaksScanned)
+        while (breaksScanned < offset) {
+            val c = sql[breaksScanned]
+            if (c == '\n' || c == '\r') lastBreak = breaksScanned
+            breaksScanned++
+        }
+        return lastBreak
     }
 
     // sqlglot: TokenizerCore._scan_keywords
@@ -260,10 +596,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             if (scanString(word)) return
             if (scanComment(word)) return
             if (prevSpace || singleToken || cEmpty) {
-                advance(matchSize - 1)
                 val upper = word.uppercase()
-                add(config.keywords.getValue(upper), text = upper)
-                return
+                val type = config.keywords[upper]
+                if (type != null) {
+                    advance(matchSize - 1)
+                    add(type, text = upper)
+                    return
+                }
             }
         }
 
@@ -279,12 +618,18 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
     // sqlglot: TokenizerCore._scan_comment
     private fun scanComment(commentStart: String): Boolean {
         if (!config.comments.containsKey(commentStart)) return false
+        if (commentStart == "--" && config.dashCommentRequiresBoundary) {
+            val boundary = sql.getOrNull(current + 1)
+            if (boundary != null && !boundary.isWhitespace() && boundary.code >= 32 && boundary.code != 127) return false
+        }
 
         val commentStartLine = line
         val commentStartSize = commentStart.length
         val commentEnd = config.comments[commentStart]
 
-        if (commentEnd != null) {
+        if (commentEnd == "*/" && config.nestedBlockComments) {
+            scanNestedBlockComment(commentStartSize, commentStartLine)
+        } else if (commentEnd != null) {
             // Skip the comment's start delimiter
             advance(commentStartSize)
 
@@ -316,7 +661,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             comments.add(if (sliceEnd < commentStartSize) "" else t.substring(commentStartSize, sliceEnd))
             advance(commentEndSize - 1)
         } else {
-            while (!end && peek != '\n' && peek != '\r') {
+            while (!end && (config.commentsTerminateAtNewlineOnly || peek != '\r')) {
+                if (peek == '\n' && !(char == '\\' && config.dashCommentLineContinuation && commentStart == "--")) break
                 advance(alnum = true)
             }
             comments.add(text.substring(commentStartSize))
@@ -340,6 +686,121 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         }
 
         return true
+    }
+
+    // Native BRACKETED_COMMENT (`'/*' (BRACKETED_COMMENT | .)*? '*/'`) ends where its preferred
+    // reading completes: at each offset close, else open a nested comment, else take one char.
+    // When the plain depth count cannot close, that is a backtracking search. Editor tokenization
+    // then requires a depth count that does not open at `/*/` to close at the same place.
+    private fun scanNestedBlockComment(commentStartSize: Int, commentStartLine: Int) {
+        val contentStart = start + 2
+        val close = countedClose(contentStart, openOverlapping = true).takeIf { it >= 0 }
+            ?: recoveredClose(contentStart).takeIf { it >= 0 }
+            ?: throw TokenError("Missing */ from $commentStartLine:$start")
+        advanceTo(close + 2)
+        comments.add(sql.substring(start + commentStartSize, close))
+    }
+
+    private fun recoveredClose(contentStart: Int): Int {
+        if (!editorMode) return nativeCommentClose(contentStart)
+        val counted = countedClose(contentStart, openOverlapping = false)
+        return if (counted >= 0 && nativeCommentClose(contentStart) == counted) counted else -1
+    }
+
+    // The offset of the closing `*/` by depth count, or -1.
+    private fun countedClose(contentStart: Int, openOverlapping: Boolean): Int {
+        var depth = 1
+        var index = contentStart
+        while (index < size) {
+            progress(1)
+            when {
+                sql.startsWith("*/", index) -> if (--depth == 0) return index else index += 2
+                sql.startsWith("/*", index) && (openOverlapping || sql.getOrNull(index + 2) != '/') -> { depth++; index += 2 }
+                else -> index++
+            }
+        }
+        return -1
+    }
+
+    private class CommentFrame(val delimiter: Int, val depth: Int) {
+        var alternative = 0
+    }
+
+    // The first completion in the native lexer's preference order, or -1. The search only
+    // branches at `/*` and `*/`, so its states are (delimiter, depth); depths beyond the closers
+    // still ahead cannot complete, and failed states are not revisited.
+    private fun nativeCommentClose(contentStart: Int): Int {
+        val delimiters = delimitersFrom(contentStart)
+        val count = delimiters.size
+        val closersFrom = IntArray(count + 1)
+        for (k in count - 1 downTo 0) closersFrom[k] = closersFrom[k + 1] + if (sql[delimiters[k]] == '*') 1 else 0
+        fun nextDelimiter(offset: Int, from: Int): Int {
+            var k = from
+            while (k < count && delimiters[k] < offset) k++
+            return k
+        }
+        val failed = HashSet<Long>()
+        val frames = ArrayList<CommentFrame>()
+        fun key(delimiter: Int, depth: Int) = delimiter.toLong() shl 32 or depth.toLong()
+        fun visit(delimiter: Int, depth: Int) {
+            if (delimiter < count && depth <= closersFrom[delimiter] && key(delimiter, depth) !in failed) {
+                frames += CommentFrame(delimiter, depth)
+            }
+        }
+        visit(0, 1)
+        while (frames.isNotEmpty()) {
+            progress(1)
+            val frame = frames.last()
+            val offset = delimiters[frame.delimiter]
+            val closing = sql[offset] == '*'
+            when (frame.alternative++) {
+                0 -> if (closing) {
+                    if (frame.depth == 1) return offset
+                    visit(nextDelimiter(offset + 2, frame.delimiter), frame.depth - 1)
+                }
+                1 -> if (!closing) visit(nextDelimiter(offset + 2, frame.delimiter), frame.depth + 1)
+                2 -> visit(nextDelimiter(offset + 1, frame.delimiter), frame.depth)
+                else -> {
+                    failed += key(frame.delimiter, frame.depth)
+                    frames.removeAt(frames.lastIndex)
+                }
+            }
+        }
+        return -1
+    }
+
+    // Offsets of every `/*` and `*/` at or after [from], overlaps included.
+    private fun delimitersFrom(from: Int): IntArray {
+        var offsets = IntArray(16)
+        var count = 0
+        for (index in from until size - 1) {
+            progress(1)
+            val pair = sql[index] == '/' && sql[index + 1] == '*' || sql[index] == '*' && sql[index + 1] == '/'
+            if (!pair) continue
+            if (count == offsets.size) offsets = offsets.copyOf(count * 2)
+            offsets[count++] = index
+        }
+        return offsets.copyOf(count)
+    }
+
+    // Native Doris DOLLAR_QUOTED_STRING; a longer `$`-identifier match wins, ties go to the string.
+    private fun scanDollarString(): Boolean {
+        val close = sql.indexOf("$$", start + 2)
+        if (close == -1) {
+            if (editorMode) throw TokenError("Missing $$ from $line:$start")
+            return false
+        }
+        val identifierEnd = (start until size).firstOrNull { !isDollarIdentifierChar(sql[it]) } ?: size
+        if (identifierEnd > close + 2) return false
+        advanceTo(close + 2)
+        add(TokenType.HEREDOC_STRING, sql.substring(start + 2, close))
+        return true
+    }
+
+    private fun isDollarIdentifierChar(c: Char): Boolean = c == '$' || c == '_' || c.isLetterOrDigit() || c.code > 0x7F
+
+    private fun advanceTo(exclusiveEnd: Int) {
+        while (current < exclusiveEnd) advance()
     }
 
     // sqlglot: TokenizerCore._scan_number
@@ -524,7 +985,8 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
             } else {
                 config.stringEscapes
             },
-            rawString = tokenType == TokenType.RAW_STRING,
+            rawString = tokenType == TokenType.RAW_STRING || tokenType == TokenType.HEREDOC_STRING,
+            bytesLiteral = tokenType == TokenType.BYTE_STRING && config.byteStringsAreBytes,
         )
 
         if (base != 0 && text.isNotEmpty()) {
@@ -574,12 +1036,86 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         add(tokenType)
     }
 
+    // sqlglot: TokenizerCore._read_numeric_escape (#8470 / #8484)
+    private fun readNumericEscape(start: Int, spec: TokenizerConfig.NumericEscape): Pair<Int, Int> {
+        var value = 0
+        var end = start
+        val limit = minOf(start + spec.maxDigits, size)
+        while (end < limit) {
+            val digit = sql[end].digitToIntOrNull(spec.base) ?: break
+            if (value > (spec.maxValue - digit) / spec.base) break
+            value = value * spec.base + digit
+            end++
+        }
+        return (if (end - start >= spec.minDigits) value else -1) to end
+    }
+
+    private fun readByteEscape(pos: Int): Pair<Int, Int> {
+        val next = sql.getOrNull(pos + 1) ?: return -1 to pos
+        val octal = next in '0'..'7'
+        val spec = config.numericEscapes[if (octal) '0' else next] ?: return -1 to pos
+        if (spec.base != 8 && spec.maxValue > 0xFF) return -1 to pos
+        val (value, end) = readNumericEscape(pos + if (octal) 1 else 2, spec)
+        return (if (value >= 0) value and 0xFF else value) to end
+    }
+
+    private fun codePointText(value: Int): String = if (value <= 0xFFFF) value.toChar().toString() else {
+        val cp = value - 0x10000
+        "${(0xD800 + (cp shr 10)).toChar()}${(0xDC00 + (cp and 0x3FF)).toChar()}"
+    }
+
+    // Decode only valid, complete escapes; the caller handles unknown/truncated ones.
+    private fun scanNumericEscape(): String? {
+        val start = current
+        val octal = peek in '0'..'7'
+        val spec = config.numericEscapes[if (octal) '0' else peek] ?: return null
+        var (value, end) = readNumericEscape(start + if (octal) 0 else 1, spec)
+        val bytes = config.numericEscapesAreBytes && (spec.base == 8 || spec.maxValue <= 0xFF)
+        if (bytes && value >= 0) value = value and 0xFF
+        if (value in 0xD800..0xDFFF) {
+            val (low, lowEnd) = if (value <= 0xDBFF && sql.getOrNull(end) == '\\' && sql.getOrNull(end + 1) == peek) {
+                readNumericEscape(end + 2, spec)
+            } else -1 to end
+            if (low in 0xDC00..0xDFFF) {
+                value = 0x10000 + ((value - 0xD800) shl 10) + (low - 0xDC00)
+                end = lowEnd
+            } else if (config.loneSurrogateReplacement.isNotEmpty() && end < size) {
+                advance(end - start + 1)
+                return config.loneSurrogateReplacement
+            } else value = -1
+        }
+        if (bytes && value in 0xC2..0xF4) {
+            val count = if (value < 0xE0) 2 else if (value < 0xF0) 3 else 4
+            var cp = value and (0x7F shr count)
+            var runEnd = end
+            var read = 1
+            while (read < count && sql.getOrNull(runEnd) == '\\') {
+                val (byte, byteEnd) = readByteEscape(runEnd)
+                if (byte !in 0x80..0xBF) break
+                cp = (cp shl 6) or (byte and 0x3F)
+                runEnd = byteEnd
+                read++
+            }
+            val minimum = when (count) { 2 -> 0x80; 3 -> 0x800; else -> 0x10000 }
+            if (read == count && cp in minimum..0x10FFFF && cp !in 0xD800..0xDFFF && runEnd < size) {
+                advance(runEnd - start + 1)
+                return codePointText(cp)
+            }
+        }
+        if (value >= 0 && end < size) {
+            advance(end - start + 1)
+            return codePointText(value)
+        }
+        return null
+    }
+
     // sqlglot: TokenizerCore._extract_string
     private fun extractString(
         delimiter: String,
         escapes: Set<Char>? = null,
         rawString: Boolean = false,
         raiseUnmatched: Boolean = true,
+        bytesLiteral: Boolean = false,
     ): String {
         var text = StringBuilder()
         val delimSize = delimiter.length
@@ -602,14 +1138,17 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 // no backslash in the string that would need escape processing
                 (
                     !(unescapedSequences.isNotEmpty() || '\\' in esc) ||
-                        sql.indexOf('\\', pos).let { it == -1 || it >= endIdx }
+                        !hasBackslash(pos, endIdx)
                     )
             ) {
                 var newlines = 0
-                for (i in pos until endIdx) if (sql[i] == '\n') newlines++
+                for (i in pos until endIdx) {
+                    progress(1)
+                    if (sql[i] == '\n' || (sql[i] == '\r' && sql.getOrNull(i + 1) != '\n')) newlines++
+                }
                 if (newlines > 0) {
                     line += newlines
-                    col = endIdx - sql.lastIndexOf('\n', endIdx - 1)
+                    col = endIdx - maxOf(sql.lastIndexOf('\n', endIdx - 1), sql.lastIndexOf('\r', endIdx - 1))
                 } else {
                     col += endIdx - pos
                 }
@@ -618,18 +1157,36 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 end = current >= size
                 char = sql[endIdx]
                 peek = if (end) NONE else sql[current]
-                return sql.substring(pos, endIdx)
+                return byteChunk(sql.substring(pos, endIdx), bytesLiteral)
             }
         }
 
         while (true) {
-            if (!rawString && unescapedSequences.isNotEmpty() && peek != NONE && char in esc) {
+            val backslashEscape = !rawString && char == '\\' && '\\' in esc
+            if (backslashEscape && config.numericEscapes.isNotEmpty()) {
+                val decoded = scanNumericEscape()
+                if (decoded != null) {
+                    text.append(decoded)
+                    continue
+                }
+            }
+            if (!rawString && unescapedSequences.isNotEmpty() && current < size && char in esc) {
                 val unescaped = unescapedSequences["$char$peek"]
                 if (unescaped != null) {
-                    advance(2)
+                    if (peek == '\n' || peek == '\r') {
+                        advance()
+                        advance()
+                    } else advance(2)
                     text.append(unescaped)
                     continue
                 }
+            }
+            if (backslashEscape && config.dropUnknownEscapes && current < size) {
+                val next = peek
+                advance()
+                advance()
+                text.append(byteChunk(next.toString(), bytesLiteral))
+                continue
             }
 
             val isValidCustomEscape =
@@ -674,14 +1231,32 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
 
                 val cur = current - 1
                 advance(alnum = true)
-                text.append(sql, cur, current - 1)
+                if (bytesLiteral && sql[cur].isHighSurrogate() && char.isLowSurrogate()) advance()
+                text.append(byteChunk(sql.substring(cur, current - 1), bytesLiteral))
             }
         }
 
         return text.toString()
     }
 
+    private fun hasBackslash(from: Int, until: Int): Boolean {
+        for (index in from until until) {
+            progress(1)
+            if (sql[index] == '\\') return true
+        }
+        return false
+    }
+
+    private fun byteChunk(text: String, bytes: Boolean): String = if (bytes && text.any { it.code >= 128 })
+        text.encodeToByteArray(throwOnInvalidSequence = true).joinToString("") { (it.toInt() and 0xFF).toChar().toString() } else text
+
+    private class Canceled(val signal: Throwable) : RuntimeException(signal)
+
     private companion object {
+        const val CANCEL_INTERVAL = 1 shl 16
+        private val INSERT_WITHOUT_DATA = setOf("INFILE", "VALUES")
+        private val CSV_FORMATS = setOf("CSV", "CSVWITHNAMES", "CSVWITHNAMESANDTYPES")
+
         /** Stand-in for Python's empty-string "no char" sentinel. */
         const val NONE: Char = '\u0000'
 

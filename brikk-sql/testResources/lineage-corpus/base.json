@@ -1,5 +1,5 @@
 {
-  "sqlglot_version": "v30.18.0-43-g3ca82489",
+  "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
   "generator": "tools/gen_lineage_corpus.py",
   "cases": [
     {
@@ -159,22 +159,27 @@
       "sql": "WITH y AS (SELECT * FROM x) SELECT a FROM y",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "x": {
+          "a": "INT"
+        }
+      },
       "expected": {
         "name": "a",
         "expression": "y.a AS a",
-        "source": "WITH y AS (SELECT * FROM x AS x) SELECT y.a AS a FROM y AS y",
+        "source": "WITH y AS (SELECT x.a AS a FROM x AS x) SELECT y.a AS a FROM y AS y",
         "source_name": "",
         "reference_node_name": "",
         "downstream": [
           {
             "name": "y.a",
-            "expression": "*",
-            "source": "SELECT * FROM x AS x",
+            "expression": "x.a AS a",
+            "source": "SELECT x.a AS a FROM x AS x",
             "source_name": "",
             "reference_node_name": "y",
             "downstream": [
               {
-                "name": "*",
+                "name": "x.a",
                 "expression": "x AS x",
                 "source": "x AS x",
                 "source_name": "",
@@ -187,91 +192,12 @@
       }
     },
     {
-      "id": "test_lineage_join_with_star#1",
-      "column": "*",
-      "sql": "SELECT * from x JOIN y USING (uid)",
-      "dialect": "",
-      "trim_selects": true,
-      "expected": {
-        "name": "*",
-        "expression": "*",
-        "source": "SELECT * FROM x AS x JOIN y AS y ON x.uid = y.uid",
-        "source_name": "",
-        "reference_node_name": "",
-        "downstream": [
-          {
-            "name": "*",
-            "expression": "x AS x",
-            "source": "x AS x",
-            "source_name": "",
-            "reference_node_name": "",
-            "downstream": []
-          },
-          {
-            "name": "*",
-            "expression": "y AS y",
-            "source": "y AS y",
-            "source_name": "",
-            "reference_node_name": "",
-            "downstream": []
-          }
-        ]
-      }
-    },
-    {
-      "id": "test_lineage_join_with_qualified_star#1",
-      "column": "*",
-      "sql": "SELECT x.* from x JOIN y USING (uid)",
-      "dialect": "",
-      "trim_selects": true,
-      "expected": {
-        "name": "*",
-        "expression": "x.*",
-        "source": "SELECT x.* FROM x AS x JOIN y AS y ON x.uid = y.uid",
-        "source_name": "",
-        "reference_node_name": "",
-        "downstream": [
-          {
-            "name": "x.*",
-            "expression": "x AS x",
-            "source": "x AS x",
-            "source_name": "",
-            "reference_node_name": "",
-            "downstream": []
-          }
-        ]
-      }
-    },
-    {
-      "id": "test_lineage_external_col#1",
-      "column": "a",
-      "sql": "WITH y AS (SELECT * FROM x) SELECT a FROM y JOIN z USING (uid)",
-      "dialect": "",
-      "trim_selects": true,
-      "expected": {
-        "name": "a",
-        "expression": "a AS a",
-        "source": "WITH y AS (SELECT * FROM x AS x) SELECT a AS a FROM y AS y JOIN z AS z ON y.uid = z.uid",
-        "source_name": "",
-        "reference_node_name": "",
-        "downstream": [
-          {
-            "name": "a",
-            "expression": "?",
-            "source": "?",
-            "source_name": "",
-            "reference_node_name": "",
-            "downstream": []
-          }
-        ]
-      }
-    },
-    {
       "id": "test_lineage_values#1",
       "column": "a",
       "sql": "SELECT a FROM y",
       "dialect": "",
       "trim_selects": true,
+      "schema": {},
       "sources": {
         "y": "SELECT a FROM (VALUES (1), (2)) AS t (a)"
       },
@@ -362,6 +288,17 @@
       "sql": "SELECT ax AS x FROM a UNION SELECT bx FROM b UNION SELECT cx FROM c",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "a": {
+          "ax": "INT"
+        },
+        "b": {
+          "bx": "INT"
+        },
+        "c": {
+          "cx": "INT"
+        }
+      },
       "expected": {
         "name": "UNION",
         "expression": "a.ax AS x",
@@ -429,6 +366,17 @@
       "sql": "SELECT x FROM (SELECT ax AS x FROM a UNION SELECT bx FROM b UNION SELECT cx FROM c)",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "a": {
+          "ax": "INT"
+        },
+        "b": {
+          "bx": "INT"
+        },
+        "c": {
+          "cx": "INT"
+        }
+      },
       "expected": {
         "name": "x",
         "expression": "_0.x AS x",
@@ -496,6 +444,11 @@
       "sql": "SELECT (SELECT max(t3.my_column) my_column FROM foo t3) AS output FROM table3",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "foo": {
+          "my_column": "INT"
+        }
+      },
       "expected": {
         "name": "output",
         "expression": "(SELECT MAX(t3.my_column) AS my_column FROM foo AS t3) AS output",
@@ -529,6 +482,13 @@
       "sql": "SELECT SUM((SELECT max(a) a from x) + (SELECT min(b) b from x) + c) AS y FROM x",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "x": {
+          "a": "INT",
+          "b": "INT",
+          "c": "INT"
+        }
+      },
       "expected": {
         "name": "y",
         "expression": "SUM((SELECT MAX(x.a) AS a FROM x AS x) + (SELECT MIN(x.b) AS b FROM x AS x) + x.c) AS y",
@@ -587,6 +547,12 @@
       "sql": "WITH cte AS (SELECT a, b FROM z) SELECT sum(SELECT a FROM cte) AS x, (SELECT b FROM cte) as y FROM cte",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "z": {
+          "a": "INT",
+          "b": "INT"
+        }
+      },
       "expected": {
         "name": "x",
         "expression": "SUM(SELECT cte.a AS a FROM cte AS cte) AS x",
@@ -629,6 +595,7 @@
       "sql": "\n            WITH foo AS (\n              SELECT\n                1 AS a\n            ), bar AS (\n              (\n                SELECT\n                  a + 1 AS a\n                FROM foo\n              )\n            )\n            (\n              SELECT\n                a + b AS a\n              FROM bar\n              CROSS JOIN (\n                SELECT\n                  2 AS b\n              ) AS baz\n            )\n            ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {},
       "expected": {
         "name": "a",
         "expression": "bar.a + baz.b AS a",
@@ -670,6 +637,11 @@
       "sql": "SELECT a FROM (SELECT a FROM x) subquery",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "x": {
+          "a": "INT"
+        }
+      },
       "expected": {
         "name": "a",
         "expression": "subquery.a AS a",
@@ -703,6 +675,11 @@
       "sql": "SELECT a FROM (SELECT a FROM x)",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "x": {
+          "a": "INT"
+        }
+      },
       "expected": {
         "name": "a",
         "expression": "_0.a AS a",
@@ -736,22 +713,36 @@
       "sql": "\n        WITH dataset AS (\n            SELECT *\n            FROM catalog.db.table_a\n\n            UNION\n\n            SELECT *\n            FROM catalog.db.table_b\n        )\n\n        SELECT x, created_at FROM dataset;\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "catalog": {
+          "db": {
+            "table_a": {
+              "x": "INT",
+              "created_at": "DATETIME"
+            },
+            "table_b": {
+              "x": "INT",
+              "created_at": "DATETIME"
+            }
+          }
+        }
+      },
       "expected": {
         "name": "x",
         "expression": "dataset.x AS x",
-        "source": "WITH dataset AS (SELECT * FROM catalog.db.table_a AS table_a UNION SELECT * FROM catalog.db.table_b AS table_b) SELECT dataset.x AS x FROM dataset AS dataset",
+        "source": "WITH dataset AS (SELECT table_a.x AS x, table_a.created_at AS created_at FROM catalog.db.table_a AS table_a UNION SELECT table_b.x AS x, table_b.created_at AS created_at FROM catalog.db.table_b AS table_b) SELECT dataset.x AS x FROM dataset AS dataset",
         "source_name": "",
         "reference_node_name": "",
         "downstream": [
           {
             "name": "0",
-            "expression": "*",
-            "source": "SELECT * FROM catalog.db.table_a AS table_a",
+            "expression": "table_a.x AS x",
+            "source": "SELECT table_a.x AS x FROM catalog.db.table_a AS table_a",
             "source_name": "",
             "reference_node_name": "dataset",
             "downstream": [
               {
-                "name": "*",
+                "name": "table_a.x",
                 "expression": "catalog.db.table_a AS table_a",
                 "source": "catalog.db.table_a AS table_a",
                 "source_name": "",
@@ -762,13 +753,13 @@
           },
           {
             "name": "0",
-            "expression": "*",
-            "source": "SELECT * FROM catalog.db.table_b AS table_b",
+            "expression": "table_b.x AS x",
+            "source": "SELECT table_b.x AS x FROM catalog.db.table_b AS table_b",
             "source_name": "",
             "reference_node_name": "dataset",
             "downstream": [
               {
-                "name": "*",
+                "name": "table_b.x",
                 "expression": "catalog.db.table_b AS table_b",
                 "source": "catalog.db.table_b AS table_b",
                 "source_name": "",
@@ -786,6 +777,17 @@
       "sql": "\n        WITH three_way AS (\n            SELECT a FROM t1\n            UNION ALL\n            SELECT a FROM t2\n            UNION ALL\n            SELECT a FROM t3\n        ),\n        attached AS (\n            SELECT COALESCE(r1.a, r2.a) AS a\n            FROM three_way AS r1\n            LEFT JOIN three_way AS r2 ON r1.a = r2.a\n        )\n        SELECT a FROM attached\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "t1": {
+          "a": "INT"
+        },
+        "t2": {
+          "a": "INT"
+        },
+        "t3": {
+          "a": "INT"
+        }
+      },
       "expected": {
         "name": "a",
         "expression": "attached.a AS a",
@@ -913,25 +915,39 @@
       "sql": "SELECT x, created_at FROM dataset;",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "catalog": {
+          "db": {
+            "table_a": {
+              "x": "INT",
+              "created_at": "DATETIME"
+            },
+            "table_b": {
+              "x": "INT",
+              "created_at": "DATETIME"
+            }
+          }
+        }
+      },
       "sources": {
         "dataset": "\n                SELECT *\n                FROM catalog.db.table_a\n\n                UNION\n\n                SELECT *\n                FROM catalog.db.table_b\n                "
       },
       "expected": {
         "name": "x",
         "expression": "dataset.x AS x",
-        "source": "SELECT dataset.x AS x FROM (SELECT * FROM catalog.db.table_a AS table_a UNION SELECT * FROM catalog.db.table_b AS table_b) AS dataset /* source: dataset */",
+        "source": "SELECT dataset.x AS x FROM (SELECT table_a.x AS x, table_a.created_at AS created_at FROM catalog.db.table_a AS table_a UNION SELECT table_b.x AS x, table_b.created_at AS created_at FROM catalog.db.table_b AS table_b) AS dataset /* source: dataset */",
         "source_name": "",
         "reference_node_name": "",
         "downstream": [
           {
             "name": "0",
-            "expression": "*",
-            "source": "SELECT * FROM catalog.db.table_a AS table_a",
+            "expression": "table_a.x AS x",
+            "source": "SELECT table_a.x AS x FROM catalog.db.table_a AS table_a",
             "source_name": "dataset",
             "reference_node_name": "",
             "downstream": [
               {
-                "name": "*",
+                "name": "table_a.x",
                 "expression": "catalog.db.table_a AS table_a",
                 "source": "catalog.db.table_a AS table_a",
                 "source_name": "",
@@ -942,13 +958,13 @@
           },
           {
             "name": "0",
-            "expression": "*",
-            "source": "SELECT * FROM catalog.db.table_b AS table_b",
+            "expression": "table_b.x AS x",
+            "source": "SELECT table_b.x AS x FROM catalog.db.table_b AS table_b",
             "source_name": "dataset",
             "reference_node_name": "",
             "downstream": [
               {
-                "name": "*",
+                "name": "table_b.x",
                 "expression": "catalog.db.table_b AS table_b",
                 "source": "catalog.db.table_b AS table_b",
                 "source_name": "",
@@ -966,22 +982,27 @@
       "sql": "SELECT x from (SELECT * from table_a)",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "table_a": {
+          "x": "INT"
+        }
+      },
       "expected": {
         "name": "x",
         "expression": "_0.x AS x",
-        "source": "SELECT _0.x AS x FROM (SELECT * FROM table_a AS table_a) AS _0",
+        "source": "SELECT _0.x AS x FROM (SELECT table_a.x AS x FROM table_a AS table_a) AS _0",
         "source_name": "",
         "reference_node_name": "",
         "downstream": [
           {
             "name": "_0.x",
-            "expression": "*",
-            "source": "SELECT * FROM table_a AS table_a",
+            "expression": "table_a.x AS x",
+            "source": "SELECT table_a.x AS x FROM table_a AS table_a",
             "source_name": "",
             "reference_node_name": "_0",
             "downstream": [
               {
-                "name": "*",
+                "name": "table_a.x",
                 "expression": "table_a AS table_a",
                 "source": "table_a AS table_a",
                 "source_name": "",
@@ -999,29 +1020,21 @@
       "sql": "with _data as (select [struct(1 as a, 2 as b)] as col) select b from _data cross join unnest(col)",
       "dialect": "",
       "trim_selects": true,
+      "schema": {},
       "expected": {
         "name": "b",
-        "expression": "_0.b AS b",
-        "source": "WITH _data AS (SELECT ARRAY(STRUCT(1 AS a, 2 AS b)) AS col) SELECT _0.b AS b FROM _data AS _data CROSS JOIN UNNEST(_data.col) AS _0",
+        "expression": "b AS b",
+        "source": "WITH _data AS (SELECT ARRAY(STRUCT(1 AS a, 2 AS b)) AS col) SELECT b AS b FROM _data AS _data CROSS JOIN UNNEST(_data.col) AS _0",
         "source_name": "",
         "reference_node_name": "",
         "downstream": [
           {
-            "name": "_0.b",
-            "expression": "UNNEST(_data.col) AS _0",
-            "source": "UNNEST(_data.col) AS _0",
+            "name": "b",
+            "expression": "?",
+            "source": "?",
             "source_name": "",
             "reference_node_name": "",
-            "downstream": [
-              {
-                "name": "_data.col",
-                "expression": "ARRAY(STRUCT(1 AS a, 2 AS b)) AS col",
-                "source": "SELECT ARRAY(STRUCT(1 AS a, 2 AS b)) AS col",
-                "source_name": "",
-                "reference_node_name": "",
-                "downstream": []
-              }
-            ]
+            "downstream": []
           }
         ]
       }
@@ -1032,6 +1045,15 @@
       "sql": "SELECT a,b FROM table1 UNION ALL BY NAME SELECT a FROM table2",
       "dialect": "duckdb",
       "trim_selects": true,
+      "schema": {
+        "table1": {
+          "a": "INT",
+          "b": "INT"
+        },
+        "table2": {
+          "a": "INT"
+        }
+      },
       "error": "SqlglotError",
       "error_message": "Cannot find column's source with index 1 in query: SELECT table2.a AS a FROM table2 AS table2"
     },
@@ -1041,6 +1063,13 @@
       "sql": "\n            SELECT a, b, c\n            FROM (select a, b, c from y) z\n        ",
       "dialect": "",
       "trim_selects": false,
+      "schema": {
+        "y": {
+          "a": "INT",
+          "b": "INT",
+          "c": "INT"
+        }
+      },
       "expected": {
         "name": "a",
         "expression": "z.a AS a",
@@ -1074,6 +1103,11 @@
       "sql": "SELECT * FROM (SELECT x /* c */ FROM t1) AS t2",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "t1": {
+          "x": "INT"
+        }
+      },
       "expected": {
         "name": "x",
         "expression": "t2.x AS x",
@@ -1107,6 +1141,12 @@
       "sql": "\n        SELECT\n            a as other_a\n        FROM (select value,category from sample_data)\n        PIVOT (\n            sum(value)\n            FOR category IN ('a', 'b')\n        );\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "sample_data": {
+          "value": "INT",
+          "category": "TEXT"
+        }
+      },
       "expected": {
         "name": "other_a",
         "expression": "_1.a AS other_a",
@@ -1140,6 +1180,13 @@
       "sql": "\n            SELECT\n                cat_a_s as other_as\n            FROM sample_data\n            PIVOT (\n                sum(value) as s, max(price)\n                FOR category IN ('a' as cat_a, 'b')\n            )\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "sample_data": {
+          "value": "INT",
+          "category": "TEXT",
+          "price": "DOUBLE"
+        }
+      },
       "expected": {
         "name": "other_as",
         "expression": "_0.cat_a_s AS other_as",
@@ -1164,6 +1211,12 @@
       "sql": "\n        WITH t as (\n            SELECT\n                a as other_a\n            FROM sample_data\n            PIVOT (\n                sum(value)\n                FOR category IN ('a', 'b')\n            )\n        )\n        select other_a from t\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "sample_data": {
+          "value": "INT",
+          "category": "TEXT"
+        }
+      },
       "expected": {
         "name": "other_a",
         "expression": "t.other_a AS other_a",
@@ -1197,6 +1250,13 @@
       "sql": "\n        SELECT empid\n        FROM quarterly_sales\n            PIVOT(SUM(amount) FOR quarter IN (\n            '2023_Q1',\n            '2023_Q2',\n            '2023_Q3'))\n        ORDER BY empid;\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "quarterly_sales": {
+          "empid": "INT",
+          "amount": "INT",
+          "quarter": "VARCHAR"
+        }
+      },
       "expected": {
         "name": "empid",
         "expression": "_0.empid AS empid",
@@ -1221,6 +1281,13 @@
       "sql": "\n        WITH t as (\n            SELECT empid\n            FROM quarterly_sales\n            PIVOT(SUM(amount) FOR quarter IN (\n                '2023_Q1',\n                '2023_Q2',\n                '2023_Q3'))\n        )\n        select empid from t\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "quarterly_sales": {
+          "empid": "INT",
+          "amount": "INT",
+          "quarter": "VARCHAR"
+        }
+      },
       "expected": {
         "name": "empid",
         "expression": "t.empid AS empid",
@@ -1492,6 +1559,12 @@
       "sql": "\n        SELECT x FROM (SELECT value, category FROM sample_data) AS sd\n        PIVOT (SUM(value) FOR category IN ('a', 'b')) AS p(x, y)\n        ",
       "dialect": "",
       "trim_selects": true,
+      "schema": {
+        "sample_data": {
+          "value": "INT",
+          "category": "TEXT"
+        }
+      },
       "expected": {
         "name": "x",
         "expression": "p.x AS x",
@@ -2582,6 +2655,18 @@
     {
       "id": "test_lineage#3",
       "reason": "unresolvable name: ast"
+    },
+    {
+      "id": "test_lineage_join_with_star#1",
+      "reason": "unsupported kwargs: ['expand_stars']"
+    },
+    {
+      "id": "test_lineage_join_with_qualified_star#1",
+      "reason": "unsupported kwargs: ['expand_stars']"
+    },
+    {
+      "id": "test_lineage_external_col#1",
+      "reason": "unsupported kwargs: ['expand_stars']"
     },
     {
       "id": "test_lineage_lateral_flatten#1",

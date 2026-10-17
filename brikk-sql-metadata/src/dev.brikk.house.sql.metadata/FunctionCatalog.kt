@@ -15,6 +15,13 @@ import kotlinx.serialization.json.Json
  *
  *  - [FunctionKind], [FunctionOverload], [FunctionDef], [FunctionCatalog]
  *  - the generated per-dialect catalog vals (DORIS_FUNCTION_CATALOG, ...)
+ *  - versioned snapshots: [DialectMetadata], [MetadataSnapshot] and the per-dialect vals
+ *    (DUCKDB_METADATA, TRINO_METADATA, ...); their parts [KeywordCatalog], [KeywordDef],
+ *    [KeywordCategory], [PragmaDef], [SettingDef], [ExtensionDef], [TableFunctionInfo],
+ *    [PropertyDef], [ColumnDef], [OutputSchema], [GrammarForm], [InvocationSyntax]
+ *  - the completion projection: [FunctionPresentation], [presentation], [completionEntries]
+ *  - the DuckDB capture shape shared with live harvests: [DuckdbCapture], the `DUCKDB_*`
+ *    capture vals, the `Duckdb*Row` types, [DuckdbDump] and [toSnapshot]
  *
  * Changes here are API changes for the plugin — additive only, and prefer defaulted
  * fields (serialization stays backward-compatible for persisted JSON).
@@ -114,6 +121,10 @@ data class SemanticProfile(
  * order; null when the engine does not expose names (Doris SIGNATURES, Trino SHOW
  * FUNCTIONS, and some DuckDB rows). Names are verbatim from the engine — DuckDB includes
  * generic ones (col0, col1) and lambda shapes (`lambda(x)`).
+ *
+ * [positionalCount], when set, says only the first that many arguments are positional; the
+ * rest are optional named parameters (DuckDB `read_csv('f.csv', header := true)`). Null when
+ * every argument is positional or the engine does not say.
  */
 @Serializable
 data class FunctionOverload(
@@ -121,6 +132,7 @@ data class FunctionOverload(
     @SerialName("return_type") val returnType: String,
     val variadic: Boolean = false,
     @SerialName("arg_names") val argNames: List<String>? = null,
+    @SerialName("positional_count") val positionalCount: Int? = null,
 )
 
 /**
@@ -131,20 +143,24 @@ data class FunctionOverload(
  * normalize to SCALAR/TABLE_VALUED but keep their native kind here). Null when the
  * engine kind maps directly.
  *
- * [sinceVersion] is intended as "the first engine version that ships the function" (for
- * version-gated completion in external tooling), but for Doris it is honestly only "the
- * first apache/doris-website version tier that DOCUMENTS the function" — no engine or
- * docs source carries a true introduced-in fact (see
- * tools/extract_doris_since_versions.py and vendor/README.md for the extraction method
- * and its limitations). Null when doris-website has no matching doc at the pinned clone
- * (undocumented/legacy function) or when its only doc lives in the unreleased/dev tree
- * (not yet in a shipped version). Always null for DuckDB/Trino: neither exposes any
- * version-introduced metadata the generators can read.
+ * [sinceVersion] is a PROVEN fact: the first engine version that ships the function (for
+ * example a registry's introduced-in column). Only proven facts may exclude a def from a
+ * version (see [FunctionCatalog.availableIn]). Null for every bundled dialect today: no
+ * engine source the generators read carries one.
+ *
+ * [firstDocumentedIn] is evidence of a weaker kind: the first documentation tier that
+ * describes the function (Doris: the oldest apache/doris-website version tier, coarse
+ * values such as "3.x"; see tools/extract_doris_since_versions.py and vendor/README.md).
+ * Documentation lags releases, so it never excludes a def. Null when the docs at the
+ * pinned clone have no matching page or only the unreleased tree documents it.
  *
  * [profile] carries per-engine semantic facts (see [SemanticProfile]); null when the
  * engine exposes none for this function (all Trino/DuckDB defs currently; Doris defs
  * whose class carries no ComputeNullable marker). Null and an all-defaults profile mean
  * the same thing semantically — generators emit null to keep the catalogs lean.
+ *
+ * [extension] names the extension that registers the function; set only on
+ * [MetadataSnapshot.extensionFunctions], never on a base-catalog def.
  */
 @Serializable
 data class FunctionDef(
@@ -155,6 +171,8 @@ data class FunctionDef(
     @SerialName("native_kind") val nativeKind: String? = null,
     @SerialName("since_version") val sinceVersion: String? = null,
     val profile: SemanticProfile? = null,
+    val extension: String? = null,
+    @SerialName("first_documented_in") val firstDocumentedIn: String? = null,
 )
 
 /**
@@ -166,10 +184,14 @@ data class FunctionDef(
  * [toJson] (persisted catalogs stay pure registry dumps). Use [isKnown] when asking
  * "would this name reach the engine unrecognized?" — [contains]/[get] stay
  * registry-only.
+ *
+ * [caseSensitive] is the dialect's name policy (ClickHouse: names differ by case). [getAll]
+ * and the snapshot projections follow it; [get], [contains] and [isKnown] always ignore case.
  */
 class FunctionCatalog(
     val functions: List<FunctionDef>,
     val grammarBuiltins: Set<String> = emptySet(),
+    val caseSensitive: Boolean = false,
 ) {
 
     private val byName: Map<String, FunctionDef> = buildMap {
@@ -198,8 +220,26 @@ class FunctionCatalog(
         }
     }
 
-    /** Case-insensitive lookup by primary name or alias. */
+    private val allByName: Map<String, List<FunctionDef>> by lazy {
+        buildMap<String, MutableList<FunctionDef>> {
+            for (def in functions) {
+                for (key in (listOf(def.name) + def.aliases).map(::nameKey).distinct()) getOrPut(key, ::mutableListOf) += def
+            }
+        }
+    }
+
+    /**
+     * Case-insensitive lookup by primary name or alias. A name defined under several kinds
+     * (DuckDB `range` as scalar and table function) returns the LAST such def; use [getAll]
+     * to see every one.
+     */
     operator fun get(name: String): FunctionDef? = byName[name.uppercase()]
+
+    /** Every def registered under [name] (primary name or alias), across kinds, by [caseSensitive]. */
+    fun getAll(name: String): List<FunctionDef> = allByName[nameKey(name)].orEmpty()
+
+    /** [name] as the dialect compares names: unchanged when [caseSensitive], else uppercased. */
+    internal fun nameKey(name: String): String = if (caseSensitive) name else name.uppercase()
 
     operator fun contains(name: String): Boolean = byName.containsKey(name.uppercase())
 
@@ -210,6 +250,16 @@ class FunctionCatalog(
      */
     fun isKnown(name: String): Boolean =
         contains(name) || name.uppercase() in grammarBuiltins
+
+    /**
+     * The defs a server at [version] can have: every def except those whose proven
+     * [FunctionDef.sinceVersion] is newer. [FunctionDef.firstDocumentedIn] never excludes.
+     * An unparsable [version] or since-version keeps the def.
+     */
+    fun availableIn(version: String): List<FunctionDef> {
+        val server = parseVersion(version)?.number ?: return functions
+        return functions.filter { def -> def.sinceVersion?.let(::parseVersion)?.let { it.number <= server } ?: true }
+    }
 
     /** True when [name] is a registered table-valued / table-generating function. */
     fun isTableFunction(name: String): Boolean =

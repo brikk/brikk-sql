@@ -21,7 +21,41 @@ import dev.brikk.house.sql.optimizer.validateQualifyColumns as validateQualifyCo
  *   qualify(parseOne("SELECT col FROM tbl"), schema = schema).sql()
  *   => SELECT "tbl"."col" AS "col" FROM "tbl" AS "tbl"
  */
-// sqlglot: qualify.qualify (same defaults as Python)
+/**
+ * Upstream-shaped qualification: resolve against evidence, never infer an unknown
+ * source's columns. For best-effort analysis use the compatibility overload with
+ * an explicit [inferSchema] policy. This overload follows SQLGlot #8552.
+ */
+fun <E : Expression> qualify(
+    expression: E,
+    dialect: Dialect? = null,
+    db: Any? = null,
+    catalog: Any? = null,
+    schema: Any? = null,
+    expandAliasRefs: Boolean = true,
+    expandStars: Boolean = true,
+    isolateTables: Boolean = false,
+    qualifyColumns: Boolean = true,
+    allowPartialQualification: Boolean = false,
+    validateQualifyColumns: Boolean = true,
+    quoteIdentifiers: Boolean = true,
+    identify: Boolean = true,
+    canonicalizeTableAliases: Boolean = false,
+    onQualify: ((Table) -> Unit)? = null,
+    sql: String? = null,
+): E = qualify(
+    expression, dialect, db, catalog, schema, expandAliasRefs, expandStars,
+    inferSchema = false, isolateTables, qualifyColumns, allowPartialQualification,
+    validateQualifyColumns, quoteIdentifiers, identify, canonicalizeTableAliases, onQualify, sql,
+)
+
+/**
+ * Compatibility entry point: true retains legacy inference, false selects upstream
+ * behavior, null retains the historical empty-schema automatic policy. Defaults and
+ * parameter order are retained for existing JVM callers and Kotlin default bridges.
+ * New source calls that omit inferSchema select the shorter upstream-shaped overload.
+ */
+// brikk extension (docs/brikk-extensions.md #34): preserve the published inference API.
 fun <E : Expression> qualify(
     expression: E,
     dialect: Dialect? = null,
@@ -43,6 +77,8 @@ fun <E : Expression> qualify(
 ): E {
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
     val resolvedDialect = dialect ?: Dialects.BASE
+
+    preserveComprehensionIdentifierCase(expression, resolvedDialect)
 
     var result: E = normalizeIdentifiers(
         expression,

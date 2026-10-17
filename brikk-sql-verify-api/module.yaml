@@ -1,0 +1,24 @@
+# The engine-neutral verification contract: SqlVerifier, its four-state VerifyResult, and error
+# positions an editor can use directly. Engine implementations live in brikk-sql-verify-<engine>.
+product: jvm/lib
+
+# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+description: SQL verification API (verifier contract, results and error positions) for brikk-sql native-grammar verifiers.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  # exported: VerifyError.at takes core's ColumnUnit and converts with core's sourceOffset.
+  - ../brikk-sql: exported
+
+settings:
+  publishing:
+    # Published coordinate: dev.brikk.house:brikk-sql-verify-api.
+    artifactId: brikk-sql-verify-api
+  jvm:
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict

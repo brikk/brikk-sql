@@ -11,6 +11,7 @@ import java.sql.DriverManager
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
@@ -38,7 +39,7 @@ class DorisPipeStageOrderTest {
                     val result = fragment.toExecutable("doris", pretty = pretty)
                     assertEquals(emptyList(), result.unsupportedMessages, source)
                     assertSame(result.sql, assertNotNull(result.sourceMap).output)
-                    assertTrue(verifier.verify(result.sql).accepted, result.sql)
+                    assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
                     val resolved = qualify(Dialects.DORIS.parseOne(result.sql), dialect = Dialects.DORIS,
                         schema = schema, inferSchema = false, validateQualifyColumns = true)
                     assertEquals(columns, resolved.namedSelects, result.sql)
@@ -162,7 +163,7 @@ class DorisPipeStageOrderTest {
                     val result = fragment.toExecutable("doris", pretty = pretty)
                     assertEquals(emptyList(), result.unsupportedMessages, source)
                     assertSame(result.sql, assertNotNull(result.sourceMap).output)
-                    assertTrue(verifier.verify(result.sql).accepted, result.sql)
+                    assertIs<VerifyResult.Accepted>(verifier.verify(result.sql), result.sql)
                     val resolved = qualify(Dialects.DORIS.parseOne(result.sql), dialect = Dialects.DORIS,
                         schema = inputs, inferSchema = false, validateQualifyColumns = true)
                     assertEquals(columns, resolved.namedSelects, result.sql)

@@ -11,6 +11,7 @@ import dev.brikk.house.sql.ast.BitwiseOrAgg
 import dev.brikk.house.sql.ast.BitwiseXorAgg
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.PrimaryKey
 import dev.brikk.house.sql.ast.ColumnConstraint
 import dev.brikk.house.sql.ast.ColumnDef
 import dev.brikk.house.sql.ast.ColumnPrefix
@@ -32,6 +33,8 @@ import dev.brikk.house.sql.ast.EQ
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GeneratedAsIdentityColumnConstraint
 import dev.brikk.house.sql.ast.GroupConcat
+import dev.brikk.house.sql.ast.Properties
+import dev.brikk.house.sql.ast.DorisOutfile
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.IndexColumnConstraint
 import dev.brikk.house.sql.ast.IndexConstraintOption
@@ -274,9 +277,9 @@ open class MysqlParser(
     // sqlglot: MySQLParser._parse_alter_table_rename
     override fun parseAlterTableRename(): Expression? {
         if (matchTexts(setOf("INDEX", "KEY"))) {
-            val old = parseField(anyToken = true)
+            val old = parseIdVar(anyToken = true)
             matchTextSeq("TO")
-            val new = parseField(anyToken = true)
+            val new = parseIdVar(anyToken = true)
             return expression(RenameIndex(args("this" to old, "to" to new)))
         }
         return super.parseAlterTableRename()
@@ -304,17 +307,25 @@ open class MysqlParser(
 
     // sqlglot: MySQLParser._parse_column_constraint
     override fun parseColumnConstraint(): Expression? {
+        matchTextSeq("SIGNED")
         if (match(TokenType.KEY)) {
             return expression(ColumnConstraint(args("kind" to parsePrimaryKey())))
         }
         return super.parseColumnConstraint()
     }
 
+    override val alterTableMixedActions: Boolean get() = true
+    override val alterTableRequiresAction: Boolean get() = false
+    override val alterDropRequiresColumn: Boolean get() = false
+    override val addConstraintKeywords: Set<String> get() = setOf("FULLTEXT", "SPATIAL")
+
     // sqlglot: MySQLParser._parse_alter_drop_action
     override fun parseAlterDropAction(): Expression? {
         if (matchPair(TokenType.DROP, TokenType.PRIMARY_KEY)) {
             return expression(DropPrimaryKey())
         }
+        if (matchPair(TokenType.DROP, TokenType.KEY)) return parseDropWithKind(kind = "INDEX")
+        if (matchTextSeq("DROP", "CHECK")) return parseDropWithKind(kind = "CHECK")
         return super.parseAlterDropAction()
     }
 
@@ -706,15 +717,44 @@ open class MysqlParser(
         wrappedOptional: Boolean,
         inProps: Boolean,
         namedPrimaryKey: Boolean,
-    ): Expression = super.parsePrimaryKey(
+    ): Expression {
+        val key = super.parsePrimaryKey(
         wrappedOptional = wrappedOptional,
         inProps = inProps,
         namedPrimaryKey = true,
-    )
+        )
+        if (key is PrimaryKey) {
+            val options = (key.args["options"] as? List<*>)?.filterIsInstance<Expression>().orEmpty().toMutableList()
+            while (true) options.add(parseIndexConstraintOption() ?: break)
+            key.set("options", options)
+        }
+        return key
+    }
+
+    fun parseCharSetProperty(kwargs: Parser.PropertyKwargs): kotlin.Any? {
+        if (match(TokenType.SET)) return propertyParsers.getValue("CHARSET")(this, kwargs)
+        retreat(index - 1)
+        return null
+    }
 
     // -------------------------------------------------------------------
     // Ported base-parser methods only reachable from mysql tables
     // -------------------------------------------------------------------
+
+    /**
+     * brikk-native: Doris and StarRocks `INTO OUTFILE 'uri' [FORMAT AS fmt] [PROPERTIES (...)]` ending a
+     * query, as a query modifier ([DorisOutfile]). Registered by those dialects only.
+     */
+    protected fun parseDorisOutfile(): Pair<String, kotlin.Any?> {
+        if (!matchTextSeq("INTO", "OUTFILE")) return "outfile" to null
+        val uri = parseString()
+        val format = if (matchTextSeq("FORMAT", "AS")) Var(args("this" to advanceAny()?.text?.uppercase())) else null
+        val properties = if (matchTextSeq("PROPERTIES")) expression(Properties(args("expressions" to parseWrappedProperties()))) else null
+        return "outfile" to expression(DorisOutfile(args("this" to uri, "format" to format, "properties" to properties)))
+    }
+
+    /** `INTO OUTFILE` right after the select list is the export clause (Doris, StarRocks), never `SELECT ... INTO table`. */
+    protected fun isIntoOutfile(): Boolean = currToken.tokenType == TokenType.INTO && nextToken.text.equals("OUTFILE", ignoreCase = true)
 
     // sqlglot: Parser._parse_group_concat
     open fun parseGroupConcat(): Expression? {
@@ -771,7 +811,7 @@ open class MysqlParser(
         match(TokenType.COMMA)
         val path = parseBitwise()
 
-        val returning = if (match(TokenType.RETURNING)) parseType() else null
+        val returning = if (match(TokenType.RETURNING)) parseTypes() else null
 
         return expression(
             JSONValue(
@@ -1087,6 +1127,7 @@ object MysqlParserTables {
     // sqlglot: MySQLParser.PROPERTY_PARSERS
     val PROPERTY_PARSERS: Map<String, (Parser, Parser.PropertyKwargs) -> kotlin.Any?> =
         BaseParserTables.PROPERTY_PARSERS + mapOf<String, (Parser, Parser.PropertyKwargs) -> kotlin.Any?>(
+            "CHAR" to { p, kwargs -> (p as MysqlParser).parseCharSetProperty(kwargs) },
             "LOCK" to { p, _ -> p.parsePropertyAssignment({ a -> LockProperty(a) }) },
             "PARTITION BY" to { p, _ -> (p as MysqlParser).parsePartitionProperty() },
         )
@@ -1103,6 +1144,10 @@ object MysqlParserTables {
     // sqlglot: MySQLParser.CONSTRAINT_PARSERS
     val CONSTRAINT_PARSERS: Map<String, (Parser) -> Expression?> =
         BaseParserTables.CONSTRAINT_PARSERS + mapOf<String, (Parser) -> Expression?>(
+            "CHAR" to { p -> if (p.match(TokenType.SET)) p.expression(dev.brikk.house.sql.ast.CharacterSetColumnConstraint(args("this" to p.parseVarOrString()))) else null },
+            "CHARSET" to { p -> p.expression(dev.brikk.house.sql.ast.CharacterSetColumnConstraint(args("this" to p.parseVarOrString()))) },
+            "ASCII" to { p -> p.expression(dev.brikk.house.sql.ast.CharacterSetColumnConstraint(args("this" to Var(args("this" to "latin1"))))) },
+            "UNICODE" to { p -> p.expression(dev.brikk.house.sql.ast.CharacterSetColumnConstraint(args("this" to Var(args("this" to "ucs2"))))) },
             "BINARY" to { p -> p.expression(dev.brikk.house.sql.ast.BinaryColumnConstraint()) },
             "FULLTEXT" to { p -> (p as MysqlParser).parseIndexConstraint(kind = "FULLTEXT") },
             "INDEX" to { p -> (p as MysqlParser).parseIndexConstraint() },
@@ -1116,8 +1161,7 @@ object MysqlParserTables {
     val ALTER_PARSERS_EXTRA: Map<String, (Parser) -> kotlin.Any?> = mapOf(
         "CHANGE" to { p -> (p as MysqlParser).parseAlterTableModify(rename = true) },
         "MODIFY" to { p -> (p as MysqlParser).parseAlterTableModify() },
-        "AUTO_INCREMENT" to { p -> p.parsePropertyAssignment({ a -> AutoIncrementProperty(a) }) },
-        "COMMENT" to { p -> p.parsePropertyAssignment({ a -> SchemaCommentProperty(a) }) },
+        "FORCE" to { p -> p.expression(dev.brikk.house.sql.ast.ForceProperty()) },
     )
 
     // sqlglot: MySQLParser.ALTER_ALTER_PARSERS (extra entries over the base map)

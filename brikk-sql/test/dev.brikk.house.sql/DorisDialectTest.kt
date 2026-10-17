@@ -580,6 +580,76 @@ class DorisDialectTest {
     }
 
     @Test
+    fun aViewBodyMayStartWithWithoutAs() {
+        // Doris createView: ... (COMMENT STRING_LITERAL)? AS? query; the query may start with a CTE.
+        val sql = "CREATE OR REPLACE VIEW internal.app.v WITH c AS (SELECT * FROM ext_catalog.archive_db.facts) SELECT uid, kind FROM c"
+        val create = parseOne(sql, "doris")
+        assertTrue(create is Create, "$sql parsed as ${create::class.simpleName}")
+        assertEquals(
+            "CREATE OR REPLACE VIEW internal.app.v AS WITH c AS (SELECT * FROM ext_catalog.archive_db.facts) SELECT uid, kind FROM c",
+            create.sql("doris"),
+        )
+        assertEquals("CREATE VIEW v AS SELECT 1", roundTrip("CREATE VIEW v SELECT 1"))
+        val facts = dev.brikk.house.sql.scope.RelationFacts(tables = mapOf("ext_catalog.archive_db.facts" to
+            dev.brikk.house.sql.scope.RelationFact(listOf(dev.brikk.house.sql.scope.ColumnFact("uid"), dev.brikk.house.sql.scope.ColumnFact("kind")))))
+        val columns = dev.brikk.house.sql.scope.RelationScope.analyze(sql, "doris", facts).references
+            .filter { it.kind == dev.brikk.house.sql.scope.ReferenceKind.COLUMN }
+        assertEquals(listOf("uid" to true, "kind" to true), columns.map { it.name to (it.resolution == dev.brikk.house.sql.scope.Resolution.RESOLVED) })
+    }
+
+    @Test
+    fun aScheduledJobKeepsItsStatementForTheAnalysis() {
+        // Doris createScheduledJob: CREATE JOB name [PROPERTIES (...)] ON SCHEDULE (EVERY n unit [STARTS ..] [ENDS ..] | AT ..)
+        // [COMMENT '..'] DO <dml>.
+        for (sql in listOf(
+            "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO internal.app.t SELECT * FROM ext_catalog.archive_db.facts WHERE uid = 1",
+            "CREATE JOB db.j ON SCHEDULE EVERY 1 DAY STARTS '2026-01-01 00:00:00' ENDS '2027-01-01 00:00:00' COMMENT 'nightly' DO INSERT INTO t SELECT uid FROM facts",
+            "CREATE JOB j PROPERTIES ('timeout_second'='60') ON SCHEDULE EVERY 5 MINUTE DO INSERT INTO t SELECT 1",
+        )) {
+            assertTrue(parseOne(sql, "doris") is dev.brikk.house.sql.ast.DorisCreateJob, sql)
+            assertEquals(sql, roundTrip(sql))
+        }
+        val sql = "CREATE JOB j ON SCHEDULE AT CURRENT_TIMESTAMP DO INSERT INTO internal.app.t SELECT * EXCEPT (kind) FROM ext_catalog.archive_db.facts WHERE uid = 1"
+        val scope = dev.brikk.house.sql.scope.RelationScope.analyze(sql, "doris", dev.brikk.house.sql.scope.RelationFacts())
+        // The column EXCEPT removes is read from the star's source too.
+        assertEquals(listOf("kind", "uid"), scope.references.filter { it.kind == dev.brikk.house.sql.scope.ReferenceKind.COLUMN }.map { it.name })
+        // A streaming job's FROM ... TO clause is not modeled: it stays an opaque command.
+        assertTrue(parseOne("CREATE JOB j ON STREAMING FROM KAFKA (x = 'y') TO DATABASE d", "doris") is dev.brikk.house.sql.ast.Command)
+    }
+
+    @Test
+    fun anInsertMayWriteThroughATableFunctionGivenProperties() {
+        // Doris insertIntoTVF: INSERT INTO tvf(key = value, ...) query; a column list keeps its meaning.
+        val sql = "INSERT INTO s3(\"uri\" = \"s3://bucket/path/\", \"format\" = \"csv\") SELECT ts, uid FROM ext_catalog.archive_db.facts WHERE kind = 'a'"
+        assertEquals("INSERT INTO S3('uri' = 's3://bucket/path/', 'format' = 'csv') SELECT ts, uid FROM ext_catalog.archive_db.facts WHERE kind = 'a'", roundTrip(sql))
+        val scope = dev.brikk.house.sql.scope.RelationScope.analyze(sql, "doris", dev.brikk.house.sql.scope.RelationFacts())
+        assertEquals(listOf("ts", "uid", "kind"), scope.references.filter { it.kind == dev.brikk.house.sql.scope.ReferenceKind.COLUMN }.map { it.name })
+        assertEquals("INSERT INTO t (a, b) SELECT 1, 2", roundTrip("INSERT INTO t (a, b) SELECT 1, 2"))
+    }
+
+    @Test
+    fun aQueryCanSelectPartitionsOfATable() {
+        // Doris relationPrimary: name specifiedPartition? alias; specifiedPartition is
+        // TEMPORARY? PARTITION (identifier | identifierList) | TEMPORARY? PARTITIONS identifierList.
+        for ((sql, generated) in listOf(
+            "SELECT k FROM db.t PARTITIONS (p1, p2) WHERE v > 0" to "SELECT k FROM db.t PARTITION(p1, p2) WHERE v > 0",
+            "SELECT k FROM db.t PARTITION (p1, p2) AS x" to "SELECT k FROM db.t PARTITION(p1, p2) AS x",
+            "SELECT k FROM db.t PARTITION p1 x" to "SELECT k FROM db.t PARTITION(p1) AS x",
+            "SELECT k FROM db.t TEMPORARY PARTITION (p1) WHERE v > 0" to "SELECT k FROM db.t TEMPORARY PARTITION(p1) WHERE v > 0",
+            "SELECT k FROM db.t TEMPORARY PARTITIONS (p1, p2)" to "SELECT k FROM db.t TEMPORARY PARTITION(p1, p2)",
+        )) {
+            val alias = parseOne(sql, "doris").find(dev.brikk.house.sql.ast.Table::class)?.alias.orEmpty()
+            assertTrue(!alias.uppercase().startsWith("PARTITION"), "$sql: PARTITIONS read as an alias")
+            assertEquals(generated, roundTrip(sql), sql)
+        }
+        val facts = dev.brikk.house.sql.scope.RelationFacts(tables = mapOf("db.t" to dev.brikk.house.sql.scope.RelationFact(listOf(
+            dev.brikk.house.sql.scope.ColumnFact("k"), dev.brikk.house.sql.scope.ColumnFact("v"),
+        ))))
+        val scope = dev.brikk.house.sql.scope.RelationScope.analyze("SELECT k FROM db.t PARTITIONS (p1, p2) WHERE v > 0", "doris", facts)
+        assertEquals(emptyList(), scope.diagnostics.map { it.message })
+    }
+
+    @Test
     fun refreshMaterializedViewCatalogAndDatabase() {
         // REFRESH is a sqlglot statement token the Doris tokenizer never received, so
         // every REFRESH statement used to be a hard parse error.
@@ -795,5 +865,54 @@ class DorisDialectTest {
                 "'enable_unique_key_merge_on_write'='true')",
             showCreate,
         )
+    }
+
+    /** Doris: GROUP_CONCAT([DISTINCT] str[, sep] [ORDER BY ...]); the last argument is the separator with DISTINCT too. */
+    @Test
+    fun groupConcatKeepsItsSeparatorWithDistinct() {
+        for ((sql, expected) in listOf(
+            "SELECT GROUP_CONCAT(DISTINCT v, '|')" to "SELECT GROUP_CONCAT(DISTINCT v, '|')",
+            "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k)" to "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k)",
+            "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k ASC NULLS FIRST, v) FROM t" to "SELECT GROUP_CONCAT(DISTINCT v, '|' ORDER BY k ASC, v) FROM t",
+            "SELECT GROUP_CONCAT(v, '|' ORDER BY k DESC NULLS LAST) FROM t" to "SELECT GROUP_CONCAT(v, '|' ORDER BY k DESC) FROM t",
+            "SELECT GROUP_CONCAT(DISTINCT v)" to "SELECT GROUP_CONCAT(DISTINCT v, ',')",
+        )) {
+            val once = dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(sql).sql("doris")
+            assertEquals(expected, once, sql)
+            assertEquals(once, dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(once).sql("doris"), "stable: $sql")
+        }
+    }
+
+    /** G2: Doris also takes the MySQL SEPARATOR form, which renders as its comma form. */
+    @Test
+    fun groupConcatTakesASeparatorKeyword() {
+        for ((sql, expected) in listOf(
+            "SELECT GROUP_CONCAT(c SEPARATOR ',') FROM t" to "SELECT GROUP_CONCAT(c, ',') FROM t",
+            "SELECT GROUP_CONCAT(CONCAT('''', x, '''') SEPARATOR ',\n  ') FROM t" to "SELECT GROUP_CONCAT(CONCAT('''', x, ''''), ',\\n  ') FROM t",
+            "SELECT GROUP_CONCAT(DISTINCT c SEPARATOR '|') FROM t" to "SELECT GROUP_CONCAT(DISTINCT c, '|') FROM t",
+            "SELECT GROUP_CONCAT(c ORDER BY k DESC SEPARATOR '|') FROM t" to "SELECT GROUP_CONCAT(c, '|' ORDER BY k DESC) FROM t",
+        )) {
+            val once = dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(sql).sql("doris")
+            assertEquals(expected, once, sql)
+            assertEquals(once, dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne(once).sql("doris"), "stable: $sql")
+        }
+    }
+
+    /** G1: Doris and StarRocks export a query's rows with SELECT ... INTO OUTFILE 'uri' [FORMAT AS f] [PROPERTIES (...)]. */
+    @Test
+    fun selectIntoOutfile() {
+        for (dialect in listOf("doris", "starrocks")) {
+            for (sql in listOf(
+                "SELECT * FROM t WHERE a = 1 INTO OUTFILE 's3://b/p-' FORMAT AS PARQUET PROPERTIES ('k'='v', 's3.region'='r')",
+                "SELECT * FROM t INTO OUTFILE 's3://b/p-' FORMAT AS CSV",
+                "SELECT a, b FROM t ORDER BY a LIMIT 10 INTO OUTFILE 'hdfs://h/p'",
+            )) {
+                val once = dev.brikk.house.sql.dialects.Dialects.forName(dialect).parseOne(sql).sql(dialect)
+                assertEquals(sql, once, "$dialect: $sql")
+            }
+        }
+        // Double-quoted property keys and values, as written in Doris scripts, keep their meaning.
+        val quoted = dev.brikk.house.sql.dialects.Dialects.forName("doris").parseOne("SELECT 1 INTO OUTFILE 's3://b/p' FORMAT AS PARQUET PROPERTIES (\"k\" = \"v\")")
+        assertEquals("SELECT 1 INTO OUTFILE 's3://b/p' FORMAT AS PARQUET PROPERTIES ('k'='v')", quoted.sql("doris"))
     }
 }

@@ -10,6 +10,11 @@ on:
         description: 'Optional core/metadata version to publish alongside the helper'
         required: false
         default: ''
+      preverified:
+        description: 'Source already verified: skip the full test gate, keep the release checks'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -20,9 +25,12 @@ concurrency:
 
 jobs:
   test:
+    if: ${{ !inputs.preverified }}
     uses: ./.github/workflows/test.yml
   publish:
     needs: test
+    # A skipped gate counts only for a preverified run; a failed or cancelled one never does.
+    if: ${{ !cancelled() && (needs.test.result == 'success' || (inputs.preverified && needs.test.result == 'skipped')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -30,6 +38,21 @@ jobs:
         run: |
           umask 077
           printf 'brikk.mavencentral.user=unused\nbrikk.mavencentral.pass=unused\n' > .env
+      - name: Install the formal release locally and check it
+        env:
+          SUPPORT_VERSION: ${{ inputs.version }}
+          CORE_VERSION: ${{ inputs.core_version }}
+        run: |
+          python3 -m unittest discover -s tools -p 'test_*release*.py'
+          if [ -z "$CORE_VERSION" ]; then
+            echo "::error::A Central release of support needs core_version (support takes released core, metadata and verify-api)"
+            exit 1
+          fi
+          python3 tools/publish_intellij_support.py "$SUPPORT_VERSION" --core-version "$CORE_VERSION" --local
+          python3 tools/verify_release_candidates.py "$CORE_VERSION" --support-version "$SUPPORT_VERSION" \
+            --only brikk-sql,brikk-sql-jvm,brikk-sql-metadata,brikk-sql-metadata-jvm,brikk-sql-verify-api,brikk-sql-intellij-support,brikk-sql-intellij-test-support
+          python3 tools/verify_intellij_publication.py "$SUPPORT_VERSION" --core-version "$CORE_VERSION"
+
       - name: Publish only core prerequisites and SQL IntelliJ support
         env:
           KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME: ${{ secrets.KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME || secrets.KOTLIN_TOOLCHAIN_MAVEN_CENTRAL_USERNAME }}

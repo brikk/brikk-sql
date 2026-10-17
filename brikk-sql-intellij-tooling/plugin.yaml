@@ -6,6 +6,32 @@ tasks:
       license: ${project.rootDir}/LICENSE
       resourceDir: ${taskOutputDir}/resources
 
+  # Shared platform contracts live with the test kit; this module owns the SDK preparation.
+  testIntellijPlatform:
+    action: !dev.brikk.house.sql.intellij.tooling.testIntellijPlatform
+      apiDir: ${project.rootDir}/build/intellij-sql-api
+      libraries:
+        dependencies:
+          - ../brikk-sql-intellij-test-support
+          # An embedded engine for the live catalog harvest tests.
+          - org.duckdb:duckdb_jdbc:1.5.6.0
+          # A real native verifier for the shared error annotator's end-to-end test.
+          - ../brikk-sql-verify-duckdb
+          # The ClickHouse verifier, for data-source verification end to end (the driver itself is
+          # the all-in-one jar tools/clickhouse-verify-server.sh fetches, loaded by the IDE's JDBC process).
+          - ../brikk-sql-verify-clickhouse
+      testSources: ${project.rootDir}/brikk-sql-intellij-test-support/platform-test
+      toolchain:
+        dependencies:
+          - org.jetbrains.kotlin:kotlin-compiler-embeddable:2.4.10
+          - junit:junit:4.13.2
+          - org.opentest4j:opentest4j:1.3.0
+      outputDir: ${taskOutputDir}
+
+checks:
+  - name: intellijPlatform
+    performedBy: testIntellijPlatform
+
 generated:
   sources:
     - directory: ${tasks.prepareSqlIdeApi.action.revisionDir}

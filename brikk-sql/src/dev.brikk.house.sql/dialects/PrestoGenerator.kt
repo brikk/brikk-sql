@@ -13,6 +13,7 @@ import dev.brikk.house.sql.generator.explodeProjectionToUnnest
 import dev.brikk.house.sql.generator.inheritStructFieldNames
 import dev.brikk.house.sql.generator.Generator
 import dev.brikk.house.sql.generator.GeneratorTables
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.PrestoTokenizerTables
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -72,6 +73,37 @@ open class PrestoGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.PRESTO
 
+    // brikk extension #55: the Presto grammar has no STRAIGHT_JOIN (SqlBase.g4 `relation`).
+    override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
+
+    open val supportsTemporalPrecision: Boolean get() = false
+
+    // brikk extension: an open/trait row cannot be enumerated for a faithful DROP,
+    // SET or RENAME. Presto/Trino have no native star EXCEPT/REPLACE/RENAME; do not
+    // discard modifiers or guess an incomplete/reordered projection.
+    override fun starSql(expression: Star): String {
+        val modifiers = listOf("except_" to "EXCEPT", "replace" to "REPLACE", "rename" to "RENAME")
+            .filter { !(expression.args[it.first] as? List<*>).isNullOrEmpty() }
+            .map { it.second }
+        if (modifiers.isNotEmpty()) {
+            val target = dialect.name.replaceFirstChar { it.uppercaseChar() }
+            throw UnsupportedError("$target star ${modifiers.joinToString("/")} requires a complete column layout " +
+                "expanded to an explicit projection before generation")
+        }
+        return super.starSql(expression)
+    }
+
+    override fun datatypeSql(expression: DataType): String {
+        if (!supportsTemporalPrecision && expression.thisArg in DataType.TEMPORAL_TYPES) {
+            if (expression.expressionsArg.isNotEmpty() &&
+                (expression.expressionsArg[0] as Expression).name != "3") {
+                unsupported("Presto only supports millisecond precision for temporal types")
+            }
+            expression.set("expressions", null)
+        }
+        return super.datatypeSql(expression)
+    }
+
     // ------------------------------------------------------------------
     // Flags (sqlglot: PrestoGenerator class attributes)
     // ------------------------------------------------------------------
@@ -82,6 +114,7 @@ open class PrestoGenerator(
     override val tableHints: Boolean get() = false
     override val queryHints: Boolean get() = false
     override val isBoolAllowed: Boolean get() = false
+    override val castToIntRounds: Boolean get() = true
     override val tzToWithTimeZone: Boolean get() = true
     override val nvl2Supported: Boolean get() = false
     override val structDelimiter: Pair<String, String> get() = "(" to ")"
@@ -583,10 +616,7 @@ open class PrestoGenerator(
         )
 
     // sqlglot: dialect.no_pivot_sql
-    open fun noPivotSql(expression: Pivot): String {
-        unsupported("PIVOT unsupported")
-        return ""
-    }
+    open fun noPivotSql(expression: Pivot): String = unsupportedPivotSql()
 
     // sqlglot: dialect.no_timestamp_sql
     open fun noTimestampSql(expression: Timestamp): String {

@@ -16,11 +16,17 @@ open class PrestoDialect : Dialect() {
 
     override val name: String get() = "presto"
 
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val havingProjectionAliases: Boolean get() = false
+
     // sqlglot: Presto.EXPRESSION_METADATA (sqlglot/typing/presto.py)
     override val expressionMetadata get() = dev.brikk.house.sql.ast.GeneratedTypingMetadata.PRESTO
 
     // sqlglot: Presto.NORMALIZATION_STRATEGY
     override val normalizationStrategy get() = NormalizationStrategy.CASE_INSENSITIVE
+
+    // brikk-native: see Dialect.groupByProjectionAliases.
+    override val groupByProjectionAliases: Boolean get() = false
 
     override val tokenizerConfig: TokenizerConfig get() = PrestoTokenizerTables.CONFIG
 

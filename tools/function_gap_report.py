@@ -33,7 +33,7 @@ Raw data sources (preferred over the generated Kotlin catalogs):
   - vendor/data/trino-functions-483.tsv
   - vendor/data/starrocks-builtin-functions-4.1.4.tsv
   - vendor/data/clickhouse-functions-26.5.1.1.tsv
-  - python module `duckdb` -> duckdb_functions()
+  - vendor/data/duckdb-functions-1.5.6.tsv (JDBC duckdb_functions() capture)
 
 sqlglot knowledge comes from reference/sqlglot (read-only oracle).
 
@@ -60,9 +60,10 @@ import sys
 import time
 from collections import OrderedDict
 from pathlib import Path
-from generate_duckdb_functions import DUCKDB_VERSION
+from generate_duckdb_functions import json_list, read_dump
 
 ROOT = Path(__file__).resolve().parent.parent
+DUCKDB_DUMP = ROOT / "vendor" / "data" / "duckdb-functions-1.5.6.tsv"
 sys.path.insert(0, str(ROOT / "reference" / "sqlglot"))
 
 import sqlglot  # noqa: E402
@@ -178,18 +179,11 @@ def load_trino():
 
 
 def load_duckdb():
-    import duckdb
-
-    if duckdb.__version__ != DUCKDB_VERSION:
-        sys.exit(f"error: install duckdb=={DUCKDB_VERSION}; found {duckdb.__version__}")
-    rows = duckdb.sql(
-        """
-        select function_name, alias_of, function_type, parameter_types, varargs
-        from duckdb_functions()
-        where function_type <> 'pragma'
-        order by function_name
-        """
-    ).fetchall()
+    rows = sorted(
+        (r["function_name"], r["alias_of"], r["function_type"], json_list(r["parameter_types"]), r["varargs"])
+        for r in read_dump(DUCKDB_DUMP)
+        if r["function_type"] != "pragma"
+    )
     entries = {}
     alias_pairs = []  # (alias, primary)
     for name, alias_of, ftype, ptypes, varargs in rows:
@@ -943,7 +937,7 @@ def main():
         "clickhouse": load_clickhouse(),
     }
     evidence = {
-        "duckdb": f"engine-catalog: duckdb_functions() {DUCKDB_VERSION}",
+        "duckdb": f"engine-catalog: {DUCKDB_DUMP.relative_to(ROOT)}",
         "trino": "engine-catalog: vendor/data/trino-functions-483.tsv",
         "doris": "engine-catalog: vendor/data/doris-signatures.json",
         "starrocks": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",

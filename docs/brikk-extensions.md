@@ -1,6 +1,6 @@
 # brikk-sql extensions registry — deliberate divergences from sqlglot
 
-brikk-sql is a SQLGlot-derived Kotlin engine (pinned: `v30.18.0-43-g3ca82489`), checked by
+brikk-sql is a SQLGlot-derived Kotlin engine (oracle pin: `v30.22.0-5-ga00dc2e5c`), checked by
 differential and semantic gates. This file registers where brikk **deliberately diverges**
 from or **extends beyond** sqlglot, so that upstream syncs know exactly where conflicts
 can arise: when a future sqlglot version adds its own handling for one of these, the
@@ -53,8 +53,17 @@ exceptions today:
   Whole-row DISTINCT followed by plain projection can return duplicate projected
   values. The older test expecting these to collapse was incorrect and is replaced
   by row-result assertions.
-- The pipe corpus has two explicit, checked native expectations: sequential slices
-  that exhaust the earlier limit, and WHERE's boundary after DISTINCT. The extracted
+- EXTEND, WINDOW, AGGREGATE, JOIN, PIVOT and UNPIVOT rewrite the current SELECT in place
+  only when it is a plain `SELECT *`; otherwise they read its finished rows through an input
+  CTE. Earlier versions (and sqlglot) dropped a SELECT-first head's projection
+  (`SELECT a, b FROM t |> EXTEND 1 AS x` ran as `SELECT *, 1 AS x FROM t`), spread a SET or
+  DROP star across a later JOIN, aggregated or windowed before a prior LIMIT or DISTINCT, and
+  pivoted the first table before a JOIN or WHERE. A boundary keeps a single source's alias
+  for a plain `*`, as WHERE's does. ORDER BY after a SELECT-first head now reads only its
+  output, like WHERE: `SELECT a FROM t |> ORDER BY b` fails rather than sorting by `b`.
+- The pipe corpus has four explicit, checked native expectations: sequential slices
+  that exhaust the earlier limit, WHERE's boundary after DISTINCT, and PIVOT and UNPIVOT
+  of joined rows. The extracted
   SQLGlot fixtures are unchanged; overrides must match current inputs and become stale
   if upstream adopts their output. `DorisPipeStageOrderTest` and
   `PipePaginationSemanticsTest` use independent staged references and actual row results.
@@ -1044,6 +1053,938 @@ Its installed core JAR was exercised directly on Java 21 against the reported
 bare/cast/parenthesized projection reproducers and a native prefix-alias control.
 Upstream issue/PR status: not reported. Existing corpus fixtures and known-failure
 signatures are unchanged.
+
+## 34. Qualification inference compatibility alongside upstream no-inference APIs
+
+The catch-up to SQLGlot `a00dc2e` retains Brikk's published parameterized
+`qualify` / `qualifyColumns` signatures and Kotlin default-argument bridges after
+upstream #8552 removes `infer_schema`. Explicit `inferSchema=true` keeps legacy
+ownership inference; null keeps the historical empty-schema automatic policy.
+`inferSchema=false` uses evidence-only ownership and the upstream alias-expansion
+ordering. New overloads without that parameter select the same disabled policy.
+Kotlin prefers the shorter overload for new source calls that omit the flag;
+already-compiled callers still reach the unchanged old default bridge. Resolver
+likewise has a new two-argument no-inference constructor and retains its explicit
+three-argument legacy policy and historical constructor bridge.
+
+Brikk's shape discovery, stage shapes, star-expansion/standard-SQL preparation and
+schema-less lineage explicitly select the legacy nullable policy. They must not
+silently become schema-required optimizer operations. This includes Engine's
+two-step `toStandardSql` then strict qualification path, not just outputShape.
+Optional schema and legacy attribution remain part of Brikk's lineage facade;
+upstream's new mandatory schema signature is not imposed on our consumers.
+
+See [Engine analysis contract](engine-analysis-contract.md) for hand-owned
+regressions, enabled/disabled/new-signature tests, and the ABI/default-bridge checks.
+The upstream-shaped path follows alias-expansion-after-qualification, while legacy
+true/null paths retain the old ordering to protect shipped shape behavior. Exact
+parity-fixture refresh at the new target is a separate integration gate.
+
+## 35. Spark array-slice counts and CONCAT_WS target boundaries during catch-up
+
+Spark SLICE stores a length, not an inclusive end index. The parser's canonical
+`end`/`is_length` representation is preserved through serde and native Spark
+generation; older serialized `length` nodes remain readable. DuckDB normalizes
+negative starts before computing the inclusive end. Unlike a bare upstream index
+calculation, the local lowering propagates NULL inputs first and raises a target
+ERROR for invalid non-NULL zero starts/negative lengths. Those Spark runtime
+errors must not become successful DuckDB slices.
+
+Hive/Spark CONCAT_WS carries its array-flattening policy explicitly. DuckDB casts
+array/scalar elements to text and joins a combined list, preserving skipped NULLs
+and empty arrays; an outer CONCAT_WS retains NULL-separator and empty-result
+semantics. Native DuckDB CONCAT_WS remains native, including its array stringification.
+The companion Trino route coalesces NULL arrays and flattens mixed arrays/scalars.
+Unknown mixed argument types produce unsupported diagnostics. DuckDB row-dependent
+ARRAY_TO_STRING delimiters retain the existing diagnosed execution limitation
+rather than bypassing it through this new rewrite.
+
+`SparkDuckdbArrayCatchupTest` covers parser/serde/native round-trips, legacy nodes,
+wide slice ends and target diagnostics. `SparkDuckdbArrayResultTest` executes
+actual DuckDB rows and invalid-count errors, typed columns and NULL behavior;
+the Trino direction also passes its native grammar. No live Spark or Trino
+execution is claimed. These catch-up ports are not in published `0.18.0`.
+
+## 36. Source-aware StarRocks TIME_SLICE bucket origin
+
+StarRocks TIME_SLICE parses numeric INTERVAL amounts and FLOOR/CEIL into the
+dedicated TimeSlice node; CEIL corresponds to the next boundary even when the
+input is already on a boundary. Unknown boundary identifiers refuse rather than
+silently selecting FLOOR. The generic four-argument form remains understood for
+AST/cross-dialect compatibility.
+
+For explicit StarRocks-to-DuckDB requests, TIME_BUCKET uses a timestamp origin of
+`0001-01-01 00:00:00` and a timestamp input. DuckDB's default origins (2000) are
+not interchangeable: 2019-07-10 floors to July 8 in StarRocks for three-day slices,
+but July 10 with default DuckDB TIME_BUCKET; four-year slices floor to 2017 in
+StarRocks versus 2016 with DuckDB's default. CEIL adds the period after the floor.
+Source-unknown/other-source generation retains the ordinary target/default-origin
+path instead of globally assigning StarRocks semantics.
+
+`StarrocksTimeSliceCatchupTest` checks AST, serde and source-aware/native rendering.
+The opt-in `StarrocksWindowEngineTest` executes actual generated SQL in the pinned
+StarRocks 4.1.4 engine and compares emitted DuckDB results across minute/hour/day/
+month/year periods, exact boundaries and NULLs. It separately verifies FIRST_VALUE,
+LAST_VALUE, LAG and LEAD IGNORE NULLS and native-default RESPECT NULLS row behavior.
+These are native engine result proofs, not advisory MySQL parser acceptance.
+
+Run the native gate with an isolated pinned container:
+
+```sh
+BRIKK_STARROCKS_TEST_CONTAINER=<4.1.4-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*StarrocksWindowEngineTest'
+```
+
+The gate skips when no container is configured. It requires the cached pinned
+image/source version documented in `vendor/README.md`; no ports or host volumes
+are needed for the container. No implementation of a live Spark/BigQuery engine
+oracle is implied by these tests.
+
+## 37. Set-operation scope and full-join replacement pagination
+
+Set-operation generation now keeps each branch's LIMIT/OFFSET/ORDER inside that
+branch where the target requires parentheses. A nested set's own modifiers and
+WITH scope prevent flattening it into the enclosing set chain. ClickHouse's
+native branch-local limits remain native; global set modifiers instead use an
+outer SELECT wrapper, with WITH retained above it so pagination subqueries can
+still see the same CTEs. The shared TOP parser hook retains branch TOP and defers
+trailing global LIMIT/FETCH until a set operation exists; this adds no unsupported
+T-SQL dialect to the registry.
+
+The existing MySQL full-outer-join replacement had stored global ORDER/LIMIT on
+its final UNION arm, depending on unparenthesized rendering to make them look
+global. Once branch scoping is explicit, that produces wrong rows (e.g. LIMIT 0
+would retain the left-join arm). The rewrite now attaches ORDER/LIMIT/OFFSET/WITH
+to the replacement UNION itself. This restores both row restriction and CTE
+ownership rather than approving the exposed parity difference as a new failure.
+
+`SetOperationPaginationCatchupTest` checks AST-level branch/root placement and the
+shared TOP hook. `SetOperationPaginationResultTest` executes branch restrictions,
+nested set restrictions, outer wrappers, CTE-dependent limits, and the portable
+MySQL full-join replacement in DuckDB. DuckDB, Doris and Trino native grammars
+accept the branch-scoped outputs. No live MySQL or ClickHouse execution is claimed.
+Existing exact known-failure ledgers remain unchanged.
+
+## 38. Integer-division truncation, type evidence and temporary oracle drift
+
+The SQLGlot #8532 port lowers non-native integer division to a BIGINT quotient,
+with TRUNC/TRUNCATE before casts on targets whose integer casts round (BigQuery,
+DuckDB, MySQL/Doris and Presto/Trino). Native operators/functions remain native.
+The follow-up MySQL DIV rendering preserves binary operands, nested right-hand
+divisions and unary negation/bitwise NOT; TRUNCATE supplies its required default
+scale of zero. StarRocks explicitly retains its non-rounding-cast capability.
+
+Typed source division now uses proven operand types as well as syntactic casts;
+unknown types are not fabricated. A fresh untyped quotient prevents recursive
+typed-division lowering. Source integer annotations alone do not establish that a
+target's function returns integers (e.g. FLOOR in DuckDB), so that path uses the
+truncated quotient rather than assuming target-native integer operand types.
+DuckDB's NULL-on-zero integer operator is not substituted for erroring typed
+source division. NULLIF guards retain the divisor's proven type so safe typed
+integer division cannot accidentally become fractional division after guarding.
+
+`IntegerDivisionCatchupTest` fixes the target SQL, AST immutability/serde, typing
+policy, precedence, native spelling and target capability choices.
+`IntegerDivisionResultTest` executes DuckDB signs, NULLs, zero-divisor failures,
+safe division and BIGINT results beyond 32-bit range; native integer operators
+also retain exact Long.MAX_VALUE inputs. Generic real-quotient fallbacks still
+have the target's floating precision/overflow behavior; native exactness is not
+a claim that every floating fallback has full 64-bit precision. Trino and Doris
+grammar checks run without a live engine.
+
+The opt-in `IntegerDivisionEngineTest` runs actual generated SQL in Trino 483 and
+MySQL 8.4. Trino proves the shipped old rounding cast returns 4/-4, while the new
+fallback returns BIGINT 3/-3. It checks NULLs, zero-divisor failure and safe NULL
+behavior. MySQL verifies native DIV precedence, signs, NULL/zero policy, wide
+integers and TRUNCATE scale, plus the typed-column fallback.
+
+```sh
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+BRIKK_MYSQL_TEST_CONTAINER=<8.4-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*IntegerDivisionEngineTest'
+```
+
+Each native gate skips if its container is not configured. The catch-up proof
+used cached images `db58cc93e593...` (Trino 483) and `c831a0f11348...` (MySQL 8.4.10),
+in isolated containers with no host ports/volumes, removed after verification.
+
+The shipped oracle still expects `CAST(CAST(x AS DOUBLE) / y AS INTEGER)` for one
+Hive-to-Presto assertion. Its exact reviewed ID/signature is temporarily recorded
+as `oracle-pin-drift` in `hive-transpile-known-failures.json`; the corrected output
+matches the frozen a00dc2e reference and has independent native result proof.
+Remove this row during the coherent target fixture refresh. No other existing
+ledger entries, generated fixture stamps or shipped pin were changed by this batch.
+
+## 39. Native string escape profiles, source ranges and DuckDB NUL text
+
+SQLGlot #8470/#8484 require shared numeric escape decoding, not just replacements
+in a generator string. The tokenizer now reads bounded numeric escapes, handles
+octal byte wrapping, combines byte-valued escapes into valid UTF-8 scalars, and
+combines Unicode surrogate pairs. Unknown, truncated and unterminated escapes
+follow each configured dialect's rules; fixed escapes may decode to the empty
+string (ClickHouse `\N`). Invalid UTF-8 runs retain the frozen target's single-byte
+code-point fallback. That tokenizer behavior is not a claim of native equivalence
+for invalid source bytes: PostgreSQL rejects such input, explicitly proved by the
+native test rather than treating its normalized Unicode result as an engine proof.
+
+DuckDB and PostgreSQL use byte-valued hex/octal escapes only in escape strings;
+PostgreSQL also has Unicode escapes. ClickHouse hex escapes require two digits.
+DuckDB `\a`/`\v` and PostgreSQL `\a` drop their backslash, rather than inventing
+control characters. Generation inverts only real escape mappings, keeps printable
+letters literal and emits numeric control escapes where supported. It does not
+invert a rule that merely drops a backslash before a literal newline. Parsed
+backslashes in escape-string text are escaped again during generation.
+
+`StringEscapeProfiles` supplies hand-owned overlays atop the shipped generated
+tables. High-level dialects, direct parser/generator defaults and TokenizerConfigs
+all use those overlays. Raw generated table constants remain at the shipped pin
+until the coherent refresh. Tokenizer tooling must emit the new numeric policy
+before the overlays can be retired. `TokenizerConfig.withStringEscapes` adds the
+policy without changing the old constructor or Kotlin default bridge; keyword
+overlays copy it without mutating the original config.
+
+Source offsets remain UTF-16 positions in original SQL, never offsets in decoded
+literal text. LF/CRLF/lone CR, supplementary characters, templates and emitted
+source mappings are covered. Both fast and escaped-string scans count actual
+source line breaks; a decoded `\n` does not create a fictitious source line.
+
+DuckDB 1.5.6 rejects NUL in SQL source and in `e'\x00'`, and rejects byte-valued
+UTF-8 escape runs, with `pg_verifymbstr NOT IMPLEMENTED`. Decoded Unicode literals
+execute normally. NUL text is therefore generated as CHR(0) and concatenated text
+segments for ordinary, escape and raw string nodes. The source AST/mapping remains
+unchanged. These are text-string lowerings, not a new binary/BLOB escape policy.
+
+`StringEscapeCatchupTest` covers semantic values, serde, native spelling, raw/
+dollar-quoted strings, failure/reset behavior, control characters and source ranges.
+`StringEscapeAbiContractTest` checks both published TokenizerConfig constructors.
+`StringEscapeResultTest` executes DuckDB native/generated results, translated
+PostgreSQL/Spark/ClickHouse text, and NUL lowering; known native source rejections
+are asserted separately. `StringEscapeEngineTest` runs PostgreSQL 18.4 source and
+generated UTF-8/octal/Unicode/backslash/bytea results and invalid-source failures.
+No live ClickHouse result proof is claimed.
+
+```sh
+BRIKK_POSTGRES_TEST_CONTAINER=<18-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*StringEscapeEngineTest'
+```
+
+The native gate skips without a configured container. Verification used cached
+PostgreSQL 18.4 image `4efc78b0491e...` in an isolated container with no host ports
+or volumes, removed afterward.
+
+The old pin has two PostgreSQL cases whose raw numeric syntax was stored as text:
+`e'\xDEADBEEF'` (invalid native UTF-8) and `CAST(e'\176' AS BYTEA)`. Fresh parsing
+now matches a00dc2e's decoded payloads. Generating from the *old dumped ASTs* instead
+escapes their stored backslashes, also matching a00dc2e when it loads those exact
+old dumps. Six exact assertion/signature rows across parser, annotated-AST and
+generator ledgers record this temporary `oracle-pin-drift`; annotated-AST payload
+mismatches do not imply changed type evidence. Remove the rows during the coherent
+fixture refresh. No pre-existing signatures/reasons or shipped fixture stamps/pin
+were changed by this batch.
+
+## 40. REGEXP_COUNT/REGEXP_INSTR empty-pattern scope and source-aware lowering
+
+SQLGlot #8474 fixes empty checks in REGEXP_COUNT/REGEXP_INSTR lowerings that were
+not yet present locally. Both lowerings are now implemented. The canonical zero-
+result policy compares the **original** pattern with the empty string, before
+embedding literal i/m/s flags; testing the flags-prefixed pattern would turn an
+empty pattern into a nonempty expression and produce unintended matches. Runtime
+NULL checks cover all provided arguments, including empty-pattern calls with NULL
+subjects, positions, occurrences, options or flags. No compile-time substitution
+of a NULL result is used.
+
+The canonical zero rule is not universal native SQL behavior. PostgreSQL and
+Trino count empty matches between characters (four for `abc`); PostgreSQL INSTR
+returns boundary positions, including the final boundary. MySQL INSTR rejects an
+empty pattern, even with a NULL subject, and rejects out-of-bounds start positions.
+Explicit source context retains these differences. PostgreSQL starts beyond the
+last boundary return zero; its default newline mode and opposing m/s flags map to
+the appropriate RE2 flags. Spark's native empty-match policy is carried through
+for its two-argument calls, but no live Spark result proof is claimed. Extra native
+Trino/Spark COUNT arguments produce diagnostics rather than inventing overloads.
+
+Whole-match INSTR uses lengths of split prefixes and prior matches to compute
+1-based positions. Occurrence selection, starting offsets and runtime start/end
+options are retained. An explicit BIGINT cast prevents LIST_SUM's wider DuckDB
+accumulator type from becoming the exposed position result. Positive-position/
+occurrence and valid-option checks refuse invalid non-NULL calls. Original ASTs,
+parents, serde and type evidence remain unchanged; missing source type metadata
+is not fabricated merely because the target lowering has a known type.
+
+This is a portable **RE2-compatible whole-match subset**, not a promise of arbitrary
+POSIX/ICU/Java/Snowflake regex equivalence. Unsupported flags and nonzero capture-
+group position arguments are diagnosed. PostgreSQL starting-position lowering
+restarts a substring's boundary: known start anchors or dynamic patterns combined
+with a nontrivial start position therefore produce a portability diagnostic.
+Nonempty zero-width position patterns are diagnosed when recognizable and refused
+at execution time otherwise: STRING_SPLIT_REGEX drops zero-width separators, so
+using the length-summing result would silently report wrong positions. Empty
+patterns instead use the appropriate explicit source/canonical branch.
+
+`EmptyRegexpCatchupTest` fixes original-pattern/flag ordering, source policies,
+diagnostics, AST immutability, conservative typing and native DuckDB spellings.
+`EmptyRegexpResultTest` executes flags, NULLs, row-dependent patterns/options,
+occurrences, Unicode positions and refusal cases. Native DuckDB MATCHES, REPLACE
+and EXTRACT_ALL still retain their own empty-pattern behavior; no zero rule is
+added to them. `EmptyRegexpEngineTest` compares actual generated DuckDB rows with
+PostgreSQL 18.4, MySQL 8.4.10 and Trino 483 results/errors.
+
+```sh
+BRIKK_POSTGRES_TEST_CONTAINER=<18-container> \
+BRIKK_MYSQL_TEST_CONTAINER=<8.4-container> \
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*EmptyRegexpEngineTest'
+```
+
+Each live gate skips without its configured container. Verification reused the
+cached pinned PostgreSQL/MySQL/Trino images documented in extensions #38/#39,
+with isolated containers, no host ports/volumes, removed afterward. No Snowflake
+dialect/engine is added. No ledger rows or shipped generated fixture stamps/pin
+were changed by this batch; earlier reviewed pin-drift rows remain pending refresh.
+
+## 41. DuckDB comprehension binding, native casing and schema-less whole rows
+
+SQLGlot #8557 parses comprehension item/index declarations as Identifiers, not
+source Columns. Qualification converts local body/filter references to identifier/
+dot expressions before alias expansion and ordinary column resolution. Iterators
+remain outside their own declaration scope, so `[x FOR x IN x]` can still resolve
+the iterator from a source column or preceding alias. Nested bindings are retained;
+query boundaries prevent an inner SELECT's columns from becoming loop variables.
+Scope.comprehensions follows the existing collection/cache lifecycle.
+
+Proven local table-qualified columns take precedence over lambda struct fields:
+if `x.field` names a real field in the selected table alias x, its Column kind and
+ownership remain intact. Without that evidence, struct lookup stays a local Dot.
+Older serialized Column declarations are normalized when qualified, preserving
+positions/comments. Column type annotations do not prove the local element type
+and are not transferred into the new local symbol. Missing local element/whole-row
+typing and nullability stay unknown rather than being fabricated from similarly
+named schema columns.
+
+Native DuckDB 1.5.6 can distinguish variable spelling during binding before its
+case-insensitive column lookup: with a table column x, `[X FOR x IN items]` can
+produce the table column's value while `[x FOR x IN items]` uses the loop value.
+Nested frames and qualified method calls also require the original spelling.
+The local port protects declarations and candidate body/filter roots with the
+existing case_sensitive normalization hint, including method-call Identifier
+heads and nested lambda declarations that shadow those names. It preserves native
+spelling rather than assigning invented source ownership to ambiguous symbols.
+No precise element-type proof is implied by this protection.
+
+DuckDB also supports table aliases as whole-row values. With no column evidence,
+legacy inference must not turn `SELECT t FROM t` into an invented `t.t` reference.
+The local whole-row fallback retains t; a real schema column named t still wins
+and qualifies to t.t. This preserves execution under all true/false/null policies
+without changing their general inference rules or published JVM signatures.
+
+`ComprehensionQualificationCatchupTest` checks parser/serde, policies, aliases,
+struct/table distinction, query boundaries, caches, source mapping and legacy ASTs.
+`ComprehensionQualificationResultTest` executes actual original/qualified DuckDB
+rows for filters, indices, nested shadowing, casing, methods, whole rows, quoted
+variables and empty/NULL inputs. DuckDB still rejects subqueries inside lambdas;
+the native refusal is checked separately, not claimed newly supported. The added
+`EngineAnalysisContractTest` method protects output names, known external types,
+unknown comprehension nullability and the Engine's two-step standard-SQL/strict
+qualification path under full, empty and unrelated catalogs.
+
+Two old-pin comprehension cases still contain Column declarations. Four exact
+reviewed parser/annotated-AST rows record temporary oracle-pin-drift. The Identifier
+declarations and their unchanged UNKNOWN types match a00dc2e. Remove the rows at
+coherent fixture refresh; the existing UTF-16 divergence reason/signature is untouched.
+
+## 42. Scalar array values versus row-query constructors
+
+SQLGlot #8575 and 51864e76b4 distinguish a sole direct query supplying rows from
+scalar/value array elements. Shared DuckDB/BigQuery generation no longer searches
+arbitrarily inside the first element for a query, which could discard later
+elements or promote a function/struct/comprehension into invalid ARRAY(query) SQL.
+
+Bracket and LIST_VALUE scalar-query constructors retain value_constructor=true
+in ordinary AST args/serde. ARRAY(SELECT ...) and ARRAY((SELECT ...)) remain row
+constructors. Thus a scalar subquery returning no row produces `[NULL]`, while a
+row query returning no rows produces `[]`. Other elements, nested arrays/functions
+and struct fields survive unchanged. Legacy unmarked single-query ASTs retain the
+row-constructor default; absent source intent is not reconstructed by guessing.
+
+The optional intent is currently sparse (only true is stored). Existing generated
+arg-type metadata and false defaults remain at the shipped oracle until coherent
+target regeneration. That refresh must add Array.value_constructor to generated
+argTypes and emit corresponding false defaults with the refreshed fixtures, not
+rewrite current stamps while those fixture changes are pending.
+
+`ArraySubqueryCatchupTest` fixes parser/serde and both-direction output distinctions.
+`ArraySubqueryResultTest` executes DuckDB rows for every retained element, scalar
+NULL versus empty row arrays, LIST_VALUE, nested functions/structs and ordered
+multirow query arrays. Portable BigQuery-shaped output is also executed in DuckDB;
+no live BigQuery engine or general BigQuery grammar proof is claimed. Source ASTs
+remain unchanged during generation. No new array ledger entries were needed.
+
+## 43. Source-order stars, native USING policies and conservative expansion
+
+SQLGlot #8529 keeps table/derived-table/UDTF references in source walk order rather
+than grouping ordinary tables first. #8530 expands every level of parenthesized
+join constructs before alias assignment, rebuilding scopes until stable; sources
+starting with queries and aliased inner join groups remain present. Source order
+now governs star fields and positional consumers. Aliasing callbacks still run
+once per source, not once per expansion pass.
+
+The #8536 port exposes UsingColumnOrder: default USING_LIST puts each join's keys
+first in USING order; MySQL/Doris LEFT_TABLE uses the left output order; DuckDB
+IN_PLACE keeps keys at their left-side position. Native MySQL RIGHT USING instead
+uses the right side's key and residual-source order, preserved explicitly. Earlier
+keys move behind later USING keys where the policy requires it. Natural common
+keys follow the current left-side layout when they can be determined.
+
+Native qualified-star behavior is also dialect-specific. PostgreSQL, DuckDB and
+MySQL expose raw source fields, including duplicate keys and source-side NULLs.
+Trino hides joined keys from qualified stars. StarRocks exposes merged keys first,
+sharing them across distinct qualified sources but retaining them for repeated
+source-star occurrences. QualifiedStarUsing captures these policies; other
+unprobed dialects retain their existing merged-key default rather than claiming
+new native proof. Every unqualified star expands independently, so `*, *` does
+not lose the second set of keys. Literals, EXCEPT/REPLACE/RENAME and other selections
+remain in their own positions; existing rename refusal/atomicity gates still pass.
+
+Merged-key expressions retain logical join stages instead of assuming that a key
+always comes from the first physical source. Later FULL joins compare the previous
+merged key, preserving right-only rows. RIGHT prefers the right value (including
+MySQL case-insensitive matches). DuckDB INNER/LEFT keys retain the left field/type,
+RIGHT uses the right field/type, and FULL coalesces; blindly coalescing mixed INT/
+BIGINT keys would widen DuckDB's native INNER/LEFT result incorrectly. Other
+merged expressions retain their nested coercion/merge stages rather than flattening
+them merely for old-oracle text parity.
+
+**Conservative boundaries:** converting USING to ON while leaving an unresolved
+bare star changes native output into duplicate keys. If visible columns are
+unknown, wildcard-shaped or duplicated, native USING/NATURAL and the bare star
+remain intact. Merged-name references retain unqualified native spelling and
+unknown type evidence, not invented single-table ownership. Flat scopes cannot
+model separate comma-join key families safely, so those groups likewise retain
+native syntax. Known qualified/raw fields can still carry their evidence.
+StarRocks 4.1.4 FULL USING has native star-slot behavior unlike the generic merged
+projection; its stars/USING are retained rather than silently changing those rows.
+These cases may keep UNKNOWN star shapes even with some available schema evidence.
+
+`StarUsingOrderingCatchupTest` checks source order, caches, policies, repeated/raw
+stars, wrapper retention, callbacks and safe unknown-star behavior.
+`StarUsingOrderingResultTest` compares actual DuckDB column labels, types and rows,
+including all join sides, mixed INT/BIGINT keys, duplicate names, chained FULL
+joins, UDTFs, comma groups, NULL supply and partial/no schema.
+`StarUsingOrderingEngineTest` compares original/qualified headers and rows in
+PostgreSQL 18.4, MySQL 8.4.10, Trino 483 and StarRocks 4.1.4, including MySQL RIGHT
+ordering/collation and StarRocks qualified-star cases. NATURAL is not implemented
+by native Trino; StarRocks parses that token as an implicit alias in this form.
+Neither is claimed as a native NATURAL-join equivalence proof. PostgreSQL/MySQL/
+DuckDB natural joins are covered. No new live Doris/Presto/Spark/ClickHouse/BigQuery
+execution proof is claimed here. The added Engine contract protects DuckDB order,
+key type/nullability and two-step preparation/validation for unresolved USING stars.
+
+```sh
+BRIKK_POSTGRES_TEST_CONTAINER=<18-container> \
+BRIKK_MYSQL_TEST_CONTAINER=<8.4-container> \
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+BRIKK_STARROCKS_TEST_CONTAINER=<4.1.4-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*StarUsingOrderingEngineTest'
+```
+
+Verification reused the pinned cached images from extensions #36/#38/#39 in
+isolated containers, no host ports/volumes, removed afterward. Public qualification
+signatures/default bridges and the general true/false/null inference policy are
+unchanged. Scope and dialect additions do not alter existing constructor descriptors.
+
+The full texts of fourteen qualification discrepancies and one lineage discrepancy
+were reviewed individually. Eight are old-pin source/key ordering changes matching
+the frozen target and are temporary oracle-pin-drift. Six intentionally retain
+logical merged-expression stages; one retains unresolved native USING in lineage's
+source SQL while preserving both downstream source nodes. Their exact signatures
+and curated reasons are recorded separately as intentional-divergence, not approved
+by counts. Remove only the eight stale ordering rows during coherent fixture refresh;
+retain intentional safeguards unless the new oracle genuinely adopts them.
+
+## 44. Correlated UNNEST projection evidence and lexical source precedence
+
+SQLGlot #8571 (`9f2f4cd5a2`, corrected tests `6683ad28a4`) resolves correlated
+UNNEST struct fields from annotated source projections before searching physical
+schemas. Computed arrays/nested structs can supply child field types without a
+catalog, and a computed projection shadows a same-named physical column. CTE
+column aliases remain visible. #8472 caches the outer resolver chain; this port
+keeps those caches and propagates our existing explicit inference policy rather
+than reconstructing every resolver with a different default.
+
+**Evidence boundaries:** the upstream fallback walks arbitrary nested sources by
+name. We instead trace an UNKNOWN projection only when a direct qualified column
+proves its source binding. An unknown function result, duplicate projected name,
+or renamed scalar cannot borrow a same-named ARRAY/STRUCT from another projection
+or physical input. Known and UNKNOWN trace results are memoized; recursive visits
+have an in-progress guard. Set-operation UNNEST field discovery remains deferred
+(as explicitly reverted in #8571), not guessed from the first physical arm. This
+does not remove the existing reconciled type summaries for ordinary set outputs.
+
+Type annotation also respects lexical visibility. Inherited CTE declarations are
+not themselves FROM bindings: selected sources and visible lateral inputs win,
+and outer lookup crosses only correlatable scopes. This fixes the frozen target's
+same-name CTE/inner-source shadowing bug, independently proved with native DuckDB
+and Trino results. Multi-level UNNEST input discovery follows the permitted outer
+resolver chain and stops at a nearer UNKNOWN binding or a potentially owning
+unknown local source, rather than stealing farther-out type evidence.
+
+`CorrelatedUnnestCatchupTest` covers the upstream computed/nested cases, physical
+name collisions, CTE aliases, local/UNKNOWN shadowing, multi-level correlations,
+unaliased bare stars and element-qualified struct stars, missing-field refusal,
+TVF conservatism, Spark lateral schema fields and CTE PIVOT outputs. A twelve-level
+shared-source DAG checks memoization of both known and UNKNOWN schema types. The
+new-signature APIs still disable inference; explicit true/null keeps legacy TVF
+qualification with UNKNOWN types. No public constructor/default bridge changed.
+
+`CorrelatedUnnestResultTest` compares native DuckDB field labels, types and rows
+before/after qualification, including NULL/empty arrays, nested structs, computed
+schema collisions, same-name CTE shadowing, real parquet TVFs and CTE PIVOTs. Typed
+portable BigQuery correlated output also executes in DuckDB with asserted values;
+that is not a live BigQuery proof or a general BigQuery-to-DuckDB UNNEST lowering.
+No live Spark/Doris proof is claimed by the schema-resolution regressions.
+
+`CorrelatedUnnestTrinoTest` compares native Trino 483 headers and rows across all
+three inference policies, including nearer-source shadowing and NULL/empty arrays.
+The shadowed scalar output is also asserted BIGINT in the annotated tree.
+
+```sh
+BRIKK_TRINO_TEST_CONTAINER=<483-container> \
+  ./kotlin test -m brikk-sql-verify --include-classes='*CorrelatedUnnestTrinoTest'
+```
+
+Verification reused image `db58cc93e593...` (extension #38) in an isolated
+container without host ports/volumes, removed afterward. Two added Engine
+contracts protect computed correlated shape types (including bound partial slots),
+UNKNOWN computations despite same-named catalog fields, conservative nullability,
+strict two-step validation and nonmutation of the original SqlFragment AST.
+All existing exact corpus gates pass: no ledger waivers or fixture/pin changes
+were needed for this batch.
+
+## 45. Trino temporal precision versus Presto limitations
+
+SQLGlot #8538/#8564 preserve the exact fractional precision of Trino TIME/TIMESTAMP
+literals, including zero and trailing zeros, with or without zones. Zone promotion
+runs before type-literal hooks; explicit cast precision remains explicit. We also
+retain a declared typed-literal precision when promoting its zone rather than
+dropping it. Parse/serde/type/render tests cover 0..12; native Trino 483 TYPEOF,
+VARCHAR values, NULL casts and precision-sensitive DATE_ADD match the original.
+The shared Presto generator removes temporal parameters and diagnoses anything
+other than its implicit/explicit millisecond precision. This can expose earlier
+precision-loss assumptions: temporal-difference tests now assert exact diagnostics
+and do not execute lossy Presto output in Trino as if Trino were a native Presto
+result oracle. No live Presto proof is claimed. Twelve reviewed exact old-pin
+parser/type/transpile discrepancies match a00dc2e and await coherent refresh.
+
+## 46. ClickHouse ISO calendar mappings without option loss
+
+SQLGlot #8494 maps one-argument toDayOfWeek/toISOWeek/toISOYear to their canonical
+ISO nodes and back. Extra mode/timezone arguments remain native Anonymous calls,
+since canonical nodes cannot represent them. ISO-year generation now uses toISOYear;
+the companion DuckDB rendering uses EXTRACT(ISOYEAR). Existing toDayOfMonth/toDayOfYear
+mappings already implemented #8473 and now have focused equivalence regressions.
+Live chDB 26.5.1.1 results agree with DuckDB at ISO week/year, leap-day and NULL
+boundaries; timezone/mode calls retain their native results. Canonical typing metadata
+is unchanged (it is not a claim of ClickHouse's exact unsigned native widths).
+Enable live regressions with BRIKK_CHDB_TEST_PYTHON pointing to a Python containing
+chdb. No ledger or shipped fixture changes were needed.
+
+## 47. Shared ALTER dependencies for MySQL catch-up
+
+The #8419/#8539/#8565 prerequisites model mixed operations, options-only ALTERs
+and alternating actions/options; MySQL bare DROP and PostgreSQL TYPE requirements
+remain dialect-controlled. Options that require whitespace before partition clauses
+are separated from comma-separated options. Unknown trailing syntax retains the
+whole Command rather than silently truncating actions. Native MySQL 8.4.10 SHOW
+CREATE and PostgreSQL 18.4 column/type comparisons match original SQL. Six exact
+reviewed old-pin AST/type discrepancies move options from actions to options as
+at a00dc2e. Alter.actions optionality temporarily has a narrow parser validation
+overlay until its generated metadata/fixtures refresh together. Public parseDrop
+and its default bridge remain intact; new explicit-kind parsing is additive.
+
+## 48. MySQL native lexical, DDL and expression catch-up
+
+MYSQL-01 ports #8465/#8471/#8437/#8503/#8515/#8553/#8561/#8544/#8559/#8409/#8417.
+MySQL -- comments require whitespace/control/EOF and line comments stop at LF only;
+ClickHouse also keeps CR inside comments. Doris/StarRocks retain their different
+dash/CR policies. TokenizerConfig adds copy-preserving sidecar policies without
+changing published constructors/default bridges. Native MySQL escape decoding and
+generation preserve NUL, SUB, unknown escapes and pattern backslashes under default
+SQL mode; NO_BACKSLASH_ESCAPES/ANSI_QUOTES session modes are not newly claimed.
+
+INSERT VALUE is accepted only in INSERT sources, not by renaming VALUE identifiers.
+Charset aliases/ASCII(latin1)/UNICODE(ucs2), SIGNED defaults, DROP KEY/CHECK and
+comma-optional table properties retain their scopes. Key options stay on PRIMARY
+KEY, while MySQL generic table options are emitted without WITH; Doris/StarRocks
+generic properties retain PROPERTIES wrappers. WEIGHT_STRING has canonical this/to
+arguments for its AS form; undocumented extra arguments retain their native name.
+CHAR charset casts preserve their length and type metadata. Native IF retains its
+required three arguments; source CASE stays CASE. DATE_ADD/SUB keep explicit DATE
+conversions so time-of-day is not silently restored.
+
+Focused tests cover parser/serde, context/range checks and derivative rendering.
+Live MySQL 8.4.10 compares original/generated HEX values, conditions, date results,
+weight bytes, cast truncation and SHOW CREATE/inserted rows. Three exact additional
+old-pin discrepancies (preserved charset metadata and escaped NUL rendering) match
+a00dc2e and await refresh. WeightString's exact temporary metadata contract fails
+as stale when the target manifest includes it. Generated metadata/fixtures remain
+coherent at the old shipped pin until integration. No new live derivative SQL-mode
+or WEIGHT_STRING cross-engine equivalence is claimed.
+
+## 49. PostgreSQL native JSON_VALUE paths and return evidence
+
+The frozen target's #8579 parser fix retains PostgreSQL JSONPATH as native literal
+or dynamic expressions, rather than interpreting it through our structured path
+subset. Strict/lax filters, quoted keys, concatenations and CASE paths survive.
+RETURNING parses complete DataTypes, including decimal parameters and timestamp
+zones; companion MySQL/Trino parsing uses the same type entry point. Defaults and
+error clauses remain native SQL, not approximate scalar-extraction rewrites.
+
+Live PostgreSQL 18.4 tests compare original/generated values and PG_TYPEOF, including
+NULL/empty paths, scalar casts, explicit defaults and dynamic JSONPATH columns.
+ERROR ON EMPTY/ERROR paths retain native SQLSTATE 22035/22034/22P02; tests require
+the original and generated expressions to raise the same specific state. Return
+type evidence is hand-owned: PostgreSQL's explicit RETURNING type, or documented
+TEXT default, supplies analysis types without claiming the path's value type or
+nonnullness. An Engine contract protects two-step preparation and original ASTs.
+This typing is intentional native evidence, not Python's generic UNKNOWN default.
+Two exact companion Trino parser/type old-pin discrepancies replace a bogus
+RETURNING column node with VARCHAR DataType and await coherent refresh.
+
+## 50. Coherent a00dc2e integration and surfaced dependencies
+
+The branch now coherently uses `v30.22.0-5-ga00dc2e5c` / full frozen target
+`a00dc2e5c489214bea53bacbbeba8713f21ebce1`: generated node/arg-type/tokenizer/typing/
+function tables and 104 oracle fixtures were regenerated together. Generator stamps
+use a deterministic nine-character git description. Numeric, byte-literal, unknown-
+escape, surrogate and comment policies are emitted through ABI-preserving config
+methods. StringEscapeProfiles retains stable aliases/helpers but no longer overlays
+policies. Array value-constructor false defaults, With.cycle and Alter.actions
+optionality are coherent; temporary WeightString and Alter validation allowances
+are retired. Existing published inference/parser/tokenizer entry points remain.
+
+The refreshed corpus exposed dependencies that older fixtures did not exercise:
+dialect-scoped function names (#8512, including legacy native dump compatibility),
+singular/countless FETCH/OFFSET ROW (#8429), boolean update assignments (#8428),
+atomic EXISTS keyword matching, keyword-named/dotted ALTER fields, SEARCH+CYCLE
+and its defaults (#8574), duplicate-alias ordinals (#8436), SEMI/ANTI condition
+ownership (#8383/#8430), qualified index drops (#8526), and lateral ordinality
+(#8463). NULL-order alias substitution now stops at the query's own ORDER boundary
+(#8514), avoiding aggregate recursion and outer/set-operation alias capture.
+Native DuckDB rows and PostgreSQL/Trino rows/types corroborate these fixes.
+
+Typed JSON intent (#8413), Hive/Spark FROM-first insert parsing/rendering and CTE/
+lateral retention (#8527/#8535), numeric typing (#8547) and decimal literal evidence
+are reconciled. FROM-first inserts with implicit shared sources refuse unsafe
+QUALIFY lowering, and unsupported targets report that feature explicitly. This is
+parser/generator support, not a new multi-table query-plan/executor feature or live
+Spark/Hive execution claim. Native source-aware ClickHouse mappings remain protected.
+
+Byte literals (#8479) store actual bytes as Latin-1 characters; source Unicode is
+encoded as UTF-8 without moving UTF-16 source ranges. BigQuery rendering escapes
+non-ASCII bytes, DuckDB uses BLOB hex escapes, and PostgreSQL uses DECODE(hex).
+Portable outputs preserve arbitrary/non-UTF8, NUL and backslash bytes in actual
+DuckDB/PostgreSQL tests. This is not live BigQuery grammar proof; non-byte AST
+payloads refuse rather than invent encoding. TokenizerConfig constructors remain
+unchanged; keyword/escape/comment copies retain byte policy.
+
+The embedded PostgreSQL fidelity oracle now uses 18.4.0 on its three supported
+platforms, so it can verify JSON_VALUE instead of mislabeling PG-14 rejection as a
+generator bug. Specific post-parse SQL/JSON states 22034/22035 are semantic errors;
+the verifier still distinguishes syntax rejection and host unavailability. Six
+obsolete PG-14 grammar ledger rows now genuinely pass and are removed.
+
+Forty-two temporary pin-drift rows are removed. Six existing merged-key curated
+reasons and discrepancy signatures are preserved verbatim; only their descriptor
+IDs changed with target fixture policy/schema data. Five DuckDB left-key/type and
+one comma-group qualification signatures retain native safeguards. Sixteen
+PostgreSQL JSON_VALUE and one ordinality annotation signatures change only type
+payloads: native explicit/default return evidence and BIGINT ordinality replace
+Python UNKNOWN, without inventing field types/nullability. Optional-schema lineage
+keeps its legacy best-effort dependency graph, not strict column proof. The old
+unresolved-USING assertion now matches its refreshed fixture; native safeguards
+and hand-owned regressions remain. Full expected/actual mismatch artifacts are
+written for review; terminal controls are escaped only in reporting, not signatures.
+
+Coverage inventory: 3,152 named transpile assertions retain 3,133 display labels and
+19 collision labels, with stable IDs. The pre-existing deferral policy remains
+explicit: 2,478 named identity assertions, 43 non-pipe base identities and 1,482
+base transpile directions have no direct assertion consumer; parser/generator
+overlap is not claimed as full parity. Excluded dialects and dynamic extraction
+limitations remain independently inventoried. None of these counts approves a
+failure signature. New hand-owned TargetBehavior/TargetByte/TargetTyping tests,
+native result tests and all existing compatibility/corpus gates pass.
+
+The catch-up through `09d5539` was subsequently merged into main on user request,
+retaining `0.20.0-SNAPSHOT` and the existing test-gated snapshot publisher. This is
+not a new stable release. The original port rounds above describe their then-current
+pin/overlay state; this coherent refresh supersedes their temporary drift rows and
+policies. Final native and downstream candidate evidence follows below.
+
+### Final native and downstream candidate validation
+
+`DorisCatchupResultTest` now runs on official pinned **Doris 4.1.4.1** FE/BE images,
+both reporting `doris-4.1.4.1-rc02-5dbec55b399`. The earlier 4.1.3 all-in-one run
+was a historical shared-behavior baseline, not the current native validation target.
+VERSION() gives only MySQL wire compatibility; actual FE/BE versions are checked.
+Native/generated HEX values, comment boundaries, IF/CASE, DATE_ADD/SUB, properties,
+SHOW CREATE and inserted rows agree. MySQL's singular INSERT VALUE normalizes to
+VALUES before Doris execution; Doris itself rejects singular VALUE.
+
+Current native checks also cover all nine nullable Boolean OR combinations and
+the hotfix's 100,000-row JSON Boolean null-payload/OR/CASE regression under both
+short-circuit execution modes, with independent exact counts. VARIANT/NULL inputs
+and timezone-aware COALESCE compare native/generated values. All 81 Doris-selected
+methods pass (six execute the live catch-up engine); all 92 historical behavior
+vectors reproduce exactly. The hotfix changes no grammar, so the vendored 4.1.4
+parser is retained. Enable the live gate with `BRIKK_DORIS_TEST_CONTAINER`; see
+[native evidence](doris-native-catchup-verification.md) for digests and runtime
+limits. This is not a production-database, performance or broader SQL-mode proof.
+
+The exact private core/metadata JARs from `dd1ea09` pass 163 peer compiler/runtime/
+schema/tooling tests, CLI plugin assembly, a real compiler-plugin smoke build and
+ten exact IDE compiler fixtures. Both relocated plugins contain the frozen target
+pin. The peer checkout stays clean on its original main commit; candidate files,
+dependency overrides, generated inputs and logs are confined to a retained scratch
+snapshot. No Maven Local or public release was published. See
+[candidate verification](engine-candidate-verification.md) for artifact hashes,
+reproduction and the limits of that gate.
+
+## 51. Presto/Trino refusal for unexpanded pipe RENAME
+
+Presto and Trino do not support `SELECT * RENAME (...)`. Previously a valid pipe
+such as `FROM t |> RENAME id AS x` could reach executable generation with that
+syntax and an empty unsupported-message list. The shared Presto generator now
+throws `UnsupportedError` for surviving star RENAME modifiers, including Trino's
+inherited path, matching the existing Doris refusal policy. No SQL result is
+returned for that unsupported translation; this is not a warning callers can miss.
+
+A minimum trait proving `id` exists does not prove the complete row layout. The
+Brikk-house runtime erases its `Rel<T>` shape and uses schema-less source-preserving
+executable rendering, so it must refuse this translation rather than guess the
+unlisted fields. Analysis may still infer the known renamed field. SQL-side Shape
+does not encode Engine's Partial/closed distinction: callers supplying schemas
+for executable star expansion must supply complete layouts, not trait minima.
+
+An explicit projection established from a complete schema remains supported and
+preserves column positions, simultaneous swaps, types, NULLs and duplicate rows.
+`SELECT * EXCEPT (id), id AS x` is neither Trino syntax nor generally an equivalent
+rename: it appends x, changing column order. Native DuckDB star RENAME and ordinary
+Presto/Trino stars remain supported. Explicit pipe-formatting mode still preserves
+authored `|>` text; it is not executable engine SQL and its public defaults are
+unchanged.
+
+`PipeRenameGenerationTest` protects the schema-less/trait runtime path, source-map
+and pretty modes, nested pipes, qualified/direct stars, unresolved joined layouts,
+complete projections and AST nonmutation. `TrinoPipeRenameResultTest` independently
+rejects the old output with Trino 483's native grammar, checks complete-projection
+grammar and portable row/header/type semantics in DuckDB, and has an opt-in live
+Trino execution check. The malformed trailing `c` in `RENAME id AS x c` remains a
+separate parse error, not the valid generator input used to reproduce this defect.
+
+Verification: the new regression class initially failed three refusal methods;
+after the guard, build, 1,277 Kotlin methods (24 optional native skips), 38 existing
+consumer/editor contracts, sixteen offline release and three candidate safety
+tests pass. Trino 483 ran the complete-projection row checks; all existing ledgers
+are unchanged. The retained precompiled brikk-house runtime also refuses a bound
+`Rel<HasId>` rename against the new core JAR while explicit SELECT still renders;
+the original peer checkout stays clean. Logs are retained under
+`/tmp/opencode/trino-pipe-rename-*`; only the isolated task container is removed.
+
+## 52. DROP/SET capabilities, native Doris replacement and executable pivot refusal
+
+The Presto/Trino star guard from #51 now also refuses surviving EXCEPT and REPLACE
+modifiers. Schema-less `|> DROP` and `|> SET` previously returned invalid Trino SQL
+with no diagnostics. A complete caller-supplied layout can still expand them to
+ordered explicit projections; trait minima are not a complete field inventory.
+Ordinary stars, set-operation EXCEPT and explicit author pipe-formatting are unchanged.
+
+Doris is different: official 4.1.4.1 FE/BE images reporting
+`doris-4.1.4.1-rc02-5dbec55b399` execute both star EXCEPT and star REPLACE. Live
+schema-less pipeline checks compare row/header results and wire column metadata
+against independent explicit projections: untouched fields retain their positions,
+simultaneous replacements read the original values, chained SET reads the previous
+stage, and NULL/duplicate rows and wide/type-changing results survive. Native
+replacement rejects unknown, duplicate and ambiguous target names instead of
+appending missing fields or replacing both joined copies. Star RENAME is still
+unsupported. Do not apply Trino's EXCEPT/REPLACE refusal to Doris.
+
+One unrelated native limitation surfaced while probing metadata: creating a view
+from the generated WITH plus star REPLACE failed in this Doris build with a
+`start ... end ... length ...` SQL-text rewrite error. The SELECT itself executes
+correctly. Tests inspect its wire metadata directly and do not claim that this
+CREATE VIEW form works; this is not evidence that star REPLACE is unsupported.
+
+Unsupported PIVOT/UNPIVOT formerly dropped the operator and returned flagged SQL.
+IDE execution adapters may honor those blockers, but a plain consumer such as
+Brikk-house `Rel.render()` can use the SQL without reading the messages. Executable
+generation, standard rendering and source-preserving lowering now refuse the
+unsupported query transformation with `UnsupportedError`. `transpileTo` remains
+the diagnostic-preview API and retains its existing flagged best-effort output;
+native DuckDB pivot/unpivot still works. Internal purpose state is additive and
+does not change published generator constructors or fragment method/default bridges.
+
+The grand-unification `lowerForExecution` adapter maps this refusal to `Refused`;
+its earlier test expecting `Ok` plus PIVOT blockers needs the new expectation when
+integrating this change. Other diagnostic previews and blocker checks remain valid.
+Parser-derived join keyword enumeration is untouched: executable-engine completion
+filtering belongs in the IDE/profile consumer, not the core parser's keyword tables.
+
+`PipeExecutionCapabilitiesTest`, `PipeExecutionCapabilitiesResultTest` and
+`DorisPipeSetResultTest` cover the guards, complete-layout execution, preserved
+previews and native behavior. Live Trino 483 and Doris 4.1.4.1 run the relevant
+row checks. Scratch evidence is retained under `/tmp/opencode/pipe-capabilities-*`
+and `/tmp/opencode/doris-set-*`; no peer source or grand-unification branch is edited.
+
+Verification on 2026-10-12: build, 1,295 Kotlin methods (18 optional native skips),
+38 existing consumer/editor contracts, sixteen offline release and three candidate
+safety tests pass. All nine selected pipe-result methods run with live Trino/Doris
+configured; 111 core pipe methods pass. No generated metadata, fixture stamps or
+curated ledger entries change. The retained precompiled Brikk-house runtime also
+refuses unknown-layout DROP/SET and unsupported pivots while native Doris SET still
+renders; its original checkout remains clean. Only the task's isolated containers
+and internal network are removed after verification.
+
+## 53. Doris native lexical rules
+
+**NOT sqlglot parity.** `DorisDialect.LEXICAL_CONFIG` layers native DorisLexer.g4 rules
+(apache/doris `3226e0c`) over the generated tables via `TokenizerConfig.withLexicalRules`;
+`DorisTokenizerTables.kt` and its generator are unchanged.
+
+- Untagged `$$...$$` is one raw HEREDOC_STRING; a longer `$`-spelled identifier wins
+  (`$$a$$b`); tagged forms and an unclosed `$$abc` stay identifiers.
+- Block comments nest, also in `/*+` hints, and end where the native lazy recursive rule
+  does, `/*/` overlaps and unclosable nesting included (checked against the native lexer for
+  every `/*`-prefixed string over `/`, `*`, `a` up to 13 characters).
+- Backslash + LF continues a `--` comment; backslash + CRLF does not.
+- `#` and `{# #}` are not comments.
+- Editor tokenization (so `SqlScriptSnapshot`) refuses an unclosed `$$` and a comment that no
+  depth count closes at the native end: both usually mean unfinished input.
+- `Dialect.semicolonsInBrackets` is false for Doris, so a snapshot statement with `;` inside
+  brackets is a boundary error (PostgreSQL rule actions keep the default).
+- `Dialect.halfOpenPartitionRanges` is true for Doris (and StarRocks): after VALUES, `[` closes with `)`
+  (`fixedPartitionDef`, `VALUES [(lower), (upper))`, the grammar's only mismatched pair).
+
+Evidence: Doris 4.1.4.1 FE (`doris-4.1.4.1-rc02-5dbec55b399`) over raw JDBC rejects `#` and
+`{# #}` comments (`mismatched input '#'`) and accepts nested comments, nested hints and
+backslash-LF continuation. `TokenCorpusDifferentialTest` accepts sqlglot mismatches only under
+named `DorisNativeLexing` exceptions; `DorisScannerCorpusTest` replays the Doris plugin's
+scanner corpus against native results, naming its conventions and remaining disagreements.
+
+## 54. ClickHouse typed query parameters stay as written
+
+ClickHouse `{name:Type}` is a server query parameter, unlike an IDE `:name` bind. Parameter
+discovery (`parseParameterOccurrences`, `SqlScriptParameters`, `SqlFragment.scalarParams`)
+reports it as `ParamStyle.NAMED_TYPED`; `maskNamedParameters` and IDE prompting, which take
+only `NAMED_COLON`, leave it alone. `Dialect.typedQueryParameters` marks ClickHouse, the only
+core dialect whose parser reads the form. SQLGlot renders `{name: Type}`; the ClickHouse
+generator instead reuses the authored text while the parsed placeholder is unchanged, so
+lowering keeps `{a:UInt32}` byte for byte. A changed placeholder renders canonically.
+
+ClickHouse's `?` is also the ternary operator (`cond ? a : b`), so editor discovery
+(`SqlScriptParameters.parse(text, dialect, positional = true)`) tells them apart by tokens as the
+IDE's ClickHouse grammar does (`Dialect.questionMarkTernary`): a `?` after a complete operand opens a
+ternary, the `:` after a complete operand closing it is never a bind (`x ? y :z`), and `?` or `:name`
+in operand position stay binds, also as `?::Type` (one token) and `:name::Type`; a cast's type ends an
+operand (`x::Int32 ? 1 : 0`). A `?` tokens cannot prove (a ternary never closed, an empty middle)
+is reported as `ambiguous`; the IDE calls it a parameter. One known divergence: for a bind opening a
+ternary's middle (`x ? :p : ?`), the IDE also takes the ternary `?` for a parameter.
+
+## 55. Executable refusal for pipe stages the target rejects
+
+Executable lowering (`toExecutable`, `toStandardSql`, source-preserving lowering and so
+`lowerForExecution`) refuses with `UnsupportedError`, using #52's executable-purpose state,
+where it used to return SQL the target engine rejects:
+
+| Target | Refused | Engine evidence |
+|---|---|---|
+| Trino | pipe CALL, STRAIGHT_JOIN, ASOF JOIN, NATURAL JOIN | Trino 483: syntax errors; `t ASOF` reads as an alias; "Natural join not supported" |
+| DuckDB | STRAIGHT_JOIN | DuckDB 1.5.6: syntax error |
+| Doris | pipe CALL, STRAIGHT_JOIN, NATURAL JOIN | Doris 4.1.4 FE parser: mismatched input |
+| ClickHouse | pipe CALL, star RENAME, STRAIGHT_JOIN | ClickHouse 26.7: `f((SELECT …))`, `* RENAME` and STRAIGHT_JOIN syntax errors |
+| Presto | STRAIGHT_JOIN | Presto `SqlBase.g4` `relation` has only CROSS, typed and NATURAL joins |
+
+Pipe CALL becomes a table function taking `(query)`, which these targets lack. ClickHouse
+star RENAME follows #51: a complete caller-supplied layout (`toStandardSql` with
+`expandStars`) still expands it to explicit ordered projections, which ClickHouse runs.
+`transpileTo` previews keep their earlier output and carry the same message as an
+unsupported finding. DuckDB CALL, ASOF, NATURAL and RENAME,
+Doris ASOF and ClickHouse ASOF still lower. `PipeEngineRejectionTest` covers each case.
+
+## 56. ClickHouse inline INSERT data
+
+**NOT sqlglot parity.** `ClickhouseDialect.TOKENIZER_CONFIG` turns on
+`TokenizerConfig.inlineInsertData`: in editor tokenization only (so `SqlScriptSnapshot` and
+parameter discovery, never the parser), the data after `INSERT ... FORMAT <name>` is one
+`INSERT_DATA` token instead of SQL tokens, so quotes, braces and `;` inside it neither end the
+statement nor make its boundary an error. The rule applies to a depth-0 `FORMAT <name>` of a
+statement that begins with `INSERT` and has no `INFILE` or `VALUES` before it, nor a `SELECT` or
+`WITH` unless the query reads its rows through the `input(...)` table function (as
+`ParserInsertQuery` decides). A `SETTINGS` clause on the format name's line comes before the data
+(`allow_settings_after_format_in_insert`); on a later line it is data. The clause ends at a value
+that no `,` follows past whitespace, blank lines and comments; a window that ends before that is
+decided leaves the statement open. `FORMAT Values` stays SQL, as
+ClickHouse reads its rows with the Values parser up to the terminating `;`.
+
+Framing never alters stored data. Data starts after the spaces that follow the header and,
+when a line break follows them, after it (ClickHouse's `ParserInsertQuery`). It ends only:
+
+- before a blank line, which also ends the statement, without a `;`;
+- before a line holding only `;` (spaces and tabs allowed), that `;` being the terminator;
+- at the real end of the text.
+
+A `;` at the end of a data line, or anywhere else in data, is data. A `;` ending the format name's
+line with nothing else on it is the terminator of a statement without data. Without data the
+`INSERT_DATA` token is empty at the header's end (`SqlStatementRange.dataEnd` there), so the line
+breaks and indentation before a terminator line or a blank line are never submitted as data.
+
+Quoted fields (data preservation over client parity): for `CSV`, `CSVWithNames` and
+`CSVWithNamesAndTypes` (format names in any case), and for `CustomSeparated*` when the INSERT sets
+`format_custom_escaping_rule = 'CSV'`, a quote at a field's start (line start, or right after the
+field delimiter, spaces allowed) opens a field that the same quote doubled escapes and alone
+closes. Quotes are `"` unless the INSERT sets `format_csv_allow_double_quotes = 0` (default 1) and
+`'` when it sets `format_csv_allow_single_quotes = 1` (default 0); a blank line or a `;` line inside it is data, and data ends at the next one outside
+quotes. The field delimiter is the INSERT's `format_csv_delimiter` (default `,`) for CSV, and its
+`format_custom_field_delimiter` (default a tab) for `CustomSeparated*`. A field still open at the end
+of the text is a lexical failure, so the statement's boundary is an error rather than a guess.
+clickhouse-client instead cuts such data at the blank line.
+
+Framing reads only settings written in the INSERT itself (`SETTINGS` before or after `FORMAT`);
+everything else takes ClickHouse's defaults (`FormatFactorySettings.h`, master 2026-10, the same in
+the 26.x servers we target). Session-level settings (`SET`, profiles, connection properties) are
+invisible to the editor. Not covered, as their quoting is not known from the INSERT alone:
+`Template*` and `Regexp` with CSV escaping rules; TSV and JSON fields cannot hold a raw line break,
+so their data keeps the plain rule.
+
+The parser consumes `FORMAT <name>` and the framed INSERT_DATA token as the insert's format (`format`, the
+name; `insert_data`, the payload as written), so local diagnostics never read data as SQL and the generator
+writes header and data back unchanged. Without the editor's framing nothing is consumed.
+
+## 57. Plan-only text explain and catalog definitions
+
+`prepareTextExplain(statement, dialect)` builds the `EXPLAIN` an IDE shows as text, or refuses. Only
+Trino (without ANALYZE) and Doris are explained, and only a single query: a live Trino 483 creates the
+table of `EXPLAIN CREATE TABLE ... AS SELECT` (`TextExplainResultTest`), while `EXPLAIN INSERT` and
+`EXPLAIN DROP TABLE` change nothing (`ExplainableStatements.Queries`, the only set until a live engine
+proves another writes nothing). A statement inside the query (DML in a CTE, `SELECT ... INTO`) is refused
+too. Functions, UDFs, routines and hints are the engine's business, as in any query the console runs.
+Parameters (the dialect's, and the console's default `${name}` and `#{name}`) are refused. Text the core
+parser cannot read is explained when it starts like a query (`SELECT`, `WITH`, `VALUES`, `(`) and holds no
+statement keyword, so the server reports its own error. A query starting with a parenthesis is explained
+as a derived table, since `EXPLAIN (` opens Trino's options. DuckDB is refused outright: its
+`EXPLAIN SELECT * FROM range(nextval('s'))` advances the sequence (DuckDB 1.5.6). `explainPlanText`
+joins the first column of the plan rows. `TextExplainResultTest` runs against a live Trino when
+`BRIKK_TRINO_TEST_CONTAINER` names its container, and is skipped otherwise.
+
+`definitionQuery(dialect, kind, path)` reads definitions from the catalog only: Doris, Trino and ClickHouse
+`SHOW CREATE` (ClickHouse with `[database, name]` quoted as its core dialect quotes identifiers; a
+materialized view through `SHOW CREATE TABLE`, since ClickHouse 26.9 rejects `SHOW CREATE MATERIALIZED VIEW`;
+`DefinedObject.DICTIONARY` through `SHOW CREATE DICTIONARY`), DuckDB `duckdb_tables()`, `duckdb_views()`, `duckdb_sequences()`, `duckdb_indexes()`, and
+macros rebuilt from `duckdb_functions()`, whose definition says that parameter defaults are not reported.
+Every DuckDB read calls one built-in table function, qualified as `system.main.`, and no other function: a
+user macro named `duckdb_tables` shadows the unqualified call and runs (DuckDB 1.5.6 advanced a sequence
+through it), and DuckDB's own `system.main.array_to_string` is a macro that calls `list_aggr` unqualified, so
+a user `list_aggr` ran even through the qualified helper. A macro's parameters are read as a list column and
+quoted here, so `"select"("a b", "c, d")` round-trips.
 
 ## Upstream sync protocol
 

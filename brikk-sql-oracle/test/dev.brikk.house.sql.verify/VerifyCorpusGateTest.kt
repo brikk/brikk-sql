@@ -140,11 +140,8 @@ class VerifyCorpusGateTest {
         check(ledger.engine == engine) { "ledger engine mismatch: ${ledger.engine} != $engine" }
 
         val preflight = verifier.verify("SELECT 1")
-        if (!preflight.verified) {
-            println(
-                "VerifyCorpusGateTest[$label]: skipped ${sqls.size} cases; " +
-                    (preflight.warning ?: "verifier unavailable"),
-            )
+        if (!preflight.isVerdict) {
+            println("VerifyCorpusGateTest[$label]: skipped ${sqls.size} cases; ${summarize(preflight)}")
             return
         }
 
@@ -166,18 +163,18 @@ class VerifyCorpusGateTest {
             // `DAYNAME(x)`), so try the engine's statement grammar first and fall back to its
             // expression grammar. A reject means neither native entry point accepts the SQL.
             val asStatement = verifier.verify(generated)
-            if (!asStatement.verified) {
+            if (!asStatement.isVerdict) {
                 fail("$engine verifier became unavailable during $label: ${summarize(asStatement)}")
             }
-            val result = if (asStatement.accepted) {
+            val result = if (asStatement is VerifyResult.Accepted) {
                 asStatement
             } else {
                 verifier.verifyExpression(generated)
             }
-            if (!result.verified) {
+            if (!result.isVerdict) {
                 fail("$engine expression verifier became unavailable during $label: ${summarize(result)}")
             }
-            if (result.accepted) {
+            if (result is VerifyResult.Accepted) {
                 accepted += 1
             } else {
                 val reason = "statement: ${summarize(asStatement)} | expression: ${summarize(result)}"
@@ -231,11 +228,20 @@ class VerifyCorpusGateTest {
 
     /** Engine error message trimmed for the ledger (Doris "expecting {...}" lists run to kilobytes). */
     private fun summarize(result: VerifyResult): String {
-        val message = (result.error ?: result.warning ?: "rejected without message").replace("\n", " ")
+        val message = when (result) {
+            VerifyResult.Accepted -> "accepted"
+            is VerifyResult.Rejected -> result.error.message
+            is VerifyResult.Unverified -> result.reason
+            is VerifyResult.Unavailable -> result.reason
+        }.replace("\n", " ")
         val cut = message.take(160).let { if (message.length > 160) "$it…" else it }
-        val position = result.line?.let { " (line ${result.line}, col ${result.col})" } ?: ""
+        val error = (result as? VerifyResult.Rejected)?.error
+        val position = error?.line?.let { " (line $it, col ${error.column})" } ?: ""
         return cut + position
     }
+
+    private val VerifyResult.isVerdict: Boolean
+        get() = this is VerifyResult.Accepted || this is VerifyResult.Rejected
 
     /** Cross-module corpus files, read from the filesystem relative to repo root or module dir. */
     private fun corpusResource(path: String): String {

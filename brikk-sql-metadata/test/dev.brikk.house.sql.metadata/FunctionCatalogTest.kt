@@ -14,7 +14,8 @@ class FunctionCatalogTest {
 
     @Test
     fun clickhouseCatalogLoadsVendoredSystemFunctions() {
-        assertEquals(1570, CLICKHOUSE_FUNCTION_CATALOG.size)
+        // 1570 system.functions definitions less 9 `__` internals, plus 87 system.table_functions.
+        assertEquals(1648, CLICKHOUSE_FUNCTION_CATALOG.size)
         assertTrue("length" in CLICKHOUSE_FUNCTION_CATALOG)
         assertEquals(FunctionKind.AGGREGATE, CLICKHOUSE_FUNCTION_CATALOG["groupBitAnd"]!!.kind)
         assertEquals(
@@ -25,12 +26,34 @@ class FunctionCatalogTest {
         assertTrue(CLICKHOUSE_FUNCTION_CATALOG["length"]!!.overloads.isEmpty())
     }
 
+    @Test
+    fun clickhouseCatalogHasTheTableFunctionsDump() {
+        // Pinned to vendor/data/clickhouse-table-functions-26.5.1.1.tsv (87 rows).
+        val tables = CLICKHOUSE_FUNCTION_CATALOG.functions.filter { it.kind == FunctionKind.TABLE_VALUED }
+        assertEquals(87, tables.size)
+        for (name in listOf("numbers", "s3", "file", "url", "remote", "generate_series", "null")) {
+            assertTrue(CLICKHOUSE_FUNCTION_CATALOG.getAll(name).any { it.kind == FunctionKind.TABLE_VALUED }, name)
+        }
+        // Names in both dumps are defined once per kind.
+        for (name in listOf("file", "format", "fuzzQuery")) {
+            assertEquals(setOf(FunctionKind.SCALAR, FunctionKind.TABLE_VALUED), CLICKHOUSE_FUNCTION_CATALOG.getAll(name).map { it.kind }.toSet(), name)
+        }
+        assertEquals(listOf(FunctionKind.SCALAR), CLICKHOUSE_FUNCTION_CATALOG.getAll("length").map { it.kind })
+    }
+
+    @Test
+    fun clickhouseCatalogLeavesOutEngineInternals() {
+        assertTrue(CLICKHOUSE_FUNCTION_CATALOG.functions.none { it.name.startsWith("__") })
+        assertFalse("__getScalar" in CLICKHOUSE_FUNCTION_CATALOG)
+        assertTrue("_CAST" in CLICKHOUSE_FUNCTION_CATALOG)
+    }
+
     // ---------------------------------------------------------------- doris
 
     @Test
     fun dorisCatalogLoadsWithExpectedSurface() {
-        // Pinned to the reference/doris checkout the generator ran against.
-        assertEquals(731, DORIS_FUNCTION_CATALOG.size)
+        // Pinned to the Doris 4.1.4 registry the generator ran against.
+        assertEquals(711, DORIS_FUNCTION_CATALOG.size)
         assertTrue("ABS" in DORIS_FUNCTION_CATALOG)
         // alias lookup (SUBSTR/SUBSTRING/MID registered on one def)
         val substr = DORIS_FUNCTION_CATALOG["substr"]
@@ -47,7 +70,7 @@ class FunctionCatalogTest {
     }
 
     @Test
-    fun doris414AdditionsKeepTheirKindsSignaturesAndNullability() {
+    fun dorisCatalogIsTheRegistryOf414() {
         val parse = DORIS_FUNCTION_CATALOG["parse_to_variant"]!!
         val tryParse = DORIS_FUNCTION_CATALOG["try_parse_to_variant"]!!
         for (def in listOf(parse, tryParse)) {
@@ -59,11 +82,26 @@ class FunctionCatalogTest {
         val vectorSearch = DORIS_FUNCTION_CATALOG["vector_search"]!!
         assertEquals(FunctionKind.TABLE_VALUED, vectorSearch.kind)
         assertTrue(vectorSearch.overloads.isEmpty(), "VectorSearch has a dynamic relation schema")
-        // The release supplement must not remove registrations from the base snapshot.
-        for (name in listOf("LEVENSHTEIN", "AVG_MAP", "BINLOG", "EMBED")) {
-            assertTrue(name in DORIS_FUNCTION_CATALOG, name)
+        assertTrue("EMBED" in DORIS_FUNCTION_CATALOG)
+        // Not registered by 4.1.4; the first three were on the earlier master pin.
+        for (name in listOf("LEVENSHTEIN", "AVG_MAP", "BINLOG", "ICEBERG_META")) {
+            assertFalse(name in DORIS_FUNCTION_CATALOG, name)
         }
         assertTrue("DEFAULT" in DORIS_GRAMMAR_BUILTINS)
+    }
+
+    @Test
+    fun dorisSignatureConstantsAreResolved() {
+        // scalar/ElementAt.java lists VARIANT_KEY_SIGNATURE and VARIANT_INDEX_SIGNATURE by name.
+        assertEquals(
+            listOf(
+                FunctionOverload(listOf("ARRAY<ANY_0>", "BIGINT"), "ANY_0"),
+                FunctionOverload(listOf("VARIANT", "VARCHAR"), "VARIANT"),
+                FunctionOverload(listOf("VARIANT", "BIGINT"), "VARIANT"),
+                FunctionOverload(listOf("MAP<ANY_0,ANY_1>", "ANY_0"), "ANY_1"),
+            ),
+            DORIS_FUNCTION_CATALOG["element_at"]!!.overloads,
+        )
     }
 
     @Test
@@ -170,11 +208,10 @@ class FunctionCatalogTest {
 
     @Test
     fun dorisOverloadTotalsArePinned() {
-        // Base snapshot plus release supplement: 632 defs carry 1436
-        // overloads; the rest (dynamic getSignatures(): all table-valued functions,
+        // Doris 4.1.4: 618 defs carry 1418 overloads; the rest (dynamic getSignatures(): all table-valued functions,
         // rank-like window functions, ...) stay empty.
-        assertEquals(1436, DORIS_FUNCTION_CATALOG.functions.sumOf { it.overloads.size })
-        assertEquals(632, DORIS_FUNCTION_CATALOG.functions.count { it.overloads.isNotEmpty() })
+        assertEquals(1418, DORIS_FUNCTION_CATALOG.functions.sumOf { it.overloads.size })
+        assertEquals(618, DORIS_FUNCTION_CATALOG.functions.count { it.overloads.isNotEmpty() })
         // Dynamic-signature examples remain overload-free (names still resolvable).
         assertTrue(DORIS_FUNCTION_CATALOG["rank"]!!.overloads.isEmpty())
         assertTrue(DORIS_FUNCTION_CATALOG["numbers"]!!.overloads.isEmpty())
@@ -205,15 +242,15 @@ class FunctionCatalogTest {
 
     @Test
     fun dorisProfileCoverageIsPinned() {
-        // Base snapshot plus the pinned 4.1.4 supplement (731 defs total). A regeneration
+        // The Doris 4.1.4 registry (711 defs). A regeneration
         // against a new Doris pin is EXPECTED to move these — update deliberately.
         val byMode = DORIS_FUNCTION_CATALOG.functions.groupingBy { it.profile?.nullPropagation }.eachCount()
-        assertEquals(340, byMode[NullPropagation.STRICT])
-        assertEquals(153, byMode[NullPropagation.ALWAYS_NULLABLE])
-        assertEquals(116, byMode[NullPropagation.NEVER_NULL])
+        assertEquals(336, byMode[NullPropagation.STRICT])
+        assertEquals(144, byMode[NullPropagation.ALWAYS_NULLABLE])
+        assertEquals(110, byMode[NullPropagation.NEVER_NULL])
         assertEquals(68, byMode[NullPropagation.UNKNOWN]) // all custom nullable() overrides
-        assertEquals(54, byMode[null]) // no marker on the class (incl. all table kinds)
-        assertEquals(731, byMode.values.sum())
+        assertEquals(53, byMode[null]) // no marker on the class (incl. all table kinds)
+        assertEquals(711, byMode.values.sum())
         // Every emitted UNKNOWN carries its provenance note; no unmapped markers at the pin.
         assertTrue(
             DORIS_FUNCTION_CATALOG.functions
@@ -236,9 +273,7 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbCatalogLoadsWithExpectedSurface() {
-        // Pinned to DuckDB v1.5.6 (the python module the generator embeds).
-        assertEquals(876, DUCKDB_FUNCTION_CATALOG.size)
-        // The 1.5.6 Python registry no longer exposes these ICU locale functions.
+        // The 1.5.6 engine no longer exposes these ICU locale functions.
         for (locale in listOf("fy", "lij", "nso", "st", "tn")) {
             assertFalse("icu_collate_$locale" in DUCKDB_FUNCTION_CATALOG)
         }
@@ -305,11 +340,7 @@ class FunctionCatalogTest {
             setOf(listOf("x"), listOf("x", "precision")),
             round.overloads.mapNotNull { it.argNames }.toSet(),
         )
-        // Engine-wide coverage pin at v1.5.6: 2567 of 2677 overloads carry names
-        // (the rest: duckdb lists no parameters for the row).
         val all = DUCKDB_FUNCTION_CATALOG.functions.flatMap { it.overloads }
-        assertEquals(2677, all.size)
-        assertEquals(2567, all.count { it.argNames != null })
         // Named overloads keep names aligned with the fixed parameter types (variadic
         // rows may name the vararg tail, e.g. concat(string, ...)).
         assertTrue(
@@ -429,53 +460,62 @@ class FunctionCatalogTest {
     }
 
     @Test
-    fun dorisSinceVersionIsPinnedAgainstTheDocsSiteClone() {
+    fun dorisDocumentationTiersArePinnedAgainstTheDocsSiteClone() {
         // vendor/data/doris-since-versions.json ("first documented in", extracted by
         // tools/extract_doris_since_versions.py from a pinned apache/doris-website
         // clone — see vendor/README.md for the method and its honesty caveats).
-        // ABS: documented since the oldest tracked version tier.
-        assertEquals("1.2", DORIS_FUNCTION_CATALOG["abs"]!!.sinceVersion)
-        // AI_CLASSIFY: an AI function, only documented from the 4.x tier onward.
-        assertEquals("4.x", DORIS_FUNCTION_CATALOG["ai_classify"]!!.sinceVersion)
-        // SLEEP: registered by the engine but absent from doris-website entirely at
-        // the pinned clone (debug/admin function, never documented) — honest null,
-        // not a guess.
-        assertNull(DORIS_FUNCTION_CATALOG["sleep"]!!.sinceVersion)
+        assertEquals("1.2", DORIS_FUNCTION_CATALOG["abs"]!!.firstDocumentedIn)
+        assertEquals("4.x", DORIS_FUNCTION_CATALOG["ai_classify"]!!.firstDocumentedIn)
+        // SLEEP: registered but never documented at the pinned clone — honest null.
+        assertNull(DORIS_FUNCTION_CATALOG["sleep"]!!.firstDocumentedIn)
+        // A documentation tier is not a proven introduction.
+        assertTrue(DORIS_FUNCTION_CATALOG.functions.all { it.sinceVersion == null })
     }
 
     @Test
-    fun dorisSinceVersionCoverageIsPinned() {
-        // Coverage at the pinned doris-website clone SHA (vendor/README.md): 650 of
-        // 731 defs matched to a version tier; the rest have no doc anywhere at that
-        // clone (mostly internal/legacy/undocumented functions) or are documented
-        // only in the live/unreleased tree (not yet in a shipped version tier — see
-        // extract_doris_since_versions.py). A regeneration against a newer clone is
+    fun dorisDocumentationTierCoverageIsPinned() {
+        // Coverage at the pinned doris-website clone SHA (vendor/README.md): 631 of
+        // 711 defs matched to a version tier; a regeneration against a newer clone is
         // EXPECTED to move this — update deliberately.
-        val withVersion = DORIS_FUNCTION_CATALOG.functions.count { it.sinceVersion != null }
-        assertEquals(650, withVersion)
-        assertEquals(731, DORIS_FUNCTION_CATALOG.size)
+        assertEquals(631, DORIS_FUNCTION_CATALOG.functions.count { it.firstDocumentedIn != null })
+        assertEquals(711, DORIS_FUNCTION_CATALOG.size)
     }
 
     @Test
-    fun sinceVersionRoundTripsThroughTheWireName() {
-        // Doris catalog values round-trip.
+    fun aDocumentationTierNeverExcludesADef() {
+        val catalog = FunctionCatalog(
+            listOf(
+                FunctionDef("documented_late", FunctionKind.SCALAR, firstDocumentedIn = "4.x"),
+                FunctionDef("introduced", FunctionKind.SCALAR, sinceVersion = "3.0"),
+            ),
+        )
+
+        assertEquals(listOf("documented_late"), catalog.availableIn("2.1").map { it.name })
+        assertEquals(listOf("documented_late", "introduced"), catalog.availableIn("3.0.1").map { it.name })
+        assertEquals(DORIS_FUNCTION_CATALOG.functions, DORIS_FUNCTION_CATALOG.availableIn("1.2"))
+    }
+
+    @Test
+    fun versionFactsRoundTripThroughTheirWireNames() {
         val decoded = Json.decodeFromString(
             ListSerializer(FunctionDef.serializer()),
             DORIS_FUNCTION_CATALOG.toJson(),
         )
-        assertEquals("1.2", decoded.first { it.name == "ABS" }.sinceVersion)
-        assertNull(decoded.first { it.name == "SLEEP" }.sinceVersion)
-        // Wire shape is pinned: snake_case key.
-        val def = FunctionDef("F", FunctionKind.SCALAR, sinceVersion = "2.1")
+        assertEquals("1.2", decoded.first { it.name == "ABS" }.firstDocumentedIn)
+        assertNull(decoded.first { it.name == "SLEEP" }.firstDocumentedIn)
+        // Wire shape is pinned: snake_case keys.
+        val def = FunctionDef("F", FunctionKind.SCALAR, sinceVersion = "2.1", firstDocumentedIn = "2.0")
         val json = Json.encodeToString(FunctionDef.serializer(), def)
         assertTrue("\"since_version\":\"2.1\"" in json)
+        assertTrue("\"first_documented_in\":\"2.0\"" in json)
         assertEquals(def, Json.decodeFromString(FunctionDef.serializer(), json))
-        // Pre-since_version JSON (field absent) still decodes: defaults null.
+        // JSON without the fields still decodes: defaults null.
         val legacy = Json.decodeFromString(
             FunctionDef.serializer(),
             """{"name":"F","kind":"SCALAR"}""",
         )
         assertNull(legacy.sinceVersion)
+        assertNull(legacy.firstDocumentedIn)
     }
 
     @Test

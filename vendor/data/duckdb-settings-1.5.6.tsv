@@ -1,0 +1,161 @@
+name	input_type	scope	aliases	description
+Calendar	VARCHAR	GLOBAL	[]	The current calendar
+TimeZone	VARCHAR	GLOBAL	[]	The current time zone
+__delta_only_variant_encoding_enabled	BOOLEAN	GLOBAL	[]	Enables the Parquet reader to identify a Variant structurally.
+access_mode	VARCHAR	GLOBAL	[]	Access mode of the database (AUTOMATIC, READ_ONLY or READ_WRITE)
+allocator_background_threads	BOOLEAN	GLOBAL	[]	Whether to enable the allocator background thread.
+allocator_bulk_deallocation_flush_threshold	VARCHAR	GLOBAL	[]	If a bulk deallocation larger than this occurs, flush outstanding allocations.
+allocator_flush_threshold	VARCHAR	GLOBAL	[]	Peak allocation threshold at which to flush the allocator after completing a task.
+allow_community_extensions	BOOLEAN	GLOBAL	[]	Allow to load community built extensions
+allow_extensions_metadata_mismatch	BOOLEAN	GLOBAL	[]	Allow to load extensions with not compatible metadata
+allow_parser_override_extension	VARCHAR	GLOBAL	[]	Allow extensions to override the current parser
+allow_persistent_secrets	BOOLEAN	GLOBAL	[]	Allow the creation of persistent secrets, that are stored and loaded on restarts
+allow_unredacted_secrets	BOOLEAN	GLOBAL	[]	Allow printing unredacted secrets
+allow_unsigned_extensions	BOOLEAN	GLOBAL	[]	Allow to load extensions with invalid or missing signatures
+allowed_configs	VARCHAR[]	GLOBAL	[]	List of configuration options that are ALWAYS allowed to be changed - even when lock_configuration is true
+allowed_directories	VARCHAR[]	GLOBAL	[]	List of directories/prefixes that are ALWAYS allowed to be queried - even when enable_external_access is false
+allowed_paths	VARCHAR[]	GLOBAL	[]	List of files that are ALWAYS allowed to be queried - even when enable_external_access is false
+arrow_large_buffer_size	BOOLEAN	GLOBAL	[]	Whether Arrow buffers for strings, blobs, uuids and bits should be exported using large buffers
+arrow_lossless_conversion	BOOLEAN	GLOBAL	[]	Whenever a DuckDB type does not have a clear native or canonical extension match in Arrow, export the types with a duckdb.type_name extension name.
+arrow_output_list_view	BOOLEAN	GLOBAL	[]	Whether export to Arrow format should use ListView as the physical layout for LIST columns
+arrow_output_version	VARCHAR	GLOBAL	[]	Whether strings should be produced by DuckDB in Utf8View format instead of Utf8
+asof_loop_join_threshold	UBIGINT	GLOBAL	[]	The maximum number of rows we need on the left side of an ASOF join to use a nested loop join
+auto_checkpoint_skip_wal_threshold	UBIGINT	GLOBAL	[]	The estimated WAL write size at which point we will skip writing to the WAL and only checkpoint. Skipping writing to the WAL means concurrent commits are blocked while the checkpoint is happening.
+autoinstall_extension_repository	VARCHAR	GLOBAL	[]	Overrides the custom endpoint for extension installation on autoloading
+autoinstall_known_extensions	BOOLEAN	GLOBAL	[]	Whether known extensions are allowed to be automatically installed when a query depends on them
+autoload_known_extensions	BOOLEAN	GLOBAL	[]	Whether known extensions are allowed to be automatically loaded when a query depends on them
+binary_as_string	BOOLEAN	GLOBAL	[]	In Parquet files, interpret binary data as a string.
+block_allocator_memory	VARCHAR	GLOBAL	[]	Physical memory that the block allocator is allowed to use (this memory is never freed and cannot be reduced).
+catalog_error_max_schemas	UBIGINT	GLOBAL	[]	The maximum number of schemas the system will scan for "did you mean..." style errors in the catalog
+checkpoint_threshold	VARCHAR	GLOBAL	["wal_autocheckpoint"]	The WAL size threshold at which to automatically trigger a checkpoint (e.g. 1GB)
+current_transaction_invalidation_policy	VARCHAR	GLOBAL	[]	Which types of exceptions invalidate the database for the current transaction
+custom_extension_repository	VARCHAR	GLOBAL	[]	Overrides the custom endpoint for remote extension installation
+custom_profiling_settings	VARCHAR	LOCAL	[]	Accepts a JSON enabling custom metrics
+custom_user_agent	VARCHAR	GLOBAL	[]	Metadata from DuckDB callers
+debug_asof_iejoin	BOOLEAN	GLOBAL	[]	DEBUG SETTING: force use of IEJoin to implement AsOf joins
+debug_checkpoint_abort	VARCHAR	GLOBAL	[]	DEBUG SETTING: trigger an abort while checkpointing for testing purposes
+debug_checkpoint_scan_sleep_ms	UBIGINT	GLOBAL	[]	DEBUG SETTING: time to sleep after a checkpoint has written a table's row groups, before it installs them
+debug_checkpoint_sleep_ms	UBIGINT	GLOBAL	[]	DEBUG SETTING: time to sleep before a checkpoint
+debug_eviction_queue_sleep_micro_seconds	UBIGINT	GLOBAL	[]	DEBUG SETTING: time for the eviction queue to sleep before acquiring shared ownership of block memory
+debug_force_external	BOOLEAN	LOCAL	[]	DEBUG SETTING: force out-of-core computation for operators that support it, used for testing
+debug_force_no_cross_product	BOOLEAN	GLOBAL	[]	DEBUG SETTING: Force disable cross product generation when hyper graph isn't connected, used for testing
+debug_physical_table_scan_execution_strategy	VARCHAR	GLOBAL	[]	DEBUG SETTING: force use of given strategy for executing physical table scans
+debug_skip_checkpoint_on_commit	BOOLEAN	GLOBAL	[]	DEBUG SETTING: skip checkpointing on commit
+debug_verify_blocks	BOOLEAN	GLOBAL	[]	DEBUG SETTING: verify block metadata during checkpointing
+debug_verify_vector	VARCHAR	GLOBAL	[]	DEBUG SETTING: enable vector verification
+debug_window_mode	VARCHAR	GLOBAL	[]	DEBUG SETTING: switch window mode to use
+default_block_size	UBIGINT	GLOBAL	[]	The default block size for new duckdb database files (new as-in, they do not yet exist).
+default_collation	VARCHAR	GLOBAL	[]	The collation setting used when none is specified
+default_null_order	VARCHAR	GLOBAL	["null_order"]	NULL ordering used when none is specified (NULLS_FIRST or NULLS_LAST)
+default_order	VARCHAR	GLOBAL	[]	The order type used when none is specified (ASC or DESC)
+default_secret_storage	VARCHAR	GLOBAL	[]	Allows switching the default storage for secrets
+deprecated_using_key_syntax	VARCHAR	GLOBAL	[]	Configures the use of the deprecated union syntax for USING KEY CTEs.
+disable_database_invalidation	BOOLEAN	GLOBAL	[]	Disables invalidating the database instance when encountering a fatal error. Should be used with great care, as DuckDB cannot guarantee correct behavior after a fatal error.
+disable_parquet_prefetching	BOOLEAN	GLOBAL	[]	Disable the prefetching mechanism in Parquet
+disable_timestamptz_casts	BOOLEAN	GLOBAL	[]	Disable casting from timestamp to timestamptz 
+disabled_compression_methods	VARCHAR	GLOBAL	[]	Disable a specific set of compression methods (comma separated)
+disabled_filesystems	VARCHAR	GLOBAL	[]	Disable specific file systems preventing access (e.g. LocalFileSystem)
+disabled_log_types	VARCHAR	GLOBAL	[]	Sets the list of disabled loggers
+disabled_optimizers	VARCHAR	GLOBAL	[]	DEBUG SETTING: disable a specific set of optimizers (comma separated)
+duckdb_api	VARCHAR	GLOBAL	[]	DuckDB API surface
+dynamic_or_filter_threshold	UBIGINT	GLOBAL	[]	The maximum amount of OR filters we generate dynamically from a hash join
+enable_caching_operators	BOOLEAN	LOCAL	[]	Enables caching operators that cache intermediate results
+enable_external_access	BOOLEAN	GLOBAL	[]	Allow the database to access external state (through e.g. loading/installing modules, COPY TO/FROM, CSV readers, pandas replacement scans, etc)
+enable_external_file_cache	BOOLEAN	GLOBAL	[]	Allow the database to cache external files (e.g., Parquet) in memory.
+enable_fsst_vectors	BOOLEAN	GLOBAL	[]	Allow scans on FSST compressed segments to emit compressed vectors to utilize late decompression
+enable_geoparquet_conversion	BOOLEAN	GLOBAL	[]	Attempt to decode/encode geometry data in/as GeoParquet files if the spatial extension is present.
+enable_http_logging	BOOLEAN	LOCAL	[]	(deprecated) Enables HTTP logging
+enable_http_metadata_cache	BOOLEAN	GLOBAL	[]	Whether or not the global http metadata is used to cache HTTP metadata
+enable_logging	BOOLEAN	GLOBAL	[]	Enables the logger
+enable_macro_dependencies	BOOLEAN	GLOBAL	[]	Enable created MACROs to create dependencies on the referenced objects (such as tables)
+enable_object_cache	BOOLEAN	GLOBAL	[]	[PLACEHOLDER] Legacy setting - does nothing
+enable_optimistic_write	BOOLEAN	GLOBAL	[]	Whether or not to optimistically write large appends to disk before committing. Disable this to keep bulk appends in memory (e.g. for in-memory benchmarks).
+enable_profiling	VARCHAR	LOCAL	[]	Enables profiling, and sets the output format (JSON, QUERY_TREE, QUERY_TREE_OPTIMIZER)
+enable_progress_bar	BOOLEAN	LOCAL	[]	Enables the progress bar, printing progress to the terminal for long queries
+enable_progress_bar_print	BOOLEAN	LOCAL	[]	Controls the printing of the progress bar, when 'enable_progress_bar' is true
+enable_view_dependencies	BOOLEAN	GLOBAL	[]	Enable created VIEWs to create dependencies on the referenced objects (such as tables)
+enabled_log_types	VARCHAR	GLOBAL	[]	Sets the list of enabled loggers
+errors_as_json	BOOLEAN	GLOBAL	[]	Output error messages as structured JSON instead of as a raw string
+experimental_metadata_reuse	BOOLEAN	GLOBAL	[]	EXPERIMENTAL: Re-use row group and table metadata when checkpointing.
+explain_output	VARCHAR	GLOBAL	[]	Output of EXPLAIN statements (ALL, OPTIMIZED_ONLY, PHYSICAL_ONLY)
+extension_directories	VARCHAR[]	GLOBAL	[]	Set the directories to store extensions in
+extension_directory	VARCHAR	GLOBAL	[]	Set the directory to store extensions in
+external_threads	UBIGINT	GLOBAL	[]	The number of external threads that work on DuckDB tasks.
+file_search_path	VARCHAR	GLOBAL	[]	A comma separated list of directories to search for input files
+force_bitpacking_mode	VARCHAR	GLOBAL	[]	DEBUG SETTING: forces a specific bitpacking mode
+force_column_metadata_reuse	BOOLEAN	GLOBAL	[]	Force re-use of row group metadata on a column-level when checkpointing on older storage versions 6 and 7. This breaks storage backward-compatibility with older DuckDB versions.
+force_compression	VARCHAR	GLOBAL	[]	DEBUG SETTING: forces a specific compression method to be used
+force_mbedtls_unsafe	BOOLEAN	GLOBAL	[]	Enable mbedtls for encryption (WARNING: unsafe to use)
+force_variant_shredding	VARCHAR	GLOBAL	[]	Forces the VARIANT shredding that happens at checkpoint to use the provided schema for the shredding.
+geometry_minimum_shredding_size	BIGINT	GLOBAL	[]	Minimum size of a rowgroup to enable GEOMETRY shredding, or set to -1 to disable entirely. Defaults to 1/4th of a rowgroup
+home_directory	VARCHAR	GLOBAL	[]	Sets the home directory used by the system
+http_logging_output	VARCHAR	LOCAL	[]	(deprecated) The file to which HTTP logging output should be saved, or empty to print to the terminal
+http_proxy	VARCHAR	GLOBAL	[]	HTTP proxy host (defaults to the HTTP_PROXY environment variable when unset)
+http_proxy_password	VARCHAR	GLOBAL	[]	Password for HTTP proxy
+http_proxy_username	VARCHAR	GLOBAL	[]	Username for HTTP proxy
+ieee_floating_point_ops	BOOLEAN	GLOBAL	[]	Use IEE754-compliant floating point operations (returning NAN instead of errors/NULL).
+ignore_unknown_crs	BOOLEAN	GLOBAL	[]	Ignore unknown Coordinate Reference Systems (CRS) when creating geometry types or importing geospatial data.
+immediate_transaction_mode	BOOLEAN	GLOBAL	[]	Whether transactions should be started lazily when needed, or immediately when BEGIN TRANSACTION is called
+index_scan_max_count	UBIGINT	GLOBAL	[]	The maximum index scan count sets a threshold for index scans. If fewer than MAX(index_scan_max_count, index_scan_percentage * total_row_count) rows match, we perform an index scan instead of a table scan.
+index_scan_percentage	DOUBLE	GLOBAL	[]	The index scan percentage sets a threshold for index scans. If fewer than MAX(index_scan_max_count, index_scan_percentage * total_row_count) rows match, we perform an index scan instead of a table scan.
+integer_division	BOOLEAN	GLOBAL	[]	Whether or not the / operator defaults to integer division, or to floating point division
+jdbc_stream_results	BOOLEAN	GLOBAL	[]	Whether to stream results. Only one ResultSet on a connection can be open at once when true
+lambda_syntax	VARCHAR	GLOBAL	[]	Configures the use of the deprecated single arrow operator (->) for lambda functions.
+late_materialization_max_rows	UBIGINT	GLOBAL	[]	The maximum amount of rows in the LIMIT/SAMPLE for which we trigger late materialization
+lock_configuration	BOOLEAN	GLOBAL	[]	Whether or not configurations can be altered
+log_query_path	VARCHAR	GLOBAL	[]	Specifies the path to which queries should be logged (default: NULL, queries are not logged)
+logging_level	VARCHAR	GLOBAL	[]	The log level which will be recorded in the log
+logging_mode	VARCHAR	GLOBAL	[]	Determines which types of log messages are logged
+logging_storage	VARCHAR	GLOBAL	[]	Set the logging storage (memory/stdout/file/<custom>)
+max_expression_depth	UBIGINT	GLOBAL	[]	The maximum expression depth limit in the parser. WARNING: increasing this setting and using very deep expressions might lead to stack overflow errors.
+max_memory	VARCHAR	GLOBAL	["memory_limit"]	The maximum memory of the system (e.g. 1GB)
+max_temp_directory_size	VARCHAR	GLOBAL	[]	The maximum amount of data stored inside the 'temp_directory' (when set) (e.g. 1GB)
+max_vacuum_tasks	UBIGINT	GLOBAL	[]	The maximum vacuum tasks to schedule during a checkpoint.
+memory_limit	VARCHAR	GLOBAL	[]	The maximum memory of the system (e.g. 1GB)
+merge_join_threshold	UBIGINT	GLOBAL	[]	The maximum number of rows on either table to choose a merge join
+nested_loop_join_threshold	UBIGINT	GLOBAL	[]	The maximum number of rows on either table to choose a nested loop join
+null_order	VARCHAR	GLOBAL	[]	NULL ordering used when none is specified (NULLS_FIRST or NULLS_LAST)
+old_implicit_casting	BOOLEAN	GLOBAL	[]	Allow implicit casting to/from VARCHAR
+order_by_non_integer_literal	BOOLEAN	GLOBAL	[]	Allow ordering by non-integer literals - ordering by such literals has no effect.
+ordered_aggregate_threshold	UBIGINT	GLOBAL	[]	The number of rows to accumulate before sorting, used for tuning
+parquet_metadata_cache	BOOLEAN	GLOBAL	[]	Cache Parquet metadata - useful when reading the same files multiple times
+partitioned_write_flush_threshold	UBIGINT	GLOBAL	[]	The threshold in number of rows after which we flush a thread state when writing using PARTITION_BY
+partitioned_write_max_open_files	UBIGINT	GLOBAL	[]	The maximum amount of files the system can keep open before flushing to disk when writing using PARTITION_BY
+password	VARCHAR	GLOBAL	[]	The password to use. Ignored for legacy compatibility.
+perfect_ht_threshold	UBIGINT	GLOBAL	[]	Threshold in bytes for when to use a perfect hash table
+pin_threads	VARCHAR	GLOBAL	[]	Whether to pin threads to cores (Linux only, default AUTO: on when there are more than 64 cores)
+pivot_filter_threshold	UBIGINT	GLOBAL	[]	The threshold to switch from using filtered aggregates to LIST with a dedicated pivot operator
+pivot_limit	UBIGINT	GLOBAL	[]	The maximum number of pivot columns in a pivot statement
+prefer_range_joins	BOOLEAN	GLOBAL	[]	Force use of range joins with mixed predicates
+prefetch_all_parquet_files	BOOLEAN	GLOBAL	[]	Use the prefetching mechanism for all types of parquet files
+preserve_identifier_case	BOOLEAN	GLOBAL	[]	Whether or not to preserve the identifier case, instead of always lowercasing all non-quoted identifiers
+preserve_insertion_order	BOOLEAN	GLOBAL	[]	Whether or not to preserve insertion order. If set to false the system is allowed to re-order any results that do not contain ORDER BY clauses.
+produce_arrow_string_view	BOOLEAN	GLOBAL	[]	Whether Arrow strings should be produced by DuckDB in Utf8View format instead of Utf8
+profile_output	VARCHAR	LOCAL	["profiling_output"]	The file to which profile output should be saved, or empty to print to the terminal
+profiling_coverage	VARCHAR	LOCAL	[]	The profiling coverage (SELECT or ALL)
+profiling_mode	VARCHAR	LOCAL	[]	The profiling mode (STANDARD or DETAILED)
+profiling_output	VARCHAR	LOCAL	[]	The file to which profile output should be saved, or empty to print to the terminal
+progress_bar_time	BIGINT	LOCAL	[]	Sets the time (in milliseconds) how long a query needs to take before we start printing a progress bar
+scalar_subquery_error_on_multiple_rows	BOOLEAN	GLOBAL	[]	When a scalar subquery returns multiple rows - return a random row instead of returning an error.
+scheduler_process_partial	BOOLEAN	GLOBAL	[]	Partially process tasks before rescheduling - allows for more scheduler fairness between separate queries
+schema	VARCHAR	LOCAL	[]	Sets the default search schema. Equivalent to setting search_path to a single value.
+search_path	VARCHAR	LOCAL	[]	Sets the default catalog search path as a comma-separated list of values
+secret_directory	VARCHAR	GLOBAL	[]	Set the directory to which persistent secrets are stored
+storage_block_prefetch	VARCHAR	GLOBAL	[]	In which scenarios to use storage block prefetching
+storage_compatibility_version	VARCHAR	GLOBAL	[]	Serialize on checkpoint with compatibility for a given duckdb version
+streaming_buffer_size	VARCHAR	LOCAL	[]	The maximum memory to buffer between fetching from a streaming result (e.g. 1GB)
+temp_directory	VARCHAR	GLOBAL	[]	Set the directory to which to write temp files
+temp_file_encryption	BOOLEAN	GLOBAL	[]	Encrypt all temporary files if database is encrypted
+threads	BIGINT	GLOBAL	["worker_threads"]	The number of total threads used by the system.
+user	VARCHAR	GLOBAL	[]	The username to use. Ignored for legacy compatibility.
+username	VARCHAR	GLOBAL	["user"]	The username to use. Ignored for legacy compatibility.
+vacuum_rebuild_indexes	UBIGINT	GLOBAL	[]	(Experimental) Allow vacuum to compact row groups on tables with bound ART indexes, rebuilding the indexes afterward. Tables with a row count exceeding this threshold are skipped. 0 = disabled. Can also be set per-database via the 'vacuum_rebuild_indexes' ATTACH option, which overrides this default.
+validate_external_file_cache	VARCHAR	GLOBAL	[]	Cache validation mode: VALIDATE_ALL (default, validate all cache entries), VALIDATE_REMOTE (validate only remote cache entries), or NO_VALIDATION (disable cache validation).
+variant_minimum_shredding_size	BIGINT	GLOBAL	[]	Minimum size of a rowgroup to enable VARIANT shredding, or set to -1 to disable entirely. Defaults to 1/4th of a rowgroup
+wal_autocheckpoint	VARCHAR	GLOBAL	[]	The WAL size threshold at which to automatically trigger a checkpoint (e.g. 1GB)
+wal_autocheckpoint_entries	UBIGINT	GLOBAL	[]	Trigger automatic checkpoint when WAL entry count reaches or exceeds N (0 = disabled)
+warnings_as_errors	BOOLEAN	GLOBAL	[]	Escalate all warnings to errors.
+worker_threads	BIGINT	GLOBAL	[]	The number of total threads used by the system.
+write_buffer_row_group_count	UBIGINT	GLOBAL	[]	The amount of row groups to buffer in bulk ingestion prior to flushing them together. Reducing this setting can reduce memory consumption.
+write_buffer_row_group_memory_limit	VARCHAR	GLOBAL	[]	The maximum data to buffer in row groups (in bytes) to buffer prior to flushing them together. When either this limit is reached, or write_buffer_row_group_count is reached, we flush the data to disk. Defaults to 20% of memory limit divided by thread count.
+zstd_min_string_length	UBIGINT	GLOBAL	[]	The (average) length at which to enable ZSTD compression, defaults to 4096

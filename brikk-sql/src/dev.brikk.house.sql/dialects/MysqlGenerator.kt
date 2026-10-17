@@ -84,6 +84,10 @@ open class MysqlGenerator(
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.MYSQL
+    override fun ifSql(expression: If): String = func("IF", expression.thisArg, expression.args["true"],
+        expression.args["false"] ?: Null())
+    override val alterPartitionOptions: Set<KClass<out Expression>>
+        get() = setOf(PartitionByListProperty::class, PartitionByRangeProperty::class)
 
     // ------------------------------------------------------------------
     // Flags (sqlglot: MySQLGenerator class attributes)
@@ -113,6 +117,7 @@ open class MysqlGenerator(
     override val supportsMedian: Boolean get() = false
     override val updateStatementSupportsFrom: Boolean get() = false
     override val limitFetch: String get() = "LIMIT"
+    override val castToIntRounds: Boolean get() = true
 
     // sqlglot: MySQLGenerator.LIMIT_ONLY_LITERALS = True
     override val limitOnlyLiterals: Boolean get() = true
@@ -127,7 +132,8 @@ open class MysqlGenerator(
     // sqlglot: STRING_ESCAPES contains "\\" -> STRINGS_SUPPORT_ESCAPED_SEQUENCES
     override val dialectStringsSupportEscapedSequences: Boolean get() = true
     // sqlglot: Dialect.ESCAPED_SEQUENCES ({v: k for UNESCAPED_SEQUENCES})
-    override val escapedSequences: Map<String, String> get() = ESCAPED_SEQUENCES
+    override val escapedSequences: Map<String, String>
+        get() = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
     // sqlglot: Generator._escaped_quote_end (STRING_ESCAPES[0] == "'")
     override val escapedQuoteEnd: String get() = "''"
     // sqlglot: MySQL HEX_STRINGS = [("x'", "'"), ...]
@@ -314,10 +320,7 @@ open class MysqlGenerator(
         renameFuncSql(if (expression.expressionsArg.isNotEmpty()) "LEAST" else "MIN", expression)
 
     // sqlglot: dialect.no_pivot_sql
-    open fun noPivotSql(expression: Pivot): String {
-        unsupported("PIVOT unsupported")
-        return ""
-    }
+    open fun noPivotSql(expression: Pivot): String = unsupportedPivotSql()
 
     // sqlglot: dialect.no_tablesample_sql
     open fun noTablesampleSql(expression: TableSample): String {
@@ -549,7 +552,9 @@ open class MysqlGenerator(
             "PROJECTIONS" -> target = if (target.isNotEmpty()) " ON TABLE$target" else ""
         }
 
-        val db = prefixedSql("FROM", expression, "db")
+        val db = if (expression.name == "CREATE TABLE" && sql(expression, "db").isNotEmpty()) {
+            target = " ${sql(expression, "db")}.${sql(expression, "target")}"; ""
+        } else prefixedSql("FROM", expression, "db")
 
         val like = prefixedSql("LIKE", expression, "like")
         val where = sql(expression, "where")
@@ -667,6 +672,17 @@ open class MysqlGenerator(
         // https://dev.mysql.com/doc/refman/8.4/en/window-function-descriptions.html
         unsupported("MySQL does not support IGNORE NULLS.")
         return sql(expression.thisArg)
+    }
+
+    // sqlglot: MySQLGenerator.intdiv_sql (6aeb6a0ab7): DIV needs operand and parent
+    // grouping, including right-nested divisions and unary negation/bitwise NOT.
+    override fun intdivSql(expression: IntDiv): String {
+        fun operand(value: Expression): String = if (value is Binary) sql(Paren(args("this" to value.copy()))) else sql(value)
+        val rendered = "${operand(expression.left)} ${maybeComment("DIV", comments = expression.comments)} ${operand(expression.right)}"
+        val parent = expression.parent
+        return if (parent is Neg || parent is BitwiseNot ||
+            ((parent is Mul || parent is Div || parent is IntDiv || parent is Mod) &&
+                parent.expressionArg === expression)) wrap(rendered) else rendered
     }
 
     // sqlglot: MySQLGenerator.currentschema_sql (@unsupported_args("this"))
@@ -795,6 +811,7 @@ open class MysqlGenerator(
                 PartitionedByProperty::class to GeneratorTables.PropLocation.UNSUPPORTED,
                 PartitionByRangeProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 PartitionByListProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
+                Property::class to GeneratorTables.PropLocation.POST_SCHEMA,
             )
 
         // sqlglot: MySQLGenerator.TRANSFORMS (dispatch-map overlay; multi-line entries are
@@ -819,14 +836,12 @@ open class MysqlGenerator(
                 func("DATEDIFF", e.thisArg, e.args["expression"])
             }
             reg(DateAdd::class) { e ->
-                mg().removeTsOrDsToDate(e, "this")
                 mg().dateAddSql("ADD", e)
             }
             reg(DateStrToDate::class) { e ->
                 sql(Cast(args("this" to e.thisArg, "to" to DataType(args("this" to DType.DATE)))))
             }
             reg(DateSub::class) { e ->
-                mg().removeTsOrDsToDate(e, "this")
                 mg().dateAddSql("SUB", e)
             }
             reg(DateTrunc::class) { e -> mg().dateTruncSql(e as DateTrunc) }
@@ -894,7 +909,7 @@ open class MysqlGenerator(
                 func("DATE_FORMAT", e.thisArg, formatTime(e))
             }
             reg(Trim::class) { e -> mg().mysqlTrimSql(e as Trim) }
-            reg(Trunc::class) { e -> mg().renameFuncSql("TRUNCATE", e) }
+            reg(Trunc::class) { e -> func("TRUNCATE", e.thisArg, e.args["decimals"] ?: Literal.number(0)) }
             reg(TryCast::class) { e -> castSql(e as TryCast) }
             reg(TsOrDsAdd::class) { e -> mg().dateAddSql("ADD", e) }
             reg(TsOrDsDiff::class) { e -> func("DATEDIFF", e.thisArg, e.args["expression"]) }

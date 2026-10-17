@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.parser
 
+import dev.brikk.house.sql.dialects.Dialects
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -60,6 +61,21 @@ class PipeSplitResult(
         pipeOperatorCount = pipeOperatorCount,
         rawStages = stages.map { it.rawSql },
     )
+}
+
+/** Where run-to-stage may cut a pipe program; see [PipeStageSplitter.topLevelPrefixAt]. */
+sealed interface PipeStageCut {
+    /**
+     * [sql] is the program through its last token in top-level [stage], a 0-based index into
+     * [PipeSplitResult.stages] of [stageCount].
+     */
+    data class Prefix(val sql: String, val stage: Int, val stageCount: Int) : PipeStageCut
+
+    /** Stages inside a bracketed pipeline are not top-level stages. */
+    data object InsideNestedPipeline : PipeStageCut
+
+    /** Fewer than two stages, an offset outside every stage, or untokenizable text. */
+    data object Unavailable : PipeStageCut
 }
 
 /**
@@ -134,6 +150,63 @@ object PipeStageSplitter {
     }
 
     /**
+     * The executable prefix of [sql] for running up to the top-level stage at [offset], a caret
+     * position in `0..sql.length`. Stage ranges are half-open: a stage owns everything from its
+     * first token up to the next stage's first token, and the last stage owns the rest of [sql].
+     * A bracketed pipeline owns the positions from just before its `(` through just before its `)`.
+     * A top-level `;` ends the program; positions after it are [PipeStageCut.Unavailable].
+     */
+    fun topLevelPrefixAt(sql: String, offset: Int, dialect: String = ""): PipeStageCut {
+        if (offset !in 0..sql.length) return PipeStageCut.Unavailable
+        val split = try {
+            val whole = split(sql, dialect)
+            when (val terminator = whole.topLevelTerminator()) {
+                null -> whole
+                else -> {
+                    if (offset > terminator.end + 1) return PipeStageCut.Unavailable
+                    split(sql.substring(0, terminator.start), dialect)
+                }
+            }
+        } catch (_: TokenError) {
+            return PipeStageCut.Unavailable
+        }
+        if (split.isInsideNestedPipeline(offset)) return PipeStageCut.InsideNestedPipeline
+        val stages = split.stages
+        val stage = stages.indexOfLast { offset >= it.start }
+        if (stages.size < 2 || stage < 0) return PipeStageCut.Unavailable
+        return PipeStageCut.Prefix(sql.substring(0, stages[stage].endInclusive + 1), stage, stages.size)
+    }
+
+    private fun PipeSplitResult.topLevelTerminator(): Token? {
+        var depth = 0
+        for (token in tokens) when (token.tokenType) {
+            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> depth++
+            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> depth--
+            TokenType.SEMICOLON -> if (depth == 0) return token
+            else -> {}
+        }
+        return null
+    }
+
+    private class Bracket(val start: Int) {
+        var hasPipe = false
+    }
+
+    private fun PipeSplitResult.isInsideNestedPipeline(offset: Int): Boolean {
+        val open = ArrayList<Bracket>()
+        for (token in tokens) when (token.tokenType) {
+            TokenType.L_PAREN, TokenType.L_BRACKET, TokenType.L_BRACE -> open.add(Bracket(token.start))
+            TokenType.PIPE_GT -> open.lastOrNull()?.hasPipe = true
+            TokenType.R_PAREN, TokenType.R_BRACKET, TokenType.R_BRACE -> open.removeLastOrNull()?.let {
+                if (it.hasPipe && offset in it.start..token.end) return true
+            }
+            else -> {}
+        }
+        // An unclosed pipeline extends to the end of the text.
+        return open.any { it.hasPipe && offset >= it.start }
+    }
+
+    /**
      * Best-effort classification of a stage's leading pipe operator, normalized to the
      * GoogleSQL operator names (see reference/googlesql/docs/pipe-syntax.md). JOIN-family
      * and set-operator prefixes are resolved; anything else is the first token's text
@@ -172,3 +245,64 @@ object PipeStageSplitter {
 
     private val SET_OPS = setOf(TokenType.UNION, TokenType.INTERSECT, TokenType.EXCEPT)
 }
+
+/**
+ * brikk-native: the phrases that can start a pipe stage after `|>` in [dialect], from the
+ * parser's own tables: transform operators (`WHERE`, `ORDER BY`, ...), joins (`JOIN`,
+ * `side [OUTER] JOIN`, kind and method joins) and set operations (`ALL`/`DISTINCT`, and bare
+ * where the dialect has a default). Join and set-operation phrases are omitted when a word in
+ * them is not a keyword of the dialect.
+ */
+fun pipeStageKeywords(dialect: String): List<String> {
+    val source = Dialects.forName(dialect)
+    val parser = source.parser()
+    val words = source.tokenizerConfig.keywords.entries
+        .filter { ' ' !in it.key }
+        .groupBy({ it.value }, { it.key })
+        .mapValues { (type, spellings) -> spellings.firstOrNull { it == type.name } ?: spellings.first() }
+    val joins = words[TokenType.JOIN]?.let { join ->
+        buildList {
+            add(join)
+            val outer = words[TokenType.OUTER]?.takeIf { TokenType.OUTER in parser.joinKinds }
+            for (side in parser.joinSides.mapNotNull(words::get)) {
+                add("$side $join")
+                if (outer != null) add("$side $outer $join")
+            }
+            for (prefix in (parser.joinKinds - TokenType.OUTER + parser.joinMethods).mapNotNull(words::get)) {
+                add(if (prefix.endsWith(join)) prefix else "$prefix $join")
+            }
+        }
+    }.orEmpty()
+    val setOperations = parser.setOperations.flatMap { type ->
+        val operation = words[type] ?: return@flatMap emptyList()
+        listOfNotNull(
+            operation.takeIf { parser.setOpDistinctByDefault(type) != null },
+            words[TokenType.ALL]?.let { "$operation $it" },
+            words[TokenType.DISTINCT]?.let { "$operation $it" },
+        )
+    }
+    return parser.pipeStageTransformOperators.toList() + joins + setOperations
+}
+
+/**
+ * brikk-native: the [pipeStageKeywords] of [dialect] that its engine runs as core lowers them
+ * ([dev.brikk.house.sql.dialects.Dialect.pipeRunnableStages]), in their order; all of them for a
+ * dialect without recorded evidence.
+ */
+fun pipeRunnableStageKeywords(dialect: String): List<String> {
+    val parsed = pipeStageKeywords(dialect)
+    val runnable = Dialects.forName(dialect).pipeRunnableStages ?: return parsed
+    return parsed.filter { it in runnable }
+}
+
+/**
+ * Stage phrases every engine with recorded evidence ran as lowered (Trino 483, DuckDB 1.5.6 and
+ * ClickHouse 26.7 executed them; the Doris 4.1.4 FE parser accepted them). STRAIGHT_JOIN is left
+ * out everywhere: no engine parses `a STRAIGHT_JOIN b`.
+ */
+internal val PIPE_STAGES_RUN_EVERYWHERE: Set<String> = setOf(
+    "AGGREGATE", "AS", "DISTINCT", "EXTEND", "LIMIT", "OFFSET", "ORDER BY", "SELECT", "WHERE", "WINDOW",
+    "JOIN", "INNER JOIN", "CROSS JOIN", "LEFT JOIN", "LEFT OUTER JOIN", "RIGHT JOIN", "RIGHT OUTER JOIN",
+    "FULL JOIN", "FULL OUTER JOIN", "SEMI JOIN", "ANTI JOIN",
+    "UNION ALL", "UNION DISTINCT", "INTERSECT", "INTERSECT ALL", "INTERSECT DISTINCT", "EXCEPT", "EXCEPT ALL", "EXCEPT DISTINCT",
+)

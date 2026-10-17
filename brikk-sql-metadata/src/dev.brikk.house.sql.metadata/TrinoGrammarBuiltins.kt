@@ -1,5 +1,9 @@
 package dev.brikk.house.sql.metadata
 
+import dev.brikk.house.sql.metadata.InvocationSyntax.BARE
+import dev.brikk.house.sql.metadata.InvocationSyntax.CALL
+import dev.brikk.house.sql.metadata.InvocationSyntax.SPECIAL_FORM
+
 /*
  * HANDWRITTEN (not generated): engine-GRAMMAR knowledge for Trino, curated by reading
  * the pinned Trino 483 sources — it cannot be derived from the `SHOW FUNCTIONS` dump
@@ -66,4 +70,49 @@ val TRINO_GRAMMAR_BUILTINS: Set<String> = setOf(
     "COALESCE",             // -> CoalesceExpression
     "TRY",                  // -> TryExpression
     "FORMAT",               // -> Format
+)
+
+/*
+ * Grammar forms for completion (DF-13): every name above plus the registered names whose
+ * SqlBase.g4 rule changes how they are written (reserved CURRENT_DATE is bare only; TRIM,
+ * SUBSTRING, NORMALIZE take keyword arguments; LISTAGG needs WITHIN GROUP). From the 483
+ * grammar rule cited for each name above.
+ */
+internal val TRINO_GRAMMAR_FORMS: List<GrammarForm> = listOf(
+    grammarForm("POSITION", SPECIAL_FORM, template = "POSITION(substring IN string)"),
+    grammarForm("ROW", CALL),
+    grammarForm("EXISTS", SPECIAL_FORM, template = "EXISTS(query)"),
+    grammarForm("UNIQUE", SPECIAL_FORM, template = "UNIQUE(query)"),
+    grammarForm("CAST", SPECIAL_FORM, template = "CAST(expression AS type)"),
+    grammarForm("TRY_CAST", SPECIAL_FORM, template = "TRY_CAST(expression AS type)"),
+    grammarForm("OVERLAY", SPECIAL_FORM, template = "OVERLAY(string PLACING replacement FROM start [FOR length])"),
+    grammarForm("EXTRACT", SPECIAL_FORM, template = "EXTRACT(field FROM expression)"),
+    grammarForm("GROUPING", CALL),
+    grammarForm("JSON_EXISTS", SPECIAL_FORM, template = "JSON_EXISTS(json, path)"),
+    grammarForm("JSON_VALUE", SPECIAL_FORM, template = "JSON_VALUE(json, path)"),
+    grammarForm("JSON_QUERY", SPECIAL_FORM, template = "JSON_QUERY(json, path)"),
+    grammarForm("JSON_OBJECT", SPECIAL_FORM, template = "JSON_OBJECT(key VALUE value, ...)"),
+    grammarForm("JSON_ARRAY", SPECIAL_FORM, template = "JSON_ARRAY(value, ...)"),
+    // Optional precision: CURRENT_TIMESTAMP or CURRENT_TIMESTAMP(3).
+    grammarForm("CURRENT_TIME", BARE, CALL),
+    grammarForm("CURRENT_TIMESTAMP", BARE, CALL),
+    grammarForm("LOCALTIME", BARE, CALL),
+    grammarForm("LOCALTIMESTAMP", BARE, CALL),
+    grammarForm("CURRENT_USER", BARE),
+    grammarForm("CURRENT_CATALOG", BARE),
+    grammarForm("CURRENT_SCHEMA", BARE),
+    grammarForm("CURRENT_PATH", BARE),
+    grammarForm("UNNEST", CALL, kind = FunctionKind.TABLE_VALUED),
+    grammarForm("JSON_TABLE", SPECIAL_FORM, kind = FunctionKind.TABLE_VALUED, template = "JSON_TABLE(json, path COLUMNS (...))"),
+    grammarForm("IF", CALL),
+    grammarForm("NULLIF", CALL),
+    grammarForm("COALESCE", CALL),
+    grammarForm("TRY", CALL),
+    grammarForm("FORMAT", CALL),
+    // Registered functions with their own grammar rule.
+    grammarForm("CURRENT_DATE", BARE),
+    grammarForm("TRIM", CALL, SPECIAL_FORM, template = "TRIM([BOTH | LEADING | TRAILING] [characters] FROM string)"),
+    grammarForm("SUBSTRING", CALL, SPECIAL_FORM, template = "SUBSTRING(string FROM start [FOR length])"),
+    grammarForm("NORMALIZE", CALL, SPECIAL_FORM, template = "NORMALIZE(string [, NFC | NFD | NFKC | NFKD])"),
+    grammarForm("LISTAGG", SPECIAL_FORM, kind = FunctionKind.AGGREGATE, template = "LISTAGG(expression, separator) WITHIN GROUP (ORDER BY ...)"),
 )

@@ -1,0 +1,28 @@
+# Trino native-grammar verifier over trino-parser, the exact ANTLR grammar the engine runs.
+product: jvm/lib
+
+# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+description: Trino native-grammar SQL verifier (trino-parser) for brikk-sql.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  - ../brikk-sql-verify-api: exported
+  # 483 matches the vendored function catalog (vendor/data/trino-functions-483.tsv).
+  # trino-parser ships class-file 69, so it needs a JDK 25 runtime; this module's own
+  # classes stay Java 21 bytecode.
+  - io.trino:trino-parser:483
+
+settings:
+  publishing:
+    # Published coordinate: dev.brikk.house:brikk-sql-verify-trino.
+    artifactId: brikk-sql-verify-trino
+  jvm:
+    jdk:
+      version: 25
+    release: 21
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict

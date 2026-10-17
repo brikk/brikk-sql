@@ -23,6 +23,7 @@ import dev.brikk.house.sql.ast.Schema
 import dev.brikk.house.sql.ast.TableAlias
 import dev.brikk.house.sql.ast.TableFromRows
 import dev.brikk.house.sql.ast.TimestampTrunc
+import dev.brikk.house.sql.ast.TimeSlice
 import dev.brikk.house.sql.ast.Unnest
 import dev.brikk.house.sql.ast.UniqueKeyProperty
 import dev.brikk.house.sql.ast.args
@@ -30,7 +31,6 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.NodeFactory
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
-import dev.brikk.house.sql.parser.StarrocksTokenizerTables
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.buildVarMap
@@ -80,6 +80,25 @@ private fun buildStarrocksTimestampTrunc(argsList: List<Expression?>): Expressio
         )
     )
 
+// sqlglot: StarRocksParser._build_time_slice (#8555 and 6b5191d9e3 fixup).
+private fun buildStarrocksTimeSlice(values: List<Expression?>): Expression {
+    if (values.size < 2) throw ParseError("TIME_SLICE requires a datetime and interval")
+    val interval = values[1] as? Interval
+    val amount = (interval?.thisArg as? Expression) ?: values[1]
+    val numeric = (amount as? Literal)?.takeIf { it.isString && it.name.toLongOrNull() != null }
+        ?.let { Literal.number(it.name) } ?: amount
+    val boundary = values.getOrNull(if (interval == null) 3 else 2)?.name?.uppercase()
+    val kind = when (boundary) {
+        null -> null
+        "FLOOR", "START" -> Literal.string("START")
+        "CEIL", "END" -> Literal.string("END")
+        else -> throw ParseError("TIME_SLICE boundary must be FLOOR or CEIL")
+    }
+    return TimeSlice(args("this" to values[0], "expression" to numeric,
+        "unit" to normalizeTimeUnit(if (interval != null) starrocksIntervalUnitToStr(interval) else values.getOrNull(2)),
+        "kind" to kind))
+}
+
 /**
  * Port of sqlglot's StarRocksParser (reference/sqlglot/sqlglot/parsers/starrocks.py
  * class StarRocksParser(MySQLParser)). Table merges live in [StarrocksParserTables];
@@ -88,11 +107,25 @@ private fun buildStarrocksTimestampTrunc(argsList: List<Expression?>): Expressio
 // sqlglot: parsers.starrocks.StarRocksParser
 open class StarrocksParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = StarrocksTokenizerTables.CONFIG,
+    tokenizerConfig: TokenizerConfig = StarrocksDialect.TOKENIZER_CONFIG,
 ) : MysqlParser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.STARROCKS
+
+    // brikk-native: SELECT ... INTO OUTFILE ends a query (see parseDorisOutfile).
+    override val queryModifierParsers: Map<TokenType, (Parser) -> Pair<String, kotlin.Any?>>
+        get() = super.queryModifierParsers + (TokenType.INTO to { p -> (p as StarrocksParser).parseDorisOutfile() })
+
+    override fun parseInto(): Expression? = if (isIntoOutfile()) null else super.parseInto()
+
+    // brikk-native: REFRESH MATERIALIZED VIEW options sqlglot does not model (FORCE, WITH SYNC MODE,
+    // PARTITION START (...) END (...)) keep the statement as a command, its text kept.
+    override fun parseRefresh(): Expression {
+        val start = prevToken
+        return tryParse({ super.parseRefresh().takeIf { !currToken.exists || currToken.tokenType == TokenType.SEMICOLON } })
+            ?: parseAsCommand(start)
+    }
 
     // sqlglot: StarRocks.INDEX_OFFSET = 1 (mirrored by StarrocksGenerator.dialectIndexOffset)
     override val indexOffset: Int get() = 1
@@ -214,14 +247,15 @@ open class StarrocksParser(
 
         matchRParen()
 
-        return expression(
-            PartitionByRangeProperty(
-                args(
-                    "partition_expressions" to expr,
-                    "create_expressions" to createExpressions,
-                )
+        val node = PartitionByRangeProperty(
+            args(
+                "partition_expressions" to expr,
+                "create_expressions" to (createExpressions ?: emptyList<Expression>()),
             )
         )
+        // brikk-native: `()`, the empty list of dynamic partitions, is legal (as for Doris); built
+        // directly so the required-argument check does not reject it.
+        return if (createExpressions.isNullOrEmpty()) node else expression(node)
     }
 
     // sqlglot: StarRocksParser._parse_partitioning_granularity_dynamic
@@ -294,6 +328,7 @@ object StarrocksParserTables {
         put("DATE_SUB", buildDateDeltaWithIntervalDefaultDay { a -> DateSub(a) })
         put("SUBDATE", buildDateDeltaWithIntervalDefaultDay { a -> DateSub(a) })
         put("DATE_TRUNC", ::buildStarrocksTimestampTrunc)
+        put("TIME_SLICE", ::buildStarrocksTimeSlice)
         put("DATEDIFF") { a ->
             DateDiff(
                 args(

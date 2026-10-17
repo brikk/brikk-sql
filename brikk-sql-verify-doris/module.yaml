@@ -1,0 +1,34 @@
+# Doris native-grammar verifier over Doris's own FE parser (fe-sql-parser, the Nereids grammar).
+# The parser jar itself is not a dependency (see DorisVerifier): callers bundle it on their
+# classpath or pass its path.
+product: jvm/lib
+
+# TODO(review): used verbatim as the published POM <description> (required by Maven Central).
+description: Doris native-grammar SQL verifier (Doris FE parser) for brikk-sql.
+
+apply:
+  - ../publish.module-template.yaml
+
+dependencies:
+  - ../brikk-sql-verify-api: exported
+  # ANTLR runtime for the Doris FE SQL parser. The parser jar (vendor/lib/doris-fe-sql-parser-*.jar)
+  # CANNOT be declared here: Kotlin Toolchain has no local-jar dependency kind and rejects
+  # non-https repositories, so a committed file:// Maven layout is out too. Swap to the
+  # org.apache.doris:fe-sql-parser coordinate once Doris publishes it. 4.13.2 matches
+  # trino-parser's runtime; ANTLR 4.13.x runs the 4.13.1-generated Doris parser.
+  - org.antlr:antlr4-runtime:4.13.2
+
+settings:
+  publishing:
+    # Published coordinate: dev.brikk.house:brikk-sql-verify-doris.
+    artifactId: brikk-sql-verify-doris
+  jvm:
+    release: 21
+    test:
+      systemProperties:
+        # The tests run from this module's directory.
+        brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar
+  kotlin:
+    version: 2.4.10
+    freeCompilerArgs:
+      - -Xexplicit-api=strict

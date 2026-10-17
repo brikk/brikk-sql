@@ -65,6 +65,7 @@ class QualifyCorpusTest : LedgerGate() {
 
         val schemaMap = (root["schema"] as? JsonObject)?.let { toPlainMap(it) }
         val visibleMap = (root["visible"] as? JsonObject)?.let { toPlainMap(it) }
+        val inferSchema = root["infer_schema"]?.jsonPrimitive?.content != "false"
 
         val failures = LinkedHashMap<String, CorpusFailure>()
         var compared = 0
@@ -73,6 +74,7 @@ class QualifyCorpusTest : LedgerGate() {
 
         for (case in cases) {
             val sql = case.getValue("sql").jsonPrimitive.content
+            val caseSchemaMap = (case["schema"] as? JsonObject)?.let { toPlainMap(it) } ?: schemaMap
             val key = "$name::$sql"
 
             val dialectName = case["dialect"]?.jsonPrimitive?.content ?: ""
@@ -115,7 +117,7 @@ class QualifyCorpusTest : LedgerGate() {
                         name == "normalize_identifiers" -> put("operation", "normalizeIdentifiers")
                         else -> {
                             put("operation", "qualify")
-                            put("infer_schema", true)
+                            put("infer_schema", inferSchema)
                             put("validate_qualify_columns", validate)
                             put("identify", false)
                         }
@@ -167,11 +169,11 @@ class QualifyCorpusTest : LedgerGate() {
                         expr,
                         dialect = dialect,
                         schema = if (visibleMap != null) {
-                            MappingSchema(schemaMap, visible = visibleMap, dialect = dialect)
+                            MappingSchema(caseSchemaMap, visible = visibleMap, dialect = dialect)
                         } else {
-                            schemaMap
+                            caseSchemaMap
                         },
-                        inferSchema = true,
+                        inferSchema = inferSchema,
                         validateQualifyColumns = validate,
                         identify = false,
                     )
