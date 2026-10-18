@@ -14,6 +14,7 @@ import com.intellij.database.util.TreePatternUtils
 import com.intellij.psi.PsiFile
 import com.intellij.sql.dialects.SqlImportUtil
 import com.intellij.sql.dialects.SqlResolveMappings
+import com.intellij.sql.psi.impl.DataSourceProvider
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.catalog.DataSourceResolution.Ambiguous
 import dev.brikk.house.sql.intellij.catalog.DataSourceResolution.Console
@@ -111,6 +112,26 @@ class DialectDataSourceResolverTest : BasePlatformTestCase() {
         assertEquals(NotFound, resolver.resolve(file))
         mappings.setMapping(file.virtualFile, SqlResolveMappings.ALL_DATA_SOURCES)
         assertEquals(OnlyDataSource(only), resolver.resolve(file))
+    }
+
+    /**
+     * A `sql.dataSourceProvider` naming a connection for the file itself (one block of a polyglot
+     * file, say) decides before the file's scope; one of another dbms binds the file to nothing.
+     */
+    fun testAProvidedDataSourceDecidesBeforeTheScope() {
+        val scoped = dataSource(own)
+        val provided = dataSource(own)
+        mapTo(scoped)
+        var names: List<LocalDataSource> = listOf(provided)
+        DataSourceProvider.EP_NAME.point.registerExtension(object : DataSourceProvider {
+            override fun getDataSources(target: PsiFile) =
+                if (target == file) names.mapNotNull { DbPsiFacade.getInstance(project).findDataSource(it.uniqueId) } else emptyList()
+        }, testRootDisposable)
+        assertEquals(FileMapping(provided), resolver.resolve(file))
+        names = listOf(dataSource(Dbms.POSTGRES))
+        assertEquals(NotFound, resolver.resolve(file))
+        names = emptyList()
+        assertEquals(FileMapping(scoped), resolver.resolve(file))
     }
 
     /** Aliases serve consoles and scopes, but the fallback counts only the dbms itself. */

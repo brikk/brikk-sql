@@ -9,6 +9,7 @@ import com.intellij.database.util.TreePatternNode
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiFile
+import com.intellij.sql.dialects.SqlDataSourceMappings
 import com.intellij.sql.dialects.SqlImportUtil
 import com.intellij.sql.dialects.SqlResolveMappings
 import dev.brikk.house.sql.intellij.dialect.SqlDialectRegistry
@@ -21,7 +22,10 @@ public sealed interface DataSourceResolution {
     /** The file's valid console is attached to it. */
     public data class Console(override val dataSource: LocalDataSource) : DataSourceResolution
 
-    /** The file's SQL resolution scope (its own, a directory's or the project's) names it alone. */
+    /**
+     * The file's SQL resolution scope (its own, a directory's or the project's) names it alone, or a
+     * `sql.dataSourceProvider` names it for the file itself, such as one block of a polyglot file.
+     */
     public data class FileMapping(override val dataSource: LocalDataSource) : DataSourceResolution
 
     /** The file has no console or scope, and this is the project's only data source of the dbms itself. */
@@ -44,8 +48,10 @@ public sealed interface DataSourceResolution {
 /**
  * Finds the data source of [dbms] that serves a file. An explicit association decides: the file's
  * valid console, else its SQL resolution scope (Database Tools' "SQL Resolution Scopes") when that
- * names data sources. A console or scope that names only data sources of another dbms, or that
- * excludes data sources ("all except ..."), resolves to nothing rather than to another source. Only a
+ * names data sources. Between the two, a data source that a `sql.dataSourceProvider` names for the
+ * file itself decides, as Database Tools resolves that file: SQL injected into one block of a
+ * polyglot file serves that block's connection, not the host file's. A console or scope that names
+ * only data sources of another dbms, or that excludes data sources ("all except ..."), resolves to nothing rather than to another source. Only a
  * file with neither falls back, with [onlyDataSourceFallback], to the project's single data source of
  * [dbms] itself. Consoles and scopes also accept dbms that speak the same dialect in
  * [SqlDialectRegistry], such as the stock `TRINO` for a plugin's own Trino dbms. Injected files
@@ -70,6 +76,7 @@ public class DialectDataSourceResolver(
                 ?: DataSourceResolution.NotFound
         }
         val dataSources = LocalDataSourceManager.getInstance(project).dataSources
+        provided(file, dataSources)?.let { return@recoverEditorOperation it }
         when (val scope = scopeOf(file, host)) {
             Scope.Unscoped -> Unit
             Scope.Excluding -> return@recoverEditorOperation DataSourceResolution.NotFound
@@ -93,6 +100,13 @@ public class DialectDataSourceResolver(
     public fun consoleSession(file: PsiFile): DatabaseSession? = recoverEditorOperation {
         JdbcConsoleProvider.getValidConsole(file.project, hostFile(file))?.takeIf { accepts(it.dataSource.dbms) }?.session
     }.getOrNull()
+
+    /** The connections a `sql.dataSourceProvider` names for [file], or null when none names any. */
+    private fun provided(file: PsiFile, dataSources: List<LocalDataSource>): DataSourceResolution? {
+        val ids = SqlDataSourceMappings.getInstance(file.project).getProvidedDataSources(file).mapTo(HashSet()) { it.uniqueId }
+        if (ids.isEmpty()) return null
+        return dataSources.filter { it.uniqueId in ids && accepts(it.dbms) }.choose(DataSourceResolution::FileMapping)
+    }
 
     private fun hostFile(file: PsiFile): VirtualFile =
         InjectedLanguageManager.getInstance(file.project).getTopLevelFile(file).originalFile.viewProvider.virtualFile
