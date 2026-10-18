@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij
 
 import dev.brikk.house.sql.intellij.catalog.GenericJdbcIntrospectorGate
+import dev.brikk.house.sql.intellij.catalog.CatalogProfile
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,19 +18,38 @@ import org.jetbrains.org.objectweb.asm.commons.ClassRemapper
 import org.jetbrains.org.objectweb.asm.commons.Remapper
 
 /**
- * Only the catalog kit may use internal platform API (support README), so that the kit can later
- * move to its own artifact without touching the rest. Internal means annotated `@ApiStatus.Internal`
+ * Common support must not use internal platform API. The optional JDBC artifact is checked separately.
+ * Internal means annotated `@ApiStatus.Internal`
  * or `@IntellijInternalApi` on the class, an enclosing class or its package, or on the referenced
  * member or the class declaring it, found through the owner's supertypes. Every reference counts:
  * signatures, method bodies (class literals, casts, calls, field accesses), lambdas and method
  * handles, and annotation values. [DOCUMENTED] is the source of the README's table.
  */
 class InternalApiContainmentTest : TestCase() {
-    fun testOnlyTheCatalogKitUsesInternalApi() {
+    fun testCommonSupportHasNoInternalApi() {
         val uses = supportClasses().mapValues { internalReferences(it.value) }.filterValues { it.isNotEmpty() }
-        val (kit, rest) = uses.entries.partition { it.key.startsWith(CATALOG_KIT) }
-        assertTrue(rest.joinToString("\n") { "${it.key} -> ${it.value}" }, rest.isEmpty())
-        assertEquals("the internal API the README lists", DOCUMENTED, kit.flatMap { it.value }.toSet())
+        assertTrue(uses.entries.joinToString("\n") { "${it.key} -> ${it.value}" }, uses.isEmpty())
+        assertFalse(supportClasses().containsKey(GenericJdbcIntrospectorGate::class.java.name))
+    }
+
+    fun testOnlyTheOptionalGateCarriesItsDocumentedInternalApi() {
+        val anchor = GenericJdbcIntrospectorGate::class.java
+        val bytes = checkNotNull(anchor.getResourceAsStream("${anchor.simpleName}.class")).use { it.readBytes() }
+        assertEquals(DOCUMENTED, internalReferences(bytes))
+        assertTrue(kotlinPluginReferences(bytes).isEmpty())
+        val methods = anchor.declaredMethods.filter { java.lang.reflect.Modifier.isPublic(it.modifiers) }
+        assertEquals("Only the five reviewed factory overrides", 5, methods.size)
+        assertEquals(setOf("isNative", "isSupported", "createIntrospector", "getVersion", "isOutdatedCheckSupported"),
+            methods.mapTo(sortedSetOf()) { it.name })
+        // A separate library can receive fewer override diagnostics from Plugin Verifier. Keep the
+        // actual bytecode contract checked independently, including calls from synthetic/private methods.
+        val calls = sortedSetOf<String>()
+        ClassReader(bytes).accept(ClassRemapper(ClassWriter(0), object : Remapper() {
+            override fun mapMethodName(owner: String, name: String, descriptor: String): String = name.also {
+                if (owner.startsWith("com/intellij/database/introspection/DBIntrospector\$Factory")) calls += "$owner.$name$descriptor"
+            }
+        }), 0)
+        assertTrue("No forwarding into internal factory methods: $calls", calls.isEmpty())
     }
 
     /** Each kind of reference, from classes outside the kit, is found. */
@@ -102,7 +122,7 @@ class InternalApiContainmentTest : TestCase() {
     }
 
     private fun supportClasses(): Map<String, ByteArray> {
-        val anchor = GenericJdbcIntrospectorGate::class.java
+        val anchor = CatalogProfile::class.java
         val url = checkNotNull(anchor.getResource("${anchor.simpleName}.class"))
         val location = when (url.protocol) {
             "jar" -> Path.of(URI(url.path.substringBefore("!/")))
@@ -216,7 +236,6 @@ class InternalApiContainmentTest : TestCase() {
     }
 
     private companion object {
-        const val CATALOG_KIT = "dev.brikk.house.sql.intellij.catalog."
         const val KOTLIN_PLUGIN = "org/jetbrains/kotlin/"
         val INTERNAL = setOf("Lorg/jetbrains/annotations/ApiStatus\$Internal;", "Lcom/intellij/openapi/util/IntellijInternalApi;")
         val DOCUMENTED = setOf("com.intellij.database.introspection.DBIntrospector\$Factory")

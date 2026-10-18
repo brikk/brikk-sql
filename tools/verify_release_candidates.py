@@ -13,7 +13,7 @@ GROUP = 'dev.brikk.house'
 SQL = ['brikk-sql', 'brikk-sql-jvm', 'brikk-sql-metadata', 'brikk-sql-metadata-jvm', 'brikk-sql-verify-api',
        'brikk-sql-verify-trino', 'brikk-sql-verify-duckdb', 'brikk-sql-verify-doris', 'brikk-sql-verify-shardingsphere',
        'brikk-sql-verify-clickhouse', 'brikk-sql-verify', 'brikk-sql-oracle']
-SUPPORT = ['brikk-sql-intellij-support', 'brikk-sql-intellij-test-support']
+SUPPORT = ['brikk-sql-intellij-support', 'brikk-sql-intellij-jdbc-support', 'brikk-sql-intellij-test-support']
 NS = {'m': 'http://maven.apache.org/POM/4.0.0'}
 
 

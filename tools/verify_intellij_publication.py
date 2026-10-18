@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from release_config import development_version
 
 STDLIB = ('org.jetbrains.kotlin', 'kotlin-stdlib')
+GATE = 'dev/brikk/house/sql/intellij/catalog/GenericJdbcIntrospectorGate.class'
 
 
 def verify(repository: Path, version: str, artifact: str, package: str, dependencies: list, sources: bool, versions: dict):
@@ -19,6 +20,10 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
         assert 'META-INF/LICENSE' in names and 'META-INF/NOTICE' in names
         classes = [name for name in names if name.endswith('.class')]
         assert classes
+        if artifact == 'brikk-sql-intellij-support':
+            assert GATE not in classes, 'The optional internal-API gate must not leak into common support'
+        if artifact == 'brikk-sql-intellij-jdbc-support':
+            assert classes == [GATE], classes
         for name in classes:
             assert name.startswith(package), name
             assert int.from_bytes(archive.read(name)[6:8], 'big') <= 65, name
@@ -32,6 +37,10 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
     declared = [(d.findtext('m:groupId', namespaces=ns), d.findtext('m:artifactId', namespaces=ns))
                 for d in pom.findall('.//m:dependency', ns)]
     assert declared == dependencies, declared
+    if artifact == 'brikk-sql-intellij-jdbc-support':
+        support = next(d for d in pom.findall('.//m:dependency', ns)
+                       if d.findtext('m:artifactId', namespaces=ns) == 'brikk-sql-intellij-support')
+        assert support.findtext('m:scope', namespaces=ns) == 'provided', ET.tostring(support)
     for dependency in pom.findall('.//m:dependency', ns):
         if dependency.findtext('m:groupId', namespaces=ns) == 'dev.brikk.house':
             expected = versions[dependency.findtext('m:artifactId', namespaces=ns)]
@@ -52,10 +61,13 @@ if __name__ == '__main__':
     parser.add_argument('--repository', type=Path, default=Path.home() / '.m2/repository')
     args = parser.parse_args()
     versions = {'brikk-sql-jvm': args.core_version, 'brikk-sql-metadata-jvm': args.core_version,
-                'brikk-sql-verify-api': args.core_version, 'brikk-sql-intellij-support': args.version}
+                'brikk-sql-verify-api': args.core_version, 'brikk-sql-intellij-support': args.version,
+                'brikk-sql-intellij-jdbc-support': args.version}
     # Support exports the verification API (native validators answer with its results), never an engine.
     verify(args.repository, args.version, 'brikk-sql-intellij-support', 'dev/brikk/house/sql/intellij/',
            [('dev.brikk.house', 'brikk-sql-jvm'), ('dev.brikk.house', 'brikk-sql-metadata-jvm'),
             ('dev.brikk.house', 'brikk-sql-verify-api'), STDLIB], sources=True, versions=versions)
     verify(args.repository, args.version, 'brikk-sql-intellij-test-support', 'dev/brikk/house/sql/intellij/testing/',
+           [('dev.brikk.house', 'brikk-sql-intellij-support'), ('dev.brikk.house', 'brikk-sql-intellij-jdbc-support'), STDLIB], sources=False, versions=versions)
+    verify(args.repository, args.version, 'brikk-sql-intellij-jdbc-support', 'dev/brikk/house/sql/intellij/catalog/',
            [('dev.brikk.house', 'brikk-sql-intellij-support'), STDLIB], sources=False, versions=versions)

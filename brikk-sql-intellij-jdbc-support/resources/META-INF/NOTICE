@@ -1,0 +1,4 @@
+Brikk SQL IntelliJ JDBC Support
+Copyright 2026 Sortdev SRL
+Generic JDBC introspector routing extracted from the Sortdev Trino and DuckDB plugins.
+Licensed under the Apache License, Version 2.0.

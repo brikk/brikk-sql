@@ -223,7 +223,12 @@ JDBC connection, such as an embedded engine.
 
 ## Platform tests
 
-Contracts for this module and `brikk-sql-intellij-support` live in `platform-test` and run
+Contracts for this module, common support and the optional JDBC adapter live in `platform-test` and run
 in a real IDE: `./kotlin check intellijPlatform -m brikk-sql-intellij-support`.
 `BRIKK_INTELLIJ_TESTS=SomeTest,OtherTest` runs only those classes; `BRIKK_INTELLIJ_RUNTIME_SDK`
 runs them on another installation.
+
+The test kit depends on `brikk-sql-intellij-jdbc-support` to exercise JDBC routing. That is a test-only
+dependency for plugins that do not use the gate. Common support is checked for zero internal API
+references; the optional adapter is checked separately for its documented factory interface and for
+absence of generated capability-forwarding stubs.

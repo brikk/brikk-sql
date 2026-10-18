@@ -1,5 +1,6 @@
 modules:
   - brikk-sql
+  - brikk-sql-intellij-jdbc-support
   - brikk-sql-intellij-support
   - brikk-sql-intellij-test-support
   - brikk-sql-intellij-tooling

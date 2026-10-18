@@ -129,7 +129,7 @@ class ReleaseLauncherTest(unittest.TestCase):
             module.parent.name for module in ROOT.glob("brikk-sql*/module.yaml")
             if "publish.module-template.yaml" in module.read_text()
         }
-        published -= {"brikk-sql-intellij-support", "brikk-sql-intellij-test-support"}
+        published -= {"brikk-sql-intellij-support", "brikk-sql-intellij-jdbc-support", "brikk-sql-intellij-test-support"}
         result = self.run_release()
         self.assertEqual(0, result.returncode, result.stderr)
         released = {

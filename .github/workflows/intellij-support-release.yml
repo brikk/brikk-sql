@@ -55,7 +55,7 @@ jobs:
             exit 1
           fi
           args=("$SUPPORT_VERSION" --core-version "$CORE_VERSION")
-          artifacts=brikk-sql-intellij-support,brikk-sql-intellij-test-support
+          artifacts=brikk-sql-intellij-support,brikk-sql-intellij-jdbc-support,brikk-sql-intellij-test-support
           if [ "$PUBLISH_CORE" = true ]; then
             artifacts="brikk-sql,brikk-sql-jvm,brikk-sql-metadata,brikk-sql-metadata-jvm,brikk-sql-verify-api,$artifacts"
           else

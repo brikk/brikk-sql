@@ -38,6 +38,11 @@ class GenericJdbcIntrospectorGateTest : BasePlatformTestCase() {
         registerDbmsExtension("introspector", dbms, Gate::class.java, testRootDisposable)
         assertIntrospectorRoutesToGeneric(dbms)
         assertTrue("the PostgreSQL dbms keeps its native introspector", supportedByNativeIntrospector(Dbms.POSTGRES, Version.of(17)))
+        val gate = Gate()
+        assertTrue(gate.isNative())
+        assertFalse(gate.isIncremental())
+        assertFalse(gate.supportsMultilevelIntrospection)
+        assertFalse(gate.supportsFragmentIntrospection)
     }
 
     /** A gate inherited from the fallback dbms routes today, but the registration the plugin relies on is missing. */

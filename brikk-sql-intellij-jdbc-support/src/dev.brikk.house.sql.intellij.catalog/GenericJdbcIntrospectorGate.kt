@@ -23,6 +23,8 @@ import com.intellij.database.util.Version
  * `DBIntrospector.Factory` is internal Database Tools API, which the platform offers no public
  * alternative to.
  */
+// Inherit the platform's default capabilities instead of generating compatibility forwarding stubs.
+@kotlin.jvm.JvmDefaultWithoutCompatibility
 public abstract class GenericJdbcIntrospectorGate : DBIntrospector.Factory {
     final override fun isNative(): Boolean = true
 

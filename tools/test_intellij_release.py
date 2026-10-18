@@ -15,7 +15,7 @@ class ScopedReleaseTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         (self.root / 'tools').mkdir()
-        self.modules = [self.root / m / 'module.yaml' for m in ('brikk-sql-intellij-support', 'brikk-sql-intellij-test-support')]
+        self.modules = [self.root / m / 'module.yaml' for m in ('brikk-sql-intellij-support', 'brikk-sql-intellij-jdbc-support', 'brikk-sql-intellij-test-support')]
         for name in ['publish_intellij_support.py', 'release_config.py']:
             shutil.copy2(ROOT / 'tools' / name, self.root / 'tools' / name)
         self.template = 'settings:\n  publishing:\n    version: 0.19.0-SNAPSHOT\n'
@@ -27,7 +27,8 @@ class ScopedReleaseTest(unittest.TestCase):
         wrapper = self.root / 'kotlin'
         wrapper.write_text('#!/usr/bin/env python3\nimport json,sys,os\nfrom pathlib import Path\n'
                            'Path("calls.json").write_text(json.dumps(sys.argv[1:]))\n'
-                           'Path("observed-module").write_text(Path("brikk-sql-intellij-support/module.yaml").read_text())\n'
+                            'Path("observed-module").write_text(Path("brikk-sql-intellij-support/module.yaml").read_text())\n'
+                            'Path("observed-jdbc-module").write_text(Path("brikk-sql-intellij-jdbc-support/module.yaml").read_text())\n'
                             'Path("observed-test-module").write_text(Path("brikk-sql-intellij-test-support/module.yaml").read_text())\n'
                             'Path("observed-template").write_text(Path("publish.module-template.yaml").read_text())\n'
                            'sys.exit(int(os.environ.get("TEST_EXIT", "0")))\n')
@@ -46,10 +47,10 @@ class ScopedReleaseTest(unittest.TestCase):
     def test_intellij_only_and_restoration(self):
         result = self.run_release()
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-test-support',
+        self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-jdbc-support', '-m', 'brikk-sql-intellij-test-support',
                           '--non-transitive'],
                          json.loads((self.root / 'calls.json').read_text()))
-        for observed in ('observed-module', 'observed-test-module'):
+        for observed in ('observed-module', 'observed-jdbc-module', 'observed-test-module'):
             self.assertIn('version: 0.1.0\n', (self.root / observed).read_text())
         self.assert_restored()
 
@@ -58,7 +59,7 @@ class ScopedReleaseTest(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stderr)
         calls = json.loads((self.root / 'calls.json').read_text())
         self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-metadata', '-m', 'brikk-sql', '-m', 'brikk-sql-verify-api',
-                          '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-test-support'], calls)
+                          '-m', 'brikk-sql-intellij-support', '-m', 'brikk-sql-intellij-jdbc-support', '-m', 'brikk-sql-intellij-test-support'], calls)
         self.assertFalse([m for m in calls if m.startswith('brikk-sql-verify-') and m != 'brikk-sql-verify-api'])
         self.assert_restored()
 
@@ -70,7 +71,7 @@ class ScopedReleaseTest(unittest.TestCase):
         result = self.run_release('--core-version', '0.20.0', '--skip-core-publication')
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(['publish', 'mavenLocal', '-m', 'brikk-sql-intellij-support',
-                          '-m', 'brikk-sql-intellij-test-support', '--non-transitive'],
+                          '-m', 'brikk-sql-intellij-jdbc-support', '-m', 'brikk-sql-intellij-test-support', '--non-transitive'],
                          json.loads((self.root / 'calls.json').read_text()))
         self.assertIn('version: "0.20.0"', (self.root / 'observed-template').read_text())
         self.assert_restored()

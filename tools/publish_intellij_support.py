@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scoped, restoring release overrides. Publishes support, its test kit, and optionally its core prerequisites
+"""Scoped, restoring release overrides. Publishes support, its optional JDBC adapter, its test kit, and optionally core prerequisites
 (core, metadata and the verification API)."""
 import argparse
 import json
@@ -15,7 +15,7 @@ def main():
     parser.add_argument("version", type=validate_version)
     parser.add_argument("--core-version", type=validate_version)
     parser.add_argument("--skip-core-publication", action="store_true",
-                        help="Use --core-version in metadata but publish only support and its test kit")
+                        help="Use --core-version in metadata but publish only support, its JDBC adapter and test kit")
     parser.add_argument("--local", action="store_true", help="Publish only to Maven Local, without signing")
     args = parser.parse_args()
     if args.skip_core_publication and not args.core_version:
@@ -23,7 +23,7 @@ def main():
     if not args.local and not args.core_version:
         raise SystemExit("Central releases need --core-version: support depends on released core, metadata and verify-api")
     root = Path(__file__).resolve().parents[1]
-    intellij = ["brikk-sql-intellij-support", "brikk-sql-intellij-test-support"]
+    intellij = ["brikk-sql-intellij-support", "brikk-sql-intellij-jdbc-support", "brikk-sql-intellij-test-support"]
     descriptors = [root / m / "module.yaml" for m in intellij]
     template = root / "publish.module-template.yaml"
     originals = {p: p.read_text() for p in (*descriptors, template)}

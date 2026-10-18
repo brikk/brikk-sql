@@ -877,27 +877,16 @@ temporary macro DDL and `DROP MACRO` may change only the session's; `ATTACH`, `D
 (`CREATE`/`DROP CATALOG` and `SCHEMA`; function DDL) and Doris (`CREATE`/`DROP`/`REFRESH CATALOG`); none
 notifies.
 
-Internal API used, by class. These usages require explicit review and approval for each plugin;
-previous approval of a plugin-local implementation does not establish approval of a shared adapter:
+Common support contains no internal platform API references. Since 0.2.1,
+`GenericJdbcIntrospectorGate` belongs to the optional
+[`brikk-sql-intellij-jdbc-support`](../brikk-sql-intellij-jdbc-support/README.md) artifact, which
+only its actual consumers bundle. Consumers extending that class must add the optional dependency.
 
-| API | Used by | Why | Marketplace |
-| --- | --- | --- | --- |
-| `DBIntrospector.Factory` (interface and its methods) | `GenericJdbcIntrospectorGate` | selects generic JDBC introspection rather than fallback-engine introspection | owner confirmed 15 ignored usages for Trino on 2026-10-17; no approval transfers to another plugin |
-
-`InternalApiContainmentTest` (in the test kit's platform tests) reads every class of this jar in
-full, signatures, method bodies, lambdas and annotation values, and fails if a class outside the kit
-references a class, enclosing class or package annotated `@ApiStatus.Internal` or
-`@IntellijInternalApi`, or a member so annotated or declared by such a class (found through the
-owner's supertypes). It also fails if the kit's internal API differs from the test's own list, which
-this table mirrors. The same test keeps the library free of the Kotlin IDE plugin: it fails on any
-reference to `org.jetbrains.kotlin.*` (the plugin, its PSI and the analysis API; the standard library
-is `kotlin.*`), as a type anywhere or as a class name in a constant (`Class.forName`).
-
-This is a containment check, not a call-site approval check: references to methods of an internal
-type collapse to that type. It therefore does not prove that a refactor preserved the previous
-number of internal calls. Plugin release auditing must inspect every verifier finding separately.
-The owner also confirmed 11 ignored factory usages in Doris's own introspector; that does not
-approve the additional shared gate or `DbDataSource.getDelegate()`.
+`InternalApiContainmentTest` reads every common-support class, including method bodies, signatures,
+lambdas and annotation values, and rejects internal platform API references. It separately checks
+the optional gate's documented factory interface and rejects generated capability-forwarding stubs.
+Both artifacts must remain free of Kotlin IDE plugin dependencies. This does not confer Marketplace
+approval; each plugin's complete verifier findings still need review against its exact exemptions.
 
 `isBuiltinCatalogObject` (catalog kit) reads `BasicElement.getModel`, `BasicModModel.getTextStorage`
 and `DataSourceSnapshotManager.MINICAT_STORAGE`, the platform's own test for a builtin resolve result
@@ -948,10 +937,11 @@ python3 tools/publish_intellij_support.py 0.2.1 --core-version 0.20.0 --skip-cor
 python3 tools/publish_intellij_support.py 0.2.1 --core-version 0.20.0 --skip-core-publication
 ```
 
-The last command requires the existing Central/signing environment. It publishes
-this module and its test kit, `brikk-sql-intellij-test-support`, at the same version,
-plus core, metadata and `brikk-sql-verify-api` (which support exports) at `--core-version`,
-never a verifier engine or the oracle. Without `--core-version`, only a local publication is
+The last command requires the existing Central/signing environment. It publishes common support,
+the optional JDBC adapter and `brikk-sql-intellij-test-support` at the same version. With
+`--skip-core-publication`, existing core/metadata/verify-api coordinates are only referenced, never
+republished. Omitting that flag also publishes those prerequisites at `--core-version`;
+it never publishes a verifier engine or the oracle. Without `--core-version`, only a local publication is
 allowed; it references the core, metadata and verify-api snapshots already in Maven Local. The module has independent `0.x` versioning.
 Temporary release overrides restore on success or failure.
 
