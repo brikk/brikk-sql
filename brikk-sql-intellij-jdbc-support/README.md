@@ -1,6 +1,6 @@
 # Optional IntelliJ JDBC support
 
-`dev.brikk.house:brikk-sql-intellij-jdbc-support:0.2.1` contains only
+`dev.brikk.house:brikk-sql-intellij-jdbc-support:0.2.2` contains only
 `dev.brikk.house.sql.intellij.catalog.GenericJdbcIntrospectorGate`. Its class name and routing
 contract are preserved. Consumers extending this gate must add this artifact explicitly when
 upgrading common SQL IntelliJ support to 0.2.1. Common support has no dependency on this module.
@@ -21,5 +21,5 @@ The compile-only dependency on common support orders SDK preparation and tracks 
 It appears as `provided` in the POM, not as a runtime dependency. The runtime JAR contains one class,
 LICENSE and NOTICE, with no SDK or copied support classes.
 
-Build and publish with the existing support release script. Version 0.2.1 is published on Maven
-Central from main. Use a new, unpublished version for subsequent public releases.
+Build and publish with the existing support release script. Versions 0.2.1 and 0.2.2 are published
+on Maven Central from main. Use a new, unpublished version for subsequent public releases.
