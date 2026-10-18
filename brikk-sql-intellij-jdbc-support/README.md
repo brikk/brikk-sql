@@ -21,5 +21,5 @@ The compile-only dependency on common support orders SDK preparation and tracks 
 It appears as `provided` in the POM, not as a runtime dependency. The runtime JAR contains one class,
 LICENSE and NOTICE, with no SDK or copied support classes.
 
-Build and publish with the existing support release script. Version 0.2.1 is currently a local
-release candidate; public publication requires the owner's release decision.
+Build and publish with the existing support release script. Version 0.2.1 is published on Maven
+Central from main. Use a new, unpublished version for subsequent public releases.
