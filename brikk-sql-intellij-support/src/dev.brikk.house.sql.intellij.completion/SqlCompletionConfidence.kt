@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij.completion
 
 import com.intellij.codeInsight.completion.CompletionConfidence
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
@@ -17,7 +18,8 @@ import dev.brikk.house.sql.docs.sqlPropertyAt
  * `order="first"` through a no-arg subclass.
  */
 public abstract class SqlCompletionConfidence(private val profile: SqlCompletionProfile) : CompletionConfidence(), DumbAware {
-    final override fun shouldSkipAutopopup(contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
+    // The editor entry point is the one the platform calls; the three-argument form is deprecated.
+    final override fun shouldSkipAutopopup(editor: Editor, contextElement: PsiElement, psiFile: PsiFile, offset: Int): ThreeState = when {
         !psiFile.language.isKindOf(profile.language) -> ThreeState.UNSURE
         PROPERTY_COMPLETION && tableFunctionCallAt(profile.snapshot(psiFile), contextElement, offset) != null -> ThreeState.NO
         PROPERTY_COMPLETION && profile.metadata.docs?.takeIf { it.properties.isNotEmpty() }?.let { sqlPropertyAt(psiFile.text, it, offset, checkCanceled = ProgressManager::checkCanceled) } != null -> ThreeState.NO

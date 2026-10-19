@@ -512,6 +512,8 @@ private val HELPER_REQUESTOR_CLASS: String = HelperRequestor::class.java.name
  * service ([LiveCatalogService.connected]) as its trigger says, before the connection is handed over.
  * Register a no-arg subclass naming the plugin's service class.
  */
+// No compatibility bridges for the interface's unused defaults (one is scheduled for removal).
+@JvmDefaultWithoutCompatibility
 public abstract class HarvestConnectionInterceptor(private val service: Class<out LiveCatalogService>) : DatabaseConnectionInterceptor {
     private val catalog: LiveCatalogService? get() = ApplicationManager.getApplication().getService(service)
 

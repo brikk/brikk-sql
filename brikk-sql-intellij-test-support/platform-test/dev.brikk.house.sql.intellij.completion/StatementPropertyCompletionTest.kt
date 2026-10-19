@@ -21,6 +21,6 @@ class StatementPropertyCompletionTest : CompletionTestCase() {
         val text = "CREATE TABLE t (k INT) PROPERTIES ('st<caret>')"
         myFixture.configureByText("confidence.sql", text.replace("<caret>", ""))
         val offset = text.indexOf("<caret>")
-        assertEquals(ThreeState.UNSURE, DorisConfidence().shouldSkipAutopopup(myFixture.file.findElementAt(offset - 1)!!, myFixture.file, offset))
+        assertEquals(ThreeState.UNSURE, DorisConfidence().shouldSkipAutopopup(myFixture.editor, myFixture.file.findElementAt(offset - 1)!!, myFixture.file, offset))
     }
 }

@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.intellij.psi
 
 import com.intellij.database.Dbms
+import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiElement
 import com.intellij.psi.ResolveState
 import com.intellij.psi.util.PsiTreeUtil
@@ -28,7 +29,8 @@ public abstract class SelectAliasResolveExtension(
     private val clauses = clauses.map { it.java }.toTypedArray()
 
     final override fun process(reference: SqlReference, processor: SqlScopeProcessor): Boolean {
-        val element = reference.element
+        // PsiReference.getElement, not the experimental PsiSymbolReference.getElement: the same element.
+        val element = (reference as PsiReference).element
         if ((element.language as? SqlLanguageDialectEx)?.dbms != dbms) return true
         if (PsiTreeUtil.getNonStrictParentOfType(element, SqlReferenceExpression::class.java)?.qualifierExpression != null) return true
         val query = PsiTreeUtil.getParentOfType(element, SqlQueryExpression::class.java) ?: return true

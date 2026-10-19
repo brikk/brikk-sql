@@ -29,7 +29,7 @@ class TableFunctionArgumentCompletionTest : CompletionTestCase() {
     private fun confidence(text: String): ThreeState {
         myFixture.configureByText("confidence.sql", text.replace("<caret>", ""))
         val offset = text.indexOf("<caret>")
-        return DorisConfidence().shouldSkipAutopopup(myFixture.file.findElementAt(offset - 1)!!, myFixture.file, offset)
+        return DorisConfidence().shouldSkipAutopopup(myFixture.editor, myFixture.file.findElementAt(offset - 1)!!, myFixture.file, offset)
     }
 
     fun testTheAutopopupIsNotForcedInsideTheCall() {

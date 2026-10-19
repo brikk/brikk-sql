@@ -71,7 +71,7 @@ class SqlFunctionGateTest : CompletionTestCase() {
     private fun confidenceAfter(text: String): ThreeState {
         myFixture.configureByText("confidence.sql", text.replace("<caret>", ""))
         val offset = text.indexOf("<caret>")
-        return DuckdbConfidence().shouldSkipAutopopup(myFixture.file.findElementAt(offset - 1)!!, myFixture.file, offset)
+        return DuckdbConfidence().shouldSkipAutopopup(myFixture.editor, myFixture.file.findElementAt(offset - 1)!!, myFixture.file, offset)
     }
 
     fun testTheDigitGateSkipsTheAutopopupForEveryContributor() {

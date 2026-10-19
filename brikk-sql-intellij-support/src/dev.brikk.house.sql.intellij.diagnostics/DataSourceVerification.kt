@@ -144,6 +144,6 @@ public open class VerificationConnectionListener : DatabaseConnectionManager.Lis
 
     /** Restarts [project]'s highlighting. */
     protected open fun restart(project: Project) {
-        DaemonCodeAnalyzer.getInstance(project).restart()
+        DaemonCodeAnalyzer.getInstance(project).restart("Database verification connection changed")
     }
 }

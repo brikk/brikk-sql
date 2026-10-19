@@ -6,7 +6,6 @@ import com.intellij.lang.Language
 import com.intellij.lang.injection.InjectedLanguageManager
 import com.intellij.lang.injection.MultiHostRegistrar
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.util.TextRange
@@ -211,12 +210,13 @@ public open class HostSqlChannel(public val id: String) {
         val pointer = SmartPointerManager.getInstance(project).createSmartPsiElementPointer(file)
         ApplicationManager.getApplication().invokeLater({
             DumbService.getInstance(project).runWhenSmart {
-                runReadAction {
-                    val current = pointer.element ?: return@runReadAction
+                // Application.runReadAction: not deprecated on 261-263, unlike Kotlin's runReadAction and ReadAction.run.
+                ApplicationManager.getApplication().runReadAction(Runnable {
+                    val current = pointer.element ?: return@Runnable
                     // Every cached claim is asked again: the facts behind it may have changed.
                     generation.incrementAndGet()
                     reanalyze(current)
-                }
+                })
             }
         }, project.disposed)
     }
