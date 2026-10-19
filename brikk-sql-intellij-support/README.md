@@ -921,9 +921,10 @@ source-preserving renderer has no source map and cannot borrow another rendering
 Our public APIs do not carry `ApiStatus.Experimental`. Genuine IntelliJ API annotations are still
 reported by Plugin Verifier. A Compatible verdict does not establish Marketplace approval of them.
 For a support-only patch against already-published core, use `--skip-core-publication` to avoid
-republishing immutable core coordinates. Versions 0.2.1 and 0.2.2 are published on Maven Central
-from main (0.2.2: `DialectDataSourceResolver` also takes a connection a `sql.dataSourceProvider`
-names for the file itself); new public releases must use a new, unpublished version.
+republishing immutable core coordinates. Versions 0.2.1, 0.2.2 and 0.2.3 are published on Maven
+Central from main (0.2.2: `DialectDataSourceResolver` also takes a connection a `sql.dataSourceProvider`
+names for the file itself; 0.2.3: no deprecated, scheduled-for-removal or experimental platform calls
+that have stable equivalents); new public releases must use a new, unpublished version.
 
 Compile against IDEA 261, with Java 21 bytecode. Linux x64 builds provision a pinned,
 SHA-256-verified IDEA 2026.1.3 SDK, or accept `BRIKK_INTELLIJ_SDK` pointing to a 261
@@ -933,7 +934,7 @@ platform copy.
 
 ```sh
 ./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support --transitive
-python3 tools/publish_intellij_support.py 0.2.2 --core-version 0.20.0 --skip-core-publication --local
+python3 tools/publish_intellij_support.py 0.2.3 --core-version 0.20.0 --skip-core-publication --local
 # For a new public release, set NEXT_SUPPORT_VERSION to an unpublished version:
 python3 tools/publish_intellij_support.py "$NEXT_SUPPORT_VERSION" --core-version 0.20.0 --skip-core-publication
 ```
