@@ -26,11 +26,18 @@ def validate_version(version: str) -> str:
 
 
 def development_version(template_text: str) -> str:
-    """The shared publishing version in publish.module-template.yaml."""
-    match = re.search(r"^    version: (\S+)$", template_text, re.M)
-    if not match:
-        raise ValueError("No publishing version in the module template")
-    return match.group(1)
+    """The version in a settings.publishing block, ignoring Kotlin and dependency versions."""
+    publishing = False
+    for line in template_text.splitlines():
+        if line == "  publishing:":
+            publishing = True
+        elif publishing and line.startswith("  ") and not line.startswith("    ") and line.strip():
+            publishing = False
+        elif publishing:
+            match = re.fullmatch(r"    version: (\S+)", line)
+            if match:
+                return match.group(1)
+    raise ValueError("No settings.publishing version")
 
 
 def release_template(version: str, base_template: str, local: bool = False) -> str:

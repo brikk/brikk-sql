@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-from release_config import release_template, validate_version
+from release_config import development_version, release_template, validate_version
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +15,17 @@ TEMP_DIR = "/tmp/opencode" if Path("/tmp/opencode").is_dir() else None
 
 
 class ReleaseVersionTest(unittest.TestCase):
+    def test_development_version_reads_publishing_not_kotlin(self):
+        text = (
+            "settings:\n"
+            "  kotlin:\n"
+            "    version: 2.4.10\n"
+            "  publishing:\n"
+            "    artifactId: library\n"
+            "    version: 0.2.3-SNAPSHOT\n"
+        )
+        self.assertEqual("0.2.3-SNAPSHOT", development_version(text))
+
     def test_valid_semver(self):
         for version in (
             "0.0.0", "0.16.1", "10.20.30", "1.0.0-alpha", "1.0.0-0",
