@@ -304,8 +304,10 @@ class StreamingCancelTest : BasePlatformTestCase() {
         if (ownershipFails) {
             val engine = DatabaseConnectionManager.getInstance().activeConnections.mapNotNull { it.requestor as? JdbcEngine }
                 .single { it.requestContextIfAny?.request === held }
-            // The engine's connection holder on 263, whose get() fails once it is closed.
-            val field = JdbcEngine::class.java.getDeclaredField("guardedConnection").apply { isAccessible = true }
+            // The engine's GuardedRef connection holder, whose private name varies by IDE build.
+            val field = JdbcEngine::class.java.declaredFields.single {
+                GuardedRef::class.java.isAssignableFrom(it.type)
+            }.apply { isAccessible = true }
             @Suppress("UNCHECKED_CAST") val original = field.get(engine) as GuardedRef<DatabaseConnection>
             field.set(engine, object : GuardedRef<DatabaseConnection>(original.get()) {
                 override fun get(): DatabaseConnection {
