@@ -244,6 +244,8 @@ open class Generator(
     open val padFillPatternIsRequired: Boolean get() = false
     open val matchedBySource: Boolean get() = true
     open val supportsMergeWhere: Boolean get() = false
+    open val supportsNearestJoin: Boolean get() = false
+    open val supportsSessionRouting: Boolean get() = false
     open val nvl2Supported: Boolean get() = true
     open val reservedKeywords: Set<String> get() = emptySet()
     // sqlglot: Generator.TYPE_MAPPING (base: empty)
@@ -2571,6 +2573,12 @@ open class Generator(
         val thisExpr = expression.args["this"]
         var thisSql = sql(thisExpr)
 
+        var nearest = sql(expression, "nearest")
+        if (nearest.isNotEmpty()) {
+            if (!supportsNearestJoin) unexecutable("$targetName cannot execute NEAREST joins")
+            nearest = " $nearest"
+        }
+
         val exprs = expressions(expression)
         if (exprs.isNotEmpty()) thisSql = "$thisSql,${seg(exprs)}"
 
@@ -2578,7 +2586,7 @@ open class Generator(
             onSql = indent(onSql, skipFirst = true)
             val space = if (pretty) seg(" ".repeat(pad)) else " "
             onSql = if (!using.isNullOrEmpty()) "${space}USING ($onSql)" else "${space}ON $onSql"
-        } else if (opSql.isEmpty()) {
+        } else if (opSql.isEmpty() && nearest.isEmpty()) {
             if (thisExpr is Lateral && thisExpr.args.containsKey("cross_apply") &&
                 thisExpr.args["cross_apply"] != null
             ) {
@@ -2592,7 +2600,31 @@ open class Generator(
         } else opSql
 
         val pivots = expressions(expression, key = "pivots", sep = "", flat = true)
-        return "${seg(opJoin)} $thisSql$matchCond$onSql$pivots"
+        return "${seg(opJoin)} $thisSql$nearest$matchCond$onSql$pivots"
+    }
+
+    // sqlglot: Generator.nearest_sql
+    open fun nearestSql(expression: Nearest): String {
+        val mode = when {
+            expression.args["approximate"] == true -> "APPROX "
+            expression.args["exact"] == true -> "EXACT "
+            else -> ""
+        }
+        val count = sql(expression, "count").let { if (it.isEmpty()) "" else " $it" }
+        val metric = if (expression.args["similarity"] == true) "SIMILARITY" else "DISTANCE"
+        return "${mode}NEAREST$count BY $metric ${sql(expression, "this")}"
+    }
+
+    open fun sessionconnectSql(expression: SessionConnect): String {
+        if (!supportsSessionRouting) unexecutable("$targetName cannot execute CONNECT session routing")
+        val target = sql(expression, "this").let { if (it.isEmpty()) "" else " $it" }
+        val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
+        return "CONNECT$target$options"
+    }
+
+    open fun sessiondisconnectSql(expression: SessionDisconnect): String {
+        if (!supportsSessionRouting) unexecutable("$targetName cannot execute DISCONNECT session routing")
+        return "DISCONNECT"
     }
 
     // sqlglot: Generator.lambda_sql

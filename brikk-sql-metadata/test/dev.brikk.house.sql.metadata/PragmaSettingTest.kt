@@ -21,7 +21,7 @@ class PragmaSettingTest {
     fun aPragmaKeepsItsPositionalArgumentsAndTableFunction() {
         val tableInfo = checkNotNull(pragmas["table_info"])
 
-        assertEquals(listOf(FunctionOverload(listOf("VARCHAR"), "ANY", argNames = listOf("col0"))), tableInfo.overloads)
+        assertEquals(listOf(FunctionOverload(listOf("VARCHAR"), "ANY", argNames = listOf("table_name"))), tableInfo.overloads)
         assertEquals("pragma_table_info", tableInfo.tableFunction)
         assertNull(pragmas["show_tables"]?.tableFunction)
     }

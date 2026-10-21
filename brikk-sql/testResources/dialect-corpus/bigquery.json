@@ -3324,7 +3324,7 @@
       "read": {},
       "write": {
         "bigquery": "SELECT ARRAY_TO_STRING(['cake', 'pie', NULL], '--', 'MISSING') AS text",
-        "duckdb": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], x -> COALESCE(x, 'MISSING')), '--') AS text"
+        "duckdb": "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], LAMBDA x : COALESCE(x, 'MISSING')), '--') AS text"
       }
     },
     {

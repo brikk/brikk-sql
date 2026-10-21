@@ -147,9 +147,10 @@ private fun DuckdbFunctionRow.overload() = FunctionOverload(
     returnType = returnType ?: ANY,
     variadic = varargs != null,
     argNames = parameters.ifEmpty { null },
-    positionalCount = parameters.takeIf { type == "table" }
-        ?.takeWhile(POSITIONAL_NAME::matches)?.size
-        ?.takeIf { it < parameters.size },
+    positionalCount = if (type != "table") null else {
+        parameters.takeWhile(POSITIONAL_NAME::matches).size.takeIf { it in 1 until parameters.size }
+            ?: 1.takeIf { name in ONE_POSITIONAL_TABLE_FUNCTIONS }
+    },
 )
 
 private val OVERLOAD_ORDER: Comparator<FunctionOverload> =
@@ -163,4 +164,12 @@ private fun compareLists(a: List<String>, b: List<String>): Int =
 private const val PRAGMA = "pragma"
 private const val ANY = "ANY"
 private val POSITIONAL_NAME = Regex("col[0-9]+")
+// DuckDB 2.0 replaced the earlier col0 positional marker with descriptive names. The system
+// table still has no positional/named split, so retain the verified one-positional reader set.
+private val ONE_POSITIONAL_TABLE_FUNCTIONS = setOf(
+    "parquet_scan", "read_csv", "read_csv_auto", "read_duckdb", "read_json", "read_json_auto",
+    "read_json_objects", "read_json_objects_auto", "read_ndjson", "read_ndjson_auto",
+    "read_ndjson_objects", "read_parquet", "read_single_csv_file", "read_single_json_file",
+    "read_single_parquet_file", "sniff_csv", "test_vector_types",
+)
 private val IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")

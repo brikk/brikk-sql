@@ -39,17 +39,19 @@ class StringEscapeResultTest {
     }
 
     @Test
-    fun rejectedNativeByteUtf8AndNulEscapesNormalizeToExecutableText() {
+    fun nativeUtf8ByteEscapesAndRejectedNulEscapesNormalizeToExecutableText() {
         DriverManager.getConnection("jdbc:duckdb:").use { connection ->
-            for ((body, expected) in listOf(
-                "\\xc3\\xa9 \\360\\237\\230\\200" to "é 😀",
-                "a\\x00b" to "a\u0000b", "\\0000" to "\u00000",
-            )) {
+            val nativeUtf8 = "SELECT e'\\xc3\\xa9 \\360\\237\\230\\200'"
+            connection.createStatement().use { statement -> statement.executeQuery(nativeUtf8).use { rows ->
+                assertTrue(rows.next())
+                assertEquals("é 😀", rows.getString(1), nativeUtf8)
+            } }
+            for ((body, expected) in listOf("a\\x00b" to "a\u0000b", "\\0000" to "\u00000")) {
                 val source = "SELECT e'$body'"
                 val failure = assertFailsWith<SQLException>(source) {
                     connection.createStatement().use { it.executeQuery(source).close() }
                 }
-                assertTrue("pg_verifymbstr NOT IMPLEMENTED" in failure.message.orEmpty(), failure.message)
+                assertTrue("Null character not permitted" in failure.message.orEmpty(), failure.message)
                 val output = SqlFragment(source, "duckdb").transpileTo("duckdb")
                 assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
                 connection.createStatement().use { statement ->

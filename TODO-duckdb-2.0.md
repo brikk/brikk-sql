@@ -1,17 +1,16 @@
 # DuckDB 2.0 support checklist
 
-DuckDB 2.0 ("Cyanoptera") is expected in fall 2026. This document tracks work needed to
-keep the shared `brikk-sql` DuckDB dialect, function metadata, and native verifier aligned
-with the release. The preview is not the final compatibility contract: syntax, extension
-APIs, function signatures, and the documented breaking changes can still change.
+DuckDB 2.0.0 LTS ("Cinnamon Teal") was released on 2026-10-21. This document tracks the
+shared `brikk-sql` DuckDB dialect, function metadata, and native verifier against the final
+`v2.0.0` tag (`d54cbbe3df`) and `org.duckdb:duckdb_jdbc:2.0.0.0`.
 
 Current baseline:
 
 | Surface | Current pin/source |
 |---|---|
-| Parser and generator | Port of sqlglot v30.18.0-43-g3ca82489 DuckDB dialect |
-| Function catalog | DuckDB v1.5.6 `duckdb_functions()`; 876 definitions / 2,677 overloads |
-| Native parser oracle | `org.duckdb:duckdb_jdbc:1.5.6.0` |
+| Parser and generator | Port of sqlglot v30.22.0-5-ga00dc2e5c plus final DuckDB 2.0 grammar additions |
+| Function catalog | DuckDB v2.0.0 `duckdb_functions()`; 1,093 definitions / 2,963 overloads |
+| Native parser oracle | `org.duckdb:duckdb_jdbc:2.0.0.0`, engine source `d54cbbe3df` |
 
 Status terms below mean:
 
@@ -24,15 +23,14 @@ Status terms below mean:
 
 ## Release gate
 
-- [ ] Track the final 2.0 release notes and migration guide, especially the promised list of
-  breaking changes and the completed lambda syntax transition. Do not declare parity from
-  the preview posts alone.
-- [ ] Test against at least one late 2.0 preview, then repeat against the final Maven/Python
-  artifacts. Record the exact engine version, JDBC artifact version, and source ID.
+- [x] Review the final 2.0 release notes and migration guide, including lambda syntax,
+  storage version 69, integer division/modulo by zero and PEG-parser error changes.
+- [x] Test against the final Maven artifact and record engine 2.0.0, JDBC 2.0.0.0 and source
+  ID `d54cbbe3df`.
 - [ ] Refresh the sqlglot reference before adding brikk-native behavior. Port upstream
   DuckDB changes where they exist; keep only still-missing 2.0 behavior as local extensions.
-- [ ] Keep the Python engine used for catalog generation and the JDBC engine used by
-  `brikk-sql-verify` on the same DuckDB engine release.
+- [x] Capture catalogs through the final JDBC engine used by `brikk-sql-verify-duckdb`; the
+  generator no longer depends on a separate Python-engine capture.
 - [ ] Run a 1.5.6-versus-2.0 acceptance comparison over all DuckDB parser, generator, token,
   and AST corpora. Investigate every acceptance change rather than automatically changing a
   known-failure ledger.
@@ -43,8 +41,8 @@ DuckDB 2.0 replaces the PostgreSQL-derived parser with a PEG parser. DuckSQL is 
 remain compatible, but keyword classification, ambiguities, malformed-input behavior, and
 source locations can still shift.
 
-- [ ] Diff the 2.0 PEG grammar and keyword categories against `DuckdbParser.kt` and generated
-  `DuckdbTokenizerTables.kt`; regenerate tokenizer/token corpora after updating sqlglot.
+- [x] Diff the final `src/parser/peg/grammar` rules and captured keyword categories against
+  `DuckdbParser.kt`; add backtick identifiers, `NEAREST`, session routing and trigger bodies.
 - [ ] Re-run every DuckDB identity, transpile, annotated-serde, and parser corpus case through
   the final 2.0 engine.
 - [ ] Add differential cases for precedence, associativity, prefix aliases, `FROM`-first SQL,
@@ -52,14 +50,14 @@ source locations can still shift.
   arrows, parameter markers, and nested parentheses.
 - [ ] Add invalid-query cases that stress PEG backtracking, including long runs of unmatched
   opening parentheses. Confirm both brikk and the engine reject promptly.
-- [ ] Recheck whether `json_serialize_sql` still returns the same `error`, `error_type`,
-  `error_message`, and `position` fields used by `DuckdbVerifier`.
-- [ ] Recheck the JDBC fallback's `Parser Error` prefix and line/column format. The verifier
+- [x] Recheck `json_serialize_sql`: 2.0 adds `location` as `[UTF-8 byte start, byte length]`,
+  while pre-2.0 drivers report `position` in code points. The verifier supports both.
+- [x] Recheck the JDBC fallback's `Parser Error` prefix and line/column format. The verifier
   accepts known binding/catalog/not-implemented failures as grammar acceptance, leaves
   unexpected failures unverified, and parses locations with `DUCKDB_LINE_MARKER`;
   improved 2.0 errors must not turn rejects into false accepts.
-- [ ] Check whether `json_serialize_sql` supports more non-`SELECT` statements in 2.0. Keep the
-  prepare fallback side-effect-free and add tests for every newly modeled statement family.
+- [x] Check non-`SELECT` serialization. It remains unsupported; the trusted corpus verifier
+  keeps its prepare fallback, while the editor verifier remains parse-only and returns unverified.
 - [ ] Revalidate `DuckdbGrammarBuiltins.kt`. Its comments and membership are explicitly based
   on the PostgreSQL-derived v1.5.6 parser.
 
@@ -83,22 +81,25 @@ transformers. A static shared library cannot know which extensions a caller load
 
 | DuckDB 2.0 feature | Current brikk state | Required work |
 |---|---|---|
-| Expression statements, e.g. `date: current_date(), time: current_localtime()` | **Audit:** prefix expression aliases are parsed, but the new statement form has no focused test | Confirm a comma-separated expression statement parses as the intended statement/AST rather than a partial expression; preserve the no-`SELECT` form on DuckDB round-trip and define cross-dialect generation. |
-| `CONNECT` / `DISCONNECT` | **Add:** existing `Connect` AST support is for `CONNECT BY`, not DuckDB session routing | Add distinct statement nodes or an unambiguous model for URI/attached-database targets; cover `CONNECT qk`, `CONNECT 'postgres://...'`, `DISCONNECT`, and routing scope. |
-| External resources | **Add** | Model and round-trip `CREATE`, `REGISTER`, `SHOW`, `CONNECT TO`, and `DESTROY EXTERNAL RESOURCE`; include resource type, name, handle, and options without flattening them into generic commands. |
-| Triggers | **Audit:** generic trigger nodes/parser exist and are PostgreSQL-shaped | Verify DuckDB's `BEFORE`/`AFTER`, row/statement modes, transition tables, multiple triggers per event, inline DML body, `RETURNING`, and `DROP TRIGGER`. The example body is not PostgreSQL's `EXECUTE FUNCTION` form, so expect parser/generator changes. |
-| `APPROX NEAREST ... BY SIMILARITY` joins | **Add** | Add join syntax and AST fields for approximation, top-k, and similarity expression; test join types, aliases, precedence, and transpilation refusal where no equivalent exists. Do not confuse this with scalar `approx_*` functions. |
-| DML and `COPY` inside CTEs | **Audit:** CTE bodies call the generic statement parser | Pin `INSERT`, `UPDATE`, `DELETE`, and `COPY` CTE bodies, including `MATERIALIZED` and `RETURNING`; verify generator placement and scope/lineage behavior for non-query CTE bodies. |
-| Nested schemas | **Audit:** multipart table names already exist | Test `CREATE SCHEMA finance.reports` and `CREATE TABLE finance.reports.q3`; ensure catalog/schema/table qualification is not collapsed or quoted as one identifier. |
+| Expression statements, e.g. `date: current_date(), time: current_localtime()` | **Not shipped:** present in the preview post, absent from the final v2.0.0 top-level PEG grammar | Do not claim 2.0 support; monitor a later DuckDB release. |
+| `CONNECT` / `DISCONNECT` | **Implemented:** distinct `SessionConnect`/`SessionDisconnect` nodes avoid collision with `CONNECT BY` | Extend option-shape tests as Quack/Postgres/MySQL routing evolves. |
+| External resources | **Opaque:** final forms remain generic commands | Model and round-trip `CREATE`, `REGISTER`, `SHOW`, `CONNECT TO`, and `DESTROY EXTERNAL RESOURCE`; include resource type, name, handle, and options without flattening them into generic commands. |
+| Triggers | **Implemented:** generic trigger model now accepts DuckDB inline DML bodies | Expand transition-table and row/statement execution probes beyond parser acceptance. |
+| `APPROX`/`EXACT NEAREST ... BY SIMILARITY` joins | **Implemented:** `Nearest` AST on `Join`, including optional k and distance/similarity | Add optimizer-specific semantic probes; non-DuckDB executable generation refuses the construct. |
+| DML and `COPY` inside CTEs | **Supported:** generic CTE statement bodies round-trip final documented forms | Expand scope/lineage assertions for non-query CTE bodies. |
+| Nested schemas | **Supported:** multipart schema/table paths round-trip | Keep final PEG and native-verifier cases pinned. |
 | `$name` variable references | **Audit:** `SET VARIABLE` is covered; `$...` currently shares placeholder machinery | Represent DuckDB variables separately from JDBC/bind placeholders if needed. Round-trip `$threshold`, positional parameters, named parameters, and dollar-quoted strings without collisions. |
 | `WITH RECURSIVE ... USING KEY` aggregation | **Audit:** `key_expressions` parsing/generation and corpus cases already exist | Add the aggregate key form from the 2.0 example, `USING KEY (a, avg(b))`, and execute semantic probes, not only parse/render tests. |
-| `FETCH FIRST n ROWS ONLY` | **Audit:** generic `Fetch` parsing exists | Add DuckDB identity and native-verifier cases for `FIRST`/`NEXT`, omitted count if legal, `ROW`/`ROWS`, offsets, and invalid combinations. |
+| `FETCH FIRST n ROWS ONLY` | **Supported:** generic `Fetch` parses it and DuckDB canonically emits `LIMIT` | Keep `FIRST`/`NEXT`, omitted count, `ROW`/`ROWS` and offsets pinned. |
 | `OVERLAY()` | **Audit:** generic AST/parser support exists | Add DuckDB parse/generate, catalog-signature, and result-semantic tests. |
-| `UNNEST` in `GROUP BY` | **Audit:** `Unnest` is modeled, but this placement is not pinned | Add identity, serde, typing, and native verification cases; confirm scalar-position `UNNEST` handling is not incorrectly rewritten as a table source. |
+| `UNNEST` in `GROUP BY` | **Supported:** scalar `UNNEST` stays in the grouping expression | Add result-semantic probes over list columns. |
 | `COPY TO (... PARTITION BY ..., ORDER BY ...)` | **Audit** | Pin both options together and separately, expressions versus column lists, option ordering/canonicalization, and output AST shape. |
 | `VARIANT` end-to-end support | **Audit:** type token/model, casts, and some v1.5 functions exist | Test storage DDL, JSON-to-`VARIANT` casts, nested values, extraction, comparisons/containment, Parquet read/write syntax, typing metadata, and cross-dialect hazards. |
-| Completed lambda syntax transition | **Audit:** both generic arrow lambdas and legacy `LAMBDA ... : ...` rendering exist | From the final migration guide, identify removed forms. Stop generating any form rejected by 2.0, preserve accepted legacy input only if useful, and update corpus expectations and function signatures. |
-| Custom extension repositories | **Add/Audit** | Model and round-trip `CREATE EXTENSION REPOSITORY ... FROM ... [USING PUBLIC KEY ...]`, `INSTALL ... FROM repo`, repository-qualified `LOAD`, and `DROP EXTENSION REPOSITORY`; never log or normalize key material unsafely. |
+| Completed lambda syntax transition | **Implemented:** old arrows remain migration input; DuckDB output always uses `LAMBDA ... : ...` | Remove arrow input when DuckDB 2.1 removes its compatibility setting. |
+| Backtick identifiers and `* EXCEPT` | **Supported:** backticks parse as quoted identifiers and canonicalize to double quotes; `EXCEPT` canonicalizes to `EXCLUDE` | Keep token and identity cases pinned. |
+| `SECURE VIEW` | **Supported:** existing `SecureProperty` now renders in DuckDB | Add execution-policy coverage when secure-view behavior affects consumers. |
+| `EXPLAIN (SQL)` | **Opaque:** accepted by the native verifier but still a generic command in brikk | Add a structured explain-option model before inspecting or transforming it. |
+| Custom extension repositories | **Opaque:** final grammar is `CREATE [OR REPLACE] EXTENSION REPOSITORY ... [WITH] PREFIX ... [[USING] PUBLIC KEY(S) ...]` plus `DROP` | Model without logging or normalizing key material unsafely; keep install/load repository selection separate. |
 
 For each grammar item that lands:
 
@@ -227,8 +228,12 @@ Even syntax-compatible engine replacements can change results. Re-run or add pro
 - [ ] Existing DuckDB hazard pairs in `testResources/semantics` when a changed implementation
   touches a previously probed function. Update generated hazard registries after evidence, not
   merely because the engine version changed.
+- [x] Pin final-engine changes found by the result suite: integer `//` and `%` by zero error;
+  date-at-zone metadata reports `TIMESTAMPTZ_NS`; native `CONCAT_WS` flattens list arguments;
+  UTF-8 byte escapes are accepted while NUL escapes remain rejected; comprehension/lambda local
+  names now resolve case-sensitively against case-insensitive column names.
 
-The storage format, asynchronous I/O, Quack wire protocol, and stable C API do not directly
+The storage format, asynchronous I/O, Quack wire protocol, and C API v2 do not directly
 change `brikk-sql` parsing. Monitor them only for SQL surface or test-fixture consequences.
 Never migrate a checked-in DuckDB database fixture to storage v2.0 without first documenting
 backward/forward compatibility expectations.
@@ -237,16 +242,16 @@ backward/forward compatibility expectations.
 
 When final 2.0 support is ready, update every version-bearing location together:
 
-- [ ] `brikk-sql-verify/module.yaml`: `org.duckdb:duckdb_jdbc` dependency and comments.
-- [ ] `brikk-sql-verify/src/.../DuckdbVerifier.kt`: engine-pin KDoc and any error parsing.
+- [x] `brikk-sql-verify-duckdb/module.yaml`: `org.duckdb:duckdb_jdbc` dependency and comments.
+- [x] `brikk-sql-verify-duckdb/src/.../DuckdbVerifier.kt`: engine-pin KDoc and PEG error parsing.
 - [ ] `tools/generate_duckdb_functions.py`: version-specific modeling comments if still needed.
-- [ ] `brikk-sql-metadata/src/.../GeneratedDuckdbFunctionCatalog.kt`: regenerate, do not edit.
-- [ ] `brikk-sql-metadata/src/.../DuckdbGrammarBuiltins.kt`: parser description and verified
+- [x] `brikk-sql-metadata/src/.../GeneratedDuckdb_2_0_0.kt`: regenerate, do not edit.
+- [x] `brikk-sql-metadata/src/.../DuckdbGrammarBuiltins.kt`: parser description and verified
   version.
-- [ ] `brikk-sql-metadata/src/.../FunctionCatalog.kt` and
+- [x] `brikk-sql-metadata/src/.../FunctionCatalog.kt` and
   `brikk-sql-metadata/test/.../FunctionCatalogTest.kt`: version-specific assumptions/counts.
-- [ ] `vendor/README.md` and `ATTRIBUTIONS.md`: source version, extraction behavior, and counts.
-- [ ] Run `tools/publish_maven_local.sh` and inspect the Toolchain-generated verifier
+- [x] `vendor/README.md` and `ATTRIBUTIONS.md`: source version, extraction behavior, and counts.
+- [x] Run `./kotlin publish mavenLocal` and inspect the Toolchain-generated verifier
   POM/module metadata for the updated JDBC pin. The launcher delegates to Toolchain;
   do not reintroduce manually emitted dependency metadata or duplicated version pins.
 - [ ] DuckDB verify ledgers and generated actual ledger: review diffs and retain reasons for all

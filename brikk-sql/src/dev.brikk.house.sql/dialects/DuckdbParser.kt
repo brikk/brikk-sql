@@ -58,6 +58,7 @@ import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.Localtime
 import dev.brikk.house.sql.ast.Localtimestamp
 import dev.brikk.house.sql.ast.Map as MapNode
+import dev.brikk.house.sql.ast.Nearest
 import dev.brikk.house.sql.ast.ParseJSON
 import dev.brikk.house.sql.ast.PercentileCont
 import dev.brikk.house.sql.ast.PercentileDisc
@@ -74,6 +75,8 @@ import dev.brikk.house.sql.ast.RegexpSplit
 import dev.brikk.house.sql.ast.ReturnsProperty
 import dev.brikk.house.sql.ast.SHA2
 import dev.brikk.house.sql.ast.Schema
+import dev.brikk.house.sql.ast.SessionConnect
+import dev.brikk.house.sql.ast.SessionDisconnect
 import dev.brikk.house.sql.ast.SessionUser
 import dev.brikk.house.sql.ast.Show
 import dev.brikk.house.sql.ast.SortArray
@@ -201,7 +204,7 @@ private fun duckdbBuildExtractJsonWithPath(
 // sqlglot: parsers.duckdb.DuckDBParser
 open class DuckdbParser(
     errorLevel: ErrorLevel? = null,
-    tokenizerConfig: TokenizerConfig = dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB,
+    tokenizerConfig: TokenizerConfig = DuckdbParserTables.TOKENIZER_CONFIG,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
     // sqlglot: dialect back-reference for annotate_types-driven paths
@@ -273,6 +276,43 @@ open class DuckdbParser(
     // sqlglot: DuckDBParser.SHOW_PARSERS
     open val showParsers: Map<String, (DuckdbParser) -> Expression>
         get() = DuckdbParserTables.SHOW_PARSERS
+
+    override fun parseStatement(): Expression? {
+        if (currToken.text.equals("DISCONNECT", ignoreCase = true)) {
+            matchTextSeq("DISCONNECT")
+            return expression(SessionDisconnect())
+        }
+        if (currToken.text.equals("CONNECT", ignoreCase = true) &&
+            !nextToken.text.equals("TO", ignoreCase = true)) {
+            matchTextSeq("CONNECT")
+            val target = parsePrimaryOrVar()
+            val options = if (currToken.tokenType == TokenType.L_PAREN) {
+                parseWrappedCsv({
+                    expression(
+                        AttachOption(
+                            args(
+                                "this" to parseVar(anyToken = true),
+                                "expression" to parseField(anyToken = true),
+                            )
+                        )
+                    )
+                })
+            } else null
+            return expression(SessionConnect(args("this" to target, "expressions" to options)))
+        }
+        return super.parseStatement()
+    }
+
+    override fun parseTriggerAction(): Expression? {
+        val start = index
+        val action = parseStatement()
+        if (action is dev.brikk.house.sql.ast.Insert || action is dev.brikk.house.sql.ast.Update ||
+            action is dev.brikk.house.sql.ast.Delete || action is dev.brikk.house.sql.ast.Merge) {
+            return action
+        }
+        retreat(start)
+        return null
+    }
 
     // sqlglot: DuckDBParser._parse_function_properties
     override fun parseFunctionProperties(): Expression? {
@@ -379,6 +419,48 @@ open class DuckdbParser(
         }
 
         return table
+    }
+
+    override fun parseTableAlias(aliasTokens: Collection<TokenType>?): TableAlias? {
+        val nearest = currToken.text.equals("NEAREST", ignoreCase = true) &&
+            (nextToken.tokenType == TokenType.NUMBER || nextToken.text.equals("BY", ignoreCase = true))
+        val qualifiedNearest = currToken.text.uppercase() in setOf("APPROX", "EXACT") &&
+            nextToken.text.equals("NEAREST", ignoreCase = true)
+        if (nearest || qualifiedNearest) return null
+        return super.parseTableAlias(aliasTokens)
+    }
+
+    override fun parseJoin(
+        skipJoinToken: Boolean,
+        parseBracket: Boolean,
+        aliasTokens: Collection<TokenType>?,
+    ): Expression? {
+        val join = super.parseJoin(skipJoinToken, parseBracket, aliasTokens) ?: return null
+        val approximate = matchTextSeq("APPROX", "NEAREST")
+        val exact = !approximate && matchTextSeq("EXACT", "NEAREST")
+        if (approximate || exact || matchTextSeq("NEAREST")) {
+            val count = parseNumber()
+            if (!matchTextSeq("BY")) raiseError("Expected BY after NEAREST count")
+            if (!matchTexts(setOf("DISTANCE", "SIMILARITY"))) {
+                raiseError("Expected DISTANCE or SIMILARITY after BY")
+            }
+            val similarity = prevToken.text.equals("SIMILARITY", ignoreCase = true)
+            join.set(
+                "nearest",
+                expression(
+                    Nearest(
+                        args(
+                            "this" to parseDisjunction(),
+                            "count" to count,
+                            "approximate" to approximate,
+                            "exact" to exact,
+                            "similarity" to similarity,
+                        )
+                    )
+                ),
+            )
+        }
+        return join
     }
 
     // sqlglot: DuckDBParser._parse_table_sample (https://duckdb.org/docs/sql/samples.html)
@@ -517,6 +599,9 @@ open class DuckdbParser(
  * Kept in an object so the merges happen once.
  */
 object DuckdbParserTables {
+
+    val TOKENIZER_CONFIG: TokenizerConfig =
+        dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB.withIdentifiers(mapOf('`' to "`"))
 
     // sqlglot: DuckDBParser.NO_PAREN_FUNCTIONS
     val NO_PAREN_FUNCTIONS: Map<TokenType, () -> Expression> =

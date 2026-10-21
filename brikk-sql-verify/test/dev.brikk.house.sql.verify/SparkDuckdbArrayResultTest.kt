@@ -121,7 +121,7 @@ class SparkDuckdbArrayResultTest {
                 val native = SqlFragment("SELECT CONCAT_WS('-', ['a', NULL, 'b'])", "duckdb").transpileTo("duckdb").sql
                 statement.executeQuery(native).use { rows ->
                     assertTrue(rows.next())
-                    assertEquals("[a, NULL, b]", rows.getString(1))
+                    assertEquals("a-b", rows.getString(1))
                 }
             }
         }

@@ -104,7 +104,7 @@
     },
     {
       "sql": "SELECT LIST_TRANSFORM([5, NULL, 6], (x, y) -> COALESCE(x, y, 0) + 1)",
-      "expected": null,
+      "expected": "SELECT LIST_TRANSFORM([5, NULL, 6], LAMBDA x, y : COALESCE(x, y, 0) + 1)",
       "pretty": false
     },
     {
@@ -784,7 +784,7 @@
     },
     {
       "sql": "SELECT COLUMNS(c -> c LIKE '%num%') FROM numbers",
-      "expected": null,
+      "expected": "SELECT COLUMNS(LAMBDA c : c LIKE '%num%') FROM numbers",
       "pretty": false
     },
     {
@@ -1867,7 +1867,7 @@
     },
     {
       "sql": "SELECT LIST_APPLY(RANGE(1, 4), i -> {'f1': LIST_VALUE(1, 2, 3)[i], 'f2': LIST_VALUE(1, 2, 3)[i]})",
-      "expected": "SELECT LIST_APPLY(RANGE(1, 4), i -> {'f1': [1, 2, 3][i], 'f2': [1, 2, 3][i]})",
+      "expected": "SELECT LIST_APPLY(RANGE(1, 4), LAMBDA i : {'f1': [1, 2, 3][i], 'f2': [1, 2, 3][i]})",
       "pretty": false
     },
     {
@@ -2520,7 +2520,7 @@
       "sql": "SELECT LIST_TRANSFORM(STR_SPLIT_REGEX('abc , dfg ', ','), x -> TRIM(x))",
       "read": {},
       "write": {
-        "duckdb": "SELECT LIST_TRANSFORM(STR_SPLIT_REGEX('abc , dfg ', ','), x -> TRIM(x))",
+        "duckdb": "SELECT LIST_TRANSFORM(STR_SPLIT_REGEX('abc , dfg ', ','), LAMBDA x : TRIM(x))",
         "spark": "SELECT TRANSFORM(SPLIT('abc , dfg ', ','), x -> TRIM(x))"
       }
     },
@@ -2528,7 +2528,7 @@
       "sql": "SELECT LIST_FILTER([4, 5, 6], x -> x > 4)",
       "read": {},
       "write": {
-        "duckdb": "SELECT LIST_FILTER([4, 5, 6], x -> x > 4)",
+        "duckdb": "SELECT LIST_FILTER([4, 5, 6], LAMBDA x : x > 4)",
         "spark": "SELECT FILTER(ARRAY(4, 5, 6), x -> x > 4)"
       }
     },
@@ -2536,7 +2536,7 @@
       "sql": "ARRAY_COMPACT([1, NULL, 2, NULL, 3])",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER([1, NULL, 2, NULL, 3], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER([1, NULL, 2, NULL, 3], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_COMPACT([1, NULL, 2, NULL, 3])"
       }
     },
@@ -2544,7 +2544,7 @@
       "sql": "ARRAY_COMPACT(NULL)",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER(NULL, _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER(NULL, LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_COMPACT(NULL)"
       }
     },
@@ -2552,7 +2552,7 @@
       "sql": "ARRAY_COMPACT([])",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER([], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER([], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_COMPACT([])"
       }
     },
@@ -2560,7 +2560,7 @@
       "sql": "ARRAY_COMPACT(['a', NULL, 'b', NULL, 'c'])",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER(['a', NULL, 'b', NULL, 'c'], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER(['a', NULL, 'b', NULL, 'c'], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_COMPACT(['a', NULL, 'b', NULL, 'c'])"
       }
     },
@@ -2568,7 +2568,7 @@
       "sql": "ARRAY_COMPACT([[1, 2], NULL, [3, 4]])",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER([[1, 2], NULL, [3, 4]], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER([[1, 2], NULL, [3, 4]], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_COMPACT([[1, 2], NULL, [3, 4]])"
       }
     },
@@ -2576,7 +2576,7 @@
       "sql": "ARRAY_CONSTRUCT_COMPACT(1, 2, 3, 4, 5)",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER([1, 2, 3, 4, 5], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER([1, 2, 3, 4, 5], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_CONSTRUCT_COMPACT(1, 2, 3, 4, 5)"
       }
     },
@@ -2584,7 +2584,7 @@
       "sql": "ARRAY_CONSTRUCT_COMPACT()",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER([], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER([], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_CONSTRUCT_COMPACT()"
       }
     },
@@ -2592,7 +2592,7 @@
       "sql": "ARRAY_CONSTRUCT_COMPACT('a', NULL, 'b', NULL, 'c')",
       "read": {},
       "write": {
-        "duckdb": "LIST_FILTER(['a', NULL, 'b', NULL, 'c'], _u -> NOT _u IS NULL)",
+        "duckdb": "LIST_FILTER(['a', NULL, 'b', NULL, 'c'], LAMBDA _u : NOT _u IS NULL)",
         "snowflake": "ARRAY_CONSTRUCT_COMPACT('a', NULL, 'b', NULL, 'c')"
       }
     },
@@ -3908,7 +3908,7 @@
         "snowflake": "SELECT MAP_DELETE({'a':1,'b':2,'c':3}::MAP(VARCHAR,NUMBER),'a','b')"
       },
       "write": {
-        "duckdb": "SELECT MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(CAST({'a': 1, 'b': 2, 'c': 3} AS MAP(TEXT, DECIMAL(38, 0)))), x -> NOT x.key IN ('a', 'b')))"
+        "duckdb": "SELECT MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(CAST({'a': 1, 'b': 2, 'c': 3} AS MAP(TEXT, DECIMAL(38, 0)))), LAMBDA x : NOT x.key IN ('a', 'b')))"
       }
     },
     {
@@ -3917,7 +3917,7 @@
         "snowflake": "SELECT id, MAP_DELETE(attrs, del_key1, del_key2) AS attrs_after_delete FROM demo_maps"
       },
       "write": {
-        "duckdb": "SELECT id, MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(attrs), x -> NOT x.key IN (del_key1, del_key2))) AS attrs_after_delete FROM demo_maps"
+        "duckdb": "SELECT id, MAP_FROM_ENTRIES(LIST_FILTER(MAP_ENTRIES(attrs), LAMBDA x : NOT x.key IN (del_key1, del_key2))) AS attrs_after_delete FROM demo_maps"
       }
     },
     {

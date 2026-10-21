@@ -100,6 +100,7 @@ object ExpressionRegistry {
         "Limit" to Entry(QUERY) { Limit() },
         "Offset" to Entry(QUERY) { Offset() },
         "Join" to Entry(QUERY) { Join() },
+        "Nearest" to Entry(QUERY) { Nearest() },
         "Subquery" to Entry(QUERY) { Subquery() },
         "CTE" to Entry(QUERY) { CTE() },
         "With" to Entry(QUERY) { With() },
@@ -135,6 +136,7 @@ object ExpressionRegistry {
         registerNativePipeNodes(m)
         registerNativeTrinoNodes(m)
         registerNativeDorisNodes(m)
+        registerNativeDuckdbNodes(m)
     }
 
     fun newInstance(simpleName: String): Expression =

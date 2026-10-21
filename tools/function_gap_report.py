@@ -33,7 +33,7 @@ Raw data sources (preferred over the generated Kotlin catalogs):
   - vendor/data/trino-functions-483.tsv
   - vendor/data/starrocks-builtin-functions-4.1.4.tsv
   - vendor/data/clickhouse-functions-26.5.1.1.tsv
-  - vendor/data/duckdb-functions-1.5.6.tsv (JDBC duckdb_functions() capture)
+  - vendor/data/duckdb-functions-2.0.0.tsv (JDBC duckdb_functions() capture)
 
 sqlglot knowledge comes from reference/sqlglot (read-only oracle).
 
@@ -63,7 +63,7 @@ from pathlib import Path
 from generate_duckdb_functions import json_list, read_dump
 
 ROOT = Path(__file__).resolve().parent.parent
-DUCKDB_DUMP = ROOT / "vendor" / "data" / "duckdb-functions-1.5.6.tsv"
+DUCKDB_DUMP = ROOT / "vendor" / "data" / "duckdb-functions-2.0.0.tsv"
 sys.path.insert(0, str(ROOT / "reference" / "sqlglot"))
 
 import sqlglot  # noqa: E402

@@ -275,6 +275,9 @@ object GeneratorTables {
         reg(Offset::class) { e -> offsetSql(e as Offset) }
         reg(Fetch::class) { e -> fetchSql(e as Fetch) }
         reg(Join::class) { e -> joinSql(e as Join) }
+        reg(Nearest::class) { e -> nearestSql(e as Nearest) }
+        reg(SessionConnect::class) { e -> sessionconnectSql(e as SessionConnect) }
+        reg(SessionDisconnect::class) { e -> sessiondisconnectSql(e as SessionDisconnect) }
         reg(Lateral::class) { e -> lateralSql(e as Lateral) }
         reg(Subquery::class) { e -> subquerySql(e as Subquery) }
         reg(With::class) { e -> withSql(e as With) }

@@ -18,25 +18,25 @@ class BigqueryArrayToStringTest {
         assertEquals("--", assertIs<Literal>(call.expressionArg).name)
         assertEquals("MISSING", assertIs<Literal>(call.args["null"]).name)
         check(source,
-            "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], x -> COALESCE(x, 'MISSING')), '--') AS text")
+            "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(['cake', 'pie', NULL], LAMBDA x : COALESCE(x, 'MISSING')), '--') AS text")
     }
 
     @Test
     fun replacementExpressionsNullsAndEscapingUseSqlBuilders() {
         for ((source, expected) in listOf(
             "ARRAY_TO_STRING(a, '', '')" to
-                "ARRAY_TO_STRING(LIST_TRANSFORM(a, x -> COALESCE(x, '')), '')",
+                "ARRAY_TO_STRING(LIST_TRANSFORM(a, LAMBDA x : COALESCE(x, '')), '')",
             "ARRAY_TO_STRING(a, '--', NULL)" to
-                "ARRAY_TO_STRING(LIST_TRANSFORM(a, x -> COALESCE(x, NULL)), '--')",
+                "ARRAY_TO_STRING(LIST_TRANSFORM(a, LAMBDA x : COALESCE(x, NULL)), '--')",
             "ARRAY_TO_STRING([], '--', 'missing')" to
-                "ARRAY_TO_STRING(LIST_TRANSFORM([], x -> COALESCE(x, 'missing')), '--')",
+                "ARRAY_TO_STRING(LIST_TRANSFORM([], LAMBDA x : COALESCE(x, 'missing')), '--')",
             "ARRAY_TO_STRING(NULL, '--', 'missing')" to
-                "ARRAY_TO_STRING(LIST_TRANSFORM(NULL, x -> COALESCE(x, 'missing')), '--')",
+                "ARRAY_TO_STRING(LIST_TRANSFORM(NULL, LAMBDA x : COALESCE(x, 'missing')), '--')",
             """ARRAY_TO_STRING(['a', NULL], "'", "it's missing")""" to
-                "ARRAY_TO_STRING(LIST_TRANSFORM(['a', NULL], x -> COALESCE(x, 'it''s missing')), '''')",
+                "ARRAY_TO_STRING(LIST_TRANSFORM(['a', NULL], LAMBDA x : COALESCE(x, 'it''s missing')), '''')",
         )) check(source, expected)
         check("ARRAY_TO_STRING(a, d, replacement)",
-            "ARRAY_TO_STRING(LIST_TRANSFORM(a, x -> COALESCE(x, replacement)), d)", dynamicDelimiter = true)
+            "ARRAY_TO_STRING(LIST_TRANSFORM(a, LAMBDA x : COALESCE(x, replacement)), d)", dynamicDelimiter = true)
         val explicitNull = assertIs<ArrayToString>(Dialects.BIGQUERY.parseOne("ARRAY_TO_STRING(a, d, NULL)"))
         assertIs<Null>(explicitNull.args["null"])
     }
@@ -44,14 +44,14 @@ class BigqueryArrayToStringTest {
     @Test
     fun lambdaDoesNotCaptureColumnsOrAliasesAndSupportsQuotedIdentifiers() {
         check("SELECT ARRAY_TO_STRING(a, d, X) AS x_1 FROM inputs",
-            "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(a, x_2 -> COALESCE(x_2, X)), d) AS x_1 FROM inputs", dynamicDelimiter = true)
+            "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(a, LAMBDA x_2 : COALESCE(x_2, X)), d) AS x_1 FROM inputs", dynamicDelimiter = true)
         check("SELECT ARRAY_TO_STRING(a, d, x.replacement) FROM inputs AS x",
-            "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(a, x_1 -> COALESCE(x_1, x.replacement)), d) FROM inputs AS x", dynamicDelimiter = true)
+            "SELECT ARRAY_TO_STRING(LIST_TRANSFORM(a, LAMBDA x_1 : COALESCE(x_1, x.replacement)), d) FROM inputs AS x", dynamicDelimiter = true)
         check("ARRAY_TO_STRING(`array value`, `delimiter value`, `null text`)",
-            "ARRAY_TO_STRING(LIST_TRANSFORM(\"array value\", x -> COALESCE(x, \"null text\")), \"delimiter value\")", dynamicDelimiter = true)
+            "ARRAY_TO_STRING(LIST_TRANSFORM(\"array value\", LAMBDA x : COALESCE(x, \"null text\")), \"delimiter value\")", dynamicDelimiter = true)
         val tree = Dialects.BIGQUERY.parseOne("ARRAY_TO_STRING(a, d, replacement)")
         assertEquals(
-            "ARRAY_TO_STRING(LIST_TRANSFORM(\"a\", \"x\" -> COALESCE(\"x\", \"replacement\")), \"d\")",
+            "ARRAY_TO_STRING(LIST_TRANSFORM(\"a\", LAMBDA \"x\" : COALESCE(\"x\", \"replacement\")), \"d\")",
             DuckdbGenerator(identify = true, sourceDialect = "bigquery").generate(tree),
         )
     }

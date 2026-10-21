@@ -7,7 +7,7 @@ import java.util.concurrent.CancellationException
 
 /**
  * The corpus-gate oracle: verifies SQL against the real DuckDB parser via an embedded in-memory
- * engine (`org.duckdb:duckdb_jdbc`, pinned to engine 1.5.6 to match the generated DuckDB
+ * engine (`org.duckdb:duckdb_jdbc`, pinned to engine 2.0.0 to match the generated DuckDB
  * function catalog).
  *
  * Strategy (two channels, because DuckDB reports parse failures both ways):

@@ -3824,8 +3824,9 @@
     "match_condition": false,
     "directed": false,
     "expressions": false,
-    "pivots": false
-   }
+    "pivots": false,
+    "nearest": false
+    }
   },
   "JoinHint": {
    "module": "sqlglot.expressions.core",
@@ -4547,6 +4548,16 @@
    "module": "sqlglot.expressions.query",
    "arg_types": {
     "this": true
+   }
+  },
+  "Nearest": {
+   "module": "sqlglot.expressions.query",
+   "arg_types": {
+    "this": true,
+    "count": false,
+    "approximate": false,
+    "exact": false,
+    "similarity": false
    }
   },
   "Neg": {

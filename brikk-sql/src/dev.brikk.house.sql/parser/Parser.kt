@@ -1783,7 +1783,7 @@ open class Parser(
     // -----------------------------------------------------------------------
 
     // sqlglot: Parser._parse_statement
-    fun parseStatement(): Expression? {
+    open fun parseStatement(): Expression? {
         if (!currToken.exists) return null
 
         if (matchSet(statementParsers.keys)) {
@@ -2260,7 +2260,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_table_alias
-    fun parseTableAlias(aliasTokens: Collection<TokenType>? = null): TableAlias? {
+    open fun parseTableAlias(aliasTokens: Collection<TokenType>? = null): TableAlias? {
         // In some dialects, LIMIT and OFFSET can act as both identifiers and keywords (clauses)
         // so this section tries to parse the clause version and if it fails, it treats the token
         // as an identifier (alias)
@@ -5039,6 +5039,9 @@ open class Parser(
         return expression(TriggerExecute(args("this" to funcCall)))
     }
 
+    /** Trigger action after timing/table clauses; DuckDB overrides PostgreSQL's EXECUTE FUNCTION form. */
+    protected open fun parseTriggerAction(): Expression? = parseTriggerExecute()
+
     // sqlglot: Parser._parse_create (macro-overload branch gated:
     // no base-corpus coverage; CREATABLE_KIND_MAPPING={} in the base dialect)
     open fun parseCreate(): Expression {
@@ -5194,7 +5197,7 @@ open class Parser(
             } else {
                 false
             }
-            val execute = parseTriggerExecute() ?: return parseAsCommand(start)
+            val execute = parseTriggerAction() ?: return parseAsCommand(start)
 
             val triggerProps = expression(
                 TriggerProperties(

@@ -43,6 +43,7 @@ internal class ParseOnlyDuckdbVerifierTest {
                             line = sql.take(where).count { it == '\n' } + 1,
                             column = where - (sql.lastIndexOf('\n', where - 1) + 1) + 1,
                             offset = where,
+                            endOffset = where + "WHERE".length,
                         ),
                         error,
                         sql,
@@ -50,7 +51,7 @@ internal class ParseOnlyDuckdbVerifierTest {
                 }
             }
             val expression = assertIs<VerifyResult.Rejected>(verifier.verifyExpression("'\uD83D\uDE00' +")).error
-            assertEquals(listOf(1, 7, 6), listOf(expression.line, expression.column, expression.offset))
+            assertEquals(listOf(1, 6, 5), listOf(expression.line, expression.column, expression.offset))
         }
     }
 

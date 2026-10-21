@@ -12,7 +12,7 @@ import dev.brikk.house.sql.metadata.InvocationSyntax.SPECIAL_FORM
  * DuckdbDump.toSnapshot() wires this set into every DuckDB FunctionCatalog
  * constructor (grammarBuiltins = DUCKDB_GRAMMAR_BUILTINS).
  *
- * Verified against the pinned engine (v1.5.6, python duckdb module): each name below
+ * Verified against the pinned engine (v2.0.0): each name below
  * parses as `NAME(args)` (grammar-accepted; GROUPING/GROUPING_ID fail only at BIND
  * time outside a grouped query) while `SELECT DISTINCT function_name FROM
  * duckdb_functions()` lacks it.
@@ -35,7 +35,7 @@ val DUCKDB_GRAMMAR_BUILTINS: Set<String> = setOf(
  * Grammar forms for completion (DF-13): every name above, plus the grammar-level names its
  * inclusion rule leaves out (IF, TRY, CAST, TRY_CAST, EXTRACT), the bare spellings the parser
  * accepts, and the special argument syntax of registered functions. Each probed on the
- * 1.5.6 JDBC engine (bare and call spellings both tried).
+ * 2.0.0 JDBC engine (bare and call spellings both tried).
  */
 internal val DUCKDB_GRAMMAR_FORMS: List<GrammarForm> = listOf(
     grammarForm("COALESCE", CALL),

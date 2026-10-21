@@ -91,6 +91,11 @@ The matching verify/oracle artifacts followed in a
 comment-only script tails. Editor snapshots now mark these ranges incomplete so
 consumers cannot execute a valid prefix after malformed input.
 
+Current `main` targets DuckDB 2.0.0 (`duckdb_jdbc:2.0.0.0`), with final-engine
+function/type/keyword captures, PEG-parser error locations, Python-style lambda
+generation, `NEAREST` joins, session routing, triggers, nested schemas, DML CTEs,
+`FETCH FIRST`, grouping by `UNNEST`, JSON mutation functions and `VARIANT` metadata.
+
 ## Build and test
 
 Use the pinned **Kotlin Toolchain 0.13.0** wrapper. Kotlin remains pinned to

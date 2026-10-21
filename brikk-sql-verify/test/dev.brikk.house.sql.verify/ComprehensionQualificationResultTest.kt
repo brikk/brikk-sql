@@ -19,8 +19,8 @@ class ComprehensionQualificationResultTest {
                 statement.execute("INSERT INTO t VALUES (['a', 'b'], 'table')")
                 for ((source, expected) in listOf(
                     "SELECT [X.UPPER() FOR x IN items] AS result FROM t" to "[\"TABLE\",\"TABLE\"]",
-                    "SELECT [X.UPPER() FOR X IN items] AS result FROM t" to "[\"A\",\"B\"]",
-                    "SELECT [LIST_TRANSFORM(['c'], X -> X.UPPER()) FOR x IN items] AS result FROM t" to "[[\"C\"],[\"C\"]]",
+                    "SELECT [X.UPPER() FOR X IN items] AS result FROM t" to "[\"TABLE\",\"TABLE\"]",
+                    "SELECT [LIST_TRANSFORM(['c'], LAMBDA X : X.UPPER()) FOR x IN items] AS result FROM t" to "[[\"TABLE\"],[\"TABLE\"]]",
                 )) {
                     val qualified = qualify(Dialects.DUCKDB.parseOne(source), dialect = Dialects.DUCKDB,
                         schema = mapOf("t" to mapOf("items" to "ARRAY<TEXT>", "x" to "TEXT")), inferSchema = false).sql("duckdb")
@@ -73,7 +73,7 @@ class ComprehensionQualificationResultTest {
                     "SELECT [x + threshold FOR x, i IN items IF x > 0 AND i > 1] AS result FROM t" to listOf("[12]", "[]", null),
                     "SELECT [[x FOR x IN x] FOR x IN nested] AS result FROM t" to listOf("[[1,2],[3]]", "[]", null),
                     "SELECT [[x + y FOR x IN [1, 2]] FOR y IN items] AS result FROM t" to listOf("[[2,3],[3,4],[0,1]]", "[]", null),
-                    "SELECT [X FOR x IN items] AS result FROM t" to listOf("[99,99,99]", "[]", null),
+                    "SELECT [X FOR x IN items] AS result FROM t" to listOf("[1,2,-1]", "[]", null),
                     "SELECT [X FOR X IN items] AS result FROM t" to listOf("[1,2,-1]", "[]", null),
                     "SELECT [[X FOR X IN [1, 2]] FOR x IN items] AS result FROM t" to listOf("[[1,2],[1,2],[1,2]]", "[]", null),
                     "SELECT [[x FOR X IN [1, 2]] FOR x IN items] AS result FROM t" to listOf("[[1,2],[1,2],[1,2]]", "[]", null),

@@ -19,8 +19,8 @@ class SqlVerifierTest {
             connection.createStatement().use { statement ->
                 statement.executeQuery("SELECT library_version, source_id FROM pragma_version()").use { rows ->
                     assertTrue(rows.next())
-                    assertEquals("v1.5.6", rows.getString(1))
-                    assertEquals("069cc9f9b5", rows.getString(2))
+                    assertEquals("v2.0.0", rows.getString(1))
+                    assertEquals("d54cbbe3df", rows.getString(2))
                     assertFalse(rows.next())
                 }
                 statement.executeQuery(
@@ -28,7 +28,7 @@ class SqlVerifierTest {
                         "('icu_collate_fy', 'icu_collate_lij', 'icu_collate_nso', 'icu_collate_st', 'icu_collate_tn')"
                 ).use { rows ->
                     assertTrue(rows.next())
-                    assertEquals(0, rows.getInt(1), "JDBC must agree with the refreshed Python registry")
+                    assertEquals(5, rows.getInt(1), "JDBC must agree with the captured 2.0 registry")
                 }
             }
         }

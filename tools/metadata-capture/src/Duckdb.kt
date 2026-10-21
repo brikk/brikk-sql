@@ -57,7 +57,7 @@ fun DuckdbCapture<*>.dump(connection: Connection): Dump = connection.createState
     }
 }
 
-/** The release number without DuckDB's `v` prefix: "1.5.6". */
+/** The release number without DuckDB's `v` prefix, for example "2.0.0". */
 fun Connection.engineVersion(): String = scalar("SELECT library_version FROM pragma_version()").removePrefix("v")
 
 fun Connection.sourceId(): String = scalar("SELECT source_id FROM pragma_version()")

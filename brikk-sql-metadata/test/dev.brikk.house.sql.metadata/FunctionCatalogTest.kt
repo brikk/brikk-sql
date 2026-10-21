@@ -273,9 +273,9 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbCatalogLoadsWithExpectedSurface() {
-        // The 1.5.6 engine no longer exposes these ICU locale functions.
+        // DuckDB 2.0's native ICU replacement exposes the complete locale collation set again.
         for (locale in listOf("fy", "lij", "nso", "st", "tn")) {
-            assertFalse("icu_collate_$locale" in DUCKDB_FUNCTION_CATALOG)
+            assertTrue("icu_collate_$locale" in DUCKDB_FUNCTION_CATALOG)
         }
         assertTrue("icu_collate_en" in DUCKDB_FUNCTION_CATALOG)
         assertTrue("list_transform" in DUCKDB_FUNCTION_CATALOG)
@@ -286,12 +286,20 @@ class FunctionCatalogTest {
             listOf(
                 FunctionOverload(
                     listOf("ANY[]", "LAMBDA"), "ANY[]",
-                    argNames = listOf("list", "lambda(x)"),
+                    argNames = listOf("list", "lambda"),
                 ),
             ),
             listTransform.overloads,
         )
         assertNull(listTransform.nativeKind)
+        for (name in listOf("json_set", "json_insert", "json_replace", "json_remove", "json_deep_merge")) {
+            assertEquals(FunctionKind.SCALAR, DUCKDB_FUNCTION_CATALOG[name]?.kind, name)
+        }
+        for (name in listOf("variant_type", "variant_keys", "variant_contains", "variant_array_length")) {
+            assertEquals(FunctionKind.SCALAR, DUCKDB_FUNCTION_CATALOG[name]?.kind, name)
+        }
+        assertEquals(FunctionKind.AGGREGATE, DUCKDB_FUNCTION_CATALOG["variant_group_object"]?.kind)
+        assertEquals(FunctionKind.SCALAR, DUCKDB_FUNCTION_CATALOG["setval"]?.kind)
     }
 
     @Test
@@ -322,7 +330,7 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbArgNamesArePinnedAgainstTheEngine() {
-        // duckdb_functions() (v1.5.6) lists round's parameters as ['x'] and
+        // duckdb_functions() (v2.0.0) lists round's parameters as ['x'] and
         // ['x', 'precision'] per numeric overload — names attach per overload, in
         // argTypes order.
         val round = DUCKDB_FUNCTION_CATALOG["round"]!!
@@ -351,7 +359,7 @@ class FunctionCatalogTest {
 
     @Test
     fun duckdbProfilesStayNull() {
-        // duckdb_functions() exposes no null-handling column (v1.5.6: has_side_effects
+        // duckdb_functions() exposes no null-handling column (v2.0.0: has_side_effects
         // and stability are the only behavioral flags) — honest UNKNOWN as null.
         assertTrue(DUCKDB_FUNCTION_CATALOG.functions.all { it.profile == null })
     }

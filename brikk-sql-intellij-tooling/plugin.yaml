@@ -14,7 +14,7 @@ tasks:
         dependencies:
           - ../brikk-sql-intellij-test-support
           # An embedded engine for the live catalog harvest tests.
-          - org.duckdb:duckdb_jdbc:1.5.6.0
+          - org.duckdb:duckdb_jdbc:2.0.0.0
           # A real native verifier for the shared error annotator's end-to-end test.
           - ../brikk-sql-verify-duckdb
           # The ClickHouse verifier, for data-source verification end to end (the driver itself is

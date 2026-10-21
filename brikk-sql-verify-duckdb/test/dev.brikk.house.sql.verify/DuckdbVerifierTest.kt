@@ -14,6 +14,47 @@ import kotlin.test.assertSame
 
 internal class DuckdbVerifierTest {
     @Test
+    fun duckdb20DocumentedSyntaxIsAcceptedByTheFinalPegParser() {
+        val statements = listOf(
+            "WITH updated AS (UPDATE orders SET status = 'shipped' RETURNING *) SELECT count(*) FROM updated",
+            "SELECT * FROM users q INNER JOIN products p APPROX NEAREST 2 BY SIMILARITY " +
+                "array_cosine_similarity(q.embedding, p.embedding)",
+            "CREATE SCHEMA finance.reports",
+            "SELECT json_set(doc, '$.x', '2'), json_insert(doc, '$.y', '3'), " +
+                "json_replace(doc, '$.z', '4'), json_remove(doc, '$.old') FROM t",
+            "SELECT * FROM addresses ORDER BY city OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY",
+            "SELECT unnest(tags), count(*) FROM t GROUP BY unnest(tags)",
+            "MERGE INTO people USING updates ON people.id = updates.id " +
+                "WHEN MATCHED THEN UPDATE SET name = updates.name WHEN NOT MATCHED THEN INSERT BY NAME",
+            "UPDATE people SET name = updates.name FROM updates WHERE people.id = updates.id",
+            "SELECT list_transform([1, 2, 3], lambda x: x + 1)",
+            "CREATE TRIGGER trg AFTER INSERT ON t INSERT INTO audit VALUES (1)",
+            "CONNECT 'postgres://localhost/db'",
+            "DISCONNECT",
+        )
+        DuckdbVerifier().use { verifier ->
+            for (sql in statements) assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
+        }
+    }
+
+    @Test
+    fun serializedLocationsSupportLegacyCodePointsAndPegParserUtf8Bytes() {
+        val sql = "SELECT '😀' FROM WHERE"
+        val where = sql.indexOf("WHERE")
+        val codePoint = sql.codePointCount(0, where)
+        val byte = sql.take(where).encodeToByteArray().size
+
+        assertEquals(
+            VerifyError("bad", line = 1, column = where + 1, offset = where),
+            SerializedSql.Failed("parser", "bad", codePoint, null, "{}").errorIn(sql, "bad"),
+        )
+        assertEquals(
+            VerifyError("bad", line = 1, column = where + 1, offset = where, endOffset = where + 5),
+            SerializedSql.Failed("parser", "bad", byte, "[$byte,5]", "{}").errorIn(sql, "bad"),
+        )
+    }
+
+    @Test
     fun infrastructureFailuresAreUnavailableNotAccepted() {
         assertIs<VerifyResult.Unavailable>(DuckdbVerifier { throw SQLException("Connection was closed") }.verify("SELECT 1"))
 

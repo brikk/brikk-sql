@@ -7,7 +7,6 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.PIPE_STAGES_RUN_EVERYWHERE
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenizerConfig
-import dev.brikk.house.sql.parser.StringEscapeProfiles
 
 /**
  * Port of sqlglot's DuckDB dialect umbrella (reference/sqlglot/sqlglot/dialects/duckdb.py
@@ -16,7 +15,7 @@ import dev.brikk.house.sql.parser.StringEscapeProfiles
  */
 // sqlglot: dialects.duckdb.DuckDB
 open class DuckdbDialect : Dialect() {
-    // brikk-native PIPE evidence: DuckDB 1.5.6 ran every lowered stage below.
+    // brikk-native PIPE evidence: DuckDB 2.0.0 ran every lowered stage below.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf(
         "CALL", "DROP", "SET", "RENAME", "PIVOT", "UNPIVOT", "TABLESAMPLE", "UNION", "ASOF JOIN", "NATURAL JOIN", "POSITIONAL JOIN",
     )
@@ -49,7 +48,7 @@ open class DuckdbDialect : Dialect() {
     // (tools/generate_duckdb_functions.py).
     override val functionCatalog: FunctionCatalog get() = DUCKDB_FUNCTION_CATALOG
 
-    override val tokenizerConfig: TokenizerConfig get() = StringEscapeProfiles.DUCKDB
+    override val tokenizerConfig: TokenizerConfig get() = DuckdbParserTables.TOKENIZER_CONFIG
 
     // sqlglot: DuckDB.TIME_MAPPING is the base (empty) mapping; only
     // INVERSE_TIME_MAPPING carries dialect-specific entries (see DuckdbGenerator).

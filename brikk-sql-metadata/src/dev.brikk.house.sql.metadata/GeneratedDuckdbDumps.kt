@@ -3,4 +3,4 @@
 package dev.brikk.house.sql.metadata
 
 /** Every bundled DuckDB capture, oldest first: the rows behind [DUCKDB_METADATA]. */
-val DUCKDB_DUMPS: List<DuckdbDump> = listOf(DUCKDB_1_5_6_DUMP)
+val DUCKDB_DUMPS: List<DuckdbDump> = listOf(DUCKDB_1_5_6_DUMP, DUCKDB_2_0_0_DUMP)

@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 
 /**
  * brikk-extensions #55: pipe stages whose lowering the target engine rejects (Trino 483,
- * DuckDB 1.5.6, ClickHouse 26.7, Doris 4.1.4 grammar) refuse for execution; previews stay.
+ * DuckDB 2.0.0, ClickHouse 26.7, Doris 4.1.4 grammar) refuse for execution; previews stay.
  */
 class PipeEngineRejectionTest {
 

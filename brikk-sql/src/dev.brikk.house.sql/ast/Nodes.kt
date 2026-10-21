@@ -596,9 +596,41 @@ class Join(initArgs: Args = emptyMap()) : Expression(initArgs) {
             "this" to true, "on" to false, "side" to false, "kind" to false,
             "using" to false, "method" to false, "global_" to false, "hint" to false,
             "match_condition" to false, "directed" to false, "expressions" to false,
-            "pivots" to false,
+            "pivots" to false, "nearest" to false,
         )
     }
+}
+
+// sqlglot: query.Nearest(Expression)
+class Nearest(initArgs: Args = emptyMap()) : Expression(initArgs) {
+    override val argTypes get() = ARG_TYPES
+
+    companion object {
+        private val ARG_TYPES = argTypesOf(
+            "this" to true, "count" to false, "approximate" to false,
+            "exact" to false, "similarity" to false,
+        )
+    }
+}
+
+/** DuckDB 2.0 session routing; distinct from hierarchical query [Connect]. */
+class SessionConnect(initArgs: Args = emptyMap()) : Expression(initArgs) {
+    override val argTypes get() = ARG_TYPES
+
+    companion object {
+        private val ARG_TYPES = argTypesOf("this" to false, "expressions" to false)
+    }
+}
+
+/** DuckDB 2.0 DISCONNECT statement. */
+class SessionDisconnect(initArgs: Args = emptyMap()) : Expression(initArgs) {
+    override val argTypes: Map<String, kotlin.Boolean> get() = emptyMap()
+}
+
+internal fun registerNativeDuckdbNodes(m: MutableMap<String, ExpressionRegistry.Entry>) {
+    val module = "brikk.duckdb"
+    m["SessionConnect"] = ExpressionRegistry.Entry(module) { SessionConnect() }
+    m["SessionDisconnect"] = ExpressionRegistry.Entry(module) { SessionDisconnect() }
 }
 
 // sqlglot: query.Subquery(Expression, DerivedTable, Query) — is_subquery

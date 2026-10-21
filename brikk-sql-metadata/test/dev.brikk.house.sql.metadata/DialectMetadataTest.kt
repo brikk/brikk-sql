@@ -67,7 +67,7 @@ class DialectMetadataTest {
 
     @Test
     fun bundledDuckdbServesTheDefaultRelease() {
-        assertEquals("1.5.6", DUCKDB_METADATA.default.engineVersion)
+        assertEquals("2.0.0", DUCKDB_METADATA.default.engineVersion)
         assertEquals(DUCKDB_METADATA.default.functions, DUCKDB_FUNCTION_CATALOG)
         assertEquals("1.5.6" to false, DUCKDB_METADATA.pick("v1.5.5"))
     }

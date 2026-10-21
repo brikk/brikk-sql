@@ -274,18 +274,18 @@ data drop. Format: a header of column names, then tab-separated rows; `\N` is NU
 
 | | |
 |---|---|
-| Version | **1.5.6**, source ID `069cc9f9b5` (`org.duckdb:duckdb_jdbc:1.5.6.0`, the same engine as the native verifier) |
-| Captured | 2026-10-11 |
+| Versions | **1.5.6**, source ID `069cc9f9b5`; **2.0.0**, source ID `d54cbbe3df` (`org.duckdb:duckdb_jdbc:2.0.0.0`, the same engine as the native verifier) |
+| Latest capture | 2026-10-21 |
 | License | MIT (extracted registry data; see ATTRIBUTIONS.md) |
 | Refresh | bump the `duckdb_jdbc` coordinate in `tools/metadata-capture/module.yaml`, run the `duckdb` and `duckdb-extension-functions` captures, then `python3 tools/generate_duckdb_functions.py` |
 
 `duckdb_functions()` has **no null-handling column** (`has_side_effects` and `stability`
 are the only behavioral flags), so `FunctionDef.profile` stays null for every DuckDB def.
 The JDBC capture has no Python-client functions (`pandas_scan`, `python_map_function`),
-which the earlier Python-module generator picked up. Compared with 1.5.5, the 1.5.6
-registry no longer exposes `icu_collate_fy`, `icu_collate_lij`, `icu_collate_nso`,
-`icu_collate_st`, or `icu_collate_tn`. Historical cross-engine hazard evidence retains
-the engine versions actually probed.
+which the earlier Python-module generator picked up. DuckDB 2.0.0 adds the JSON mutation
+and `VARIANT` families, trigger/external-resource catalog functions, exact decimal helpers,
+and the native ICU replacement's complete locale collation set. Historical cross-engine
+hazard evidence retains the engine versions actually probed.
 
 ## `data/<dialect>-keywords-<version>.tsv` — Trino, Doris and ClickHouse keywords
 

@@ -150,10 +150,15 @@ class TokenizerConfig(
      */
     fun withKeywords(extra: Map<String, TokenType>): TokenizerConfig = copyWith(extra, unescapedSequences)
 
+    /** This config with additional identifier delimiters, for native lexer rules absent upstream. */
+    fun withIdentifiers(extra: Map<Char, String>): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences, identifiers = identifiers + extra)
+
     private fun copyWith(
         extra: Map<String, TokenType>,
         sequences: Map<String, String>,
         comments: Map<String, String?> = this.comments,
+        identifiers: Map<Char, String> = this.identifiers,
     ): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
         keywords = keywords + extra,

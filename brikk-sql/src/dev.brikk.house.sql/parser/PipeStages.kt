@@ -296,7 +296,7 @@ fun pipeRunnableStageKeywords(dialect: String): List<String> {
 }
 
 /**
- * Stage phrases every engine with recorded evidence ran as lowered (Trino 483, DuckDB 1.5.6 and
+ * Stage phrases every engine with recorded evidence ran as lowered (Trino 483, DuckDB 2.0.0 and
  * ClickHouse 26.7 executed them; the Doris 4.1.4 FE parser accepted them). STRAIGHT_JOIN is left
  * out everywhere: no engine parses `a STRAIGHT_JOIN b`.
  */

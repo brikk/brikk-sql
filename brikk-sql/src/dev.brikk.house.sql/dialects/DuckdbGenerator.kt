@@ -64,7 +64,7 @@ open class DuckdbGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
 
-    // brikk extension #55: DuckDB 1.5.6 has no STRAIGHT_JOIN.
+    // brikk extension #55: DuckDB 2.0.0 has no STRAIGHT_JOIN.
     override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
 
     // sqlglot: DuckDBGenerator.SELECT_KINDS = ()
@@ -112,8 +112,8 @@ open class DuckdbGenerator(
     override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
     override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
 
-    // DuckDB 1.5.6 rejects NUL in ordinary SQL source and in e'\x00' (its parser's
-    // pg_verifymbstr is unimplemented). CHR(0) creates the same text at execution time.
+    // DuckDB 2.0.0 rejects NUL in ordinary SQL source and in e'\x00'. CHR(0) creates the
+    // same text at execution time.
     private fun nulTextSql(text: String, segment: (String) -> String): String {
         val pieces = text.split('\u0000').map { if (it.isEmpty()) null else segment(it) }
         val parts = mutableListOf<String>()
@@ -158,6 +158,8 @@ open class DuckdbGenerator(
 
     // sqlglot: DuckDBGenerator.TYPE_MAPPING
     override val typeMapping: Map<DType, String> get() = TYPE_MAPPING
+    override val supportsNearestJoin: Boolean get() = true
+    override val supportsSessionRouting: Boolean get() = true
 
     // sqlglot: DuckDBGenerator.RESERVED_KEYWORDS
     override val reservedKeywords: Set<String> get() = RESERVED_KEYWORDS
@@ -202,10 +204,7 @@ open class DuckdbGenerator(
 
     // sqlglot: DuckDBGenerator.lambda_sql
     override fun lambdaSql(expression: Lambda, arrowSep: String, wrapArgs: Boolean): String {
-        if (expression.args["colon"] == true) {
-            return "LAMBDA " + super.lambdaSql(expression, arrowSep = ":", wrapArgs = false)
-        }
-        return super.lambdaSql(expression, arrowSep = arrowSep, wrapArgs = wrapArgs)
+        return "LAMBDA " + super.lambdaSql(expression, arrowSep = ":", wrapArgs = false)
     }
 
     // sqlglot: DuckDBGenerator.show_sql
@@ -2746,6 +2745,7 @@ open class DuckdbGenerator(
     override fun joinSql(expression: Join): String {
         if (expression.args["using"] == null &&
             expression.args["on"] == null &&
+            expression.args["nearest"] == null &&
             expression.text("method").isEmpty() &&
             expression.text("kind").uppercase() in setOf("", "INNER", "OUTER")
         ) {
@@ -2946,17 +2946,19 @@ open class DuckdbGenerator(
 
         // sqlglot: DuckDBGenerator.RESERVED_KEYWORDS
         val RESERVED_KEYWORDS: Set<String> = setOf(
-            "array", "analyse", "union", "all", "when", "in_p", "default", "create_p",
-            "window", "asymmetric", "to", "else", "localtime", "from", "end_p", "select",
+            "array", "analyse", "union", "all", "when", "in", "default", "create",
+            "window", "asymmetric", "to", "else", "localtime", "from", "end", "select",
             "current_date", "foreign", "with", "grant", "session_user", "or", "except",
-            "references", "fetch", "limit", "group_p", "leading", "into", "collate",
-            "offset", "do", "then", "localtimestamp", "check_p", "lateral_p",
-            "current_role", "where", "asc_p", "placing", "desc_p", "user", "unique",
+            "references", "fetch", "limit", "group", "leading", "into", "collate",
+            "offset", "do", "then", "localtimestamp", "check", "lateral",
+            "current_role", "where", "asc", "placing", "desc", "user", "unique",
             "initially", "column", "both", "some", "as", "any", "only", "deferrable",
-            "null_p", "current_time", "true_p", "table", "case", "trailing", "variadic",
-            "for", "on", "distinct", "false_p", "not", "constraint", "current_timestamp",
+            "null", "current_time", "true", "table", "case", "trailing", "variadic",
+            "for", "on", "distinct", "false", "not", "constraint", "current_timestamp",
             "returning", "primary", "intersect", "having", "analyze", "current_user",
-            "and", "cast", "symmetric", "using", "order", "current_catalog",
+            "and", "cast", "symmetric", "using", "order", "current_catalog", "describe",
+            "lambda", "pivot", "pivot_longer", "pivot_wider", "qualify", "show",
+            "summarize", "unpivot",
         )
 
         // sqlglot: DuckDBGenerator.PROPERTIES_LOCATION (all base locations become
@@ -2969,6 +2971,8 @@ open class DuckdbGenerator(
                     ReturnsProperty::class to GeneratorTables.PropLocation.POST_ALIAS,
                     SequenceProperties::class to GeneratorTables.PropLocation.POST_EXPRESSION,
                     IcebergProperty::class to GeneratorTables.PropLocation.POST_CREATE,
+                    SecureProperty::class to GeneratorTables.PropLocation.POST_CREATE,
+                    TriggerProperties::class to GeneratorTables.PropLocation.POST_EXPRESSION,
                 )
 
         // sqlglot: DuckDBGenerator.TRANSFORMS (dispatch-map overlay over the base;

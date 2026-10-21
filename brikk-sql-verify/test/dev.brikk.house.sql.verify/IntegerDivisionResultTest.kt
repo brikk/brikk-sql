@@ -65,7 +65,7 @@ class IntegerDivisionResultTest {
     }
 
     @Test
-    fun typedZeroDivisorsStillFailWhileSafeAndNativeDuckdbDivisionReturnNull() {
+    fun typedAndNativeZeroDivisorsFailWhileTryAndNullOperandsReturnNull() {
         DriverManager.getConnection("jdbc:duckdb:").use { connection ->
             val source = "SELECT CAST(7 AS BIGINT) / CAST(0 AS BIGINT)"
             val tree = Dialects.POSTGRES.parseOne(source)
@@ -74,13 +74,19 @@ class IntegerDivisionResultTest {
                 connection.createStatement().use { it.executeQuery(output).close() }
             }
             tree.findAll<Div>().single().set("safe", true)
-            for (sql in listOf(tree.sql("duckdb"), "SELECT 7 // 0", "SELECT NULL // 0")) {
+            for (sql in listOf(tree.sql("duckdb"), "SELECT NULL // 0")) {
                 connection.createStatement().use { statement ->
                     statement.executeQuery(sql).use { rows ->
                         assertTrue(rows.next())
                         assertEquals(null, rows.getObject(1), sql)
                     }
                 }
+            }
+            for (sql in listOf("SELECT 7 // 0", "SELECT 7 % 0")) {
+                val failure = assertFailsWith<SQLException>(sql) {
+                    connection.createStatement().use { it.executeQuery(sql).close() }
+                }
+                assertTrue("Division by zero" in failure.message.orEmpty(), failure.message)
             }
             val safeNonzero = annotateTypes(Dialects.POSTGRES.parseOne("SELECT 7 / 2"), dialect = Dialects.POSTGRES)
             safeNonzero.findAll<Div>().single().set("safe", true)
