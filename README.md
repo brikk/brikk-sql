@@ -20,7 +20,7 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-metadata](brikk-sql-metadata/) | `brikk-sql-metadata-jvm` | Function/type catalogs and evidence-backed semantic metadata; exported by core. |
 | [brikk-sql-verify-api](brikk-sql-verify-api/) | `brikk-sql-verify-api` | `SqlVerifier` contract, four-state `VerifyResult`, and editor-ready error positions; re-exports `brikk-sql-jvm`. |
 | [brikk-sql-verify-trino](brikk-sql-verify-trino/) | `brikk-sql-verify-trino` | Trino verifier over trino-parser 483 (Java 25 runtime). |
-| [brikk-sql-verify-duckdb](brikk-sql-verify-duckdb/) | `brikk-sql-verify-duckdb` | DuckDB corpus-gate verifier and the parse-only editor verifier. |
+| [brikk-sql-verify-duckdb](brikk-sql-verify-duckdb/) | `brikk-sql-verify-duckdb` | DuckDB corpus-gate verifier, restricted standalone editor parser, and connection-backed parse-only verifier. |
 | [brikk-sql-verify-doris](brikk-sql-verify-doris/) | `brikk-sql-verify-doris` | Doris FE parser verifier, single statement or every error in a script. |
 | [brikk-sql-verify-shardingsphere](brikk-sql-verify-shardingsphere/) | `brikk-sql-verify-shardingsphere` | Advisory ShardingSphere grammars for PostgreSQL, MySQL, Hive and ClickHouse. Exclude `org.apache.groovy:groovy`: parsing never uses it and Toolchain cannot publish the exclusion. |
 | [brikk-sql-verify-clickhouse](brikk-sql-verify-clickhouse/) | `brikk-sql-verify-clickhouse` | Parse-only ClickHouse verifier over the user's own server (`formatQuery`, never executes); the caller supplies the connection. |
@@ -34,8 +34,8 @@ modules; trino-parser itself, and so the Trino verifier and the aggregate, need 
 Java 25 runtime. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest core, metadata, verify and oracle release: **`0.19.1`**. SQL IntelliJ
-support is independently versioned at **`0.1.1`**. Current core development
+Latest core, metadata, verify and oracle release: **`0.20.0`**. SQL IntelliJ
+support is independently versioned at **`0.2.3`**. Current core development
 snapshot: **`0.20.0-SNAPSHOT`**.
 
 ```kotlin
@@ -95,6 +95,13 @@ Current `main` targets DuckDB 2.0.0 (`duckdb_jdbc:2.0.0.0`), with final-engine
 function/type/keyword captures, PEG-parser error locations, Python-style lambda
 generation, `NEAREST` joins, session routing, triggers, nested schemas, DML CTEs,
 `FETCH FIRST`, grouping by `UNNEST`, JSON mutation functions and `VARIANT` metadata.
+
+The next patch adds `ConnectionDuckdbVerifier` for parse-only checks on a caller's
+DuckDB instance and active extension grammar profile. Unlike the restricted standalone
+editor parser, it can use registered custom PEG grammars. The IDE consumer owns grammar
+selection and connection setup; the shared parser does not infer or install extensions.
+SQL IntelliJ support exposes its existing query and trusted session-initialization helpers
+so consumers can configure isolated helpers without duplicating remote JDBC handling.
 
 ## Build and test
 

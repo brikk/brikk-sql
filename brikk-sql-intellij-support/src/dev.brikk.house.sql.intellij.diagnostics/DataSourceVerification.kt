@@ -16,6 +16,7 @@ import com.intellij.psi.PsiFile
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.catalog.HelperConnectionPoint
 import dev.brikk.house.sql.intellij.catalog.HelperRequestor
+import dev.brikk.house.sql.intellij.catalog.executeStatement
 import dev.brikk.house.sql.intellij.catalog.isHelperRequestor
 import dev.brikk.house.sql.intellij.catalog.queryRows
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
@@ -97,9 +98,11 @@ private fun DatabaseConnection.isUsers(): Boolean = !isHelperRequestor(requestor
 
 /**
  * A helper connection a [DataSourceVerification] opened for one verification. A verifier runs its
- * query with [queryString], may [cancel] it from another thread, and closes it.
+ * query with [queryString], may [cancel] it from another thread, and closes it. Constructing one
+ * transfers ownership of [ref]; never pass the user's console reference. Callers that only inspect
+ * a user's connection can use `queryRows` without taking ownership instead.
  */
-public class DataSourceQueryConnection internal constructor(private val ref: GuardedRef<DatabaseConnection>) : AutoCloseable {
+public class DataSourceQueryConnection public constructor(private val ref: GuardedRef<DatabaseConnection>) : AutoCloseable {
     @Volatile
     private var running: RemoteStatement? = null
 
@@ -114,6 +117,18 @@ public class DataSourceQueryConnection internal constructor(private val ref: Gua
     } catch (e: Exception) {
         if (e is ControlFlowException || e is CancellationException || e is InterruptedException) throw e
         throw SQLException(e.message ?: e.toString(), e)
+    }
+
+    /** Initializes this helper, for example with a trusted `SET`; never execute editor text here. */
+    public fun execute(sql: String, timeoutSeconds: Int) {
+        try {
+            ref.get().executeStatement(sql, timeoutSeconds, onStatement = { running = it })
+        } catch (e: SQLException) {
+            throw e
+        } catch (e: Exception) {
+            if (e is ControlFlowException || e is CancellationException || e is InterruptedException) throw e
+            throw SQLException(e.message ?: e.toString(), e)
+        }
     }
 
     /** Cancels the running query, if any. */

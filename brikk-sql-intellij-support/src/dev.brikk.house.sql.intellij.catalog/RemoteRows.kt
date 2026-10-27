@@ -11,7 +11,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * it runs, so a caller can cancel it; a statement created once [isCancelled] holds is closed, never run.
  * Failures throw.
  */
-internal fun DatabaseConnectionCore.queryRows(
+public fun DatabaseConnectionCore.queryRows(
     sql: String,
     maxRows: Int,
     queryTimeoutSeconds: Int = 0,
@@ -52,7 +52,7 @@ internal fun DatabaseConnectionCore.queryRows(
 }
 
 /** Runs [sql], which returns no rows (such as `USE`), over this connection; [onStatement] and [isCancelled] as for [queryRows]. Failures throw. */
-internal fun DatabaseConnectionCore.executeStatement(
+public fun DatabaseConnectionCore.executeStatement(
     sql: String,
     queryTimeoutSeconds: Int = 0,
     onStatement: (RemoteStatement?) -> Unit = {},

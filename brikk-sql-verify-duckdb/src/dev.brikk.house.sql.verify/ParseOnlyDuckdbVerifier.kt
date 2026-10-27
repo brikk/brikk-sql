@@ -20,7 +20,7 @@ import org.duckdb.DuckDBDriver
  * its configuration locked. A driver that cannot open it makes the verifier
  * [VerifyResult.Unavailable] for good; a connection that dies is dropped, that call is
  * [VerifyResult.Unavailable], and the next call reopens it. Error positions are converted from
- * DuckDB's code points.
+ * DuckDB's UTF-8 bytes in 2.0, or code points in earlier versions.
  *
  * Calls are synchronized over one lazily opened connection; [close] releases it.
  */
@@ -43,19 +43,7 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
             open.closeQuietly()
             return VerifyResult.Unavailable("DuckDB verification is unavailable: the connection failed (${e.reason()}).")
         }
-        return when (serialized) {
-            SerializedSql.Parsed -> VerifyResult.Accepted
-            is SerializedSql.Failed -> if (serialized.type == "parser") {
-                VerifyResult.Rejected(
-                    serialized.errorIn(sql, "Parser Error: ${serialized.message.orEmpty()}"),
-                )
-            } else {
-                VerifyResult.Unverified(
-                    "Parse-only DuckDB verification cannot check this statement: " +
-                        listOfNotNull(serialized.type, serialized.message).joinToString(": "),
-                )
-            }
-        }
+        return serialized.toParseOnlyResult(sql)
     }
 
     /** DuckDB has no standalone expression entry point, so the fragment is wrapped as `SELECT <expr>`. */

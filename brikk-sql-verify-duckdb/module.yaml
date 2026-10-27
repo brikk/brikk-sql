@@ -1,5 +1,6 @@
 # DuckDB native-grammar verifiers over DuckDB's own parser: the harness oracle for corpus gates and
-# ParseOnlyDuckdbVerifier for editors, which only parses and runs on a caller-supplied driver.
+# ParseOnlyDuckdbVerifier for isolated editor parsing and ConnectionDuckdbVerifier for a caller's
+# initialized instance and grammar profile. Neither editor verifier binds or runs the user's SQL.
 product: jvm/lib
 
 # TODO(review): used verbatim as the published POM <description> (required by Maven Central).
@@ -22,5 +23,6 @@ settings:
     release: 21
   kotlin:
     version: 2.4.10
+    serialization: json
     freeCompilerArgs:
       - -Xexplicit-api=strict

@@ -11,6 +11,8 @@ import dev.brikk.house.sql.metadata.DuckdbExtensionFunctionRow
 import dev.brikk.house.sql.metadata.toSnapshot
 import dev.brikk.house.sql.metadata.userFunctions
 import java.sql.DriverManager
+import java.nio.file.Files
+import java.util.Properties
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
@@ -81,11 +83,18 @@ class DuckdbCaptureTest {
 
     @Test
     fun liveJdbcEngineEqualsTheVendoredDump() {
-        DriverManager.getConnection("jdbc:duckdb:").use { connection ->
-            val version = connection.engineVersion()
-            for (capture in captures) {
-                assertEquals(readDump(vendorData.resolve("duckdb-${capture.name}-$version.tsv")).rows, capture.dump(connection).rows, capture.name)
+        // Installed community extensions belong to the user, not the pinned engine inventory.
+        val extensions = Files.createTempDirectory(Files.createDirectories(java.nio.file.Path.of("build")), "duckdb-capture-")
+        try {
+            val properties = Properties().apply { setProperty("extension_directory", extensions.toAbsolutePath().toString()) }
+            DriverManager.getConnection("jdbc:duckdb:", properties).use { connection ->
+                val version = connection.engineVersion()
+                for (capture in captures) {
+                    assertEquals(readDump(vendorData.resolve("duckdb-${capture.name}-$version.tsv")).rows, capture.dump(connection).rows, capture.name)
+                }
             }
+        } finally {
+            Files.deleteIfExists(extensions)
         }
     }
 

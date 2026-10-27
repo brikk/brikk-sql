@@ -1,6 +1,13 @@
 package dev.brikk.house.sql.verify
 
 import java.sql.Connection
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 
 /** What DuckDB's `json_serialize_sql` reported for one SQL text. */
 internal sealed interface SerializedSql {
@@ -33,6 +40,45 @@ internal sealed interface SerializedSql {
         val LOCATION = Regex("""\[(\d+),(\d+)]""")
     }
 }
+
+/** Same result mapping for the restricted parser and an already configured helper connection. */
+internal fun SerializedSql.toParseOnlyResult(sql: String): VerifyResult = when (this) {
+    SerializedSql.Parsed -> VerifyResult.Accepted
+    is SerializedSql.Failed -> if (type == "parser") {
+        VerifyResult.Rejected(errorIn(sql, "Parser Error: ${message.orEmpty()}"))
+    } else {
+        VerifyResult.Unverified(
+            "Parse-only DuckDB verification cannot check this statement: " +
+                listOfNotNull(type, message).joinToString(": "),
+        )
+    }
+}
+
+/** Null for a missing or malformed response, which is never a parser verdict. */
+internal fun serializedSqlDocument(document: String?): SerializedSql? {
+    if (document == null) return null
+    val root = try {
+        Json.parseToJsonElement(document) as? JsonObject ?: return null
+    } catch (_: IllegalArgumentException) {
+        return null
+    }
+    fun field(name: String): String? = (root[name] as? JsonPrimitive)?.contentOrNull
+    val error = root["error"] as? JsonPrimitive ?: return null
+    if (error.isString) return null
+    return when (error.booleanOrNull) {
+        false -> if (root["statements"] is JsonArray) SerializedSql.Parsed else null
+        true -> {
+            val type = field("error_type") ?: return null
+            val message = field("error_message") ?: return null
+            SerializedSql.Failed(type, message, (root["position"] as? JsonPrimitive)?.intOrNull, field("location"), document)
+        }
+        null -> null
+    }
+}
+
+internal fun serializeSqlQuery(sql: String): String =
+    // The helper shares a user's catalog, where an unqualified macro could shadow the parser.
+    "SELECT system.main.json_serialize_sql('" + sql.replace("'", "''") + "')::VARCHAR"
 
 /**
  * Parses [sql] with `json_serialize_sql`, which never binds or runs it. Invalid SQL is a

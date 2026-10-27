@@ -22,7 +22,9 @@ SHARDINGSPHERE = [('org.apache.shardingsphere', f'shardingsphere-{name}') for na
 ARTIFACTS = {
     'brikk-sql-verify-api': [(GROUP, 'brikk-sql-jvm'), STDLIB],
     'brikk-sql-verify-trino': [API, ('io.trino', 'trino-parser'), STDLIB],
-    'brikk-sql-verify-duckdb': [API, ('org.duckdb', 'duckdb_jdbc'), STDLIB],
+    'brikk-sql-verify-duckdb': [API, ('org.duckdb', 'duckdb_jdbc'), STDLIB,
+                             ('org.jetbrains.kotlinx', 'kotlinx-serialization-core-jvm'),
+                             ('org.jetbrains.kotlinx', 'kotlinx-serialization-json-jvm')],
     'brikk-sql-verify-doris': [API, ('org.antlr', 'antlr4-runtime'), STDLIB],
     'brikk-sql-verify-shardingsphere': [API, *SHARDINGSPHERE, STDLIB],
     # The user's own server and driver: no driver dependency.

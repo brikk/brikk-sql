@@ -12,6 +12,18 @@ no internal-API annotation.
 
 ## API
 
+`queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries
+or trusted session initialization over an existing `DatabaseConnectionCore`, without owning
+or closing that connection. Use them from the connection/execution hooks, off the EDT and
+outside PSI read actions. They reuse the existing remote-statement APIs.
+
+`DataSourceQueryConnection(ref)` takes ownership of a helper connection reference and closes
+it after verification. Its `execute(sql, timeoutSeconds)` initializes that helper, for example
+with an ordered DuckDB `SET active_grammar_extensions`. Never pass the user's console reference
+or execute editor SQL through this initialization method. The DuckDB plugin supplies initialized
+helpers to `ConnectionDuckdbVerifier` through the `DuckdbQueryConnection` interface; that verifier
+only invokes DuckDB's JSON parser and does not bind or execute editor text.
+
 - `CooperativeExecuteConfiguration`: capture and wrap the four stock Execute actions
   with the public dynamic customizer. Register a consumer subclass in plugin.xml.
 - `CooperativeExecuteAction` and `ExecuteInterceptor`: preserve live options,

@@ -16,6 +16,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.intellij.catalog.DialectDataSourceResolver
 import dev.brikk.house.sql.intellij.catalog.foreignHelperRequestor
 import dev.brikk.house.sql.intellij.catalog.otherRequestor
+import dev.brikk.house.sql.intellij.catalog.queryRows
 import dev.brikk.house.sql.intellij.catalog.realDuckdbDataSource
 import dev.brikk.house.sql.intellij.catalog.withIdeConnection
 import dev.brikk.house.sql.verify.SqlVerifier
@@ -78,6 +79,25 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
             assertEquals("only the user's connection stays open", 1, helpers())
         }
         assertEquals(0, helpers())
+    }
+
+    fun testAHelperCanApplyLocalGrammarSettingsWithoutChangingTheUsersSession() {
+        withIdeConnection(project, dataSource, otherRequestor()) { user ->
+            verification = DataSourceVerification(DialectDataSourceResolver(dataSource.dbms)) { connect ->
+                object : SqlVerifier {
+                    override val engine = "duckdb"
+                    override fun verify(sql: String): VerifyResult = checkNotNull(connect()).use { helper ->
+                        helper.execute("SET active_grammar_extensions=[]", 10)
+                        helper.execute("SET preserve_identifier_case=false", 10)
+                        VerifyResult.Rejected(VerifyError(helper.queryString("SELECT current_setting('preserve_identifier_case')::VARCHAR", 10).orEmpty()))
+                    }
+                    override fun verifyExpression(sql: String) = verify(sql)
+                }
+            }
+            assertEquals(VerifyResult.Rejected(VerifyError("lowercase")), answer("SELECT 1"))
+            assertEquals("preserve_case", user.queryRows("SELECT current_setting('preserve_identifier_case')::VARCHAR AS setting", 1, 10).single()["setting"])
+            assertEquals("only the user's connection stays open", 1, helpers())
+        }
     }
 
     fun testConnectingAndDisconnectingRestartHighlightingButHelpersDoNot() {
