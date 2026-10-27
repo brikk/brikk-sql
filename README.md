@@ -34,15 +34,15 @@ modules; trino-parser itself, and so the Trino verifier and the aggregate, need 
 Java 25 runtime. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest core, metadata, verify and oracle release: **`0.20.0`**. SQL IntelliJ
-support is independently versioned at **`0.2.3`**. Current core development
+Latest core, metadata, verify and oracle release: **`0.20.1`**. SQL IntelliJ
+support is independently versioned at **`0.2.4`**. Current core development
 snapshot: **`0.20.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.19.1")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.19.1")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.20.1")
+    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.20.1")
 }
 ```
 
@@ -91,17 +91,18 @@ The matching verify/oracle artifacts followed in a
 comment-only script tails. Editor snapshots now mark these ranges incomplete so
 consumers cannot execute a valid prefix after malformed input.
 
-Current `main` targets DuckDB 2.0.0 (`duckdb_jdbc:2.0.0.0`), with final-engine
+`0.20.1` targets DuckDB 2.0.0 (`duckdb_jdbc:2.0.0.0`), with final-engine
 function/type/keyword captures, PEG-parser error locations, Python-style lambda
 generation, `NEAREST` joins, session routing, triggers, nested schemas, DML CTEs,
 `FETCH FIRST`, grouping by `UNNEST`, JSON mutation functions and `VARIANT` metadata.
 
-The next patch adds `ConnectionDuckdbVerifier` for parse-only checks on a caller's
+`0.20.1` adds `ConnectionDuckdbVerifier` for parse-only checks on a caller's
 DuckDB instance and active extension grammar profile. Unlike the restricted standalone
 editor parser, it can use registered custom PEG grammars. The IDE consumer owns grammar
 selection and connection setup; the shared parser does not infer or install extensions.
-SQL IntelliJ support exposes its existing query and trusted session-initialization helpers
+SQL IntelliJ support `0.2.4` exposes its existing query and trusted session-initialization helpers
 so consumers can configure isolated helpers without duplicating remote JDBC handling.
+Both releases are published on Maven Central from commit `1387aad`.
 
 ## Build and test
 
@@ -133,7 +134,7 @@ candidate SQL JARs against a separate Doris IDE consumer.
 
 ## Publishing
 
-The four engine/metadata/verification artifacts share the publishing template.
+The SQL engine, metadata and verification artifacts share the publishing template.
 IntelliJ support has its own version and scoped release command; build tooling is
 never published. The template owns sources, POM metadata and repository URLs.
 
