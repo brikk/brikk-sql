@@ -100,6 +100,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.NodeFactory
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.ParseError
+import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenizerConfig
@@ -421,11 +422,16 @@ open class DuckdbParser(
         return table
     }
 
+    // These words are contextual, not reserved aliases. Quoted names/literals are never hints.
+    private fun nearestKeyword(token: Token, word: String): Boolean =
+        token.tokenType != TokenType.IDENTIFIER && token.tokenType != TokenType.STRING &&
+            !token.tokenType.name.endsWith("_STRING") && token.text.equals(word, ignoreCase = true)
+
     override fun parseTableAlias(aliasTokens: Collection<TokenType>?): TableAlias? {
-        val nearest = currToken.text.equals("NEAREST", ignoreCase = true) &&
-            (nextToken.tokenType == TokenType.NUMBER || nextToken.text.equals("BY", ignoreCase = true))
-        val qualifiedNearest = currToken.text.uppercase() in setOf("APPROX", "EXACT") &&
-            nextToken.text.equals("NEAREST", ignoreCase = true)
+        val nearest = nearestKeyword(currToken, "NEAREST") &&
+            (nextToken.tokenType == TokenType.NUMBER || nearestKeyword(nextToken, "BY"))
+        val qualifiedNearest = (nearestKeyword(currToken, "APPROX") || nearestKeyword(currToken, "EXACT")) &&
+            nearestKeyword(nextToken, "NEAREST")
         if (nearest || qualifiedNearest) return null
         return super.parseTableAlias(aliasTokens)
     }
@@ -435,13 +441,35 @@ open class DuckdbParser(
         parseBracket: Boolean,
         aliasTokens: Collection<TokenType>?,
     ): Expression? {
+        val comma = currToken.tokenType == TokenType.COMMA
         val join = super.parseJoin(skipJoinToken, parseBracket, aliasTokens) ?: return null
-        val approximate = matchTextSeq("APPROX", "NEAREST")
-        val exact = !approximate && matchTextSeq("EXACT", "NEAREST")
-        if (approximate || exact || matchTextSeq("NEAREST")) {
+        val approximate = nearestKeyword(currToken, "APPROX") && nearestKeyword(nextToken, "NEAREST") &&
+            matchTextSeq("APPROX", "NEAREST")
+        val exact = !approximate && nearestKeyword(currToken, "EXACT") && nearestKeyword(nextToken, "NEAREST") &&
+            matchTextSeq("EXACT", "NEAREST")
+        if (approximate || exact || nearestKeyword(currToken, "NEAREST") && matchTextSeq("NEAREST")) {
+            val nearestToken = prevToken
+            val side = join.text("side").uppercase()
+            val kind = join.text("kind").uppercase()
+            val supported = when (side) {
+                "" -> kind.isEmpty() || kind == "INNER"
+                "LEFT" -> kind.isEmpty() || kind == "OUTER"
+                else -> false
+            }
+            if (comma || !supported || join.text("method").isNotEmpty() || join.text("hint").isNotEmpty() || join.args["directed"] == true) {
+                raiseError("NEAREST BY only supports INNER and LEFT OUTER joins", nearestToken)
+            }
+            if (join.args["on"] != null || join.args["using"] != null || join.args["match_condition"] != null) {
+                raiseError("NEAREST BY cannot be combined with ON, USING or MATCH_CONDITION", nearestToken)
+            }
+            val countToken = currToken
             val count = parseNumber()
-            if (!matchTextSeq("BY")) raiseError("Expected BY after NEAREST count")
-            if (!matchTexts(setOf("DISTANCE", "SIMILARITY"))) {
+            // Native k is a positive int64 literal, not a fractional value or runtime bind.
+            if (count != null && (count !is Literal || count.isString || count.name.toLongOrNull()?.let { it > 0 } != true)) {
+                raiseError("NEAREST expects a positive integer literal", countToken)
+            }
+            if (!nearestKeyword(currToken, "BY") || !matchTextSeq("BY")) raiseError("Expected BY after NEAREST count")
+            if (!(nearestKeyword(currToken, "DISTANCE") || nearestKeyword(currToken, "SIMILARITY")) || !matchTexts(setOf("DISTANCE", "SIMILARITY"))) {
                 raiseError("Expected DISTANCE or SIMILARITY after BY")
             }
             val similarity = prevToken.text.equals("SIMILARITY", ignoreCase = true)

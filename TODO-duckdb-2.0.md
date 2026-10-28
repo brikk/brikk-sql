@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-007.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-008.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -148,11 +148,29 @@ and IDE introspection/completion are separate contracts.
   gates passed with 1,273 core tests and 35 DuckDB verifier/native tests, including the UPDATE
   regression batch and existing corpus/ledger/ABI gates. No ledger changes or IDE model work.
 
-- [ ] `DDB20-008` NEAREST joins [AUDIT].
+- [x] `DDB20-008` NEAREST joins [DONE].
   Implemented `Nearest` AST, optional k, APPROX/EXACT, distance/similarity, generation and
   serde; malformed forms and non-DuckDB executable refusal have tests. Extend [nearest joins][nearest]
   coverage to aliases/join types, expression precedence, ties, NULL vectors, top-k per left
   row and metric direction. Only assert determinism promised by the engine.
+  Native v2.0.0 supports only INNER and LEFT [OUTER] NEAREST joins. The parser now rejects
+  unsupported join kinds/methods, mixed ON/USING qualifiers, and non-positive, fractional,
+  overflowing or bound counts; default k remains one and positive int64 literal spellings work.
+  Quoted exact/approx aliases stay identifiers rather than mode hints, with all NEAREST words
+  still usable as ordinary names. Ranking expressions now resolve/complete against both candidate
+  sides before LEFT join NULL extension; shape, qualification, serde and physical lineage retain
+  the join. Executable generation continues to refuse non-DuckDB targets, with flagged previews.
+  Native result coverage checks both vector metrics and scalar rankings, modes on the pinned
+  engine, default k, per-left-row top-k and duplicate-row multiplicity, target-only scores,
+  expression precedence, target prefilters versus post-ranking WHERE, empty/all-NULL candidates,
+  whole NULL vectors and NULL vector-element errors. Ties assert k and allowed candidates, never
+  a particular winner. APPROX is informational in this pinned engine, not a future recall guarantee.
+  DuckdbNearestJoinTest and DuckdbNearestJoinResultTest compare raw/generated/qualified SQL and
+  a separately written native lateral top-k oracle. Source audit: v2.0.0 nearest basic/parser/error
+  tests, transform_select.cpp BuildNearestJoin and bind_joinref.cpp BindNearestJoin. No library
+  approximation algorithm, portable top-k rewrite, global keyword reservation or IDE model work.
+  Final gates passed: 1,280 core tests and 43 DuckDB verifier/native tests, with existing
+  corpus, ledger and binary-compatibility checks green. No ledger changes or Plugin Verifier run.
 
 - [ ] `DDB20-009` Data-modifying CTEs [AUDIT].
   The UPDATE RETURNING case already round-trips and passes native acceptance. Cover all

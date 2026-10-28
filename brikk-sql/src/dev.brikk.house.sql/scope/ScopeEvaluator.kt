@@ -324,6 +324,8 @@ internal class ScopeEvaluator(
     private fun joinRows(join: Join, left: List<Binding>, leftMerged: List<ScopeColumn>, right: List<Binding>, env: Env): Joined {
         val condition = Frame(left + right, env.outer, leftMerged)
         expression(join.args["on"] as? Expression, condition, env)
+        // Ranking reads candidate rows before an outer join adds NULL-extended outputs.
+        expression(join.args["nearest"] as? Expression, condition, env)
         val side = join.side
         val semi = join.isSemiOrAntiJoin
         val keys = usingKeys(join, left, leftMerged, right)

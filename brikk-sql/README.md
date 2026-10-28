@@ -233,6 +233,14 @@ UPDATE/MERGE statements instead of mistaking their last nested query for the sta
 MERGE INSERT BY NAME stays structured through
 serde and generation; executable generation refuses it for unproved non-DuckDB targets.
 
+DuckDB NEAREST joins retain their count, mode and ranking expression through parsing, serde,
+qualification and generation. Native 2.0 permits INNER and LEFT joins with a positive int64
+literal count, or an omitted count meaning one. Ranking expressions resolve against candidate
+rows before LEFT join NULL extension. Quoted mode-word aliases remain identifiers. Native
+result tests cover per-row top-k, metric direction, NULL ranks and tie cardinality; they do
+not promise a particular tied winner or future approximate-search recall. Other targets get
+flagged previews and executable refusal, not an invented portable nearest-join translation.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every
