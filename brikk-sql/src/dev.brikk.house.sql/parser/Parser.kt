@@ -2756,8 +2756,11 @@ open class Parser(
         }
 
         if (isDbReference) {
-            catalog = db
-            db = table
+            // A schema path can itself have more than two components. Shifting only db
+            // into catalog discarded the outermost name of CREATE/DROP SCHEMA a.b.c.
+            val parts = Table(args("this" to table, "db" to db, "catalog" to catalog)).parts
+            catalog = parts.firstOrNull().takeIf { parts.size > 1 }
+            db = if (parts.size > 2) Dot.build(parts.drop(1)) else parts.lastOrNull()
             table = null
         }
 

@@ -133,7 +133,8 @@ open class AbstractMappingSchema(
 
                 supportedTableArgsCache = when {
                     depth == 0 -> emptyList()
-                    depth in 1..3 -> TABLE_PARTS.take(depth)
+                    // The named AST slots stay fixed; Table.parts also includes any Dot children.
+                    depth >= 1 -> TABLE_PARTS.take(depth)
                     else -> throw SchemaError("Invalid mapping shape. Depth: $depth")
                 }
             }
@@ -177,7 +178,7 @@ open class AbstractMappingSchema(
         raiseOnMissing: Boolean = true,
         ensureDataTypes: Boolean = false,
     ): Any? {
-        val parts = tableParts(table).take(supportedTableArgs.size).toMutableList()
+        val parts = tableParts(table).take(depth()).toMutableList()
         val resolvedParts = findInTrie(parts, mappingTrie, raiseOnMissing) ?: return null
         return nestedGetParts(resolvedParts, raiseOnMissing = raiseOnMissing)
     }
@@ -190,7 +191,7 @@ open class AbstractMappingSchema(
     ): Any? =
         nestedGet(
             d ?: mapping,
-            supportedTableArgs.zip(parts.asReversed()),
+            parts.asReversed().mapIndexed { index, name -> (supportedTableArgs.getOrNull(index) ?: "namespace") to name },
             raiseOnMissing = raiseOnMissing,
         )
 }

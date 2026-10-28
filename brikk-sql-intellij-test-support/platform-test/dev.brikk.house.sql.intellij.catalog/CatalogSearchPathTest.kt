@@ -83,6 +83,14 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
         assertNull("Trino cannot use a bare catalog", trino.switchSql(path("hive")))
     }
 
+    fun testTwoLevelStrategiesNeverDropNestedSchemaParents() {
+        for (strategy in listOf(duckdb, trino, doris)) {
+            assertNull(strategy.switchSql(path("memory", "finance", "reports")))
+        }
+        // A single schema whose name contains a dot is a different, valid target.
+        assertEquals("USE \"memory\".\"finance.reports\"", duckdb.switchSql(path("memory", "finance.reports")))
+    }
+
     /** What the switch statements select is what the engine reads back. */
     fun testDuckdbSwitchesAndReadsBackOnTheEngine() {
         val engine = embeddedDuckdb()

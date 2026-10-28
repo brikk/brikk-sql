@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.scope
 
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.EQ
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
@@ -32,6 +33,26 @@ import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
+import dev.brikk.house.sql.shape.catalogTableParts
+
+/** Identifier-only dotted paths, including the Column-under-Dot representation of long names. */
+internal fun Expression.scopeIdentifierParts(): List<Identifier>? {
+    val pending = ArrayDeque<Expression>()
+    val parts = ArrayList<Identifier>()
+    pending.addLast(this)
+    while (pending.isNotEmpty()) {
+        when (val part = pending.removeLast()) {
+            is Identifier -> parts += part
+            is Column -> part.parts.asReversed().forEach { pending.addLast(it) }
+            is Dot -> {
+                pending.addLast(part.expressionArg as? Expression ?: return null)
+                pending.addLast(part.thisArg as? Expression ?: return null)
+            }
+            else -> return null
+        }
+    }
+    return parts
+}
 
 internal class ParsedRegion(val tokens: List<Token>, val statements: List<Expression>)
 
@@ -207,8 +228,13 @@ internal class CaretCompletion(
                 continue
             }
             val marker = lowered.findAll<Identifier>().firstOrNull { MARKER in it.name } ?: continue
-            val parent = marker.parent
+            var parent = marker.parent
+            // Long table names store their final components inside Dots, not directly on Table.
+            while (parent is Dot) parent = parent.parent
+            val markerParent = marker.parent
             val kind = when {
+                parent is Table -> PositionKind.RELATION
+                markerParent is Dot && markerParent.expressionArg === marker -> PositionKind.COLUMN
                 parent is Column && parent.thisArg === marker -> PositionKind.COLUMN
                 parent is Column -> PositionKind.QUALIFIER
                 parent is Table -> PositionKind.RELATION
@@ -222,7 +248,7 @@ internal class CaretCompletion(
             queries.forEach { evaluator.query(it, Env(emptyList(), null)) }
             if (kind == PositionKind.RELATION) {
                 val table = parent as Table
-                val qualifier = listOf("catalog", "db").mapNotNull { (table.args[it] as? Identifier)?.name }
+                val qualifier = table.parts.filterIsInstance<Identifier>().dropLast(1).map { it.name }
                 return ScopeCompletion(kind, null, start, end, edit.prefix, relations(evaluator.caretCtes.orEmpty(), qualifier, start, end, edit.quoted))
             }
             val site = evaluator.caret ?: return ScopeCompletion(kind, Knowledge.UNKNOWN, start, end, edit.prefix, emptyList())
@@ -283,7 +309,7 @@ internal class CaretCompletion(
         fun relation(name: String, kind: RelationKind, fact: RelationFact?, source: String?, declaration: ScopeRange? = null) =
             ScopeRelation(name, kind, fact?.knowledge ?: Knowledge.FULL, source, fact?.provenance, declaration)
         val tables = facts.tables.mapNotNull { (key, fact) ->
-            val parts = key.split('.')
+            val parts = catalogTableParts(key).map { it.name }
             if (parts.size <= qualifier.size || parts.take(qualifier.size).zip(qualifier).any { (a, b) -> !a.equals(b, ignoreCase = true) }) return@mapNotNull null
             val name = parts.drop(qualifier.size).joinToString(".")
             CompletionItem(name, CompletionKind.RELATION, parts.drop(qualifier.size).joinToString(".") { insertText(it, quoted, columns = false) },

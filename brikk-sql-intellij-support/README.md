@@ -733,6 +733,12 @@ first column; `Column`, a labelled column; `FlaggedRow`, the name of the row a f
 Probes sharing SQL run it once; a probe that fails falls through. Without a catalog (and no default)
 the path is unknown; without a schema it is the catalog alone unless `schemaRequired`.
 
+`CatalogSchemaSearchPath` represents exactly those two namespace levels. It refuses paths
+with schema ancestors rather than silently dropping them when composing switch SQL. A
+single schema name containing a literal dot remains one quoted component. DuckDB 2.0
+supports nested schemas in qualified object names but rejects them in `USE`/`search_path`;
+do not advertise nested current-namespace switching based on its object-path syntax.
+
 A strategy switches by statement only. The kit runs one itself in a single place, text explain's helper
 (`TextExplainProfile.searchPath`). A dialect whose driver keeps no namespace a statement sets (ClickHouse's
 0.9.8 JDBC over HTTP forgets `USE db` between requests, while `setSchema` holds) keeps the platform's own

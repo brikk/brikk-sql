@@ -64,6 +64,9 @@ public class CatalogSchemaSearchPath(
 
     override fun switchSql(path: SearchPath): String? {
         val current = path.current ?: return null
+        // This strategy represents catalog/schema, not recursive schema ancestry. Never
+        // silently switch to a different namespace by dropping an intermediate schema.
+        if (current.kind == ObjectKind.SCHEMA && current.findParent(ObjectKind.SCHEMA, true) != null) return null
         return when (current.kind) {
             ObjectKind.SCHEMA -> when (val catalog = current.findParent(ObjectKind.DATABASE, true)) {
                 null -> useBareSchema?.fill(catalog = null, schema = current.name)

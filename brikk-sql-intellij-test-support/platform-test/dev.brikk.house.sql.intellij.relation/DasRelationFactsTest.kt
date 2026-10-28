@@ -86,6 +86,22 @@ class DasRelationFactsTest : RelationTestCase() {
         assertEquals(listOf("quoted_only"), offered("FROM \"Mixed\" |> SELECT <caret>", "quoted_only").map { it.first })
     }
 
+    fun testDottedSchemaAndTableNamesKeepTheirComponentBoundaries() {
+        val shop = checkNotNull(orders.parent?.parent)
+        shop.schemas.createOrGet("sales.reports").tables.createOrGet("q.3").columns.createOrGet("revenue")
+            .apply { storedType = type("integer") }
+        DbPsiFacade.getInstance(project).clearCaches()
+        assertEquals(listOf("revenue"), offered("FROM shop.\"sales.reports\".\"q.3\" |> SELECT <caret>", "revenue").map { it.first })
+        open("SELECT revenue FROM shop.\"sales.reports\".\"q.3\"")
+        val facts = DasRelationFacts(DialectDataSourceResolver(Dbms.POSTGRES)).facts(myFixture.file) as RelationFactsResult.Available
+        assertTrue(facts.facts.tables.containsKey("shop.\"sales.reports\".\"q.3\""))
+        RecordingConsole(project, myFixture.file.virtualFile, source).use { recording ->
+            recording.console.setSearchPath(SearchPath.of(ObjectPath.create("shop", ObjectKind.DATABASE).append("sales.reports", ObjectKind.SCHEMA)))
+            val current = DasRelationFacts(DialectDataSourceResolver(Dbms.POSTGRES)).facts(myFixture.file) as RelationFactsResult.Available
+            assertEquals(listOf("shop.\"sales.reports\""), current.facts.searchPath)
+        }
+    }
+
     fun testAColumnIsOfferedOnceInOrdinarySql() {
         assertEquals(1, offered("SELECT o.i<caret> FROM orders o", "id").size)
     }

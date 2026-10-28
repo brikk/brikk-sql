@@ -9,6 +9,7 @@ import dev.brikk.house.sql.ast.Count
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DenseRank
+import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Except
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.From
@@ -48,6 +49,7 @@ import dev.brikk.house.sql.optimizer.expressionNullability
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
+import dev.brikk.house.sql.shape.catalogTableParts
 import java.util.IdentityHashMap
 
 /** A query's result row; output columns have no relation until a FROM clause names them. */
@@ -112,7 +114,8 @@ internal class ScopeEvaluator(
 ) {
     val references = ArrayList<ScopeReference>()
     val diagnostics = ArrayList<ScopeDiagnostic>()
-    private val resolved = IdentityHashMap<Column, ScopeColumn>()
+    private val resolved = IdentityHashMap<Expression, ScopeColumn>()
+    private val catalogPaths = HashMap<String, List<String>>()
     private var resolutions = 0
 
     /** The frame and qualifier at the caret marker, when completing. */
@@ -352,7 +355,10 @@ internal class ScopeEvaluator(
         // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.
         val call = (node.thisArg as? Expression)?.takeIf { it is Func }
         if (call != null) return tableFunction(node, call, call.key, listOfNotNull(call.thisArg as? Expression) + call.expressionsArg.filterIsInstance<Expression>(), env, lateral)
-        val name = node.thisArg as? Identifier ?: return unknownRelation(node.name, RelationKind.OTHER)
+        val pathParts = node.parts
+        if (pathParts.any { it !is Identifier }) return unknownRelation(node.name, RelationKind.OTHER)
+        val parts = pathParts.filterIsInstance<Identifier>()
+        val name = parts.lastOrNull() ?: return unknownRelation(node.name, RelationKind.OTHER)
         if (caretMarker != null && caretMarker in name.name && caretCtes == null) caretCtes = env.ctes.filterNot { it.synthetic }
         if (node.db.isEmpty() && node.catalog.isEmpty()) {
             cte(name, env)?.let { (cte, row) ->
@@ -361,7 +367,6 @@ internal class ScopeEvaluator(
                 return relation
             }
         }
-        val parts = node.parts.filterIsInstance<Identifier>()
         val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }
         val match = matches.singleOrNull()
             ?: facts.searchPath.firstNotNullOfOrNull { namespace -> matches.singleOrNull { (key, _) -> inNamespace(key, parts.size, namespace) } }
@@ -575,14 +580,13 @@ internal class ScopeEvaluator(
         val name = (alias ?: (value as? Column)?.thisArg as? Identifier)?.let(::stored) ?: (projection as? Alias)?.alias ?: value.outputName
         // SET's replacement alias is synthetic; the SET target names the column.
         val declaration = alias?.let(::declared) ?: origins.setTargets[projection.thisArg]?.let { (it.thisArg as? Identifier)?.let(::declared) }
-        if (value is Column && value.thisArg is Identifier) {
-            resolved[value]?.let { return it.copy(name = name, relation = "", relationKind = null, declaration = declaration ?: it.declaration) }
-        }
+        resolved[value]?.let { return it.copy(name = name, relation = "", relationKind = null, declaration = declaration ?: it.declaration) }
         val by = origins.stages[projection] ?: origins.stages[projection.thisArg] ?: origins.stages[value] ?: context
         return ScopeColumn(name, "", ColumnOrigin.COMPUTED, nullabilityOf(value), sqlTypeOf(value), computedBy = by, declaration = declaration)
     }
 
     private fun nullabilityOf(value: Expression): Nullability {
+        resolved[value]?.let { return it.nullability }
         val window = value as? Window
         if (window != null && window.thisArg.let { it is RowNumber || it is Rank ||
                 it is DenseRank || it is Ntile }) return Nullability.NON_NULL
@@ -604,7 +608,7 @@ internal class ScopeEvaluator(
     private fun sqlTypeOf(value: Expression): String? {
         val copy = value.copy()
         for ((original, typed) in value.walk().zip(copy.walk())) {
-            val sqlType = (original as? Column)?.let { resolved[it]?.sqlType } ?: continue
+            val sqlType = resolved[original]?.sqlType ?: continue
             typed.typeSlot = try {
                 dataTypeFromStr(sqlType, dialect)
             } catch (_: ParseError) {
@@ -768,6 +772,21 @@ internal class ScopeEvaluator(
         while (pending.isNotEmpty()) {
             val (current, hidden) = pending.removeLast()
             when (current) {
+                is Dot -> {
+                    // Beyond four components the parser retains a Column under Dots. Treat it as
+                    // qualification only when the FROM bindings prove the entire qualifier; otherwise
+                    // keep the ordinary struct-field analysis of the inner column.
+                    val parts = current.scopeIdentifierParts()
+                    val qualifier = parts?.dropLast(1).orEmpty()
+                    val bindings = frame?.let { findBindings(it, qualifier) }.orEmpty()
+                    if (parts != null && bindings.isNotEmpty()) {
+                        val identifier = parts.last()
+                        if (atCaret(identifier, frame, qualifier)) continue
+                        qualify(qualifier, bindings)
+                        record(identifier, current, Lookup(bindings.flatMap { binding -> binding.columns.filter { same(identifier, it.name) } },
+                            bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }))
+                    } else current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
+                }
                 is Column -> {
                     val identifier = current.thisArg as? Identifier
                     if (identifier != null && current.args["table"] == null && hidden.any { same(identifier, it) }) continue
@@ -890,7 +909,7 @@ internal class ScopeEvaluator(
     private fun ScopeColumn.passedOnAs(alias: ScopeColumn): Boolean =
         source != null && source == alias.source || copy(name = alias.name, relation = "", relationKind = null) == alias
 
-    private fun record(identifier: Identifier, column: Column?, lookup: Lookup, report: Boolean = true) {
+    private fun record(identifier: Identifier, column: Expression?, lookup: Lookup, report: Boolean = true) {
         val span = names.range(identifier) ?: return
         val resolution = when (lookup.candidates.size) {
             0 -> Resolution.UNRESOLVED
@@ -964,9 +983,11 @@ internal class ScopeEvaluator(
     private fun same(left: String, right: String, columns: Boolean = true): Boolean =
         left == right || folds(columns) && fold(left) == fold(right)
 
+    private fun catalogPath(key: String): List<String> = catalogPaths.getOrPut(key) { catalogTableParts(key).map { it.name } }
+
     /** A table's qualifying path: as written, completed by the catalog key's leading parts. */
     private fun path(parts: List<Identifier>, key: String): List<String> {
-        val keys = key.split('.')
+        val keys = catalogPath(key)
         return keys.take(keys.size - parts.size) + parts.map(::stored)
     }
 
@@ -977,13 +998,13 @@ internal class ScopeEvaluator(
      * innermost ones (`sales` for `one.sales.orders`).
      */
     private fun inNamespace(key: String, named: Int, namespace: String): Boolean {
-        val missing = key.split('.').dropLast(named)
-        val path = namespace.split('.')
+        val missing = catalogPath(key).dropLast(named)
+        val path = catalogPath(namespace)
         return if (missing.size <= path.size) missing == path.take(missing.size) else missing.takeLast(path.size) == path
     }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
-        val keys = key.split('.')
+        val keys = catalogPath(key)
         if (keys.size < parts.size || parts.isEmpty()) return false
         return parts.reversed().zip(keys.reversed()).all { (part, name) -> same(part, name, columns = false) }
     }

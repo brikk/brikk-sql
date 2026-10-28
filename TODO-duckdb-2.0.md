@@ -1,279 +1,657 @@
 # DuckDB 2.0 support checklist
 
-DuckDB 2.0.0 LTS ("Cinnamon Teal") was released on 2026-10-21. This document tracks the
-shared `brikk-sql` DuckDB dialect, function metadata, and native verifier against the final
-`v2.0.0` tag (`d54cbbe3df`) and `org.duckdb:duckdb_jdbc:2.0.0.0`.
+Reconciled on 2026-10-28 against the final 2.0 announcement, migration guide,
+documentation index, follow-up Gems post, the user's linked examples and existing
+source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
+On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
+recursive IDE model/native-introspection effort isolated. Other unchecked items remain unselected;
+do not expand the implementation scope without approval.
 
-Current baseline:
+## Baseline and how to use this list
 
-| Surface | Current pin/source |
+- Engine 2.0.0 LTS, source `d54cbbe3df`; JDBC `org.duckdb:duckdb_jdbc:2.0.0.0`.
+- Published SQL libraries `0.20.1`, SQL IntelliJ support `0.2.4`.
+- SQLGlot reference recorded by the earlier audit: `v30.22.0-5-ga00dc2e5c`.
+- Captured catalog: 1,093 definitions / 2,963 overloads; both 1.5.6 and 2.0.0 dumps remain bundled.
+- DuckDB plugin 0.5.1 was prepared for the new EAP ABI requirement. The user reports
+  warnings-only verification and is awaiting approval; do not call it Marketplace-approved.
+
+IDs are stable. Do not renumber or reuse them when reordering or completing work.
+Each ID has exactly one checkbox definition. References elsewhere are not new tasks.
+
+| State | Meaning |
 |---|---|
-| Parser and generator | Port of sqlglot v30.22.0-5-ga00dc2e5c plus final DuckDB 2.0 grammar additions |
-| Function catalog | DuckDB v2.0.0 `duckdb_functions()`; 1,093 definitions / 2,963 overloads |
-| Native parser oracle | `org.duckdb:duckdb_jdbc:2.0.0.0`, engine source `d54cbbe3df` |
+| DONE | The narrowly stated deliverable exists, with evidence below. Not a claim of complete feature semantics. |
+| AUDIT | Existing generic/partial support needs focused proof; change code only when a real gap is found. |
+| ADD | Structured support is missing or intentionally opaque; classify/model it before transforming it. |
+| MONITOR | Engine/client behavior to document or probe, not automatically a parser change. |
+| DEFER | A separate integration/executor workstream, not a prerequisite for core DuckSQL syntax. |
 
-Status terms below mean:
+Unchecked items are not all release blockers. In particular, syntax acceptance,
+AST preservation, namespace resolution, result semantics, native editor validation
+and IDE introspection/completion are separate contracts.
 
-| Status | Meaning |
+## SQL grammar, names and statement behavior
+
+- [x] `DDB20-001` Nested schemas: core qualification, scope and lineage [DONE].
+  Existing tests round-trip `CREATE SCHEMA finance.reports` and
+  `CREATE TABLE finance.reports.q3 (...)`; native verification covers the schema DDL.
+  Cover the full parent/schema/table sequence from [nested schemas][schemas], reads,
+  INSERT/UPDATE/DELETE/DROP, deeper paths, explicit attached-catalog prefixes and quoted
+  components containing dots. Do not assume the first of three components is a catalog;
+  prove namespace resolution rather than only unchanged generated text.
+  `Table.parts` flattens dotted AST components, but `Table.catalog` / `Table.db` still expose
+  fixed slots. Audit their scope/lineage consumers before choosing a recursive name model.
+  See [Doris lessons for nested schemas](#doris-lessons-for-nested-schemas).
+  Implementation now preserves every CREATE/DROP SCHEMA component, resolves deep table/column
+  paths in relation scopes/completion, handles deeper optimizer schema mappings and slot bindings,
+  and keeps quoted dots distinct in source/lineage keys. DuckDB shape catalogs retain the existing
+  uniform-depth contract; other shape dialects retain their previous three-component limit.
+  Evidence: DuckdbNestedSchemaTest and DuckdbNestedSchemaResultTest. Native result checks execute
+  generated DDL/DML on the final 2.0 JDBC engine, including attached catalogs and quoted dots.
+  Nested schemas cannot be a native current namespace in 2.0: USE/SET schema reject them.
+  Core fact suffix matching remains the documented provider lookup contract, not proof that an
+  arbitrary shortened path is accepted by the engine. The native tests pin rejected leaf-only paths.
+  Final module gates passed: 1,261 core tests and 23 DuckDB verifier/native tests, including
+  existing corpus/ledger and binary compatibility checks. No ledgers were weakened or refreshed.
+
+- [ ] `DDB20-002` Nested schemas: IDE catalog tree and editing [DEFER].
+  User decision: finish the other syntax work first, then revisit this as an isolated effort.
+  It is not a gate for syntax fixes. Keep the true hierarchy requirement; no flat-name fallback
+  or custom model replacement was approved or implemented in this pass.
+  The plugin profile currently declares database/schema levels. Verify how nested schema
+  parents arrive through JDBC/native metadata, then test introspection, refresh, picker
+  paths, reference resolution, completion and navigation without flattening or losing parents.
+  Keep this distinct from DDB20-001; parser support alone does not prove IDE support.
+  Reuse the shared catalog kit and Doris regression patterns, not its fixed-depth Ms model
+  or MySQL-specific workarounds. Audit shared depth/scope/search-path assumptions described
+  [below](#doris-lessons-for-nested-schemas); raising maxDeepenDepth alone is insufficient.
+  Partial shared fixes preserve the complete ancestor chain and quoted-dot boundaries in
+  DasRelationFacts, and make CatalogSchemaSearchPath refuse a nested path instead of dropping
+  its parents. These fixes do not supply recursive introspection or a recursive IDE tree.
+  Native 2.0 exposes schema oid/parent_schema_oid and table schema_oid; JDBC returns only leaf
+  schema names and can return identical catalog/schema/table triples for different nested tables.
+  The plugin's PgSchema has a PgDatabase parent and no child-schema family. A different model
+  and native parent-ID-aware introspector are still required before this item can be checked off.
+  Preserve ordinary and literally dotted schemas, cached children on failure, session-local
+  attachments and current top-level namespace. Do not manufacture USE support for nested schemas.
+  Verification of the retained shared safeguards: CatalogSearchPathTest, DasRelationFactsTest and
+  InternalApiContainmentTest, 25 tests each on IDEA 261.25134.95 and 263.5701.42. The broader platform
+  sweep hit the command's 120-second timeout and is not reported as passed. No Plugin Verifier run.
+
+- [ ] `DDB20-003` UPDATE from the same table [AUDIT].
+  Pin the exact [self-update example][update-same], with distinct target/source aliases,
+  correlated subquery references and actual resulting rows. Check qualification and lineage
+  do not capture the wrong instance of the table. This documented form is not automatically
+  a newly introduced 2.0 grammar rule.
+
+- [ ] `DDB20-004` UPDATE using joins [AUDIT].
+  Basic `UPDATE ... FROM` already passes the native 2.0 test. Pin the [city/country example][update-joins],
+  join predicates in WHERE, aliases, unqualified target assignments and unchanged nonmatching rows.
+  Separately classify explicit joined FROM sources that the final grammar permits, including
+  ambiguity/error cases; do not infer their behavior from the simple example.
+
+- [ ] `DDB20-005` UPDATE FROM with multiple source matches [AUDIT].
+  [Documented semantics][update-multiple]: each target row is updated once using an unspecified
+  matching source row. Assert allowed outcomes, not a particular accidental winner. Compare
+  the scalar-subquery cardinality error and `scalar_subquery_error_on_multiple_rows` behavior.
+
+- [ ] `DDB20-006` MERGE INTO statement forms [AUDIT].
+  Basic native acceptance exists. Pin the [documented variants][merge]: whole-row UPDATE/INSERT,
+  UPDATE SET, ON versus USING(key), conditional/multiple clauses, DELETE, INSERT BY NAME,
+  NOT MATCHED BY SOURCE/TARGET and `RETURNING merge_action, *`. Preserve AST, qualification,
+  typing and executable output; do not claim all variants from one parser-acceptance test.
+
+- [ ] `DDB20-007` MERGE multiple-match semantics [AUDIT].
+  Assert the 2.0 error when matched UPDATE/DELETE would affect one target more than once,
+  and successful deduplicated controls. Keep this separate from UPDATE FROM's unspecified
+  source selection; never transpile one into the other without a semantic warning.
+
+- [ ] `DDB20-008` NEAREST joins [AUDIT].
+  Implemented `Nearest` AST, optional k, APPROX/EXACT, distance/similarity, generation and
+  serde; malformed forms and non-DuckDB executable refusal have tests. Extend [nearest joins][nearest]
+  coverage to aliases/join types, expression precedence, ties, NULL vectors, top-k per left
+  row and metric direction. Only assert determinism promised by the engine.
+
+- [ ] `DDB20-009` Data-modifying CTEs [AUDIT].
+  The UPDATE RETURNING case already round-trips and passes native acceptance. Cover all
+  [documented INSERT/UPDATE/DELETE forms][ctes], DELETE-to-INSERT pipelines, MATERIALIZED,
+  RETURNING-dependent scopes/lineage and modification-once semantics. Verify materialization
+  dependencies rather than assuming a parsed CTE executes only once.
+
+- [ ] `DDB20-010` COPY inside CTEs [AUDIT].
+  Explicitly pin COPY bodies and the result exposed to subsequent CTE/query stages.
+  This was previously grouped with DML CTEs without a dedicated focused test. Include
+  statement boundaries and side effects only in deliberate scratch-engine result tests.
+
+- [ ] `DDB20-011` GROUP BY UNNEST [AUDIT].
+  Parse/generate and native acceptance exist. Add result and shape tests for the
+  [documented grouping form][groupby], repeated/nested expressions, aliases, NULL/empty
+  lists and interaction with aggregate outputs. Do not rewrite scalar grouping UNNEST
+  into a table source unless that rewrite is independently proved equivalent.
+
+- [ ] `DDB20-012` FETCH FIRST / NEXT [AUDIT].
+  Existing generation canonicalizes to LIMIT/OFFSET. Pin [FIRST/NEXT][fetch], omitted count,
+  ROW/ROWS, offsets and invalid combinations against the actual engine, plus result controls.
+  Round-trip need not preserve FETCH spelling, but must preserve pagination semantics.
+
+- [ ] `DDB20-013` JSON mutation functions [AUDIT].
+  All four names are captured; basic calls parse/generate and pass native acceptance.
+  Pin [json_set/json_insert/json_replace/json_remove][json], overloads, path/value lists,
+  JSONPath/JSON Pointer, missing paths, arrays, duplicate keys, invalid JSON and SQL NULL
+  versus JSON null. Audit generic JSON AST nodes before assuming another dialect's semantics.
+
+- [ ] `DDB20-014` JSON patching and normalization [AUDIT].
+  Audit `json_merge_patch_diff`, `json_deep_merge`, `json_normalize`, `json_strip_nulls`
+  and their final overloads. Prove RFC 7396 delete-on-null versus deep-merge skip-on-null,
+  recursive object-key sorting with preserved array order, and object-null stripping without
+  removing null array elements. Add dedicated nodes only where semantics/typing require them.
+
+- [ ] `DDB20-015` VARIANT end-to-end behavior [AUDIT].
+  Type/cast syntax and new function metadata exist. Cover storage DDL, JSON conversion,
+  nested extraction, field case, containment/comparison, numeric and missing/null distinctions,
+  inferred types, shredding and Parquet round trips. Do not equate VARIANT with textual JSON.
+
+- [ ] `DDB20-016` `$name` variable shorthand [AUDIT].
+  Distinguish session-variable lookup from named/positional prepared parameters and JDBC/IDE
+  bind prompting. Cover `$threshold`, `$1`, `?`, dollar-quoted strings, SET/RESET VARIABLE
+  and variable scopes. Do not automatically mask or prompt for a session variable as a bind.
+
+- [ ] `DDB20-017` Session variables as prepared-parameter defaults [AUDIT].
+  Cover PREPARE/EXECUTE with omitted named arguments, explicit-argument precedence,
+  execution-time variable changes and missing-variable errors. Keep the engine's fallback
+  semantics distinct from the IDE's own parameter substitution.
+
+- [ ] `DDB20-018` Recursive USING KEY aggregate payloads [AUDIT].
+  Generic key-expression support exists. Pin `USING KEY (a, avg(b))`, recurring-table
+  references, UNION versus UNION ALL, output types and terminating result probes after
+  the recursive execution rewrite. Include ordinary recursive CTE regression controls.
+
+- [ ] `DDB20-019` CONNECT / DISCONNECT [AUDIT].
+  SessionConnect/SessionDisconnect nodes and simple URI/attached-name/options cases exist.
+  Expand final Quack/Postgres/MySQL forms and routing scope; preserve credentials as authored
+  data without leaking them in diagnostics. Cross-target generation must refuse unsupported routing.
+
+- [ ] `DDB20-020` Trigger contract [AUDIT].
+  Inline DML bodies and simple DROP TRIGGER round-trip; native acceptance is tested.
+  Cover BEFORE/AFTER, supported row/statement modes, OLD/NEW transition tables, UPDATE OF,
+  multiple triggers, MERGE bodies, RETURNING and dependency/drop behavior. Pin documented
+  unsupported combinations as refusals, not assumed PostgreSQL EXECUTE FUNCTION semantics.
+
+- [ ] `DDB20-021` SECURE VIEW [AUDIT].
+  SecureProperty generation and round-trip exist. Verify its preservation through copying,
+  regeneration and relevant catalog/definition paths; add engine controls for information
+  hiding. Never silently emit an ordinary view for an executable cross-target translation.
+
+- [ ] `DDB20-022` Custom extension repositories [ADD].
+  Currently opaque. Model final CREATE [OR REPLACE] EXTENSION REPOSITORY, WITH PREFIX,
+  PUBLIC KEY(S), DROP, INSTALL/LOAD FROM and INSTALL AND LOAD as applicable. Keep repository
+  selection distinct from grammar activation; do not fetch keys/install modules during editor
+  analysis, normalize key material unsafely, or expose secrets in logs.
+
+- [ ] `DDB20-023` External-resource statements [ADD].
+  Currently opaque. Classify/model final CREATE/REGISTER/SHOW/CONNECT TO/DESTROY EXTERNAL
+  RESOURCE forms, resource types, handles and options; check their statement boundaries,
+  generation and cross-dialect refusal. This is not an authorization to create real resources.
+
+- [ ] `DDB20-024` EXPLAIN (SQL) and explain options [ADD].
+  Native grammar accepts it, while brikk preserves an opaque command. Introduce structured
+  options before inspecting/transforming them; include FORMAT/ANALYZE option interactions.
+  Do not introduce EXPLAIN as an editor-validation fallback because binding can have side effects.
+
+- [ ] `DDB20-025` OVERLAY [AUDIT].
+  Generic parser/AST support exists. Pin DuckDB spelling, generation, signature, NULLs,
+  offsets/lengths and actual string results before claiming a verified cross-dialect mapping.
+
+- [ ] `DDB20-026` COPY partitioning and ORDER_BY [AUDIT].
+  Use the actual option names `PARTITION_BY` and `ORDER_BY`, not only generic ORDER BY text.
+  Pin multiple partition columns, ORDER_BY alone and together with partitioning, expressions,
+  ASC/DESC/NULLS ordering, option placement and the rows written within each partition.
+
+- [ ] `DDB20-027` Custom PARTITION_PATH [AUDIT].
+  Cover CASE/function expressions, requirement for PARTITION_BY, incompatibility with
+  HIVE_FILE_PATTERN, relative/nonempty paths, rejection of `..`, and distinct paths per partition.
+  Include `hive_partition_component` and `path_join` metadata/result controls and NULL encoding.
+
+- [ ] `DDB20-028` SHOW configuration settings [AUDIT].
+  Pin `SHOW threads`, table-name collisions and `show_behavior` auto/table/setting.
+  Preserve the setting operation rather than blindly treating SHOW as DESCRIBE table.
+  Record the 2.0 deprecation of SHOW for describing tables/views/queries.
+
+- [ ] `DDB20-029` setval [AUDIT].
+  Function metadata already explicitly asserts setval exists. Pin overloads, default and
+  false `is_called`, nextval/currval effects, increments and scope. Execute sequence probes
+  deliberately in isolated tests; never invoke them to supply editor metadata or validation.
+
+- [ ] `DDB20-030` Regular-expression function additions [AUDIT].
+  Pin the third-argument options overload `regexp_extract('ABC', 'abc', 'i')`, ordinary
+  group/options forms, named captures and list/struct results of regexp_extract_all where
+  documented. Check overload selection, return types and invalid replacement handling.
+
+- [ ] `DDB20-031` Window functions as catalog entries [AUDIT].
+  DuckdbDump already maps native `window` to FunctionKind.WINDOW. Verify captured built-ins,
+  live extension-defined windows, OVER-context completion and scalar/aggregate/window name
+  distinctions. Do not lose window rows or assume every window function is an aggregate.
+
+- [ ] `DDB20-032` Parquet schema parameter and virtual columns [AUDIT].
+  Pin the documented `schema` argument, field-ID/name/default/type shape, named parameters,
+  and `file_row_group_number` metadata/typing. Generic function-call parsing is not proof that
+  catalog completion or inferred output columns are correct.
+
+- [ ] `DDB20-033` Parquet writing options [AUDIT].
+  Classify the 2.0 documented writing/encoding/compression options and COPY value shapes,
+  including VARIANT output and the release-note `data_page_size_limit` option. Verify metadata
+  and syntax only for engine options that exist;
+  filesystem/result probes belong in isolated scratch directories, not editor analysis.
+
+- [ ] `DDB20-034` GeoJSON import/export SQL [AUDIT].
+  Pin COPY FORMAT GEOJSON/GEOJSONL, ID_COLUMN/GEOMETRY_COLUMN and documented read options.
+  Check GEOMETRY typing and extension availability; do not execute files/network reads to bind
+  an editor fragment. Generic COPY/function support may already cover syntax.
+
+- [ ] `DDB20-035` Other core-extension SQL additions [MONITOR].
+  Triage the final DuckLake 1.1, Iceberg REST ATTACH options and Delta CREATE TABLE,
+  partition/property/time-travel/VARIANT syntax for effects on generic ATTACH/DDL/type models.
+  Register concrete gaps rather than porting those execution engines or reserving their keywords globally.
+
+## Migration and changed SQL semantics
+
+- [x] `DDB20-036` Python-style lambda generation [DONE].
+  DuckDB output always uses LAMBDA ... : ...; legacy arrows remain migration input.
+  Evidence: Duckdb20SyntaxTest, corpus expectations and native tests. Keep JSON `->` separate.
+  The 2.1 removal of single-arrow compatibility is future-version work, not a reason to reject
+  useful old input prematurely while targeting 2.0.
+
+- [ ] `DDB20-037` Regex operators `~` and `!~` [AUDIT].
+  The migration guide changes them to partial matching: `'abc' ~ 'b'` is true.
+  Verify AST/function lowering, generated SQL and cross-dialect hazards, including the deprecated
+  `regex_match_operator_semantics = 'full'` compatibility setting. Do not preserve old full-match semantics accidentally.
+
+- [ ] `DDB20-038` Factorial precedence [AUDIT].
+  Pin AST, generation and engine results for `2 * 3!` (12 in 2.0) versus `(2 * 3)!` (720),
+  with surrounding unary/binary operators. The old parser's precedence is not the 2.0 contract.
+
+- [ ] `DDB20-039` X/B literal types [AUDIT].
+  Verify `X'...'` is BLOB and `B'...'` is BITSTRING, not old VARCHAR text with an x/b prefix.
+  Cover tokenizer, AST/serde, value/type preservation, casts, escapes and cross-target output.
+
+- [ ] `DDB20-040` Untyped NULL columns [AUDIT].
+  Pin `CREATE TABLE ... AS SELECT NULL` retaining NULL type, subsequent non-NULL insert errors,
+  explicit cast controls and `legacy_disable_null_type`. Check inferred schemas and nullability;
+  do not automatically substitute INTEGER based on pre-2.0 engine behavior.
+
+- [ ] `DDB20-041` Identifier case setting [AUDIT].
+  `preserve_identifier_case` now reports preserve_case/lowercase/uppercase, not BOOLEAN;
+  true/false remain compatibility inputs. Test all modes through catalog harvesting,
+  normalization, quoting, alias/reference resolution and relevant local-binding behavior.
+
+- [ ] `DDB20-042` Division/modulo by zero [AUDIT].
+  Existing native tests pin integer // and % errors, TRY-to-NULL and NULL operands.
+  Extend to `error_on_division_by_zero=false`, ordinary division returning infinity and typed
+  cross-dialect/safe-division lowering. Do not mechanically change expected rows to hide a semantic mismatch.
+
+- [ ] `DDB20-043` Native ICU replacement [AUDIT].
+  Probe timezone-aware timestamps, DST gaps/overlaps, historical zones, calendar behavior,
+  locale collations and invalid names. Recheck precision/type effects including TIMESTAMPTZ_NS
+  and affected cross-engine hazards rather than assuming all old ICU findings still apply.
+  Include collations propagated into lists and list_contains/list_position, not just scalar text.
+
+- [x] `DDB20-044` Other observed 2.0 result changes [DONE].
+  Existing result tests pin CONCAT_WS list flattening, valid UTF-8 byte escapes versus rejected
+  NUL escapes, and changed comprehension/nested-lambda binding behavior. TargetTypingResultTest
+  also pins the observed timezone attachment result type. This is limited evidence, not full DDB20-043 coverage.
+
+- [ ] `DDB20-045` Removed/deprecated configuration and profiling SQL [AUDIT].
+  Reconcile settings metadata and SQL forms for removed custom_profiling_settings,
+  enable_http_logging/http_logging_output, replacement tracked_metrics/enable_logging('HTTP'),
+  and profiling_mode having no effect. Check new async/read-ahead settings and relevant
+  PRAGMA/EXPLAIN rendering options without implementing the I/O/profiler engines.
+
+- [ ] `DDB20-046` S3 URL-parameter change [AUDIT].
+  2.0 treats `?` and following text as part of the object key unless the deprecated
+  `s3_enable_deprecated_url_parameters` behavior is explicitly enabled. Review path literals,
+  documentation/examples and credential handling; use secrets and never log credential-bearing URLs.
+
+- [ ] `DDB20-047` Storage compatibility and database fixtures [MONITOR].
+  New databases default to storage version 69; old engines cannot read them. Existing files
+  keep their version. Pin relevant ATTACH STORAGE_VERSION / storage_compatibility_version
+  syntax if exposed. Never migrate a checked-in or user database implicitly; compare engine
+  versions with separate scratch files/processes and document compatibility expectations.
+
+- [x] `DDB20-048` Calculator/preview expression-statement scope [DONE].
+  Correct the former blanket "not shipped" conclusion: the 2.0 Gems post documents a CLI
+  calculator, implemented through shell grammar customization. This does not establish a core
+  JDBC DuckSQL expression-statement entry point. Keep CLI-only syntax and dot commands out
+  of the static core dialect unless an explicit future scope decision changes that boundary.
+
+## Parser/oracle and cross-dialect acceptance work
+
+- [ ] `DDB20-049` Full 1.5.6-versus-2.0 acceptance comparison [AUDIT].
+  Compare parser, generator, tokenizer and AST corpora in isolated engine processes, recording
+  actual engine/JDBC/source IDs and settings. Investigate acceptance changes; never automatically
+  add ledger entries or mix two incompatible native engine versions in one test environment.
+
+- [ ] `DDB20-050` Every applicable corpus through native 2.0 [AUDIT].
+  The normal suites and focused release examples ran on 2.0, but that does not prove every
+  identity/transpile/annotated-serde case has a native oracle gate. Inventory actual coverage,
+  run missing native checks and retain explicit unsupported/opaque classifications.
+
+- [ ] `DDB20-051` PEG ambiguity/precedence differential cases [AUDIT].
+  Cover prefix aliases, FROM-first, simplified PIVOT, GROUP/ORDER BY ALL, star EXCLUDE/REPLACE,
+  JSON arrows versus lambdas, parameter markers, explicit/internal join types and nested parentheses.
+  Include backtick identifier and star EXCEPT-to-EXCLUDE regression controls already implemented.
+
+- [ ] `DDB20-052` Malformed-input robustness [AUDIT].
+  Pin invalid/backtracking-heavy queries, long unmatched parentheses, depth/size/time limits,
+  Unicode and prompt cancellation. Confirm the native process cannot hang/crash the IDE;
+  a limit/transport failure is unavailable/unverified, not a syntax acceptance.
+
+- [ ] `DDB20-053` Grammar built-ins and special forms [AUDIT].
+  DuckdbGrammarBuiltins already claims 2.0 probing, but retains a stale Postgres-derived-parser
+  comment. Reconcile that provenance and add repeatable proof of registered versus grammar-only
+  calls, bare-only spellings and binder-restricted GROUPING forms. Do not claim no work was done.
+
+- [ ] `DDB20-054` Upstream SQLGlot reconciliation [AUDIT].
+  Compare the current pinned reference with upstream 2.0 support before implementing local
+  equivalents. Port upstream where available, retain provenance and record only still-needed
+  Brikk-specific behavior. Do not refresh unrelated dialects opportunistically.
+
+- [ ] `DDB20-055` Cross-dialect executable behavior [AUDIT].
+  For new semantic nodes/options, verify a faithful mapping or an explicit unsupported result
+  for each supported target. NEAREST already has a refusal regression; extend the matrix where
+  unproved. Anonymous function-name preservation is not proof of equivalent JSON/VARIANT semantics.
+
+- [ ] `DDB20-056` Final release-note and acceptance closure [AUDIT].
+  Triage the full v2.0.0 release-note PR list for additional user-visible SQL/type changes not
+  covered by the docs index. Engine bugfix/optimizer PRs are not automatically new parser tasks.
+  Record exact covered/deferred items, run final applicable gates, review actual ledger diffs
+  and preserve reasons. Never make a blanket parity claim from a green subset or preview post.
+
+## Metadata, reproducibility and published evidence
+
+- [x] `DDB20-057` Final engine pin [DONE].
+  JDBC 2.0.0.0, v2.0.0 source d54cbbe3df and ordinary native parser tests are pinned.
+  The current capture path is JDBC-based; installing a matching Python package is not required.
+  Any optional Python oracle introduced later must record and match its engine version.
+
+- [x] `DDB20-058` Base 2.0 catalog generation [DONE].
+  Vendored functions, keywords, settings, types, extensions and extension-function rows feed
+  GeneratedDuckdb_2_0_0.kt / GeneratedDuckdbDumps.kt. Earlier captures remain available.
+  This replaces the obsolete unchecked instruction to generate from an installed Python engine.
+
+- [ ] `DDB20-059` Hermetic future captures and extension policy [AUDIT].
+  DuckdbCaptureTest now isolates its extension directory so user-installed psql does not alter
+  the baseline. The capture command still opens ordinary engines and explicitly INSTALL/LOADs
+  CAPTURED_EXTENSIONS. Make future refreshes hermetic too, record exact extension versions and
+  review whether any old extension-function rows were reused instead of freshly captured.
+
+- [ ] `DDB20-060` Richer function registry metadata [AUDIT].
+  Inspect final schema/defaults/named arguments/null handling/stability/side effects/table results.
+  Extend FunctionDef only where engine evidence supports it, preserving binary compatibility.
+  Do not infer null semantics or positional/named splits from misleading parameter names.
+  Also classify the new duckdb_settings() `typed_value` column: current connection values
+  must not be baked into the static settings catalog as universal defaults.
+
+- [x] `DDB20-061` Basic catalog shape assertions [DONE].
+  FunctionCatalogTest pins lambda signatures, new JSON/VARIANT names/kinds, setval and native
+  collations; DuckdbDump maps window rows. DuckdbCaptureTest compares bundled/vendor/native
+  rows. These assertions do not substitute for the feature result probes above.
+
+- [ ] `DDB20-062` Precise new function typing [AUDIT].
+  Review JSON/VARIANT family additions and actual overload/default/variadic/result shapes,
+  including BOOLEAN results, key lists and extracted values. Keep function catalogs, type
+  inference, docs and live completion consistent; do not claim full end-to-end typing from names alone.
+  The full-release title audit also names decimal_average, binom, lttb, invoke, assert_true,
+  vertex_extract and aggregate-state export additions. Check their actual captured signatures,
+  kinds and required semantic models; ordinary function calls do not automatically need new AST nodes.
+
+- [ ] `DDB20-063` Function gap reports and semantic hazard refresh [AUDIT].
+  Update affected DuckDB/Trino/Doris/ClickHouse findings using live evidence at recorded versions.
+  Cover changed JSON/VARIANT, temporal, regex and numeric behavior. Regenerate registries only
+  after reviewing evidence; do not relabel historical probes as 2.0 or overwrite old hazard versions.
+
+- [x] `DDB20-064` Formal library publication and dependency pin [DONE].
+  SQL 0.20.1 and SQL IntelliJ support 0.2.4 are on Central. Formal candidate/public POM/module
+  checks and the plugin's fresh Central-only resolution passed; no SNAPSHOT/local-only dependency
+  is needed. Keep README, POMs, driver defaults, attribution and actual tested engine versions aligned.
+
+## Native grammar/editor boundary and deferred client work
+
+- [x] `DDB20-065` Parse-only JSON channel and PEG error locations [DONE].
+  Both restricted standalone and connection-backed verifiers use json_serialize_sql without
+  binding/executing editor SQL. SELECT serialization and parser rejections are handled; unsupported
+  serialization stays unverified. UTF-8 start/length and legacy code-point error locations are tested.
+  Prepare fallback belongs only to the trusted corpus oracle, never the editor path.
+
+- [x] `DDB20-066` Real runtime-extension smoke test [DONE].
+  Signed psql on DuckDB 2.0 was exercised through the plugin with Brikk PIPE off: active acceptance,
+  inactive/malformed rejection, actual keyword lookup/insertion, unchanged source activation and
+  an untouched sequence. Native autocomplete is separate from grammar activation and currently
+  requires explicit installation/loading. No implication that static Brikk AST understands all extension SQL.
+
+- [ ] `DDB20-067` Matching-helper parity beyond embedded files [DEFER].
+  Exact follow-console, unnamed-memory and remote helpers remain unavailable rather than guessed.
+  Establish an approved same-instance/routing mechanism before claiming native validation/completion
+  there. Do not replace them with a fresh memory database, replay arbitrary scripts, mutate user
+  transactions or add new internal IntelliJ calls without permission. Keep activation order and
+  connection/module/profile changes in cache identity and diagnostic invalidation.
+
+- [ ] `DDB20-068` Static-versus-extension grammar isolation guards [AUDIT].
+  Policy is established: core DuckSQL plus documented Brikk extensions is not the union of loaded
+  native grammars. Add focused identifier/keyword-collision and unknown-statement controls where
+  coverage is missing. Do not reserve extension-only keywords globally or assign invented AST semantics.
+
+- [ ] `DDB20-069` Java UDF syntax and live catalog overlay [AUDIT].
+  Pin unknown table functions with positional/named arguments, same-name scalar/table functions,
+  registration ownership and connection-local visibility. Reuse the existing live catalog/session
+  overlay where appropriate; do not put application UDFs into static metadata. Parsing a call must
+  not require installing/initializing its implementation or binding its arguments.
+
+- [ ] `DDB20-070` Chunked results and native/client APIs [DEFER].
+  The verifier already correctly uses ordinary JDBC ResultSet for a few metadata/JSON cells.
+  Do not add chunking there. Evaluate chunked results, vector indexing/composite readers and
+  bind/init ownership only for a future executor. Monitor C API v2 instability, C++17/build and
+  macOS x86_64 phase-out as packaging concerns. CLI agent/manual/history and Python appender/API
+  migration are client features, not missing core SQL grammar implementations.
+
+## Additional SQL-facing changes found in full-release titles
+
+These are candidates from the final release notes, beyond the user's links and the docs
+index. They need final-grammar/runtime classification before assuming a new implementation
+is needed. Their IDs follow the existing sequence and must remain stable.
+
+- [ ] `DDB20-071` SET SCHEMA and namespace switching [AUDIT].
+  The release notes explicitly add SET SCHEMA grammar support. Pin accepted forms against
+  USE/current-schema behavior, multipart/nested schema paths, quoting and search-path resolution.
+  Check IDE namespace tracking without inferring a catalog from a nested schema prefix.
+
+- [ ] `DDB20-072` ANALYSE synonym [AUDIT].
+  The release notes add ANALYSE wherever ANALYZE is accepted. Verify tokenizer, statement
+  boundaries, AST/generation and native acceptance without treating it as an unknown command.
+
+- [ ] `DDB20-073` Compound and numeric type edge cases [AUDIT].
+  Classify SQL-visible empty STRUCT support versus internal LogicalType::TUPLE implementation
+  details. Cover final type-literal syntax, integer-only DECIMAL parameters, typed macro defaults
+  and numeric promotions that affect inferred types. Do not expose an internal type as new SQL syntax.
+
+- [ ] `DDB20-074` Table-function identifier-to-string deprecation [AUDIT].
+  Review the release's deprecated implicit identifier-to-string conversion for table functions.
+  Pin quoted identifiers versus path string literals and positional/named reader arguments;
+  do not quietly rewrite identifiers into filenames or bind readers during editor checking.
+
+- [ ] `DDB20-075` Connection-scoped secret storage [AUDIT].
+  Classify the final SQL surface for the new `connection` secret storage, ordinary/persistent
+  secret creation, scope/visibility and session cleanup. Preserve options without exposing
+  credentials in capture files, diagnostics, completions or test logs.
+
+- [ ] `DDB20-076` Colon aliases for subqueries [AUDIT].
+  The release notes add TableAliasColon for subqueries. Verify exact final spelling, FROM-first
+  and JOIN placement, nested scopes, reference resolution and generation; existing expression
+  prefix-alias tests do not prove subquery-table alias behavior.
+
+- [ ] `DDB20-077` Temporal precision and TRY_CAST changes [AUDIT].
+  Pin TIMESTAMP_NS to TIMESTAMPTZ_NS conversion and new time-related TRY_CAST support,
+  including accepted type spellings, precision, zone effects, invalid input and inferred types.
+  Reuse existing temporal result probes rather than claiming these types are entirely unmodeled.
+
+- [ ] `DDB20-078` Dialect compatibility mode [AUDIT].
+  The release notes add `SET dialect_compatibility_mode = 'spark'`. Classify its final parser,
+  binding and result effects; document which connection modes the static DuckDB dialect models.
+  Do not silently assume copying active grammar extensions reproduces every SQL-semantic setting.
+
+## Doris lessons for nested schemas
+
+Research for DDB20-001 and DDB20-002. Core implementation and conservative shared IDE fixes
+are recorded above; recursive IDE model/introspection work remains open.
+
+Doris's catalog support is useful precedent, but it models a fixed hierarchy:
+`MsRoot -> MsDatabase` for a Doris catalog, then `MsSchema` for a Doris database,
+then tables. Its plugin owns the metadata SQL, introspector/model adaptation, default
+scopes and console wiring. Shared support already owns path resolution, lazy discovery,
+scope widening, unloaded-reference handling and reusable search-path strategies.
+DuckDB uses `PgFamilyModelFacade`, not Doris's Ms model. Neither existing facade establishes
+that the platform can represent recursive SCHEMA children. Prove the metadata and model
+shape first; do not copy the Ms substitution or assume more configured levels fixes it.
+
+Shared assumptions to audit under DDB20-002:
+
+- `CatalogProfile.kt`: `levels` is a fixed list, and `maxDeepenDepth` defaults to its size.
+  `CatalogScopes.select` truncates paths to that size; its selection predicates also map each
+  path position to one fixed kind. A nested-schema selection must not silently select its parent.
+- `NamespacePathResolver.kt`: child traversal is reusable, but resolution rejects paths over
+  maxDepth, including absolute paths formed from current-namespace prefixes. Doris raises its
+  limit to three to reach tables; DuckDB currently keeps the two-level default.
+- `AutoIntrospect.kt`: current-namespace fallback, discovery steps, relative-prefix search and
+  custom-listing decisions depend on `levels.size`. Discovery runs at most `levels.size + 1`
+  iterations. Recursive schemas need progress/cancellation bounds independent of a fixed number
+  of namespace levels, plus correct handling of schemas containing both tables and child schemas.
+- `CatalogSearchPath.kt`: `CatalogSchemaSearchPath.switchSql` uses the DATABASE parent and only
+  the leaf schema name. `readBack` constructs exactly DATABASE -> SCHEMA. Preserve the entire
+  schema ancestry in both directions, based on verified native metadata. Do not split an opaque
+  current-schema string on dots and confuse a quoted dotted name with multiple components.
+
+Practical lessons to carry forward:
+
+- Quote each identifier component separately. Doris inherited SQL that quoted `catalog.schema`
+  as one name. The switch SQL, read-back, picker and introspected model must agree on path shape;
+  otherwise the dropdown resets after execution and completion loses the current namespace.
+  Test actual picker behavior too; Doris's SCHEMA/DATABASE popup branch was easy to get wrong.
+- Seed useful defaults when the scope is initially empty, without overwriting later user choices.
+  The platform's `@` current-namespace default can select nothing if no node is marked current.
+  Distinguish cheap name enumeration from explicitly selecting a parent for deep introspection;
+  a checked parent with no child group did not automatically load Doris's descendants.
+- Make qualifier heads visible without importing every descendant into unqualified scope.
+  `CatalogImports.allCatalogs` handles Doris's inherited MySQL import restriction. Shared docs/tests
+  say PostgreSQL-family catalog heads already work, so do not add that workaround to DuckDB blindly.
+- Prefer stateless, qualified metadata reads and one-level-at-a-time discovery. Doris's cheap
+  `DorisNamespaceListing` adds names without deleting cached descendants; its full introspector
+  replaces inventory only after a valid enumeration. Exceptions, null/malformed results and
+  cancellation must preserve cached hierarchy; a complete successful empty inventory can justify
+  clearing it. Do not copy Doris session-switch fallbacks or assume a fresh DuckDB helper sees the
+  console's in-memory, temporary or attached objects. Keep the user's session and transactions intact.
+- Reuse the meaningful regression scenarios: completion loads one level at a time; same-named
+  tables resolve according to the console namespace; unloaded objects do not generate false
+  errors; genuinely missing columns become errors once loaded; failed refreshes preserve children.
+  Extend those scenarios to multiple nested levels, relative/attached-catalog paths and quoted dots.
+
+Source pointers for the eventual implementation:
+
+- Shared files above live in
+  `brikk-sql-intellij-support/src/dev.brikk.house.sql.intellij.catalog/`.
+  Also read `CatalogImports.kt`, `PgFamilyModelFacade.kt` and the catalog-kit README.
+- Doris's `DorisModelFacade.kt` lives in
+  `~/DEV/sortdev/doris-intellij-plugin/src/main/kotlin/dev/sort/doris/`.
+  Its `catalog/` directory contains `DorisIntrospector.kt`, `DorisCatalogQueries.kt`,
+  `DorisNamespaceListing.kt`, `DorisCatalogScopes.kt`, `DorisDatabaseDialect.kt` and
+  `DorisAutoIntrospectService.kt`.
+- Doris tests under `src/test/kotlin/dev/sort/doris/catalog/` include
+  `DorisMultiCatalogFlowTest.kt`, `DorisCatalogFailurePreservationTest.kt` and scope/wiring tests.
+  The flow and failure tests exercise offline models/platform machinery, not live-server proof.
+- DuckDB's `DuckdbModelFacade.kt` and `catalog/DuckdbCatalogProfile.kt` live under
+  `~/DEV/sortdev/duckdb-intellij-plugin/src/main/kotlin/dev/sort/duckdb/`.
+
+## Evidence, coverage and work rules
+
+Primary existing evidence, not a substitute for reading the assertions:
+
+- `brikk-sql/test/dev.brikk.house.sql/Duckdb20SyntaxTest.kt`:
+  nested schema/table spelling, UPDATE CTE, FETCH, grouping UNNEST, JSON calls, lambda output,
+  backticks, star EXCEPT, SECURE VIEW, CONNECT/DISCONNECT, trigger bodies and NEAREST/serde/refusal.
+- `brikk-sql-verify-duckdb/test/dev.brikk.house.sql.verify/DuckdbVerifierTest.kt`:
+  final native acceptance examples including MERGE, UPDATE FROM and the cases above.
+- `brikk-sql-verify-duckdb/test/dev.brikk.house.sql.verify/ConnectionDuckdbVerifierTest.kt`:
+  helper ownership, parser ranges, missing grammar, cancellation, timeouts and no execution/binding.
+- `brikk-sql-metadata/test/dev.brikk.house.sql.metadata/FunctionCatalogTest.kt`,
+  `DuckdbDumpTest.kt`, `tools/metadata-capture/test/DuckdbCaptureTest.kt`:
+  registry/kind/signature capture and mapping, not exhaustive function result semantics.
+- Result probes in `brikk-sql-verify/test/dev.brikk.house.sql.verify/`:
+  IntegerDivisionResultTest, StringEscapeResultTest, TargetTypingResultTest,
+  SparkDuckdbArrayResultTest and ComprehensionQualificationResultTest.
+- Plugin integration evidence is in `~/DEV/sortdev/duckdb-intellij-plugin`, notably
+  DuckdbLiveCatalogConsoleTest and grammar/completion tests. Do not report those as core AST tests.
+
+For every selected implementation item: inspect upstream first; add valuable focused
+parse/generate/serde/token tests as applicable; add deliberate native result probes for semantic
+claims; check invalid inputs and cross-target refusal; run the affected gate before wider tests.
+Do not weaken ledgers or add useless count-only tests. Preserve published constructor/copy JVM
+shapes per AGENTS.md. New defaulted public data-class fields require hidden compatibility bridges.
+
+Keep SQL-only work here. Plugin changes require Maven Local/shared-release coordination as needed,
+but no repeated slow Plugin Verifier pass for unrelated SQL edits. No new marked internal IntelliJ
+calls without permission, no experimental annotations on our methods, no connection resets or
+source-URL changes for grammar preferences. Dogfood and release authorization are separate steps.
+
+Completeness here means every feature in the reviewed final SQL documentation/index, migration
+guide and Gems post has an item or explicit client/engine scope classification, with additional
+SQL-facing candidates from the final release titles recorded separately. It does **not**
+claim that every PR in the 96 KB full release body has been exhaustively audited; DDB20-056 owns
+that remaining triage. In particular, basic round-trip tests do not close nested-name or DML semantics.
+
+## Source coverage for the user's examples
+
+| Documentation | Items |
 |---|---|
-| **Add** | No DuckDB-specific support was found; new AST/parser/generator work is likely. |
-| **Audit** | Generic or partial support exists, but the exact DuckDB 2.0 form is not pinned. |
-| **Refresh** | Generated/versioned data must be regenerated or repinned. |
-| **Monitor** | No immediate `brikk-sql` change, but consumers or verification may be affected. |
-
-## Release gate
-
-- [x] Review the final 2.0 release notes and migration guide, including lambda syntax,
-  storage version 69, integer division/modulo by zero and PEG-parser error changes.
-- [x] Test against the final Maven artifact and record engine 2.0.0, JDBC 2.0.0.0 and source
-  ID `d54cbbe3df`.
-- [ ] Refresh the sqlglot reference before adding brikk-native behavior. Port upstream
-  DuckDB changes where they exist; keep only still-missing 2.0 behavior as local extensions.
-- [x] Capture catalogs through the final JDBC engine used by `brikk-sql-verify-duckdb`; the
-  generator no longer depends on a separate Python-engine capture.
-- [ ] Run a 1.5.6-versus-2.0 acceptance comparison over all DuckDB parser, generator, token,
-  and AST corpora. Investigate every acceptance change rather than automatically changing a
-  known-failure ledger.
-
-## PEG parser replacement
-
-DuckDB 2.0 replaces the PostgreSQL-derived parser with a PEG parser. DuckSQL is intended to
-remain compatible, but keyword classification, ambiguities, malformed-input behavior, and
-source locations can still shift.
-
-- [x] Diff the final `src/parser/peg/grammar` rules and captured keyword categories against
-  `DuckdbParser.kt`; add backtick identifiers, `NEAREST`, session routing and trigger bodies.
-- [ ] Re-run every DuckDB identity, transpile, annotated-serde, and parser corpus case through
-  the final 2.0 engine.
-- [ ] Add differential cases for precedence, associativity, prefix aliases, `FROM`-first SQL,
-  simplified `PIVOT`, `GROUP BY ALL`, `ORDER BY ALL`, `* EXCLUDE`/`REPLACE`, lambdas, JSON
-  arrows, parameter markers, and nested parentheses.
-- [ ] Add invalid-query cases that stress PEG backtracking, including long runs of unmatched
-  opening parentheses. Confirm both brikk and the engine reject promptly.
-- [x] Recheck `json_serialize_sql`: 2.0 adds `location` as `[UTF-8 byte start, byte length]`,
-  while pre-2.0 drivers report `position` in code points. The verifier supports both.
-- [x] Recheck the JDBC fallback's `Parser Error` prefix and line/column format. The verifier
-  accepts known binding/catalog/not-implemented failures as grammar acceptance, leaves
-  unexpected failures unverified, and parses locations with `DUCKDB_LINE_MARKER`;
-  improved 2.0 errors must not turn rejects into false accepts.
-- [x] Check non-`SELECT` serialization. It remains unsupported; the trusted corpus verifier
-  keeps its prepare fallback, while the editor verifier remains parse-only and returns unverified.
-- [ ] Revalidate `DuckdbGrammarBuiltins.kt`. Its comments and membership are explicitly based
-  on the PostgreSQL-derived v1.5.6 parser.
-
-### Runtime-extensible grammar policy
-
-The PEG parser lets loaded extensions register tokens, keywords, grammar alternatives, and
-transformers. A static shared library cannot know which extensions a caller loaded.
-
-- [ ] Define the support boundary: `duckdb` should mean core DuckSQL 2.0, not the union of all
-  possible runtime extension grammars.
-- [ ] Do not add extension-reserved keywords globally unless they are also core DuckSQL
-  keywords; doing so can break valid identifiers for users without that extension.
-- [ ] Decide whether unknown extension statements remain unsupported/opaque `Command` nodes,
-  or whether a future API accepts an extension grammar profile. Avoid silently assigning
-  semantics to syntax brikk does not understand.
-- [ ] Add one opt-in extension smoke test, such as pipe syntax, to prove that the native oracle
-  can validate a connection's loaded grammar without claiming that the static parser supports
-  it.
-
-## SQL grammar and AST work
-
-| DuckDB 2.0 feature | Current brikk state | Required work |
-|---|---|---|
-| Expression statements, e.g. `date: current_date(), time: current_localtime()` | **Not shipped:** present in the preview post, absent from the final v2.0.0 top-level PEG grammar | Do not claim 2.0 support; monitor a later DuckDB release. |
-| `CONNECT` / `DISCONNECT` | **Implemented:** distinct `SessionConnect`/`SessionDisconnect` nodes avoid collision with `CONNECT BY` | Extend option-shape tests as Quack/Postgres/MySQL routing evolves. |
-| External resources | **Opaque:** final forms remain generic commands | Model and round-trip `CREATE`, `REGISTER`, `SHOW`, `CONNECT TO`, and `DESTROY EXTERNAL RESOURCE`; include resource type, name, handle, and options without flattening them into generic commands. |
-| Triggers | **Implemented:** generic trigger model now accepts DuckDB inline DML bodies | Expand transition-table and row/statement execution probes beyond parser acceptance. |
-| `APPROX`/`EXACT NEAREST ... BY SIMILARITY` joins | **Implemented:** `Nearest` AST on `Join`, including optional k and distance/similarity | Add optimizer-specific semantic probes; non-DuckDB executable generation refuses the construct. |
-| DML and `COPY` inside CTEs | **Supported:** generic CTE statement bodies round-trip final documented forms | Expand scope/lineage assertions for non-query CTE bodies. |
-| Nested schemas | **Supported:** multipart schema/table paths round-trip | Keep final PEG and native-verifier cases pinned. |
-| `$name` variable references | **Audit:** `SET VARIABLE` is covered; `$...` currently shares placeholder machinery | Represent DuckDB variables separately from JDBC/bind placeholders if needed. Round-trip `$threshold`, positional parameters, named parameters, and dollar-quoted strings without collisions. |
-| `WITH RECURSIVE ... USING KEY` aggregation | **Audit:** `key_expressions` parsing/generation and corpus cases already exist | Add the aggregate key form from the 2.0 example, `USING KEY (a, avg(b))`, and execute semantic probes, not only parse/render tests. |
-| `FETCH FIRST n ROWS ONLY` | **Supported:** generic `Fetch` parses it and DuckDB canonically emits `LIMIT` | Keep `FIRST`/`NEXT`, omitted count, `ROW`/`ROWS` and offsets pinned. |
-| `OVERLAY()` | **Audit:** generic AST/parser support exists | Add DuckDB parse/generate, catalog-signature, and result-semantic tests. |
-| `UNNEST` in `GROUP BY` | **Supported:** scalar `UNNEST` stays in the grouping expression | Add result-semantic probes over list columns. |
-| `COPY TO (... PARTITION BY ..., ORDER BY ...)` | **Audit** | Pin both options together and separately, expressions versus column lists, option ordering/canonicalization, and output AST shape. |
-| `VARIANT` end-to-end support | **Audit:** type token/model, casts, and some v1.5 functions exist | Test storage DDL, JSON-to-`VARIANT` casts, nested values, extraction, comparisons/containment, Parquet read/write syntax, typing metadata, and cross-dialect hazards. |
-| Completed lambda syntax transition | **Implemented:** old arrows remain migration input; DuckDB output always uses `LAMBDA ... : ...` | Remove arrow input when DuckDB 2.1 removes its compatibility setting. |
-| Backtick identifiers and `* EXCEPT` | **Supported:** backticks parse as quoted identifiers and canonicalize to double quotes; `EXCEPT` canonicalizes to `EXCLUDE` | Keep token and identity cases pinned. |
-| `SECURE VIEW` | **Supported:** existing `SecureProperty` now renders in DuckDB | Add execution-policy coverage when secure-view behavior affects consumers. |
-| `EXPLAIN (SQL)` | **Opaque:** accepted by the native verifier but still a generic command in brikk | Add a structured explain-option model before inspecting or transforming it. |
-| Custom extension repositories | **Opaque:** final grammar is `CREATE [OR REPLACE] EXTENSION REPOSITORY ... [WITH] PREFIX ... [[USING] PUBLIC KEY(S) ...]` plus `DROP` | Model without logging or normalizing key material unsafely; keep install/load repository selection separate. |
-
-For each grammar item that lands:
-
-- [ ] Add focused assertions to `DuckdbDialectTest.kt`.
-- [ ] Add identity/transpile fixtures to `testResources/dialect-corpus/duckdb.json`.
-- [ ] Add token and AST-serde cases where the node or keyword surface changes.
-- [ ] Feed generated SQL to the final engine through `brikk-sql-oracle`; ledger only a known,
-  explained limitation, never a newly introduced parser bug.
-- [ ] Define behavior when writing the AST to every supported target dialect: faithful mapping,
-  explicit unsupported warning, or preserved anonymous syntax. Avoid silent semantic rewrites.
-
-## Functions and type metadata
-
-### Catalog refresh
-
-- [ ] Install the final Python `duckdb==2.0.x` package and run
-  `python3 tools/generate_duckdb_functions.py`.
-- [ ] Inspect the `duckdb_functions()` schema before regenerating. If 2.0 exposes defaults,
-  null handling, stability, side effects, named parameters, or richer table-function results,
-  extend `FunctionDef` deliberately instead of discarding new metadata.
-- [ ] Determine whether the JSON and other bundled extensions are visible on a clean connection
-  or only after `LOAD`. Make the generator's extension-loading policy explicit and reproducible.
-- [ ] Review every changed function kind, overload, argument name, return type, alias, macro,
-  table macro, and operator row. Pay special attention to changes caused by the lambda
-  transition and the first-class `VARIANT` pipeline.
-- [ ] Update count and shape assertions in
-  `brikk-sql-metadata/test/.../FunctionCatalogTest.kt`; add direct assertions for important
-  new functions rather than relying only on total counts.
-
-### New JSON functions
-
-The preview announces these mutation functions:
-
-- `json_set(json, path, value)`
-- `json_insert(json, path, value)`
-- `json_replace(json, path, value)`
-- `json_remove(json, path)`
-
-It also announces these reconciliation functions:
-
-- `json_merge_patch_diff(orig, modified)`
-- `json_deep_merge(original, patch, ...)`
-- `json_normalize(json)`
-- `json_strip_nulls(json)`
-
-- [ ] Confirm final overloads, variadic behavior, argument names, return types, and extension
-  availability from `duckdb_functions()`.
-- [ ] Audit generic nodes already present for `JSON_SET`, `JSON_REMOVE`, and
-  `JSON_STRIP_NULLS`. DuckDB's signatures and semantics may not match the dialect that caused
-  those generic nodes to be introduced.
-- [ ] Decide whether `json_insert`, `json_replace`, `json_merge_patch_diff`,
-  `json_deep_merge`, and `json_normalize` need semantic AST nodes or should remain anonymous
-  functions. Add nodes when cross-dialect generation, typing, or hazard detection needs to
-  distinguish their behavior.
-- [ ] Pin path handling for JSONPath and JSON Pointer forms, multiple path/value pairs, missing
-  paths, arrays, SQL `NULL` versus JSON `null`, invalid JSON, and duplicate keys.
-- [ ] Pin the documented semantic distinctions: RFC 7396 delete-on-null versus
-  `json_deep_merge` skip-on-null; recursive key sorting while preserving array order; and
-  stripping object nulls without removing null array elements.
-- [ ] Update function gap reports and probe new mappings against Trino, Doris, and ClickHouse.
-  Add hazard entries where names exist on both sides but null/path/mutation semantics differ.
-
-### `VARIANT` function family
-
-- [ ] Diff the full final `variant_*` family against the v1.5.6 catalog. The current catalog has
-  low-level entries such as `variant_extract`, `variant_normalize`, and `variant_typeof`; the
-  preview names user-facing functions including `variant_type`, `variant_keys`, and
-  `variant_contains`.
-- [ ] Add typing rules for functions whose result can be stated accurately (`BOOLEAN`, lists of
-  keys, type-name text, extracted `VARIANT`, and so on).
-- [ ] Test containment and null/missing behavior before adding cross-dialect mappings to JSON or
-  semi-structured types. `VARIANT` is not merely textual JSON.
-
-## JDBC and Java API impact
-
-These APIs are client/execution features, not changes to core DuckSQL. They should not cause
-unrelated parser abstractions to leak into the multiplatform `brikk-sql` module.
-
-### Chunked query results
-
-`DuckDBChunkedResult` and `DuckDBDataChunkReader` provide lazy, columnar chunks through
-`DuckDBPreparedStatement.query()`. The API first appeared in JDBC 1.5.3.0, so it is available
-before the 2.0 engine release.
-
-- [ ] Keep `DuckdbVerifier` on ordinary JDBC `ResultSet`: it reads one JSON cell, so chunking
-  provides no benefit and would couple the verifier to a DuckDB-specific execution API.
-- [ ] When bumping JDBC, smoke-test the ordinary `ResultSet`, streaming-result setting,
-  prepared statements, error reporting, and connection cleanup used by the verifier.
-- [ ] If a brikk execution/result API is added later, evaluate chunked results there. Document
-  zero-based vector indexing, lazy close/ownership, supported scalar types, and the current
-  lack of `LIST`/`STRUCT` readers before exposing it as a stable API.
-
-### Java scalar and table UDFs
-
-Pure-Java table functions are registered per connection and may use positional and named
-parameters. They are runtime objects, not DuckDB built-ins.
-
-- [ ] Keep generated `DUCKDB_FUNCTION_CATALOG` limited to the reproducible engine/extension
-  registry used during generation. Do not add application-specific Java UDFs to static shared
-  metadata.
-- [ ] Verify that an unknown table function with named arguments, for example
-  `FROM mongo_query('tab', '{}', columns = '["id"]', port = 27017)`, parses and round-trips
-  without needing a hard-coded function name.
-- [ ] Verify that scalar and table functions with the same name remain distinguishable where
-  context or runtime metadata provides the distinction.
-- [ ] If consumers need completion or validation for registered UDFs, design a connection-local
-  catalog overlay on top of the built-in catalog rather than mutating `DuckdbDialect` globally.
-- [ ] Monitor the Java vector API's composite-type support and bind/init state lifecycle. These
-  affect a future executor integration, not current dialect correctness.
-
-## Semantic regression probes
-
-Even syntax-compatible engine replacements can change results. Re-run or add probes for:
-
-- [ ] Timezone-aware timestamps, calendars, and collations after removal of ICU internals,
-  including DST gaps/overlaps, historical zones, locale collation, and unknown zone/collation
-  errors.
-- [ ] `MERGE` and `UPDATE ... FROM` with multiple source matches, whose semantics are now
-  explicitly defined.
-- [ ] Recursive CTEs, including `USING KEY`, after the recursive execution rewrite.
-- [ ] `VARIANT` shredding, extraction pushdown, Parquet round trips, missing versus SQL/JSON
-  null, and numeric type preservation.
-- [ ] JSON mutation/reconciliation functions as described above.
-- [ ] `NEAREST` joins for ties, null vectors, metric direction, top-k per left row, and
-  deterministic ordering guarantees.
-- [ ] Existing DuckDB hazard pairs in `testResources/semantics` when a changed implementation
-  touches a previously probed function. Update generated hazard registries after evidence, not
-  merely because the engine version changed.
-- [x] Pin final-engine changes found by the result suite: integer `//` and `%` by zero error;
-  date-at-zone metadata reports `TIMESTAMPTZ_NS`; native `CONCAT_WS` flattens list arguments;
-  UTF-8 byte escapes are accepted while NUL escapes remain rejected; comprehension/lambda local
-  names now resolve case-sensitively against case-insensitive column names.
-
-The storage format, asynchronous I/O, Quack wire protocol, and C API v2 do not directly
-change `brikk-sql` parsing. Monitor them only for SQL surface or test-fixture consequences.
-Never migrate a checked-in DuckDB database fixture to storage v2.0 without first documenting
-backward/forward compatibility expectations.
-
-## Version and documentation updates
-
-When final 2.0 support is ready, update every version-bearing location together:
-
-- [x] `brikk-sql-verify-duckdb/module.yaml`: `org.duckdb:duckdb_jdbc` dependency and comments.
-- [x] `brikk-sql-verify-duckdb/src/.../DuckdbVerifier.kt`: engine-pin KDoc and PEG error parsing.
-- [ ] `tools/generate_duckdb_functions.py`: version-specific modeling comments if still needed.
-- [x] `brikk-sql-metadata/src/.../GeneratedDuckdb_2_0_0.kt`: regenerate, do not edit.
-- [x] `brikk-sql-metadata/src/.../DuckdbGrammarBuiltins.kt`: parser description and verified
-  version.
-- [x] `brikk-sql-metadata/src/.../FunctionCatalog.kt` and
-  `brikk-sql-metadata/test/.../FunctionCatalogTest.kt`: version-specific assumptions/counts.
-- [x] `vendor/README.md` and `ATTRIBUTIONS.md`: source version, extraction behavior, and counts.
-- [x] Run `./kotlin publish mavenLocal` and inspect the Toolchain-generated verifier
-  POM/module metadata for the updated JDBC pin. The launcher delegates to Toolchain;
-  do not reintroduce manually emitted dependency metadata or duplicated version pins.
-- [ ] DuckDB verify ledgers and generated actual ledger: review diffs and retain reasons for all
-  exceptions.
-
-## Definition of done
-
-- [ ] Final DuckDB 2.0 Python and JDBC engines are pinned to matching engine versions.
-- [ ] Generated function metadata is reproducible and tests pin important 2.0 additions.
-- [ ] Every final release-note grammar addition is classified as supported, intentionally
-  opaque, or explicitly unsupported, with a test for that decision.
-- [ ] All DuckDB parser/generator/token/serde corpora pass.
-- [ ] Native verifier and oracle tests pass, and no unexplained failure was ledgered.
-- [ ] Cross-dialect generation for new semantic AST nodes either has a verified mapping or
-  emits an explicit unsupported diagnostic.
-- [ ] Existing semantic hazards affected by 2.0 have fresh live evidence.
-- [ ] Public docs and published dependency metadata report the same DuckDB version.
+| Nested schemas | DDB20-001, DDB20-002 |
+| UPDATE from same table | DDB20-003 |
+| UPDATE using joins / multiple matches | DDB20-004, DDB20-005 |
+| Nearest joins | DDB20-008 |
+| MERGE INTO | DDB20-006, DDB20-007 |
+| Grouping by UNNEST | DDB20-011 |
+| FETCH FIRST | DDB20-012 |
+| JSON mutation | DDB20-013, DDB20-014 |
+| Data-modifying / COPY CTEs | DDB20-009, DDB20-010 |
 
 ## Sources
 
-- [A Preview of DuckDB v2.0](https://duckdb.org/2026/08/17/duckdb-20-highlights)
-- [DuckDB v2.0: Your Database Deserves a Better Parser](https://duckdb.org/2026/08/20/duckdb-20-peg-parser)
-- [Reconciling JSON in DuckDB, One Patch at a Time](https://duckdb.org/2026/08/18/reconciling-json)
-- [Chunked Query Results in the DuckDB Java Driver](https://duckdb.org/2026/08/21/chunked-query-results-java-driver)
-- [DuckDB Table Functions in Java](https://duckdb.org/2026/08/25/table-functions-in-java)
+- [Final 2.0 announcement](https://duckdb.org/2026/10/21/announcing-duckdb-200)
+- [Final GitHub release notes](https://github.com/duckdb/duckdb/releases/tag/v2.0.0)
+- [What's new in the 2.0 docs](https://duckdb.org/docs/2.0/whats_new_in_the_docs)
+- [Gems of 2.0](https://duckdb.org/2026/10/26/gems-of-duckdb-200)
+- [Migration guide](https://duckdb.org/docs/2.0/operations_manual/migration)
+- [Variable shorthand](https://duckdb.org/docs/2.0/sql/statements/set_variable#the-name-shorthand)
+- [Prepared variable defaults](https://duckdb.org/docs/2.0/sql/query_syntax/prepared_statements#session-variables-as-default-values)
+- [Partition paths and sorting](https://duckdb.org/docs/2.0/data/partitioning/partitioned_writes)
+- [SHOW](https://duckdb.org/docs/2.0/sql/statements/show)
+- [Sequences](https://duckdb.org/docs/2.0/sql/statements/create_sequence#setting-the-sequence-value)
+- [Regex functions](https://duckdb.org/docs/2.0/sql/functions/regular_expressions#using-regexp_extract)
+- [Parquet](https://duckdb.org/docs/2.0/data/parquet/overview)
+- [GeoJSON loading](https://duckdb.org/docs/2.0/data/json/loading_json#geojson)
+- [GeoJSON writing](https://duckdb.org/docs/2.0/data/json/writing_json#geojson)
+- [PEG parser](https://duckdb.org/docs/2.0/sql/peg_parser)
+- [Window extensions](https://duckdb.org/docs/2.0/extensions/window_function_extensions)
+- Preview context only: [2.0 highlights](https://duckdb.org/2026/08/17/duckdb-20-highlights),
+  [PEG parser article](https://duckdb.org/2026/08/20/duckdb-20-peg-parser),
+  [JSON reconciliation](https://duckdb.org/2026/08/18/reconciling-json),
+  [chunked Java results](https://duckdb.org/2026/08/21/chunked-query-results-java-driver),
+  [Java table functions](https://duckdb.org/2026/08/25/table-functions-in-java).
+
+[schemas]: https://duckdb.org/docs/2.0/sql/statements/create_schema#nested-schemas
+[update-same]: https://duckdb.org/docs/2.0/sql/statements/update#update-from-same-table
+[update-joins]: https://duckdb.org/docs/2.0/sql/statements/update#update-using-joins
+[update-multiple]: https://duckdb.org/docs/2.0/sql/statements/update#multiple-matching-source-rows
+[nearest]: https://duckdb.org/docs/2.0/sql/query_syntax/from#nearest-joins
+[merge]: https://duckdb.org/docs/2.0/sql/statements/merge_into
+[groupby]: https://duckdb.org/docs/2.0/sql/query_syntax/groupby#grouping-by-unnest
+[fetch]: https://duckdb.org/docs/2.0/sql/query_syntax/limit#fetch-first
+[json]: https://duckdb.org/docs/2.0/data/json/json_functions#json-mutation-functions
+[ctes]: https://duckdb.org/docs/2.0/sql/query_syntax/with#data-modifying-ctes

@@ -2,6 +2,7 @@ package dev.brikk.house.sql.intellij.catalog
 
 import com.intellij.database.model.DasObject
 import com.intellij.database.model.DasTable
+import com.intellij.database.model.ObjectKind
 import com.intellij.database.psi.DbDataSource
 import com.intellij.database.psi.DbPsiFacade
 import com.intellij.database.util.DasUtil
@@ -52,7 +53,7 @@ public class DasRelationFacts(private val resolver: DialectDataSourceResolver) :
                 built[dataSource.uniqueId] = fresh
             }
         // The console's current namespace decides which of same-named tables an unqualified name means.
-        val searchPath = resolver.consoleNamespace(file).ifEmpty { null }?.let { listOf(it.joinToString(".")) }.orEmpty()
+        val searchPath = resolver.consoleNamespace(file).ifEmpty { null }?.let { listOf(catalogPath(it)) }.orEmpty()
         val revision = current.revisions.computeIfAbsent(searchPath) { revisions.incrementAndGet() }
         RelationFactsResult.Available(current.facts.copy(searchPath = searchPath), revision)
     }.getOrNull()
@@ -99,6 +100,12 @@ internal fun dasRelationFact(table: DasTable, key: String): RelationFact {
     return RelationFact(columns, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL, provenance = key)
 }
 
-/** [table]'s key in relation facts: its catalog, schema and name as stored, as far as the model has them. */
+/** [table]'s entire namespace path, without turning literal dotted names into extra components. */
 internal fun dasTablePath(table: DasTable): String =
-    listOf(DasUtil.getCatalog(table), DasUtil.getSchema(table), table.name).filter { it.isNotBlank() }.joinToString(".")
+    catalogPath(generateSequence(table.dasParent) { it.dasParent }
+        .takeWhile { it.kind == ObjectKind.DATABASE || it.kind == ObjectKind.SCHEMA }
+        .map { it.name }.toList().asReversed() + table.name)
+
+private fun catalogPath(parts: List<String>): String = parts.filter { it.isNotBlank() }.joinToString(".") {
+    if ('.' in it || '"' in it) "\"${it.replace("\"", "\"\"")}\"" else it
+}

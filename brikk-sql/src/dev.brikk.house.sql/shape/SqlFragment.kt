@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.Func
 import dev.brikk.house.sql.ast.sqlNames
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
@@ -370,7 +371,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             // inventory behavior. Functions and unresolved placeholders are not tables.
             val parts = table.parts
             if (resolved[table] == false || parts.isEmpty() || parts.any { it !is Identifier }) continue
-            out.add(parts.joinToString(".") { it.name })
+            out.add(catalogPath(parts.map { it.name }))
         }
         out.toList()
     }
@@ -639,6 +640,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
                     node.set("this", Identifier(args("this" to slotKey, "quoted" to false)))
                     if (depth >= 2) node.set("db", Identifier(args("this" to SLOT_QUALIFIER, "quoted" to false)))
                     if (depth >= 3) node.set("catalog", Identifier(args("this" to SLOT_QUALIFIER, "quoted" to false)))
+                    // The parser stores components beyond catalog/db in this as Dots as well.
+                    if (depth > 3) node.set("this", Dot.build(List(depth - 3) {
+                        Identifier(args("this" to SLOT_QUALIFIER, "quoted" to false))
+                    } + Identifier(args("this" to slotKey, "quoted" to false))))
                 }
             }
             node
@@ -670,6 +675,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         var depth = 1
         for ((tableName, shape) in inputs.tables) {
             val parts = catalogTableParts(tableName).map { if (it.quoted) dialectObj.generate(it) else it.name }
+            if (parts.size > 3 && dialectObj.name != "duckdb") {
+                throw ShapeError("Nested schema paths are supported only for DuckDB shape catalogs")
+            }
             depth = maxOf(depth, parts.size)
             nestedSet(mapping, parts, columns(shape))
         }
@@ -731,10 +739,15 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     private fun leafName(leaf: Node): String {
         val source = leaf.source
         return if (source is Table) {
-            source.parts.joinToString(".") { it.name }
+            catalogPath(source.parts.map { it.name })
         } else {
             leaf.name
         }
+    }
+
+    /** Keep a literal dotted identifier distinct from several namespace components. */
+    private fun catalogPath(parts: List<String>): String = parts.joinToString(".") {
+        if ('.' in it || '"' in it) "\"${it.replace("\"", "\"\"")}\"" else it
     }
 }
 
