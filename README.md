@@ -19,7 +19,7 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql](brikk-sql/README.md) | `brikk-sql-jvm` | Tokenizer, AST, dialects, parser, generator, optimizer, lineage, and schema/shape analysis. |
 | [brikk-sql-metadata](brikk-sql-metadata/) | `brikk-sql-metadata-jvm` | Function/type catalogs and evidence-backed semantic metadata; exported by core. |
 | [brikk-sql-verify-api](brikk-sql-verify-api/) | `brikk-sql-verify-api` | `SqlVerifier` contract, four-state `VerifyResult`, and editor-ready error positions; re-exports `brikk-sql-jvm`. |
-| [brikk-sql-verify-trino](brikk-sql-verify-trino/) | `brikk-sql-verify-trino` | Trino verifier over trino-parser 483 (Java 25 runtime). |
+| [brikk-sql-verify-trino](brikk-sql-verify-trino/) | `brikk-sql-verify-trino` | Trino verifier over trino-parser 484 (Java 25 runtime). |
 | [brikk-sql-verify-duckdb](brikk-sql-verify-duckdb/) | `brikk-sql-verify-duckdb` | DuckDB corpus-gate verifier, restricted standalone editor parser, and connection-backed parse-only verifier. |
 | [brikk-sql-verify-doris](brikk-sql-verify-doris/) | `brikk-sql-verify-doris` | Doris FE parser verifier, single statement or every error in a script. |
 | [brikk-sql-verify-shardingsphere](brikk-sql-verify-shardingsphere/) | `brikk-sql-verify-shardingsphere` | Advisory ShardingSphere grammars for PostgreSQL, MySQL, Hive and ClickHouse. Exclude `org.apache.groovy:groovy`: parsing never uses it and Toolchain cannot publish the exclusion. |
@@ -64,6 +64,11 @@ See the [core API guide](brikk-sql/README.md),
 [corpus coverage policy](docs/corpus-coverage.md), and
 [vendor provenance](vendor/README.md). Current priorities and ownership:
 [work list](TODO.md) (`SQL-*`).
+
+The development Trino target is **484**, including its SQL/JSON constructor and
+serialization forms, interval precision, window-frame exclusion and NEAREST
+relations. The native parser and captured metadata use the same version.
+See [the compatibility notes](docs/brikk-extensions.md#58-trino-484-sql-and-metadata).
 
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.

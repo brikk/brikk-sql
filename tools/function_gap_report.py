@@ -30,7 +30,7 @@ engine pairs are retained too.
 
 Raw data sources (preferred over the generated Kotlin catalogs):
   - vendor/data/doris-signatures.json
-  - vendor/data/trino-functions-483.tsv
+  - vendor/data/trino-functions-484.tsv
   - vendor/data/starrocks-builtin-functions-4.1.4.tsv
   - vendor/data/clickhouse-functions-26.5.1.1.tsv
   - vendor/data/duckdb-functions-2.0.0.tsv (JDBC duckdb_functions() capture)
@@ -49,12 +49,13 @@ to its counts/subCounts and its detail file. The full per-function entry lists l
 one file per ordered pair under `function-gaps/`. Stale pair files no longer referenced
 by the manifest are removed on every run.
 
-Usage: python3 tools/function_gap_report.py
+Usage: python3 tools/function_gap_report.py [--engine trino]
 """
 
 from __future__ import annotations
 
 import json
+import argparse
 import re
 import sys
 import time
@@ -145,7 +146,7 @@ def load_doris():
 
 def load_trino():
     entries = {}
-    path = ROOT / "vendor" / "data" / "trino-functions-483.tsv"
+    path = ROOT / "vendor" / "data" / "trino-functions-484.tsv"
     for line in path.read_text().splitlines():
         cols = line.split("\t")
         if len(cols) < 4:
@@ -180,9 +181,11 @@ def load_trino():
 
 def load_duckdb():
     rows = sorted(
-        (r["function_name"], r["alias_of"], r["function_type"], json_list(r["parameter_types"]), r["varargs"])
-        for r in read_dump(DUCKDB_DUMP)
-        if r["function_type"] != "pragma"
+        ((r["function_name"], r["alias_of"], r["function_type"], json_list(r["parameter_types"]), r["varargs"])
+         for r in read_dump(DUCKDB_DUMP)
+         if r["function_type"] != "pragma"),
+        # Macro parameters and optional alias/varargs fields can contain SQL NULL.
+        key=lambda r: (r[0], r[1] or "", r[2], tuple(t or "" for t in r[3] or []), r[4] or ""),
     )
     entries = {}
     alias_pairs = []  # (alias, primary)
@@ -737,6 +740,9 @@ def write_markdown(pairs_data, pair_metadata, catalogs, evidence, path):
     w("```bash")
     w("python3 tools/function_gap_report.py")
     w("```")
+    w("Use `--engine trino` to refresh only pairs involving Trino, preserving the other")
+    w("pair records. Catalog sizes and `dialectEvidence` describe the current captures;")
+    w("each pair's `sourceEvidence` and `targetEvidence` record its own snapshot.")
     w("")
     w("## Method")
     w("")
@@ -928,6 +934,9 @@ def write_markdown(pairs_data, pair_metadata, catalogs, evidence, path):
 # --------------------------------------------------------------------------
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--engine", choices=CATALOG_ENGINES, help="refresh only pairs involving this engine")
+    args = parser.parse_args()
     start = time.time()
     catalogs = {
         "doris": load_doris(),
@@ -938,7 +947,7 @@ def main():
     }
     evidence = {
         "duckdb": f"engine-catalog: {DUCKDB_DUMP.relative_to(ROOT)}",
-        "trino": "engine-catalog: vendor/data/trino-functions-483.tsv",
+        "trino": "engine-catalog: vendor/data/trino-functions-484.tsv",
         "doris": "engine-catalog: vendor/data/doris-signatures.json",
         "starrocks": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",
         "clickhouse": "engine-catalog: system.functions 26.5.1.1",
@@ -1001,6 +1010,16 @@ def main():
             "targetEvidence": evidence[tgt],
             "reason": "DataFusion is brikk-native and has no SQLGlot oracle or extracted engine catalog",
         }
+
+    if args.engine:
+        # Keep unrelated evidence byte-for-byte stable during a single-engine upgrade.
+        pair_dir = ROOT / "brikk-sql" / "testResources" / "semantics" / PAIR_DIR_NAME
+        for pair in pairs_data:
+            if args.engine in pair:
+                continue
+            previous = json.loads((pair_dir / pair_file_name(*pair)).read_text())
+            pairs_data[pair] = previous["entries"]
+            pair_metadata[pair] = {k: v for k, v in previous.items() if k not in ("entries", "counts", "subCounts")}
 
     removed = write_split_report(
         pairs_data, pair_metadata, evidence,

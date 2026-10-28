@@ -9,12 +9,12 @@
 
 **0 actionable items.**
 
-Every annotated corpus, including the newly ported StarRocks dialect, matches
-the oracle except for 3 protected Trino `ALTER TABLE ... SET PROPERTIES`
-entries. Those are parser-AST differences caused by Brikk's intentional,
-verifier-backed grammar-legality extension, not type-inference defects. They
-remain in the Trino annotation ledger and are documented in
-`docs/brikk-extensions.md` section 8.
+The Trino annotation ledger has 7 protected entries: the original 3
+`ALTER TABLE ... SET PROPERTIES` parser-AST differences, 3 structured
+`SET AUTHORIZATION` differences, and JSON_VALUE's explicit return type instead
+of SQLGlot UNKNOWN. These are native-verifier-backed extensions, not defects
+to regress toward the Python oracle. See `docs/brikk-extensions.md` sections
+8 and 58. Other dialects' committed ledgers remain authoritative.
 
 Run the authoritative gate with:
 

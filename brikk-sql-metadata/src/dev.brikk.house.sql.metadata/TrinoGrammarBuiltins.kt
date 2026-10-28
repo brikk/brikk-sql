@@ -6,18 +6,12 @@ import dev.brikk.house.sql.metadata.InvocationSyntax.SPECIAL_FORM
 
 /*
  * HANDWRITTEN (not generated): engine-GRAMMAR knowledge for Trino, curated by reading
- * the pinned Trino 483 sources — it cannot be derived from the `SHOW FUNCTIONS` dump
+ * the pinned Trino 484 sources — it cannot be derived from the `SHOW FUNCTIONS` dump
  * that generates GeneratedTrinoFunctionCatalog.kt, precisely because these names are
  * absent from the registry. tools/generate_trino_functions.py wires this set into the
  * generated FunctionCatalog constructor (grammarBuiltins = TRINO_GRAMMAR_BUILTINS).
  *
- * NOTE (483 grammar, not yet modeled): SqlBase.g4 also has the function-shaped
- * `NEAREST '(' ... MATCH booleanExpression ')'` (#nearest) relation primary. It is
- * intentionally NOT listed here yet — the parser does not handle the `NEAREST` join
- * clause at all, so listing it would mask a real parse failure rather than clear a
- * false positive. Add it together with parser support (see the 476–483 grammar gaps).
- *
- * Sources (verify on refresh, both in reference/trino at the 483 pin):
+ * Sources (verify on refresh, both in reference/trino at the 484 pin):
  *  - core/trino-grammar/src/main/antlr4/io/trino/grammar/sql/SqlBase.g4 — dedicated
  *    grammar alternatives (rule labels cited per name below).
  *  - core/trino-parser/src/main/java/io/trino/sql/parser/AstBuilder.java
@@ -51,6 +45,8 @@ val TRINO_GRAMMAR_BUILTINS: Set<String> = setOf(
     "JSON_QUERY",           // #jsonQuery
     "JSON_OBJECT",          // #jsonObject
     "JSON_ARRAY",           // #jsonArray
+    "JSON",                 // #jsonConstructor
+    "JSON_SERIALIZE",       // #jsonSerialize
     // SqlBase.g4 primaryExpression niladic/precision forms (CURRENT_DATE itself IS
     // registered at 481, so it lives in the generated catalog, not here):
     "CURRENT_TIME",         // #currentTime
@@ -64,6 +60,7 @@ val TRINO_GRAMMAR_BUILTINS: Set<String> = setOf(
     // SqlBase.g4 relationPrimary alternatives (function-shaped in table position):
     "UNNEST",               // #unnest: UNNEST '(' expression (',' expression)* ')'
     "JSON_TABLE",           // #jsonTable: JSON_TABLE '(' jsonPathInvocation COLUMNS ... ')'
+    "NEAREST",              // #nearest: NEAREST '(' FROM relation ... MATCH predicate ')'
     // AstBuilder.visitFunctionCall parser special forms (dedicated AST nodes by name):
     "IF",                   // -> IfExpression
     "NULLIF",               // -> NullIfExpression
@@ -75,7 +72,7 @@ val TRINO_GRAMMAR_BUILTINS: Set<String> = setOf(
 /*
  * Grammar forms for completion (DF-13): every name above plus the registered names whose
  * SqlBase.g4 rule changes how they are written (reserved CURRENT_DATE is bare only; TRIM,
- * SUBSTRING, NORMALIZE take keyword arguments; LISTAGG needs WITHIN GROUP). From the 483
+ * SUBSTRING, NORMALIZE take keyword arguments; LISTAGG needs WITHIN GROUP). From the 484
  * grammar rule cited for each name above.
  */
 internal val TRINO_GRAMMAR_FORMS: List<GrammarForm> = listOf(
@@ -93,6 +90,8 @@ internal val TRINO_GRAMMAR_FORMS: List<GrammarForm> = listOf(
     grammarForm("JSON_QUERY", SPECIAL_FORM, template = "JSON_QUERY(json, path)"),
     grammarForm("JSON_OBJECT", SPECIAL_FORM, template = "JSON_OBJECT(key VALUE value, ...)"),
     grammarForm("JSON_ARRAY", SPECIAL_FORM, template = "JSON_ARRAY(value, ...)"),
+    grammarForm("JSON", SPECIAL_FORM, template = "JSON(value [FORMAT JSON [ENCODING UTF8]])"),
+    grammarForm("JSON_SERIALIZE", SPECIAL_FORM, template = "JSON_SERIALIZE(value [RETURNING type] [NULL ON ERROR])"),
     // Optional precision: CURRENT_TIMESTAMP or CURRENT_TIMESTAMP(3).
     grammarForm("CURRENT_TIME", BARE, CALL),
     grammarForm("CURRENT_TIMESTAMP", BARE, CALL),
@@ -104,6 +103,7 @@ internal val TRINO_GRAMMAR_FORMS: List<GrammarForm> = listOf(
     grammarForm("CURRENT_PATH", BARE),
     grammarForm("UNNEST", CALL, kind = FunctionKind.TABLE_VALUED),
     grammarForm("JSON_TABLE", SPECIAL_FORM, kind = FunctionKind.TABLE_VALUED, template = "JSON_TABLE(json, path COLUMNS (...))"),
+    grammarForm("NEAREST", SPECIAL_FORM, kind = FunctionKind.TABLE_VALUED, template = "NEAREST(FROM relation [WHERE condition] MATCH condition)"),
     grammarForm("IF", CALL),
     grammarForm("NULLIF", CALL),
     grammarForm("COALESCE", CALL),

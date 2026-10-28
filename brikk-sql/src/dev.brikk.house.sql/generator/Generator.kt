@@ -638,6 +638,11 @@ open class Generator(
         val sql = try {
             when {
                 handler != null -> handler(this, expression)
+                // These Trino 484 forms have no proved cross-dialect lowering. A Func
+                // fallback would silently discard their RETURNING/PASSING/error clauses.
+                expression is TrinoJsonConstructor || expression is TrinoJsonSerialize ||
+                    expression is TrinoJsonScalar || expression is TrinoJsonPathCall ->
+                    throw UnsupportedError("${expression::class.simpleName} requires a Trino-specific translation")
                 expression is Func -> functionFallbackSql(expression)
                 expression is Property -> propertySql(expression)
                 else -> throw UnsupportedError(

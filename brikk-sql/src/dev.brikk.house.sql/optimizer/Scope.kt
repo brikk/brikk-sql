@@ -385,7 +385,11 @@ class Scope(
                 cached = mutableListOf()
 
                 for (source in orderedSourcesList) {
-                    if (source is Table) cached.add(source.aliasOrName to source)
+                    if (source is dev.brikk.house.sql.ast.TrinoNearest && source.alias.isEmpty()) {
+                        // An unaliased NEAREST preserves the input relation's qualifiers.
+                        val child = udtfScopes.find { it.expression === source }
+                        if (child != null) cached.addAll(child.references)
+                    } else if (source is Table) cached.add(source.aliasOrName to source)
                     else cached.add(getSourceAlias(source) to
                         (if (truthy(source.args["pivots"])) source else source.unnest()))
                 }
@@ -544,7 +548,7 @@ private fun traverseScopeInner(scope: Scope, acc: MutableList<Scope>) {
     val expression = scope.expression
 
     when {
-        expression is Select -> traverseSelect(scope, acc)
+        expression is Select || expression is dev.brikk.house.sql.ast.TrinoNearest -> traverseSelect(scope, acc)
         expression is SetOperation -> {
             traverseCtes(scope, acc)
             traverseUnion(scope, acc)
@@ -723,7 +727,7 @@ private fun traverseCtes(scope: Scope, acc: MutableList<Scope>) {
  * really a "derived table" unless it's aliased or wraps an unwrapped query.
  */
 private fun isDerivedTableNode(expression: Expression): Boolean =
-    expression is Subquery &&
+    expression is dev.brikk.house.sql.ast.TrinoNearest || expression is Subquery &&
         (
             expression.alias.isNotEmpty() ||
                 expression.thisArg is Select || expression.thisArg is SetOperation
@@ -747,6 +751,10 @@ private fun traverseTables(scope: Scope, acc: MutableList<Scope>) {
 
     // Traverse FROMs, JOINs, and LATERALs in the order they are defined
     val expressions = mutableListOf<Expression>()
+
+    if (scope.expression is dev.brikk.house.sql.ast.TrinoNearest) {
+        expressions.add(scope.expression.thisArg as Expression)
+    }
     val from_ = scope.expression.args["from_"]
     if (from_ is From) {
         expressions.add(from_.thisArg as Expression)
@@ -865,6 +873,10 @@ private fun traverseTables(scope: Scope, acc: MutableList<Scope>) {
         if (childScope != null) {
             scopes.add(childScope)
             scope.tableScopes.add(childScope)
+            if (node is dev.brikk.house.sql.ast.TrinoNearest && node.alias.isEmpty()) {
+                sources.remove("")
+                for ((name, binding) in childScope.selectedSources) sources[name] = binding.second
+            }
         }
     }
 

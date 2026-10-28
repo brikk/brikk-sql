@@ -8,6 +8,14 @@ import dev.brikk.house.sql.ast.GeneratedTypingMetadata
 import dev.brikk.house.sql.ast.MatchPredicate
 import dev.brikk.house.sql.ast.TypingSpec
 import dev.brikk.house.sql.ast.UniquePredicate
+import dev.brikk.house.sql.ast.TrinoJsonConstructor
+import dev.brikk.house.sql.ast.TrinoJsonScalar
+import dev.brikk.house.sql.ast.TrinoIntervalValue
+import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.GrantPrincipal
+import dev.brikk.house.sql.ast.Alias
+import dev.brikk.house.sql.ast.TrinoJsonPathCall
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.metadata.TRINO_FUNCTION_CATALOG
 import dev.brikk.house.sql.parser.ErrorLevel
@@ -29,10 +37,27 @@ class TrinoDialect : PrestoDialect() {
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf("TABLESAMPLE", "UNION")
 
     override val name: String get() = "trino"
+
+    override fun <E : Expression> normalizeIdentifier(expression: E): E {
+        val passing = expression.parent as? Alias
+        if (expression is Identifier && expression.quoted && expression.argKey == "alias" &&
+            passing?.argKey == "passing" && passing.parent is TrinoJsonPathCall) {
+            return expression
+        }
+        val principal = expression.parent as? GrantPrincipal
+        if (expression is Identifier && principal != null) {
+            // Trino 484 compares user names case-sensitively, including unquoted names.
+            // Role names remain lowercase, even when quoted.
+            if (principal.text("kind").equals("ROLE", ignoreCase = true)) {
+                expression.set("this", expression.name.lowercase())
+            }
+            return expression
+        }
+        return super.normalizeIdentifier(expression)
+    }
     override val qualifiedStarUsing: QualifiedStarUsing get() = QualifiedStarUsing.OMIT
 
-    // Generated from Trino 481's SHOW FUNCTIONS registry (tools/generate_trino_functions.py
-    // over vendor/data/trino-functions-481.tsv). Trino-only: Presto's surface differs.
+    // Generated from Trino 484's SHOW FUNCTIONS registry. Presto's registry differs.
     override val functionCatalog: FunctionCatalog get() = TRINO_FUNCTION_CATALOG
 
     override val tokenizerConfig: TokenizerConfig get() = TrinoTokenizerTables.CONFIG
@@ -52,6 +77,9 @@ class TrinoDialect : PrestoDialect() {
             AtLocal::class to TypingSpec.Returns(DType.TIMESTAMP),
             MatchPredicate::class to TypingSpec.Returns(DType.BOOLEAN),
             UniquePredicate::class to TypingSpec.Returns(DType.BOOLEAN),
+            TrinoJsonConstructor::class to TypingSpec.Returns(DType.JSON),
+            TrinoJsonScalar::class to TypingSpec.Returns(DType.JSON),
+            TrinoIntervalValue::class to TypingSpec.Returns(DType.INTERVAL),
         )
 
         private val TRINO_COERCES_TO: Map<DType, Set<DType>> = buildMap {

@@ -106,7 +106,7 @@ class EmptyRegexpEngineTest {
     fun liveTrinoCountKeepsNativeEmptyPatternMatches() {
         val name = container("BRIKK_TRINO_TEST_CONTAINER")
         val client = listOf("trino", "--output-format=TSV", "--execute")
-        assertEquals("483", query(name, client, "SELECT version()"))
+        assertEquals("484", query(name, client, "SELECT version()"))
         for (call in listOf("REGEXP_COUNT('abc', '')", "REGEXP_COUNT(NULL, '')", "REGEXP_COUNT('abc', '[a-z]')",
             "REGEXP_COUNT('é😀a', '')")) compare(name, client, "SELECT $call", "trino", "")
     }

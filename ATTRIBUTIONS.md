@@ -79,12 +79,13 @@ See vendor/README.md for provenance and the refresh procedure.
 
 ## Trino
 
-`vendor/data/trino-functions-483.tsv` and the generated
+`vendor/data/trino-functions-484.tsv` and the generated
 `brikk-sql-metadata/.../GeneratedTrinoFunctionCatalog.kt` contain the built-in function
 registry (names, signatures, kinds) extracted from [Trino](https://github.com/trinodb/trino)
-version 483 via its own `SHOW FUNCTIONS` statement (see vendor/README.md for the generation
-method). `vendor/data/trino-keywords-483.tsv` and `GeneratedKeywords.kt` hold the keyword
-spellings and reservation read from the trino-grammar 483 lexer and parser. Trino is
+version 484 via its own `SHOW FUNCTIONS` statement (see vendor/README.md for the generation
+method). `vendor/data/trino-keywords-484.tsv` and `GeneratedKeywords.kt` hold the keyword
+spellings and reservation read from the trino-grammar 484 lexer and parser. Historical
+483 captures remain available under `vendor/data/`. Trino is
 licensed under the Apache License 2.0. No Trino code is included — only registry and
 grammar data.
 

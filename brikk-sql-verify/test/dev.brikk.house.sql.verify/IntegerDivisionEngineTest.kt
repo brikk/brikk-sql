@@ -42,7 +42,7 @@ class IntegerDivisionEngineTest {
         assumeTrue(!container.isNullOrBlank(), "BRIKK_TRINO_TEST_CONTAINER is not configured")
         val name = container!!
         val client = listOf("trino", "--output-format=TSV", "--execute")
-        assertEquals("483", query(name, client, "SELECT version()"))
+        assertEquals("484", query(name, client, "SELECT version()"))
         assertEquals("4\t-4", query(name, client,
             "SELECT CAST(CAST(7 AS DOUBLE) / 2 AS INTEGER), CAST(CAST(-7 AS DOUBLE) / 2 AS INTEGER)"))
         for ((call, expected) in listOf(

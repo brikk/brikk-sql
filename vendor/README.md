@@ -322,7 +322,7 @@ symbol, `\N` when not from a grammar), in the dump format above.
 
 | File | Source | Refresh |
 |---|---|---|
-| `trino-keywords-483.tsv` | trino-grammar 483: lexer tokens with a one-word literal; UNRESERVED when the parser's `nonReserved` rule can start with the token, else RESERVED. The capture checks the reserved set equals `io.trino.sql.ReservedIdentifiers` (313 keywords, 83 reserved) | bump `io.trino:trino-parser` in `tools/metadata-capture/module.yaml`, `./kotlin run -m metadata-capture -- trino-keywords` |
+| `trino-keywords-484.tsv` | trino-grammar 484: lexer tokens with a one-word literal; UNRESERVED when the parser's `nonReserved` rule can start with the token, else RESERVED. The capture checks the reserved set equals `io.trino.sql.ReservedIdentifiers` (316 keywords, 84 reserved). The historical 483 dump is retained. | bump `io.trino:trino-parser` in `tools/metadata-capture/module.yaml`, `./kotlin run -m metadata-capture -- trino-keywords` |
 | `doris-keywords-4.1.5.tsv` | the same reading of `vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar` (565 keywords) | `./kotlin run -m metadata-capture -- doris-keywords` after refreshing the jar |
 | `clickhouse-keywords-26.5.1.1.tsv` | ClickHouse 26.5.1.1 `system.keywords` via `chdb` 4.2.1 with `chdb-core` 26.5.0 (`SELECT version()` = `26.5.1.1`), captured 2026-10-11. The table has no reservation column, so every category is UNKNOWN; many entries are phrases (`ADD COLUMN`) | see below |
 
@@ -333,32 +333,34 @@ python3 -c "import chdb; open('vendor/data/clickhouse-keywords-<ver>.tsv','w').w
 
 Pin `chdb-core` explicitly: `chdb` 4.2.1 alone resolves a newer engine.
 
-## `data/trino-functions-483.tsv`
+## `data/trino-functions-484.tsv`
 
-Trino **483**'s complete built-in function registry (`SHOW FUNCTIONS`), one row per
+Trino **484**'s complete built-in function registry (`SHOW FUNCTIONS`), one row per
 overload, 6 tab-separated columns: name, return type, argument types, function type,
-deterministic, description. 900 rows / 441 distinct names (via generator: 442 defs /
-808 overloads — 372 scalar, 57 aggregate, 11 window, 2 table).
+deterministic, description. 915 rows / 442 distinct names (via generator: 443 defs /
+825 overloads, with 373 scalar, 57 aggregate, 11 window, and 2 table definitions).
 
 | | |
 |---|---|
 | Source | Trino — https://github.com/trinodb/trino |
-| Version | 483 (official `trinodb/trino:483` container image) |
+| Version | 484 (official `trinodb/trino:484` container image) |
+| Image digest | `sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f` |
+| Captured | 2026-10-28, `SELECT version()` = `484` |
 | License | Apache License 2.0 (extracted registry data; see ATTRIBUTIONS.md) |
 
 ### Generation method
 
-**Method A (container dump)** — the official `trinodb/trino:483` server image bundles the
+**Method A (container dump)** — the official `trinodb/trino:484` server image bundles the
 geospatial *and* ML plugins, so `SHOW FUNCTIONS` on a stock container lists their functions
 (`ST_*`, `bing_tile*`, `geometry_*`, `great_circle_distance`, `convex_hull_agg`,
 `learn_*`, `regress`, `classify`, …). This is why the 483 dump has ~100 more names than the
 old 481 dump, which used the in-JVM harness (Method B) that never loaded those plugins.
 
 ```bash
-docker run -d --name trino-dump trinodb/trino:483
+docker run -d --name trino-dump trinodb/trino:484
 # wait until `docker exec trino-dump trino --execute "SELECT 1"` succeeds, then:
 docker exec trino-dump trino --execute "SHOW FUNCTIONS" --output-format=TSV \
-    > vendor/data/trino-functions-483.tsv
+    > vendor/data/trino-functions-484.tsv
 docker rm -f trino-dump
 ```
 
@@ -366,8 +368,8 @@ Refresh on a version bump: dump from the new `trinodb/trino:<version>` image, sa
 `data/trino-functions-<version>.tsv`, then re-run `tools/generate_trino_functions.py`
 (TSV -> `GeneratedTrinoFunctionCatalog.kt`). The output is version-pinned and reproducible.
 
-The previous `data/trino-functions-481.tsv` (Method B, 746 rows, no geospatial/ML) has been
-superseded and removed.
+The 483 function capture is retained as historical evidence. The previous 481 capture
+(Method B, 746 rows, no geospatial/ML) was superseded and removed.
 
 Known caveats (carried into the generated Kotlin header): `SHOW FUNCTIONS` does not flag
 variadics (arity is a lower bound), parametric types / type variables appear literally

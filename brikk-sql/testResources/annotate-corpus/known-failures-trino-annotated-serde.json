@@ -1,6 +1,30 @@
 {
     "cases": [
         {
+            "id": "assertion:v1:sha256:9507397f783d15849dd0ae9853191e2f94e73e00a901bdc54ab938de0d7ed2a3:1",
+            "sql": "ALTER TABLE people SET AUTHORIZATION alice",
+            "reason": "type-mismatch at #0 (Command): expected t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType. actual t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType.",
+            "signature": "type-mismatch:v1:sha256:2659c74a4b55874f338730b68a1b779e029169e30f9c348841f7666c103d56ff"
+        },
+        {
+            "id": "assertion:v1:sha256:8d3de49390c784b7966fe6d33dd8ba26f46b8ebcabc34e6d4f86da3a3106f8d1:1",
+            "sql": "ALTER TABLE people SET AUTHORIZATION ROLE PUBLIC",
+            "reason": "type-mismatch at #0 (Command): expected t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType. actual t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType.",
+            "signature": "type-mismatch:v1:sha256:63e25db6e1945a31b67ea929c95c0493c5307c8525e780ba0a0ad4c85843cb19"
+        },
+        {
+            "id": "assertion:v1:sha256:7b28d61beb0c71d78c2097344bb0227e245cf86377b33df50d133b320b3594fd:1",
+            "sql": "ALTER VIEW people SET AUTHORIZATION alice",
+            "reason": "type-mismatch at #0 (Command): expected t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType. actual t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType.",
+            "signature": "type-mismatch:v1:sha256:b1a6a47ccc62d216bb99d33eb9e2db78c5233b670d2e28896cd3dac1d42809cc"
+        },
+        {
+            "id": "assertion:v1:sha256:167a6910e0e22d36b3e944fd7e6677b0c64e587bb5331af87359b8158ef4830e:1",
+            "sql": "JSON_VALUE(jl.extra_attributes, 'lax $.amount_source' RETURNING VARCHAR)",
+            "reason": "type-mismatch at #0 (JSONValue): expected t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType. actual t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType.",
+            "signature": "type-mismatch:v1:sha256:e07908b173c4930bf8a848c428cf31f48fc30b80279ec9fbe15e3f7809f3d76f"
+        },
+        {
             "id": "assertion:v1:sha256:7bc2afdb7af1bc134d11701578b7109847a46d86936fb3bc4b60af1eb533af37:1",
             "sql": "ALTER TABLE people SET PROPERTIES x = 'y'",
             "reason": "type-mismatch at #0 (Command): expected t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType. actual t=[{\"c\":\"sqlglot.expressions.datatypes.DataType\"},{\"i\":0,\"k\":\"this\",\"c\":\"DataType.",

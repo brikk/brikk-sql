@@ -21,7 +21,7 @@ private fun antlrKeywords(atn: ATN, vocabulary: Vocabulary, ruleNames: List<Stri
 private val WORD = Regex("[A-Za-z_][A-Za-z0-9_]*")
 private val KEYWORD_COLUMNS = listOf("word", "category", "token")
 
-/** Writes vendor/data/trino-keywords-483.tsv from the trino-grammar on the classpath. */
+/** Writes vendor/data/trino-keywords-484.tsv from the trino-grammar on the classpath. */
 fun captureTrinoKeywords(vendorData: Path) {
     val dump = antlrKeywords(SqlBaseParser._ATN, SqlBaseParser.VOCABULARY, SqlBaseParser.ruleNames.toList())
     val reserved = dump.rows.filter { it[1] == "RESERVED" }.map { it[0] }.toSet()
@@ -29,7 +29,7 @@ fun captureTrinoKeywords(vendorData: Path) {
         "nonReserved-derived reserved words disagree with ReservedIdentifiers: " +
             "${reserved - ReservedIdentifiers.reservedIdentifiers()} / ${ReservedIdentifiers.reservedIdentifiers() - reserved}"
     }
-    writeDump(vendorData.resolve("trino-keywords-483.tsv"), dump)
+    writeDump(vendorData.resolve("trino-keywords-484.tsv"), dump)
 }
 
 /** Writes vendor/data/doris-keywords-4.1.5.tsv from the vendored Doris parser jar. */

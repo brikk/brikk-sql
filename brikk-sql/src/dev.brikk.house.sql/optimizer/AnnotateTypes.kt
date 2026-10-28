@@ -381,7 +381,27 @@ class TypeAnnotator(
             if (source is Scope) {
                 val expression = source.expression
 
-                if (expression is UDTF) {
+                if (expression is dev.brikk.house.sql.ast.TrinoNearest) {
+                    val fields = LinkedHashMap<String, Any>()
+                    val duplicates = mutableSetOf<String>()
+                    for ((name, binding) in source.selectedSources) {
+                        val types = if (binding.second is Table) {
+                            val table = binding.second as Table
+                            schema.columnNames(table).associateWith { column -> schema.getColumnType(table, column) }
+                        } else {
+                            getScopeSourceSelects(source, name)
+                        }
+                        for ((column, type) in types) {
+                            if (column in fields) duplicates.add(column)
+                            fields[column] = type
+                        }
+                    }
+                    for (duplicate in duplicates) fields.remove(duplicate)
+                    val aliases = expression.aliasColumnNames
+                    result = if (aliases.isEmpty()) fields else fields.entries.mapIndexed { i, entry ->
+                        (aliases.getOrNull(i) ?: entry.key) to entry.value
+                    }.toMap()
+                } else if (expression is UDTF) {
                     if (expression is Lateral && expression.thisArg is Unnest) {
                         val unnest = expression.thisArg as Unnest
                         val fields = LinkedHashMap<String, Any>()
@@ -599,8 +619,26 @@ class TypeAnnotator(
 
             // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
             // evidence, or its documented TEXT default (not a fabricated path type).
-            if (expr is JSONValue && dialect.name == "postgres") {
+            if (expr is JSONValue && dialect.name in setOf("postgres", "trino")) {
                 setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
+                continue
+            }
+            if (expr is dev.brikk.house.sql.ast.TrinoJsonSerialize && dialect.name == "trino") {
+                val returning = expr.args["returning"] as? Expression
+                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+                setType(expr, type as? DataType ?: DType.VARCHAR)
+                continue
+            }
+            if (expr is dev.brikk.house.sql.ast.TrinoJsonPathCall && dialect.name == "trino") {
+                val returning = expr.args["returning"] as? Expression
+                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+                setType(expr, type as? DataType ?: if (expr.text("kind") == "JSON_EXISTS") DType.BOOLEAN else DType.VARCHAR)
+                continue
+            }
+            if (expr is dev.brikk.house.sql.ast.JSONArray && dialect.name == "trino") {
+                val returning = expr.args["return_type"] as? Expression
+                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+                setType(expr, type as? DataType ?: DType.VARCHAR)
                 continue
             }
 

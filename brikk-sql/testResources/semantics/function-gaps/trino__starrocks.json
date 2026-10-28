@@ -1,12 +1,12 @@
 {
  "analysisStatus": "classified",
- "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+ "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
  "targetEvidence": "engine-catalog: SHOW FULL BUILTIN FUNCTIONS 4.1.4",
  "counts": {
   "A": 148,
   "B": 48,
   "C": 3,
-  "D": 242
+  "D": 243
  },
  "subCounts": {
   "A_arity_compatible": 143,
@@ -22,7 +22,7 @@
   {
    "name": "abs",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "abs",
@@ -33,7 +33,7 @@
   {
    "name": "acos",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "acos",
@@ -44,7 +44,7 @@
   {
    "name": "all_match",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "all_match",
@@ -54,7 +54,7 @@
   {
    "name": "any_match",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "any_match",
@@ -64,7 +64,7 @@
   {
    "name": "any_value",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "any_value",
@@ -75,7 +75,7 @@
   {
    "name": "approx_distinct",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ApproxDistinct",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -87,14 +87,14 @@
   {
    "name": "approx_most_frequent",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "approx_percentile",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ApproxQuantile",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -107,14 +107,14 @@
   {
    "name": "approx_set",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "arbitrary",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "AnyValue",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -126,7 +126,7 @@
   {
    "name": "array_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_agg",
@@ -137,7 +137,7 @@
   {
    "name": "array_distinct",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_distinct",
@@ -148,7 +148,7 @@
   {
    "name": "array_except",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ArrayExcept",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -156,7 +156,7 @@
   {
    "name": "array_first",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ArrayFirst",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -164,7 +164,7 @@
   {
    "name": "array_histogram",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "C",
    "classification": "rename-candidate",
    "candidates": [
@@ -178,7 +178,7 @@
   {
    "name": "array_intersect",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_intersect",
@@ -189,7 +189,7 @@
   {
    "name": "array_join",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_join",
@@ -200,7 +200,7 @@
   {
    "name": "array_last",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ArrayLast",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -208,7 +208,7 @@
   {
    "name": "array_max",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_max",
@@ -219,7 +219,7 @@
   {
    "name": "array_min",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_min",
@@ -230,7 +230,7 @@
   {
    "name": "array_position",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_position",
@@ -241,7 +241,7 @@
   {
    "name": "array_remove",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_remove",
@@ -252,7 +252,7 @@
   {
    "name": "array_sort",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "array_sort",
@@ -263,14 +263,14 @@
   {
    "name": "array_union",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "arrays_overlap",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "arrays_overlap",
@@ -280,7 +280,7 @@
   {
    "name": "asin",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "asin",
@@ -291,14 +291,14 @@
   {
    "name": "at_timezone",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "atan",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "atan",
@@ -309,7 +309,7 @@
   {
    "name": "atan2",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "atan2",
@@ -320,7 +320,7 @@
   {
    "name": "avg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "avg",
@@ -331,7 +331,7 @@
   {
    "name": "bar",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "bar",
@@ -341,70 +341,70 @@
   {
    "name": "beta_cdf",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tile",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tile_at",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tile_coordinates",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tile_polygon",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tile_quadkey",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tile_zoom_level",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bing_tiles_around",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bit_count",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bitwise_and",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseAnd",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -415,7 +415,7 @@
   {
    "name": "bitwise_and_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseAndAgg",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -428,14 +428,14 @@
   {
    "name": "bitwise_left_shift",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bitwise_not",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseNot",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -446,7 +446,7 @@
   {
    "name": "bitwise_or",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseOr",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -457,7 +457,7 @@
   {
    "name": "bitwise_or_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseOrAgg",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -470,21 +470,21 @@
   {
    "name": "bitwise_right_shift",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bitwise_right_shift_arithmetic",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "bitwise_xor",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseXor",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -495,7 +495,7 @@
   {
    "name": "bitwise_xor_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "BitwiseXorAgg",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -508,7 +508,7 @@
   {
    "name": "bool_and",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "LogicalAnd",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -520,7 +520,7 @@
   {
    "name": "bool_or",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "bool_or",
@@ -533,7 +533,7 @@
   {
    "name": "cardinality",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cardinality",
@@ -546,7 +546,7 @@
   {
    "name": "cbrt",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cbrt",
@@ -557,7 +557,7 @@
   {
    "name": "ceil",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ceil",
@@ -568,7 +568,7 @@
   {
    "name": "ceiling",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ceiling",
@@ -581,21 +581,21 @@
   {
    "name": "char2hexint",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "checksum",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "chr",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Chr",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -607,35 +607,35 @@
   {
    "name": "classify",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "codepoint",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "color",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "combinations",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "concat",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "concat",
@@ -646,7 +646,7 @@
   {
    "name": "concat_ws",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "concat_ws",
@@ -657,7 +657,7 @@
   {
    "name": "contains",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ArrayContains",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -669,21 +669,21 @@
   {
    "name": "contains_sequence",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "convex_hull_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "corr",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "corr",
@@ -694,7 +694,7 @@
   {
    "name": "cos",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cos",
@@ -705,7 +705,7 @@
   {
    "name": "cosh",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cosh",
@@ -716,7 +716,7 @@
   {
    "name": "cosine_distance",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "CosineDistance",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -724,7 +724,7 @@
   {
    "name": "cosine_similarity",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cosine_similarity",
@@ -734,7 +734,7 @@
   {
    "name": "count",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "count",
@@ -745,7 +745,7 @@
   {
    "name": "count_if",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "count_if",
@@ -756,7 +756,7 @@
   {
    "name": "covar_pop",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "covar_pop",
@@ -767,7 +767,7 @@
   {
    "name": "covar_samp",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "covar_samp",
@@ -778,7 +778,7 @@
   {
    "name": "crc32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "crc32",
@@ -788,7 +788,7 @@
   {
    "name": "cume_dist",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "cume_dist",
@@ -799,7 +799,7 @@
   {
    "name": "current_date",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "current_date",
@@ -810,14 +810,14 @@
   {
    "name": "current_groups",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "current_timezone",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "current_timezone",
@@ -828,7 +828,7 @@
   {
    "name": "date",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "date",
@@ -839,7 +839,7 @@
   {
    "name": "date_add",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "date_add",
@@ -850,7 +850,7 @@
   {
    "name": "date_diff",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "date_diff",
@@ -861,7 +861,7 @@
   {
    "name": "date_format",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "date_format",
@@ -872,7 +872,7 @@
   {
    "name": "date_parse",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "StrToTime",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -884,7 +884,7 @@
   {
    "name": "date_trunc",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "date_trunc",
@@ -895,7 +895,7 @@
   {
    "name": "day",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "day",
@@ -906,7 +906,7 @@
   {
    "name": "day_of_month",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "DayOfMonth",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -918,7 +918,7 @@
   {
    "name": "day_of_week",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "DayOfWeekIso",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -930,7 +930,7 @@
   {
    "name": "day_of_year",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "DayOfYear",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -942,7 +942,7 @@
   {
    "name": "degrees",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "degrees",
@@ -953,7 +953,7 @@
   {
    "name": "dense_rank",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "dense_rank",
@@ -964,7 +964,7 @@
   {
    "name": "dot_product",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "DotProduct",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -972,7 +972,7 @@
   {
    "name": "dow",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "DayOfWeekIso",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -984,7 +984,7 @@
   {
    "name": "doy",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "DayOfYear",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -996,7 +996,7 @@
   {
    "name": "e",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "e",
@@ -1006,7 +1006,7 @@
   {
    "name": "element_at",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Bracket",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1017,14 +1017,14 @@
   {
    "name": "empty_approx_set",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "ends_with",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ends_with",
@@ -1035,7 +1035,7 @@
   {
    "name": "euclidean_distance",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "EuclideanDistance",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1043,28 +1043,28 @@
   {
    "name": "evaluate_classifier_predictions",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "every",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "exclude_columns",
    "kind": "table",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "exp",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "exp",
@@ -1075,14 +1075,14 @@
   {
    "name": "features",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "filter",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ArrayFilter",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1094,7 +1094,7 @@
   {
    "name": "first_value",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "first_value",
@@ -1105,7 +1105,7 @@
   {
    "name": "flatten",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Flatten",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1117,7 +1117,7 @@
   {
    "name": "floor",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "floor",
@@ -1128,21 +1128,21 @@
   {
    "name": "format_datetime",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "format_number",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_base",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "FromBase",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1150,7 +1150,7 @@
   {
    "name": "from_base32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "FromBase32",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1158,7 +1158,7 @@
   {
    "name": "from_base64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "from_base64",
@@ -1169,42 +1169,42 @@
   {
    "name": "from_base64url",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_big_endian_32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_big_endian_64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_encoded_polyline",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_geojson_geometry",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_hex",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Unhex",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1216,21 +1216,21 @@
   {
    "name": "from_ieee754_32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_ieee754_64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_iso8601_date",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "FromISO8601Date",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1242,7 +1242,7 @@
   {
    "name": "from_iso8601_timestamp",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "FromISO8601Timestamp",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1254,7 +1254,7 @@
   {
    "name": "from_iso8601_timestamp_nanos",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "FromISO8601TimestampNanos",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1266,7 +1266,7 @@
   {
    "name": "from_unixtime",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "from_unixtime",
@@ -1277,14 +1277,14 @@
   {
    "name": "from_unixtime_nanos",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "from_utf8",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Decode",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1297,70 +1297,70 @@
   {
    "name": "geometric_mean",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_collect_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_from_hadoop_shape",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_invalid_reason",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_nearest_points",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_to_bing_tiles",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_union",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "geometry_union_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "great_circle_distance",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "greatest",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "greatest",
@@ -1371,21 +1371,21 @@
   {
    "name": "hamming_distance",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "hash_counts",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "histogram",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "histogram",
@@ -1395,35 +1395,35 @@
   {
    "name": "hmac_md5",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "hmac_sha1",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "hmac_sha256",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "hmac_sha512",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "hour",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "hour",
@@ -1434,70 +1434,70 @@
   {
    "name": "human_readable_seconds",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "index",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "infinity",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "intersection_cardinality",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "inverse_beta_cdf",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "inverse_normal_cdf",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "is_finite",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "is_infinite",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "is_json_scalar",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "is_nan",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "IsNan",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1505,14 +1505,14 @@
   {
    "name": "jaccard_index",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "json_array_contains",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "JSONArrayContains",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1523,21 +1523,21 @@
   {
    "name": "json_array_get",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "json_array_length",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "json_extract",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "JSONExtract",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1548,7 +1548,7 @@
   {
    "name": "json_extract_scalar",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "JSONExtractScalar",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1559,7 +1559,7 @@
   {
    "name": "json_format",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "JSONFormat",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1567,7 +1567,7 @@
   {
    "name": "json_parse",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ParseJSON",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1577,16 +1577,23 @@
    "renderCheck": "ok"
   },
   {
+   "name": "json_scalar",
+   "kind": "scalar",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
+   "bucket": "D",
+   "classification": "no-equivalent-evidence"
+  },
+  {
    "name": "json_size",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "kurtosis",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Kurtosis",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1594,7 +1601,7 @@
   {
    "name": "lag",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lag",
@@ -1605,7 +1612,7 @@
   {
    "name": "last_day_of_month",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "LastDay",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1617,7 +1624,7 @@
   {
    "name": "last_value",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "last_value",
@@ -1628,7 +1635,7 @@
   {
    "name": "lead",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lead",
@@ -1639,35 +1646,35 @@
   {
    "name": "learn_classifier",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "learn_libsvm_classifier",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "learn_libsvm_regressor",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "learn_regressor",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "least",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "least",
@@ -1678,7 +1685,7 @@
   {
    "name": "length",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "length",
@@ -1691,7 +1698,7 @@
   {
    "name": "levenshtein_distance",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Levenshtein",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1704,28 +1711,28 @@
   {
    "name": "line_interpolate_point",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "line_interpolate_points",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "line_locate_point",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "listagg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "GroupConcat",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1737,7 +1744,7 @@
   {
    "name": "ln",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ln",
@@ -1748,7 +1755,7 @@
   {
    "name": "log",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "log",
@@ -1759,7 +1766,7 @@
   {
    "name": "log10",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "log10",
@@ -1772,7 +1779,7 @@
   {
    "name": "log2",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "log2",
@@ -1785,7 +1792,7 @@
   {
    "name": "lower",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lower",
@@ -1796,7 +1803,7 @@
   {
    "name": "lpad",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "lpad",
@@ -1807,7 +1814,7 @@
   {
    "name": "ltrim",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ltrim",
@@ -1818,21 +1825,21 @@
   {
    "name": "luhn_check",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "make_set_digest",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "map",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Map",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -1843,7 +1850,7 @@
   {
    "name": "map_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map_agg",
@@ -1853,7 +1860,7 @@
   {
    "name": "map_concat",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map_concat",
@@ -1863,7 +1870,7 @@
   {
    "name": "map_entries",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map_entries",
@@ -1873,7 +1880,7 @@
   {
    "name": "map_filter",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map_filter",
@@ -1883,7 +1890,7 @@
   {
    "name": "map_from_entries",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "MapFromEntries",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -1891,7 +1898,7 @@
   {
    "name": "map_keys",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map_keys",
@@ -1902,14 +1909,14 @@
   {
    "name": "map_union",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "map_values",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "map_values",
@@ -1919,14 +1926,14 @@
   {
    "name": "map_zip_with",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "max",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "max",
@@ -1937,7 +1944,7 @@
   {
    "name": "max_by",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "max_by",
@@ -1948,7 +1955,7 @@
   {
    "name": "md5",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "md5",
@@ -1961,28 +1968,28 @@
   {
    "name": "merge",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "merge_set_digest",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "millisecond",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "min",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "min",
@@ -1993,7 +2000,7 @@
   {
    "name": "min_by",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "min_by",
@@ -2004,7 +2011,7 @@
   {
    "name": "minute",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "minute",
@@ -2015,7 +2022,7 @@
   {
    "name": "mod",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "mod",
@@ -2026,7 +2033,7 @@
   {
    "name": "month",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "month",
@@ -2037,56 +2044,56 @@
   {
    "name": "multimap_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "multimap_from_entries",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "murmur3",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "nan",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "ngrams",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "none_match",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "normal_cdf",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "normalize",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Normalize",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2094,7 +2101,7 @@
   {
    "name": "now",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "now",
@@ -2107,7 +2114,7 @@
   {
    "name": "nth_value",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "NthValue",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2115,7 +2122,7 @@
   {
    "name": "ntile",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "ntile",
@@ -2126,35 +2133,35 @@
   {
    "name": "numeric_histogram",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "objectid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "objectid_timestamp",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "parse_data_size",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "parse_datetime",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ParseDatetime",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2162,21 +2169,21 @@
   {
    "name": "parse_duration",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "parse_presto_data_size",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "percent_rank",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "percent_rank",
@@ -2187,7 +2194,7 @@
   {
    "name": "pi",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "pi",
@@ -2198,7 +2205,7 @@
   {
    "name": "pow",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "pow",
@@ -2211,7 +2218,7 @@
   {
    "name": "power",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "power",
@@ -2222,21 +2229,21 @@
   {
    "name": "qdigest_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "quantile_at_value",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "quarter",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "quarter",
@@ -2247,7 +2254,7 @@
   {
    "name": "radians",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "radians",
@@ -2258,7 +2265,7 @@
   {
    "name": "rand",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "rand",
@@ -2269,7 +2276,7 @@
   {
    "name": "random",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "random",
@@ -2282,7 +2289,7 @@
   {
    "name": "rank",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "rank",
@@ -2293,7 +2300,7 @@
   {
    "name": "reduce",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Reduce",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2301,14 +2308,14 @@
   {
    "name": "reduce_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "regexp_count",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "regexp_count",
@@ -2319,7 +2326,7 @@
   {
    "name": "regexp_extract",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "regexp_extract",
@@ -2330,7 +2337,7 @@
   {
    "name": "regexp_extract_all",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "regexp_extract_all",
@@ -2341,7 +2348,7 @@
   {
    "name": "regexp_like",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "RegexpLike",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2353,7 +2360,7 @@
   {
    "name": "regexp_position",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "C",
    "classification": "rename-candidate",
    "candidates": [
@@ -2367,7 +2374,7 @@
   {
    "name": "regexp_replace",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "regexp_replace",
@@ -2378,7 +2385,7 @@
   {
    "name": "regexp_split",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "regexp_split",
@@ -2389,7 +2396,7 @@
   {
    "name": "regr_intercept",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "RegrIntercept",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2397,7 +2404,7 @@
   {
    "name": "regr_slope",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "RegrSlope",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2405,21 +2412,21 @@
   {
    "name": "regress",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "render",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "repeat",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "repeat",
@@ -2430,7 +2437,7 @@
   {
    "name": "replace",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "replace",
@@ -2441,7 +2448,7 @@
   {
    "name": "reverse",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "reverse",
@@ -2452,14 +2459,14 @@
   {
    "name": "rgb",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "round",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "round",
@@ -2470,7 +2477,7 @@
   {
    "name": "row_number",
    "kind": "window",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "row_number",
@@ -2481,7 +2488,7 @@
   {
    "name": "rpad",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "rpad",
@@ -2492,7 +2499,7 @@
   {
    "name": "rtrim",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "rtrim",
@@ -2503,7 +2510,7 @@
   {
    "name": "second",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "second",
@@ -2514,7 +2521,7 @@
   {
    "name": "sequence",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "GenerateSeries",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2526,7 +2533,7 @@
   {
    "name": "sha1",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "SHA",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2539,7 +2546,7 @@
   {
    "name": "sha256",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "SHA2Digest",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2552,7 +2559,7 @@
   {
    "name": "sha512",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "SHA2Digest",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2565,7 +2572,7 @@
   {
    "name": "shuffle",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Shuffle",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2573,7 +2580,7 @@
   {
    "name": "sign",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sign",
@@ -2584,14 +2591,14 @@
   {
    "name": "simplify_geometry",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "sin",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sin",
@@ -2602,7 +2609,7 @@
   {
    "name": "sinh",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sinh",
@@ -2613,7 +2620,7 @@
   {
    "name": "skewness",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Skewness",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2621,7 +2628,7 @@
   {
    "name": "slice",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ArraySlice",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2633,7 +2640,7 @@
   {
    "name": "soundex",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Soundex",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -2641,21 +2648,21 @@
   {
    "name": "spatial_partitioning",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "spatial_partitions",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "split",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "split",
@@ -2666,7 +2673,7 @@
   {
    "name": "split_part",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "split_part",
@@ -2677,7 +2684,7 @@
   {
    "name": "split_to_map",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "StrToMap",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2689,28 +2696,28 @@
   {
    "name": "split_to_multimap",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "spooky_hash_v2_32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "spooky_hash_v2_64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "sqrt",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sqrt",
@@ -2721,35 +2728,35 @@
   {
    "name": "st_area",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_asbinary",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_asewkb",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_asewkt",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_astext",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_astext",
@@ -2759,35 +2766,35 @@
   {
    "name": "st_boundary",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_buffer",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_centroid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_collect",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_contains",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_contains",
@@ -2797,49 +2804,49 @@
   {
    "name": "st_convexhull",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_coorddim",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_crosses",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_difference",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_dimension",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_disjoint",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_distance",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "StDistance",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -2851,63 +2858,63 @@
   {
    "name": "st_endpoint",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_envelope",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_envelopeaspts",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_equals",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_exteriorring",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_force2d",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_force3d",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_geometries",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_geometryfromtext",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_geometryfromtext",
@@ -2917,112 +2924,112 @@
   {
    "name": "st_geometryn",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_geometrytype",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_geomfrombinary",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_geomfromewkt",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_geomfromkml",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_interiorringn",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_interiorrings",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_intersection",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_intersects",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_isclosed",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_isempty",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_isring",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_issimple",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_isvalid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_length",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_linefromtext",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_linefromtext",
@@ -3032,98 +3039,98 @@
   {
    "name": "st_linemerge",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_linestring",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_makeline",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_makepolygon",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_minimumboundingcircle",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_multi",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_multipoint",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_normalize",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_numgeometries",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_numinteriorring",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_numpoints",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_orientedenvelope",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_overlaps",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_point",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_point",
@@ -3134,28 +3141,28 @@
   {
    "name": "st_pointn",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_pointonsurface",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_points",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_polygon",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_polygon",
@@ -3165,98 +3172,98 @@
   {
    "name": "st_polygonize",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_reduceprecision",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_relate",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_setsrid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_srid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_startpoint",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_symdifference",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_touches",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_transform",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_transformxy",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_union",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_voronoipolygons",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_within",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_x",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_x",
@@ -3266,21 +3273,21 @@
   {
    "name": "st_xmax",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_xmin",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_y",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "st_y",
@@ -3290,28 +3297,28 @@
   {
    "name": "st_ymax",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_ymin",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "st_z",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "starts_with",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "starts_with",
@@ -3322,7 +3329,7 @@
   {
    "name": "stddev",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "stddev",
@@ -3333,7 +3340,7 @@
   {
    "name": "stddev_pop",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "stddev_pop",
@@ -3344,7 +3351,7 @@
   {
    "name": "stddev_samp",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "stddev_samp",
@@ -3355,7 +3362,7 @@
   {
    "name": "strpos",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "strpos",
@@ -3368,7 +3375,7 @@
   {
    "name": "substr",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "substr",
@@ -3381,7 +3388,7 @@
   {
    "name": "substring",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "substring",
@@ -3392,7 +3399,7 @@
   {
    "name": "sum",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "sum",
@@ -3403,21 +3410,21 @@
   {
    "name": "t_cdf",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "t_pdf",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "tan",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "tan",
@@ -3428,7 +3435,7 @@
   {
    "name": "tanh",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "tanh",
@@ -3439,56 +3446,56 @@
   {
    "name": "tdigest_agg",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "timestamp_objectid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "timezone",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "timezone_hour",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "timezone_minute",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "title_case",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_base",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_base32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "ToBase32",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -3496,7 +3503,7 @@
   {
    "name": "to_base64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "to_base64",
@@ -3507,28 +3514,28 @@
   {
    "name": "to_base64url",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_big_endian_32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_big_endian_64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_char",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "TimeToStr",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -3540,7 +3547,7 @@
   {
    "name": "to_date",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "to_date",
@@ -3550,28 +3557,28 @@
   {
    "name": "to_encoded_polyline",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_geojson_geometry",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_geometry",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_hex",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Hex",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -3583,21 +3590,21 @@
   {
    "name": "to_ieee754_32",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_ieee754_64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_iso8601",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "to_iso8601",
@@ -3607,21 +3614,21 @@
   {
    "name": "to_milliseconds",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_spherical_geography",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "to_timestamp",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "C",
    "classification": "rename-candidate",
    "candidates": [
@@ -3637,7 +3644,7 @@
   {
    "name": "to_unixtime",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "TimeToUnix",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -3650,7 +3657,7 @@
   {
    "name": "to_utf8",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Encode",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -3663,7 +3670,7 @@
   {
    "name": "transform",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Transform",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -3671,21 +3678,21 @@
   {
    "name": "transform_keys",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "transform_values",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "translate",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "translate",
@@ -3696,7 +3703,7 @@
   {
    "name": "trim",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "trim",
@@ -3707,14 +3714,14 @@
   {
    "name": "trim_array",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "truncate",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "truncate",
@@ -3725,7 +3732,7 @@
   {
    "name": "typeof",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "Typeof",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -3733,7 +3740,7 @@
   {
    "name": "upper",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "upper",
@@ -3744,7 +3751,7 @@
   {
    "name": "url_decode",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "url_decode",
@@ -3754,7 +3761,7 @@
   {
    "name": "url_encode",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "url_encode",
@@ -3764,14 +3771,14 @@
   {
    "name": "url_extract_fragment",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "url_extract_host",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "url_extract_host",
@@ -3781,7 +3788,7 @@
   {
    "name": "url_extract_parameter",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "url_extract_parameter",
@@ -3791,35 +3798,35 @@
   {
    "name": "url_extract_path",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "url_extract_port",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "url_extract_protocol",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "url_extract_query",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "uuid",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "uuid",
@@ -3830,21 +3837,21 @@
   {
    "name": "value_at_quantile",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "values_at_quantiles",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "var_pop",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "var_pop",
@@ -3857,7 +3864,7 @@
   {
    "name": "var_samp",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "var_samp",
@@ -3870,7 +3877,7 @@
   {
    "name": "variance",
    "kind": "aggregate",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "variance",
@@ -3881,14 +3888,14 @@
   {
    "name": "variant_is_null",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "week",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "week",
@@ -3901,7 +3908,7 @@
   {
    "name": "week_of_year",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "WeekOfYear",
    "bucket": "B",
    "classification": "typed-rewrite",
@@ -3913,7 +3920,7 @@
   {
    "name": "width_bucket",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "WidthBucket",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -3921,42 +3928,42 @@
   {
    "name": "wilson_interval_lower",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "wilson_interval_upper",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "with_timezone",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "word_stem",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "xxhash64",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "year",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "A",
    "classification": "same-name",
    "targetName": "year",
@@ -3967,7 +3974,7 @@
   {
    "name": "year_of_week",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "nodeClass": "YearOfWeek",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
@@ -3975,21 +3982,21 @@
   {
    "name": "yow",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "zip",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   },
   {
    "name": "zip_with",
    "kind": "scalar",
-   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-483.tsv",
+   "sourceEvidence": "engine-catalog: vendor/data/trino-functions-484.tsv",
    "bucket": "D",
    "classification": "no-equivalent-evidence"
   }

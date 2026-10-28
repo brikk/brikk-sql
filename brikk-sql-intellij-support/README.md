@@ -857,8 +857,8 @@ bundled function of the same name and kind (a temporary macro shadowing a built-
 back into the completion profile's hooks.
 
 `TrinoFunctionHarvester` reads Trino's `SHOW FUNCTIONS` (and `version()`) with the bundled Trino
-catalog's modeling, which is generated from the same command: the harvest of the vendored 483 dump
-equals the bundled 483 catalog. `TrinoLiveCatalogProfile` (only `dbms` left) uses it once per session
+catalog's modeling, which is generated from the same command: the harvest of the vendored 484 dump
+equals the bundled 484 catalog. `TrinoLiveCatalogProfile` (only `dbms` left) uses it once per session
 with `REPLACE`, in memory, and is off (`enabled = false`) until the Trino plugin turns it on.
 
 ### Executed statements

@@ -380,10 +380,10 @@ class FunctionCatalogTest {
 
     @Test
     fun trinoCatalogLoadsWithExpectedSurface() {
-        // Pinned to vendor/data/trino-functions-483.tsv (Trino 483 SHOW FUNCTIONS from
-        // the stock trinodb/trino:483 container, incl. geospatial + ML plugins:
-        // 900 rows -> 808 distinct signatures over 442 (name, kind) defs).
-        assertEquals(442, TRINO_FUNCTION_CATALOG.size)
+        // Stock trinodb/trino:484, including geospatial and ML plugins:
+        // 915 rows -> 825 distinct signatures over 443 (name, kind) definitions.
+        assertEquals(443, TRINO_FUNCTION_CATALOG.size)
+        assertTrue("json_scalar" in TRINO_FUNCTION_CATALOG)
         assertTrue("approx_percentile" in TRINO_FUNCTION_CATALOG)
         // TSV-verified overload count for approx_percentile.
         assertEquals(15, TRINO_FUNCTION_CATALOG["approx_percentile"]!!.overloads.size)

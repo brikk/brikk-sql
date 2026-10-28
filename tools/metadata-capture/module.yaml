@@ -11,7 +11,7 @@ dependencies:
   # The engine a DuckDB dump describes: bump this coordinate to capture another release.
   - org.duckdb:duckdb_jdbc:2.0.0.0
   # The Trino grammar keywords are read from (trino-parser brings trino-grammar).
-  - io.trino:trino-parser:483
+  - io.trino:trino-parser:484
   # Runtime for the Trino grammar and the vendored Doris parser jar (loaded from vendor/lib).
   - org.antlr:antlr4-runtime:4.13.2
 

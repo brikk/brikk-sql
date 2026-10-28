@@ -197,6 +197,10 @@ class Resolver(
             var columns: List<String>
             if (source is Table) {
                 columns = schema.columnNames(source, onlyVisible)
+            } else if (source is Scope && source.expression is dev.brikk.house.sql.ast.TrinoNearest) {
+                // NEAREST returns its input relation's columns, not a new projection.
+                val input = Resolver(source, schema, inferSchema)
+                columns = source.selectedSources.keys.flatMap { input.getSourceColumns(it, onlyVisible) }
             } else if (source is Scope &&
                 (source.expression is Values || source.expression is Unnest ||
                     source.expression is Lateral)
@@ -497,7 +501,13 @@ class Resolver(
                 result = colType
             }
         } else if (source is Scope) {
-            if (source.expression is Select) {
+            if (source.expression is dev.brikk.house.sql.ast.TrinoNearest) {
+                val input = Resolver(source, schema, inferSchema)
+                val matches = source.selectedSources.keys.filter { column.name in input.getSourceColumns(it) }
+                if (matches.size == 1) {
+                    result = getColumnTypeFromScope(source.sources.getValue(matches.single()), column)
+                }
+            } else if (source.expression is Select) {
                 val projections = source.expression.selects.filter { it.aliasOrName == column.name }
                 val projection = projections.singleOrNull()
                 val projectionType = projection?.type as? DataType

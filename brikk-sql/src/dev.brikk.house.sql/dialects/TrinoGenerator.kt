@@ -50,6 +50,55 @@ open class TrinoGenerator(
     override val executesPipeCall: Boolean get() = false
     override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN", "ASOF", "NATURAL")
     override val supportsTemporalPrecision: Boolean get() = true
+    override val supportsWindowExclude: Boolean get() = true
+    override val reservedKeywords: Set<String> get() = super.reservedKeywords + "json_serialize"
+
+    private fun trinoJsonInputSql(expression: TrinoJsonInput): String {
+        val encoding = sql(expression, "encoding").let { if (it.isEmpty()) "" else " ENCODING $it" }
+        return "${sql(expression, "this")} FORMAT JSON$encoding"
+    }
+
+    private fun trinoJsonSerializeSql(expression: TrinoJsonSerialize): String {
+        val returning = sql(expression, "returning").let { if (it.isEmpty()) "" else " RETURNING $it" }
+        val error = sql(expression, "on_error").let { if (it.isEmpty()) "" else " $it" }
+        return "JSON_SERIALIZE(${sql(expression, "this")}$returning$error)"
+    }
+
+    private fun trinoJsonPathCallSql(expression: TrinoJsonPathCall): String {
+        val pathName = sql(expression, "path_name").let { if (it.isEmpty()) "" else " AS $it" }
+        val passing = expressions(expression, key = "passing", flat = true).let { if (it.isEmpty()) "" else " PASSING $it" }
+        val returning = sql(expression, "returning").let { if (it.isEmpty()) "" else " RETURNING $it" }
+        val option = sql(expression, "option").let { if (it.isEmpty()) "" else " ${normalizeJsonQueryWrapperOption(it)}" }
+        val quote = sql(expression, "quote").let { if (it.isEmpty()) "" else " $it" }
+        val condition = sql(expression, "on_condition").let { if (it.isEmpty()) "" else " $it" }
+        return "${expression.text("kind")}(${sql(expression, "this")}, ${sql(expression, "path")}$pathName$passing$returning$option$quote$condition)"
+    }
+
+    private fun trinoIntervalQualifierSql(expression: TrinoIntervalQualifier): String {
+        val field = sql(expression, "this")
+        val end = sql(expression, "end")
+        val leading = sql(expression, "leading_precision")
+        val fractional = sql(expression, "fractional_precision")
+        val precision = if (leading.isEmpty()) "" else if (field == "SECOND" && fractional.isNotEmpty()) {
+            "($leading, $fractional)"
+        } else "($leading)"
+        val trailing = if (end.isEmpty()) "" else " TO $end" +
+            if (fractional.isEmpty()) "" else "($fractional)"
+        return "$field$precision$trailing"
+    }
+
+    private fun trinoMaterializedViewExecuteSql(expression: TrinoMaterializedViewExecute): String {
+        val arguments = if (expression.args["parentheses"] == true) "(${expressions(expression, flat = true)})" else ""
+        val where = sql(expression, "where").let { if (it.isEmpty()) "" else " WHERE $it" }
+        return "ALTER MATERIALIZED VIEW ${sql(expression, "this")} EXECUTE ${sql(expression, "procedure")}$arguments$where"
+    }
+
+    private fun trinoNearestSql(expression: TrinoNearest): String {
+        val where = sql(expression, "where").let { if (it.isEmpty()) "" else " WHERE $it" }
+        val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+        val joins = (expression.args["joins"] as? List<*>).orEmpty().joinToString("") { sql(it) }
+        return "NEAREST (FROM ${sql(expression, "this")}$where MATCH ${sql(expression, "match")})$alias$joins"
+    }
 
     // sqlglot: TrinoGenerator.EXCEPT_INTERSECT_SUPPORT_ALL_CLAUSE = True
     override val exceptIntersectSupportAllClause: Boolean get() = true
@@ -404,6 +453,24 @@ open class TrinoGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             fun Generator.tg(): TrinoGenerator = this as TrinoGenerator
+
+            reg(TrinoJsonInput::class) { e -> tg().trinoJsonInputSql(e as TrinoJsonInput) }
+            reg(TrinoJsonConstructor::class) { e -> func("JSON", e.thisArg) }
+            reg(TrinoJsonSerialize::class) { e -> tg().trinoJsonSerializeSql(e as TrinoJsonSerialize) }
+            reg(TrinoJsonScalar::class) { e -> func("JSON_SCALAR", e.thisArg) }
+            reg(TrinoJsonPathCall::class) { e -> tg().trinoJsonPathCallSql(e as TrinoJsonPathCall) }
+            reg(TrinoIntervalQualifier::class) { e -> tg().trinoIntervalQualifierSql(e as TrinoIntervalQualifier) }
+            reg(TrinoIntervalValue::class) { e -> "${sql(e, "this")} ${sql(e, "qualifier")}" }
+            reg(TrinoMaterializedViewExecute::class) { e -> tg().trinoMaterializedViewExecuteSql(e as TrinoMaterializedViewExecute) }
+            reg(TrinoNearest::class) { e -> tg().trinoNearestSql(e as TrinoNearest) }
+            reg(TrinoSetAuthorization::class) { e ->
+                "ALTER ${e.text("kind")} ${sql(e, "this")} SET AUTHORIZATION ${sql(e, "principal")}" }
+            reg(TrinoCreateSchema::class) { e ->
+                val exists = if (e.args["exists"] == true) " IF NOT EXISTS" else ""
+                val props = (e.args["properties"] as? List<*>).orEmpty()
+                val with = if (props.isEmpty()) "" else " WITH (${expressions(e, key = "properties", flat = true)})"
+                "CREATE SCHEMA$exists ${sql(e, "this")} AUTHORIZATION ${sql(e, "principal")}$with"
+            }
 
             reg(ArraySum::class) { e ->
                 "REDUCE(${sql(e, "this")}, 0, (acc, x) -> acc + x, acc -> acc)"

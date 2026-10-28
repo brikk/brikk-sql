@@ -1986,6 +1986,48 @@ through it), and DuckDB's own `system.main.array_to_string` is a macro that call
 a user `list_aggr` ran even through the qualified helper. A macro's parameters are read as a list column and
 quoted here, so `"select"("a b", "c, d")` round-trips.
 
+## 58. Trino 484 SQL and metadata
+
+Trino's native parser and captured catalogs now target 484. Handwritten Trino nodes
+preserve SQL/JSON representation, encoding, RETURNING, PASSING, and error clauses;
+interval field ranges and precision; materialized-view EXECUTE; authorization
+principals; and NEAREST relations. The shared window parser already models frame
+exclusion, and Trino generation now emits it. These additions do not change Presto.
+
+User names retain case through normalization in GRANT, REVOKE, CREATE SCHEMA and
+SET AUTHORIZATION. Roles still lowercase. Structured authorization deliberately
+replaces SQLGlot's raw Command nodes in three parser and three annotation corpus
+rows. One additional annotation row records JSON_VALUE's explicit VARCHAR return
+type instead of UNKNOWN. Those seven exact signatures are intentional differences
+from the frozen SQLGlot oracle, covered by Trino484Test and the native 484 parser.
+The earlier SET PROPERTIES ledger rows and signatures are unchanged.
+
+DECIMAL literals retain their inferred precision and scale when converted to CAST,
+so DECIMAL '1.20' remains decimal(3,2) rather than decimal(38,0). Native result tests
+check 484's JSON member order, duplicate keys, numeric scale, scalar quoting,
+interval truncation and precision, window exclusions, and correlated NEAREST rows.
+Unsupported cross-dialect translations of the new SQL/JSON forms fail rather than
+silently discard clauses. Historical pairwise semantic evidence is not relabeled
+as 484 proof; function-gap reports remain candidate mappings, not equivalence claims.
+
+Verification on 2026-10-28: the full `./kotlin test` run passes with 1,704 successful
+methods and 42 optional non-Trino engine assumptions aborted. Both
+`BRIKK_TRINO_TEST_CONTAINER` and `BRIKK_TRINO_CONTAINER` name the isolated stock
+484 container during that run. The 484 result gate covers 28 scalar JSON/interval
+cases, absent-field extraction rejection, all four window exclusions, JSON_TABLE
+input, and correlated NEAREST output. The IDE TrinoFunctionHarvesterTest passes
+all 5 methods on build 261.25134.95. Python tooling has 35 passes and 1 optional
+skip; regenerating 42 catalog/report files produces identical hashes. The task
+container was removed after verification. No release or dependency publication
+was performed.
+
+After integrating main's Doris 4.1.5 support at `36e3a42`, the combined tree passes
+the full Kotlin suite with 1,695 successful methods, 59 optional engine assumptions
+aborted, and zero failures. That integration run has no live engine containers
+configured and does not replace the earlier native Trino 484 evidence. Paired
+484/Doris 4.1.5 JSON evidence remains on the
+[remaining-work list](trino-483-parity-todo.md#remaining-484-work).
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

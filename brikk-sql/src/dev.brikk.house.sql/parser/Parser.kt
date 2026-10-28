@@ -5747,7 +5747,7 @@ open class Parser(
                 args(
                     "this" to this_,
                     "kind" to kind.text,
-                    "expression" to parseString(),
+                    "expression" to (parseString() ?: if (match(TokenType.NULL)) expression(Null()) else null),
                     "exists" to exists,
                     "materialized" to materialized,
                 )
@@ -6860,7 +6860,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_grant_principal
-    fun parseGrantPrincipal(): Expression? {
+    open fun parseGrantPrincipal(): Expression? {
         val kind = if (matchTexts(setOf("ROLE", "GROUP"))) prevToken.text.uppercase() else false
         val principal = parseIdVar() ?: return null
 

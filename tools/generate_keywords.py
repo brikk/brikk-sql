@@ -2,8 +2,8 @@
 """Generates the Trino, Doris and ClickHouse keyword catalogs for brikk-sql-metadata.
 
 Sources (vendor/data/<dialect>-keywords-<version>.tsv, columns word, category, token):
-  - trino-keywords-483.tsv: `./kotlin run -m metadata-capture -- trino-keywords`, from the
-    trino-grammar 483 lexer literals and the parser's `nonReserved` rule.
+  - trino-keywords-484.tsv: `./kotlin run -m metadata-capture -- trino-keywords`, from the
+    trino-grammar 484 lexer literals and the parser's `nonReserved` rule.
   - doris-keywords-4.1.5.tsv: `./kotlin run -m metadata-capture -- doris-keywords`, the same
     reading of the vendored Doris 4.1.5 parser jar.
   - clickhouse-keywords-26.5.1.1.tsv: ClickHouse system.keywords (no reservation column, so
