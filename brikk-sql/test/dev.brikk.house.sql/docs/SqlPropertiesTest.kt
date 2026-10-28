@@ -76,6 +76,36 @@ class SqlPropertiesTest {
     }
 
     @Test
+    fun doris415StatementPropertiesAreRecognizedInTheirOwnContexts() {
+        for (create in listOf("CREATE INDEX", "CREATE OR REPLACE INDEX")) {
+            val norms = at("$create idx ON t (c) USING INVERTED PROPERTIES ('norms'='f<caret>')")!!
+            assertEquals("CREATE INDEX properties", norms.title)
+            assertEquals(listOf("true", "false"), norms.definition?.values)
+            assertEquals("4.1.5", norms.definition?.since)
+        }
+        val analyzer = at("CREATE INVERTED INDEX ANALYZER a PROPERTIES ('tokenizer'='ik_<caret>')")!!
+        assertTrue(analyzer.definition!!.values.containsAll(listOf("ik_smart", "ik_max_word")))
+        val binding = at("CREATE ROUTINE LOAD j ON t PROPERTIES ('compute_<caret>group'='cg')")!!
+        assertEquals("4.1.5", binding.definition?.since)
+        val ai = at("CREATE RESOURCE r PROPERTIES ('type'='ai', 'ai.embed.<caret>endpoint'='https://example.org')")!!
+        assertEquals("CREATE RESOURCE properties (ai)", ai.title)
+        assertEquals("4.1.5", ai.definition?.since)
+        val other = at("CREATE RESOURCE r PROPERTIES ('type'='s3', 'ai.<caret>')")!!
+        assertTrue(other.keys.none { it.name.startsWith("ai.") })
+    }
+
+    @Test
+    fun doris415TableFunctionPropertiesAreOfferedWithoutInventingADocsPage() {
+        val fullText = at("SELECT * FROM FULL_TEXT_SEARCH('table'='lance.db.t', 'query_type'='p<caret>')")!!
+        assertEquals(listOf("match", "phrase"), fullText.definition?.values)
+        assertNull(fullText.url)
+        val vector = at("SELECT * FROM VECTOR_SEARCH('distance_upper_<caret>bound'='0.5')")!!
+        assertEquals("4.1.5", vector.definition?.since)
+        val entries = at("SELECT * FROM LANCE_INDEX_ENTRIES('<caret>')")!!
+        assertEquals(listOf("table"), entries.keys.map { it.name })
+    }
+
+    @Test
     fun nothingOutsideAPropertiesList() {
         for (sql in listOf(
             "SELECT \"repl<caret>\" FROM t",

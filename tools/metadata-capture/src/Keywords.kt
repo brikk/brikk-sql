@@ -32,9 +32,9 @@ fun captureTrinoKeywords(vendorData: Path) {
     writeDump(vendorData.resolve("trino-keywords-483.tsv"), dump)
 }
 
-/** Writes vendor/data/doris-keywords-4.1.4.tsv from the vendored Doris parser jar. */
+/** Writes vendor/data/doris-keywords-4.1.5.tsv from the vendored Doris parser jar. */
 fun captureDorisKeywords(vendorData: Path) {
-    val jar = vendorData.resolveSibling("lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar")
+    val jar = vendorData.resolveSibling("lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar")
     URLClassLoader(arrayOf(jar.toUri().toURL()), ATN::class.java.classLoader).use { loader ->
         val parser = loader.loadClass("org.apache.doris.nereids.DorisParser")
         fun <T> static(name: String): T {
@@ -42,6 +42,6 @@ fun captureDorisKeywords(vendorData: Path) {
             return parser.getField(name).get(null) as T
         }
         val dump = antlrKeywords(static("_ATN"), static("VOCABULARY"), static<Array<String>>("ruleNames").toList())
-        writeDump(vendorData.resolve("doris-keywords-4.1.4.tsv"), dump)
+        writeDump(vendorData.resolve("doris-keywords-4.1.5.tsv"), dump)
     }
 }

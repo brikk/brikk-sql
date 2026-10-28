@@ -56,7 +56,7 @@ settings:
       freeJvmArgs: ["--enable-native-access=ALL-UNNAMED"]
       systemProperties:
         # SqlVerifiers' Doris parser for the corpus gates; the tests run from this module's directory.
-        brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar
+        brikk.doris.parser.jar: ../vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar
   kotlin:
     version: 2.4.10
     serialization: json

@@ -642,10 +642,10 @@ private fun clickhouse26_5_1_1Keywords1(): List<KeywordDef> = listOf(
     KeywordDef("cluster_host_ids", KeywordCategory.UNKNOWN, null),
 )
 
-/** doris-keywords-4.1.4.tsv: 564 keywords. */
-internal val DORIS_4_1_4_KEYWORDS: KeywordCatalog = KeywordCatalog(doris4_1_4Keywords0())
+/** doris-keywords-4.1.5.tsv: 565 keywords. */
+internal val DORIS_4_1_5_KEYWORDS: KeywordCatalog = KeywordCatalog(doris4_1_5Keywords0())
 
-private fun doris4_1_4Keywords0(): List<KeywordDef> = listOf(
+private fun doris4_1_5Keywords0(): List<KeywordDef> = listOf(
     KeywordDef("ACCOUNT_LOCK", KeywordCategory.RESERVED, "ACCOUNT_LOCK"),
     KeywordDef("ACCOUNT_UNLOCK", KeywordCategory.RESERVED, "ACCOUNT_UNLOCK"),
     KeywordDef("ACTIONS", KeywordCategory.UNRESERVED, "ACTIONS"),
@@ -696,6 +696,7 @@ private fun doris4_1_4Keywords0(): List<KeywordDef> = listOf(
     KeywordDef("BRANCH", KeywordCategory.UNRESERVED, "BRANCH"),
     KeywordDef("BRIEF", KeywordCategory.UNRESERVED, "BRIEF"),
     KeywordDef("BROKER", KeywordCategory.UNRESERVED, "BROKER"),
+    KeywordDef("BTREE", KeywordCategory.UNRESERVED, "BTREE"),
     KeywordDef("BUCKETS", KeywordCategory.UNRESERVED, "BUCKETS"),
     KeywordDef("BUILD", KeywordCategory.UNRESERVED, "BUILD"),
     KeywordDef("BUILTIN", KeywordCategory.UNRESERVED, "BUILTIN"),

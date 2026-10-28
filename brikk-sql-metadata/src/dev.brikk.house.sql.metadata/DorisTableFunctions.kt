@@ -4,17 +4,18 @@ package dev.brikk.house.sql.metadata
  * HANDWRITTEN (not generated): Doris table-valued function properties and output schemas.
  * No engine table exposes them, so they are curated, and need a refresh per Doris release.
  *
- * Sources, checked 2026-10-11:
+ * Sources, checked 2026-10-28:
  *  - doris-intellij-plugin `src/main/kotlin/dev/sort/doris/sql/DorisTableFunctions.kt` and
  *    `RESEARCH-tvf-completion.md` at 2913ad276d49c46fabe178ebb8155e3b4286c866: every entry
  *    except those below. The research read the apache/doris-website master docs
  *    (`docs/sql-manual/sql-functions/table-valued-functions/`) on 2026-07-07 without
  *    recording a commit; master was then at 0a22aeec9089be5a925327faa68dc339dc50a542.
- *  - apache/doris tag 4.1.4 (ad35a140c7fd), fe/fe-core: `VectorSearchTableValuedFunction`
- *    (vector_search), `ParquetMetadataTableValuedFunction` (parquet_*), `FileTableValuedFunction`
+ *  - apache/doris tag 4.1.5-release (917b20be8387), fe/fe-core: `VectorSearchTableValuedFunction`,
+ *    `LanceExternalSearchTableValuedFunction`, `FullTextSearchTableValuedFunction`,
+ *    `LanceIndexEntriesTableValuedFunction`, `ParquetMetadataTableValuedFunction` (parquet_*), `FileTableValuedFunction`
  *    (file), and `BuiltinTableValuedFunctions` / `TableValuedFunctionIf` for which names exist.
  *
- * `iceberg_meta` (documented for earlier 4.x releases) is not registered at 4.1.4, so it is
+ * `iceberg_meta` (documented for earlier 4.x releases) is not registered at 4.1.5, so it is
  * not listed; its schemas are in the plugin file above.
  * Column types use plain spellings: text for strings and nested types.
  */
@@ -37,6 +38,14 @@ private val FILE_PARSING_PROPERTIES = listOf(
 )
 
 private val BOOLEAN_VALUES: List<String> get() = listOf("true", "false")
+
+/** Shared Lance search selectors at 4.1.5; version/timestamp/tag/branch select a fixed snapshot. */
+private val LANCE_SEARCH_PROPERTIES = listOf(
+    PropertyDef("table"), PropertyDef("column"), PropertyDef("top_k"), PropertyDef("offset"), PropertyDef("filter"),
+    PropertyDef("prefilter", BOOLEAN_VALUES, since = "4.1.5"),
+    PropertyDef("version", since = "4.1.5"), PropertyDef("timestamp", since = "4.1.5"),
+    PropertyDef("tag", since = "4.1.5"), PropertyDef("branch", since = "4.1.5"),
+)
 
 private fun columns(vararg pairs: Pair<String, String>) = pairs.map { (name, type) -> ColumnDef(name, type) }
 
@@ -203,12 +212,33 @@ private val HANDWRITTEN_TABLE_FUNCTIONS: List<TableFunctionInfo> = listOf(
     // Columns come from the referenced Lance table.
     TableFunctionInfo(
         "vector_search",
-        listOf(
-            PropertyDef("table"), PropertyDef("column"), PropertyDef("query_vector"), PropertyDef("top_k"),
-            PropertyDef("offset"), PropertyDef("metric", listOf("l2", "cosine", "dot", "dot_product", "hamming")),
-            PropertyDef("filter"), PropertyDef("nprobes"), PropertyDef("refine_factor"), PropertyDef("ef"),
+        LANCE_SEARCH_PROPERTIES + listOf(
+            PropertyDef("query_vector"), PropertyDef("metric", listOf("l2", "cosine", "dot", "dot_product", "hamming")),
+            PropertyDef("nprobes"), PropertyDef("refine_factor"), PropertyDef("ef"),
             PropertyDef("use_index", BOOLEAN_VALUES),
+            PropertyDef("query_parallelism", since = "4.1.5"),
+            PropertyDef("distance_lower_bound", since = "4.1.5"), PropertyDef("distance_upper_bound", since = "4.1.5"),
         ),
+    ),
+    // Source-table columns plus FLOAT _score. Keep the schema dynamic until the source table is resolved.
+    TableFunctionInfo(
+        "full_text_search",
+        LANCE_SEARCH_PROPERTIES + listOf(
+            PropertyDef("query", since = "4.1.5"),
+            PropertyDef("coverage_mode", listOf("strict", "index_only", "index-only"), since = "4.1.5"),
+            PropertyDef("query_type", listOf("match", "phrase"), since = "4.1.5"),
+            PropertyDef("operator", listOf("or", "and"), since = "4.1.5"),
+            PropertyDef("max_fuzzy_distance", listOf("0"), since = "4.1.5"),
+            PropertyDef("slop", since = "4.1.5"),
+        ),
+    ),
+    TableFunctionInfo(
+        "lance_index_entries",
+        listOf(PropertyDef("table", since = "4.1.5")),
+        OutputSchema.Fixed(columns(
+            "CatalogName" to "text", "DatabaseName" to "text", "TableName" to "text",
+            "IndexName" to "text", "IndexUuid" to "text", "DatasetVersion" to "bigint",
+        )),
     ),
     TableFunctionInfo(
         "parquet_meta",

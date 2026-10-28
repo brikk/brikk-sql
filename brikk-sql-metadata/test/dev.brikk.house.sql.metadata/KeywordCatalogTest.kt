@@ -50,6 +50,8 @@ class KeywordCatalogTest {
 
         assertEquals("CONVERT_LSC", doris["CONVERT_LIGHT_SCHEMA_CHANGE_PROCESS"]?.token)
         assertEquals(KeywordCategory.UNRESERVED, doris["MAPPING"]?.category)
+        assertEquals("BTREE", doris["BTREE"]?.token)
+        assertEquals(KeywordCategory.UNRESERVED, doris["BTREE"]?.category)
         assertNull(doris["SET_SESSION_VARIABLE"])
     }
 

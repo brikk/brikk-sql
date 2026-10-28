@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** Native current-release probes; both FE and BE must report Doris 4.1.4 or 4.1.4.1. */
+/** Opt-in native probes; both FE and BE must report Doris 4.1.5. Historical evidence stays versioned. */
 class DorisCatchupResultTest {
     private val client = listOf("mysql", "--default-character-set=utf8mb4", "-uroot", "-h127.0.0.1", "-P9030", "-B", "-e")
 
@@ -15,10 +15,10 @@ class DorisCatchupResultTest {
     fun liveDorisFrontendAndBackendUseCurrentSupportedRelease() {
         val container = System.getenv("BRIKK_DORIS_TEST_CONTAINER")
         assumeTrue(!container.isNullOrBlank(), "BRIKK_DORIS_TEST_CONTAINER is not configured")
-        val version = Regex("doris-4\\.1\\.4(?:\\.1)?(?:-|\\s|$)")
+        val version = Regex("doris-4\\.1\\.5(?:-|\\s|$)")
         for (query in listOf("SHOW FRONTENDS", "SHOW BACKENDS")) {
             val output = runCatchupEngineSql(container!!, client, query)
-            assertTrue(version.containsMatchIn(output), "Expected Doris 4.1.4/4.1.4.1 in $query: $output")
+            assertTrue(version.containsMatchIn(output), "Expected Doris 4.1.5 in $query: $output")
         }
     }
 

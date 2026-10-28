@@ -8,7 +8,7 @@ moment upstream publishes.
 This is distinct from `reference/` (gitignored full clones of upstream repos used as porting
 oracles) — `vendor/` contents are committed and shipped-adjacent.
 
-## `lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar`
+## `lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar`
 
 The standalone Doris SQL parser (`fe-sql-parser`) from Apache Doris — the authoritative ANTLR
 grammar, planned to back the JVM-only native-parser adapter (fragment validation /
@@ -17,39 +17,47 @@ published to any public Maven repository** — Doris publishes connectors/SDKs, 
 modules — so we vendor a locally-built jar.
 
 The original artifact was coordinated with doris-intellij-plugin. This refresh pins
-the grammar to the Doris 4.1.4 release, using the upstream standalone facade from a
+the grammar to the Doris 4.1.5 release, using the upstream standalone facade from a
 separate commit because the release branch has no `fe-sql-parser` module.
 
 | | |
 |---|---|
 | Source | Apache Doris — https://github.com/apache/doris, module `fe/fe-sql-parser` |
-| Grammar SHA | `ad35a140c7fd0b842f18c23300bac581f7d04326`, tag `4.1.4` |
+| Grammar SHA | `917b20be83878e98f94e3ebf7efccc80346e3e50`, tag `4.1.5-release` |
 | Facade/build SHA | `2a58ad96ac3ca6330a6df3d0b90f437351f63701` |
-| Refreshed | 2026-09-20 |
+| Refreshed | 2026-10-28 |
 | Artifact version | `1.2-SNAPSHOT` (internal Doris build version — NOT a stable coordinate) |
-| JAR SHA-256 | `358ecccb39e84c65e62dc72b4090191c445fad4be1fb64e79ddaf68787d8703a` |
+| JAR SHA-256 | `9f28a480f17da4a100164acdbb461c2352d7af962632e14c9ca663302903ee75` |
 | License | Apache License 2.0 (see ATTRIBUTIONS.md at repo root) |
 | Runtime dependency | `org.antlr:antlr4-runtime:4.13.2` (from Maven Central, not bundled; compatible with this 4.13.1-generated parser) |
 
-Checked 2026-10-03: the [current Doris release](https://doris.apache.org/download/)
-is **4.1.4.1**, a [hotfix for 4.1.4](https://doris.apache.org/releases/v4.1/release-4.1.4.1/).
-The [six-commit comparison](https://github.com/apache/doris/compare/4.1.4...4.1.4.1)
-changes execution, materialized-view refresh, WAL reads, and platform dependencies;
-neither SQL grammar file nor the parser facade changes. The 4.1.4 grammar pin
-therefore remains current for this parser artifact, without claiming an engine upgrade.
+Checked 2026-10-28 against [Doris 4.1.5](https://doris.apache.org/releases/v4.1/release-4.1.5/)
+and tag `4.1.5-release`. Compared with 4.1.4, the grammar adds `CREATE OR REPLACE INDEX`,
+Lance-only `USING BTREE | BITMAP`, and unreserved `BTREE`. CREATE FUNCTION and
+CREATE ALIAS FUNCTION no longer accept ellipsis argument lists; DROP FUNCTION still does.
+The facade/build source pin is unchanged. File names use
+`doris-fe-sql-parser-<release>-g<12-character grammar commit>.jar`; the internal
+Maven version remains upstream's `1.2-SNAPSHOT`.
 
-Separately verified 2026-10-11: the catch-up native gate now executes official
+Separately verified 2026-10-11: the catch-up native gate executed official
 digest-pinned FE/BE images reporting `doris-4.1.4.1-rc02-5dbec55b399`, including
 the hotfix's nullable JSON Boolean OR/CASE regression. See
 [native execution evidence](../docs/doris-native-catchup-verification.md); the
-grammar artifact above and historical probe provenance are not relabeled.
+grammar artifact above and historical probe provenance are not relabeled. This 4.1.5
+refresh builds and tests locally only. It does not claim live 4.1.5 execution, rerun
+the semantic behavior matrix, publish artifacts, or change Brikk release versions.
+
+Local validation on 2026-10-28: `./kotlin build` succeeded; `./kotlin test` reported
+1,685 passing tests, zero failures, and 55 assumption-aborted opt-in tests. Function
+and keyword generation, and signature extraction, reproduced their outputs
+byte-for-byte. All five vendored registries match the release source exactly.
 
 Verify the committed binary before use or refresh:
 
 ```bash
 printf '%s  %s\n' \
-  358ecccb39e84c65e62dc72b4090191c445fad4be1fb64e79ddaf68787d8703a \
-  vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar | sha256sum --check
+  9f28a480f17da4a100164acdbb461c2352d7af962632e14c9ca663302903ee75 \
+  vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar | sha256sum --check
 ```
 
 ### Rebuilding / refreshing
@@ -64,15 +72,28 @@ git clone --filter=blob:none --no-checkout --depth 1 \
   https://github.com/apache/doris.git /tmp/opencode/doris-parser-build
 git -C /tmp/opencode/doris-parser-build sparse-checkout set fe/fe-sql-parser
 git -C /tmp/opencode/doris-parser-build checkout --detach 2a58ad96ac3ca6330a6df3d0b90f437351f63701
-git -C /tmp/opencode/doris-parser-build fetch --depth 1 origin ad35a140c7fd0b842f18c23300bac581f7d04326
-bash tools/build_doris_parser.sh /tmp/opencode/doris-parser-build
+git -C /tmp/opencode/doris-parser-build fetch --depth 1 origin 917b20be83878e98f94e3ebf7efccc80346e3e50
+mise exec maven@3.9.16 java@17.0.2 -- bash tools/build_doris_parser.sh /tmp/opencode/doris-parser-build
 ```
 
 The release grammar emits ANTLR warnings for its implicit GET_FORMAT token and
 nullable `warmUpSingleTableRef` alternative. The build script allows these warnings,
 matching the release's fe-core build, rather than modifying the grammar. The facade
-and postprocessor Java sources are unchanged. `Doris414GrammarTest` checks both new
-syntax and rejection of the removed PLAN REPLAYER PLAY production.
+and postprocessor Java sources are unchanged. `Doris414GrammarTest` retains the 4.1.4
+syntax checks and rejection of PLAN REPLAYER PLAY. `Doris415GrammarTest` checks Lance
+index forms, the new TVFs, static Hive partition overwrite, and UDF ellipsis rejection.
+
+After a refresh, update the three verifier modules' `brikk.doris.parser.jar` values
+and `tools/metadata-capture/src/Keywords.kt`, then capture and generate keywords:
+
+```bash
+./kotlin run -m metadata-capture -- doris-keywords
+python3 tools/generate_keywords.py
+```
+
+Remove the superseded keyword dump and JAR, select the new keyword catalog in
+`DorisMetadata.kt`, and update this checksum and ATTRIBUTIONS.md. Historical scanner
+fixtures and engine probe results keep the provenance of the artifact actually used.
 
 Replace this artifact with a published Maven coordinate once a parser with the required
 release grammar is available. Update ATTRIBUTIONS.md and this file with its provenance.
@@ -85,7 +106,7 @@ function catalog is regenerable from this repo alone (no Doris clone needed):
 | | |
 |---|---|
 | Source | https://github.com/apache/doris — `fe/fe-core/src/main/java/org/apache/doris/catalog/` |
-| Pin | tag `4.1.4` (commit `ad35a140c7fd0b842f18c23300bac581f7d04326`; matches `VENDORED_VERSION` in tools/generate_doris_functions.py) |
+| Pin | tag `4.1.5-release` (commit `917b20be83878e98f94e3ebf7efccc80346e3e50`; matches `VENDORED_VERSION` in tools/generate_doris_functions.py) |
 | Refresh | copy the five files from a newer checkout, update the pin in the script + here, re-run the generator |
 
 ## StarRocks function registry (pinned to 4.1.4)
@@ -159,25 +180,31 @@ tools/generate_trino_functions.py.
 
 The Doris function catalog (`brikk-sql-metadata/.../GeneratedDorisFunctionCatalog.kt`) is
 generated by `tools/generate_doris_functions.py` from Doris's runtime function registry
-(`fe/fe-core/.../catalog/Builtin*Functions.java`, vendored from the Doris 4.1.4 release) —
+(`fe/fe-core/.../catalog/Builtin*Functions.java`, vendored from the Doris 4.1.5 release) —
 the same source of truth Doris registers at startup, more authoritative than docs. It lists
-exactly what 4.1.4 registers: 711 definitions, 806 names including aliases, 1418 overloads.
+exactly what 4.1.5 registers: 713 definitions, 808 names including aliases, 1418 overloads.
 Regenerate against a newer checkout to refresh. Signatures come from
 `data/doris-signatures.json` (below), joined by class name.
 
 A sparse checkout of the release is enough for both tools:
 
 ```bash
-git init doris-4.1.4 && cd doris-4.1.4
+git init doris-4.1.5 && cd doris-4.1.5
 git remote add origin https://github.com/apache/doris.git
 git sparse-checkout init --no-cone
 git sparse-checkout set '/fe/fe-core/src/main/java/org/apache/doris/catalog/Builtin*Functions.java' \
   '/fe/fe-core/src/main/java/org/apache/doris/nereids/trees/expressions/'
-git fetch --depth 1 origin tag 4.1.4 && git checkout --detach 4.1.4
-cd - && python3 tools/extract_doris_signatures.py doris-4.1.4
-cp doris-4.1.4/fe/fe-core/src/main/java/org/apache/doris/catalog/Builtin*Functions.java vendor/data/doris-registry/
+git fetch --depth 1 origin tag 4.1.5-release && git checkout --detach 4.1.5-release
+cd - && python3 tools/extract_doris_signatures.py doris-4.1.5
+cp doris-4.1.5/fe/fe-core/src/main/java/org/apache/doris/catalog/Builtin*Functions.java vendor/data/doris-registry/
 python3 tools/generate_doris_functions.py
 ```
+
+`DorisTableFunctions.kt` separately curates property arguments and output schemas
+from the same release source. `DorisProperties.kt` supplements the older pinned
+website capture with source-backed 4.1.5 compute-group, index/analyzer, and AI-resource
+properties. Its source pin is recorded in the file; regenerating the older docs
+capture must not erase those additions.
 
 ## `data/doris-signatures.json` — Doris function signatures + nullable modes
 
@@ -202,13 +229,13 @@ nullability not applicable). `tools/generate_doris_functions.py` maps these onto
 `FunctionDef.profile` (`SemanticProfile.nullPropagation`): PropagateNullable→STRICT,
 AlwaysNullable→ALWAYS_NULLABLE, AlwaysNotNullable→NEVER_NULL, custom/unmapped
 markers→UNKNOWN with provenance in `notes`, null→no profile. At the pin: 332
-PropagateNullable, 141 AlwaysNullable, 110 AlwaysNotNullable, 68 custom, 53 none (over
-704 classes).
+PropagateNullable, 141 AlwaysNullable, 110 AlwaysNotNullable, 68 custom, 55 none (over
+706 classes).
 
 | | |
 |---|---|
 | Source | https://github.com/apache/doris — `fe/fe-core/.../nereids/trees/expressions/functions/` |
-| Pin | tag `4.1.4` (recorded as `doris_version` inside the JSON) |
+| Pin | tag `4.1.5-release` (recorded as `doris_version` inside the JSON) |
 | License | Apache License 2.0 (extracted registry data; see ATTRIBUTIONS.md) |
 | Refresh | `python3 tools/extract_doris_signatures.py <doris-checkout>` then `python3 tools/generate_doris_functions.py` (keep the pin in sync with `data/doris-registry/`) |
 
@@ -296,7 +323,7 @@ symbol, `\N` when not from a grammar), in the dump format above.
 | File | Source | Refresh |
 |---|---|---|
 | `trino-keywords-483.tsv` | trino-grammar 483: lexer tokens with a one-word literal; UNRESERVED when the parser's `nonReserved` rule can start with the token, else RESERVED. The capture checks the reserved set equals `io.trino.sql.ReservedIdentifiers` (313 keywords, 83 reserved) | bump `io.trino:trino-parser` in `tools/metadata-capture/module.yaml`, `./kotlin run -m metadata-capture -- trino-keywords` |
-| `doris-keywords-4.1.4.tsv` | the same reading of `vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar` | `./kotlin run -m metadata-capture -- doris-keywords` after refreshing the jar |
+| `doris-keywords-4.1.5.tsv` | the same reading of `vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar` (565 keywords) | `./kotlin run -m metadata-capture -- doris-keywords` after refreshing the jar |
 | `clickhouse-keywords-26.5.1.1.tsv` | ClickHouse 26.5.1.1 `system.keywords` via `chdb` 4.2.1 with `chdb-core` 26.5.0 (`SELECT version()` = `26.5.1.1`), captured 2026-10-11. The table has no reservation column, so every category is UNKNOWN; many entries are phrases (`ADD COLUMN`) | see below |
 
 ```bash

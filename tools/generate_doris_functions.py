@@ -64,8 +64,8 @@ VENDORED_REGISTRY = ROOT / "vendor" / "data" / "doris-registry"
 SIGNATURES_JSON = ROOT / "vendor" / "data" / "doris-signatures.json"
 SINCE_VERSIONS_JSON = ROOT / "vendor" / "data" / "doris-since-versions.json"
 # Pin of the vendored registry copy (update when refreshing vendor/data/doris-registry/):
-# the 4.1.4 release tag, commit ad35a140c7fd0b842f18c23300bac581f7d04326.
-VENDORED_VERSION = "4.1.4"
+# tag 4.1.5-release, commit 917b20be83878e98f94e3ebf7efccc80346e3e50.
+VENDORED_VERSION = "4.1.5-release"
 OUT = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedDorisFunctionCatalog.kt"
 
 IDENT = re.compile(r"[A-Za-z][A-Za-z0-9_]*$")

@@ -1,6 +1,10 @@
 # Doris native catch-up validation
 
-The current native validation target is **Doris 4.1.4.1**, using the official,
+The 2026-10-28 local refresh updates the parser grammar and metadata to 4.1.5 and
+sets the opt-in execution gate to require 4.1.5. It does not run a 4.1.5 server.
+The image pins, results, and commands below document the earlier 4.1.4.1 run.
+
+The last executed native validation target was **Doris 4.1.4.1**, using the official,
 digest-pinned FE and BE images rather than the older 4.1.3 all-in-one image:
 
 | Component | Official image digest |
@@ -24,10 +28,12 @@ insignificant.
 when nullable Boolean OR feeds expressions such as multi-branch CASE. It also
 fixes materialized-view partition refresh, VARIANT WAL reads and aarch64 startup.
 The [six-commit tag comparison](https://github.com/apache/doris/compare/4.1.4...4.1.4.1)
-changes no grammar or parser-facade file. Our vendored **4.1.4 grammar remains
-correct**; native execution should prefer the hotfix.
+changed no grammar or parser-facade file, so the then-vendored 4.1.4 grammar also
+covered the hotfix. The current parser artifact now uses the changed 4.1.5 grammar.
 
 ## Gates
+
+Historical command from the 4.1.4.1 run, not the current gate's required version:
 
 ```sh
 BRIKK_DORIS_TEST_CONTAINER=<4.1.4.1-FE-container> TMPDIR=/tmp/opencode \

@@ -66,6 +66,32 @@ class TableFunctionInfoTest {
     }
 
     @Test
+    fun doris415SearchFunctionsKeepDynamicAndFixedSchemasSeparate() {
+        assertEquals("4.1.5", doris.engineVersion)
+        val fullText = doris.tableFunction("FULL_TEXT_SEARCH")!!
+        assertEquals(OutputSchema.Open, fullText.schema)
+        assertEquals(listOf("match", "phrase"), fullText.properties.definitionOf("query_type")?.values)
+        assertEquals(listOf("0"), fullText.properties.definitionOf("max_fuzzy_distance")?.values)
+        for (name in listOf("vector_search", "full_text_search")) {
+            val info = doris.tableFunction(name)!!
+            assertEquals(OutputSchema.Open, info.schema)
+            for (key in listOf("prefilter", "version", "timestamp", "tag", "branch")) {
+                assertEquals("4.1.5", info.properties.definitionOf(key)?.since, "$name.$key")
+            }
+        }
+        val vector = doris.tableFunction("vector_search")!!
+        for (key in listOf("query_parallelism", "distance_lower_bound", "distance_upper_bound")) {
+            assertEquals("4.1.5", vector.properties.definitionOf(key)?.since, key)
+        }
+        val entries = doris.tableFunction("lance_index_entries")!!
+        assertEquals(listOf("table"), entries.properties.map { it.name })
+        assertEquals(listOf(
+            ColumnDef("CatalogName", "text"), ColumnDef("DatabaseName", "text"), ColumnDef("TableName", "text"),
+            ColumnDef("IndexName", "text"), ColumnDef("IndexUuid", "text"), ColumnDef("DatasetVersion", "bigint"),
+        ), assertIs<OutputSchema.Fixed>(entries.schema).columns)
+    }
+
+    @Test
     fun tableFunctionInfoRoundTripsThroughJson() {
         val serializer = ListSerializer(TableFunctionInfo.serializer())
         val json = Json.encodeToString(serializer, dorisTableFunctions)

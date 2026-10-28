@@ -52,8 +52,8 @@ class FunctionCatalogTest {
 
     @Test
     fun dorisCatalogLoadsWithExpectedSurface() {
-        // Pinned to the Doris 4.1.4 registry the generator ran against.
-        assertEquals(711, DORIS_FUNCTION_CATALOG.size)
+        // Pinned to the Doris 4.1.5-release registry the generator ran against.
+        assertEquals(713, DORIS_FUNCTION_CATALOG.size)
         assertTrue("ABS" in DORIS_FUNCTION_CATALOG)
         // alias lookup (SUBSTR/SUBSTRING/MID registered on one def)
         val substr = DORIS_FUNCTION_CATALOG["substr"]
@@ -70,7 +70,7 @@ class FunctionCatalogTest {
     }
 
     @Test
-    fun dorisCatalogIsTheRegistryOf414() {
+    fun dorisCatalogIsTheRegistryOf415() {
         val parse = DORIS_FUNCTION_CATALOG["parse_to_variant"]!!
         val tryParse = DORIS_FUNCTION_CATALOG["try_parse_to_variant"]!!
         for (def in listOf(parse, tryParse)) {
@@ -83,7 +83,12 @@ class FunctionCatalogTest {
         assertEquals(FunctionKind.TABLE_VALUED, vectorSearch.kind)
         assertTrue(vectorSearch.overloads.isEmpty(), "VectorSearch has a dynamic relation schema")
         assertTrue("EMBED" in DORIS_FUNCTION_CATALOG)
-        // Not registered by 4.1.4; the first three were on the earlier master pin.
+        for (name in listOf("full_text_search", "lance_index_entries")) {
+            val function = DORIS_FUNCTION_CATALOG[name]!!
+            assertEquals(FunctionKind.TABLE_VALUED, function.kind)
+            assertTrue(function.overloads.isEmpty(), "$name is a relation, not a scalar signature")
+        }
+        // Not registered by 4.1.5; the first three were on the earlier master pin.
         for (name in listOf("LEVENSHTEIN", "AVG_MAP", "BINLOG", "ICEBERG_META")) {
             assertFalse(name in DORIS_FUNCTION_CATALOG, name)
         }
@@ -208,7 +213,7 @@ class FunctionCatalogTest {
 
     @Test
     fun dorisOverloadTotalsArePinned() {
-        // Doris 4.1.4: 618 defs carry 1418 overloads; the rest (dynamic getSignatures(): all table-valued functions,
+        // Doris 4.1.5: 618 defs carry 1418 overloads; the rest (dynamic getSignatures(): all table-valued functions,
         // rank-like window functions, ...) stay empty.
         assertEquals(1418, DORIS_FUNCTION_CATALOG.functions.sumOf { it.overloads.size })
         assertEquals(618, DORIS_FUNCTION_CATALOG.functions.count { it.overloads.isNotEmpty() })
@@ -242,15 +247,15 @@ class FunctionCatalogTest {
 
     @Test
     fun dorisProfileCoverageIsPinned() {
-        // The Doris 4.1.4 registry (711 defs). A regeneration
+        // The Doris 4.1.5 registry (713 defs). A regeneration
         // against a new Doris pin is EXPECTED to move these — update deliberately.
         val byMode = DORIS_FUNCTION_CATALOG.functions.groupingBy { it.profile?.nullPropagation }.eachCount()
         assertEquals(336, byMode[NullPropagation.STRICT])
         assertEquals(144, byMode[NullPropagation.ALWAYS_NULLABLE])
         assertEquals(110, byMode[NullPropagation.NEVER_NULL])
         assertEquals(68, byMode[NullPropagation.UNKNOWN]) // all custom nullable() overrides
-        assertEquals(53, byMode[null]) // no marker on the class (incl. all table kinds)
-        assertEquals(711, byMode.values.sum())
+        assertEquals(55, byMode[null]) // no marker on the class (incl. all table kinds)
+        assertEquals(713, byMode.values.sum())
         // Every emitted UNKNOWN carries its provenance note; no unmapped markers at the pin.
         assertTrue(
             DORIS_FUNCTION_CATALOG.functions
@@ -483,10 +488,10 @@ class FunctionCatalogTest {
     @Test
     fun dorisDocumentationTierCoverageIsPinned() {
         // Coverage at the pinned doris-website clone SHA (vendor/README.md): 631 of
-        // 711 defs matched to a version tier; a regeneration against a newer clone is
+        // 713 defs matched to a version tier; a regeneration against a newer clone is
         // EXPECTED to move this — update deliberately.
         assertEquals(631, DORIS_FUNCTION_CATALOG.functions.count { it.firstDocumentedIn != null })
-        assertEquals(711, DORIS_FUNCTION_CATALOG.size)
+        assertEquals(713, DORIS_FUNCTION_CATALOG.size)
     }
 
     @Test

@@ -36,7 +36,7 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         DocsEntry("CREATE [OR REPLACE] VIEW", "${STATEMENTS}table-and-view/view/CREATE-VIEW/", "CREATE VIEW"),
         DocsEntry("ALTER VIEW", "${STATEMENTS}table-and-view/view/ALTER-VIEW/", "ALTER VIEW"),
         DocsEntry("DROP VIEW", "${STATEMENTS}table-and-view/view/DROP-VIEW/", "DROP VIEW"),
-        DocsEntry("CREATE INDEX", "${STATEMENTS}table-and-view/index/CREATE-INDEX/", "CREATE INDEX"),
+        DocsEntry("CREATE [OR REPLACE] INDEX", "${STATEMENTS}table-and-view/index/CREATE-INDEX/", "CREATE INDEX"),
         DocsEntry("DROP INDEX", "${STATEMENTS}table-and-view/index/DROP-INDEX/", "DROP INDEX"),
         DocsEntry("BUILD INDEX", "${STATEMENTS}table-and-view/index/BUILD-INDEX/", "BUILD INDEX"),
         DocsEntry("SHOW CREATE TABLE", "${STATEMENTS}table-and-view/table/SHOW-CREATE-TABLE/", "SHOW CREATE TABLE"),
@@ -97,5 +97,5 @@ val DORIS_DOCS: EngineDocs = EngineDocs(
         "partition_values" to "partition-values/", "hudi_meta" to "hudi-meta/", "cdc_stream" to "cdc-stream/",
         "parquet_meta" to "parquet-meta/",
     ).mapValues { (_, page) -> TABLE_FUNCTIONS + page },
-    properties = DORIS_PROPERTY_LISTS,
+    properties = DORIS_PROPERTIES,
 )

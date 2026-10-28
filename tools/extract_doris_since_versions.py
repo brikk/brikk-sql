@@ -37,8 +37,8 @@ KDoc):
   - No claim is made below the granularity doris-website itself uses: "3.x"/"4.x" are the
     site's own labels (not exact dot releases); we do not attempt to resolve them to a
     specific minor.
-    The function catalog is generated from the Doris 4.1.4 release registry, so every name
-    it lists ships in 4.1.4; a "4.x" tier does not say which 4.x release first had it.
+    The function catalog is generated from the Doris 4.1.5 release registry, so every name
+    it lists ships in 4.1.5; a "4.x" tier does not say which 4.x release first had it.
   - Titles are matched, not descriptions: a small number of docs use combined titles for
     multi-alias pages ("CURDATE,CURRENT_DATE", "LCASE/LOWER") or an SEO-vs-sidebar split
     ("STRUCT | Struct Functions") -- both are parsed into individual name tokens.

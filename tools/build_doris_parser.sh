@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Build the standalone upstream parser facade with the exact Doris 4.1.4 grammar.
+# Build the standalone upstream parser facade with the exact Doris 4.1.5 grammar.
 # Requires Maven, JDK 17+, and a Doris checkout at WRAPPER_SHA containing GRAMMAR_SHA.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 SOURCE=${1:?Usage: bash tools/build_doris_parser.sh /path/to/doris-checkout}
 WRAPPER_SHA=2a58ad96ac3ca6330a6df3d0b90f437351f63701
-GRAMMAR_SHA=ad35a140c7fd0b842f18c23300bac581f7d04326
+GRAMMAR_SHA=917b20be83878e98f94e3ebf7efccc80346e3e50
 MODULE="$SOURCE/fe/fe-sql-parser"
 
 test "$(git -C "$SOURCE" rev-parse HEAD)" = "$WRAPPER_SHA"
@@ -27,4 +27,4 @@ pom.write_text(pom.read_text().replace(
 ))
 PY
 mvn -B -ntp -f "$MODULE/pom.xml" -Pflatten clean package -Dmaven.test.skip=true -Dcheckstyle.skip
-cp "$MODULE/target/doris-fe-sql-parser.jar" "$ROOT/vendor/lib/doris-fe-sql-parser-4.1.4-gad35a140c7fd.jar"
+cp "$MODULE/target/doris-fe-sql-parser.jar" "$ROOT/vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar"

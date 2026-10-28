@@ -70,4 +70,26 @@ class DorisPropertiesTest {
         assertTrue(http.none { it.name == "http.header.xxx" })
         assertTrue(DORIS_METADATA.default.tableFunction("local")?.properties.orEmpty().none { it.name == "json_paths" })
     }
+
+    @Test
+    fun release415AddsComputeBindingsAnalyzerAndEmbeddingProperties() {
+        for (title in listOf("CREATE MATERIALIZED VIEW properties", "CREATE ROUTINE LOAD job properties")) {
+            assertEquals("4.1.5", list(title).keys.definitionOf("compute_group")?.since)
+        }
+        assertEquals(listOf("true", "false"), list("CREATE INDEX properties").keys.definitionOf("norms")?.values)
+        assertTrue(list("CREATE INVERTED INDEX ANALYZER properties").keys.definitionOf("tokenizer")!!.values
+            .containsAll(listOf("ik_smart", "ik_max_word")))
+        assertEquals("type" to "ai", list("CREATE RESOURCE properties (ai)").variant)
+        assertTrue("ai" in list("CREATE RESOURCE properties").keys.definitionOf("type")!!.values)
+        for (prefix in listOf("ai.embed.", "ai.embed.mm.")) {
+            for (suffix in listOf("endpoint", "provider_type", "model_name", "api_key")) {
+                assertEquals("4.1.5", list("CREATE RESOURCE properties (ai)").keys.definitionOf(prefix + suffix)?.since)
+            }
+        }
+    }
+
+    @Test
+    fun supplementedListsNeverDuplicateKeys() {
+        for (list in lists) assertEquals(list.keys.size, list.keys.map { it.name.lowercase() }.distinct().size, list.title)
+    }
 }

@@ -42,24 +42,24 @@ SOFTWARE.
 
 ## Apache Doris
 
-Three Doris-derived artifacts are included, both from https://github.com/apache/doris and
+Doris-derived artifacts are included from https://github.com/apache/doris and
 https://github.com/apache/doris-website, both Apache License 2.0:
 
 - `vendor/lib/doris-fe-sql-parser-*.jar` — a locally-built snapshot of Doris's standalone
   `fe-sql-parser` module (pre-release; see vendor/README.md for provenance and refresh
-  procedure). The current artifact combines the exact 4.1.4 release grammar with
+  procedure). The current artifact combines the exact 4.1.5 release grammar with
   the upstream standalone parser facade; both source pins are in `vendor/README.md`.
 - `brikk-sql-metadata/.../GeneratedDorisFunctionCatalog.kt` — function names/aliases/kinds
   extracted from Doris's runtime function registry
   (`fe/fe-core/.../catalog/Builtin*Functions.java`) by `tools/generate_doris_functions.py`
-  (adapted from the doris-intellij-plugin extraction script), at the Doris 4.1.4 release.
+  (adapted from the doris-intellij-plugin extraction script), at tag `4.1.5-release`.
 - `vendor/data/doris-since-versions.json` — per-function "first documented in" version,
   extracted from `apache/doris-website`'s function docs
   (`docs/sql-manual/sql-functions/`, `versioned_docs/version-*/sql-manual/sql-functions/`)
   by `tools/extract_doris_since_versions.py`; joined onto `FunctionDef.firstDocumentedIn`. See
   vendor/README.md for the extraction method and its honesty caveats.
-- `vendor/data/doris-keywords-4.1.4.tsv` and `GeneratedKeywords.kt` — keyword spellings,
-  token symbols and reservation read from the vendored 4.1.4 parser's grammar.
+- `vendor/data/doris-keywords-4.1.5.tsv` and `GeneratedKeywords.kt` — keyword spellings,
+  token symbols and reservation read from the vendored 4.1.5 parser's grammar.
 
 ## Apache StarRocks
 
