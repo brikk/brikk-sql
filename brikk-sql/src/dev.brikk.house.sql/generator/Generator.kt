@@ -1413,6 +1413,9 @@ open class Generator(
 
     // sqlglot: Generator.cte_sql
     open fun cteSql(expression: CTE): String {
+        if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb" && expression.thisArg is DML) {
+            unexecutable("$targetName has no verified DuckDB side-effecting CTE translation")
+        }
         val alias = expression.args["alias"] as? Expression
         alias?.addComments(expression.popComments())
 

@@ -19,8 +19,11 @@ import dev.brikk.house.sql.ast.Star
 import dev.brikk.house.sql.ast.Subquery
 import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.With
+import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.DML
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.desugarPipes
+import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.namedSelects
 import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
@@ -36,6 +39,15 @@ import dev.brikk.house.sql.optimizer.nestedSet
 import dev.brikk.house.sql.optimizer.normalizeIdentifiers
 import dev.brikk.house.sql.optimizer.qualify
 import dev.brikk.house.sql.optimizer.traverseScope
+import dev.brikk.house.sql.optimizer.dataTypeFromStr
+import dev.brikk.house.sql.scope.CatalogKnowledge
+import dev.brikk.house.sql.scope.ColumnFact
+import dev.brikk.house.sql.scope.ColumnOrigin
+import dev.brikk.house.sql.scope.Knowledge
+import dev.brikk.house.sql.scope.Nullability
+import dev.brikk.house.sql.scope.RelationFact
+import dev.brikk.house.sql.scope.RelationFacts
+import dev.brikk.house.sql.scope.RelationScope
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
@@ -342,6 +354,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      */
     val sourceTables: List<String> by lazy {
         val tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        val sideEffects = tree.hasSideEffectingCte()
         val resolved = java.util.IdentityHashMap<Table, Boolean>()
         for (scope in traverseScope(tree)) {
             // references includes SEMI/ANTI inputs that selectedSources omits.
@@ -370,7 +383,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             // Tables outside query scopes (e.g. DML targets) retain the existing
             // inventory behavior. Functions and unresolved placeholders are not tables.
             val parts = table.parts
-            if (resolved[table] == false || parts.isEmpty() || parts.any { it !is Identifier }) continue
+            if (parts.isEmpty() || parts.any { it !is Identifier }) continue
+            val target = sideEffects && isPhysicalWriteTarget(table)
+            if (!target && (resolved[table] == false || sideEffects && visibleCteReference(table))) continue
             out.add(catalogPath(parts.map { it.name }))
         }
         out.toList()
@@ -449,6 +464,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (dialectObj.name == "duckdb" && tree.hasSideEffectingCte()) return sideEffectingCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
         val schema = buildSchema(inputs, rejectNormalizedDuplicates = prepared.hasStarRename())
         val qualified = qualify(
@@ -541,6 +557,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         inputs: ShapeCatalog? = null,
         expandStars: Boolean = false,
     ): String {
+        if (expandStars && inputs != null && dialectObj.name == "duckdb" && ast.hasSideEffectingCte()) {
+            throw UnsupportedError("Cannot expand stars or qualify across side-effecting CTEs")
+        }
         var tree = desugarPipes(ast, dialectObj, copy = true)
         val hasRename = tree.findAll<Star>().any { !(it.args["rename"] as? List<*>).isNullOrEmpty() }
         if (expandStars && inputs != null) {
@@ -599,6 +618,71 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         )
 
     // ------------------------------------------------------------------ internals
+
+    private fun isPhysicalWriteTarget(table: Table): Boolean {
+        var target: Expression = table
+        val schema = target.parent as? dev.brikk.house.sql.ast.Schema
+        if (schema?.thisArg === target) target = schema
+        val statement = target.parent ?: return false
+        return statement is DML && statement.thisArg === target &&
+            (statement !is dev.brikk.house.sql.ast.Copy || statement.args["kind"] == true)
+    }
+
+    /** Lexical CTE visibility also covers write producers that the SELECT optimizer cannot model. */
+    private fun visibleCteReference(table: Table): Boolean {
+        if (table.parts.size != 1) return false
+        for (owner in generateSequence(table.parent) { it.parent }) {
+            val with = owner.args["with_"] as? With ?: continue
+            val enclosing = generateSequence(table.parent) { it.parent }.firstOrNull { it is CTE && it.parent === with }
+            val definitions = with.expressionsArg.filterIsInstance<CTE>()
+            val visible = if (with.recursive) definitions else definitions.takeWhile { it !== enclosing }
+            if (visible.any { it.alias == table.name }) return true
+        }
+        return false
+    }
+
+    /** Read the declarative CTE output contract without sending write SQL through SELECT optimizers. */
+    private fun sideEffectingCteShape(tree: Expression, inputs: ShapeCatalog): Shape {
+        fun fact(shape: Shape, origin: ColumnOrigin) = RelationFact(shape.columns.map { column ->
+            ColumnFact(column.name, column.type, nullability = when (column.nullable) {
+                true -> Nullability.NULLABLE
+                false -> Nullability.NON_NULL
+                null -> Nullability.UNKNOWN
+            }, origin = origin)
+        })
+        val available = tableSlots.mapTo(HashSet()) { it.uppercase() }
+        val slots = LinkedHashMap<String, RelationFact>()
+        for ((name, shape) in inputs.slots) {
+            if (name.uppercase() !in available) throw ShapeError("Unknown slot binding '$name'")
+            slots[name] = fact(shape, ColumnOrigin.DECLARED)
+        }
+        val byName = slots.mapKeys { it.key.uppercase() }
+        slots.putAll(byName) // The generator canonicalizes function calls to upper case.
+        for (table in tree.findAll<Table>()) {
+            val function = table.thisArg as? Anonymous ?: continue
+            byName[function.name.uppercase()]?.let { slots[function.name] = it }
+        }
+        val facts = RelationFacts(
+            tables = inputs.tables.mapValues { fact(it.value, ColumnOrigin.PHYSICAL_TABLE) },
+            slots = slots,
+            calls = slots, // ShapeCatalog slots may have arguments; RelationFacts separates zero-arg slots/calls.
+            catalog = CatalogKnowledge.OPEN,
+        )
+        // Generation and analysis are pure; no prepare/bind, native helper, path read or execution.
+        val scope = RelationScope.analyze(dialectObj.generate(tree.copy()), dialectObj.name, facts)
+        val output = scope.output
+        if (!scope.parsed || output == null || output.knowledge != Knowledge.FULL) {
+            throw ShapeError("Complete RETURNING/output facts are required for a side-effecting CTE shape")
+        }
+        return Shape(output.columns.map { column ->
+            ColumnShape(column.name, column.sqlType?.let { renderType(dataTypeFromStr(it, dialectObj, udt = true)) } ?: "UNKNOWN",
+                nullable = when (column.nullability) {
+                    Nullability.NON_NULL -> false
+                    Nullability.NULLABLE -> true
+                    Nullability.UNKNOWN -> null
+                }, quoted = dialectObj.caseSensitive(column.name))
+        })
+    }
 
     /** Copy + desugar pipes + rewrite bound slots into plain table references. */
     private fun prepareTree(tree: Expression, inputs: ShapeCatalog): Expression {

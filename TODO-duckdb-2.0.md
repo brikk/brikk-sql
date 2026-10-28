@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-008.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-010.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -172,16 +172,47 @@ and IDE introspection/completion are separate contracts.
   Final gates passed: 1,280 core tests and 43 DuckDB verifier/native tests, with existing
   corpus, ledger and binary-compatibility checks green. No ledger changes or Plugin Verifier run.
 
-- [ ] `DDB20-009` Data-modifying CTEs [AUDIT].
+- [x] `DDB20-009` Data-modifying CTEs [DONE].
   The UPDATE RETURNING case already round-trips and passes native acceptance. Cover all
   [documented INSERT/UPDATE/DELETE forms][ctes], DELETE-to-INSERT pipelines, MATERIALIZED,
   RETURNING-dependent scopes/lineage and modification-once semantics. Verify materialization
   dependencies rather than assuming a parsed CTE executes only once.
+  Added structured INSERT/UPDATE/DELETE CTE contracts, RETURNING aliases/star fields and types,
+  later-CTE/query scope/completion, physical source inventory and schema-driven outer query shapes.
+  New INSERT/UPDATE images are computed outputs, not pre-write physical value provenance; direct
+  DELETE outputs may retain old-row provenance. Whole assignment lineage and SELECT optimizer/star
+  expansion across these producers explicitly refuse rather than tracing an input SELECT as output.
+  The actual v2.0.0 engine exposes BIGINT Count without RETURNING; a returning outer INSERT verifies
+  that result independently of the JDBC update-count classification. Native tests pin documented
+  shipped-row and move-to-archive examples, producer dependencies, duplicate references, unreferenced
+  and empty consumers, same-statement visibility, prepared executions and atomic table rollback.
+  Default/MATERIALIZED/NOT MATERIALIZED all execute each side-effecting producer once in this engine;
+  preserve the user's hint and do not inline, duplicate or eliminate the write. Parser/binder controls
+  cover unsupported body types, recursive writes, nesting and views. MERGE remains illegal as a CTE
+  body even though it is legal as a standalone statement. Cross-target execution is unproved/refused.
 
-- [ ] `DDB20-010` COPY inside CTEs [AUDIT].
+- [x] `DDB20-010` COPY inside CTEs [DONE].
   Explicitly pin COPY bodies and the result exposed to subsequent CTE/query stages.
   This was previously grouped with DML CTEs without a dedicated focused test. Include
   statement boundaries and side effects only in deliberate scratch-engine result tests.
+  Fixed COPY parsing at the enclosing CTE parenthesis instead of opaque-command fallback. COPY TO
+  table/query bodies and nested COPY-over-statistics stay structured through serde and generation.
+  Static output contracts match native Count BIGINT, RETURN_FILES Count/Files VARCHAR[], and all
+  seven RETURN_STATS names/types, including UBIGINT count and MAP(VARCHAR, VARIANT) extra_info.
+  Explicit false flags and unknown/dynamic flags are distinguished; no guessed full schema.
+  Tests write only uniquely created opencode test-temp directories, read the resulting CSV/Parquet
+  data and statistics, prove single source evaluation across multiple references with a private
+  sequence, retain unreferenced/empty-consumer exports, and rerun prepared parameterized paths.
+  COPY FROM, recursive/nested producers and view placement have native error/no-output-file controls.
+  Pure analysis and connection-backed parse-only verification leave tables, a sequence and an output
+  path untouched. No prepare/execute fallback is introduced into editor validation. JDBC may expose
+  COPY's default Count through its update-count channel; RETURN_FILES/RETURN_STATS and returning
+  consumers verify actual SQL schemas. File rollback/atomicity is not inferred from table rollback.
+  Evidence for DDB20-009/010: DuckdbSideEffectCteTest, DuckdbDmlCteResultTest and
+  DuckdbCopyCteResultTest. Full gates passed: 1,287 core tests and 58 DuckDB verifier/native tests,
+  including existing corpus/ledger/ABI gates. No ledgers, driver/IDE APIs or connection settings
+  changed. Source review: v2.0.0 bind_cte_node.cpp, cte_inlining.cpp, copy_function.cpp and native
+  DML/COPY CTE tests; measured JDBC results take precedence over stale no-RETURNING test comments.
 
 - [ ] `DDB20-011` GROUP BY UNNEST [AUDIT].
   Parse/generate and native acceptance exist. Add result and shape tests for the
@@ -512,6 +543,10 @@ and IDE introspection/completion are separate contracts.
   bind/init ownership only for a future executor. Monitor C API v2 instability, C++17/build and
   macOS x86_64 phase-out as packaging concerns. CLI agent/manual/history and Python appender/API
   migration are client features, not missing core SQL grammar implementations.
+  The CTE audits also measured JDBC 2.0.0.0 classifying an outer SELECT as CHANGED_ROWS when a
+  DML/COPY producer lacks RETURNING/result options. Investigate result-channel handling separately
+  for a console/executor or driver fix; an executeQuery failure can follow a completed write, so
+  never recover by executing that SQL again. This is not a syntax gate or an editor-parse fallback.
 
 ## Additional SQL-facing changes found in full-release titles
 

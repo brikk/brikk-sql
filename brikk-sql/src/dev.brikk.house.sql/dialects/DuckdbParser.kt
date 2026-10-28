@@ -18,6 +18,16 @@ import dev.brikk.house.sql.ast.ArrayPrepend
 import dev.brikk.house.sql.ast.ArraySlice
 import dev.brikk.house.sql.ast.Attach
 import dev.brikk.house.sql.ast.AttachOption
+import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.Copy
+import dev.brikk.house.sql.ast.DML
+import dev.brikk.house.sql.ast.Delete
+import dev.brikk.house.sql.ast.Insert
+import dev.brikk.house.sql.ast.Update
+import dev.brikk.house.sql.ast.With
+import dev.brikk.house.sql.ast.Query
+import dev.brikk.house.sql.ast.Pivot
+import dev.brikk.house.sql.ast.PipeQuery
 import dev.brikk.house.sql.ast.BitwiseAndAgg
 import dev.brikk.house.sql.ast.BitwiseOrAgg
 import dev.brikk.house.sql.ast.BitwiseXor
@@ -420,6 +430,25 @@ open class DuckdbParser(
         }
 
         return table
+    }
+
+    override fun parseCte(): Expression? {
+        val cte = super.parseCte() as? CTE ?: return null
+        val body = cte.thisArg
+        if (body is Copy && body.args["kind"] == true) {
+            raiseError("COPY FROM cannot be used as a CTE body")
+        } else if (body !is Query && body !is Pivot && body !is PipeQuery && body !is Insert && body !is Update && body !is Delete && body !is Copy) {
+            raiseError("A CTE body must be a query, INSERT, UPDATE, DELETE, or COPY TO statement")
+        }
+        return cte
+    }
+
+    override fun parseWith(skipWithToken: Boolean): With? {
+        val with = super.parseWith(skipWithToken) ?: return null
+        if (with.recursive && with.expressionsArg.filterIsInstance<CTE>().any { it.thisArg is DML }) {
+            raiseError("Recursive CTEs with data-modifying or COPY statements are not supported")
+        }
+        return with
     }
 
     // These words are contextual, not reserved aliases. Quoted names/literals are never hints.

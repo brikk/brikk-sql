@@ -241,6 +241,28 @@ result tests cover per-row top-k, metric direction, NULL ranks and tie cardinali
 not promise a particular tied winner or future approximate-search recall. Other targets get
 flagged previews and executable refusal, not an invented portable nearest-join translation.
 
+DuckDB 2.0 side-effecting CTEs support INSERT, UPDATE, DELETE and COPY TO bodies. Their
+RETURNING fields feed later CTE/query scopes and completion. Without RETURNING, the pinned
+engine exposes a BIGINT `Count`, not the target table's columns. COPY TO exposes `Count`,
+`Count`/`Files`, or the seven RETURN_STATS fields according to its options; dynamic result
+flags leave the contract unknown. These contracts come from syntax and copied schema facts.
+Analysis never prepares or executes a statement, evaluates a function, or opens an output path.
+
+INSERT/UPDATE RETURNING describe new row images, so their CTE outputs do not inherit old-value
+physical provenance. DELETE can retain direct pre-deletion provenance. Query-root shape inference
+uses these contracts without SELECT-optimizer rewrites. Automatic qualification/star expansion
+and assignment-lineage inference across side-effecting CTEs explicitly refuse where unmodeled;
+ordinary read-only CTEs keep their existing analysis. Cross-target executable generation also
+refuses unverified DuckDB side-effecting CTE translations. Native DuckDB generation preserves
+the producer, references, dependencies and authored materialization hints.
+
+Native result tests verify one execution per statement even for unreferenced/empty consumers
+and NOT MATERIALIZED, plus fresh execution of prepared plans, table rollback and actual COPY
+files. This is the pinned engine's behavior, not an app-side materialization algorithm or a
+promise that exported files roll back. JDBC 2.0.0.0 may classify an outer SELECT as an update
+count when a producer lacks RETURNING. An executeQuery error in that case does not mean the
+write did not run; do not retry the SQL to recover a ResultSet.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

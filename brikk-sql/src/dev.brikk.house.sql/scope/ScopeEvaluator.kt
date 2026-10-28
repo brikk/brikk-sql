@@ -4,6 +4,11 @@ import dev.brikk.house.sql.ast.AggFunc
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.Copy
+import dev.brikk.house.sql.ast.Delete
+import dev.brikk.house.sql.ast.Schema
+import dev.brikk.house.sql.ast.Returning
+import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.Count
 import dev.brikk.house.sql.ast.DType
@@ -137,11 +142,15 @@ internal class ScopeEvaluator(
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
         if (node is Update && dialect.name == "duckdb") {
-            update(node, env)
+            update(node, withClause(node, env))
             return true
         }
         if (node is Merge && dialect.name == "duckdb") {
             merge(node, env)
+            return true
+        }
+        if (dialect.name == "duckdb" && (node is Insert || node is Delete || node is Copy)) {
+            query(node, env)
             return true
         }
         val queries = node.outermostQueries()
@@ -149,22 +158,100 @@ internal class ScopeEvaluator(
         return queries.isNotEmpty()
     }
 
-    private fun update(node: Update, env: Env) {
+    private fun update(node: Update, scoped: Env): Row {
         checkCanceled()
-        val scoped = withClause(node, env)
-        val target = node.thisArg as? Table ?: return
+        val target = node.thisArg as? Table ?: return Row(emptyList(), Knowledge.UNKNOWN)
         // A write target is a physical table, never a same-named CTE or relation slot.
-        val physical = Env(emptyList(), env.outer)
-        val targets = source(target, physical, Frame(emptyList(), env.outer))
-        val targetFrame = Frame(targets, env.outer)
+        val physical = Env(emptyList(), scoped.outer)
+        val targets = source(target, physical, Frame(emptyList(), scoped.outer))
+        val targetFrame = Frame(targets, scoped.outer)
         // DuckDB does not expose the target inside FROM joins or lateral source queries.
         val sources = from(node, scoped)
-        val inputs = Frame(targets + sources.bindings, env.outer, sources.merged)
+        val inputs = Frame(targets + sources.bindings, scoped.outer, sources.merged)
         assignments(node, targetFrame, inputs, scoped)
         expression(node.args["where"] as? Expression, inputs, scoped)
-        // RETURNING reads the updated target, not the FROM sources. This does not claim
-        // a statement result shape or assignment lineage; those need a separate DML contract.
-        expression(node.args["returning"] as? Expression, targetFrame, scoped)
+        return returning(node, targetFrame, scoped, "UPDATE", changed = true)
+    }
+
+    private fun insert(node: Insert, env: Env): Row {
+        val schema = node.thisArg as? Schema
+        val target = (schema?.thisArg ?: node.thisArg) as? Table ?: return Row(emptyList(), Knowledge.UNKNOWN)
+        val targets = source(target, Env(emptyList(), env.outer), Frame(emptyList(), env.outer))
+        val frame = Frame(targets, env.outer)
+        for (column in schema?.expressionsArg.orEmpty().filterIsInstance<Expression>()) {
+            checkCanceled()
+            val identifier = column as? Identifier ?: (column as? Column)?.thisArg as? Identifier ?: continue
+            if (!atCaret(identifier, frame)) record(identifier, null, unqualified(frame, identifier))
+        }
+        (node.args["expression"] as? Expression)?.let { input ->
+            if (input.isQuery()) query(input, env) else expression(input, Frame(emptyList(), env.outer), env)
+        }
+        return returning(node, frame, env, "INSERT", changed = true)
+    }
+
+    private fun delete(node: Delete, env: Env): Row {
+        val target = node.thisArg as? Table ?: return Row(emptyList(), Knowledge.UNKNOWN)
+        val targets = source(target, Env(emptyList(), env.outer), Frame(emptyList(), env.outer))
+        val frame = Frame(targets, env.outer)
+        val sources = (node.args["using"] as? List<*>).orEmpty().filterIsInstance<Expression>()
+            .flatMap { source(it, env, Frame(emptyList(), env.outer)) }
+        expression(node.args["where"] as? Expression, Frame(targets + sources, env.outer), env)
+        return returning(node, frame, env, "DELETE", changed = false)
+    }
+
+    /** CTE outputs only: standalone statement analysis still exposes no statement result shape. */
+    private fun returning(node: Expression, frame: Frame, env: Env, context: String, changed: Boolean): Row {
+        val returning = node.args["returning"] as? Returning
+            ?: return Row(listOf(computed("Count", Nullability.NON_NULL, context, "BIGINT")), Knowledge.FULL)
+        val columns = ArrayList<ScopeColumn>()
+        var knowledge = Knowledge.FULL
+        for (projection in returning.expressionsArg.filterIsInstance<Expression>()) {
+            checkCanceled()
+            val star = projection as? Star ?: (projection as? Column)?.thisArg as? Star
+            if (star != null) {
+                val bindings = if (projection is Column) qualifiedStar(projection, frame) else frame.bindings
+                val (expanded, known) = star(star, bindings, emptyList(), frame, env, context)
+                columns += expanded
+                knowledge = worst(knowledge, known)
+            } else {
+                expression(projection, frame, env)
+                columns += projected(projection, context)
+            }
+        }
+        // INSERT/UPDATE output is a new row image. Keep declared types/constraints, but never
+        // claim that a changed value comes from the pre-write physical column's old value.
+        return Row(if (changed) columns.map { it.copy(origin = ColumnOrigin.COMPUTED, source = null,
+            provenance = null, computedBy = context) } else columns, knowledge)
+    }
+
+    private fun copy(node: Copy, env: Env): Row {
+        (node.thisArg as? Expression)?.let { input ->
+            if (input.isQuery()) query(input, env) else source(input, env, Frame(emptyList(), env.outer))
+        }
+        val files = copyFlag(node, "RETURN_FILES")
+        val stats = copyFlag(node, "RETURN_STATS")
+        if (files == null || stats == null || files && stats) return Row(emptyList(), Knowledge.UNKNOWN)
+        val fields = when {
+            stats -> listOf("filename" to "VARCHAR", "count" to "UBIGINT", "file_size_bytes" to "UBIGINT",
+                "footer_size_bytes" to "UBIGINT", "column_statistics" to "MAP(VARCHAR, MAP(VARCHAR, VARCHAR))",
+                "partition_keys" to "MAP(VARCHAR, VARCHAR)", "extra_info" to "MAP(VARCHAR, VARIANT)")
+            files -> listOf("Count" to "BIGINT", "Files" to "VARCHAR[]")
+            else -> listOf("Count" to "BIGINT")
+        }
+        return Row(fields.map { (name, type) -> computed(name, if (stats) Nullability.UNKNOWN else Nullability.NON_NULL, "COPY", type) }, Knowledge.FULL)
+    }
+
+    private fun copyFlag(node: Copy, name: String): Boolean? {
+        val options = (node.args["params"] as? List<*>).orEmpty().filterIsInstance<Expression>()
+            .filter { (it.thisArg as? Expression)?.name.equals(name, ignoreCase = true) }
+        if (options.isEmpty()) return false
+        val option = options.singleOrNull() ?: return null
+        return when (val value = option.expressionArg) {
+            null -> true
+            is BooleanNode -> value.thisArg as? Boolean
+            is Literal -> when (value.name.lowercase()) { "true" -> true; "false" -> false; else -> null }
+            else -> null
+        }
     }
 
     private fun assignments(node: Update, targets: Frame, inputs: Frame, env: Env) {
@@ -233,6 +320,10 @@ internal class ScopeEvaluator(
                 row
             }
             is Values -> values(node, scoped)
+            is Update -> if (dialect.name == "duckdb") update(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Insert -> if (dialect.name == "duckdb") insert(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Delete -> if (dialect.name == "duckdb") delete(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
+            is Copy -> if (dialect.name == "duckdb" && node.args["kind"] != true) copy(node, scoped) else Row(emptyList(), Knowledge.UNKNOWN)
             else -> {
                 expression(node, env.outer, scoped)
                 Row(emptyList(), Knowledge.UNKNOWN)

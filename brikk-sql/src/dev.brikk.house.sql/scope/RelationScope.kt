@@ -183,7 +183,10 @@ data class ScopeCompletion(
  * scopes its target assignments, FROM inputs, predicates and target-only RETURNING, including
  * the outer target visible to a correlated scalar subquery. DuckDB MERGE scopes matched,
  * source-only and target-only branches separately, plus target RETURNING and merge_action.
- * Neither exposes a statement result shape or assignment lineage.
+ * Standalone writes still expose no statement result shape. In DuckDB CTEs, INSERT/UPDATE/DELETE
+ * expose RETURNING columns, or the native BIGINT Count contract without RETURNING; COPY TO exposes
+ * its Count/Files/statistics contract. New INSERT/UPDATE row images do not claim pre-write value
+ * provenance. This is declarative analysis, never preparation, binding or execution.
  *
  * Experimental: the shape of these types may change until the IntelliJ and LSP consumers use it.
  */

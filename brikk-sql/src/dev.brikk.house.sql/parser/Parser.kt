@@ -2126,7 +2126,7 @@ open class Parser(
     protected fun parseProjections(): MutableList<Expression> = parseExpressions()
 
     // sqlglot: Parser._parse_with
-    fun parseWith(skipWithToken: kotlin.Boolean = false): With? {
+    open fun parseWith(skipWithToken: kotlin.Boolean = false): With? {
         if (!skipWithToken && !match(TokenType.WITH)) return null
 
         val comments = prevComments
@@ -5908,8 +5908,8 @@ open class Parser(
 
         val params = parseWrapped({ parseCopyParameters() }, optional = true)
 
-        // Fallback case
-        if (currToken.exists) {
+        // A COPY nested in a CTE or another query ends at the caller's closing parenthesis.
+        if (currToken.exists && currToken.tokenType != TokenType.R_PAREN) {
             return parseAsCommand(start)
         }
 

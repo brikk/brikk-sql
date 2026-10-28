@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Merge
 import dev.brikk.house.sql.ast.DerivedTable
@@ -212,6 +213,9 @@ private fun prepareLineage(
         )
     }
 
+    if (scope == null && expression.hasSideEffectingCte()) {
+        throw SqlglotError("Cannot infer assignment lineage across side-effecting CTEs")
+    }
     val ensuredSchema = ensureSchema(schema, dialect = dialect)
 
     var builtScope = scope

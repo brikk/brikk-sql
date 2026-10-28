@@ -2,6 +2,7 @@ package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Table
+import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 
@@ -75,8 +76,11 @@ fun <E : Expression> qualify(
     onQualify: ((Table) -> Unit)? = null,
     sql: String? = null,
 ): E {
-    val resolvedSchema = ensureSchema(schema, dialect = dialect)
     val resolvedDialect = dialect ?: Dialects.BASE
+    if (resolvedDialect.name == "duckdb" && expression.hasSideEffectingCte()) {
+        throw OptimizeError("Automatic qualification across side-effecting CTEs is not modeled")
+    }
+    val resolvedSchema = ensureSchema(schema, dialect = dialect)
 
     preserveComprehensionIdentifierCase(expression, resolvedDialect)
 
