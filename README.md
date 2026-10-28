@@ -28,10 +28,15 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Embedded IntelliJ action, snapshot and console-preparation mechanics; independently versioned. |
 
-Core and metadata target JVM for current publications and retain the `-jvm`
-coordinates. They emit Java 21-compatible bytecode, as do the verification
-modules; trino-parser itself, and so the Trino verifier and the aggregate, need a
-Java 25 runtime. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
+Core and metadata retain their JVM `-jvm` coordinates. The development core,
+metadata, verification API and Doris verifier target **Java 17** and run their
+suites on JDK 17, so they can be embedded in Doris's JVM. Other verifiers and IDE
+support retain Java 21 bytecode; trino-parser itself, and so the Trino verifier
+and aggregate, need a Java 25 runtime. Java 17 consumers should use the individual
+Doris verifier, not the aggregate. Older published JARs are not retroactively
+retargeted; use a snapshot/release with the Java 17 change.
+See [Java 17 embedding and verification](docs/java17-compatibility.md).
+The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
 Latest core, metadata, verify and oracle release: **`0.20.1`**. SQL IntelliJ

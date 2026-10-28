@@ -9,12 +9,17 @@ import kotlin.test.assertNotNull
 
 class JvmCompatibilityTest {
     @Test
-    fun coreTargetsJava21() {
+    fun coreTargetsJava17() {
         val stream = assertNotNull(SqlFragment::class.java.getResourceAsStream("/dev/brikk/house/sql/shape/SqlFragment.class"))
         val header = stream.use { it.readNBytes(8) }
         val major = (header[6].toInt() and 0xff) shl 8 or (header[7].toInt() and 0xff)
 
-        assertEquals(65, major)
+        assertEquals(61, major)
+    }
+
+    @Test
+    fun coreSuiteRunsOnTheMinimumSupportedJvm() {
+        assertEquals(17, Runtime.version().feature())
     }
 
     @Test
