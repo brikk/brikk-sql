@@ -181,7 +181,9 @@ data class ScopeCompletion(
  * qualifier execution cannot keep across a stage boundary does not resolve. Queries are
  * analyzed, including those inside other statements (INSERT ... SELECT). DuckDB UPDATE also
  * scopes its target assignments, FROM inputs, predicates and target-only RETURNING, including
- * the outer target visible to a correlated scalar subquery. It does not expose a result shape.
+ * the outer target visible to a correlated scalar subquery. DuckDB MERGE scopes matched,
+ * source-only and target-only branches separately, plus target RETURNING and merge_action.
+ * Neither exposes a statement result shape or assignment lineage.
  *
  * Experimental: the shape of these types may change until the IntelliJ and LSP consumers use it.
  */

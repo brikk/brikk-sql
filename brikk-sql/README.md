@@ -220,12 +220,18 @@ The full sqlglot semantic pipeline is ported and oracle-gated:
   Powers engine-exact `unmappableFunctions(target)` capability checks and
   certification below.
 
-`RelationScope.analyze` and `RelationScope.complete` also handle DuckDB UPDATE expressions.
+`RelationScope.analyze` and `RelationScope.complete` also handle DuckDB UPDATE and MERGE expressions.
 SET targets see only the physical target table; values and WHERE see the target plus FROM
 sources, with that frame available to correlated scalar subqueries. FROM joins cannot read
 the target, and RETURNING sees only the target. This is symbol resolution and completion,
-not UPDATE result-shape or assignment-lineage support. The query-lineage entry points
-refuse a root UPDATE instead of mistaking its last scalar subquery for the statement result.
+not UPDATE result-shape or assignment-lineage support. MERGE branches expose both sides when
+matched, only the target for NOT MATCHED BY SOURCE, and only the source for NOT MATCHED BY TARGET.
+Its RETURNING also exposes the VARCHAR `merge_action` pseudo-column, unless a real target column
+shadows that name. An incomplete target inventory does not prove the pseudo-column's type.
+Without an explicitly supplied query scope, query-lineage entry points refuse root
+UPDATE/MERGE statements instead of mistaking their last nested query for the statement result.
+MERGE INSERT BY NAME stays structured through
+serde and generation; executable generation refuses it for unproved non-DuckDB targets.
 
 ### Certified transpilation
 

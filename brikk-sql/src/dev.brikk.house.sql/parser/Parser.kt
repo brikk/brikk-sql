@@ -6552,8 +6552,11 @@ open class Parser(
             match(TokenType.THEN)
 
             val then: Expression? = if (match(TokenType.INSERT)) {
-                val star = parseStar()
-                if (star != null) {
+                val byName = matchTextSeq("BY", "NAME")
+                val star = if (byName) null else parseStar()
+                if (byName) {
+                    expression(Insert(args("by_name" to true)))
+                } else if (star != null) {
                     expression(Insert(args("this" to star)))
                 } else {
                     expression(

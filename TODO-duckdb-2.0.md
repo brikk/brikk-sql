@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; the first continuation batch covers DDB20-003 through DDB20-005.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-007.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -116,16 +116,37 @@ and IDE introspection/completion are separate contracts.
   Full core and DuckDB verifier/native module gates passed: 1,268 core tests and 28 verifier/native
   tests. Existing corpus, ledger and binary-compatibility tests remain green without ledger changes.
 
-- [ ] `DDB20-006` MERGE INTO statement forms [AUDIT].
+- [x] `DDB20-006` MERGE INTO statement forms [DONE].
   Basic native acceptance exists. Pin the [documented variants][merge]: whole-row UPDATE/INSERT,
   UPDATE SET, ON versus USING(key), conditional/multiple clauses, DELETE, INSERT BY NAME,
   NOT MATCHED BY SOURCE/TARGET and `RETURNING merge_action, *`. Preserve AST, qualification,
   typing and executable output; do not claim all variants from one parser-acceptance test.
+  Structured INSERT BY NAME now uses the existing Insert.by_name argument rather than a
+  value-shaped expression, with serde/generation preservation and executable refusal for
+  unproved non-DuckDB targets. Core relation scopes distinguish matched, source-only and
+  target-only branches, SET/INSERT target columns and source expressions. RETURNING exposes
+  target fields and the VARCHAR merge_action pseudo-column, not source aliases.
+  A real target column named merge_action shadows the pseudo-column, retaining its own type;
+  incomplete target facts do not prove an unshadowed VARCHAR. Whole-statement
+  result shape and assignment lineage are not claimed; query-lineage APIs refuse the wrong root.
+  DuckdbMergeTest and DuckdbMergeResultTest pin the documented people sequence, ON/USING keys,
+  whole-row actions, explicit assignments/inserts, reordered BY NAME input, conditional/multiple
+  clauses, both unmatched directions, returned actions and native invalid-alias controls.
 
-- [ ] `DDB20-007` MERGE multiple-match semantics [AUDIT].
+- [x] `DDB20-007` MERGE multiple-match semantics [DONE].
   Assert the 2.0 error when matched UPDATE/DELETE would affect one target more than once,
   and successful deduplicated controls. Keep this separate from UPDATE FROM's unspecified
   source selection; never transpile one into the other without a semantic warning.
+  Native probes distinguish duplicate keys from duplicate actual target changes: a guard that
+  leaves only one applicable matched action can succeed. Deduplicated or unique-ON controls
+  succeed; matched duplicates with no applicable action or only an INSERT branch need not fail.
+  Multiple inserts from unmatched source rows are allowed without a conflicting target constraint.
+  Tests require atomic UPDATE/DELETE failures when the same target would change twice, unchanged
+  target rows after failure, and exact successful control rows. No global duplicate-source ban or
+  UPDATE/MERGE rewrite was added.
+  Evidence for DDB20-006 and DDB20-007: DuckdbMergeTest and DuckdbMergeResultTest. Full module
+  gates passed with 1,273 core tests and 35 DuckDB verifier/native tests, including the UPDATE
+  regression batch and existing corpus/ledger/ABI gates. No ledger changes or IDE model work.
 
 - [ ] `DDB20-008` NEAREST joins [AUDIT].
   Implemented `Nearest` AST, optional k, APPROX/EXACT, distance/similarity, generation and

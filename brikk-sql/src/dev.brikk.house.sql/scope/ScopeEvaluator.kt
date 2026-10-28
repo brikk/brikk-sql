@@ -36,6 +36,11 @@ import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.TableAlias
 import dev.brikk.house.sql.ast.Values
 import dev.brikk.house.sql.ast.Update
+import dev.brikk.house.sql.ast.Merge
+import dev.brikk.house.sql.ast.Insert
+import dev.brikk.house.sql.ast.When
+import dev.brikk.house.sql.ast.Whens
+import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.Window
 import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.outputName
@@ -129,10 +134,14 @@ internal class ScopeEvaluator(
     var caretCtes: List<Cte>? = null
         private set
 
-    /** Non-query statements normally contribute only their queries; DuckDB UPDATE also has a row scope. */
+    /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
         if (node is Update && dialect.name == "duckdb") {
             update(node, env)
+            return true
+        }
+        if (node is Merge && dialect.name == "duckdb") {
+            merge(node, env)
             return true
         }
         val queries = node.outermostQueries()
@@ -151,17 +160,64 @@ internal class ScopeEvaluator(
         // DuckDB does not expose the target inside FROM joins or lateral source queries.
         val sources = from(node, scoped)
         val inputs = Frame(targets + sources.bindings, env.outer, sources.merged)
-        for (assignment in node.expressionsArg.filterIsInstance<Expression>()) {
-            checkCanceled()
-            if (assignment is EQ) {
-                expression(assignment.thisArg as? Expression, targetFrame, scoped)
-                expression(assignment.expressionArg as? Expression, inputs, scoped)
-            } else expression(assignment, inputs, scoped)
-        }
+        assignments(node, targetFrame, inputs, scoped)
         expression(node.args["where"] as? Expression, inputs, scoped)
         // RETURNING reads the updated target, not the FROM sources. This does not claim
         // a statement result shape or assignment lineage; those need a separate DML contract.
         expression(node.args["returning"] as? Expression, targetFrame, scoped)
+    }
+
+    private fun assignments(node: Update, targets: Frame, inputs: Frame, env: Env) {
+        for (assignment in node.expressionsArg.filterIsInstance<Expression>()) {
+            checkCanceled()
+            if (assignment is EQ) {
+                expression(assignment.thisArg as? Expression, targets, env)
+                expression(assignment.expressionArg as? Expression, inputs, env)
+            } else expression(assignment, inputs, env)
+        }
+    }
+
+    private fun merge(node: Merge, env: Env) {
+        checkCanceled()
+        val scoped = withClause(node, env)
+        val target = node.thisArg as? Table ?: return
+        val targets = source(target, Env(emptyList(), env.outer), Frame(emptyList(), env.outer))
+        val targetFrame = Frame(targets, env.outer)
+        val sources = (node.args["using"] as? Expression)?.let { source(it, scoped, Frame(emptyList(), env.outer)) }.orEmpty()
+        val sourceFrame = Frame(sources, env.outer)
+        val keys = (node.args["using_cond"] as? List<*>).orEmpty().filterIsInstance<Expression>()
+        // Reuse the JOIN USING name contract, with copies so the AST's parent links stay intact.
+        val common = if (keys.isEmpty()) emptyList() else usingKeys(Join(args("using" to keys.map { it.copy() })), targets, emptyList(), sources)
+            .map { merge(it, "") }
+        val both = Frame(targets + sources, env.outer, common)
+        expression(node.args["on"] as? Expression, both, scoped)
+        for (branch in (node.args["whens"] as? Whens)?.expressionsArg.orEmpty().filterIsInstance<When>()) {
+            checkCanceled()
+            val inputs = when {
+                branch.args["matched"] == true -> both
+                branch.args["source"] == true -> targetFrame
+                else -> sourceFrame
+            }
+            expression(branch.args["condition"] as? Expression, inputs, scoped)
+            when (val action = branch.args["then"]) {
+                is Update -> assignments(action, targetFrame, inputs, scoped)
+                is Insert -> {
+                    expression(action.thisArg as? Expression, targetFrame, scoped)
+                    expression(action.expressionArg as? Expression, inputs, scoped)
+                }
+                is Expression -> expression(action, inputs, scoped)
+            }
+        }
+        // The engine's actual target column wins over the pseudo-column when names collide.
+        // An incomplete inventory guarantees the name via fallback, not an unshadowed VARCHAR type.
+        val shadowed = targets.any { binding -> binding.columns.any { same(it.name, "merge_action") } }
+        val action = when {
+            shadowed -> emptyList()
+            targets.all { it.knowledge == Knowledge.FULL } -> listOf(computed("merge_action", Nullability.NON_NULL, "MERGE", "VARCHAR"))
+            else -> listOf(ScopeColumn("merge_action", "", ColumnOrigin.RELATION_CONTRACT, Nullability.UNKNOWN))
+        }
+        val returning = targetFrame.with(action, first = false)
+        expression(node.args["returning"] as? Expression, returning, scoped)
     }
 
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {

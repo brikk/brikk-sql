@@ -4494,6 +4494,10 @@ open class Generator(
         var then: String
         if (thenExpression is Insert) {
             var this_ = sql(thenExpression, "this")
+            if (thenExpression.args["by_name"] == true) {
+                if (dialect.name != "duckdb") unexecutable("MERGE INSERT BY NAME is supported only for DuckDB")
+                this_ = "BY NAME" + if (this_.isNotEmpty()) " $this_" else ""
+            }
             this_ = if (this_.isNotEmpty()) "INSERT $this_" else "INSERT"
             val thenExpr = sql(thenExpression, "expression")
             then = if (thenExpr.isNotEmpty()) "$this_ VALUES $thenExpr" else this_
