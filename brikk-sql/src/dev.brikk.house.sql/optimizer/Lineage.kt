@@ -1,6 +1,7 @@
 package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.DerivedTable
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
@@ -194,6 +195,12 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+
+    // buildScope(UPDATE) can return its last scalar subquery or FROM table. Neither is
+    // the UPDATE's output or its assignment lineage. Refuse rather than trace the wrong root.
+    if (expression is Update && scope == null) {
+        throw SqlglotError("Cannot build UPDATE assignment lineage; sql must be a query")
+    }
 
     if (!sources.isNullOrEmpty()) {
         expression = expand(

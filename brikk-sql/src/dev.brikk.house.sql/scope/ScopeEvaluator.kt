@@ -35,6 +35,7 @@ import dev.brikk.house.sql.ast.Subquery
 import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.TableAlias
 import dev.brikk.house.sql.ast.Values
+import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Window
 import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.outputName
@@ -128,6 +129,41 @@ internal class ScopeEvaluator(
     var caretCtes: List<Cte>? = null
         private set
 
+    /** Non-query statements normally contribute only their queries; DuckDB UPDATE also has a row scope. */
+    fun statement(node: Expression, env: Env): Boolean {
+        if (node is Update && dialect.name == "duckdb") {
+            update(node, env)
+            return true
+        }
+        val queries = node.outermostQueries()
+        queries.forEach { query(it, env) }
+        return queries.isNotEmpty()
+    }
+
+    private fun update(node: Update, env: Env) {
+        checkCanceled()
+        val scoped = withClause(node, env)
+        val target = node.thisArg as? Table ?: return
+        // A write target is a physical table, never a same-named CTE or relation slot.
+        val physical = Env(emptyList(), env.outer)
+        val targets = source(target, physical, Frame(emptyList(), env.outer))
+        val targetFrame = Frame(targets, env.outer)
+        // DuckDB does not expose the target inside FROM joins or lateral source queries.
+        val sources = from(node, scoped)
+        val inputs = Frame(targets + sources.bindings, env.outer, sources.merged)
+        for (assignment in node.expressionsArg.filterIsInstance<Expression>()) {
+            checkCanceled()
+            if (assignment is EQ) {
+                expression(assignment.thisArg as? Expression, targetFrame, scoped)
+                expression(assignment.expressionArg as? Expression, inputs, scoped)
+            } else expression(assignment, inputs, scoped)
+        }
+        expression(node.args["where"] as? Expression, inputs, scoped)
+        // RETURNING reads the updated target, not the FROM sources. This does not claim
+        // a statement result shape or assignment lineage; those need a separate DML contract.
+        expression(node.args["returning"] as? Expression, targetFrame, scoped)
+    }
+
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {
         // Recursion follows query nesting only, which the parser caps at its bracket depth.
         checkCanceled()
@@ -212,18 +248,18 @@ internal class ScopeEvaluator(
 
     private class Joined(val bindings: List<Binding>, val merged: List<ScopeColumn>)
 
-    private fun from(select: Select, env: Env): Frame {
-        val first = (select.args["from_"] as? From)?.thisArg as? Expression
+    private fun from(node: Expression, env: Env): Frame {
+        val first = (node.args["from_"] as? From)?.thisArg as? Expression
             ?: return Frame(emptyList(), env.outer)
         var bindings = source(first, env, Frame(emptyList(), env.outer))
         var merged = emptyList<ScopeColumn>()
-        for (join in (select.args["joins"] as? List<*>).orEmpty().filterIsInstance<Join>()) {
+        for (join in (node.args["joins"] as? List<*>).orEmpty().filterIsInstance<Join>()) {
             val right = source(join.thisArg as? Expression ?: continue, env, Frame(bindings, env.outer, merged))
             val joined = joinRows(join, bindings, merged, right, env)
             bindings = joined.bindings
             merged = joined.merged
         }
-        (select.args["laterals"] as? List<*>)?.filterIsInstance<Expression>()?.forEach {
+        (node.args["laterals"] as? List<*>)?.filterIsInstance<Expression>()?.forEach {
             bindings = bindings + source(it, env, Frame(bindings, env.outer, merged))
         }
         return Frame(bindings, env.outer, merged)
@@ -332,7 +368,7 @@ internal class ScopeEvaluator(
             .fold(labeled) { binding, pivot -> pivot(binding, pivot, env) }
         var bindings = listOf(pivoted)
         var merged = emptyList<ScopeColumn>()
-        if (node is Table) for (join in (node.args["joins"] as? List<*>).orEmpty().filterIsInstance<Join>()) {
+        if (node is Table || node is Subquery) for (join in (node.args["joins"] as? List<*>).orEmpty().filterIsInstance<Join>()) {
             val right = source(join.thisArg as? Expression ?: continue, env, Frame(bindings, env.outer, merged))
             val joined = joinRows(join, bindings, merged, right, env)
             bindings = joined.bindings

@@ -220,6 +220,13 @@ The full sqlglot semantic pipeline is ported and oracle-gated:
   Powers engine-exact `unmappableFunctions(target)` capability checks and
   certification below.
 
+`RelationScope.analyze` and `RelationScope.complete` also handle DuckDB UPDATE expressions.
+SET targets see only the physical target table; values and WHERE see the target plus FROM
+sources, with that frame available to correlated scalar subqueries. FROM joins cannot read
+the target, and RETURNING sees only the target. This is symbol resolution and completion,
+not UPDATE result-shape or assignment-lineage support. The query-lineage entry points
+refuse a root UPDATE instead of mistaking its last scalar subquery for the statement result.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

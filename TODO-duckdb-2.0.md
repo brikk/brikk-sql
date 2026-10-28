@@ -4,8 +4,9 @@ Reconciled on 2026-10-28 against the final 2.0 announcement, migration guide,
 documentation index, follow-up Gems post, the user's linked examples and existing
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
-recursive IDE model/native-introspection effort isolated. Other unchecked items remain unselected;
-do not expand the implementation scope without approval.
+recursive IDE model/native-introspection effort isolated. The user subsequently authorized
+continued DuckDB work on `duckdb-2-0-syntax`; the first continuation batch covers DDB20-003 through DDB20-005.
+Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
 
@@ -79,22 +80,41 @@ and IDE introspection/completion are separate contracts.
   InternalApiContainmentTest, 25 tests each on IDEA 261.25134.95 and 263.5701.42. The broader platform
   sweep hit the command's 120-second timeout and is not reported as passed. No Plugin Verifier run.
 
-- [ ] `DDB20-003` UPDATE from the same table [AUDIT].
+- [x] `DDB20-003` UPDATE from the same table [DONE].
   Pin the exact [self-update example][update-same], with distinct target/source aliases,
   correlated subquery references and actual resulting rows. Check qualification and lineage
   do not capture the wrong instance of the table. This documented form is not automatically
   a newly introduced 2.0 grammar rule.
+  Focused coverage now pins both the documented scalar form and aliased self-FROM form,
+  parse/generate/serde and native rows before/after table qualification. DuckDB relation scopes
+  now retain the outer target in scalar subqueries, keep inner aliases separate and offer
+  assignment/correlated completion. Query-lineage APIs explicitly refuse a root UPDATE instead
+  of inventing statement lineage from its last nested SELECT. Full assignment/result-shape
+  lineage remains unsupported, not silently inferred.
 
-- [ ] `DDB20-004` UPDATE using joins [AUDIT].
+- [x] `DDB20-004` UPDATE using joins [DONE].
   Basic `UPDATE ... FROM` already passes the native 2.0 test. Pin the [city/country example][update-joins],
   join predicates in WHERE, aliases, unqualified target assignments and unchanged nonmatching rows.
   Separately classify explicit joined FROM sources that the final grammar permits, including
   ambiguity/error cases; do not infer their behavior from the simple example.
+  Added exact city/country rows, explicit joined and derived FROM sources, target-only assignment
+  lookup, FROM/target expression lookup and scope tests for joins attached to derived sources.
+  Native errors pin duplicate aliases, ambiguous RHS columns and qualified SET targets.
+  FROM join predicates cannot see the target; RETURNING sees only the updated target, not FROM
+  aliases. No UPDATE-to-MERGE or scalar-to-FROM semantic rewrite was introduced.
 
-- [ ] `DDB20-005` UPDATE FROM with multiple source matches [AUDIT].
+- [x] `DDB20-005` UPDATE FROM with multiple source matches [DONE].
   [Documented semantics][update-multiple]: each target row is updated once using an unspecified
   matching source row. Assert allowed outcomes, not a particular accidental winner. Compare
   the scalar-subquery cardinality error and `scalar_subquery_error_on_multiple_rows` behavior.
+  Native result tests assert one returned/updated target, one increment of its counter, an allowed
+  winner among both source values and unchanged nonmatches/source rows. The scalar form errors
+  atomically by default; with the compatibility setting false its winner is unspecified, and
+  no-match scalars yield NULL rather than UPDATE FROM's unchanged target. MERGE's separate
+  multiple-match contract remains DDB20-007.
+  Evidence for DDB20-003 through DDB20-005: DuckdbUpdateTest and DuckdbUpdateResultTest.
+  Full core and DuckDB verifier/native module gates passed: 1,268 core tests and 28 verifier/native
+  tests. Existing corpus, ledger and binary-compatibility tests remain green without ledger changes.
 
 - [ ] `DDB20-006` MERGE INTO statement forms [AUDIT].
   Basic native acceptance exists. Pin the [documented variants][merge]: whole-row UPDATE/INSERT,

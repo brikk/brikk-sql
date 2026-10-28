@@ -165,7 +165,7 @@ internal class ScopeAnalysis(
                 val row = evaluator.query(lowered, root)
                 if (parsed.statements.size == 1) output = row.toFact()
             } else {
-                lowered.outermostQueries().forEach { evaluator.query(it, root) }
+                evaluator.statement(lowered, root)
             }
             references += evaluator.references
             diagnostics += evaluator.diagnostics
@@ -242,10 +242,9 @@ internal class CaretCompletion(
             }
             if (kind != PositionKind.COLUMN && kind != PositionKind.RELATION) return none(kind)
             val evaluator = ScopeEvaluator(dialect, facts, names, origins, checkCanceled, MARKER)
-            val queries = if (lowered.isQuery()) listOf(lowered) else lowered.outermostQueries()
-            // Outside any query the marker is a word being typed, not a column.
-            if (queries.isEmpty()) return none(PositionKind.OTHER)
-            queries.forEach { evaluator.query(it, Env(emptyList(), null)) }
+            val root = Env(emptyList(), null)
+            if (lowered.isQuery()) evaluator.query(lowered, root)
+            else if (!evaluator.statement(lowered, root)) return none(PositionKind.OTHER)
             if (kind == PositionKind.RELATION) {
                 val table = parent as Table
                 val qualifier = table.parts.filterIsInstance<Identifier>().dropLast(1).map { it.name }

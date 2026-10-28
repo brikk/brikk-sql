@@ -178,8 +178,10 @@ data class ScopeCompletion(
  * analyze (a statement of a script, a dialect region of a host document), and results stay in
  * the script's coordinates. PIPE stages scope as brikk-sql lowers them for execution
  * (ast/PipeDesugar.kt): projection-changing stages drop old qualifiers, `AS` replaces them, and a
- * qualifier execution cannot keep across a stage boundary does not resolve. Only queries are
- * analyzed, including those inside other statements (INSERT ... SELECT).
+ * qualifier execution cannot keep across a stage boundary does not resolve. Queries are
+ * analyzed, including those inside other statements (INSERT ... SELECT). DuckDB UPDATE also
+ * scopes its target assignments, FROM inputs, predicates and target-only RETURNING, including
+ * the outer target visible to a correlated scalar subquery. It does not expose a result shape.
  *
  * Experimental: the shape of these types may change until the IntelliJ and LSP consumers use it.
  */
