@@ -379,6 +379,23 @@ exposes **neither parameter names nor null-handling metadata**, so
 Populating Trino profiles would require scraping the engine sources (`@SqlNullable` /
 `RETURNS NULL ON NULL INPUT` on the java implementations) — future work.
 
+## `data/trino-484-doris-4.1.5-json/`
+
+Hand-owned JSON probe inputs and raw paired execution evidence captured on
+2026-10-28 against Trino 484 and Doris FE/BE 4.1.5-release-917b20be838.
+`vectors.json` contains 47 paired expressions; `results.json` includes exact
+queries, stdout/stderr, exit codes, SQL NULL/value distinctions, engine versions
+and image digests. Query IDs and capture timestamps are retained, not normalized
+to make recaptures look byte-identical. See
+[the scoped report](../docs/research/trino-484-doris-4.1.5-json.md) for exact image
+pins, runtime limits, counterexamples and reproduction commands.
+
+Refresh with `tools/probe_trino_doris_json.py` against disposable containers, then
+review semantic changes before updating the golden results and hazard registry.
+Never infer universal equivalence from matching samples or replace historical
+non-JSON evidence with these versions. The metadata generator consumes the reviewed
+`brikk-sql/testResources/semantics/trino-doris-hazards.json`, not raw probe counts.
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 ClickHouse **26.5.1.1**'s complete function registry (`system.functions`), one row per

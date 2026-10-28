@@ -58,6 +58,12 @@ open class DorisGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DORIS
 
+    // Paired 484/4.1.5 probes: MySQL's null parseJsonName silently removed the
+    // parser, turning CAST(JSON_PARSE(text) AS STRING) into CAST(text AS STRING).
+    // Doris needs its actual parser for numeric rendering and invalid/JSON-null input.
+    override val parseJsonName: String?
+        get() = if (dialect.name == "doris") "JSON_PARSE" else super.parseJsonName
+
     // brikk extension #55: the Doris 4.1.4 grammar rejects these lowered forms.
     override val executesPipeCall: Boolean get() = false
     override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN", "NATURAL")

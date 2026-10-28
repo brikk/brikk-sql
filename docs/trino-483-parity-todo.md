@@ -15,18 +15,21 @@ See [extension 58](brikk-extensions.md#58-trino-484-sql-and-metadata) for the up
 
 ## Remaining 484 work
 
-- [ ] Refresh paired JSON evidence against Trino 484 and Doris 4.1.5. Capture
+- [x] Refresh paired JSON evidence against Trino 484 and Doris 4.1.5. Capture
   engine versions, image digests, SQL inputs, results and failures for exponent
   rendering, decimal scale, duplicate keys/member order, and path semantics.
-- [ ] Update the Trino/Doris semantic hazard records and generated metadata from
+- [x] Update the Trino/Doris semantic hazard records and generated metadata from
   those measured results. Candidate function-gap reports are not execution proof;
   retain historical evidence without relabeling it as a new-version result.
-- [ ] Add repeatable paired regression tests and rerun the relevant certification
+- [x] Add repeatable paired regression tests and rerun the relevant certification
   and native-engine gates for any mappings changed by the evidence refresh.
 
 The Trino DuckLake consumer reports no blocking API changes. Its metadata
 dependency remains at 0.7.0; publishing refreshed artifacts and updating that
 consumer pin are separate release/integration work, not completed by this branch.
+
+Completed evidence and validation are in the
+[Trino 484 / Doris 4.1.5 JSON report](research/trino-484-doris-4.1.5-json.md).
 
 ## Verification
 

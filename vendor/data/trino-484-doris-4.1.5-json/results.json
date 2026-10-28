@@ -1,0 +1,1432 @@
+{
+  "capturedAt": "2026-10-28T13:27:01.668223+00:00",
+  "scope": "Exact text/error observations for these vectors only; not universal function equivalence.",
+  "images": {
+    "trino": {
+      "requestedImage": "trinodb/trino@sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f",
+      "imageId": "sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f",
+      "repoDigests": [
+        "trinodb/trino@sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f"
+      ]
+    },
+    "frontend": {
+      "requestedImage": "apache/doris@sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+      "imageId": "sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+      "repoDigests": [
+        "apache/doris@sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc"
+      ]
+    },
+    "backend": {
+      "requestedImage": "apache/doris@sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb",
+      "imageId": "sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb",
+      "repoDigests": [
+        "apache/doris@sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb"
+      ]
+    }
+  },
+  "versions": {
+    "trino": {
+      "exitCode": 0,
+      "stdout": "484\n",
+      "stderr": ""
+    },
+    "frontend": {
+      "exitCode": 0,
+      "stdout": "fe_d3de52bd_9f75_4906_b24f_459ee7ec55fd\t127.0.0.1\t9010\t8030\t9030\t9020\t8070\tFOLLOWER\ttrue\t1791551639\ttrue\ttrue\t117\t2026-10-28 13:19:12\t2026-10-28 13:26:23\ttrue\t\tdoris-4.1.5-release-917b20be838\tYes\tNULL\n",
+      "stderr": ""
+    },
+    "backend": {
+      "exitCode": 0,
+      "stdout": "1793193552389\t127.0.0.1\t9050\t9060\t8040\t8060\t8050\t2026-10-28 13:21:02\t2026-10-28 13:26:23\ttrue\tfalse\t22\t39.251 KB\t0.000 \t1.034 TB\t1.817 TB\t43.13 %\t43.13 %\t0.000 \t{\"location\" : \"default\"}\t\tdoris-4.1.5-release-917b20be838\t{\"lastSuccessReportTabletsTime\":\"2026-10-28 13:26:24\",\"lastStreamLoadTime\":-1,\"isQueryDisabled\":false,\"isLoadDisabled\":false,\"isActive\":true,\"isShutdown\":false,\"currentFragmentNum\":0,\"lastFragmentUpdateTime\":1793193982741}\t0\t32\t6.00 GB\t2026-10-28 13:26:23\t0\tmix\n",
+      "stderr": ""
+    }
+  },
+  "cases": [
+    {
+      "id": "parse-object",
+      "area": "parse",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('{\"a\":1}')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B2261223A317D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"a\":1}"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('{\"a\":1}') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B2261223A317D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"a\":1}"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "parse-invalid",
+      "area": "parse",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('not json')) AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "Query 20261028_132627_00102_2dj9v failed: Cannot convert value to JSON: 'not json'\n\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('not json') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "parse-null",
+      "area": "null",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE(NULL)) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE(NULL) AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "json-null",
+      "area": "null",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('null')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:6E756C6C\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('null') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "exponent-positive",
+      "area": "exponent",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('1e2')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:3130302E30\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "100.0"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('1e2') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:313030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "100"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "exponent-small",
+      "area": "exponent",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('1e-7')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E30452D37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.0E-7"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('1e-7') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D3037\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-07"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "exponent-zero",
+      "area": "exponent",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('-0e0')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:2D302E30\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "-0.0"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('-0e0') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:2D30\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "-0"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "exponent-overflow",
+      "area": "exponent",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('1e9999')) AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "Query 20261028_132631_00114_2dj9v failed: Cannot convert value to JSON: '1e9999'\n\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('1e9999') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:696E66\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "inf"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "decimal-scale",
+      "area": "decimal",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('1.2300')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E32333030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.2300"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('1.2300') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "decimal-negative-zero",
+      "area": "decimal",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('-0.00')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:302E3030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "0.00"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('-0.00') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:2D30\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "-0"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "decimal-large",
+      "area": "decimal",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('9007199254740993.1200')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:393030373139393235343734303939332E31323030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "9007199254740993.1200"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('9007199254740993.1200') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:39303037313939323534373430393934\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "9007199254740994"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "decimal-nested",
+      "area": "decimal",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT('{\"n\":1.2300}', '$.n')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT('{\"n\":1.2300}', '$.n') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "decimal-typed-array",
+      "area": "decimal",
+      "concept": "json_array",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_ARRAY(CAST(1.20 AS DECIMAL(3,2))) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312E32305D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1.20]"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_ARRAY(CAST(1.20 AS DECIMAL(3,2))) AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312E32305D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1.20]"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "object-member-order",
+      "area": "duplicates",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('{\"z\":1,\"a\":2}')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B227A223A312C2261223A327D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"z\":1,\"a\":2}"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('{\"z\":1,\"a\":2}') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B227A223A312C2261223A327D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"z\":1,\"a\":2}"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "duplicate-preservation",
+      "area": "duplicates",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('{\"a\":1,\"a\":2}')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B2261223A312C2261223A327D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"a\":1,\"a\":2}"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_PARSE('{\"a\":1,\"a\":2}') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B2261223A312C2261223A327D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"a\":1,\"a\":2}"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "duplicate-extract",
+      "area": "duplicates",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT('{\"a\":1,\"a\":2}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT('{\"a\":1,\"a\":2}', '$.a') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "duplicate-scalar",
+      "area": "duplicates",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":1,\"a\":2}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":1,\"a\":2}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-string",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":\"hello\"}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:68656C6C6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "hello"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":\"hello\"}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:68656C6C6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "hello"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-object",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":{\"b\":1}}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":{\"b\":1}}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B2262223A317D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"b\":1}"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "path-array",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":[1,2]}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":[1,2]}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312C325D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1,2]"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "path-missing",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":1}', '$.missing') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":1}', '$.missing')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-json-null",
+      "area": "null",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":null}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":null}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-bool",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":true}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:74727565\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "true"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":true}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:74727565\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "true"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-root",
+      "area": "path",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT('[1,2]', '$')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312C325D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1,2]"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT('[1,2]', '$') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312C325D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1,2]"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-zero",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('[10,20]', '$[0]') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:3130\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "10"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('[10,20]', '$[0]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:3130\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "10"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-negative",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('[10,20]', '$[-1]') AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "Query 20261028_132644_00149_2dj9v failed: Invalid JSON path: '$[-1]'\n\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('[10,20]', '$[-1]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:3230\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "20"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "path-out-of-range",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('[10,20]', '$[2]') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('[10,20]', '$[2]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-wildcard",
+      "area": "path",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT('[10,20]', '$[*]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "Query 20261028_132646_00153_2dj9v failed: Invalid JSON path: '$[*]'\n\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT('[10,20]', '$[*]') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B31302C32305D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[10,20]"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "path-quoted-key",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a.b\":5}', '$.\"a.b\"') AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "Query 20261028_132647_00155_2dj9v failed: Invalid JSON path: '$.\"a.b\"'\n\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a.b\":5}', '$.\"a.b\"')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:35\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "5"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "path-nested",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":[{\"b\":7}]}', '$.a[0].b') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "7"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":[{\"b\":7}]}', '$.a[0].b')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "7"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "scalar-decimal",
+      "area": "decimal",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":1.2300}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E32333030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.2300"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":1.2300}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "scalar-exponent",
+      "area": "exponent",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":1e-7}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-7"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a\":1e-7}', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D3037\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-07"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "json-format-availability",
+      "area": "api",
+      "concept": "json_format",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('[1,2]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312C325D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1,2]"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_FORMAT(JSON_PARSE('[1,2]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "ERROR 1105 (HY000) at line 1: errCode = 2, detailMessage = Can not found function 'JSON_FORMAT'\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "path-invalid-json",
+      "area": "path",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT('not json', '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT('not json', '$.a') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "typed-decimal-extract",
+      "area": "decimal",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT(JSON_PARSE('{\"n\":1.2300}'), '$.n')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E32333030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.2300"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT(JSON_PARSE('{\"n\":1.2300}'), '$.n') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "typed-decimal-scalar",
+      "area": "decimal",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR(JSON_PARSE('{\"n\":1.2300}'), '$.n') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E32333030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.2300"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT(JSON_PARSE('{\"n\":1.2300}'), '$.n')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "typed-exponent-extract",
+      "area": "exponent",
+      "concept": "json_extract",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_FORMAT(JSON_EXTRACT(JSON_PARSE('{\"n\":1e-7}'), '$.n')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E30452D37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.0E-7"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CAST(JSON_EXTRACT(JSON_PARSE('{\"n\":1e-7}'), '$.n') AS STRING) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D3037\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-07"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "typed-exponent-scalar",
+      "area": "exponent",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR(JSON_PARSE('{\"n\":1e-7}'), '$.n') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E30452D37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.0E-7"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT(JSON_PARSE('{\"n\":1e-7}'), '$.n')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D3037\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-07"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "typed-duplicate-scalar",
+      "area": "duplicates",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR(JSON_PARSE('{\"a\":1,\"a\":2}'), '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT(JSON_PARSE('{\"a\":1,\"a\":2}'), '$.a')) AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "path-bracket-quoted-key",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a.b\":5}', '$[\"a.b\"]') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:35\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "5"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT JSON_UNQUOTE(JSON_EXTRACT('{\"a.b\":5}', '$[\"a.b\"]')) AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "ERROR 1105 (HY000) at line 1: errCode = 2, detailMessage = (127.0.0.1)[INVALID_ARGUMENT]Json path error: Invalid Json Path for value: $[\"a.b\"]\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "parsed-json-null-is-sql-null",
+      "area": "null",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT CASE WHEN JSON_PARSE('null') IS NULL THEN 'yes' ELSE 'no' END AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:6E6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "no"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CASE WHEN JSON_PARSE('null') IS NULL THEN 'yes' ELSE 'no' END AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:6E6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "no"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "parsed-invalid-is-sql-null",
+      "area": "null",
+      "concept": "json_parse",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT CASE WHEN JSON_PARSE('not json') IS NULL THEN 'yes' ELSE 'no' END AS v) AS probe",
+        "raw": {
+          "exitCode": 1,
+          "stdout": "",
+          "stderr": "Query 20261028_132656_00181_2dj9v failed: Cannot convert value to JSON: 'not json'\n\n"
+        },
+        "observation": {
+          "status": "error"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT CASE WHEN JSON_PARSE('not json') IS NULL THEN 'yes' ELSE 'no' END AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:6E6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "no"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "get-json-string-string",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":\"hello\"}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:68656C6C6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "hello"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT GET_JSON_STRING('{\"a\":\"hello\"}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:68656C6C6F\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "hello"
+        }
+      },
+      "comparison": "same"
+    },
+    {
+      "id": "get-json-string-object",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":{\"b\":1}}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT GET_JSON_STRING('{\"a\":{\"b\":1}}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:7B2262223A317D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "{\"b\":1}"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "get-json-string-array",
+      "area": "path",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":[1,2]}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "SQL_NULL\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "sql-null"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT GET_JSON_STRING('{\"a\":[1,2]}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:5B312C325D\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "[1,2]"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "get-json-string-decimal",
+      "area": "decimal",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":1.2300}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E32333030\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.2300"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT GET_JSON_STRING('{\"a\":1.2300}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:312E3233\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1.23"
+        }
+      },
+      "comparison": "different"
+    },
+    {
+      "id": "get-json-string-exponent",
+      "area": "exponent",
+      "concept": "json_extract_scalar",
+      "trino": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', TO_HEX(TO_UTF8(CAST(v AS VARCHAR)))) END FROM (SELECT JSON_EXTRACT_SCALAR('{\"a\":1e-7}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D37\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-7"
+        }
+      },
+      "doris": {
+        "sql": "SELECT CASE WHEN v IS NULL THEN 'SQL_NULL' ELSE CONCAT('VALUE:', HEX(CAST(v AS STRING))) END FROM (SELECT GET_JSON_STRING('{\"a\":1e-7}', '$.a') AS v) AS probe",
+        "raw": {
+          "exitCode": 0,
+          "stdout": "VALUE:31652D3037\n",
+          "stderr": ""
+        },
+        "observation": {
+          "status": "value",
+          "value": "1e-07"
+        }
+      },
+      "comparison": "different"
+    }
+  ]
+}

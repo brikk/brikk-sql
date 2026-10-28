@@ -2028,6 +2028,32 @@ configured and does not replace the earlier native Trino 484 evidence. Paired
 484/Doris 4.1.5 JSON evidence remains on the
 [remaining-work list](trino-483-parity-todo.md#remaining-484-work).
 
+## 59. Versioned Trino/Doris JSON evidence and retained Doris JSON_PARSE
+
+The paired Trino 484 / Doris 4.1.5 refresh directly probes exponent rendering,
+decimal scale/precision, duplicate keys/member order, scalar/null behavior and
+legacy JSON paths. Forty-seven paired cases retain raw SQL, results/errors and
+digest/version provenance. Twenty match exactly and twenty-seven differ. Only
+the five corresponding JSON hazard entries are refreshed; other historical
+evidence keeps its original provenance. JSON_EXTRACT and both scalar-extraction
+alternatives now carry conditional warnings instead of unconditional identity.
+JSON_PARSE remains conditional; Doris still has no JSON_FORMAT built-in.
+
+The native regression also found that Doris inherited MySQL's null parseJsonName,
+which removed ParseJSON nodes entirely. CAST(JSON_PARSE(text) AS STRING) could
+therefore return unparsed original text. Doris generation now emits JSON_PARSE;
+MySQL and StarRocks generation retain their earlier behavior. This correction is
+native-evidence-backed, not a claim of SQLGlot parity or unrestricted cross-engine
+equivalence. Trino484Doris415JsonEvidenceTest replays each captured outcome and
+successful same-dialect renderings; Trino484Doris415JsonCertificationTest requires
+the metadata warnings and retained parser. Hazard sync tests check both directions.
+
+Certification's existing conditional-warning policy is unchanged. Consumers that
+require exact JSON text or numeric precision must act on those warnings. Raw
+evidence, reproduction and limits are in
+[the JSON report](research/trino-484-doris-4.1.5-json.md). No public API, release,
+publication or consumer dependency pin changes are included.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
