@@ -9,8 +9,18 @@ val CLICKHOUSE_TABLE_FUNCTIONS: List<TableFunctionInfo> = listOf(
     TableFunctionInfo("generate_series", schema = OutputSchema.Fixed(listOf(ColumnDef("generate_series", "UInt64")))),
 )
 
-val CLICKHOUSE_METADATA: DialectMetadata = singleSnapshot(
+val CLICKHOUSE_METADATA: DialectMetadata = DialectMetadata(
     "clickhouse",
-    MetadataSnapshot("26.5.1.1", CLICKHOUSE_FUNCTION_CATALOG, CLICKHOUSE_26_5_1_1_KEYWORDS, tableFunctions = CLICKHOUSE_TABLE_FUNCTIONS),
-    CLICKHOUSE_DOCS,
+    listOf(
+        MetadataSnapshot("26.5.1.1", CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG, CLICKHOUSE_26_5_1_1_KEYWORDS,
+            tableFunctions = CLICKHOUSE_TABLE_FUNCTIONS),
+        MetadataSnapshot("26.8.34.13", CLICKHOUSE_26_8_34_13_FUNCTION_CATALOG, CLICKHOUSE_26_8_34_13_KEYWORDS,
+            tableFunctions = CLICKHOUSE_TABLE_FUNCTIONS, settings = CLICKHOUSE_26_8_34_13_SETTINGS,
+            types = CLICKHOUSE_26_8_34_13_TYPES),
+        MetadataSnapshot("26.10.2.103", CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG, CLICKHOUSE_26_10_2_103_KEYWORDS,
+            tableFunctions = CLICKHOUSE_TABLE_FUNCTIONS, settings = CLICKHOUSE_26_10_2_103_SETTINGS,
+            types = CLICKHOUSE_26_10_2_103_TYPES),
+    ),
+    defaultVersion = "26.10.2.103",
+    docs = CLICKHOUSE_DOCS,
 )

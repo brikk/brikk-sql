@@ -290,4 +290,7 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "DorisCancelMaterializedViewTask", "DorisRecover",
     "DorisDefault", "DorisCompactTablet", "DorisModifyColumn",
     "ClickhouseStream", "ClickhouseStreamCursor",
+    "ClickhouseLimitRange", "ClickhouseLimitBy", "ClickhouseAtLocal", "ClickhouseCompoundInterval",
+    "ClickhouseFunctionSettings", "ClickhouseNativeType",
+    "ClickhouseYear",
 )

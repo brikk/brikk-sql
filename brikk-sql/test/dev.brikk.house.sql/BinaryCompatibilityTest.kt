@@ -11,6 +11,7 @@ import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.EngineDocs
 import dev.brikk.house.sql.metadata.PropertyDef
 import dev.brikk.house.sql.metadata.TRINO_METADATA
+import dev.brikk.house.sql.metadata.TypeDef
 import dev.brikk.house.sql.scope.CatalogKnowledge
 import dev.brikk.house.sql.scope.RelationFacts
 import dev.brikk.house.sql.shape.SqlScriptParameters
@@ -23,6 +24,24 @@ import kotlin.test.assertEquals
  */
 class BinaryCompatibilityTest {
     private val marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
+
+    @Test
+    fun clickhouseCasePoliciesKeepPublishedConstructorsAndDefaults() {
+        val list = List::class.java
+        val set = Set::class.java
+        val bool = Boolean::class.javaPrimitiveType!!
+        FunctionCatalog::class.java.getConstructor(list, set, bool).newInstance(emptyList<Any>(), emptySet<String>(), true)
+        val defaults = FunctionCatalog::class.java.getConstructor(list, set, bool, Int::class.javaPrimitiveType, marker)
+            .newInstance(emptyList<Any>(), null, false, 6, null)
+        assertEquals(false, defaults.caseSensitive)
+        val string = String::class.java
+        assertEquals(TypeDef("x", "X"), TypeDef::class.java.getConstructor(string, string, string).newInstance("x", "X", null))
+        TypeDef::class.java.getConstructor(string, string, string, Int::class.javaPrimitiveType, marker)
+            .newInstance("x", "X", null, 4, null)
+        val value = TypeDef("x", "X", caseInsensitive = true)
+        assertEquals(value.copy(name = "y"), TypeDef::class.java.getMethod("copy", string, string, string).invoke(value, "y", "X", null))
+        TypeDef::class.java.getDeclaredMethod("copy\$default", TypeDef::class.java, string, string, string, Int::class.javaPrimitiveType, Any::class.java)
+    }
 
     /** Calls [type]'s synthetic defaults constructor of [parameters] with every argument defaulted. */
     private fun <T> allDefaults(type: Class<T>, vararg parameters: Class<*>): T {

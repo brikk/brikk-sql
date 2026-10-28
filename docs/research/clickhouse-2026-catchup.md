@@ -2,6 +2,10 @@
 
 Audit date: 2026-10-28. Batch 1 covers CH26-001 and CH26-002 in `docs/clickhouse-catchup-plan.md`.
 
+The metadata and query/type follow-up is recorded separately in
+[batch 2](clickhouse-2026-batch2.md). The version-status statements below describe
+batch 1, not the current catalog default after batch 2.
+
 ## References and limits
 
 - [2026 OSS changelog](https://clickhouse.com/docs/resources/changelogs/oss/2026), retrieved 2026-10-28. At retrieval it listed 26.1 through 26.9, not 26.10.

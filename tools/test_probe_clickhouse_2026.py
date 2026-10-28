@@ -6,6 +6,13 @@ import probe_clickhouse_2026 as probe
 
 
 class NativeProbeSafetyTest(unittest.TestCase):
+    def test_expected_native_errors_are_not_successes_or_arbitrary_failures(self):
+        case = {"error_code": 48, "error_name": "NOT_IMPLEMENTED"}
+        self.assertTrue(probe.expected_execution(case, {"returncode": 48, "stdout": "", "stderr": "(NOT_IMPLEMENTED)"}))
+        self.assertFalse(probe.expected_execution(case, {"returncode": 0, "stdout": "", "stderr": ""}))
+        self.assertFalse(probe.expected_execution(case, {"returncode": None, "stdout": "", "stderr": "deadline"}))
+        self.assertFalse(probe.expected_execution(case, {"returncode": 48, "stdout": "", "stderr": "unrelated error"}))
+
     @patch.object(probe.subprocess, "run")
     def test_queries_are_isolated_and_cleanup_only_their_own_container(self, run):
         run.side_effect = [subprocess.CompletedProcess([], 0, "26.10.2.103\n", ""),

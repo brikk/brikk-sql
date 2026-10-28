@@ -29,6 +29,13 @@ import dev.brikk.house.sql.ast.CityHash64
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ClickhouseStream
 import dev.brikk.house.sql.ast.ClickhouseStreamCursor
+import dev.brikk.house.sql.ast.ClickhouseLimitRange
+import dev.brikk.house.sql.ast.ClickhouseLimitBy
+import dev.brikk.house.sql.ast.ClickhouseAtLocal
+import dev.brikk.house.sql.ast.ClickhouseCompoundInterval
+import dev.brikk.house.sql.ast.ClickhouseFunctionSettings
+import dev.brikk.house.sql.ast.ClickhouseNativeType
+import dev.brikk.house.sql.ast.ClickhouseYear
 import dev.brikk.house.sql.ast.Columns
 import dev.brikk.house.sql.ast.CombinedAggFunc
 import dev.brikk.house.sql.ast.CombinedParameterizedAgg
@@ -135,6 +142,9 @@ import dev.brikk.house.sql.parser.applyTimeUnitCoercion
 import dev.brikk.house.sql.parser.buildVarMap
 import dev.brikk.house.sql.parser.buildTrim
 import dev.brikk.house.sql.parser.fromArgList
+import dev.brikk.house.sql.metadata.CLICKHOUSE_FUNCTION_CATALOG
+import dev.brikk.house.sql.metadata.CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
+import dev.brikk.house.sql.metadata.FunctionKind
 import dev.brikk.house.sql.ast.Array as ArrayNode
 
 private fun seqGet(argsList: List<Expression?>, index: Int): Expression? = argsList.getOrNull(index)
@@ -341,6 +351,18 @@ open class ClickhouseParser(
         get() = ClickhouseParserTables.FUNCTIONS + calendarFunctions
 
     private val calendarFunctions = mapOf(
+        // The pinned native formatter accepts year(), but these builds still reject it at
+        // execution. Preserve that call without inventing current-year semantics.
+        "YEAR" to { values: List<Expression?> ->
+            when (values.size) {
+                0 -> ClickhouseYear()
+                1 -> ClickhouseParserTables.FUNCTIONS.getValue("YEAR")(values)
+                else -> {
+                    if (values.size > 2) raiseError("year expects at most a date and timezone argument")
+                    ClickhouseYear(args("expressions" to values))
+                }
+            }
+        },
         "GROUPBITAND" to fromArgList(listOf("this"), false) { BitwiseAndAgg(it) },
         "GROUPBITOR" to fromArgList(listOf("this"), false) { BitwiseOrAgg(it) },
         "GROUPBITXOR" to fromArgList(listOf("this"), false) { BitwiseXorAgg(it) },
@@ -417,7 +439,17 @@ open class ClickhouseParser(
     protected fun resolveClickhouseAgg(nameIn: String): Pair<String, List<String>>? {
         var name = nameIn
         val accumulatedSuffixes = ArrayDeque<String>()
-        var parts: Pair<String, String?>? = AGG_FUNC_MAPPING[name]
+        // Extend recognition for names newly captured by our catalog, not every native
+        // aggregate implementation. The latter includes window-only lag/lead functions
+        // whose established AST and typing must remain unchanged.
+        fun base(name: String): Pair<String, String?>? = AGG_FUNC_MAPPING[name]
+            ?: CLICKHOUSE_FUNCTION_CATALOG.getAll(name)
+                .firstOrNull { it.kind == FunctionKind.AGGREGATE &&
+                    CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG.getAll(name).none { old ->
+                        old.kind == FunctionKind.AGGREGATE
+                    }
+                }?.let { it.name to null }
+        var parts: Pair<String, String?>? = base(name)
         while (parts == null) {
             var stripped = false
             for (suffix in AGG_FUNCTIONS_SUFFIXES) {
@@ -429,7 +461,7 @@ open class ClickhouseParser(
                 }
             }
             if (!stripped) return null
-            parts = AGG_FUNC_MAPPING[name]
+            parts = base(name)
         }
 
         val (aggFuncName, innerSuffix) = parts
@@ -538,6 +570,49 @@ open class ClickhouseParser(
         allowIdentifiers: Boolean,
         withCollation: Boolean,
     ): Expression? {
+        val start = index
+        if (currToken.tokenType != TokenType.IDENTIFIER && currToken.text in setOf("QBit", "MultiPoint")) {
+            val kind = currToken.text
+            advance()
+            val parameters = mutableListOf<Expression>()
+            val parentheses = match(TokenType.L_PAREN)
+            if (kind == "QBit") {
+                if (!parentheses) raiseError("QBit requires element type and dimension")
+                val element = if (currToken.text == "BFloat16") {
+                    advance()
+                    DataType(args("this" to DType.USERDEFINED, "kind" to "BFloat16", "nullable" to false))
+                } else parseTypes(allowIdentifiers = false) as? DataType
+                if (element == null || element.thisArg !in setOf(DType.TINYINT, DType.FLOAT, DType.DOUBLE) && element.text("kind") != "BFloat16" ||
+                    element.args["nullable"] == true || element.expressionsArg.isNotEmpty()) {
+                    raiseError("QBit element type must be Int8, BFloat16, Float32 or Float64")
+                }
+                if (element != null) parameters.add(element)
+                if (!match(TokenType.COMMA)) raiseError("Expected QBit dimension")
+                val dimension = parseNumber() as? Literal
+                if (dimension == null || dimension.name.toULongOrNull() == null || dimension.name.toULongOrNull() == 0UL) {
+                    raiseError("QBit dimension must be a positive integer")
+                }
+                if (dimension != null) parameters.add(dimension)
+                if (match(TokenType.COMMA)) {
+                    val stride = parseNumber() as? Literal
+                    val n = dimension?.name?.toULongOrNull()
+                    val s = stride?.name?.toULongOrNull()
+                    if (s == null || s == 0UL || n == null || n % s != 0UL || s < n && s % 8UL != 0UL) {
+                        raiseError("QBit stride must divide dimension and be a multiple of 8 when smaller")
+                    }
+                    if (stride != null) parameters.add(stride)
+                }
+            }
+            if (parentheses) matchRParen()
+            if (checkFunc && currToken.tokenType != TokenType.STRING) {
+                retreat(start)
+                return null
+            }
+            return expression(ClickhouseNativeType(args(
+                "this" to DType.USERDEFINED, "kind" to kind, "expressions" to parameters,
+                "nested" to parentheses, "nullable" to false,
+            )))
+        }
         val dtype = super.parseTypes(
             checkFunc = checkFunc,
             schema = schema,
@@ -549,6 +624,106 @@ open class ClickhouseParser(
         }
 
         return dtype
+    }
+
+    override fun parseAtTimeZone(this_: Expression?): Expression? {
+        if (matchTextSeq("AT", "LOCAL")) return parseAtTimeZone(expression(ClickhouseAtLocal(args("this" to this_))))
+        return super.parseAtTimeZone(this_)
+    }
+
+    override fun parseIntervalSpan(thisIn: Expression?, parseFunctionUnit: Boolean): Expression {
+        val interval = super.parseIntervalSpan(thisIn, parseFunctionUnit)
+        // TO also starts ORDER BY ... WITH FILL bounds and TTL destinations. Only
+        // consume it here when another interval unit follows, not an outer clause.
+        if (!matchTextSeq("TO", advance = false) || nextToken.text.uppercase() !in validIntervalUnits) return interval
+        advance()
+        val end = parseVar(upper = true)
+        val start = interval.text("unit")
+        val validEnds = mapOf("YEAR" to setOf("MONTH"), "DAY" to setOf("HOUR", "MINUTE", "SECOND"),
+            "HOUR" to setOf("MINUTE", "SECOND"), "MINUTE" to setOf("SECOND"))
+        if (thisIn !is Literal || !thisIn.isString || end == null || end.name !in validEnds[start].orEmpty()) {
+            raiseError("Invalid compound interval qualifier")
+        }
+        return expression(ClickhouseCompoundInterval(args(
+            "this" to interval.thisArg, "unit" to interval.args["unit"], "expression" to end,
+        )))
+    }
+
+    override fun parseLimit(this_: Expression?, top: Boolean, skipLimitToken: Boolean): Expression? {
+        if (top || !skipLimitToken && currToken.tokenType != TokenType.LIMIT) return super.parseLimit(this_, top, skipLimitToken)
+        if (!skipLimitToken) advance()
+        val start = index
+        parseLimitRange(this_, null, null, null)?.let { return it }
+        retreat(start)
+        var count = parseTerm(parseMod = false) ?: return raiseError("Expected LIMIT count or boundary")
+        var offset: Expression? = null
+        if (match(TokenType.COMMA)) {
+            offset = count
+            count = parseTerm() ?: return raiseError("Expected LIMIT count")
+        } else if (match(TokenType.OFFSET)) {
+            offset = parseTerm() ?: return raiseError("Expected LIMIT offset")
+        }
+        val options = parseLimitOptions()
+        val by = parseLimitBy()
+        if (by != null) {
+            val first = expression(Limit(args("this" to this_, "expression" to count, "offset" to offset,
+                "limit_options" to options, "expressions" to by)))
+            if (currToken.tokenType != TokenType.LIMIT) return first
+            val second = parseLimit() ?: return raiseError("Expected LIMIT after LIMIT BY")
+            return expression(ClickhouseLimitBy(args("this" to first, "expression" to second)))
+        }
+        return parseLimitRange(this_, count, offset, options)
+            ?: expression(Limit(args("this" to this_, "expression" to count, "offset" to offset, "limit_options" to options)))
+    }
+
+    private fun parseLimitRange(this_: Expression?, count: Expression?, offset: Expression?, options: Expression?): Expression? {
+        // AFTER and UNTIL remain usable as count identifiers. A boundary wins only
+        // when a following expression can be parsed, matching the native contextual grammar.
+        if (!matchTexts(setOf("AFTER", "UNTIL"), advance = false)) return null
+        val begin = index
+        val after = currToken.text.equals("AFTER", true)
+        advance()
+        if (currToken.text.uppercase() in setOf("AS", "BY", "OFFSET", "WITH", "AFTER", "UNTIL", "FETCH", "SETTINGS", "FORMAT", "UNION", "EXCEPT", "INTERSECT")) {
+            retreat(begin)
+            return null
+        }
+        val boundary = tryParse({ parseAssignment() })
+        if (boundary == null) { retreat(begin); return null }
+        val all = after && match(TokenType.ALL)
+        val until = if (after && matchTextSeq("UNTIL")) parseAssignment()
+            ?: return raiseError("Expected UNTIL boundary") else null
+        if (currToken.tokenType == TokenType.OFFSET) raiseError("OFFSET must precede the LIMIT boundary")
+        return expression(ClickhouseLimitRange(args("this" to this_, "expression" to count, "offset" to offset,
+            "after" to if (after) boundary else null, "until" to if (after) until else boundary,
+            "all" to all, "limit_options" to options)))
+    }
+
+    internal fun parseRemoteFunction(): Expression {
+        val nameToken = tokens[index - 2]
+        val name = nameToken.text
+        val values = mutableListOf<Expression>()
+        while (currToken.tokenType != TokenType.R_PAREN && currToken.exists) {
+            if (nextToken.tokenType !in setOf(TokenType.R_PAREN, TokenType.COMMA, TokenType.DOT) && matchTextSeq("SETTINGS")) {
+                val settings = parseCsv {
+                    val key = parseIdVar() ?: return@parseCsv raiseError("Expected setting name")
+                    if (!match(TokenType.EQ)) {
+                        if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) return@parseCsv key
+                        return@parseCsv raiseError("Expected = after setting name")
+                    }
+                    val value = parseAssignment() ?: return@parseCsv raiseError("Expected setting value")
+                    expression(PropertyEQ(args("this" to key, "expression" to value)))
+                }
+                if (settings.isEmpty()) raiseError("Expected table-function settings")
+                values.add(expression(ClickhouseFunctionSettings(args("expressions" to settings))))
+                break
+            }
+            val value = parseLambda(alias = true) ?: break
+            values.add(value)
+            if (!match(TokenType.COMMA)) break
+            if (currToken.tokenType == TokenType.R_PAREN) raiseError("Expected table-function argument after comma")
+        }
+        if (currToken.tokenType != TokenType.R_PAREN) raiseError("Expected ) after table function")
+        return expression(Anonymous(args("this" to name, "expressions" to values)), token = nameToken)
     }
 
     // sqlglot: ClickHouseParser._parse_extract
@@ -813,12 +988,22 @@ open class ClickhouseParser(
     // sqlglot: ClickHouseParser._parse_join_parts
     override fun parseJoinParts(): Triple<Token?, Token?, Token?> {
         val isGlobal = if (match(TokenType.GLOBAL)) prevToken else null
+        val natural = if (match(TokenType.NATURAL)) prevToken else null
 
         val kindPre = if (matchSet(joinKinds)) prevToken else null
         val side = if (matchSet(joinSides)) prevToken else null
         val kind = if (matchSet(joinKinds)) prevToken else null
 
-        return Triple(isGlobal, side ?: kind, kindPre ?: kind)
+        if (natural != null && listOfNotNull(kindPre, kind).any { it.tokenType !in setOf(TokenType.INNER, TokenType.OUTER) }) {
+            raiseError("NATURAL JOIN cannot use strictness, CROSS or PASTE modifiers")
+        }
+        if (natural != null && (kindPre?.tokenType == TokenType.OUTER || kindPre != null && side != null ||
+                kind?.tokenType == TokenType.INNER || kind?.tokenType == TokenType.OUTER && side == null)) {
+            raiseError("Invalid NATURAL JOIN side/kind combination")
+        }
+        val method = if (natural != null && isGlobal != null) Token(TokenType.NATURAL, "GLOBAL NATURAL",
+            start = isGlobal.start, end = natural.end) else natural ?: isGlobal
+        return Triple(method, side ?: kind, kindPre ?: kind)
     }
 
     // sqlglot: Table.to_column (expressions/query.py) — used for ARRAY JOIN operands
@@ -858,8 +1043,10 @@ open class ClickhouseParser(
         )
         if (join != null) {
             val method = join.args["method"]
-            join.set("method", null)
-            join.set("global_", method)
+            val natural = method == "NATURAL" || method == "GLOBAL NATURAL"
+            join.set("method", if (natural) "NATURAL" else null)
+            join.set("global_", if (natural) (if (method == "GLOBAL NATURAL") "GLOBAL" else null) else method)
+            if (natural && (join.args["on"] != null || join.args["using"] != null)) raiseError("NATURAL JOIN cannot have ON or USING")
 
             // tbl ARRAY JOIN arr <-- this should be a `Column` reference, not a `Table`
             // https://clickhouse.com/docs/en/sql-reference/statements/select/array-join
@@ -1426,6 +1613,10 @@ object ClickhouseParserTables {
     // sqlglot: ClickHouseParser.FUNCTION_PARSERS (base minus MATCH)
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> =
         (BaseParserTables.FUNCTION_PARSERS - "MATCH") + mapOf<String, (Parser) -> Expression?>(
+            "REMOTE" to { p -> (p as ClickhouseParser).parseRemoteFunction() },
+            "REMOTESECURE" to { p -> (p as ClickhouseParser).parseRemoteFunction() },
+            "CLUSTER" to { p -> (p as ClickhouseParser).parseRemoteFunction() },
+            "CLUSTERALLREPLICAS" to { p -> (p as ClickhouseParser).parseRemoteFunction() },
             "ARRAYJOIN" to { p ->
                 p.expression(Explode(args("this" to (p as ClickhouseParser).parseExpression())))
             },

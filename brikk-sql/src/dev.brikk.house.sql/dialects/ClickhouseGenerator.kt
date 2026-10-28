@@ -127,6 +127,38 @@ open class ClickhouseGenerator(
         return "${sql(withoutSample)} FINAL${sql(sample)}"
     }
 
+    private fun rangeSql(expression: ClickhouseLimitRange, queryOffset: Expression? = null): String = buildString {
+        append(sql(expression, "this"))
+        append(seg("LIMIT"))
+        if (expression.args["expression"] != null) append(" ${sql(expression, "expression")}")
+        val offset = expression.args["offset"] ?: queryOffset?.args?.get("expression")
+        if (offset != null) append(" OFFSET ${sql(offset)}")
+        append(sql(expression, "limit_options"))
+        if (expression.args["after"] != null) {
+            append(" AFTER ${sql(expression, "after")}")
+            if (expression.args["all"] == true) append(" ALL")
+        }
+        if (expression.args["until"] != null) append(" UNTIL ${sql(expression, "until")}")
+    }
+
+    override fun offsetLimitModifiers(expression: Expression, fetch: Boolean, limit: Expression?): List<String> =
+        if (limit is ClickhouseLimitRange) listOf(rangeSql(limit, expression.args["offset"] as? Expression))
+        else super.offsetLimitModifiers(expression, fetch, limit)
+
+    override fun joinSql(expression: Join): String {
+        if (expression.method == "NATURAL" && expression.args["global_"] != null) {
+            val local = expression.copy().also { it.set("global_", null) } as Join
+            return super.joinSql(local).replaceFirst("NATURAL", "GLOBAL NATURAL")
+        }
+        return super.joinSql(expression)
+    }
+
+    private fun nativeTypeSql(expression: ClickhouseNativeType): String {
+        val parameters = if (expression.args["nested"] == true) "(${expressions(expression, flat = true)})" else ""
+        val value = expression.text("kind") + parameters
+        return if (expression.args["nullable"] == true) "Nullable($value)" else value
+    }
+
     // brikk extension #55: ClickHouse table functions take no `(query)` argument, and
     // ClickHouse 26.7 rejects STRAIGHT_JOIN.
     override val executesPipeCall: Boolean get() = false
@@ -1370,6 +1402,17 @@ open class ClickhouseGenerator(
                 "{" + e.expressionsArg.filterIsInstance<Expression>().joinToString(", ") {
                     "${sql(it, "this")}: ${sql(it, "expression")}" } + "}"
             }
+            reg(ClickhouseLimitRange::class) { e -> ch().rangeSql(e as ClickhouseLimitRange) }
+            reg(ClickhouseLimitBy::class) { e -> "${sql(e, "this")}${sql(e, "expression")}" }
+            reg(ClickhouseAtLocal::class) { e -> "${sql(e, "this")} AT LOCAL" }
+            reg(ClickhouseYear::class) { e -> "${e.meta["clickhouse_name"] ?: "year"}(${expressions(e, flat = true)})" }
+            reg(ClickhouseCompoundInterval::class) { e ->
+                "INTERVAL ${sql(e, "this")} ${sql(e, "unit")} TO ${sql(e, "expression")}" }
+            reg(ClickhouseFunctionSettings::class) { e ->
+                "SETTINGS " + e.expressionsArg.filterIsInstance<Expression>().joinToString(", ") {
+                    if (it is Identifier) sql(it) else "${sql(it, "this")} = ${sql(it, "expression")}" }
+            }
+            reg(ClickhouseNativeType::class) { e -> ch().nativeTypeSql(e as ClickhouseNativeType) }
             reg(IsNan::class) { e -> ch().renameFuncSql("isNaN", e) }
             // sqlglot: dialect.jarowinkler_similarity("jaroWinklerSimilarity")
             reg(JarowinklerSimilarity::class) { e ->

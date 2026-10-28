@@ -1,8 +1,8 @@
 package dev.brikk.house.sql.metadata
 
 /**
- * ClickHouse's current documentation (26.x on 2026-10-14, the line the bundled metadata pins). The site
- * documents only its current release, so the links follow it.
+ * ClickHouse's current documentation. The site has no release-specific documentation tree,
+ * so these links follow it independently of the binary-pinned metadata snapshots.
  */
 val CLICKHOUSE_DOCS: EngineDocs = EngineDocs(
     dialect = "clickhouse",

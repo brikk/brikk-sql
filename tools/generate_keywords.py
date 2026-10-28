@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import argparse
 
 from generate_duckdb_functions import DATA, OUT_DIR, chunked, knullable, kstr, read_dump
 
@@ -26,7 +27,7 @@ OUT = OUT_DIR / "GeneratedKeywords.kt"
 DUMP_NAME = re.compile(r"^(trino|doris|clickhouse)-keywords-([\d.]+)\.tsv$")
 
 
-def render(data: pathlib.Path) -> str:
+def render(data: pathlib.Path, captures: list[str] | None = None) -> str:
     """GeneratedKeywords.kt for every keyword dump in [data], one val per (dialect, version)."""
     lines = [
         "// GENERATED FILE — DO NOT EDIT.",
@@ -35,6 +36,8 @@ def render(data: pathlib.Path) -> str:
         "package dev.brikk.house.sql.metadata",
     ]
     for path in sorted(data.iterdir()):
+        if captures is not None and path.name not in captures:
+            continue
         if not (m := DUMP_NAME.match(path.name)):
             continue
         dialect, version = m.groups()
@@ -56,8 +59,15 @@ def render(data: pathlib.Path) -> str:
 
 
 def main() -> None:
-    OUT.write_text(render(DATA))
-    print(f"wrote {OUT}")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data", type=pathlib.Path, default=DATA)
+    parser.add_argument("--output", type=pathlib.Path, default=OUT)
+    parser.add_argument("--capture", action="append", help="Exact capture filename; repeat for several versions")
+    args = parser.parse_args()
+    if args.capture and any(not (args.data / name).is_file() or not DUMP_NAME.fullmatch(name) for name in args.capture):
+        parser.error("Every --capture must name a versioned keyword TSV in --data")
+    args.output.write_text(render(args.data, args.capture))
+    print(f"wrote {args.output}")
 
 
 if __name__ == "__main__":

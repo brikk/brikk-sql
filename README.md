@@ -73,8 +73,13 @@ See [the compatibility notes](docs/brikk-extensions.md#58-trino-484-sql-and-meta
 ClickHouse `STREAM` reads and the `-Tuple` aggregate combinator have native
 parse/finite-result checks against pinned 26.8.34.13 LTS and 26.10.2.103 builds.
 Streaming execution still requires the server setting `enable_streaming_queries`.
-Function/keyword metadata remains at 26.5.1.1 pending the separate catalog refresh.
-See [the catch-up evidence](docs/research/clickhouse-2026-catchup.md).
+Metadata now has 26.5.1.1, 26.8.34.13 LTS and 26.10.2.103 stable snapshots, with
+26.10.2.103 as the unknown-server default. Boundary LIMIT forms, NATURAL JOIN,
+AT LOCAL, compound intervals, trailing remote-function SETTINGS, QBit and MultiPoint
+have structured parser coverage. Native execution limits remain explicit: the
+pinned engines reject `year()` and some LIMIT-range combinations.
+See the [batch 1](docs/research/clickhouse-2026-catchup.md) and
+[batch 2 evidence](docs/research/clickhouse-2026-batch2.md).
 
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.

@@ -134,6 +134,12 @@ grammar handling follows the pinned Apache-2.0 upstream parser; source links and
 immutable engine digests are recorded with the fixtures. Brikk's AST observations
 and regression cases are separate from the historical function catalog.
 
+The official-build registry, type, settings, build-option and embedded-documentation
+captures `vendor/data/clickhouse-*-26.8.34.13.*` and `clickhouse-*-26.10.2.103.*`
+and their generated Kotlin metadata also derive from those Apache-2.0 ClickHouse
+builds. Capture manifests retain the exact image digests, queries and SHA-256 hashes.
+No documentation prose is treated as a machine-readable function signature.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

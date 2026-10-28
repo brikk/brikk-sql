@@ -39,8 +39,11 @@ def main():
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--engine", action="append", help="Exact pinned version; defaults to both")
     parser.add_argument("--brikk", type=pathlib.Path, help="JSON observations from clickhouse_2026_audit.kts")
+    parser.add_argument("--cases", type=pathlib.Path, default=DATA / "cases.json")
+    parser.add_argument("--task", action="append", help="Plan tasks whose generated parsing is checked; defaults to CH26-002")
     args = parser.parse_args()
-    fixtures = json.loads((DATA / "cases.json").read_text())
+    fixtures = json.loads(args.cases.read_text())
+    tasks = set(args.task or ["CH26-002"])
     brikk = {r["id"]: r for r in json.loads(args.brikk.read_text())} if args.brikk else {}
     engines = json.loads((DATA / "engines.json").read_text())["engines"]
     if args.engine:
@@ -68,7 +71,8 @@ def main():
                     failures.append(engine["version"] + "/" + case["id"] + ": native parse expectation")
         brikk_parsed = None
         if args.brikk:
-            fixed = [c for c in fixtures["cases"] if c["task"] == "CH26-002" and c.get("accept", True)]
+            fixed = [c for c in fixtures["cases"] if c["task"] in tasks and c.get("accept", True)
+                     and tuple(map(int, c["release"].split("."))) <= tuple(map(int, engine["version"].split(".")[:2]))]
             generated_tuples = []
             for case in fixed:
                 generated = brikk[case["id"]].get("generated")
@@ -90,10 +94,13 @@ def main():
         execution = []
         brikk_execution = []
         for case in fixtures["execution"]:
+            if tuple(map(int, case.get("release", "0.0").split("."))) > tuple(map(int, engine["version"].split(".")[:2])):
+                execution.append({"id": case["id"], "skipped": "Introduced after this pinned engine"})
+                continue
             sql = case.get("setup", "") + "; " + case["sql"]
             result = query(engine, sql.lstrip("; "), streaming=" STREAM" in case["sql"])
             execution.append({"id": case["id"], **result})
-            if result["returncode"] != 0 or result["stdout"] != case["stdout"]:
+            if not expected_execution(case, result):
                 failures.append(engine["version"] + "/" + case["id"] + ": native execution expectation")
             if args.brikk:
                 generated = brikk[case["id"]].get("generated")
@@ -103,16 +110,26 @@ def main():
                 result = query(engine, (case.get("setup", "") + "; " + generated).lstrip("; "),
                                streaming=" STREAM" in case["sql"])
                 brikk_execution.append({"id": case["id"], "sql": generated, **result})
-                if result["returncode"] != 0 or result["stdout"] != case["stdout"]:
+                if not expected_execution(case, result):
                     failures.append(engine["version"] + "/" + case["id"] + ": Brikk execution expectation")
         report = {"captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                   "engine": engine, "version_query": version, "parse_query": parsed,
                   "parsed": rows, "brikk_parse_query": brikk_parsed,
                   "execution": execution, "brikk_execution": brikk_execution}
         (args.output / (engine["version"] + ".json")).write_text(json.dumps(report, indent=2) + "\n")
-        print(engine["version"], len(rows), "parse observations;", len(execution), "execution observations")
+        print(engine["version"], len(rows), "parse observations;",
+              sum("skipped" not in r for r in execution), "native execution outcomes;",
+              len(brikk_execution), "generated execution outcomes;",
+              sum("skipped" in r for r in execution), "version-inapplicable cases")
     if failures:
         raise SystemExit("\n".join(failures))
+
+
+def expected_execution(case, result):
+    if "error_code" in case:
+        return (result["returncode"] == case["error_code"] % 256 and result["stdout"] == ""
+                and case["error_name"] in result["stderr"])
+    return result["returncode"] == 0 and result["stdout"] == case["stdout"]
 
 
 if __name__ == "__main__":

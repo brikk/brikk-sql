@@ -3851,7 +3851,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_limit
-    fun parseLimit(
+    open fun parseLimit(
         this_: Expression? = null,
         top: kotlin.Boolean = false,
         skipLimitToken: kotlin.Boolean = false,
@@ -4182,7 +4182,7 @@ open class Parser(
         Regex("^\\s*-?\\s*\\d+(?:\\.\\d+)?\\s+(?:-?(?:\\d+:)?\\d+:\\d+(?:\\.\\d+)?|-?(?:\\d+:){1,2}|:)\\s*")
 
     // sqlglot: Parser._parse_interval_span
-    protected fun parseIntervalSpan(
+    protected open fun parseIntervalSpan(
         thisIn: Expression?,
         parseFunctionUnit: kotlin.Boolean = true,
     ): Expression {

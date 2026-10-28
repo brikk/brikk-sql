@@ -410,6 +410,17 @@ ClickHouse-derived parser output is Apache-2.0 licensed.
 
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
+The original embedded capture below is retained. Current official-build captures
+for **26.8.34.13** and **26.10.2.103** are versioned alongside it. Their
+`clickhouse-capture-<version>.json` manifests pin exact engine images, queries and
+content hashes. `tools/capture_clickhouse_metadata.py` reproduces function, table
+function, keyword and type-family registries, selected query settings, build options
+and embedded documentation. `system.statements` is recorded as unavailable on 26.8.
+Documentation syntax and introduction strings are raw evidence, not inferred
+overloads or first-availability facts. See `docs/research/clickhouse-2026-batch2.md`.
+`tools/generate_clickhouse_functions.py` renders all captured snapshots by default;
+the public catalog alias uses 26.10.2.103. The historical files are not relabeled.
+
 ClickHouse **26.5.1.1**'s complete function registry (`system.functions`), one row per
 function, 4 tab-separated columns: `name`, `is_aggregate`, `case_insensitive`, `alias_to`.
 1787 functions / 230 aggregate / 255 case-insensitive / 218 aliases. This is the

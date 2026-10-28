@@ -17,7 +17,9 @@ class Clickhouse2026AuditTest {
     @Test
     fun fixedCasesStayStructuredAndCaptureCurrentCoverage() {
         val root = projectRoot()
-        val fixture = Json.parseToJsonElement(File(root, "vendor/data/clickhouse-2026-audit/cases.json").readText()).jsonObject
+        val input = System.getProperty("brikk.clickhouseAuditCases")?.let(::File)
+            ?: File(root, "vendor/data/clickhouse-2026-audit/cases.json")
+        val fixture = Json.parseToJsonElement(input.readText()).jsonObject
         val cases = fixture.getValue("cases").jsonArray + fixture.getValue("execution").jsonArray
         val observations = cases.map { row ->
             val case = row.jsonObject
@@ -25,6 +27,14 @@ class Clickhouse2026AuditTest {
             val sql = case.getValue("sql").jsonPrimitive.content
             val parsed = runCatching { parseOne(sql, "clickhouse") }
             val fixed = case["task"]?.jsonPrimitive?.content == "CH26-002"
+            val syntax = case["task"]?.jsonPrimitive?.content == "CH26-004"
+            if (syntax) {
+                if (case["accept"]?.jsonPrimitive?.booleanOrNull != false) {
+                    val ast = parsed.getOrThrow()
+                    assertEquals(ast, parseOne(ast.sql("clickhouse"), "clickhouse"), id)
+                    assertEquals(ast, dev.brikk.house.sql.ast.Serde.load(dev.brikk.house.sql.ast.Serde.dump(ast)), id)
+                } else assertTrue(parsed.isFailure, id)
+            }
             if (fixed && case["accept"]?.jsonPrimitive?.booleanOrNull != false) {
                 val ast = parsed.getOrThrow()
                 assertEquals(ast, parseOne(ast.sql("clickhouse"), "clickhouse"), id)

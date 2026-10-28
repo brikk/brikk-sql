@@ -2074,6 +2074,32 @@ are not a general static tuple-typing or cross-dialect equivalence claim. See
 [the evidence report](research/clickhouse-2026-catchup.md) and `Clickhouse2026CatchupTest`.
 Metadata remains pinned to 26.5.1.1 until the separate catalog step is implemented.
 
+## 61. Versioned ClickHouse metadata and native query/type syntax
+
+Metadata snapshots retain the embedded 26.5.1.1 capture and add official-build
+26.8.34.13 LTS and 26.10.2.103 stable registries. The default catalog uses 26.10.
+Per-name case flags apply to precise lookup/completion, and type-family case flags
+are independent. Legacy lookup and JSON contracts remain unchanged. Existing
+constructor/default bridges and TypeDef.copy entry points are retained.
+
+Native AST nodes cover LIMIT boundary ranges and combined LIMIT BY, AT LOCAL,
+compound intervals, trailing remote/cluster SETTINGS, QBit and MultiPoint. NATURAL
+joins use the existing join method and preserve scope/source identity. Compound
+interval lookahead must not consume TO bounds in WITH FILL or TTL destinations.
+Remote function parsers retain their function-name positions. New aggregate names
+can resolve parameter lists/combinators without reclassifying old window-only ASTs.
+
+Native formatter acceptance is not execution support: both pinned builds reject
+zero-argument year(), and 26.10 rejects OFFSET/negative-count/WITH-TIES combinations
+with boundary LIMIT. Their actual outcomes are pinned, not rewritten into successful
+ordinary expressions. The two-argument year timezone form no longer drops its zone.
+New native-only forms refuse unproved cross-dialect translations, and boundary
+limits do not enter the ordinary pipe-slice arithmetic path.
+
+See [the batch 2 evidence and reproduction](research/clickhouse-2026-batch2.md).
+Function overloads and first-availability facts are not fabricated from embedded
+documentation. Historical semantic proofs and certification policy are unchanged.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
