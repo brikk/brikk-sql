@@ -28,26 +28,26 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Embedded IntelliJ action, snapshot and console-preparation mechanics; independently versioned. |
 
-Core and metadata retain their JVM `-jvm` coordinates. The development core,
+Core and metadata retain their JVM `-jvm` coordinates. Since 0.21.0, core,
 metadata, verification API and Doris verifier target **Java 17** and run their
 suites on JDK 17, so they can be embedded in Doris's JVM. Other verifiers and IDE
 support retain Java 21 bytecode; trino-parser itself, and so the Trino verifier
 and aggregate, need a Java 25 runtime. Java 17 consumers should use the individual
 Doris verifier, not the aggregate. Older published JARs are not retroactively
-retargeted; use a snapshot/release with the Java 17 change.
+retargeted; use 0.21.0 or a later build with the Java 17 change.
 See [Java 17 embedding and verification](docs/java17-compatibility.md).
 The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest core, metadata, verify and oracle release: **`0.20.1`**. SQL IntelliJ
+Latest core, metadata, verify and oracle release: **`0.21.0`**. SQL IntelliJ
 support is independently versioned at **`0.2.4`**. Current core development
 snapshot: **`0.20.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.20.1")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.20.1")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.21.0")
+    // Optional, Java 25 runtime: implementation("dev.brikk.house:brikk-sql-verify:0.21.0")
 }
 ```
 
@@ -70,7 +70,7 @@ See the [core API guide](brikk-sql/README.md),
 [vendor provenance](vendor/README.md). Current priorities and ownership:
 [work list](TODO.md) (`SQL-*`).
 
-The development Trino target is **484**, including its SQL/JSON constructor and
+The Trino target is **484**, including its SQL/JSON constructor and
 serialization forms, interval precision, window-frame exclusion and NEAREST
 relations. The native parser and captured metadata use the same version.
 See [the compatibility notes](docs/brikk-extensions.md#58-trino-484-sql-and-metadata).
@@ -113,6 +113,11 @@ selection and connection setup; the shared parser does not infer or install exte
 SQL IntelliJ support `0.2.4` exposes its existing query and trusted session-initialization helpers
 so consumers can configure isolated helpers without duplicating remote JDBC handling.
 Both releases are published on Maven Central from commit `1387aad`.
+
+`0.21.0` publishes Trino 484, Doris 4.1.5 parser/metadata, the versioned paired
+JSON evidence and Java 17 embedding support for core, metadata, verifier API and
+Doris verifier. All aligned SQL artifacts are on Maven Central from `fcd1b91`;
+IntelliJ support stays at 0.2.4. See [the release record](docs/sql-0.21.0.md).
 
 ## Build and test
 

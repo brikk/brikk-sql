@@ -52,8 +52,10 @@ consumer runtime are checked separately.
 This does not retarget existing artifacts. In particular, the metadata/core
 0.20.0-SNAPSHOT builds ending in `-8`, published from `8ef3506`, contain Java 21
 classes and cannot run inside Java 17 Doris. Stable 0.20.1 also predates this
-change. Use a newly published and verified snapshot/release containing the Java
-17 change, refreshing any cached rolling SNAPSHOT resolution.
+change. Formal release **0.21.0** is published on Maven Central and its downloaded
+JARs pass the Java 17 consumer smoke. Use that release or a later compatible
+build; refresh cached resolution if using the rolling SNAPSHOT instead. See
+[the release record](sql-0.21.0.md).
 
 This library compatibility work does not replace Duckbridge's own integration
 qualification inside Doris, nor the connector's live SQL/pushdown qualification.
