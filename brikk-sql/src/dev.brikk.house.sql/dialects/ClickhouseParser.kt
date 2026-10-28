@@ -27,6 +27,8 @@ import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.CheckColumnConstraint
 import dev.brikk.house.sql.ast.CityHash64
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.ClickhouseStream
+import dev.brikk.house.sql.ast.ClickhouseStreamCursor
 import dev.brikk.house.sql.ast.Columns
 import dev.brikk.house.sql.ast.CombinedAggFunc
 import dev.brikk.house.sql.ast.CombinedParameterizedAgg
@@ -685,7 +687,7 @@ open class ClickhouseParser(
         isDbReference: Boolean,
         parsePartition: Boolean,
         consumePipe: Boolean,
-    ): Expression? {
+    ): Expression? = captureSyntax {
         var this_ = super.parseTable(
             schema = schema,
             joins = joins,
@@ -711,10 +713,71 @@ open class ClickhouseParser(
         }
 
         if (match(TokenType.FINAL)) {
+            // ClickHouse orders table modifiers as alias, FINAL, SAMPLE, STREAM.
+            // The base parser has already consumed SAMPLE when FINAL is absent.
+            val sample = parseTableSample()
+            if (sample != null) this_?.set("sample", sample)
             this_ = expression(Final(args("this" to this_)))
         }
 
-        return this_
+        if (!schema && !isDbReference && this_ != null && matchTextSeq("STREAM")) {
+            val bounded = matchTextSeq("BOUNDED")
+            val unordered = matchTextSeq("UNORDERED")
+            val cursor = if (matchTextSeq("CURSOR")) parseStreamCursor() else null
+            var watermark: Expression? = null
+            var value: Expression? = null
+            var idleTimeout: Expression? = null
+            if (matchTextSeq("WATERMARK")) {
+                if (!match(TokenType.FOR)) raiseError("Expected FOR after WATERMARK")
+                val column = parseIdVar() ?: raiseError("Expected watermark column")
+                watermark = expression(Column(args("this" to column)))
+                if (!match(TokenType.ALIAS)) raiseError("Expected AS after watermark column")
+                value = parseAssignment() ?: raiseError("Expected watermark expression")
+                if (matchTextSeq("IDLE", "TIMEOUT")) {
+                    if (!match(TokenType.INTERVAL, advance = false)) raiseError("Expected INTERVAL after IDLE TIMEOUT")
+                    if (nextToken.tokenType != TokenType.NUMBER || nextToken.text.toULongOrNull() == null) {
+                        raiseError("Expected unsigned integer idle timeout")
+                    }
+                    idleTimeout = parseInterval() ?: raiseError("Expected idle timeout interval")
+                    val count = idleTimeout?.thisArg as? Literal
+                    if (idleTimeout !is dev.brikk.house.sql.ast.Interval || count == null ||
+                        count.name.toULongOrNull() == null || idleTimeout.text("unit") !in validIntervalUnits) {
+                        raiseError("Expected unsigned integer idle timeout")
+                    }
+                }
+            }
+            this_ = expression(ClickhouseStream(args(
+                "this" to this_, "bounded" to bounded, "unordered" to unordered, "cursor" to cursor,
+                "watermark" to watermark, "expression" to value, "idle_timeout" to idleTimeout,
+            )))
+        }
+
+        this_
+    }
+
+    // STREAM is reserved only in the implicit table-alias position. Quoted aliases,
+    // explicit AS stream, columns and tables named stream keep their normal meaning.
+    override fun parseTableAlias(aliasTokens: Collection<TokenType>?): TableAlias? =
+        if (matchTextSeq("STREAM", advance = false)) null else super.parseTableAlias(aliasTokens)
+
+    private fun parseStreamCursor(depth: Int = 0): Expression {
+        if (depth >= 128) raiseError("Stream cursor nesting too deep")
+        if (!match(TokenType.L_BRACE)) raiseError("Expected { after CURSOR")
+        val entries = mutableListOf<Expression>()
+        if (!match(TokenType.R_BRACE)) {
+            do {
+                val key = parseString() ?: raiseError("Expected stream cursor string key")
+                if (!match(TokenType.COLON)) raiseError("Expected : after stream cursor key")
+                val value = if (currToken.tokenType == TokenType.L_BRACE) parseStreamCursor(depth + 1) else {
+                    val number = parseNumber() as? Literal ?: raiseError("Expected unsigned stream cursor value")
+                    if (number == null || number.name.toULongOrNull() == null) raiseError("Expected unsigned stream cursor value")
+                    number
+                }
+                entries.add(expression(PropertyEQ(args("this" to key, "expression" to value))))
+            } while (match(TokenType.COMMA))
+            if (!match(TokenType.R_BRACE)) raiseError("Expected } after stream cursor")
+        }
+        return expression(ClickhouseStreamCursor(args("expressions" to entries)))
     }
 
     // brikk-native: ClickHouse DESCRIBE [TABLE] takes a table, a table function or a subquery, never a
@@ -1205,7 +1268,7 @@ open class ClickhouseParser(
         val AGG_FUNCTIONS_SUFFIXES: List<String> = listOf(
             "If", "Array", "ArrayIf", "Map", "SimpleState", "State", "Merge",
             "MergeState", "ForEach", "Distinct", "OrDefault", "OrNull", "Resample",
-            "ArgMin", "ArgMax",
+            "ArgMin", "ArgMax", "Tuple",
         ).sortedByDescending { it.length }
 
         // sqlglot: parsers.clickhouse.AGG_FUNC_MAPPING — memoized 0- and 1-suffix names

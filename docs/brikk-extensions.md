@@ -2054,6 +2054,26 @@ evidence, reproduction and limits are in
 [the JSON report](research/trino-484-doris-4.1.5-json.md). No public API, release,
 publication or consumer dependency pin changes are included.
 
+## 60. ClickHouse streaming reads and Tuple aggregate combinators
+
+`ClickhouseStream` represents `table [AS alias] [FINAL] [SAMPLE ...] STREAM`
+and its BOUNDED, UNORDERED, CURSOR and WATERMARK options. STREAM no longer becomes
+an implicit alias. Explicit `AS stream`, quoted aliases and tables/columns named
+stream remain available. Cursor and watermark children survive serde; scope analysis
+retains the underlying relation and resolves watermark references against it.
+
+The `-Tuple` aggregate combinator uses the existing combined aggregate nodes, including
+parameterized/nested suffixes and window calls. A second argument list no longer becomes
+an alias list. Other dialects refuse unproved STREAM/Tuple translations rather than
+dropping behavior or emitting an unsupported native call.
+
+Native parse/finite execution evidence targets digest-pinned ClickHouse 26.8.34.13 LTS
+and 26.10.2.103 stable. Streaming execution remains gated by the server's
+`enable_streaming_queries`; generation does not enable it. Named-tuple result checks
+are not a general static tuple-typing or cross-dialect equivalence claim. See
+[the evidence report](research/clickhouse-2026-catchup.md) and `Clickhouse2026CatchupTest`.
+Metadata remains pinned to 26.5.1.1 until the separate catalog step is implemented.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

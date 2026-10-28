@@ -100,6 +100,33 @@ open class ClickhouseGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.CLICKHOUSE
 
+    private fun streamSql(expression: ClickhouseStream): String = buildString {
+        append(sql(expression, "this"))
+        append(" STREAM")
+        if (expression.args["bounded"] == true) append(" BOUNDED")
+        if (expression.args["unordered"] == true) append(" UNORDERED")
+        if (expression.args["cursor"] != null) append(" CURSOR ${sql(expression, "cursor")}")
+        if (expression.args["watermark"] != null) {
+            append(" WATERMARK FOR ${sql(expression, "watermark")} AS ${sql(expression, "expression")}")
+            val timeout = expression.args["idle_timeout"] as? Interval
+            if (timeout != null) {
+                // Unlike ordinary INTERVAL expressions, the native stream parser requires
+                // an unquoted unsigned integer count here.
+                val numeric = timeout.copy().also {
+                    it.set("this", Literal.number((timeout.thisArg as Expression).name))
+                }
+                append(" IDLE TIMEOUT ${sql(numeric)}")
+            }
+        }
+    }
+
+    private fun finalTableSql(expression: Final): String {
+        val table = expression.thisArg as? Expression ?: return "${sql(expression, "this")} FINAL"
+        val sample = table.args["sample"] ?: return "${sql(table)} FINAL"
+        val withoutSample = table.copy().also { it.set("sample", null) }
+        return "${sql(withoutSample)} FINAL${sql(sample)}"
+    }
+
     // brikk extension #55: ClickHouse table functions take no `(query)` argument, and
     // ClickHouse 26.7 rejects STRAIGHT_JOIN.
     override val executesPipeCall: Boolean get() = false
@@ -1337,7 +1364,12 @@ open class ClickhouseGenerator(
             reg(DateSub::class) { e -> ch().datetimeDeltaSql("DATE_SUB", e) }
             reg(Explode::class) { e -> ch().renameFuncSql("arrayJoin", e) }
             reg(FarmFingerprint::class) { e -> ch().renameFuncSql("farmFingerprint64", e) }
-            reg(Final::class) { e -> "${sql(e, "this")} FINAL" }
+            reg(Final::class) { e -> (this as ClickhouseGenerator).finalTableSql(e as Final) }
+            reg(ClickhouseStream::class) { e -> (this as ClickhouseGenerator).streamSql(e as ClickhouseStream) }
+            reg(ClickhouseStreamCursor::class) { e ->
+                "{" + e.expressionsArg.filterIsInstance<Expression>().joinToString(", ") {
+                    "${sql(it, "this")}: ${sql(it, "expression")}" } + "}"
+            }
             reg(IsNan::class) { e -> ch().renameFuncSql("isNaN", e) }
             // sqlglot: dialect.jarowinkler_similarity("jaroWinklerSimilarity")
             reg(JarowinklerSimilarity::class) { e ->

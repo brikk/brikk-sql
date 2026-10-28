@@ -396,6 +396,18 @@ Never infer universal equivalence from matching samples or replace historical
 non-JSON evidence with these versions. The metadata generator consumes the reviewed
 `brikk-sql/testResources/semantics/trino-doris-hazards.json`, not raw probe counts.
 
+## `data/clickhouse-2026-audit/`
+
+Targeted 2026 SQL audit and STREAM/Tuple-combinator regression evidence. `engines.json`
+pins official 26.8.34.13 LTS and 26.10.2.103 stable images by digest; `cases.json` records
+stable case IDs and native acceptance/execution expectations. Native JSON captures include
+raw parser output and exact native/generated finite-query results. Brikk before/after captures
+record ASTs, output and errors, not semantic certification. Reproduce with
+`tools/probe_clickhouse_2026.py` and `tools/clickhouse_2026_audit.kts`; see
+`docs/research/clickhouse-2026-catchup.md` for commands, provenance and limitations.
+These probes do not replace or relabel the historical 26.5.1.1 catalogs or hazard evidence.
+ClickHouse-derived parser output is Apache-2.0 licensed.
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 ClickHouse **26.5.1.1**'s complete function registry (`system.functions`), one row per

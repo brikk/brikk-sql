@@ -70,6 +70,12 @@ serialization forms, interval precision, window-frame exclusion and NEAREST
 relations. The native parser and captured metadata use the same version.
 See [the compatibility notes](docs/brikk-extensions.md#58-trino-484-sql-and-metadata).
 
+ClickHouse `STREAM` reads and the `-Tuple` aggregate combinator have native
+parse/finite-result checks against pinned 26.8.34.13 LTS and 26.10.2.103 builds.
+Streaming execution still requires the server setting `enable_streaming_queries`.
+Function/keyword metadata remains at 26.5.1.1 pending the separate catalog refresh.
+See [the catch-up evidence](docs/research/clickhouse-2026-catchup.md).
+
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
 The opt-in API leaves the existing rendering paths unchanged.

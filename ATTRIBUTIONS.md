@@ -128,6 +128,12 @@ SOFTWARE.
 `GeneratedKeywords.kt` hold its `system.keywords`. No ClickHouse source code is included in the catalog artifact.
 ClickHouse is licensed under the Apache License 2.0; see vendor/README.md for provenance.
 
+`vendor/data/clickhouse-2026-audit/` includes native formatter output and finite-query
+results from official ClickHouse 26.8.34.13 LTS and 26.10.2.103 stable builds. STREAM
+grammar handling follows the pinned Apache-2.0 upstream parser; source links and
+immutable engine digests are recorded with the fixtures. Brikk's AST observations
+and regression cases are separate from the historical function catalog.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

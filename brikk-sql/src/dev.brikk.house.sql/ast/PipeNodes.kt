@@ -289,4 +289,5 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "DorisModifyEngine", "DorisModifyComment", "DorisBuildIndex", "DorisCreateJob", "DorisMaterializedViewJob",
     "DorisCancelMaterializedViewTask", "DorisRecover",
     "DorisDefault", "DorisCompactTablet", "DorisModifyColumn",
+    "ClickhouseStream", "ClickhouseStreamCursor",
 )
