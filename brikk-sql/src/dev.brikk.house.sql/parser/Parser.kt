@@ -3854,7 +3854,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_limit
-    fun parseLimit(
+    open fun parseLimit(
         this_: Expression? = null,
         top: kotlin.Boolean = false,
         skipLimitToken: kotlin.Boolean = false,
@@ -3925,7 +3925,7 @@ open class Parser(
         if (matchTextSeq("BY")) parseCsv { parseBitwise() } else null
 
     // sqlglot: Parser._parse_offset
-    fun parseOffset(this_: Expression? = null): Expression? {
+    open fun parseOffset(this_: Expression? = null): Expression? {
         if (!match(TokenType.OFFSET)) return this_
 
         val count = parseTerm()

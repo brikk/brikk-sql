@@ -263,6 +263,28 @@ promise that exported files roll back. JDBC 2.0.0.0 may classify an outer SELECT
 count when a producer lacks RETURNING. An executeQuery error in that case does not mean the
 write did not run; do not retry the SQL to recover a ResultSet.
 
+DuckDB 2.0 grouping UNNEST stays a scalar grouping expression. Qualification preserves it,
+including projection aliases, ordinals and scalar wrappers, rather than moving it into FROM.
+Native result tests cover repeated values, NULL elements, NULL/empty lists, aggregate inputs,
+zip/padding of grouped UNNESTs and post-aggregate expansion of ungrouped projection UNNESTs.
+List element types feed scopes and shapes; constant `recursive`/`max_depth` options also remove
+the appropriate list levels. Unknown options and recursive struct expansion do not prove a
+single-column type. A non-null list does not prove non-null elements or prevent NULL padding.
+Native binding, not static name resolution, enforces the restrictions on nested UNNEST calls,
+struct expansion, GROUP BY ALL, aggregates and windows inside grouping expressions.
+Non-DuckDB executable generation refuses unverified grouping-UNNEST translations before target
+projection rewrites; previews carry a finding. Ordinary scalar/table UNNEST paths are unchanged.
+
+DuckDB FETCH accepts FIRST/NEXT, ROW/ROWS, an omitted count of one and full count expressions.
+Generation normally canonicalizes it to LIMIT/OFFSET. The parser requires FIRST/NEXT and
+ROW/ROWS ONLY, rejects duplicate pagination, and does not accept WITH TIES or PERCENT. The
+engine still decides count/offset binding, rounding, NULL and negative-value behavior.
+Anonymous pagination parameters retain their authored order through copy, serde and generation.
+For `OFFSET ? FETCH NEXT ?`, DuckDB emits `OFFSET ? LIMIT ?` so existing JDBC bindings do not
+swap meanings. Cross-target execution refuses a pagination rewrite that would reorder these
+parameters; numbered parameters can retain their identity across clause reordering. Tests run
+both authored and generated queries with the same prepared bindings and check CTE/set boundaries.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

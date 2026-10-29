@@ -53,6 +53,8 @@ import dev.brikk.house.sql.ast.Encode
 import dev.brikk.house.sql.ast.EndsWith
 import dev.brikk.house.sql.ast.EuclideanDistance
 import dev.brikk.house.sql.ast.Explode
+import dev.brikk.house.sql.ast.Fetch
+import dev.brikk.house.sql.ast.LimitOptions
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GenerateSeries
 import dev.brikk.house.sql.ast.Getbit
@@ -430,6 +432,33 @@ open class DuckdbParser(
         }
 
         return table
+    }
+
+    override fun parseLimit(this_: Expression?, top: Boolean, skipLimitToken: Boolean): Expression? {
+        val start = index
+        if (top || skipLimitToken || !match(TokenType.FETCH, advance = false)) {
+            return super.parseLimit(this_, top, skipLimitToken)?.also { paginationPosition(it, start) }
+        }
+        match(TokenType.FETCH)
+        if (!matchSet(setOf(TokenType.FIRST, TokenType.NEXT))) raiseError("Expected FIRST or NEXT after FETCH")
+        val direction = prevToken.text.uppercase()
+        val count = if (matchTexts(setOf("ROW", "ROWS"), advance = false)) null else parseDisjunction()
+        if (!matchTexts(setOf("ROW", "ROWS"))) raiseError("Expected ROW or ROWS in FETCH")
+        if (!matchTextSeq("ONLY")) raiseError("Expected ONLY in FETCH; WITH TIES and PERCENT are not supported")
+        return expression(Fetch(args("direction" to direction, "count" to count,
+            "limit_options" to LimitOptions(args("percent" to false, "rows" to true, "with_ties" to false)))))
+            .also { paginationPosition(it, start) }
+    }
+
+    override fun parseOffset(this_: Expression?): Expression? {
+        val start = index
+        return super.parseOffset(this_)?.also { paginationPosition(it, start) }
+    }
+
+    private fun paginationPosition(node: Expression, start: Int) {
+        // LIMIT canonicalization may reorder OFFSET and FETCH. Retain order only where
+        // anonymous parameters make it semantic; metadata survives copy/serde.
+        if (node.findAll<Placeholder>().any { it.thisArg == null }) node.meta["duckdb_pagination_position"] = start
     }
 
     override fun parseCte(): Expression? {

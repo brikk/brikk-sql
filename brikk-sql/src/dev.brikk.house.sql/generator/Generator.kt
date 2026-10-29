@@ -388,6 +388,18 @@ open class Generator(
             spanStack.clear()
             spanStack.addLast(mutableListOf())
         }
+        if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
+            // Check before target SELECT transforms move projection UNNESTs into FROM.
+            // Alias/ordinal grouping and ungrouped post-aggregate expansions also need a
+            // proved translation; an ordinary table-source UNNEST is not this operation.
+            if (expr.findAll<Select>().any { select ->
+                select.args["group"] != null && select.walk().any { node ->
+                    (node is Explode || node is Unnest) && node.findAncestor<Select>() === select &&
+                        generateSequence(node.parent) { it.parent }.takeWhile { it !== select }
+                            .none { it is From || it is Join || it is Table || it is Lateral }
+                }
+            }) unexecutable("$targetName has no verified DuckDB grouping UNNEST translation")
+        }
         val raw = sql(preprocess(expr))
         var sql = raw.trim()
         if (pretty) sql = sql.replace(SENTINEL_LINE_BREAK, "\n")
@@ -3037,6 +3049,10 @@ open class Generator(
 
         // sqlglot: LIMIT_FETCH conversion between Fetch and Limit
         if (limitFetch == "LIMIT" && limit is Fetch) {
+            val options = limit.args["limit_options"] as? Expression
+            if (options?.args?.get("with_ties") == true || options?.args?.get("percent") == true) {
+                unexecutable("$targetName cannot preserve FETCH WITH TIES/PERCENT through LIMIT conversion")
+            }
             val count = limit.args["count"] as? Expression
             limit = Limit(args("expression" to (count?.copy() ?: Literal.number("1"))))
         } else if (limitFetch == "FETCH" && limit is Limit) {
@@ -3084,10 +3100,22 @@ open class Generator(
         expression: Expression,
         fetch: Boolean,
         limit: Expression?,
-    ): List<String> = listOf(
-        if (fetch) sql(expression, "offset") else sql(limit),
-        if (fetch) sql(limit) else sql(expression, "offset"),
-    )
+    ): List<String> {
+        val limitPosition = anonymousPaginationPosition(expression.args["limit"] as? Expression)
+        val offsetPosition = anonymousPaginationPosition(expression.args["offset"] as? Expression)
+        if (limitPosition != null && offsetPosition != null && (offsetPosition < limitPosition) != fetch) {
+            unexecutable("$targetName would reorder anonymous pagination parameters; use numbered parameters")
+        }
+        return listOf(
+            if (fetch) sql(expression, "offset") else sql(limit),
+            if (fetch) sql(limit) else sql(expression, "offset"),
+        )
+    }
+
+    protected fun anonymousPaginationPosition(node: Expression?): Int? =
+        (node?.metaOrNull?.get("duckdb_pagination_position") as? Number)?.toInt()?.takeIf {
+            node.findAll<Placeholder>().any { it.thisArg == null }
+        }
 
     // sqlglot: Generator.after_limit_modifiers
     open fun afterLimitModifiers(expression: Expression): List<String> {

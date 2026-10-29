@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-010.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-012.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -214,16 +214,41 @@ and IDE introspection/completion are separate contracts.
   changed. Source review: v2.0.0 bind_cte_node.cpp, cte_inlining.cpp, copy_function.cpp and native
   DML/COPY CTE tests; measured JDBC results take precedence over stale no-RETURNING test comments.
 
-- [ ] `DDB20-011` GROUP BY UNNEST [AUDIT].
+- [x] `DDB20-011` GROUP BY UNNEST [DONE].
   Parse/generate and native acceptance exist. Add result and shape tests for the
   [documented grouping form][groupby], repeated/nested expressions, aliases, NULL/empty
   lists and interaction with aggregate outputs. Do not rewrite scalar grouping UNNEST
   into a table source unless that rewrite is independently proved equivalent.
+  Focused tests preserve scalar ASTs through copy/serde/qualification, cover alias/ordinal grouping,
+  repeated expressions and nested scalar wrappers, and retain computed element provenance rather
+  than the list column's direct provenance. Shapes/scopes use element types without assuming
+  list nullability proves element nullability. Constant recursive/max_depth options now type
+  list-only flattening at the correct depth; unknown options/recursive structs remain conservative.
+  Native results pin the documented tag counts, duplicate/NULL elements, NULL/empty lists,
+  aggregate input duplication, HAVING, zip/NULL padding of grouped UNNESTs and post-aggregate
+  expansion of ungrouped projection UNNESTs. Invalid nested calls, struct expansion, GROUP BY ALL,
+  and aggregates/windows in group expressions have native binder-error controls, not a claim of
+  complete static grouping validation. Cross-target previews flag, and execution refuses,
+  unproved grouping rewrites before projection-to-FROM transforms. Ordinary UNNEST generation is unchanged.
 
-- [ ] `DDB20-012` FETCH FIRST / NEXT [AUDIT].
+- [x] `DDB20-012` FETCH FIRST / NEXT [DONE].
   Existing generation canonicalizes to LIMIT/OFFSET. Pin [FIRST/NEXT][fetch], omitted count,
   ROW/ROWS, offsets and invalid combinations against the actual engine, plus result controls.
   Round-trip need not preserve FETCH spelling, but must preserve pagination semantics.
+  DuckDB-specific parsing now requires FIRST/NEXT and ROW/ROWS ONLY, accepts full count expressions,
+  and rejects incomplete clauses, WITH TIES/PERCENT and duplicate pagination instead of repairing
+  them. Native tests compare authored SQL and generated LIMIT SQL for both offset orders, omitted
+  counts, arithmetic/CASE/subquery counts, NULL/zero/decimal counts, bounds and negative/binding errors.
+  CTE/set-operation result tests keep pagination on its own query. Prepared executions use unchanged
+  bindings, including numbered parameters. Reordering anonymous OFFSET/FETCH binds is not safe:
+  parser metadata preserves their relative order through copy/serde/reparse and DuckDB can emit
+  OFFSET ? LIMIT ? instead. Cross-target execution refuses a rewrite that would change bind order.
+  FETCH-to-LIMIT conversion also refuses unpreservable WITH TIES/PERCENT from foreign ASTs instead
+  of silently dropping the options. Existing other-dialect FETCH parsing remains supported.
+  Evidence for DDB20-011/012: DuckdbGroupUnnestTest, DuckdbFetchTest and DuckdbGroupFetchResultTest.
+  Full gates passed: 1,297 core tests and 69 DuckDB verifier/native tests, including corpus/serde,
+  annotation ledgers and ABI controls. No ledgers or IDE/connection configuration were changed.
+  Native reference: v2.0.0 unnest_group_by.test, fetch_first.test and final GROUP BY/LIMIT docs.
 
 - [ ] `DDB20-013` JSON mutation functions [AUDIT].
   All four names are captured; basic calls parse/generate and pass native acceptance.
@@ -567,6 +592,10 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   Classify SQL-visible empty STRUCT support versus internal LogicalType::TUPLE implementation
   details. Cover final type-literal syntax, integer-only DECIMAL parameters, typed macro defaults
   and numeric promotions that affect inferred types. Do not expose an internal type as new SQL syntax.
+  The grouping audit also observed the pre-existing generic SUM(INT) inference as BIGINT while
+  native DuckDB returns HUGEINT. Reconcile DuckDB-specific aggregate promotions here; the UNNEST
+  batch proves SUM row values, not exact static SUM return-type parity. COUNT/MAX shape controls
+  and native results remain separate from that broader aggregate-typing gap.
 
 - [ ] `DDB20-074` Table-function identifier-to-string deprecation [AUDIT].
   Review the release's deprecated implicit identifier-to-string conversion for table functions.

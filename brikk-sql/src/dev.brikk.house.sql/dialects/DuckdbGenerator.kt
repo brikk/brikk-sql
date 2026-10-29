@@ -82,6 +82,17 @@ open class DuckdbGenerator(
     override val queryHints: Boolean get() = false
     override val lastDaySupportsDatePart: Boolean get() = false
     override val limitFetch: String get() = "LIMIT"
+
+    override fun offsetLimitModifiers(expression: Expression, fetch: Boolean, limit: Expression?): List<String> {
+        val original = expression.args["limit"] as? Expression
+        val offset = expression.args["offset"] as? Expression
+        val limitPosition = anonymousPaginationPosition(original)
+        val offsetPosition = anonymousPaginationPosition(offset)
+        // DuckDB accepts OFFSET before LIMIT. Keep anonymous JDBC binds in authored order,
+        // even while canonicalizing FETCH; do not silently swap the caller's two values.
+        if (limitPosition != null && offsetPosition != null && offsetPosition < limitPosition) return listOf(sql(offset), sql(limit))
+        return super.offsetLimitModifiers(expression, fetch, limit)
+    }
     override val structDelimiter: Pair<String, String> get() = "(" to ")"
     override val renameTableWithDb: Boolean get() = false
     override val semiAntiJoinWithSide: Boolean get() = false

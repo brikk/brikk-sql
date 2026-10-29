@@ -1543,6 +1543,29 @@ class TypeAnnotator(
     // sqlglot: TypeAnnotator._annotate_explode
     private fun annotateExplode(expression: Expression): Expression {
         val thisType = ((expression.thisArg as Expression).type as DataType)
+        if (dialect.name == "duckdb" && expression.expressionsArg.isNotEmpty()) {
+            // Scalar DuckDB UNNEST can remove several list levels. This is list-only
+            // typing, not a model of recursive struct expansion into multiple columns.
+            val option = expression.expressionsArg.singleOrNull() as? Expression
+            val value = option?.expressionArg
+            val depth = when ((option?.thisArg as? Expression)?.name?.lowercase()) {
+                "recursive" -> when ((value as? dev.brikk.house.sql.ast.Boolean)?.thisArg) {
+                    true -> Int.MAX_VALUE
+                    false -> 1
+                    else -> null
+                }
+                "max_depth" -> (value as? Literal)?.takeUnless { it.isString }?.name?.toIntOrNull()?.takeIf { it > 0 }
+                else -> null
+            }
+            var type: DataType? = thisType
+            var remaining = depth ?: 0
+            while (remaining > 0 && type?.isType(DType.ARRAY) == true) {
+                type = type.expressionsArg.firstOrNull() as? DataType
+                remaining--
+            }
+            setType(expression, if (depth == null || type?.isType(DType.STRUCT) == true) null else type)
+            return expression
+        }
         setType(expression, seqGet(thisType.expressionsArg.filterIsInstance<Expression>(), 0))
         return expression
     }
