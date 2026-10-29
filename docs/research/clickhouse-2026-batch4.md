@@ -248,3 +248,6 @@ the behavior. No clause or result expectation was removed to bypass that differe
 
 All eight plan steps are complete within these boundaries. Publishing, merging,
 consumer dependency updates and broader support still require separate approval.
+
+The subsequently authorized main merge, Java 17 integration and full IDE validation
+are recorded in [the integration handoff](clickhouse-main-integration.md).
