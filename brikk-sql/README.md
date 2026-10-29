@@ -312,6 +312,21 @@ The existing JSON nodes and raw function calls preserve these operations without
 JSON evaluation or new AST classes. Cross-target execution refuses unverified same-name
 translations in either direction; previews carry a finding instead of claiming equivalence.
 
+DuckDB VARIANT retains its own binary-value semantics, not JSON text semantics. Static contracts
+cover the documented variant functions and scalar/list-path return dimensions. Extracted fields
+remain nullable, computed VARIANT values; no object-field inventory or embedded SQL type is
+invented. Qualification preserves case-sensitive VARIANT fields and one-based bracket indexes,
+including when the input's type becomes known only from schema facts. Existing native casts,
+DDL, COPY/shredding options, copy and serde remain structured. Cross-target execution refuses
+unproved translations of VARIANT types and functions.
+
+Native tests distinguish VARCHAR-to-VARIANT from JSON-to-VARIANT, missing fields from VARIANT
+nulls, numeric equality from string equality, and literal extraction fields from JSONPath.
+They also verify checkpoint/reopen with shredding enabled and default/explicitly shredded
+Parquet round trips. `variant_group_array` is a macro with aggregate behavior, but native 2.0
+rejects ORDER BY/DISTINCT/FILTER inside that call; ordered input is a separate operation.
+These result tests do not add a JDBC nested-VARIANT reader or promise another engine's semantics.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

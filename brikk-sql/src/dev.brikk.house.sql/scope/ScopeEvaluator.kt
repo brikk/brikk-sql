@@ -1012,6 +1012,7 @@ internal class ScopeEvaluator(
             record(identifier, node, Lookup(candidates, bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }))
             return
         }
+        if (dialect.name == "duckdb" && variantField(node, qualifier + identifier, frame)) return
         val first = qualifier.first()
         val last = qualifier.last()
         val field = frame?.let { unqualified(it, first) } ?: Lookup(emptyList(), Knowledge.UNKNOWN)
@@ -1032,6 +1033,27 @@ internal class ScopeEvaluator(
         reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, Knowledge.FULL, start = first)
         diagnose(ScopeProblem.UNKNOWN_QUALIFIER, "Unknown relation '${qualifier.joinToString(".") { it.name }}'", first, last)
         record(identifier, null, Lookup(emptyList(), Knowledge.FULL), report = false)
+    }
+
+    /** Resolve the physical root, not the schema-less field names or their embedded types. */
+    private fun variantField(node: Column, parts: List<Identifier>, frame: Frame?): Boolean {
+        if (frame == null) return false
+        for (index in parts.lastIndex - 1 downTo 0) {
+            val root = parts[index]
+            val bindings = if (index == 0) emptyList() else findBindings(frame, parts.take(index))
+            val lookup = if (index == 0) unqualified(frame, root) else Lookup(bindings.flatMap { binding ->
+                binding.columns.filter { same(root, it.name, columns = true) }
+            }, Knowledge.UNKNOWN)
+            val column = lookup.single ?: continue
+            if (!column.sqlType.equals("VARIANT", ignoreCase = true)) continue
+            if (bindings.isNotEmpty()) qualify(parts.take(index), bindings)
+            record(root, null, lookup)
+            for (field in parts.drop(index + 1)) record(field, null, Lookup(emptyList(), Knowledge.UNKNOWN))
+            resolved[node] = ScopeColumn(stored(parts.last()), "", ColumnOrigin.COMPUTED, Nullability.NULLABLE,
+                "VARIANT", computedBy = "VARIANT field")
+            return true
+        }
+        return false
     }
 
     /** A column's qualifier parts, outermost first: `catalog.db.t`. */

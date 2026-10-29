@@ -47,6 +47,8 @@ import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
+import dev.brikk.house.sql.dialects.duckdbVariantReturnType
+import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 
 /**
  * Port of sqlglot's type annotator (reference/sqlglot/sqlglot/optimizer/annotate_types.py).
@@ -610,6 +612,7 @@ class TypeAnnotator(
 
             when {
                 duckdbJson != null -> setType(expr, duckdbJson.returnType ?: DType.UNKNOWN)
+                dialect.name == "duckdb" && expr.isDuckdbVariantFunction() -> setType(expr, expr.duckdbVariantReturnType() ?: DType.UNKNOWN)
                 spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)
                 spec is TypingSpec.Returns -> setType(expr, spec.dtype)
                 spec is TypingSpec.ReturnsDataType -> setType(expr, spec.dtype)
@@ -1466,6 +1469,8 @@ class TypeAnnotator(
 
         if (bracketArg is Slice) {
             setType(expression, exprThis.type)
+        } else if (dialect.name == "duckdb" && thisType?.isType(DType.VARIANT) == true) {
+            setType(expression, DType.VARIANT)
         } else if (thisType != null && thisType.isType(DType.ARRAY)) {
             setType(expression, seqGet(thisType.expressionsArg.filterIsInstance<Expression>(), 0))
         } else if (thisKeys != null && thisKeys.any { it == bracketArg }) {
@@ -1531,7 +1536,9 @@ class TypeAnnotator(
 
         val thisType = (expression.thisArg as Expression).type as? DataType
 
-        if (thisType != null && thisType.isType(DType.STRUCT)) {
+        if (dialect.name == "duckdb" && thisType?.isType(DType.VARIANT) == true) {
+            setType(expression, DType.VARIANT)
+        } else if (thisType != null && thisType.isType(DType.STRUCT)) {
             for (e in thisType.expressionsArg.filterIsInstance<Expression>()) {
                 if (e.name == (expression.expressionArg as Expression).name) {
                     setType(expression, e.args["kind"])

@@ -7,6 +7,7 @@ import dev.brikk.house.sql.ast.Any as AnyNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
 import dev.brikk.house.sql.dialects.duckdbJsonCall
+import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -390,6 +391,9 @@ open class Generator(
             spanStack.addLast(mutableListOf())
         }
         if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
+            if (expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
+                unexecutable("$targetName has no verified DuckDB VARIANT translation")
+            }
             if (expr.walk().any { it.duckdbJsonCall() != null }) {
                 unexecutable("$targetName has no verified DuckDB JSON mutation/normalization translation")
             }
@@ -407,6 +411,10 @@ open class Generator(
         if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
             expr.walk().any { it.duckdbJsonCall() != null }) {
             unexecutable("DuckDB JSON mutation/normalization is not a verified same-name translation from $sourceDialect")
+        }
+        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
+            expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
+            unexecutable("DuckDB VARIANT is not a verified translation from $sourceDialect")
         }
         val raw = sql(preprocess(expr))
         var sql = raw.trim()

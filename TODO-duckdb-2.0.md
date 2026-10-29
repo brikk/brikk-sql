@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-014.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-015.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -291,10 +291,27 @@ and IDE introspection/completion are separate contracts.
   json_modify.cpp, json_deep_merge.cpp, json_merge_patch_diff.cpp, json_normalize.cpp,
   json_strip_nulls.cpp and their v2.0.0 SQL tests; measured results bound the semantic claims.
 
-- [ ] `DDB20-015` VARIANT end-to-end behavior [AUDIT].
+- [x] `DDB20-015` VARIANT end-to-end behavior [DONE].
   Type/cast syntax and new function metadata exist. Cover storage DDL, JSON conversion,
   nested extraction, field case, containment/comparison, numeric and missing/null distinctions,
   inferred types, shredding and Parquet round trips. Do not equate VARIANT with textual JSON.
+  Added builtin-specific return typing, including scalar/list-path result dimensions, without
+  guessing embedded field types. Qualified UDFs and unknown path shapes remain unknown. Dot/bracket
+  field outputs retain VARIANT and nullable computed provenance, not the root's physical value.
+  Fixed case folding of proven VARIANT fields during qualification, including explicit casts/CTEs,
+  and canonical index handling when schema facts reveal a previously unknown input is VARIANT.
+  Both native VARIANT brackets and variant_extract integer indexes are one-based; raw field strings
+  are not JSONPath. Cross-target VARIANT types/functions explicitly refuse unproved equivalence.
+  Native results distinguish VARCHAR-as-value from JSON-as-document, case-sensitive fields,
+  missing from VARIANT null via exists/type, numeric buckets and large-integer comparisons,
+  containment, list paths, duplicate/null aggregate keys and array-macro modifier restrictions.
+  A private database is checkpointed with shredding enabled, closed and reopened; generated COPY
+  tests read back default and explicitly shredded Parquet, preserving untyped overlay fields,
+  case and null/missing behavior. Tests use only their own unique, cleaned scratch directories.
+  Evidence: DuckdbVariantTest and DuckdbVariantResultTest; full gates passed 1,307 core and 87
+  DuckDB verifier/native tests with existing corpus/annotation/serde/ABI ledgers unchanged.
+  No new AST classes, driver/result rendering, IDE connections or publication changes. JDBC display
+  of raw nested VARIANT values is not claimed as a new reader API; result probes use explicit casts.
 
 - [ ] `DDB20-016` `$name` variable shorthand [AUDIT].
   Distinguish session-variable lookup from named/positional prepared parameters and JDBC/IDE

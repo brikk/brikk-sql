@@ -10,6 +10,9 @@ import dev.brikk.house.sql.ast.Coalesce
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.Connector
 import dev.brikk.house.sql.ast.DPipe
+import dev.brikk.house.sql.ast.Dot
+import dev.brikk.house.sql.ast.Bracket
+import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Exists
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Except
@@ -206,6 +209,7 @@ private class NullabilityAnnotator(
 
             // --- column references ---
             is Column -> if (column != null) column(node) else columnNullability(node)
+            is Dot, is Bracket -> if (dialect.name == "duckdb" && (node.thisArg as? Expression)?.isType(DType.VARIANT) == true) true else null
 
             // --- CAST / TRY_CAST ---
             // TryCast must precede Cast (TryCast is a subclass of Cast).

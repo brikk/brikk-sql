@@ -955,6 +955,14 @@ private fun convertColumnsToDots(scope: Scope, resolver: Resolver) {
                 converted = true
                 val newColumn = column(root, table = newColumnTable)
 
+                if (resolver.dialect.name == "duckdb" && resolver.sourceColumnType(
+                        newColumnTable.name, newColumn as Column)?.isType(DType.VARIANT) == true) {
+                    val originals = dotParts.drop(if (wasQualified) 2 else 1)
+                    for ((part, original) in parts.zip(originals)) if (part is Identifier && original is String) {
+                        part.set("this", original)
+                    }
+                }
+
                 if (dotParts.isNotEmpty()) {
                     // Remove the actual column parts from the rest of dot parts
                     newColumn.meta["dot_parts"] =

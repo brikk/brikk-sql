@@ -24,6 +24,7 @@ import dev.brikk.house.sql.ast.selects
 import dev.brikk.house.sql.ast.toIdentifier
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.hasExplicitDuckdbVariantRoot
 
 /**
  * Port of sqlglot/optimizer/resolver.py — helper for resolving columns.
@@ -475,6 +476,9 @@ class Resolver(
      * sqlglot: Resolver._get_column_type_from_scope — a column's type found by tracing
      * through annotated projections/tables, memoized per (source identity, name).
      */
+    internal fun sourceColumnType(sourceName: String, column: Column): DataType? =
+        scope.sources[sourceName]?.let { getColumnTypeFromScope(it, column) }
+
     private fun getColumnTypeFromScope(source: Any, column: Column): DataType? {
         val sourceId = when (source) {
             is Expression -> source.objectId
@@ -503,6 +507,9 @@ class Resolver(
                 val projectionType = projection?.type as? DataType
                 if (projectionType != null && !projectionType.isType(DType.UNKNOWN)) {
                     result = projectionType
+                } else if (dialect.name == "duckdb" &&
+                    ((projection as? Alias)?.thisArg as? Expression ?: projection)?.hasExplicitDuckdbVariantRoot() == true) {
+                    result = DataType.build(DType.VARIANT)
                 } else {
                     // brikk extension (docs/brikk-extensions.md #44): UNKNOWN
                     // computations/renames must not borrow a same-named
