@@ -384,7 +384,8 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   (`completableFunctions`). Whether parentheses are inserted comes from the invocation
   syntax, not from the overloads: a call inserts `()`, while a grammar bare form
   (`CURRENT_TIMESTAMP`, also when a call is accepted) and a special form (`CAST`) insert only
-  the name. A name written with parentheses reuses an existing `(`, with the caret inside,
+   the name. Special forms match prefixes without regard to case, even when the catalog's
+   ordinary function names are case-sensitive. A name written with parentheses reuses an existing `(`, with the caret inside,
   and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
   overloads: it goes after `()` when the only overload takes no arguments. Keywords from the profile's
   `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later

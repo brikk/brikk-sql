@@ -88,4 +88,14 @@ class SqlCompletionSourceContextTest : CompletionTestCase() {
         val clickhouse = families[3]
         assertEmpty(clickhouse.offered("INSERT INTO t FORMAT TSV\na\t<name>", CHouseFixtureDialect))
     }
+
+    fun testClickhousePartialTryCastBeforeExistingArgumentsCompletes() {
+        val source = "SELECT try_ca<caret>('256' AS UInt8)"
+        myFixture.configureFromExistingVirtualFile(LightVirtualFile("try-cast-${UUID.randomUUID()}.sql", CHouseFixtureDialect, source.replace("<caret>", "")))
+        myFixture.editor.caretModel.moveToOffset(source.indexOf("<caret>"))
+        clickhouseProfile.functionGates = SqlFunctionGates(qualifier = QualifierRule.Unqualified, digitPrefix = true, autopopup = ExpressionPositions.STANDARD)
+        register(ClickhouseCompletion::class.java, LoadingOrder.FIRST)
+        accept(clickhouseProfile.metadata.default.completableFunctions().single { it.name == "TRY_CAST" })
+        assertEquals("SELECT TRY_CAST(<caret>'256' AS UInt8)", resultWithCaret())
+    }
 }

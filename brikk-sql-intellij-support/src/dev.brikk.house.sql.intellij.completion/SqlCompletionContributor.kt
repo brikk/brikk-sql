@@ -169,12 +169,16 @@ private fun completeFunctions(
     }
     val qualifier = if (context != null) context.qualifier
     else PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)?.qualifierExpression?.text
-    val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
+    val caseSensitive = reads.snapshot.functions.caseSensitive
+    val insensitive = result.caseInsensitive()
     val names = HashSet<String>()
     val positions = profile.tablePositions
     fun offer(entry: FunctionPresentation, serverOnly: Boolean) {
         if (!position.offers(entry, positions)) return
         val wrapper = positions.wrapper?.takeIf { position == FunctionPosition.TABLE && positions.wraps(entry) }
+        // Grammar forms such as TRY_CAST are keywords even when ordinary function
+        // names in the same catalog are case-sensitive.
+        val sink = if (caseSensitive && InvocationSyntax.SPECIAL_FORM !in entry.syntaxes) result else insensitive
         sink.addElement(profile.lookup(entry, serverOnly, wrapper))
         names += entry.name.uppercase()
     }

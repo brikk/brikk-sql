@@ -78,6 +78,15 @@ class SqlFunctionCompletionTest : CompletionTestCase() {
         assertEquals("SELECT ${special.name}(<caret>x)", insertion(special, after = "(x)"))
     }
 
+    fun testPartialTryCastBeforeExistingArgumentsIsOfferedAndReusesParentheses() {
+        val entry = clickhouseProfile.metadata.default.completableFunctions().single { it.name == "TRY_CAST" }
+        for (prefix in listOf("try_ca", "TrY_Ca", "TRY_CA")) {
+            configure("SELECT $prefix<caret>('256' AS UInt8)", ClickhouseCompletion::class.java)
+            accept(entry)
+            assertEquals("SELECT TRY_CAST(<caret>'256' AS UInt8)", resultWithCaret())
+        }
+    }
+
     fun testTypingAParenthesisToAcceptInsertsOnePair() {
         assertEquals("SELECT abs(<caret>)", insertion(abs, char = '('))
         assertEquals("SELECT ${special.name}(<caret>)", insertion(special, char = '('))
