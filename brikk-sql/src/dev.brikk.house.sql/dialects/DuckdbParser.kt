@@ -22,6 +22,10 @@ import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Copy
 import dev.brikk.house.sql.ast.DML
 import dev.brikk.house.sql.ast.Delete
+import dev.brikk.house.sql.ast.DuckdbPrepare
+import dev.brikk.house.sql.ast.DuckdbExecute
+import dev.brikk.house.sql.ast.DuckdbDeallocate
+import dev.brikk.house.sql.ast.DuckdbResetVariable
 import dev.brikk.house.sql.ast.Insert
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.With
@@ -286,11 +290,31 @@ open class DuckdbParser(
     override val setParsers: Map<String, (Parser) -> Expression?>
         get() = super.setParsers + DuckdbParserTables.SET_PARSERS_EXTRA
 
+    // PREPARE used to be a COMMAND token, which was also allowed in identifier/alias sites.
+    override val idVarTokens: Set<TokenType> get() = super.idVarTokens + TokenType.PREPARE
+    override val aliasTokens: Set<TokenType> get() = super.aliasTokens + TokenType.PREPARE
+    override val tableAliasTokens: Set<TokenType> get() = super.tableAliasTokens + TokenType.PREPARE
+
     // sqlglot: DuckDBParser.SHOW_PARSERS
     open val showParsers: Map<String, (DuckdbParser) -> Expression>
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        if (matchTextSeq("PREPARE")) {
+            val name = parseIdVar() ?: raiseError("Expected prepared statement name")
+            if (!matchTextSeq("AS")) raiseError("Expected AS after prepared statement name")
+            val body = parseStatement() ?: raiseError("Expected prepared statement body")
+            return expression(DuckdbPrepare(args("this" to name, "expression" to body)))
+        }
+        if (matchTextSeq("EXECUTE")) {
+            val name = parseIdVar() ?: raiseError("Expected prepared statement name")
+            val values = if (currToken.tokenType == TokenType.L_PAREN) parseWrappedCsv({ parseExpression() }) else emptyList()
+            return expression(DuckdbExecute(args("this" to name, "expressions" to values)))
+        }
+        if (matchTextSeq("DEALLOCATE")) {
+            matchTextSeq("PREPARE")
+            return expression(DuckdbDeallocate(args("this" to (parseIdVar() ?: raiseError("Expected prepared statement name")))))
+        }
         if (currToken.text.equals("DISCONNECT", ignoreCase = true)) {
             matchTextSeq("DISCONNECT")
             return expression(SessionDisconnect())
@@ -314,6 +338,29 @@ open class DuckdbParser(
             return expression(SessionConnect(args("this" to target, "expressions" to options)))
         }
         return super.parseStatement()
+    }
+
+    override fun parseCommand(): Expression {
+        // Preserve existing RESET-setting command/token contracts. Only RESET VARIABLE is
+        // structured; the editor tokenizer gives its identifier the original absolute range.
+        if (prevToken.text.equals("RESET", ignoreCase = true) && currToken.tokenType == TokenType.STRING &&
+            currToken.text.trimStart().startsWith("VARIABLE", ignoreCase = true)) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            val bodyTokens = lexed.tokens.filter { it.start >= start && it.end < end }
+            if (bodyTokens.firstOrNull()?.text.equals("VARIABLE", ignoreCase = true)) {
+                val parser = DuckdbParser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig)
+                parser.captureSourceRanges = captureSourceRanges
+                val parsed = parser.parseIntoWith(bodyTokens, sql) { p ->
+                    p.matchTextSeq("VARIABLE")
+                    p.expression(DuckdbResetVariable(args("this" to (p.parseIdVar() ?: p.raiseError("Expected variable name")))))
+                }
+                advance()
+                return parsed ?: throw ParseError("Expected RESET VARIABLE name")
+            }
+        }
+        return super.parseCommand()
     }
 
     override fun parseTriggerAction(): Expression? {
@@ -962,7 +1009,10 @@ object DuckdbParserTables {
     val PLACEHOLDER_PARSERS: Map<TokenType, (Parser) -> Expression?> =
         BaseParserTables.PLACEHOLDER_PARSERS + mapOf<TokenType, (Parser) -> Expression?>(
             TokenType.PARAMETER to { p ->
-                if (p.match(TokenType.NUMBER) || p.matchSet(p.idVarTokens)) {
+                if (p.match(TokenType.IDENTIFIER)) {
+                    p.expression(dev.brikk.house.sql.ast.Parameter(args("this" to
+                        dev.brikk.house.sql.ast.Identifier(args("this" to p.prevToken.text, "quoted" to true)))))
+                } else if (p.match(TokenType.NUMBER) || p.matchSet(p.idVarTokens)) {
                     p.expression(Placeholder(args("this" to p.prevToken.text)))
                 } else {
                     null

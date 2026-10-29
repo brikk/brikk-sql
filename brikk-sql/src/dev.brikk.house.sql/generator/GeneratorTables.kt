@@ -678,6 +678,10 @@ object GeneratorTables {
         reg(RecursiveWithSearch::class) { e -> recursivewithsearchSql(e as RecursiveWithSearch) }
         reg(DistanceNd::class) { e -> binary(e as Binary, "<<->>") }
         reg(TriggerExecute::class) { e -> "EXECUTE FUNCTION ${sql(e, "this")}" }
+        reg(DuckdbPrepare::class) { e -> duckdbSessionStatementSql(e) }
+        reg(DuckdbExecute::class) { e -> duckdbSessionStatementSql(e) }
+        reg(DuckdbDeallocate::class) { e -> duckdbSessionStatementSql(e) }
+        reg(DuckdbResetVariable::class) { e -> duckdbSessionStatementSql(e) }
         reg(ExplodingGenerateSeries::class) { e ->
             explodinggenerateseriesSql(e as ExplodingGenerateSeries)
         }

@@ -289,6 +289,8 @@ open class Generator(
     // target rejects (#55). Additive state, not a constructor parameter: existing
     // generator JVM signatures stay intact.
     internal var forExecution: Boolean = false
+    /** Authored-sigil evidence, null when a caller supplies only a legacy ambiguous AST. */
+    internal var duckdbSessionDefaults: Boolean? = null
 
     /** brikk-native (#55): whether a lowered pipe CALL (a table function taking `(query)`) runs. */
     protected open val executesPipeCall: Boolean get() = true
@@ -391,6 +393,12 @@ open class Generator(
             spanStack.addLast(mutableListOf())
         }
         if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
+            if (duckdbSessionDefaults == true || duckdbSessionDefaults == null && expr.walk().any { parameter ->
+                    (parameter is Parameter || parameter is Placeholder && parameter.thisArg != null) && parameter.name.any { it !in '0'..'9' }
+                } ||
+                expr.findAll<SetItem>().any { it.text("kind").equals("VARIABLE", ignoreCase = true) }) {
+                unexecutable("$targetName has no verified DuckDB session-variable/default translation")
+            }
             if (expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
                 unexecutable("$targetName has no verified DuckDB VARIANT translation")
             }
@@ -2656,6 +2664,17 @@ open class Generator(
     open fun sessiondisconnectSql(expression: SessionDisconnect): String {
         if (!supportsSessionRouting) unexecutable("$targetName cannot execute DISCONNECT session routing")
         return "DISCONNECT"
+    }
+
+    internal fun duckdbSessionStatementSql(expression: Expression): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB prepared/session statements")
+        val name = sql(expression, "this")
+        return when (expression) {
+            is DuckdbPrepare -> "PREPARE $name AS ${sql(expression, "expression")}"
+            is DuckdbExecute -> expressions(expression, flat = true).let { "EXECUTE $name" + if (it.isEmpty()) "" else "($it)" }
+            is DuckdbDeallocate -> "DEALLOCATE $name"
+            else -> "RESET VARIABLE $name"
+        }
     }
 
     // sqlglot: Generator.lambda_sql

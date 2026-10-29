@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-015.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-017.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -313,15 +313,44 @@ and IDE introspection/completion are separate contracts.
   No new AST classes, driver/result rendering, IDE connections or publication changes. JDBC display
   of raw nested VARIANT values is not claimed as a new reader API; result probes use explicit casts.
 
-- [ ] `DDB20-016` `$name` variable shorthand [AUDIT].
+- [x] `DDB20-016` `$name` variable shorthand [DONE].
   Distinguish session-variable lookup from named/positional prepared parameters and JDBC/IDE
   bind prompting. Cover `$threshold`, `$1`, `?`, dollar-quoted strings, SET/RESET VARIABLE
   and variable scopes. Do not automatically mask or prompt for a session variable as a bind.
+  The final engine implements $name as a named parameter with a session default, not a distinct
+  getvariable call: unset $name errors while getvariable returns SQL NULL. Preserve that dual
+  role and explicit-argument precedence. Existing unquoted Placeholder AST dumps remain compatible;
+  quoted dollar names now preserve Identifier quoting. Fixed invalid dollar-tag detection that
+  mistook adjacent comma-separated $names for a dollar-quoted string. Exact source occurrences and
+  scalar inventories distinguish engine dollar sigils from IDE colon substitutions. The additive
+  duckdbSessionDefaultCandidates API reports eligibility only, never variable presence/value/type.
+  Default lexical bind discovery/masking does not turn dollar names into prompts or substitutions.
+  Numeric names, including quoted numeric $"1", never fall back to variables. Cross-target execution
+  refuses unproved session-default semantics, without blocking proven authored :client placeholders.
 
-- [ ] `DDB20-017` Session variables as prepared-parameter defaults [AUDIT].
+- [x] `DDB20-017` Session variables as prepared-parameter defaults [DONE].
   Cover PREPARE/EXECUTE with omitted named arguments, explicit-argument precedence,
   execution-time variable changes and missing-variable errors. Keep the engine's fallback
   semantics distinct from the IDE's own parameter substitution.
+  PREPARE/EXECUTE/DEALLOCATE and RESET VARIABLE now retain structured bodies, names and arguments,
+  allowing exact parameter discovery inside a prepared SELECT/DML body. Existing RESET-setting
+  token/AST contracts remain opaque and unchanged; the new PREPARE token is appended to preserve
+  old token ordinals and identifier/alias uses. Native tests pin omitted/partial/all explicit
+  arguments, execution-time changes/reset, quoted/case-insensitive names, excess argument errors,
+  missing/default errors and one deliberate write per EXECUTE. Editor parse/generation/analysis
+  and PREPARE itself do not execute the prepared INSERT. Session isolation tests account for JDBC
+  duplicate copying the initial variables while keeping subsequent changes local.
+  Direct JDBC PreparedStatement is a separate client limit: unbound named statements report a
+  parameter-count mismatch; positional setInt is not a named override. SQL EXECUTE fallback works.
+  Keep the driver boundary explicit; no bind-time evaluation, automatic prompting, connection
+  refresh, retry or native-prepare fallback was introduced into validation.
+  Body references are available for analysis, but PREPARE/EXECUTE statement result shapes and
+  lineage explicitly refuse rather than being inferred from a nested SELECT. Evidence for
+  DDB20-016/017: DuckdbVariablesTest, DuckdbVariablesResultTest and the corrected mask regression.
+  Full gates passed 1,312 core, 115 metadata and 93 DuckDB verifier/native tests. The final
+  variables/lineage subset also passed after the statement-lineage refusal. Existing generated
+  corpora/annotation/serde/ABI gates remain intact; four exact native AST registrations were added,
+  not exempted from the Python manifest's existing checks. No IDE connection or publication changes.
 
 - [ ] `DDB20-018` Recursive USING KEY aggregate payloads [AUDIT].
   Generic key-expression support exists. Pin `USING KEY (a, avg(b))`, recurring-table
@@ -596,6 +625,9 @@ and IDE introspection/completion are separate contracts.
   there. Do not replace them with a fresh memory database, replay arbitrary scripts, mutate user
   transactions or add new internal IntelliJ calls without permission. Keep activation order and
   connection/module/profile changes in cache identity and diagnostic invalidation.
+  DDB20-016/017 measured that JDBC duplicate copies current session variables at creation but
+  later changes are independent. That is not proof of follow-console parity or permission to
+  replay variables/scripts into helpers; retain the deferred matching-session requirement.
 
 - [ ] `DDB20-068` Static-versus-extension grammar isolation guards [AUDIT].
   Policy is established: core DuckSQL plus documented Brikk extensions is not the union of loaded
@@ -618,6 +650,10 @@ and IDE introspection/completion are separate contracts.
   DML/COPY producer lacks RETURNING/result options. Investigate result-channel handling separately
   for a console/executor or driver fix; an executeQuery failure can follow a completed write, so
   never recover by executing that SQL again. This is not a syntax gate or an editor-parse fallback.
+  DDB20-017 also pins the JDBC client binding boundary: direct unbound named PreparedStatement
+  calls report parameter-count mismatch and index binding does not override a named parameter.
+  Native SQL EXECUTE session-default fallback works. Any driver/console adoption needs its own
+  binding contract; do not mask defaults or retry SQL to compensate.
 
 ## Additional SQL-facing changes found in full-release titles
 

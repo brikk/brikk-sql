@@ -278,6 +278,7 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "PipeSet", "PipeDrop", "PipeRename", "PipeCall", "PipeWindow",
     "AtLocal", "MatchPredicate", "UniquePredicate",
     "SessionConnect", "SessionDisconnect",
+    "DuckdbPrepare", "DuckdbExecute", "DuckdbDeallocate", "DuckdbResetVariable",
     "AggregateKeyProperty", "AggregateTypeColumnConstraint", "AutoPartitionProperty",
     "IndexPropertiesOption", "DorisRollupIndex", "DorisVariantField", "DorisTemporaryPartition", "DorisRefresh", "DorisOutfile",
     "DorisIndexParameters", "DorisAddPartition", "DorisDropPartition", "DorisReplacePartition",

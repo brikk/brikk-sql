@@ -290,7 +290,7 @@ internal fun parameterOccurrences(root: Expression, tokens: List<Token>): List<P
         if (parts.isEmpty()) throw UnsupportedError("Parameter interval has no tokens")
         val name = (if (node is Placeholder) node.text("this") else node.name).ifEmpty { null }
         val style = when {
-            node is Parameter -> ParamStyle.NAMED_AT
+            node is Parameter || parts.first().tokenType == TokenType.PARAMETER -> ParamStyle.NAMED_AT
             node.args["kind"] != null -> ParamStyle.NAMED_TYPED
             name != null -> ParamStyle.NAMED_COLON
             else -> ParamStyle.POSITIONAL

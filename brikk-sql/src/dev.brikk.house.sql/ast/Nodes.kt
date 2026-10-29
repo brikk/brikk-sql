@@ -631,6 +631,10 @@ internal fun registerNativeDuckdbNodes(m: MutableMap<String, ExpressionRegistry.
     val module = "brikk.duckdb"
     m["SessionConnect"] = ExpressionRegistry.Entry(module) { SessionConnect() }
     m["SessionDisconnect"] = ExpressionRegistry.Entry(module) { SessionDisconnect() }
+    m["DuckdbPrepare"] = ExpressionRegistry.Entry(module) { DuckdbPrepare() }
+    m["DuckdbExecute"] = ExpressionRegistry.Entry(module) { DuckdbExecute() }
+    m["DuckdbDeallocate"] = ExpressionRegistry.Entry(module) { DuckdbDeallocate() }
+    m["DuckdbResetVariable"] = ExpressionRegistry.Entry(module) { DuckdbResetVariable() }
 }
 
 // sqlglot: query.Subquery(Expression, DerivedTable, Query) — is_subquery

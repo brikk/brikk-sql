@@ -155,6 +155,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
         generator.forExecution = forExecution
+        if (dialectObj.name == "duckdb") generator.duckdbSessionDefaults = duckdbSessionDefaultCandidates(sql).isNotEmpty()
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -270,6 +271,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * (DFS preorder = textual order), so positional `?` binds line up with named ones.
      */
     val scalarParams: List<ScalarParam> by lazy {
+        if (dialectObj.name == "duckdb") {
+            return@lazy parseParameterOccurrences(sql, dialect).withIndex().groupBy { it.value.style to it.value.name }
+                .map { (key, values) -> ScalarParam(key.second, key.first, values.size, values.map { it.index }) }
+        }
         data class Key(val style: ParamStyle, val name: String?)
 
         val occurrences = LinkedHashMap<Key, MutableList<Int>>()
@@ -841,7 +846,7 @@ enum class ParamStyle {
     /** `:name` — [Placeholder] with a name. */
     NAMED_COLON,
 
-    /** `@name` — [Parameter]. */
+    /** Engine sigils: `@name`, and authored DuckDB `$name`/`$1`. Not proof a bind needs prompting. */
     NAMED_AT,
 
     /** `?` — anonymous [Placeholder]. */

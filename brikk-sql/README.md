@@ -327,6 +327,30 @@ Parquet round trips. `variant_group_array` is a macro with aggregate behavior, b
 rejects ORDER BY/DISTINCT/FILTER inside that call; ordered input is a separate operation.
 These result tests do not add a JDBC nested-VARIANT reader or promise another engine's semantics.
 
+DuckDB `$name` is a named prepared parameter with an optional session-variable default. It
+must not be rewritten to `getvariable('name')`: an unset `$name` errors, while `getvariable`
+returns SQL NULL. Explicit EXECUTE arguments take precedence; omitted names use the current
+session values at execution time. Numeric `$1`, quoted numeric `$"1"` and anonymous `?` do not
+use that fallback. SET VARIABLE is session state, not SET GLOBAL configuration.
+
+PREPARE bodies, EXECUTE arguments, DEALLOCATE and RESET VARIABLE are structured ASTs. Parameter
+discovery sees the prepared body without preparing it. PREPARE/EXECUTE statement result shapes
+and lineage are not inferred from a nested query body. The legacy unquoted-dollar Placeholder
+shape stays serde-compatible, while quoted dollar names retain their quotes. Exact authored
+occurrences and `SqlFragment.scalarParams` classify dollar parameters as engine sigils, not IDE
+colon substitutions. `duckdbSessionDefaultCandidates(sql)` reports eligible names only; it does
+not prove a variable exists, read its value/type, resolve it, or require a bind prompt. Existing
+editor colon discovery/masking leaves dollar names, dollar-quoted strings and numeric binds alone.
+Cross-target execution refuses unproved variable/default and session-statement translations;
+ordinary authored `:client` substitutions keep their existing translation path.
+
+SQL EXECUTE fallback and JDBC PreparedStatement binding are separate contracts. With the pinned
+2.0.0.0 driver, a direct unbound JDBC named statement reports a parameter-count mismatch, and
+index-based binding is not a named-argument override. Use the client's supported binding API;
+the library adds no retry or driver workaround. JDBC duplicate copies current session variables
+at creation, but later changes remain local. Native tests also prove PREPARE/editor analysis do
+not run writes and that each deliberate EXECUTE runs once with its current defaults.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

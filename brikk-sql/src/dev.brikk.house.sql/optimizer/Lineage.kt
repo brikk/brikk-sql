@@ -198,6 +198,10 @@ private fun prepareLineage(
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
 
+    if (scope == null && (expression is dev.brikk.house.sql.ast.DuckdbPrepare || expression is dev.brikk.house.sql.ast.DuckdbExecute)) {
+        throw SqlglotError("Prepared/session statements do not expose a query result for lineage")
+    }
+
     // buildScope(UPDATE/MERGE) can return a scalar/source query or FROM table. None is
     // the statement's output or assignment lineage. Refuse rather than trace the wrong root.
     if ((expression is Update || expression is Merge) && scope == null) {

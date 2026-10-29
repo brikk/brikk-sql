@@ -963,7 +963,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 if (
                     tag.isNotEmpty() &&
                     config.heredocTagIsIdentifier &&
-                    (end || tag.all { it.isDigit() } || tag.any { it.isWhitespace() })
+                    (end || tag.first().isDigit() || tag.any { it.isWhitespace() || it.code < 128 && !it.isLetterOrDigit() && it != '_' })
                 ) {
                     if (!end) advance(-1)
                     advance(-tag.length)

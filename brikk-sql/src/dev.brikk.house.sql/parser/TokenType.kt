@@ -455,4 +455,6 @@ enum class TokenType {
     AGG_STATE,
     // brikk-native: ClickHouse inline INSERT data, editor tokenization only (TokenizerConfig.inlineInsertData).
     INSERT_DATA,
+    // DuckDB structured PREPARE; append to retain existing token ordinals.
+    PREPARE,
 }

@@ -25,6 +25,18 @@ fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccur
 }
 
 /**
+ * Named `$name` parameters eligible for DuckDB's execution-time session-variable fallback.
+ * This does not prove a variable exists or has a type/value, does not bind it, and must not
+ * turn it into an IDE substitution or a mandatory prompt. Explicit arguments still win.
+ * Numeric names, including `$"1"`, and anonymous `?` parameters have no such fallback.
+ */
+fun duckdbSessionDefaultCandidates(sql: String): List<ParameterOccurrence> =
+    parseParameterOccurrences(sql, "duckdb").filter { occurrence ->
+        occurrence.style == ParamStyle.NAMED_AT && sql.getOrNull(occurrence.range.start) == '$' &&
+            occurrence.name?.let { name -> name.isNotEmpty() && name.any { it !in '0'..'9' } } == true
+    }
+
+/**
  * [sql] with every named placeholder ([ParamStyle.NAMED_COLON] in any spelling the dialect
  * parses) replaced by the scalar `0` padded with spaces, so a native parser can check the
  * statement before substitution. Offsets, length and line breaks are unchanged, so native

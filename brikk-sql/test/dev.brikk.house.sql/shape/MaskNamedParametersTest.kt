@@ -11,7 +11,8 @@ class MaskNamedParametersTest {
     fun namedPlaceholdersBecomePaddedScalarsAtTheSameOffsets() {
         for ((dialect, sql, masked) in listOf(
             Triple("duckdb", "SELECT '\uD83D\uDE00:x', a FROM t WHERE a = :a AND b = \$bee AND c = ?",
-                "SELECT '\uD83D\uDE00:x', a FROM t WHERE a = 0  AND b = 0    AND c = ?"),
+                // Dollar names are native parameters with optional session defaults, not IDE substitutions.
+                "SELECT '\uD83D\uDE00:x', a FROM t WHERE a = 0  AND b = \$bee AND c = ?"),
             Triple("duckdb", "SELECT :n::INTEGER AS n", "SELECT 0 ::INTEGER AS n"),
             Triple("trino", "SELECT * FROM t\r\nWHERE a = :long_name -- :c\r\nLIMIT :n",
                 "SELECT * FROM t\r\nWHERE a = 0          -- :c\r\nLIMIT 0 "),
