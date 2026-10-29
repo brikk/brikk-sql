@@ -17,8 +17,10 @@ dependencies:
 
 settings:
   jvm:
-    # Public core remains compatible with the Java 21 minimum supported by IDE consumers.
-    release: 21
+    # Duckbridge embeds core in Doris's Java 17 JVM. Compile and test against that floor.
+    jdk:
+      version: 17
+    release: 17
   publishing:
     # Explicit artifactId is required by Maven Central publishing (toolchain 0.11); equals the
     # default (module name). Published JVM coordinate: dev.brikk.house:brikk-sql-jvm.

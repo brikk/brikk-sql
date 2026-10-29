@@ -17,7 +17,9 @@ settings:
     # Published coordinate: dev.brikk.house:brikk-sql-verify-api.
     artifactId: brikk-sql-verify-api
   jvm:
-    release: 21
+    jdk:
+      version: 17
+    release: 17
   kotlin:
     version: 2.4.10
     freeCompilerArgs:
