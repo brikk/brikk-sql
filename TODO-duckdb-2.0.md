@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-018.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-019.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -383,10 +383,38 @@ and IDE introspection/completion are separate contracts.
   connection changes, driver workaround or publication. Reviewed v2.0.0 bind_recursive_cte_node.cpp
   and recursive_cte_key_{aggregation,union,snapshot,final_drain}.test alongside the final WITH docs.
 
-- [ ] `DDB20-019` CONNECT / DISCONNECT [AUDIT].
+- [x] `DDB20-019` CONNECT / DISCONNECT [DONE].
   SessionConnect/SessionDisconnect nodes and simple URI/attached-name/options cases exist.
   Expand final Quack/Postgres/MySQL forms and routing scope; preserve credentials as authored
   data without leaking them in diagnostics. Cross-target generation must refuse unsupported routing.
+  Final grammar now distinguishes literal URIs, attached catalog identifiers, LOCAL and quoted
+  "LOCAL". Options belong only to string targets and use whitespace, not assignment syntax;
+  alias options, numeric/subquery targets and extra DISCONNECT targets are rejected. Quack,
+  PostgreSQL/libpq and MySQL strings remain opaque authored data, not normalized connection URLs.
+  Bare CONNECT and CONNECT LOCAL parse but are not implemented in native 2.0; executable generation
+  explicitly refuses them. Quoted aliases are not accidentally treated as that keyword form.
+  Routing has no query-result shape/scope or lineage and is not a SELECT optimizer input. Native
+  and cross-target refusals contain no credentials. Parser errors omit routing SQL contexts,
+  lexical/editor diagnostics and verifier reasons are redacted, while AST/serde/executable SQL
+  deliberately retain the authored data. Raw low-level dumps/native exceptions remain sensitive.
+  All verifier channels stay parse-only for routing: even the trusted corpus oracle does not
+  prepare/bind CONNECT options. Unsupported non-SELECT serialization is Unverified, not fabricated
+  acceptance; private-sequence controls prove option expressions are not evaluated by validation.
+  A signed v2.0.0 Quack extension was loaded explicitly from private test scratch, with automatic
+  install/load and secret creation disabled. Random loopback ports/tokens exercise authored and
+  generated alias/URI routing, independent local/remote variables, persistent named-backend state,
+  forwarded CONNECT failure, ephemeral detach/recreation and authentication-failure cleanup. Only
+  DISCONNECT returns to local scope; explicit catalog qualification is not assumed to do so.
+  The shared-catalog behavior of the in-process fixture is not proof of remote data availability.
+  PostgreSQL/MySQL URI grammar is parse-checked without contacting endpoints; those live backends
+  are not certified by the Quack result tests. User connections, URLs and grammar preferences stay.
+  Evidence: DuckdbRoutingTest, DuckdbRoutingResultTest and DuckdbQuackRoutingResultTest. Full gates
+  passed 1,322 core, 115 metadata and 108 verifier/native tests with the loopback fixture enabled,
+  zero skips; 29 final focused controls also passed. Generated ledgers and public data-class JVM
+  shapes remain unchanged. Opt-in artifact: signed v2.0.0 linux_amd64 quack.duckdb_extension,
+  SHA-256 9c893bd543ec2c5253d0c47d5614f90a1bfa1791c735dc6bbcea4e8bd3811a97, downloaded only to
+  /tmp/opencode/duckdb-routing-v2. Set BRIKK_DUCKDB_QUACK_EXTENSION to run that optional result test;
+  no extension binary, installation, consumer pin or publication is part of this commit.
 
 - [ ] `DDB20-020` Trigger contract [AUDIT].
   Inline DML bodies and simple DROP TRIGGER round-trip; native acceptance is tested.

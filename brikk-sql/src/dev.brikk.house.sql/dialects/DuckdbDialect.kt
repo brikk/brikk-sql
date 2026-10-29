@@ -22,6 +22,17 @@ open class DuckdbDialect : Dialect() {
 
     override val name: String get() = "duckdb"
 
+    override fun diagnosticMessage(sql: String, message: String): String =
+        if (mayContainDuckdbRouting(sql)) REDACTED_ROUTING_DIAGNOSTIC else message
+
+    override fun tokenize(sql: String): List<dev.brikk.house.sql.parser.Token> = try {
+        super.tokenize(sql)
+    } catch (error: dev.brikk.house.sql.parser.TokenError) {
+        val safe = diagnosticMessage(sql, error.message.orEmpty())
+        if (safe == error.message) throw error
+        throw dev.brikk.house.sql.parser.TokenError(safe)
+    }
+
     // brikk-native: see Dialect.groupByProjectionAliases.
     override val whereProjectionAliases: Boolean get() = true
     override val lateralColumnAliases: Boolean get() = true

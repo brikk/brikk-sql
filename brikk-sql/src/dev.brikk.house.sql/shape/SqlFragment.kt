@@ -472,6 +472,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {
+            throw ShapeError("Session routing has no query output shape")
+        }
         if (dialectObj.name == "duckdb" && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
         val schema = buildSchema(inputs, rejectNormalizedDuplicates = prepared.hasStarRename())

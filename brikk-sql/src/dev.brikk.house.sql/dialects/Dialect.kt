@@ -231,7 +231,10 @@ open class Dialect {
         Generator(pretty = pretty, tokenizerConfig = tokenizerConfig, sourceDialect = sourceDialect)
 
     // sqlglot: Dialect.tokenize
-    fun tokenize(sql: String): List<Token> = Tokenizer(tokenizerConfig).tokenize(sql)
+    open fun tokenize(sql: String): List<Token> = Tokenizer(tokenizerConfig).tokenize(sql)
+
+    /** A diagnostic is not an authorized channel for authored connection credentials. */
+    open fun diagnosticMessage(sql: String, message: String): String = message
 
     // sqlglot: Dialect.parse
     fun parse(sql: String): List<Expression?> = parser().parse(tokenize(sql), sql)

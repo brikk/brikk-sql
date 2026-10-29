@@ -2659,6 +2659,10 @@ open class Generator(
 
     open fun sessionconnectSql(expression: SessionConnect): String {
         if (!supportsSessionRouting) unexecutable("$targetName cannot execute CONNECT session routing")
+        val authoredTarget = expression.thisArg
+        if (dialect.name == "duckdb" && (authoredTarget == null || authoredTarget is Var && authoredTarget.name.equals("LOCAL", ignoreCase = true))) {
+            unexecutable("DuckDB 2.0 does not implement bare CONNECT or CONNECT LOCAL")
+        }
         val target = sql(expression, "this").let { if (it.isEmpty()) "" else " $it" }
         val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
         return "CONNECT$target$options"

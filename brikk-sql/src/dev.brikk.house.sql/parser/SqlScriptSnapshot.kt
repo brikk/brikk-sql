@@ -122,7 +122,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 if (kind == TokenType.INSERT_DATA && tokens.getOrNull(index + 1)?.tokenType != TokenType.SEMICOLON &&
                     brackets.isEmpty() && blocks.isEmpty() && error == null) flush(token.end + 1)
             }
-            if (lexed.error != null) { error = lexed.error; hasSql = true }
+            if (lexed.error != null) { error = source.diagnosticMessage(text, lexed.error); hasSql = true }
             if (brackets.isNotEmpty() || blocks.isNotEmpty()) error = "Unterminated SQL construct; statement boundary is unknown"
             flush(text.length)
             return SqlScriptSnapshot(text, dialect, ranges)

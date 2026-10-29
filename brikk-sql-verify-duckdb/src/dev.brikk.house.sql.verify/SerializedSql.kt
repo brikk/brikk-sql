@@ -25,13 +25,14 @@ internal sealed interface SerializedSql {
         val document: String,
     ) : SerializedSql {
         fun errorIn(sql: String, message: String): VerifyError {
+            val safe = dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql, message)
             val bytes = LOCATION.matchEntire(location.orEmpty())?.destructured?.let { (start, length) ->
                 start.toIntOrNull()?.let { it to length.toIntOrNull() }
             }
             return when {
-                bytes != null -> VerifyError.atUtf8Byte(sql, message, bytes.first, bytes.second?.let { bytes.first + it })
-                position != null -> VerifyError.atCodePoint(sql, message, position)
-                else -> VerifyError(message)
+                bytes != null -> VerifyError.atUtf8Byte(sql, safe, bytes.first, bytes.second?.let { bytes.first + it })
+                position != null -> VerifyError.atCodePoint(sql, safe, position)
+                else -> VerifyError(safe)
             }
         }
     }
@@ -48,8 +49,8 @@ internal fun SerializedSql.toParseOnlyResult(sql: String): VerifyResult = when (
         VerifyResult.Rejected(errorIn(sql, "Parser Error: ${message.orEmpty()}"))
     } else {
         VerifyResult.Unverified(
-            "Parse-only DuckDB verification cannot check this statement: " +
-                listOfNotNull(type, message).joinToString(": "),
+            dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql,
+                "Parse-only DuckDB verification cannot check this statement: " + listOfNotNull(type, message).joinToString(": ")),
         )
     }
 }

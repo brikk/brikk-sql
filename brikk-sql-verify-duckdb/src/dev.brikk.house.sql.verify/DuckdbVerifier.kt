@@ -20,7 +20,8 @@ import java.util.concurrent.CancellationException
  *
  * Binding evaluates some expressions (table-function arguments such as `range(nextval('s'))`),
  * and the engine has external access enabled, so this oracle is for trusted corpus SQL only.
- * Editors use [ParseOnlyDuckdbVerifier].
+ * Editors use [ParseOnlyDuckdbVerifier]. Routing statements never use prepare/bind even here;
+ * they remain unverified when the parse-only channel cannot serialize them.
  *
  * Cold start: the first [verify] boots an embedded DuckDB; the connection is created lazily
  * and kept for the verifier's lifetime. [verify] is synchronized because one connection is
@@ -50,12 +51,14 @@ public class DuckdbVerifier internal constructor(
             throw e
         } catch (e: Exception) {
             // The parse channel itself failed, so no grammar verdict was obtained.
-            return unavailable(e)
+            return unavailable(e, sql)
         }
         return when (serialized) {
             SerializedSql.Parsed -> VerifyResult.Accepted
             is SerializedSql.Failed -> if (serialized.type == "not implemented") {
-                verifyByPrepare(sql)
+                // CONNECT option binding can evaluate expressions or acquire resources. Never
+                // turn routing validation into prepare/bind, even in the trusted corpus oracle.
+                if (dev.brikk.house.sql.dialects.mayContainDuckdbRouting(sql)) serialized.toParseOnlyResult(sql) else verifyByPrepare(sql)
             } else {
                 val message = listOfNotNull(serialized.type, serialized.message).joinToString(": ")
                 VerifyResult.Rejected(serialized.errorIn(sql, message.ifEmpty { serialized.document }))
@@ -78,9 +81,9 @@ public class DuckdbVerifier internal constructor(
         unavailable(e)
     }
 
-    private fun unavailable(error: Throwable): VerifyResult = VerifyResult.Unavailable(
-        "DuckDB verification was not performed: ${error::class.simpleName}: " +
-            (error.message?.trim() ?: "no detail"),
+    private fun unavailable(error: Throwable, sql: String = ""): VerifyResult = VerifyResult.Unavailable(
+        dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql,
+            "DuckDB verification was not performed: ${error::class.simpleName}: " + (error.message?.trim() ?: "no detail")),
     )
 
     @Synchronized

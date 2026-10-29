@@ -124,7 +124,8 @@ data class SqlScriptParameters(
             val source = Dialects.forName(dialect)
             val typeTokens = if (source.typedQueryParameters) source.parser().typeTokens else null
             val found = binds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, source.questionMarkTernary, positional, checkCanceled)
-            return SqlScriptParameters(text, dialect, found.first, lexed.failureOffset, lexed.error, if (positional) found.second else emptyList())
+            return SqlScriptParameters(text, dialect, found.first, lexed.failureOffset,
+                lexed.error?.let { source.diagnosticMessage(text, it) }, if (positional) found.second else emptyList())
         }
 
         private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE, RANGE }

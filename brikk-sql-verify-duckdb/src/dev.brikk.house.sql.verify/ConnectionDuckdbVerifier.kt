@@ -47,7 +47,8 @@ public class ConnectionDuckdbVerifier(
                         ?: VerifyResult.Unavailable("DuckDB verification is unavailable: invalid parser response.")
                 }
             } catch (e: SQLException) {
-                VerifyResult.Unavailable("DuckDB verification is unavailable: ${e.reason()}.")
+                VerifyResult.Unavailable(dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql,
+                    "DuckDB verification is unavailable: ${e.reason()}."))
             }
         })
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds.toLong())

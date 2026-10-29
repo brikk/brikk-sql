@@ -198,6 +198,9 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
+        throw SqlglotError("Session routing does not expose query-result lineage")
+    }
     if (expression.hasKeyedCte()) {
         throw SqlglotError("Cannot infer recursive USING KEY aggregate-state lineage")
     }

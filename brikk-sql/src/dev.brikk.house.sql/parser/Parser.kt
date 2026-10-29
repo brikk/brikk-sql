@@ -1128,6 +1128,11 @@ open class Parser(
 
     private fun parseError(message: String, token: Token?): ParseError {
         val errorToken = token ?: Token.string("")
+        val safe = dialect.diagnosticMessage(sql, message)
+        if (safe != message) return ParseError("$safe. Line ${errorToken.line}, Col: ${errorToken.col}.", listOf(
+            ParseErrorInfo(safe, errorToken.line, errorToken.col, null, null, null,
+                start = token?.start, end = token?.let { it.end + 1 }),
+        ))
         val highlighted = highlightSql(
             sql = sql,
             positions = listOf(errorToken.start to errorToken.end),

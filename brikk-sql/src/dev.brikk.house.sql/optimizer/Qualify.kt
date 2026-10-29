@@ -78,6 +78,9 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
+        throw OptimizeError("Session routing is not a query to qualify")
+    }
     if (resolvedDialect.name == "duckdb" && expression.hasKeyedCte()) {
         throw OptimizeError("Automatic qualification across recursive USING KEY state is not modeled")
     }

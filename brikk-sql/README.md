@@ -372,6 +372,29 @@ recursive build. Error controls retain native restrictions on aggregate modifier
 payload targets. The probes are bounded or use native keyed convergence and have query deadlines;
 the library does not prove termination, emulate recursion, or add an app-side materialization rule.
 
+DuckDB CONNECT/DISCONNECT remain session-routing statements, not ATTACH/USE rewrites or query
+outputs. CONNECT accepts an attached catalog name or a literal connection string; options are
+allowed only for strings, using whitespace separators. PostgreSQL/MySQL strings are preserved
+as opaque data. Bare CONNECT and CONNECT LOCAL are parsed native forms but are not implemented
+in pinned 2.0, so executable generation refuses them. A quoted catalog named "LOCAL" is different.
+Other targets get explicit routing refusals, not an invented portable connection operation.
+
+Authored connection strings/options remain in AST, serde and emitted SQL and must be handled as
+sensitive data. DuckDB parser/editor-wrapper/verifier diagnostics redact routing details without
+altering those values. Low-level token/AST dumps and native execution exceptions are not a safe
+logging channel. Routing verification never prepares/binds options, even in the trusted corpus
+oracle; its non-SELECT parse-only limitation remains Unverified. Analysis does not acquire a
+backend, evaluate option expressions, change a user's source connection or reconnect anything.
+
+Native loopback Quack tests cover named versus ephemeral routing, local/remote session state,
+return to local scope, reconnect persistence, forwarded errors and cleanup after authentication
+failure. The fixture uses a random token/port, disables extension auto-install/load and secret
+creation, retains signature verification, and stops its own server. It does not certify live
+PostgreSQL/MySQL deployments or promise an explicit catalog name escapes an active remote route.
+Run that optional fixture with `BRIKK_DUCKDB_QUACK_EXTENSION` set to a signed v2.0.0 file named
+`quack.duckdb_extension`, plus matching httpfs already available. Tests never install it into the
+user's extension store. Without this explicit dependency the new loopback test reports a skip.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

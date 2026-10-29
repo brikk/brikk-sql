@@ -33,7 +33,16 @@ internal class DuckdbVerifierTest {
             "DISCONNECT",
         )
         DuckdbVerifier().use { verifier ->
-            for (sql in statements) assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
+            for (sql in statements) {
+                if (dev.brikk.house.sql.dialects.mayContainDuckdbRouting(sql)) {
+                    // A parse-only serializer cannot produce a verdict for routing. Keep the
+                    // native syntax control, but never prepare/bind connection-changing SQL.
+                    assertIs<VerifyResult.Unverified>(verifier.verify(sql))
+                    DriverManager.getConnection("jdbc:duckdb:").use { connection ->
+                        assertEquals("not implemented", assertIs<SerializedSql.Failed>(connection.serializeSql(sql)).type)
+                    }
+                } else assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
+            }
         }
     }
 

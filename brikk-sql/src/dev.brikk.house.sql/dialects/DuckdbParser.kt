@@ -322,24 +322,23 @@ open class DuckdbParser(
             matchTextSeq("PREPARE")
             return expression(DuckdbDeallocate(args("this" to (parseIdVar() ?: raiseError("Expected prepared statement name")))))
         }
-        if (currToken.text.equals("DISCONNECT", ignoreCase = true)) {
+        if (currToken.tokenType != TokenType.IDENTIFIER && currToken.tokenType != TokenType.STRING && currToken.text.equals("DISCONNECT", ignoreCase = true)) {
             matchTextSeq("DISCONNECT")
             return expression(SessionDisconnect())
         }
-        if (currToken.text.equals("CONNECT", ignoreCase = true) &&
-            !nextToken.text.equals("TO", ignoreCase = true)) {
+        if (currToken.tokenType != TokenType.IDENTIFIER && currToken.tokenType != TokenType.STRING && currToken.text.equals("CONNECT", ignoreCase = true)) {
             matchTextSeq("CONNECT")
-            val target = parsePrimaryOrVar()
-            val options = if (currToken.tokenType == TokenType.L_PAREN) {
+            if (currToken.tokenType == TokenType.NUMBER) raiseError("CONNECT requires an identifier or connection string")
+            val target = if (currToken.tokenType == TokenType.STRING) parseString()
+                else if (currToken.tokenType != TokenType.IDENTIFIER && matchTextSeq("LOCAL")) expression(Var(args("this" to "LOCAL")))
+                else if (currToken.exists && currToken.tokenType !in setOf(TokenType.SEMICOLON, TokenType.R_PAREN))
+                    parseIdVar() ?: raiseError("Expected attached database name or connection string") else null
+            val options = if (target is Literal && target.isString && currToken.tokenType == TokenType.L_PAREN) {
                 parseWrappedCsv({
-                    expression(
-                        AttachOption(
-                            args(
-                                "this" to parseVar(anyToken = true),
-                                "expression" to parseField(anyToken = true),
-                            )
-                        )
-                    )
+                    val name = parseIdVar(anyToken = false) ?: raiseError("Expected CONNECT option name")
+                    if (currToken.tokenType == TokenType.EQ) raiseError("CONNECT options use whitespace, not assignment syntax")
+                    val value = if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) null else parseAssignment()
+                    expression(AttachOption(args("this" to name, "expression" to value)))
                 })
             } else null
             return expression(SessionConnect(args("this" to target, "expressions" to options)))
