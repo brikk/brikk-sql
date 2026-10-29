@@ -2983,6 +2983,7 @@ open class DuckdbGenerator(
                     SequenceProperties::class to GeneratorTables.PropLocation.POST_EXPRESSION,
                     IcebergProperty::class to GeneratorTables.PropLocation.POST_CREATE,
                     SecureProperty::class to GeneratorTables.PropLocation.POST_CREATE,
+                    DuckdbRecursiveViewProperty::class to GeneratorTables.PropLocation.POST_CREATE,
                     TriggerProperties::class to GeneratorTables.PropLocation.POST_EXPRESSION,
                 )
 

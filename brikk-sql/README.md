@@ -416,6 +416,28 @@ mixed granularity, row UPDATE/generated/cascading restrictions and dependency/dr
 Analysis and parse-only verification neither register nor run a definition. No application-side
 trigger execution, mutation retry, or new JDBC result interpretation is introduced.
 
+DuckDB 2.0 SECURE VIEW definitions retain their marker through copying, serde, qualification
+of a non-recursive authored body, catalog definition reads and SQL regeneration. Native tests
+cover filtered results, aliases, replacement/existence/temporary forms, recursive views,
+checkpoint/reopen and database export/import. Secure recursive view syntax has a dedicated
+modifier. The explicit PERSISTENT keyword is rejected for views by native 2.0, even though
+its shared CREATE grammar contains it; omitting TEMP already gives a persistent view.
+Recursive self-reference scope, dependency inventory and optimizer qualification/type rewriting
+are not modeled and explicitly refuse. DDL itself has no query-result shape or lineage. A
+non-recursive authored body can be analyzed separately, but row-contract catalogs do not encode access policy or permission
+to inline a stored view. Unproved cross-target SECURE VIEW translations refuse execution,
+even when another engine uses the same keyword, rather than silently emitting an ordinary view.
+
+SECURE hides internal query plans and statistics for rows hidden by the view. It does not
+encrypt the definition: `duckdb_views()` and `information_schema.views` still report SQL,
+and the definition reader deliberately preserves that SQL and its SECURE marker. An unfiltered
+view may expose statistics about values its caller can already read. Native controls pin
+logical/physical/ANALYZE/JSON plan hiding, filtered-statistics suppression, visible-only outer
+predicate evaluation and SQL-plan export retaining the view reference. This is not a claim of
+general authorization, definition secrecy, timing-side-channel protection or a ban on safe
+predicate pushdown. Persistent secure views require native storage format v2.0.0 or newer;
+older storage fails instead of downgrading the view. Temporary secure views remain possible.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

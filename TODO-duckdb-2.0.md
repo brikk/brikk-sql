@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-020.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-021.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -452,10 +452,45 @@ and IDE introspection/completion are separate contracts.
   create_trigger grammar, bind_create.cpp and trigger/merge/dependency/RETURNING test families.
   No user connection, driver-result workaround, consumer-pin, merge or publication changes.
 
-- [ ] `DDB20-021` SECURE VIEW [AUDIT].
+- [x] `DDB20-021` SECURE VIEW [DONE].
   SecureProperty generation and round-trip exist. Verify its preservation through copying,
   regeneration and relevant catalog/definition paths; add engine controls for information
   hiding. Never silently emit an ordinary view for an executable cross-target translation.
+  Audit distinguishes the security boundary from definition secrecy: duckdb_views() and
+  information_schema.views still return CREATE SECURE VIEW SQL. DefinitionQueries reads that
+  native SQL unchanged; no new IDE catalog adapter or access-control model is introduced.
+  Native 2.0 can expose statistics for an unfiltered secure view, since those values are visible;
+  filtered/limited/distinct/grouped/joined view statistics omit hidden min/max/distinct facts.
+  Logical, physical, ANALYZE and JSON plans retain a secure node without body scans/joins or
+  hidden scan counters. SQL-plan export keeps the view reference; it does not inline private SQL.
+  Added structured recursive-view modifier and strict modifier/object validation, copy/serde/
+  pretty-regeneration checks and hard executable cross-target refusals; another engine's
+  same-spelling feature is not a proved semantic translation. Non-recursive body qualification
+  preserves SECURE; recursive-view self-reference scope, dependency inventory and optimizer
+  qualification/type rewriting explicitly refuse rather than reporting the self-name as a physical input.
+  DDL exposes no query-result shape/lineage; authored-body column analysis is not catalog policy.
+  Native positive controls cover aliases, OR REPLACE/IF NOT EXISTS, TEMP and default persistent lifetimes,
+  stacked/recursive views, safe visible-row predicate evaluation, checkpoint/reopen, export/import
+  and read-back/regenerated definitions. Explicit PERSISTENT is rejected: despite its shared grammar,
+  the native transformer only supports that keyword for CREATE SECRET. It is not silently normalized.
+  Old-format persistent storage fails with the native v2.0.0+ requirement; temporary secure views
+  still work there. Parse-only checking creates no view and consumes no sequence in its body.
+  This is not a claim of general authorization, definition secrecy, timing-side-channel protection
+  or a ban on safe native predicate pushdown. No application-side security emulation is introduced.
+  Reviewed final create_view docs and pinned native create_view grammar/transformer,
+  catalog/view/secure_view{,_persistence}.test, optimizer/secure_view_{statistics,explain,pushdown}.test
+  and sql_export/secure_view_{sql_export,predicates}.test. Existing native definition reader code
+  already preserves SQL verbatim; its path is tested instead of adding an ordinary-view rebuild.
+  Evidence: DuckdbSecureViewTest and DuckdbSecureViewResultTest. Full gates passed 1,334 core,
+  115 metadata and 126 DuckDB verifier/native tests, zero skips with the signed loopback Quack
+  fixture still enabled. The new recursive modifier is explicitly registered under brikk.duckdb
+  and listed as a native expression; Python manifests/generated corpora and every existing parity
+  comparison stay unchanged. No public data-class JVM shape or IntelliJ API changes.
+  No user connection, extension installation, consumer pin, merge or publication changes.
+  Final 14 focused controls also passed after adding the paired hidden-value cast-error case:
+  with join-filter pushdown disabled, the ordinary query errors on the hidden value while the
+  secure view returns only allowed rows. Logs: /tmp/opencode/duckdb-secure-view-verified.log and
+  /tmp/opencode/duckdb-secure-view-final-controls.log.
 
 - [ ] `DDB20-022` Custom extension repositories [ADD].
   Currently opaque. Model final CREATE [OR REPLACE] EXTENSION REPOSITORY, WITH PREFIX,

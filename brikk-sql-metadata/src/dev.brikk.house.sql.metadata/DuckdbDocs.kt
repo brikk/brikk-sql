@@ -24,7 +24,8 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("VACUUM", "${STATEMENTS}vacuum", "VACUUM"),
         // Schema objects.
         DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] TABLE", "${STATEMENTS}create_table", "CREATE TABLE"),
-        DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] VIEW", "${STATEMENTS}create_view", "CREATE VIEW"),
+        DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] [SECURE] [RECURSIVE] VIEW", "${STATEMENTS}create_view", "CREATE VIEW",
+            "SECURE hides internal query plans and statistics for hidden rows, not the stored SQL definition. Introduced in DuckDB 2.0."),
         DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION", "${STATEMENTS}create_macro", "CREATE MACRO",
             "Creates a scalar or table macro: a function written in SQL."),
         DocsEntry("CREATE [OR REPLACE] [PERSISTENT|TEMPORARY] SECRET", "${STATEMENTS}create_secret", "CREATE SECRET"),

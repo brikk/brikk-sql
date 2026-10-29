@@ -395,6 +395,16 @@ open class Generator(
         if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
             unexecutable("$targetName has no verified recursive USING KEY translation")
         }
+        if (expr.findAll<SecureProperty>().any()) {
+            // Among the implemented targets only DuckDB has a verified secure-view
+            // contract. An origin-less AST is not permission to emit an unsafe DDL.
+            if (dialect.name != "duckdb")
+                unexecutable("$targetName has no verified DuckDB SECURE VIEW information-hiding translation")
+            if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true))
+                unexecutable("DuckDB SECURE VIEW is not a verified same-keyword translation from $sourceDialect")
+        }
+        if (dialect.name != "duckdb" && expr.findAll<DuckdbRecursiveViewProperty>().any())
+            unexecutable("$targetName has no verified DuckDB recursive view translation")
         val triggerDdl = expr.walk().any { it.isTriggerDdl() }
         if (triggerDdl && sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb")
             unexecutable("$targetName has no verified DuckDB trigger translation")
@@ -1870,6 +1880,7 @@ open class Generator(
             if (loc != GeneratorTables.PropLocation.UNSUPPORTED) {
                 locations.getOrPut(loc) { mutableListOf() }.add(p)
             } else {
+                if (p is SecureProperty) unexecutable("$targetName cannot discard SECURE VIEW information hiding")
                 unsupported("Unsupported property ${p.key}")
             }
         }

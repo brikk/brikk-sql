@@ -5,6 +5,7 @@ import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 
@@ -79,6 +80,7 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference qualification is not modeled")
     if (expression.isTriggerDdl()) throw OptimizeError("Trigger definitions are not SELECT optimizer inputs")
     if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
         throw OptimizeError("Session routing is not a query to qualify")

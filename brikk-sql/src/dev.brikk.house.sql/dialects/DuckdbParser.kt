@@ -28,6 +28,7 @@ import dev.brikk.house.sql.ast.DuckdbDeallocate
 import dev.brikk.house.sql.ast.DuckdbResetVariable
 import dev.brikk.house.sql.ast.Insert
 import dev.brikk.house.sql.ast.Update
+import dev.brikk.house.sql.ast.Values
 import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.Query
 import dev.brikk.house.sql.ast.Pivot
@@ -381,11 +382,42 @@ open class DuckdbParser(
     }
 
     override fun parseCreate(): Expression {
+        val createStart = index
         var cursor = index
-        while (tokens.getOrNull(cursor)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY", "CONSTRAINT", "UNIQUE")) cursor++
+        while (tokens.getOrNull(cursor)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY", "PERSISTENT", "CONSTRAINT", "UNIQUE", "SECURE", "RECURSIVE")) cursor++
+        val viewModifiers = tokens.subList(createStart, cursor).any { it.text.equals("SECURE", true) || it.text.equals("RECURSIVE", true) }
         val trigger = tokens.getOrNull(cursor)?.tokenType == TokenType.TRIGGER
         val orAlter = tokens.getOrNull(index)?.text.equals("OR", ignoreCase = true) && tokens.getOrNull(index + 1)?.text.equals("ALTER", ignoreCase = true)
         val result = super.parseCreate()
+        if (viewModifiers && result !is dev.brikk.house.sql.ast.Create) raiseError("Expected structured DuckDB secure/recursive view definition")
+        val secure = result.findAll<dev.brikk.house.sql.ast.SecureProperty>().toList()
+        val recursive = result.findAll<dev.brikk.house.sql.ast.DuckdbRecursiveViewProperty>().toList()
+        if (secure.isNotEmpty() || recursive.isNotEmpty()) {
+            if (result !is dev.brikk.house.sql.ast.Create || result.text("kind") != "VIEW" ||
+                secure.size > 1 || recursive.size > 1) raiseError("SECURE and RECURSIVE modifiers require a DuckDB VIEW")
+            // The generic property parser accepts these words in other positions too. DuckDB
+            // requires OR REPLACE, TEMP, SECURE, RECURSIVE, VIEW in that order, all unquoted.
+            val prefix = tokens.subList(createStart, index).takeWhile { it.tokenType != TokenType.VIEW }
+            val words = prefix.map { it.text.uppercase() }.toMutableList()
+            if (words.take(2) == listOf("OR", "REPLACE")) repeat(2) { words.removeAt(0) }
+            if (words.firstOrNull() in setOf("TEMP", "TEMPORARY", "PERSISTENT")) words.removeAt(0)
+            if (secure.isNotEmpty() && words.firstOrNull() == "SECURE") words.removeAt(0) else if (secure.isNotEmpty()) raiseError("Expected SECURE before VIEW")
+            if (recursive.isNotEmpty() && words.firstOrNull() == "RECURSIVE") words.removeAt(0) else if (recursive.isNotEmpty()) raiseError("Expected RECURSIVE before VIEW")
+            val body = result.args["expression"]
+            if (words.isNotEmpty() || prefix.any { it.tokenType == TokenType.IDENTIFIER || it.tokenType == TokenType.STRING } ||
+                body !is Query && body !is Values && body !is PipeQuery) raiseError("Invalid DuckDB secure/recursive view definition")
+            var depth = 0
+            var hasAs = false
+            for (token in tokens.subList(createStart + prefix.size + 1, index)) {
+                if (depth == 0 && token.tokenType == TokenType.ALIAS) { hasAs = true; break }
+                if (depth == 0 && token.tokenType in setOf(TokenType.SELECT, TokenType.FROM, TokenType.VALUES, TokenType.TABLE)) break
+                if (token.tokenType == TokenType.L_PAREN) depth++
+                if (token.tokenType == TokenType.R_PAREN) depth--
+            }
+            if (!hasAs) raiseError("Expected AS before secure/recursive view query")
+            if (recursive.isNotEmpty() && (result.thisArg as? dev.brikk.house.sql.ast.Schema)?.expressionsArg.isNullOrEmpty())
+                raiseError("CREATE RECURSIVE VIEW requires a column list")
+        }
         if (trigger) {
             if (result !is dev.brikk.house.sql.ast.Create || orAlter) raiseError("Unsupported DuckDB trigger definition syntax")
             val properties = result.findAll<dev.brikk.house.sql.ast.TriggerProperties>().firstOrNull()
@@ -398,6 +430,9 @@ open class DuckdbParser(
         }
         return result
     }
+
+    override val propertyParsers: Map<String, (dev.brikk.house.sql.parser.Parser, dev.brikk.house.sql.parser.Parser.PropertyKwargs) -> Any?>
+        get() = super.propertyParsers + ("RECURSIVE" to { parser, _ -> parser.expression(dev.brikk.house.sql.ast.DuckdbRecursiveViewProperty()) })
 
     override fun parseTriggerEvents(): List<Expression> = super.parseTriggerEvents().also { events ->
         if (events.size != 1 || events.single().name !in setOf("INSERT", "UPDATE", "DELETE")) raiseError("DuckDB requires one INSERT, UPDATE or DELETE trigger event")

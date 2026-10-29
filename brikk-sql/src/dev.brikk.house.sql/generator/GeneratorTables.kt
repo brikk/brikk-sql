@@ -135,6 +135,7 @@ object GeneratorTables {
         SampleProperty::class to PropLocation.POST_SCHEMA,
         SchemaCommentProperty::class to PropLocation.POST_SCHEMA,
         SecureProperty::class to PropLocation.POST_CREATE,
+        DuckdbRecursiveViewProperty::class to PropLocation.POST_CREATE,
         SecurityIntegrationProperty::class to PropLocation.POST_CREATE,
         SerdeProperties::class to PropLocation.POST_SCHEMA,
         SetNode::class to PropLocation.POST_SCHEMA,
@@ -769,6 +770,10 @@ object GeneratorTables {
         }
         reg(SampleProperty::class) { e -> "SAMPLE BY ${sql(e, "this")}" }
         reg(SecureProperty::class) { _ -> "SECURE" }
+        reg(DuckdbRecursiveViewProperty::class) { _ ->
+            if (dialect.name != "duckdb") unexecutable("${dialect.name} has no verified DuckDB recursive view translation")
+            "RECURSIVE"
+        }
         reg(SecurityIntegrationProperty::class) { _ -> "SECURITY" }
         reg(SetConfigProperty::class) { e -> sql(e, "this") }
         reg(SetProperty::class) { e -> "${if (e.args["multi"] == true) "MULTI" else ""}SET" }

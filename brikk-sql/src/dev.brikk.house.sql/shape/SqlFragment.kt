@@ -27,6 +27,8 @@ import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isRecurringCteReference
 import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isSecureViewDefinition
+import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.isTriggerName
 import dev.brikk.house.sql.ast.isTriggerTransitionReference
 import dev.brikk.house.sql.ast.namedSelects
@@ -364,6 +366,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      */
     val sourceTables: List<String> by lazy {
         val tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        if (tree.isDuckdbRecursiveViewDefinition()) throw ShapeError("Recursive view self-reference dependencies are not modeled")
         val sideEffects = tree.hasSideEffectingCte()
         val resolved = java.util.IdentityHashMap<Table, Boolean>()
         for (scope in traverseScope(tree)) {
@@ -477,6 +480,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree.isSecureViewDefinition()) throw ShapeError("SECURE VIEW DDL has no query output shape; analyze its body separately")
         if (tree.isTriggerDdl()) throw ShapeError("Trigger DDL has no query output shape")
         if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {
             throw ShapeError("Session routing has no query output shape")

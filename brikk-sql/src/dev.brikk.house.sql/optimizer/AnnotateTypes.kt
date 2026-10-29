@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.hasKeyedAggregatePayload
 import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ColumnDef
@@ -355,6 +356,7 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate
     fun <E : Expression> annotate(expression: E, annotateScope: Boolean = true): E {
+        if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference typing is not modeled")
         if (dialect.name == "duckdb" && expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require image/transition scope contracts")
         if (dialect.name == "duckdb" && expression.hasKeyedAggregatePayload()) {
             throw OptimizeError("Recursive USING KEY aggregate types require the declarative CTE contract, not SELECT type annotation")
