@@ -26,6 +26,9 @@ import dev.brikk.house.sql.ast.desugarPipes
 import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isRecurringCteReference
+import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isTriggerName
+import dev.brikk.house.sql.ast.isTriggerTransitionReference
 import dev.brikk.house.sql.ast.namedSelects
 import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
@@ -391,7 +394,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             // inventory behavior. Functions and unresolved placeholders are not tables.
             val parts = table.parts
             if (parts.isEmpty() || parts.any { it !is Identifier }) continue
-            val target = sideEffects && isPhysicalWriteTarget(table)
+            if (dialectObj.name == "duckdb" && table.isTriggerName()) continue
+            val target = (sideEffects || tree.isTriggerDdl()) && isPhysicalWriteTarget(table)
+            if (dialectObj.name == "duckdb" && !target && table.isTriggerTransitionReference()) continue
             if (dialectObj.name == "duckdb" && table.isRecurringCteReference()) continue
             if (!target && (resolved[table] == false || sideEffects && visibleCteReference(table))) continue
             out.add(catalogPath(parts.map { it.name }))
@@ -472,6 +477,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree.isTriggerDdl()) throw ShapeError("Trigger DDL has no query output shape")
         if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {
             throw ShapeError("Session routing has no query output shape")
         }

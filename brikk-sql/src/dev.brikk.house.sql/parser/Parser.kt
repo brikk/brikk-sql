@@ -4949,7 +4949,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_trigger_events
-    protected fun parseTriggerEvents(): List<Expression> {
+    protected open fun parseTriggerEvents(): List<Expression> {
         val events = mutableListOf<Expression>()
 
         while (true) {
@@ -4991,7 +4991,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_trigger_referencing_clause
-    protected fun parseTriggerReferencingClause(keyword: String): Expression? {
+    protected open fun parseTriggerReferencingClause(keyword: String): Expression? {
         if (!matchTextSeq(keyword)) return null
         if (!matchTextSeq("TABLE")) {
             raiseError("Expected TABLE after $keyword in REFERENCING clause")
@@ -5031,7 +5031,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_trigger_for_each
-    protected fun parseTriggerForEach(): String? {
+    protected open fun parseTriggerForEach(): String? {
         if (!matchTextSeq("FOR", "EACH")) return null
 
         return if (matchTexts(setOf("ROW", "STATEMENT"))) prevToken.text.uppercase() else null
@@ -6397,7 +6397,7 @@ open class Parser(
     // sqlglot: Parser._parse_drop
     fun parseDrop(exists: kotlin.Boolean = false): Expression = parseDropWithKind(exists = exists)
 
-    fun parseDropWithKind(kind: String? = null, exists: kotlin.Boolean = false): Expression {
+    open fun parseDropWithKind(kind: String? = null, exists: kotlin.Boolean = false): Expression {
         val start = prevToken
         val temporary = kind == null && match(TokenType.TEMPORARY)
         val materialized = kind == null && matchTextSeq("MATERIALIZED")

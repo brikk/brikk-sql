@@ -8,6 +8,11 @@ import dev.brikk.house.sql.ast.Max
 import dev.brikk.house.sql.ast.ArrayAgg
 import dev.brikk.house.sql.ast.GroupConcat
 import dev.brikk.house.sql.ast.Union
+import dev.brikk.house.sql.ast.Create
+import dev.brikk.house.sql.ast.TriggerProperties
+import dev.brikk.house.sql.ast.TriggerReferencing
+import dev.brikk.house.sql.ast.TriggerEvent
+import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -104,7 +109,7 @@ internal class Frame(
 }
 
 /** A CTE visible by [name]; [synthetic] ones come from pipe lowering and have no name in the text. */
-internal class Cte(val name: Identifier, val row: Row, val synthetic: Boolean)
+internal class Cte(val name: Identifier, val row: Row, val synthetic: Boolean, val kind: RelationKind = RelationKind.CTE)
 
 internal class Env(val ctes: List<Cte>, val outer: Frame?, val recurring: List<Cte> = emptyList(), val keyedAnchor: Boolean = false) {
     fun withOuter(frame: Frame?) = Env(ctes, frame, recurring, keyedAnchor)
@@ -148,6 +153,10 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
+        if (dialect.name == "duckdb" && node.isTriggerDdl()) {
+            if (node is Create) trigger(node, env)
+            return true
+        }
         if (node is dev.brikk.house.sql.ast.SessionConnect || node is dev.brikk.house.sql.ast.SessionDisconnect) return true
         if (node is Update && dialect.name == "duckdb") {
             update(node, withClause(node, env))
@@ -164,6 +173,38 @@ internal class ScopeEvaluator(
         val queries = node.outermostQueries()
         queries.forEach { query(it, env) }
         return queries.isNotEmpty()
+    }
+
+    /** Definition-time image contracts, never trigger registration or body execution. */
+    private fun trigger(node: Create, env: Env) {
+        val properties = node.findAll<TriggerProperties>().firstOrNull() ?: return
+        val target = properties.args["table"] as? Table ?: return
+        val bindings = source(target, Env(emptyList(), null), Frame(emptyList(), null))
+        val targetFrame = Frame(bindings, null)
+        val event = (properties.args["events"] as? List<*>).orEmpty().filterIsInstance<TriggerEvent>().singleOrNull()
+        expression(event, targetFrame, env)
+        val timing = properties.text("timing").uppercase()
+        val row = properties.text("for_each").equals("ROW", ignoreCase = true)
+        val body = properties.args["execute"] as? Expression ?: return
+        val oldAvailable = event?.name in setOf("UPDATE", "DELETE")
+        val newAvailable = event?.name in setOf("UPDATE", "INSERT")
+        fun image(label: String): Row = Row(bindings.flatMap { it.columns }.map { column ->
+            computed(column.name, column.nullability, "TRIGGER $label", column.sqlType)
+        }, bindings.fold(Knowledge.FULL) { knowledge, binding -> worst(knowledge, binding.knowledge) })
+        val images = ArrayList<Binding>()
+        var ctes = env.ctes
+        if (row && timing == "AFTER" && event?.name != "UPDATE" && body !is Update) {
+            for ((label, available) in listOf("OLD" to oldAvailable, "NEW" to newAvailable)) if (available) {
+                images += bound(image(label), Identifier(args("this" to label, "quoted" to false)), false, RelationKind.OTHER, null)
+            }
+        } else if (!row && timing == "AFTER" && event?.args?.get("columns").let { it as? List<*> }.isNullOrEmpty()) {
+            val referencing = properties.args["referencing"] as? TriggerReferencing
+            for ((label, available) in listOf("old" to oldAvailable, "new" to newAvailable)) if (available) {
+                val alias = referencing?.args?.get(label) as? Identifier ?: continue
+                ctes = ctes + Cte(alias, image(label.uppercase()), false, RelationKind.OTHER)
+            }
+        }
+        statement(body, Env(ctes, if (images.isEmpty()) null else Frame(images, null)))
     }
 
     private fun update(node: Update, scoped: Env): Row {
@@ -579,7 +620,7 @@ internal class ScopeEvaluator(
             is Table -> table(node, env, lateral)
             is TableAlias -> {
                 val name = node.thisArg as? Identifier
-                cte(name, env)?.let { (cte, row) -> bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name)) }
+                cte(name, env)?.let { (cte, row) -> bound(row, name, cte.synthetic, cte.kind, cte.name.name, declared(cte.name)) }
                     ?: unknownRelation(node.name, RelationKind.OTHER)
             }
             is Subquery -> {
@@ -639,7 +680,7 @@ internal class ScopeEvaluator(
         }
         if (node.db.isEmpty() && node.catalog.isEmpty()) {
             cte(name, env)?.let { (cte, row) ->
-                val relation = bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name))
+                val relation = bound(row, name, cte.synthetic, cte.kind, cte.name.name, declared(cte.name))
                 if (!cte.synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, row.knowledge, relation = relation.relation)
                 return relation
             }

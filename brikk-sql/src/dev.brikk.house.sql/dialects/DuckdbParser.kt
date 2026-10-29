@@ -380,6 +380,55 @@ open class DuckdbParser(
         return null
     }
 
+    override fun parseCreate(): Expression {
+        var cursor = index
+        while (tokens.getOrNull(cursor)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY", "CONSTRAINT", "UNIQUE")) cursor++
+        val trigger = tokens.getOrNull(cursor)?.tokenType == TokenType.TRIGGER
+        val orAlter = tokens.getOrNull(index)?.text.equals("OR", ignoreCase = true) && tokens.getOrNull(index + 1)?.text.equals("ALTER", ignoreCase = true)
+        val result = super.parseCreate()
+        if (trigger) {
+            if (result !is dev.brikk.house.sql.ast.Create || orAlter) raiseError("Unsupported DuckDB trigger definition syntax")
+            val properties = result.findAll<dev.brikk.house.sql.ast.TriggerProperties>().firstOrNull()
+                ?: return result.also { raiseError("Expected inline trigger action") }
+            if (properties.args["constraint"] == true || properties.args["referenced_table"] != null ||
+                properties.args["deferrable"] != null || properties.args["initially"] != null ||
+                properties.args["when"].let { it != null && it != false } || result.args["unique"] == true) {
+                raiseError("This PostgreSQL trigger clause is not DuckDB trigger syntax")
+            }
+        }
+        return result
+    }
+
+    override fun parseTriggerEvents(): List<Expression> = super.parseTriggerEvents().also { events ->
+        if (events.size != 1 || events.single().name !in setOf("INSERT", "UPDATE", "DELETE")) raiseError("DuckDB requires one INSERT, UPDATE or DELETE trigger event")
+        for (column in events.flatMap { it.args["columns"] as? List<*> ?: emptyList<Any>() }) {
+            if (column !is dev.brikk.house.sql.ast.Column || column.parts.size != 1) raiseError("UPDATE OF requires unqualified column names")
+        }
+    }
+
+    override fun parseTriggerReferencingClause(keyword: String): Expression? {
+        if (!matchTextSeq(keyword)) return null
+        if (!matchTextSeq("TABLE", "AS")) raiseError("Expected TABLE AS in trigger REFERENCING")
+        return parseIdVar() ?: raiseError("Expected transition table alias")
+    }
+
+    override fun parseTriggerForEach(): String? {
+        if (!matchTextSeq("FOR", "EACH")) return null
+        if (!matchTexts(setOf("ROW", "STATEMENT"))) raiseError("Expected ROW or STATEMENT after FOR EACH")
+        return prevToken.text.uppercase()
+    }
+
+    override fun parseDropWithKind(kind: String?, exists: Boolean): Expression {
+        if (kind != null || !match(TokenType.TRIGGER)) return super.parseDropWithKind(kind, exists)
+        val ifExists = exists || parseExists()
+        val name = parseIdVar() ?: raiseError("Expected trigger name")
+        if (!match(TokenType.ON)) raiseError("DROP TRIGGER requires ON and its attached table")
+        val target = parseTableParts() ?: raiseError("Expected attached table")
+        return expression(dev.brikk.house.sql.ast.Drop(args("kind" to "TRIGGER", "exists" to ifExists,
+            "tables" to listOf(dev.brikk.house.sql.ast.Table(args("this" to name))),
+            "cluster" to dev.brikk.house.sql.ast.OnProperty(args("this" to target)))))
+    }
+
     // sqlglot: DuckDBParser._parse_function_properties
     override fun parseFunctionProperties(): Expression? {
         if (match(TokenType.TABLE)) {

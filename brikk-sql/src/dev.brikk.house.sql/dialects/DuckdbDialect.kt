@@ -21,6 +21,7 @@ open class DuckdbDialect : Dialect() {
     )
 
     override val name: String get() = "duckdb"
+    override val singleStatementTriggers: Boolean get() = true
 
     override fun diagnosticMessage(sql: String, message: String): String =
         if (mayContainDuckdbRouting(sql)) REDACTED_ROUTING_DIAGNOSTIC else message

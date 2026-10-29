@@ -61,6 +61,9 @@ open class Dialect {
      */
     open val functionCatalog: FunctionCatalog? get() = null
 
+    /** Native triggers with one inline DML action, not a procedural BEGIN/END body. */
+    open val singleStatementTriggers: Boolean get() = false
+
     // sqlglot: Dialect.NORMALIZATION_STRATEGY
     open val normalizationStrategy: NormalizationStrategy get() = NormalizationStrategy.LOWERCASE
 

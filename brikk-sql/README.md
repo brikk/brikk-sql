@@ -395,6 +395,27 @@ Run that optional fixture with `BRIKK_DUCKDB_QUACK_EXTENSION` set to a signed v2
 `quack.duckdb_extension`, plus matching httpfs already available. Tests never install it into the
 user's extension store. Without this explicit dependency the new loopback test reports a skip.
 
+DuckDB 2.0 trigger definitions keep one inline INSERT/UPDATE/DELETE/MERGE action. Grammar
+checks do not substitute PostgreSQL EXECUTE FUNCTION, multi-event or WHEN syntax. Qualified
+DROP TRIGGER targets retain the required attached-table identity. Native single-statement
+trigger bodies have script boundaries; compound BEGIN/END bodies remain refused.
+
+Definition scopes/completion expose target fields for UPDATE OF, NEW for supported AFTER INSERT
+row triggers, OLD for AFTER DELETE row triggers, and explicit OLD/NEW TABLE aliases for supported
+AFTER statement triggers. Image columns have target types but computed provenance. Those aliases
+are local to the action and are not physical input tables. Trigger DDL has no body-result shape
+or lineage; SELECT optimizer/type rewrites and unproved cross-target DDL explicitly refuse it.
+Known unsupported timing, granularity, transition and temporary forms also refuse executable
+generation. Native binding still decides schema-dependent validity, dependencies and catalog state.
+
+Native tests verify trigger order, BEFORE/AFTER state, empty statement input, per-row duplicates,
+UPDATE OF, transition audits, outer RETURNING/generated columns, MERGE bodies and rollback.
+MERGE can be an action, including against the trigger's own table; top-level MERGE against a
+trigger-bearing table is a separate unsupported path. Runtime controls pin row RETURNING,
+mixed granularity, row UPDATE/generated/cascading restrictions and dependency/drop behavior.
+Analysis and parse-only verification neither register nor run a definition. No application-side
+trigger execution, mutation retry, or new JDBC result interpretation is introduced.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

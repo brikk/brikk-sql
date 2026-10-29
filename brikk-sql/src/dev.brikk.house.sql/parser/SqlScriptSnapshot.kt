@@ -55,6 +55,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
             var error: String? = null
             var head: String? = null
             var routine = false
+            var inlineTrigger = false
             var afterEnd = false
             // The closer each open bracket expects.
             val brackets = ArrayList<TokenType>()
@@ -64,7 +65,7 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 if (end > start) ranges.add(SqlStatementRange(start, end, hasSql, hasPipe, error, terminator, dataEnd))
                 start = end
                 dataEnd = null
-                hasSql = false; hasPipe = false; error = null; head = null; routine = false; afterEnd = false
+                hasSql = false; hasPipe = false; error = null; head = null; routine = false; inlineTrigger = false; afterEnd = false
             }
             for ((index, token) in tokens.withIndex()) {
                 if (index and 1023 == 1023) checkCanceled()
@@ -76,8 +77,12 @@ data class SqlScriptSnapshot(val text: String, val dialect: String, val statemen
                 val previousWord = tokens.getOrNull(index - 1)?.text?.uppercase()
                 val declaration = brackets.isEmpty() && head in setOf("CREATE", "WITH") &&
                     previousWord in setOf("CREATE", "REPLACE", "WITH", "TEMP", "TEMPORARY", "AGGREGATE")
-                if (visibleWord && word == "FUNCTION" && declaration) routine = true
-                if (head == "DELIMITER" || visibleWord && declaration && word in setOf("PROCEDURE", "TRIGGER"))
+                if (!inlineTrigger && visibleWord && word == "FUNCTION" && declaration) routine = true
+                if (visibleWord && declaration && word == "TRIGGER" && source.singleStatementTriggers) inlineTrigger = true
+                if (inlineTrigger && visibleWord && word == "BEGIN" && brackets.isEmpty() &&
+                    tokens.getOrNull(index - 1)?.tokenType != TokenType.DOT)
+                    error = "Unsupported compound trigger body; statement boundary is unknown"
+                if (head == "DELIMITER" || visibleWord && declaration && (word == "PROCEDURE" || word == "TRIGGER" && !source.singleStatementTriggers))
                     error = "Unsupported procedural/client delimiter boundary; select a complete supported statement"
                 when (kind) {
                     TokenType.L_PAREN -> brackets.add(TokenType.R_PAREN)

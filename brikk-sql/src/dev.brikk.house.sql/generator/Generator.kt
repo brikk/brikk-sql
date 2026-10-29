@@ -395,6 +395,13 @@ open class Generator(
         if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
             unexecutable("$targetName has no verified recursive USING KEY translation")
         }
+        val triggerDdl = expr.walk().any { it.isTriggerDdl() }
+        if (triggerDdl && sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb")
+            unexecutable("$targetName has no verified DuckDB trigger translation")
+        if (triggerDdl && dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true))
+            unexecutable("DuckDB trigger semantics are not a verified translation from $sourceDialect")
+        if (dialect.name == "duckdb" && expr.isTriggerDdl() && expr.findAll<TemporaryProperty>().any())
+            unexecutable("DuckDB 2.0 does not support temporary triggers")
         if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
             if (duckdbSessionDefaults == true || duckdbSessionDefaults == null && expr.walk().any { parameter ->
                     (parameter is Parameter || parameter is Placeholder && parameter.thisArg != null) && parameter.name.any { it !in '0'..'9' }
@@ -2014,6 +2021,7 @@ open class Generator(
 
     // sqlglot: Generator.triggerproperties_sql
     open fun triggerpropertiesSql(expression: TriggerProperties): String {
+        if (dialect.name == "duckdb") checkDuckdbTriggerMode(expression)
         val timing = expression.args["timing"] as? String ?: ""
         val events = (expression.args["events"] as? List<*>).orEmpty()
             .joinToString(" OR ") { sql(it) }
@@ -2041,6 +2049,25 @@ open class Generator(
         parts.add(sql(expression, "execute"))
 
         return parts.joinToString(sep())
+    }
+
+    private fun checkDuckdbTriggerMode(properties: TriggerProperties) {
+        val timing = properties.text("timing").uppercase()
+        val row = properties.text("for_each").equals("ROW", ignoreCase = true)
+        val events = (properties.args["events"] as? List<*>).orEmpty().filterIsInstance<TriggerEvent>()
+        val event = events.singleOrNull()?.name
+        val referencing = properties.args["referencing"] as? TriggerReferencing
+        val body = properties.args["execute"]
+        val updateColumns = events.singleOrNull()?.args?.get("columns") as? List<*>
+        if (body !is Insert && body !is Update && body !is Delete && body !is Merge)
+            unexecutable("DuckDB triggers require one inline INSERT/UPDATE/DELETE/MERGE action")
+        if (event !in setOf("INSERT", "UPDATE", "DELETE") || timing == "INSTEAD OF")
+            unexecutable("DuckDB 2.0 does not support this trigger event/timing")
+        if (row && (timing != "AFTER" || event == "UPDATE" || body is Update || referencing != null))
+            unexecutable("DuckDB 2.0 does not support this FOR EACH ROW trigger form")
+        if (referencing != null && (timing != "AFTER" || event == "INSERT" && referencing.args["old"] != null ||
+                event == "DELETE" && referencing.args["new"] != null || !updateColumns.isNullOrEmpty()))
+            unexecutable("DuckDB 2.0 does not support these transition tables for this event")
     }
 
     // sqlglot: Generator.triggerreferencing_sql

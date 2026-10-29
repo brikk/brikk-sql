@@ -17,6 +17,7 @@ import dev.brikk.house.sql.ast.Distinct
 import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Explode
 import dev.brikk.house.sql.ast.hasKeyedCte
+import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Group
 import dev.brikk.house.sql.ast.Identifier
@@ -101,6 +102,7 @@ fun <E : Expression> qualifyColumns(
     dialect: Dialect? = null,
 ): E {
     if (expression.hasKeyedCte()) throw OptimizeError("Automatic column qualification across recursive USING KEY state is not modeled")
+    if (expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require their image/transition scope, not SELECT qualification")
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
     val annotator = TypeAnnotator(resolvedSchema)
     val resolvedInferSchema = inferSchema ?: resolvedSchema.empty

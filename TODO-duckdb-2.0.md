@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-019.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-020.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -416,11 +416,41 @@ and IDE introspection/completion are separate contracts.
   /tmp/opencode/duckdb-routing-v2. Set BRIKK_DUCKDB_QUACK_EXTENSION to run that optional result test;
   no extension binary, installation, consumer pin or publication is part of this commit.
 
-- [ ] `DDB20-020` Trigger contract [AUDIT].
+- [x] `DDB20-020` Trigger contract [DONE].
   Inline DML bodies and simple DROP TRIGGER round-trip; native acceptance is tested.
   Cover BEFORE/AFTER, supported row/statement modes, OLD/NEW transition tables, UPDATE OF,
   multiple triggers, MERGE bodies, RETURNING and dependency/drop behavior. Pin documented
   unsupported combinations as refusals, not assumed PostgreSQL EXECUTE FUNCTION semantics.
+  Existing Create/TriggerProperties/Event/Referencing nodes retain inline INSERT/UPDATE/DELETE/
+  MERGE actions through copy/serde/generation. Added DuckDB-specific grammar checks: one I/U/D
+  event, TABLE AS transition aliases, complete FOR EACH and required DROP TRIGGER ... ON table.
+  Qualified attached-table drops now remain structured rather than failing at a schema dot.
+  PostgreSQL OR-event/TRUNCATE/WHEN/constraint/EXECUTE FUNCTION and qualified trigger-name forms
+  do not silently become DuckDB actions. Explicit generation refusals cover known unsupported
+  timing/granularity/transition combinations and temporary triggers, plus unproved cross-target DDL.
+  Script snapshots split native single-DML trigger bodies while retaining compound BEGIN/END
+  refusal. Scope/completion uses target-column facts for UPDATE OF, supported OLD/NEW row images
+  and statement transition aliases only inside the action. These are computed image contracts,
+  not pre-write provenance or persisted trigger metadata. Physical source inventory excludes
+  transition aliases and the trigger name, but keeps body write targets and the attached table.
+  Trigger DDL does not expose its body's result shape/lineage; generic SELECT qualification/type
+  rewriting refuses this definition context rather than binding transitions as physical tables.
+  Native results pin BEFORE/AFTER observations, empty statement input, duplicate row images,
+  old/new UPDATE audit tables, UPDATE OF assignment semantics, trigger creation order, outer
+  RETURNING including generated columns, MERGE actions including a same-table action, atomic
+  statement/caller rollback, OR REPLACE/IF NOT EXISTS, qualified DROP, and dependency RESTRICT/
+  CASCADE. Runtime controls distinguish outer MERGE, row RETURNING, upsert UPDATE triggers,
+  mixed granularity, row UPDATE bodies/generated columns/cascades and cross-catalog dependencies.
+  Temporary rejection can occur in the native PEG transformer before binding. Pure definition
+  analysis and parse-only verification do not register a trigger or consume a body sequence.
+  This does not emulate trigger execution or make schema-dependent limitations statically decidable.
+  Evidence: DuckdbTriggerTest and DuckdbTriggerResultTest. Full gates passed 1,328 core, 115
+  metadata and 118 DuckDB verifier/native tests with the loopback routing fixture still enabled
+  and zero skips. The final 16 trigger controls also passed after the NEW.begin field/boundary
+  regression. Existing generated corpora, annotation/serde and JVM compatibility gates are intact;
+  no new AST classes or public data-class fields. Reviewed the final CREATE TRIGGER docs, native
+  create_trigger grammar, bind_create.cpp and trigger/merge/dependency/RETURNING test families.
+  No user connection, driver-result workaround, consumer-pin, merge or publication changes.
 
 - [ ] `DDB20-021` SECURE VIEW [AUDIT].
   SecureProperty generation and round-trip exist. Verify its preservation through copying,

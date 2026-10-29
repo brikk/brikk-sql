@@ -3,6 +3,7 @@ package dev.brikk.house.sql.optimizer
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
+import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Merge
 import dev.brikk.house.sql.ast.DerivedTable
@@ -198,6 +199,7 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if (expression.isTriggerDdl()) throw SqlglotError("Trigger DDL does not expose its body's query-result lineage")
     if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
         throw SqlglotError("Session routing does not expose query-result lineage")
     }
