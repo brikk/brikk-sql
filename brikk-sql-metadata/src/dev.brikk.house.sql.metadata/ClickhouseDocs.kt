@@ -1,12 +1,13 @@
 package dev.brikk.house.sql.metadata
 
 /**
- * ClickHouse's current documentation. The site has no release-specific documentation tree,
- * so these links follow it independently of the binary-pinned metadata snapshots.
+ * Historical ClickHouse patterns and shared documentation links. The site has no release-specific
+ * tree, so the links follow current documentation independently of the binary-pinned snapshots.
+ * The default advertising below removes retired patterns without deleting this older knowledge.
  */
-val CLICKHOUSE_DOCS: EngineDocs = EngineDocs(
+val CLICKHOUSE_HISTORICAL_DOCS: EngineDocs = EngineDocs(
     dialect = "clickhouse",
-    version = "current",
+    version = "historical",
     base = "https://clickhouse.com/docs/",
     statements = listOf(
         DocsEntry("CREATE [OR REPLACE] [TEMPORARY] TABLE", "reference/statements/create/table", "CREATE TABLE", "Creates a table: its columns, engine, ordering, partitioning and settings."),
@@ -177,4 +178,11 @@ val CLICKHOUSE_DOCS: EngineDocs = EngineDocs(
         "versionedcollapsingmergetree" to "reference/engines/table-engines/mergetree-family/versionedcollapsingmergetree",
         "view" to "reference/engines/table-engines/special/view",
     ),
+)
+
+val CLICKHOUSE_DOCS: EngineDocs = CLICKHOUSE_HISTORICAL_DOCS.copy(
+    version = "current",
+    statements = CLICKHOUSE_HISTORICAL_DOCS.statements.map { entry ->
+        if ("|WINDOW" in entry.pattern) entry.copy(pattern = entry.pattern.replace("|WINDOW", "")) else entry
+    },
 )

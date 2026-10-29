@@ -87,6 +87,13 @@ and structured refresh, index, EXPLAIN, authentication, handler and ALTER forms.
 DDL coverage is parse-only. EXPLAIN ANALYZE is explicitly classified as executing
 its enclosed query; the editor verifier still only formats SQL passed as data.
 
+The eight-step catch-up is complete within the [final coverage and limits](docs/research/clickhouse-2026-batch4.md).
+Native TRY_CAST keeps its accurate-cast behavior, integer division retains
+setting-dependent diagnostics, nullable tuple fields keep nullability, and
+PostgreSQL cardinality uses the all-dimensions count without changing Trino's
+outer-array behavior. Lowered NATURAL joins are measured on both pins; LATERAL
+remains experimental and setting-dependent. Historical semantic proofs are unchanged.
+
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
 The opt-in API leaves the existing rendering paths unchanged.

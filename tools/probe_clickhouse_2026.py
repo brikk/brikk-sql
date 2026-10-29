@@ -97,10 +97,11 @@ def main():
             if tuple(map(int, case.get("release", "0.0").split("."))) > tuple(map(int, engine["version"].split(".")[:2])):
                 execution.append({"id": case["id"], "skipped": "Introduced after this pinned engine"})
                 continue
+            expected = execution_expectation(case, engine["version"])
             sql = case.get("setup", "") + "; " + case["sql"]
             result = query(engine, sql.lstrip("; "), streaming=" STREAM" in case["sql"])
             execution.append({"id": case["id"], **result})
-            if not expected_execution(case, result):
+            if not expected_execution(expected, result):
                 failures.append(engine["version"] + "/" + case["id"] + ": native execution expectation")
             if args.brikk:
                 generated = brikk[case["id"]].get("generated")
@@ -110,7 +111,7 @@ def main():
                 result = query(engine, (case.get("setup", "") + "; " + generated).lstrip("; "),
                                streaming=" STREAM" in case["sql"])
                 brikk_execution.append({"id": case["id"], "sql": generated, **result})
-                if not expected_execution(case, result):
+                if not expected_execution(expected, result):
                     failures.append(engine["version"] + "/" + case["id"] + ": Brikk execution expectation")
         report = {"captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                   "engine": engine, "version_query": version, "parse_query": parsed,
@@ -130,6 +131,15 @@ def expected_execution(case, result):
         return (result["returncode"] == case["error_code"] % 256 and result["stdout"] == ""
                 and case["error_name"] in result["stderr"])
     return result["returncode"] == 0 and result["stdout"] == case["stdout"]
+
+
+def execution_expectation(case, version):
+    if "expectations" not in case:
+        return case
+    # A changed native behavior is tested on each pin, not relabeled as an unavailable case.
+    if version not in case["expectations"]:
+        raise ValueError(f"Missing explicit native expectation: {case['id']}/{version}")
+    return case["expectations"][version]
 
 
 if __name__ == "__main__":

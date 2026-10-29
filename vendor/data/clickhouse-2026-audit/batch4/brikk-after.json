@@ -1,0 +1,380 @@
+[
+    {
+        "id": "CH26-B4-C01",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-C02",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))])",
+        "generated": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64) SETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+        "id": "CH26-B4-C03",
+        "root": "Select",
+        "ast": "Select(expressions=[TryCast(this=Literal(this=256, is_string=false), to=DataType(this=UTINYINT, nested=false, nullable=false), safe=true), Cast(this=Literal(this=256, is_string=false), to=DataType(this=UTINYINT, nested=false, nullable=true))])",
+        "generated": "SELECT TRY_CAST(256 AS UInt8), CAST(256 AS Nullable(UInt8))"
+    },
+    {
+        "id": "CH26-B4-C04",
+        "root": "Select",
+        "ast": "Select(expressions=[TryCast(this=Literal(this=[1,2], is_string=true), to=DataType(this=ARRAY, expressions=[DataType(this=INT, nested=false, nullable=false)], nested=true, nullable=false), safe=true)])",
+        "generated": "SELECT TRY_CAST('[1,2]' AS Array(Int32))"
+    },
+    {
+        "id": "CH26-B4-C05",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false), table=Identifier(this=a, quoted=false)), Column(this=Identifier(this=n, quoted=false), table=Identifier(this=b, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]), alias=TableAlias(this=Identifier(this=a, quoted=false)))), joins=[Join(this=Lateral(this=Subquery(this=Select(expressions=[Alias(this=Add(this=Column(this=Identifier(this=number, quoted=false), table=Identifier(this=a, quoted=false)), expression=Literal(this=10, is_string=false)), alias=Identifier(this=n, quoted=false))])), view=false, outer=false, alias=TableAlias(this=Identifier(this=b, quoted=false))), side=LEFT, on=Boolean(this=true))], settings=[EQ(this=Column(this=Identifier(this=allow_experimental_lateral_join, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT a.number, b.n FROM numbers(2) AS a LEFT JOIN LATERAL (SELECT a.number + 10 AS n) AS b ON TRUE SETTINGS allow_experimental_lateral_join = 1"
+    },
+    {
+        "id": "CH26-B4-C06",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[Column(this=Identifier(this=number, quoted=false)), Anonymous(this=toString, expressions=[Mod(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))])]), CombinedAggFunc(this=avgMap, expressions=[Column(this=Identifier(this=number, quoted=false)), Anonymous(this=toString, expressions=[Mod(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))])])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT sumMap(number, toString(number % 2)), avgMap(number, toString(number % 2)) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-C07",
+        "root": "Select",
+        "ast": "Select(expressions=[Dot(this=Cast(this=Null(), to=DataType(this=STRUCT, expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false))], nested=true, nullable=true)), expression=Identifier(this=x, quoted=false))], settings=[EQ(this=Column(this=Identifier(this=enable_nullable_tuple_type, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST(NULL AS Nullable(Tuple(x Int32))).x SETTINGS enable_nullable_tuple_type = 1"
+    },
+    {
+        "id": "CH26-B4-C08",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=arrayFlattenedLength, expressions=[Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=3, is_string=false)], value_constructor=false)], value_constructor=false)]), Length(this=Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=3, is_string=false)], value_constructor=false)], value_constructor=false), binary=true)])",
+        "generated": "SELECT arrayFlattenedLength([[1, 2], [3]]), LENGTH([[1, 2], [3]])"
+    },
+    {
+        "id": "CH26-B4-C09",
+        "root": "Select",
+        "ast": "Select(expressions=[RegrAvgx(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrAvgy(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrCount(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrIntercept(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrR2(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSlope(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSxx(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSxy(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSyy(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false)))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Column(this=Identifier(this=number, quoted=false)), alias=Identifier(this=x, quoted=false)), Alias(this=Add(this=Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), expression=Literal(this=1, is_string=false)), alias=Identifier(this=y, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)])))))))",
+        "generated": "SELECT regr_avgx(y, x), regr_avgy(y, x), regr_count(y, x), regr_intercept(y, x), regr_r2(y, x), regr_slope(y, x), regr_sxx(y, x), regr_sxy(y, x), regr_syy(y, x) FROM (SELECT number AS x, number * 2 + 1 AS y FROM numbers(3))"
+    },
+    {
+        "id": "CH26-B4-C10",
+        "root": "PipeQuery",
+        "ast": "PipeQuery(this=Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)])))), expressions=[PipeAs(alias=TableAlias(this=Identifier(this=a, quoted=false))), PipeJoin(this=Join(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=0, is_string=false), alias=Identifier(this=number, quoted=false)), Alias(this=Literal(this=R, is_string=true), alias=Identifier(this=r, quoted=false))]), alias=TableAlias(this=Identifier(this=b, quoted=false))), method=NATURAL, side=LEFT)), PipeSelect(expressions=[Column(this=Identifier(this=number, quoted=false)), Column(this=Identifier(this=r, quoted=false))]), PipeOrderBy(this=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))])",
+        "generated": "FROM numbers(2) |> AS a |> NATURAL LEFT JOIN (SELECT 0 AS number, 'R' AS r) AS b |> SELECT number, r |> ORDER BY number"
+    },
+    {
+        "id": "CH26-B4-C11",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear(), Year(this=Anonymous(this=toDate, expressions=[Literal(this=2026-01-01, is_string=true)]))])",
+        "generated": "SELECT year(), year(toDate('2026-01-01'))"
+    },
+    {
+        "id": "CH26-B4-C12",
+        "root": "Select",
+        "ast": "Select(expressions=[Add(this=Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:00:00, is_string=true)]), expression=Anonymous(this=toTime, expressions=[Literal(this=01:00:00, is_string=true)]))])",
+        "generated": "SELECT toDateTime('2026-01-01 00:00:00') + toTime('01:00:00')"
+    },
+    {
+        "id": "CH26-B4-C13",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=v, quoted=false)), Typeof(this=Column(this=Identifier(this=v, quoted=false)))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Div(this=Literal(this=7, is_string=false), expression=Literal(this=2, is_string=false), typed=false, safe=false), alias=Identifier(this=v, quoted=false))], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))]))), settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v SETTINGS sql_compatible_division_for_integers = 0) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-R01",
+        "root": "Select",
+        "ast": "Select(expressions=[Sum(this=Column(this=Identifier(this=number, quoted=false)))], from_=From(this=Table(this=Identifier(this=c, quoted=false))), with_=With(expressions=[CTE(this=Select(expressions=[Column(this=Identifier(this=number, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)])))), alias=TableAlias(this=Identifier(this=c, quoted=false)), materialized=true)]))",
+        "generated": "WITH c AS MATERIALIZED (SELECT number FROM numbers(3)) SELECT sum(number) FROM c"
+    },
+    {
+        "id": "CH26-B4-R02",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false)), ProjectionDef(this=Identifier(this=p, quoted=false), expression=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (x Int32, PROJECTION p (SELECT x WHERE x > 0 ORDER BY x)) ENGINE=MergeTree ORDER BY x"
+    },
+    {
+        "id": "CH26-B4-R03",
+        "root": "Select",
+        "ast": "Select(expressions=[Escape(this=Like(this=Literal(this=a_b, is_string=true), expression=Literal(this=a!_%, is_string=true)), expression=Literal(this=!, is_string=true))])",
+        "generated": "SELECT 'a_b' LIKE 'a!_%' ESCAPE '!'"
+    },
+    {
+        "id": "CH26-B4-R04",
+        "root": "Select",
+        "ast": "Select(expressions=[Bracket(this=Bracket(this=Cast(this=Literal(this={\"a\":{\"b\":42}}, is_string=true), to=DataType(this=JSON, nested=false, nullable=false)), expressions=[Literal(this=a, is_string=true)]), expressions=[Literal(this=b, is_string=true)])])",
+        "generated": "SELECT CAST('{\"a\":{\"b\":42}}' AS JSON)['a']['b']"
+    },
+    {
+        "id": "CH26-B4-R05",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false)), Window(this=Sum(this=Column(this=Identifier(this=number, quoted=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]), spec=WindowSpec(kind=GROUPS, start=CURRENT ROW, end=Literal(this=1, is_string=false), end_side=FOLLOWING), over=OVER)], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number, sum(number) OVER (ORDER BY number GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING) FROM numbers(3) ORDER BY number"
+    },
+    {
+        "id": "CH26-B4-R06",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT * FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-R07",
+        "root": "PipeQuery",
+        "ast": "PipeQuery(this=Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=4, is_string=false)])))), expressions=[PipeWhere(this=Where(this=GT(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)))), PipeSelect(expressions=[Column(this=Identifier(this=number, quoted=false))]), PipeOrderBy(this=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))])",
+        "generated": "FROM numbers(4) |> WHERE number > 1 |> SELECT number |> ORDER BY number"
+    },
+    {
+        "id": "CH26-B4-R08",
+        "root": "Select",
+        "ast": "Select(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false)])",
+        "generated": "SELECT [1, 2, 3]"
+    },
+    {
+        "id": "CH26-B4-R09",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[VarMap(keys=Array(expressions=[Literal(this=a, is_string=true), Literal(this=b, is_string=true)]), values=Array(expressions=[Column(this=Identifier(this=number, quoted=false)), Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))]))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT sumMap(map('a', number, 'b', number * 2)) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-E01",
+        "root": "Select",
+        "ast": "Select(expressions=[CountIf(this=EQ(this=Column(this=Identifier(this=name, quoted=false)), expression=Literal(this=catboostEvaluate, is_string=true))), CountIf(this=EQ(this=Column(this=Identifier(this=name, quoted=false)), expression=Literal(this=windowID, is_string=true))), CountIf(this=EQ(this=Column(this=Identifier(this=name, quoted=false)), expression=Literal(this=tumble, is_string=true))), CountIf(this=EQ(this=Column(this=Identifier(this=name, quoted=false)), expression=Literal(this=hop, is_string=true)))], from_=From(this=Table(this=Identifier(this=functions, quoted=false), db=Identifier(this=system, quoted=false))))",
+        "generated": "SELECT countIf(name = 'catboostEvaluate'), countIf(name = 'windowID'), countIf(name = 'tumble'), countIf(name = 'hop') FROM system.functions"
+    },
+    {
+        "id": "CH26-B4-E02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=name, quoted=false)), Column(this=Identifier(this=alias_to, quoted=false)), Column(this=Identifier(this=deterministic, quoted=false))], from_=From(this=Table(this=Identifier(this=functions, quoted=false), db=Identifier(this=system, quoted=false))), where=Where(this=In(this=Column(this=Identifier(this=name, quoted=false)), expressions=[Literal(this=YEAR, is_string=true), Literal(this=toYear, is_string=true), Literal(this=now, is_string=true), Literal(this=today, is_string=true)])), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=name, quoted=false)), nulls_first=false)]), format=Identifier(this=JSONEachRow, quoted=false))",
+        "generated": "SELECT name, alias_to, deterministic FROM system.functions WHERE name IN ('YEAR', 'toYear', 'now', 'today') ORDER BY name FORMAT JSONEachRow"
+    },
+    {
+        "id": "CH26-B4-E03",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear()])",
+        "generated": "SELECT year()"
+    },
+    {
+        "id": "CH26-B4-E04",
+        "root": "Select",
+        "ast": "Select(expressions=[Year(this=Anonymous(this=toDate, expressions=[Literal(this=2026-01-01, is_string=true)])), ClickhouseYear(expressions=[Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:30:00, is_string=true), Literal(this=UTC, is_string=true)]), Literal(this=America/New_York, is_string=true)])])",
+        "generated": "SELECT year(toDate('2026-01-01')), year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America/New_York')"
+    },
+    {
+        "id": "CH26-B4-E05",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false), Typeof(this=Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false))])",
+        "generated": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64), toTypeName(CAST(-7 AS Int64) / CAST(2 AS Int64))"
+    },
+    {
+        "id": "CH26-B4-E06",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false), Typeof(this=Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false))], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))])",
+        "generated": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64), toTypeName(CAST(-7 AS Int64) / CAST(2 AS Int64)) SETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+        "id": "CH26-B4-E07",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false), Typeof(this=Div(this=Cast(this=Neg(this=Literal(this=7, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)), Div(this=Cast(this=Literal(this=7, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=2, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64), toTypeName(CAST(-7 AS Int64) / CAST(2 AS Int64)), CAST(7 AS Int64) / CAST(2 AS Int64) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-E08",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Literal(this=1, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=0, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))])",
+        "generated": "SELECT CAST(1 AS Int64) / CAST(0 AS Int64) SETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+        "id": "CH26-B4-E09",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Literal(this=1, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Literal(this=0, is_string=false), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST(1 AS Int64) / CAST(0 AS Int64) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-E10",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Literal(this=-9223372036854775808, is_string=true), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Neg(this=Literal(this=1, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))])",
+        "generated": "SELECT CAST('-9223372036854775808' AS Int64) / CAST(-1 AS Int64) SETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+        "id": "CH26-B4-E11",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Literal(this=-9223372036854775808, is_string=true), to=DataType(this=BIGINT, nested=false, nullable=false)), expression=Cast(this=Neg(this=Literal(this=1, is_string=false)), to=DataType(this=BIGINT, nested=false, nullable=false)), typed=false, safe=false)], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST('-9223372036854775808' AS Int64) / CAST(-1 AS Int64) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-E12",
+        "root": "Select",
+        "ast": "Select(expressions=[Div(this=Cast(this=Literal(this=7, is_string=false), to=DataType(this=DOUBLE, nested=false, nullable=false)), expression=Literal(this=2, is_string=false), typed=false, safe=false), Typeof(this=Div(this=Cast(this=Literal(this=7, is_string=false), to=DataType(this=DOUBLE, nested=false, nullable=false)), expression=Literal(this=2, is_string=false), typed=false, safe=false))], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST(7 AS Float64) / 2, toTypeName(CAST(7 AS Float64) / 2) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-E13",
+        "root": "Select",
+        "ast": "Select(expressions=[Dot(this=Cast(this=Null(), to=DataType(this=STRUCT, expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false))], nested=true, nullable=true)), expression=Identifier(this=x, quoted=false))], settings=[EQ(this=Column(this=Identifier(this=enable_nullable_tuple_type, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT CAST(NULL AS Nullable(Tuple(x Int32))).x SETTINGS enable_nullable_tuple_type = 1"
+    },
+    {
+        "id": "CH26-B4-E14",
+        "root": "Select",
+        "ast": "Select(expressions=[Dot(this=Cast(this=Null(), to=DataType(this=STRUCT, expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false))], nested=true, nullable=true)), expression=Identifier(this=x, quoted=false))], settings=[EQ(this=Column(this=Identifier(this=enable_nullable_tuple_type, quoted=false)), expression=Literal(this=0, is_string=false))])",
+        "generated": "SELECT CAST(NULL AS Nullable(Tuple(x Int32))).x SETTINGS enable_nullable_tuple_type = 0"
+    },
+    {
+        "id": "CH26-B4-E15",
+        "root": "Select",
+        "ast": "Select(expressions=[Add(this=Anonymous(this=toDate, expressions=[Literal(this=2026-01-01, is_string=true)]), expression=Anonymous(this=toTime, expressions=[Literal(this=01:00:00, is_string=true)]))])",
+        "generated": "SELECT toDate('2026-01-01') + toTime('01:00:00')"
+    },
+    {
+        "id": "CH26-B4-E16",
+        "root": "Select",
+        "ast": "Select(expressions=[Add(this=Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:00:00, is_string=true)]), expression=Anonymous(this=toTime, expressions=[Literal(this=01:00:00, is_string=true)]))])",
+        "generated": "SELECT toDateTime('2026-01-01 00:00:00') + toTime('01:00:00')"
+    },
+    {
+        "id": "CH26-B4-E17",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[Column(this=Identifier(this=number, quoted=false)), Anonymous(this=toString, expressions=[Mod(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))])])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT sumMap(number, toString(number % 2)) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-E18",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=avgMap, expressions=[Column(this=Identifier(this=number, quoted=false)), Anonymous(this=toString, expressions=[Mod(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))])])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT avgMap(number, toString(number % 2)) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-E19",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[VarMap(keys=Array(expressions=[Literal(this=a, is_string=true), Literal(this=b, is_string=true)]), values=Array(expressions=[Column(this=Identifier(this=number, quoted=false)), Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))]))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT sumMap(map('a', number, 'b', number * 2)) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-E20",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[Column(this=Identifier(this=key, quoted=false)), Column(this=Identifier(this=value, quoted=false))])], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Array(expressions=[Literal(this=a, is_string=true), Literal(this=b, is_string=true)], value_constructor=false), alias=Identifier(this=key, quoted=false)), Alias(this=Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), alias=Identifier(this=value, quoted=false))]))))",
+        "generated": "SELECT sumMap(key, value) FROM (SELECT ['a', 'b'] AS key, [1, 2] AS value)"
+    },
+    {
+        "id": "CH26-B4-E21",
+        "root": "Select",
+        "ast": "Select(expressions=[RegrAvgx(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrAvgy(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrCount(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrIntercept(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrR2(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSlope(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSxx(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSxy(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false))), RegrSyy(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false)))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Column(this=Identifier(this=number, quoted=false)), alias=Identifier(this=x, quoted=false)), Alias(this=Add(this=Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), expression=Literal(this=1, is_string=false)), alias=Identifier(this=y, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)])))))))",
+        "generated": "SELECT regr_avgx(y, x), regr_avgy(y, x), regr_count(y, x), regr_intercept(y, x), regr_r2(y, x), regr_slope(y, x), regr_sxx(y, x), regr_sxy(y, x), regr_syy(y, x) FROM (SELECT number AS x, number * 2 + 1 AS y FROM numbers(3))"
+    },
+    {
+        "id": "CH26-B4-E22",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=arrayFlattenedLength, expressions=[Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=3, is_string=false)], value_constructor=false)], value_constructor=false)]), Length(this=Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=3, is_string=false)], value_constructor=false)], value_constructor=false), binary=true)])",
+        "generated": "SELECT arrayFlattenedLength([[1, 2], [3]]), LENGTH([[1, 2], [3]])"
+    },
+    {
+        "id": "CH26-B4-E23",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=arrayFlattenedLength, expressions=[Array(expressions=[Array(expressions=[Cast(this=Null(), to=DataType(this=INT, nested=false, nullable=true)), Literal(this=1, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false)], value_constructor=false)]), Anonymous(this=arrayFlattenedLength, expressions=[Array(value_constructor=false)]), Anonymous(this=arrayFlattenedLength, expressions=[Null()])])",
+        "generated": "SELECT arrayFlattenedLength([[CAST(NULL AS Nullable(Int32)), 1], [2, 3]]), arrayFlattenedLength([]), arrayFlattenedLength(NULL)"
+    },
+    {
+        "id": "CH26-B4-E24",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=cardinality, expressions=[Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=3, is_string=false), Literal(this=4, is_string=false)], value_constructor=false)], value_constructor=false)])])",
+        "generated": "SELECT arrayFlattenedLength([[1, 2], [3, 4]])"
+    },
+    {
+        "id": "CH26-B4-E25",
+        "root": "Select",
+        "ast": "Select(expressions=[ArraySize(this=Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=3, is_string=false), Literal(this=4, is_string=false)], value_constructor=false)], value_constructor=false))])",
+        "generated": "SELECT LENGTH([[1, 2], [3, 4]])"
+    },
+    {
+        "id": "CH26-B4-E26",
+        "root": "Select",
+        "ast": "Select(expressions=[TryCast(this=Literal(this=256, is_string=false), to=DataType(this=UTINYINT, nested=false, nullable=false), safe=true), Cast(this=Literal(this=256, is_string=false), to=DataType(this=UTINYINT, nested=false, nullable=true))])",
+        "generated": "SELECT TRY_CAST(256 AS UInt8), CAST(256 AS Nullable(UInt8))"
+    },
+    {
+        "id": "CH26-B4-E27",
+        "root": "Select",
+        "ast": "Select(expressions=[TryCast(this=Literal(this=abc, is_string=true), to=DataType(this=INT, nested=false, nullable=false), safe=true), TryCast(this=Literal(this=42, is_string=true), to=DataType(this=INT, nested=false, nullable=false), safe=true)])",
+        "generated": "SELECT TRY_CAST('abc' AS Int32), TRY_CAST('42' AS Int32)"
+    },
+    {
+        "id": "CH26-B4-E28",
+        "root": "Select",
+        "ast": "Select(expressions=[TryCast(this=Literal(this=[1,2], is_string=true), to=DataType(this=ARRAY, expressions=[DataType(this=INT, nested=false, nullable=false)], nested=true, nullable=false), safe=true)])",
+        "generated": "SELECT TRY_CAST('[1,2]' AS Array(Int32))"
+    },
+    {
+        "id": "CH26-B4-E29",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false), table=Identifier(this=a, quoted=false)), Column(this=Identifier(this=n, quoted=false), table=Identifier(this=b, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]), alias=TableAlias(this=Identifier(this=a, quoted=false)))), joins=[Join(this=Lateral(this=Subquery(this=Select(expressions=[Alias(this=Add(this=Column(this=Identifier(this=number, quoted=false), table=Identifier(this=a, quoted=false)), expression=Literal(this=10, is_string=false)), alias=Identifier(this=n, quoted=false))])), view=false, outer=false, alias=TableAlias(this=Identifier(this=b, quoted=false))), side=LEFT, on=Boolean(this=true))], settings=[EQ(this=Column(this=Identifier(this=allow_experimental_lateral_join, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT a.number, b.n FROM numbers(2) AS a LEFT JOIN LATERAL (SELECT a.number + 10 AS n) AS b ON TRUE SETTINGS allow_experimental_lateral_join = 1"
+    },
+    {
+        "id": "CH26-B4-E30",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false), table=Identifier(this=a, quoted=false)), Column(this=Identifier(this=n, quoted=false), table=Identifier(this=b, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]), alias=TableAlias(this=Identifier(this=a, quoted=false)))), joins=[Join(this=Lateral(this=Subquery(this=Select(expressions=[Alias(this=Add(this=Column(this=Identifier(this=number, quoted=false), table=Identifier(this=a, quoted=false)), expression=Literal(this=10, is_string=false)), alias=Identifier(this=n, quoted=false))])), view=false, outer=false, alias=TableAlias(this=Identifier(this=b, quoted=false))), side=LEFT, on=Boolean(this=true))])",
+        "generated": "SELECT a.number, b.n FROM numbers(2) AS a LEFT JOIN LATERAL (SELECT a.number + 10 AS n) AS b ON TRUE"
+    },
+    {
+        "id": "CH26-B4-E31",
+        "root": "PipeQuery",
+        "ast": "PipeQuery(this=Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)])))), expressions=[PipeAs(alias=TableAlias(this=Identifier(this=a, quoted=false))), PipeJoin(this=Join(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=0, is_string=false), alias=Identifier(this=number, quoted=false)), Alias(this=Literal(this=R, is_string=true), alias=Identifier(this=r, quoted=false))]), alias=TableAlias(this=Identifier(this=b, quoted=false))), method=NATURAL, side=LEFT)), PipeSelect(expressions=[Column(this=Identifier(this=number, quoted=false)), Column(this=Identifier(this=r, quoted=false))]), PipeOrderBy(this=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))])",
+        "generated": "WITH a AS (SELECT * FROM numbers(2)), __tmp1 AS (SELECT number, r FROM a NATURAL LEFT JOIN (SELECT 0 AS number, 'R' AS r) AS b) SELECT * FROM __tmp1 ORDER BY number"
+    },
+    {
+        "id": "CH26-B4-E32",
+        "root": "PipeQuery",
+        "ast": "PipeQuery(this=Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=4, is_string=false)])))), expressions=[PipeWhere(this=Where(this=GT(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)))), PipeSelect(expressions=[Column(this=Identifier(this=number, quoted=false))]), PipeOrderBy(this=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))])",
+        "generated": "WITH __tmp1 AS (SELECT number FROM numbers(4) WHERE number > 1) SELECT * FROM __tmp1 ORDER BY number"
+    },
+    {
+        "id": "CH26-B4-E33",
+        "root": "Select",
+        "ast": "Select(expressions=[Sum(this=Column(this=Identifier(this=number, quoted=false)))], from_=From(this=Table(this=Identifier(this=c, quoted=false))), with_=With(expressions=[CTE(this=Select(expressions=[Column(this=Identifier(this=number, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)])))), alias=TableAlias(this=Identifier(this=c, quoted=false)), materialized=true)]))",
+        "generated": "WITH c AS MATERIALIZED (SELECT number FROM numbers(3)) SELECT sum(number) FROM c"
+    },
+    {
+        "id": "CH26-B4-E34",
+        "root": "Select",
+        "ast": "Select(expressions=[Escape(this=Like(this=Literal(this=a_b, is_string=true), expression=Literal(this=a!_%, is_string=true)), expression=Literal(this=!, is_string=true))])",
+        "generated": "SELECT 'a_b' LIKE 'a!_%' ESCAPE '!'"
+    },
+    {
+        "id": "CH26-B4-E35",
+        "root": "Select",
+        "ast": "Select(expressions=[Bracket(this=Bracket(this=Cast(this=Literal(this={\"a\":{\"b\":42}}, is_string=true), to=DataType(this=JSON, nested=false, nullable=false)), expressions=[Literal(this=a, is_string=true)]), expressions=[Literal(this=b, is_string=true)])])",
+        "generated": "SELECT CAST('{\"a\":{\"b\":42}}' AS JSON)['a']['b']"
+    },
+    {
+        "id": "CH26-B4-E36",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false)), Window(this=Sum(this=Column(this=Identifier(this=number, quoted=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]), spec=WindowSpec(kind=GROUPS, start=CURRENT ROW, end=Literal(this=1, is_string=false), end_side=FOLLOWING), over=OVER)], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number, sum(number) OVER (ORDER BY number GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING) FROM numbers(3) ORDER BY number"
+    },
+    {
+        "id": "CH26-B4-E37",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT * FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B4-E38",
+        "root": "Select",
+        "ast": "Select(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false)])",
+        "generated": "SELECT [1, 2, 3]"
+    },
+    {
+        "id": "CH26-B4-E39",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=v, quoted=false)), Typeof(this=Column(this=Identifier(this=v, quoted=false)))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Div(this=Literal(this=7, is_string=false), expression=Literal(this=2, is_string=false), typed=false, safe=false), alias=Identifier(this=v, quoted=false))], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))]))), settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v SETTINGS sql_compatible_division_for_integers = 0) SETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+        "id": "CH26-B4-E40",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=v, quoted=false)), Typeof(this=Column(this=Identifier(this=v, quoted=false)))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Div(this=Literal(this=7, is_string=false), expression=Literal(this=2, is_string=false), typed=false, safe=false), alias=Identifier(this=v, quoted=false))], settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))]))), settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=0, is_string=false))])",
+        "generated": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v SETTINGS sql_compatible_division_for_integers = 1) SETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+        "id": "CH26-B4-E41",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=v, quoted=false)), Typeof(this=Column(this=Identifier(this=v, quoted=false)))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Div(this=Literal(this=7, is_string=false), expression=Literal(this=2, is_string=false), typed=false, safe=false), alias=Identifier(this=v, quoted=false))]))), settings=[EQ(this=Column(this=Identifier(this=sql_compatible_division_for_integers, quoted=false)), expression=Literal(this=1, is_string=false))])",
+        "generated": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v) SETTINGS sql_compatible_division_for_integers = 1"
+    }
+]

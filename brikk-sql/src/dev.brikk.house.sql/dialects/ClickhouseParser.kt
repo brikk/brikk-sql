@@ -1661,6 +1661,7 @@ object ClickhouseParserTables {
     // sqlglot: ClickHouseParser.FUNCTION_PARSERS (base minus MATCH)
     val FUNCTION_PARSERS: Map<String, (Parser) -> Expression?> =
         (BaseParserTables.FUNCTION_PARSERS - "MATCH") + mapOf<String, (Parser) -> Expression?>(
+            "TRY_CAST" to { p -> p.parseCast(false, safe = true)?.also { it.meta["clickhouse_name"] = "TRY_CAST" } },
             "REMOTE" to { p -> (p as ClickhouseParser).parseRemoteFunction() },
             "REMOTESECURE" to { p -> (p as ClickhouseParser).parseRemoteFunction() },
             "CLUSTER" to { p -> (p as ClickhouseParser).parseRemoteFunction() },

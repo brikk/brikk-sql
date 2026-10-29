@@ -9,14 +9,21 @@ val fixtures = Json.parseToJsonElement(File(args[0]).readText()).jsonObject
 val cases = fixtures["cases"]!!.jsonArray + fixtures["execution"]!!.jsonArray
 val observations = cases.map { element ->
     val row = element.jsonObject
-    val query = row["sql"]!!.jsonPrimitive.content
+    val query = (row["brikk_sql"] ?: row["sql"]!!).jsonPrimitive.content
+    val source = row["brikk_dialect"]?.jsonPrimitive?.content ?: "clickhouse"
     buildJsonObject {
         put("id", row["id"]!!)
         try {
-            val ast = parseOne(query, "clickhouse")
+            val ast = parseOne(query, source)
             put("root", ast::class.simpleName)
             put("ast", ast.toString())
-            put("generated", ast.sql("clickhouse"))
+            val generated = when {
+                row["lower_pipes"]?.jsonPrimitive?.booleanOrNull == true ->
+                    dev.brikk.house.sql.shape.SqlFragment(query, source).toExecutable("clickhouse").sql
+                source != "clickhouse" -> dev.brikk.house.sql.shape.SqlFragment(query, source).transpileTo("clickhouse").sql
+                else -> ast.sql("clickhouse")
+            }
+            put("generated", generated)
         } catch (e: Exception) {
             put("error", e.message)
         }

@@ -24,10 +24,11 @@ class Clickhouse2026AuditTest {
         val observations = cases.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
-            val sql = case.getValue("sql").jsonPrimitive.content
-            val parsed = runCatching { parseOne(sql, "clickhouse") }
+            val sql = (case["brikk_sql"] ?: case.getValue("sql")).jsonPrimitive.content
+            val source = case["brikk_dialect"]?.jsonPrimitive?.content ?: "clickhouse"
+            val parsed = runCatching { parseOne(sql, source) }
             val fixed = case["task"]?.jsonPrimitive?.content == "CH26-002"
-            val syntax = case["task"]?.jsonPrimitive?.content in setOf("CH26-004", "CH26-005", "CH26-006")
+            val syntax = case["task"]?.jsonPrimitive?.content in setOf("CH26-004", "CH26-005", "CH26-006", "CH26-007", "CH26-008")
             if (syntax) {
                 if (case["accept"]?.jsonPrimitive?.booleanOrNull != false) {
                     val ast = parsed.getOrThrow()
@@ -51,7 +52,13 @@ class Clickhouse2026AuditTest {
                 else {
                     put("root", ast::class.simpleName)
                     put("ast", ast.toString())
-                    put("generated", ast.sql("clickhouse"))
+                    val generated = when {
+                        case["lower_pipes"]?.jsonPrimitive?.booleanOrNull == true ->
+                            dev.brikk.house.sql.shape.SqlFragment(sql, source).toExecutable("clickhouse").sql
+                        source != "clickhouse" -> dev.brikk.house.sql.shape.SqlFragment(sql, source).transpileTo("clickhouse").sql
+                        else -> ast.sql("clickhouse")
+                    }
+                    put("generated", generated)
                 }
             }
         }

@@ -644,6 +644,15 @@ class TypeAnnotator(
 
             val spec = expressionMetadata[expr::class]
 
+            if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.Div &&
+                dev.brikk.house.sql.dialects.clickhouseBooleanSetting(expr, "sql_compatible_division_for_integers") == true) {
+                // divideExact's integer width depends on actual operand types. Do not report Float64
+                // just because the dialect's historical default uses fractional division.
+                val real = listOf(expr.left, expr.right).any { it.isType(DType.FLOAT, DType.DOUBLE) }
+                setType(expr, if (real) DType.DOUBLE else DType.UNKNOWN)
+                continue
+            }
+
             if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
                 setType(expr, when (expr.name.uppercase()) {
                     "LOCALTIME" -> DType.TIME
@@ -1582,7 +1591,10 @@ class TypeAnnotator(
         if (thisType != null && thisType.isType(DType.STRUCT)) {
             for (e in thisType.expressionsArg.filterIsInstance<Expression>()) {
                 if (e.name == (expression.expressionArg as Expression).name) {
-                    setType(expression, e.args["kind"])
+                    val kind = e.args["kind"]
+                    if (dialect.name == "clickhouse" && thisType.args["nullable"] == true && kind is DataType) {
+                        setType(expression, kind.copy().also { it.set("nullable", true) })
+                    } else setType(expression, kind)
                     break
                 }
             }

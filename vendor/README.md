@@ -408,6 +408,12 @@ record ASTs, output and errors, not semantic certification. Reproduce with
 These probes do not replace or relabel the historical 26.5.1.1 catalogs or hazard evidence.
 ClickHouse-derived parser output is Apache-2.0 licensed.
 
+The final ClickHouse `batch4-cases.json` and `batch4/` evidence cover setting/version
+differences, retained regression forms and actual original/lowered results. Per-pin
+expected results/errors keep older-engine failures visible. Fresh reruns of the first
+three batches are saved under `batch4/regression/`, not over older captures or the
+historical semantic-hazard evidence. See `docs/research/clickhouse-2026-batch4.md`.
+
 The ClickHouse audit's `batch3-cases.json` and `batch3/` evidence cover analysis
 corrections and structured DDL/EXPLAIN on the same pinned engines. DDL and executing
 EXPLAIN statements are supplied to native formatQuery as hex data only. The separate

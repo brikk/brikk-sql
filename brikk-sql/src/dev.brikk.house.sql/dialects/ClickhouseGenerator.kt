@@ -153,6 +153,12 @@ open class ClickhouseGenerator(
         return super.joinSql(expression)
     }
 
+    override fun lateralSql(expression: Lateral): String {
+        if (clickhouseBooleanSetting(expression, "allow_experimental_lateral_join") != true)
+            unexecutable("ClickHouse LATERAL JOIN requires allow_experimental_lateral_join = 1; its session value is not proven enabled")
+        return super.lateralSql(expression)
+    }
+
     private fun nativeTypeSql(expression: ClickhouseNativeType): String {
         val parameters = if (expression.args["nested"] == true) "(${expressions(expression, flat = true)})" else ""
         val value = expression.text("kind") + parameters
@@ -514,9 +520,13 @@ open class ClickhouseGenerator(
         return super.castSql(expression, safePrefix = safePrefix)
     }
 
-    // sqlglot: ClickHouseGenerator.trycast_sql — casting into Nullable(T) behaves
-    // similarly to TRY_CAST(x AS T)
+    // Native TRY_CAST retains its accurate-cast contract. The foreign-source legacy
+    // Nullable CAST lowering below is separate and does not gain new equivalence evidence.
     override fun trycastSql(expression: TryCast): String {
+        // Native TRY_CAST uses accurateCastOrNull, including overflow checks and errors for
+        // non-nullable composite targets. Plain CAST(... AS Nullable(T)) is not equivalent.
+        if (sourceDialect?.equals("clickhouse", ignoreCase = true) == true || expression.meta["clickhouse_name"] == "TRY_CAST")
+            return super.castSql(expression, safePrefix = "TRY_")
         val dtype = expression.args["to"] as? DataType
         if (dtype != null &&
             !dtype.isType(*NON_NULLABLE_TYPES.toTypedArray(), checkNullable = true)
@@ -864,6 +874,11 @@ open class ClickhouseGenerator(
     // ClickHouse 26.5.1.1 + DuckDB 1.5.4 (30123, 0, 5789, 56001 all match). `millisecond`
     // is not a ClickHouse function name, so this never fires on ClickHouse->ClickHouse.
     override fun anonymousSql(expression: Anonymous): String {
+        // PostgreSQL counts all scalar elements of a multidimensional array. Trino's
+        // ArraySize/CARDINALITY and native ClickHouse cardinality keep outer-length semantics.
+        if (sourceDialect?.lowercase() in setOf("postgres", "postgresql") && expression.name.equals("cardinality", ignoreCase = true) &&
+            expression.parent !is Dot && expression.expressionsArg.size == 1)
+            return func("arrayFlattenedLength", expression.expressionsArg[0])
         if (expression.name.equals("millisecond", ignoreCase = true)) {
             val args = expression.expressionsArg
             if (args.size == 1) {

@@ -69,7 +69,12 @@ def render(data, versions):
                   f'val CLICKHOUSE_{ident}_FUNCTION_CATALOG: FunctionCatalog = FunctionCatalog(',
                   '    ' + ' + '.join(f'clickhouse{ident}Functions{i}()' for i in range(len(chunks))) + ',',
                   '    caseSensitive = true,',
-                  '    caseInsensitiveNames = setOf(' + ', '.join(map(kstr, insensitive)) + '),', ')']
+                  '    caseInsensitiveNames = setOf(' + ', '.join(map(kstr, insensitive)) + '),']
+        # Pinned batch-4 evidence: a native grammar form, not a system.functions row.
+        # 26.8 parses it as an ordinary unknown call and fails at execution instead.
+        if version == '26.10.2.103':
+            lines += ['    grammarBuiltins = setOf("TRY_CAST"),']
+        lines += [')']
         for i, chunk in enumerate(chunks):
             lines += ['', f'private fun clickhouse{ident}Functions{i}(): List<FunctionDef> = listOf(',
                       *('    ' + d + ',' for d in chunk), ')']

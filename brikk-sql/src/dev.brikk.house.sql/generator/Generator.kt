@@ -5005,6 +5005,7 @@ open class Generator(
             }
         }
 
+        dev.brikk.house.sql.dialects.checkClickhouseDivision(this, expression)
         return binary(expression, "/")
     }
 

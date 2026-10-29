@@ -6,6 +6,18 @@ import probe_clickhouse_2026 as probe
 
 
 class NativeProbeSafetyTest(unittest.TestCase):
+    def test_versioned_outcomes_require_an_explicit_expectation_for_each_pin(self):
+        case = {"id": "changed", "expectations": {
+            "26.8.34.13": {"error_code": 43, "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"},
+            "26.10.2.103": {"stdout": "ok\n"},
+        }}
+        self.assertTrue(probe.expected_execution(probe.execution_expectation(case, "26.8.34.13"),
+            {"returncode": 43, "stdout": "", "stderr": "(ILLEGAL_TYPE_OF_ARGUMENT)"}))
+        self.assertTrue(probe.expected_execution(probe.execution_expectation(case, "26.10.2.103"),
+            {"returncode": 0, "stdout": "ok\n", "stderr": ""}))
+        with self.assertRaises(ValueError):
+            probe.execution_expectation(case, "26.9.1")
+
     def test_expected_native_errors_are_not_successes_or_arbitrary_failures(self):
         case = {"error_code": 48, "error_name": "NOT_IMPLEMENTED"}
         self.assertTrue(probe.expected_execution(case, {"returncode": 48, "stdout": "", "stderr": "(NOT_IMPLEMENTED)"}))

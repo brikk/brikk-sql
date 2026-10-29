@@ -22,9 +22,10 @@ open class ClickhouseDialect : Dialect() {
 
     // brikk-native PIPE evidence: a ClickHouse 26.7 server ran the lowered stages (the function
     // catalog has separate 26.5/26.8/26.10 snapshots; that does not relabel the pipe evidence). The
-    // lowered CALL and RENAME do not run; core refuses or blocks NATURAL JOIN, PIVOT and UNPIVOT.
+    // lowered CALL and RENAME do not run; core still refuses or blocks PIVOT and UNPIVOT.
+    // NATURAL JOIN additionally has pinned 26.8/26.10 original/lowered evidence in batch 4.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf(
-        "DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN",
+        "DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN", "NATURAL JOIN",
     )
 
     override val name: String get() = "clickhouse"

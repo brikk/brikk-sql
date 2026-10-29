@@ -145,6 +145,11 @@ same Apache-2.0 upstream's v26.10.2.103-stable parser and function-composition s
 The fixture file records the source URLs; native observations retain the image
 digests. No source statement from the DDL fixtures is executed by the verifier.
 
+The final batch-4 behavior captures and regression reruns use those same immutable
+Apache-2.0 ClickHouse images. The PostgreSQL cardinality source contract is cited
+from the PostgreSQL array-functions documentation, separately from the native
+ClickHouse target results; this is not a live PostgreSQL equivalence capture.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

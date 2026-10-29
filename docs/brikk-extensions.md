@@ -2128,6 +2128,31 @@ hex data in formatQuery. Native DDL vectors are never run. See the
 observations, reproduction and unsupported combinations. No failure ledgers or
 historical semantic proofs are relaxed by these additions.
 
+## 63. ClickHouse version-sensitive semantics and final gates
+
+Native TRY_CAST retains its accurate-cast syntax and failure contract rather than
+becoming CAST to Nullable. Its grammar availability is recorded for the measured
+26.10 snapshot, not inferred from the function registry or backported to 26.8.
+Foreign-source legacy lowering and historical semantic certification remain separate.
+
+Source-aware integer division emits diagnostics when the ClickHouse session setting
+is unknown, refuses unproved conversion from explicitly enabled SQL-compatible
+integer mode, and respects measured nested query overrides. Explicit integer mode
+does not inherit the old Float64 typing assumption. Nullable Tuple field extraction
+keeps the container's nullability. PostgreSQL cardinality uses arrayFlattenedLength;
+Trino, native ClickHouse and ordinary Length/ArraySize handling are not globally changed.
+
+Lowered NATURAL pipe joins have original/lowered native evidence on both pins.
+Experimental LATERAL requires proven query-level enablement in executable generation.
+Other existing pipe refusals remain. Current WINDOW VIEW advertising is retired while
+historical patterns and catalog snapshots remain available through their own exports.
+
+The native runner accepts explicit per-pin result/error expectations and the audit
+can capture actual executable pipe lowering and source-aware target examples. Final
+checks cover every earlier batch again without editing failure ledgers or historical
+hazard provenance. See [the final handoff](research/clickhouse-2026-batch4.md) for
+commands, counts, version boundaries, optional skips and remaining limitations.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),
