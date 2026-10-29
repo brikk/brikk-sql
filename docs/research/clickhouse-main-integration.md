@@ -55,8 +55,10 @@ Project Notes. Direct session delivery requires that project folder to be truste
 The mistakenly addressed DuckDB project note was removed after the user corrected
 the recipient. Neither plugin's source nor dependency pins were changed.
 
-Development candidates use the existing SQL 0.20.0-SNAPSHOT coordinates and the
-separately versioned IntelliJ support 0.2.3-SNAPSHOT coordinates. Keep the SQL
+The original integration candidates used SQL 0.20.0-SNAPSHOT coordinates and
+IntelliJ support 0.2.3-SNAPSHOT coordinates. Those lower-numbered development
+streams were subsequently corrected to SQL 0.22.0-SNAPSHOT and IDE support
+0.2.5-SNAPSHOT, ahead of the published stable versions. Keep the SQL
 dependency graph aligned when testing; published stable 0.21.0 does not contain
 these ClickHouse additions. Maven Local publication is followed by artifact audits,
 a Java 17 packaged-core smoke and a repeated packaged IntelliJ API-delta check.

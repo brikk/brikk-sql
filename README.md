@@ -40,8 +40,8 @@ The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
 Latest core, metadata, verify and oracle release: **`0.21.0`**. SQL IntelliJ
-support is independently versioned at **`0.2.4`**. Current core development
-snapshot: **`0.20.0-SNAPSHOT`**.
+support is independently versioned at **`0.2.4`**. Current development snapshots:
+SQL **`0.22.0-SNAPSHOT`**, IntelliJ support **`0.2.5-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
@@ -178,7 +178,8 @@ IntelliJ support has its own version and scoped release command; build tooling i
 never published. The template owns sources, POM metadata and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
-  `0.20.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
+  SQL `0.22.0-SNAPSHOT` and IDE support `0.2.5-SNAPSHOT` to
+  `https://central.sonatype.com/repository/maven-snapshots/`.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.
@@ -191,6 +192,14 @@ never published. The template owns sources, POM metadata and repository URLs.
 - IDE support release: `python3 tools/publish_intellij_support.py <support-version>`.
   Add `--core-version <version>` only when explicitly releasing core and metadata
   prerequisites too. This command never releases verify/oracle.
+
+Development snapshot bases must be newer than their latest published stable
+versions. After a stable release, advance the SQL template and all three aligned
+IDE support descriptors as appropriate; release launchers restore their input
+templates and do not advance development versions automatically. Release-policy
+tests compare these descriptors with the stable versions recorded above. The old
+`0.20.0-SNAPSHOT`/`0.2.3-SNAPSHOT` builds are historical, not the current development
+streams. Stable `0.21.0` and `0.2.4` coordinates remain unchanged.
 
 Required GitHub organization/repository secrets:
 `KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME`, `KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD`,
