@@ -97,3 +97,13 @@ Packaged common/JDBC IDE support still adds no IntelliJ/JetBrains references or
 callsites versus published 0.2.4. Local manifests and logs are under
 `/tmp/opencode/snapshot-version-correction/`; public availability is checked
 separately after main CI publishes the fixed build.
+
+The fixed-build workflow `40925135049` again stopped before publication, solely on
+tokenizer scaling. The scaling tests previously warmed and measured the small
+input before warming the large one, carrying discarded token/AST allocations
+between samples. They now warm both sizes first and request collection before
+each sample, outside its timer. Input sizes, sample counts, wall-clock measurement,
+the 10x limit for 4x input, and all tested entry points remain unchanged. This is a
+test-only correction; the packaged production artifacts are unchanged.
+Three repeated scaling runs with a 512 MB heap and two active processors passed,
+followed by another successful full JVM suite.

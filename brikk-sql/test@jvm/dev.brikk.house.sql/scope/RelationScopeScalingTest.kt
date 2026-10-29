@@ -7,14 +7,15 @@ import kotlin.test.assertTrue
 
 /**
  * Relation scopes stay linear in the statement: four times the input may take at most ten times
- * as long (linear is about four, quadratic about sixteen). Timings are the best of several runs.
+ * as long (linear is about four, quadratic about sixteen). Warm both sizes before sampling and
+ * collect discarded results outside each timed run so earlier samples do not fill its heap.
  */
 class RelationScopeScalingTest {
     private val facts = RelationFacts(slots = mapOf("src" to RelationFact((1..50).map { ColumnFact("c$it") })))
 
     private fun bestMillis(block: () -> Unit): Double {
-        repeat(2) { block() }
         return (1..5).minOf {
+            System.gc()
             val start = System.nanoTime()
             block()
             (System.nanoTime() - start) / 1e6
@@ -24,6 +25,7 @@ class RelationScopeScalingTest {
     private fun assertLinear(name: String, input: (Int) -> String, run: (String) -> Unit) {
         val small = input(1)
         val large = input(4)
+        repeat(2) { run(small); run(large) }
         val smallMillis = bestMillis { run(small) }
         val largeMillis = bestMillis { run(large) }
         println("$name: ${small.length} chars %.1f ms, ${large.length} chars %.1f ms".format(smallMillis, largeMillis))
