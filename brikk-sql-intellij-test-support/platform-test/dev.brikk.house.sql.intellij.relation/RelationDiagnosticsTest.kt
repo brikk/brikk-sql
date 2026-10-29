@@ -10,6 +10,14 @@ import dev.brikk.house.sql.scope.RelationFacts
 
 /** The analysis's problems at exact ranges, in plain files and injected fragments, per revision. */
 class RelationDiagnosticsTest : RelationTestCase() {
+    fun testTrinoIntervalTypeDoesNotCrashHighlighting() {
+        trinoRelations.reset()
+        LanguageAnnotators.INSTANCE.addExplicitExtension(postgres, TrinoRelationAnnotator(), testRootDisposable)
+        open("SELECT CAST(NULL AS INTERVAL DAY(3) TO SECOND(12)) AS v")
+        assertEmpty(relationDiagnostics(myFixture.file, trinoRelations))
+        myFixture.doHighlighting(HighlightSeverity.WARNING)
+    }
+
     private fun marks(): List<Pair<String, HighlightSeverity>> {
         val document = myFixture.editor.document
         // A fresh pass, as a provider's restart gives when its facts change without an edit.

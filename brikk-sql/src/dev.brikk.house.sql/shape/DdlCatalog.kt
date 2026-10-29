@@ -10,6 +10,7 @@ import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Schema as AstSchema
 import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.optimizer.renderType
 
 /**
  * BRIKK-NATIVE: builds a [ShapeCatalog] from `CREATE TABLE` DDL text — the schema-cache
@@ -17,7 +18,8 @@ import dev.brikk.house.sql.dialects.Dialects
  * Any statement that is not a table CREATE is ignored. Table keys are the dotted name as
  * written (`schema.table` / `table`); nullability is `false` for NOT NULL / PRIMARY KEY
  * columns and `true` otherwise. Column types are rendered in the base dialect so they are
- * dialect-neutral strings (see [ColumnShape.type]).
+ * dialect-neutral strings where possible; native interval qualifiers retain their dialect spelling
+ * (see [ColumnShape.type]).
  */
 object DdlCatalog {
 
@@ -50,7 +52,7 @@ object DdlCatalog {
                 val identifier = def.thisArg as? Identifier
                 ColumnShape(
                     name = identifier?.name ?: (def.thisArg as Expression).sqlName(),
-                    type = if (kind == null) "UNKNOWN" else Dialects.BASE.generate(kind),
+                    type = if (kind == null) "UNKNOWN" else renderType(kind, d),
                     nullable = !notNull,
                     quoted = identifier?.quoted == true,
                 )

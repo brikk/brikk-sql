@@ -187,6 +187,17 @@ class RelationScopeTest {
     }
 
     @Test
+    fun trinoIntervalQualifiersSurviveComputedAndFactTypeRendering() {
+        for (type in listOf("INTERVAL DAY(3) TO SECOND(12)", "INTERVAL SECOND(3, 12)", "INTERVAL YEAR(3) TO MONTH")) {
+            val scope = analyze("SELECT CAST(NULL AS $type) AS v", "trino")
+            assertEquals(type, scope.output?.columns?.single()?.sqlType)
+            val input = RelationFacts(slots = mapOf("n" to RelationFact(listOf(ColumnFact("v", type)))))
+            val union = analyze("SELECT v FROM n() UNION ALL SELECT CAST(NULL AS $type)", "trino", input)
+            assertEquals(type, union.output?.columns?.single()?.sqlType)
+        }
+    }
+
+    @Test
     fun declarationsLocateWhereSqlNamesRelationsAndColumns() {
         val sql = "WITH q AS (SELECT id AS k, id + 1 AS n FROM events()) SELECT x.k, x.n FROM q x |> RENAME k AS key |> WHERE key > 0"
         val scope = analyze(sql)

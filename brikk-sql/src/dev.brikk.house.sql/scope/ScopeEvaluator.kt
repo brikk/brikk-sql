@@ -38,13 +38,13 @@ import dev.brikk.house.sql.ast.Window
 import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.outputName
 import dev.brikk.house.sql.dialects.Dialect
-import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
 import dev.brikk.house.sql.optimizer.annotateTypes
 import dev.brikk.house.sql.optimizer.dataTypeFromStr
 import dev.brikk.house.sql.optimizer.expressionNullability
+import dev.brikk.house.sql.optimizer.renderType
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
@@ -623,7 +623,7 @@ internal class ScopeEvaluator(
             }
         }
         val type = annotateTypes(copy, dialect = dialect, overwriteTypes = false).type as? DataType ?: return null
-        return if (type.thisArg == DType.UNKNOWN) null else Dialects.BASE.generate(type)
+        return if (type.thisArg == DType.UNKNOWN) null else renderType(type, dialect)
     }
 
     private fun aggregated(projection: Any?): Boolean =
@@ -1012,7 +1012,7 @@ internal class ScopeEvaluator(
     /** A SQL type in the spelling computed types use, so a fact's and a computed type compare; unparsable text stays as given. */
     private fun canonical(sqlType: String): String = canonicalTypes.getOrPut(sqlType) {
         try {
-            Dialects.BASE.generate(dataTypeFromStr(sqlType, dialect))
+            renderType(dataTypeFromStr(sqlType, dialect), dialect)
         } catch (_: ParseError) {
             sqlType
         }

@@ -77,6 +77,7 @@ val mysql: Language get() = Language.findLanguageByID("MySQL")!!
 
 val pgRelations = TestRelationProfile(postgres, "postgres")
 val mysqlRelations = TestRelationProfile(mysql, "mysql")
+val trinoRelations = TestRelationProfile(postgres, "trino")
 
 class PgRelationResolve : ExternalRelationResolveExtension(pgRelations)
 class PgRelationSuppressor : ExternalRelationInspectionSuppressor(pgRelations)
@@ -84,6 +85,7 @@ class PgRelationGoto : ExternalRelationGotoDeclarationHandler(pgRelations)
 class PgRelationAnnotator : ExternalRelationAnnotator(pgRelations)
 class PgRelationCompletion : ExternalRelationCompletionContributor(pgRelations)
 class MysqlRelationAnnotator : ExternalRelationAnnotator(mysqlRelations)
+class TrinoRelationAnnotator : ExternalRelationAnnotator(trinoRelations)
 
 /** Registers every feature of [pgRelations] until [until] ends. */
 fun registerPgRelations(until: Disposable, resolve: Boolean = true, suppressor: Boolean = true) {

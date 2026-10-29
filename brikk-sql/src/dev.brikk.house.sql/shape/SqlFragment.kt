@@ -725,7 +725,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
 
     private fun renderType(type: Expression?): String {
         val dataType = type as? DataType ?: return "UNKNOWN"
-        return Dialects.BASE.generate(dataType)
+        return dev.brikk.house.sql.optimizer.renderType(dataType, dialectObj)
     }
 
     private fun leafName(leaf: Node): String {
