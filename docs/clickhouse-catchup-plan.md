@@ -6,8 +6,8 @@
 - [x] CH26-002: Fix incorrect STREAM and aggregate-combinator rewrites.
 - [x] CH26-003: Capture versioned function, keyword, type and settings metadata.
 - [x] CH26-004: Add missing query expressions and type syntax.
-- [ ] CH26-005: Correct star filtering, built-in names and higher-order expression analysis.
-- [ ] CH26-006: Replace opaque fallback for the identified DDL and EXPLAIN forms.
+- [x] CH26-005: Correct star filtering, built-in names and higher-order expression analysis.
+- [x] CH26-006: Replace opaque fallback for the identified DDL and EXPLAIN forms.
 - [ ] CH26-007: Update version-sensitive semantics and executable-generation guards.
 - [ ] CH26-008: Validate existing coverage and run native, compatibility and regression gates.
 

@@ -644,6 +644,19 @@ class TypeAnnotator(
 
             val spec = expressionMetadata[expr::class]
 
+            if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
+                setType(expr, when (expr.name.uppercase()) {
+                    "LOCALTIME" -> DType.TIME
+                    "LOCALTIMESTAMP", "NOW", "CURRENT_TIMESTAMP" -> DType.DATETIME
+                    "SESSION_USER", "CURRENT_USER" -> DType.VARCHAR
+                    "CURRENT_DATE" -> DType.DATE
+                    else -> DType.UNKNOWN
+                })
+                continue
+            }
+            // Composition and implicit lambdas are function values, never integer operators.
+            // Keep their types unknown until argument-aware function typing is available.
+
             when {
                 spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)
                 spec is TypingSpec.Returns -> setType(expr, spec.dtype)

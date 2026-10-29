@@ -112,7 +112,7 @@ class Dot(initArgs: Args = emptyMap()) : Binary(initArgs) {
 }
 
 // sqlglot: core.Star(Expression)
-class Star(initArgs: Args = emptyMap()) : Expression(initArgs) {
+open class Star(initArgs: Args = emptyMap()) : Expression(initArgs) {
     override val argTypes get() = ARG_TYPES
     override val name: String get() = "*"
 

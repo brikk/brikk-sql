@@ -1148,6 +1148,7 @@ open class ClickhouseGenerator(
             GeneratorTables.PROPERTIES_LOCATION + mapOf(
                 // sqlglot #7990: refreshable MV REFRESH clause after the view name
                 AutoRefreshProperty::class to GeneratorTables.PropLocation.POST_NAME,
+                ClickhouseRefresh::class to GeneratorTables.PropLocation.POST_NAME,
                 DefinerProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
                 OnCluster::class to GeneratorTables.PropLocation.POST_NAME,
                 PartitionedByProperty::class to GeneratorTables.PropLocation.POST_SCHEMA,
@@ -1406,6 +1407,22 @@ open class ClickhouseGenerator(
             reg(ClickhouseLimitBy::class) { e -> "${sql(e, "this")}${sql(e, "expression")}" }
             reg(ClickhouseAtLocal::class) { e -> "${sql(e, "this")} AT LOCAL" }
             reg(ClickhouseYear::class) { e -> "${e.meta["clickhouse_name"] ?: "year"}(${expressions(e, flat = true)})" }
+            reg(ClickhouseStar::class) { e ->
+                val star = Star(e.copy().args.filterKeys { it != "like" && it != "ilike" })
+                "*" + (if (e.args["like"] != null) " LIKE ${sql(e, "like")}" else " ILIKE ${sql(e, "ilike")}") + starSql(star).removePrefix("*") }
+            reg(ClickhouseComposition::class) { e -> "${sql(e, "this")} | ${sql(e, "expression")}" }
+            reg(ClickhouseImplicitLambda::class) { e -> sql(e, "this") }
+            reg(ClickhouseLambdaArgument::class) { e -> sql(e, "this") }
+            reg(ClickhouseFunctionReference::class) { e -> sql(e, "this") }
+            reg(ClickhouseBuiltin::class) { e -> e.name }
+            reg(ClickhouseDatePart::class) { e -> "${e.meta["clickhouse_name"] ?: "date_part"}(${sql(e, "this")}, ${sql(e, "expression")})" }
+            reg(ClickhouseExtract::class) { e -> "EXTRACT(${sql(e, "this")} FROM ${sql(e, "expression")})" }
+            for (type in listOf(ClickhouseExplain::class, ClickhouseHypotheticalIndex::class, ClickhouseHandler::class,
+                ClickhouseCreateToken::class, ClickhouseGrant::class, ClickhouseUserAuthentication::class,
+                ClickhouseAuthenticationMethod::class, ClickhouseCredential::class, ClickhouseAlterAction::class,
+                ClickhouseProjection::class, ClickhouseSystem::class, ClickhouseRefresh::class)) {
+                reg(type) { e -> clickhouseDdlSql(e) }
+            }
             reg(ClickhouseCompoundInterval::class) { e ->
                 "INTERVAL ${sql(e, "this")} ${sql(e, "unit")} TO ${sql(e, "expression")}" }
             reg(ClickhouseFunctionSettings::class) { e ->

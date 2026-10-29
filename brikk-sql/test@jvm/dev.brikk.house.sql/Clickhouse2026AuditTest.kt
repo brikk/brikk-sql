@@ -27,10 +27,11 @@ class Clickhouse2026AuditTest {
             val sql = case.getValue("sql").jsonPrimitive.content
             val parsed = runCatching { parseOne(sql, "clickhouse") }
             val fixed = case["task"]?.jsonPrimitive?.content == "CH26-002"
-            val syntax = case["task"]?.jsonPrimitive?.content == "CH26-004"
+            val syntax = case["task"]?.jsonPrimitive?.content in setOf("CH26-004", "CH26-005", "CH26-006")
             if (syntax) {
                 if (case["accept"]?.jsonPrimitive?.booleanOrNull != false) {
                     val ast = parsed.getOrThrow()
+                    assertTrue(ast !is dev.brikk.house.sql.ast.Command, id)
                     assertEquals(ast, parseOne(ast.sql("clickhouse"), "clickhouse"), id)
                     assertEquals(ast, dev.brikk.house.sql.ast.Serde.load(dev.brikk.house.sql.ast.Serde.dump(ast)), id)
                 } else assertTrue(parsed.isFailure, id)

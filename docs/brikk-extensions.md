@@ -2100,6 +2100,34 @@ See [the batch 2 evidence and reproduction](research/clickhouse-2026-batch2.md).
 Function overloads and first-availability facts are not fabricated from embedded
 documentation. Historical semantic proofs and certification policy are unchanged.
 
+## 62. ClickHouse 2026 analysis and structured utilities
+
+ClickhouseStar is a Star with native LIKE/ILIKE name filtering. Qualification,
+shape, relation scope, subquery completion and lineage share that filtering.
+Bare built-in names are recognized in statement contexts without stealing quoted
+or qualified columns, ordinary calls or standalone identifier fragments. Native
+date-part and EXTRACT additions keep units out of column scope; unproved return
+types stay unknown.
+
+Composition, implicit lambdas, local argument references and function designators
+have separate native nodes. Binding contexts follow the captured 26.10 higher-order
+flags. A function-valued `|` cannot become integer BitwiseOr or an unproved
+cross-dialect rewrite. Ordinary bitwise functions and other dialects are unchanged.
+
+Structured utilities cover APPEND INCREMENTAL refresh mode, hypothetical indexes,
+EXPLAIN ANALYZE/WHATIF, enum additions, token/authentication grants, handlers,
+projection indexes/settings, supported projection ALTER and constraint actions,
+and unified SYSTEM background commands. Unrelated Command behavior stays intact.
+New statement-effect information is descriptive, not authorization. Credential
+nodes mask debug output and have explicit redacted SQL rendering; normal SQL and
+serde remain lossless and therefore must not be used as redacted logging formats.
+
+The verifier test asserts that even executing EXPLAIN and credential DDL are only
+hex data in formatQuery. Native DDL vectors are never run. See the
+[batch 3 report](research/clickhouse-2026-batch3.md) for exact coverage, native
+observations, reproduction and unsupported combinations. No failure ledgers or
+historical semantic proofs are relaxed by these additions.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

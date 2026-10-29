@@ -81,6 +81,12 @@ pinned engines reject `year()` and some LIMIT-range combinations.
 See the [batch 1](docs/research/clickhouse-2026-catchup.md) and
 [batch 2 evidence](docs/research/clickhouse-2026-batch2.md).
 
+The [batch 3 evidence](docs/research/clickhouse-2026-batch3.md) covers name-filtered
+stars, bare built-ins, date-part analysis, higher-order composition/implicit arguments,
+and structured refresh, index, EXPLAIN, authentication, handler and ALTER forms.
+DDL coverage is parse-only. EXPLAIN ANALYZE is explicitly classified as executing
+its enclosed query; the editor verifier still only formats SQL passed as data.
+
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
 The opt-in API leaves the existing rendering paths unchanged.

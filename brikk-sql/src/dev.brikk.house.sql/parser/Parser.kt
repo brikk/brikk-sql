@@ -10620,7 +10620,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_star_ops
-    fun parseStarOps(): Expression? {
+    open fun parseStarOps(): Expression? {
         val starToken = prevToken // sqlglot: star_token = self._prev
 
         if (matchTextSeq("COLUMNS", "(", advance = false)) {

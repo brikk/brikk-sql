@@ -293,4 +293,10 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "ClickhouseLimitRange", "ClickhouseLimitBy", "ClickhouseAtLocal", "ClickhouseCompoundInterval",
     "ClickhouseFunctionSettings", "ClickhouseNativeType",
     "ClickhouseYear",
+    "ClickhouseStar", "ClickhouseComposition", "ClickhouseImplicitLambda", "ClickhouseLambdaArgument",
+    "ClickhouseFunctionReference", "ClickhouseBuiltin", "ClickhouseDatePart",
+    "ClickhouseExtract",
+    "ClickhouseExplain", "ClickhouseHypotheticalIndex", "ClickhouseHandler", "ClickhouseCreateToken",
+    "ClickhouseGrant", "ClickhouseUserAuthentication", "ClickhouseAuthenticationMethod", "ClickhouseCredential",
+    "ClickhouseAlterAction", "ClickhouseProjection", "ClickhouseSystem", "ClickhouseRefresh",
 )

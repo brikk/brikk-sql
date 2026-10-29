@@ -49,6 +49,8 @@ class ClickhouseFunctionSettings(initArgs: Args = emptyMap()) : Expression(initA
 class ClickhouseNativeType(initArgs: Args = emptyMap()) : DataType(initArgs)
 
 internal fun registerNativeClickhouseNodes(entries: kotlin.collections.MutableMap<String, ExpressionRegistry.Entry>) {
+    registerClickhouseAnalysisNodes(entries)
+    registerClickhouseDdlNodes(entries)
     entries["ClickhouseStream"] = ExpressionRegistry.Entry("brikk.clickhouse") { ClickhouseStream() }
     entries["ClickhouseStreamCursor"] = ExpressionRegistry.Entry("brikk.clickhouse") { ClickhouseStreamCursor() }
     entries["ClickhouseLimitRange"] = ExpressionRegistry.Entry("brikk.clickhouse") { ClickhouseLimitRange() }

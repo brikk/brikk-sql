@@ -140,6 +140,11 @@ and their generated Kotlin metadata also derive from those Apache-2.0 ClickHouse
 builds. Capture manifests retain the exact image digests, queries and SHA-256 hashes.
 No documentation prose is treated as a machine-readable function signature.
 
+The ClickHouse batch-3 parser/analyzer corrections and audit fixtures reference the
+same Apache-2.0 upstream's v26.10.2.103-stable parser and function-composition source.
+The fixture file records the source URLs; native observations retain the image
+digests. No source statement from the DDL fixtures is executed by the verifier.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

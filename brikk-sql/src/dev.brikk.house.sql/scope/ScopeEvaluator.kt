@@ -512,6 +512,7 @@ internal class ScopeEvaluator(
 
     private fun star(star: Star, bindings: List<Binding>, merged: List<ScopeColumn>, frame: Frame, env: Env, context: String): Pair<List<ScopeColumn>, Knowledge> {
         var columns = expandStar(bindings, merged).map { it.copy(relation = "", relationKind = null) }
+        dev.brikk.house.sql.ast.clickhouseStarPattern(star)?.let { pattern -> columns = columns.filter { pattern.matches(it.name) } }
         val knowledge = Frame(bindings, null).absence
         // Modifiers name input columns: references resolve where the star reads.
         val pool = Frame(bindings, null, merged)
