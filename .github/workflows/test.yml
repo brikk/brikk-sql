@@ -60,8 +60,13 @@ jobs:
           TEST_KOTLIN_RELEASE_MODEL: '1'
         run: python3 -m unittest discover -s tools -p 'test_*release*.py'
 
-      - name: Test
-        run: ./kotlin test
+      # Core contains wall-clock scaling assertions. Do not run its measurements
+      # alongside other module suites, and give its JVM a repeatable resource budget.
+      - name: Test core
+        run: ./kotlin test -m brikk-sql --jvm-args="-Xmx1g -XX:ActiveProcessorCount=2"
+
+      - name: Test remaining modules
+        run: ./kotlin test --exclude-module=brikk-sql
 
       - name: Test IntelliJ platform contracts
         run: ./kotlin check intellijPlatform -m brikk-sql-intellij-support

@@ -107,3 +107,10 @@ the 10x limit for 4x input, and all tested entry points remain unchanged. This i
 test-only correction; the packaged production artifacts are unchanged.
 Three repeated scaling runs with a 512 MB heap and two active processors passed,
 followed by another successful full JVM suite.
+
+Workflow `40926241109` passed tokenizer scaling but failed deep-pipe analysis
+scaling at 8.1 ms versus 84.9 ms. The CI test step now runs core by itself with a
+1 GB heap and two active processors before running all remaining modules. This
+keeps other module suites from competing with the core wall-clock measurements.
+No test is omitted, no threshold changes, and the remaining IDE/publication gates
+are unchanged.
