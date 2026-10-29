@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.ast.Any as AnyNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
+import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -389,6 +390,9 @@ open class Generator(
             spanStack.addLast(mutableListOf())
         }
         if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
+            if (expr.walk().any { it.duckdbJsonCall() != null }) {
+                unexecutable("$targetName has no verified DuckDB JSON mutation/normalization translation")
+            }
             // Check before target SELECT transforms move projection UNNESTs into FROM.
             // Alias/ordinal grouping and ungrouped post-aggregate expansions also need a
             // proved translation; an ordinary table-source UNNEST is not this operation.
@@ -399,6 +403,10 @@ open class Generator(
                             .none { it is From || it is Join || it is Table || it is Lateral }
                 }
             }) unexecutable("$targetName has no verified DuckDB grouping UNNEST translation")
+        }
+        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
+            expr.walk().any { it.duckdbJsonCall() != null }) {
+            unexecutable("DuckDB JSON mutation/normalization is not a verified same-name translation from $sourceDialect")
         }
         val raw = sql(preprocess(expr))
         var sql = raw.trim()

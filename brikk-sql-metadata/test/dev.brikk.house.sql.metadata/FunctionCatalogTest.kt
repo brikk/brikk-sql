@@ -308,6 +308,24 @@ class FunctionCatalogTest {
     }
 
     @Test
+    fun duckdb20JsonMutationSignaturesDoNotInventPathListsOrVariadicPairs() {
+        val mutate = FunctionOverload(listOf("JSON", "VARCHAR", "JSON"), "JSON", argNames = listOf("json", "path", "value"))
+        val expected = mapOf(
+            "json_set" to mutate, "json_insert" to mutate, "json_replace" to mutate,
+            "json_remove" to FunctionOverload(listOf("JSON", "VARCHAR"), "JSON", argNames = listOf("json", "path")),
+            "json_deep_merge" to FunctionOverload(listOf("JSON", "JSON"), "JSON", variadic = true, argNames = listOf("json1", "json2")),
+            "json_merge_patch_diff" to FunctionOverload(listOf("JSON", "JSON"), "JSON", argNames = listOf("old", "new")),
+            "json_normalize" to FunctionOverload(listOf("JSON"), "VARCHAR", argNames = listOf("json")),
+            "json_strip_nulls" to FunctionOverload(listOf("JSON"), "JSON", argNames = listOf("json")),
+        )
+        for ((name, overload) in expected) {
+            val definition = DUCKDB_FUNCTION_CATALOG[name]!!
+            assertEquals(FunctionKind.SCALAR, definition.kind, name)
+            assertEquals(listOf(overload), definition.overloads, name)
+        }
+    }
+
+    @Test
     fun duckdbVariadicsAreFlagged() {
         // duckdb_functions() reports concat as (value ANY, varargs ANY) — the single
         // fixed parameter is named.

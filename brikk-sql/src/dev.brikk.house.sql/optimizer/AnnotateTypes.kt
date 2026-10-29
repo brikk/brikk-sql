@@ -46,6 +46,7 @@ import dev.brikk.house.sql.ast.unpivot
 import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.duckdbJsonCall
 
 /**
  * Port of sqlglot's type annotator (reference/sqlglot/sqlglot/optimizer/annotate_types.py).
@@ -604,9 +605,11 @@ class TypeAnnotator(
                 continue
             }
 
+            val duckdbJson = if (dialect.name == "duckdb") expr.duckdbJsonCall() else null
             val spec = expressionMetadata[expr::class]
 
             when {
+                duckdbJson != null -> setType(expr, duckdbJson.returnType ?: DType.UNKNOWN)
                 spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)
                 spec is TypingSpec.Returns -> setType(expr, spec.dtype)
                 spec is TypingSpec.ReturnsDataType -> setType(expr, spec.dtype)

@@ -31,6 +31,7 @@ import dev.brikk.house.sql.ast.selects
 import dev.brikk.house.sql.ast.sqlName
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
 import dev.brikk.house.sql.shape.catalogTableParts
 import dev.brikk.house.sql.metadata.FunctionKind
@@ -411,6 +412,18 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        val json = if (dialect.name == "duckdb") (node as Expression).duckdbJsonCall() else null
+        if (json != null) {
+            val arguments = json.boundArguments ?: return null
+            return when (json.name) {
+                // Removing the root yields SQL NULL even for a non-null document/path.
+                "JSON_REMOVE" -> true
+                // Each patch replaces a SQL NULL intermediate; only the final patch's
+                // SQL nullability determines whether a successful merge has a document.
+                "JSON_DEEP_MERGE", "JSON_MERGE_PATCH_DIFF" -> get(arguments.last())
+                else -> operatorRule(arguments)
+            }
+        }
         // Generic builtin calls retain their SQL name in Anonymous.name; sqlName()
         // returns the node class name. A qualified call may be a schema-owned UDF.
         if (node is Anonymous && node.parent is dev.brikk.house.sql.ast.Dot) return null

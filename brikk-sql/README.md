@@ -285,6 +285,33 @@ swap meanings. Cross-target execution refuses a pagination rewrite that would re
 parameters; numbered parameters can retain their identity across clause reordering. Tests run
 both authored and generated queries with the same prepared bindings and check CTE/set boundaries.
 
+DuckDB 2.0 JSON mutation calls retain their authored values and paths, including JSON Pointer
+escapes, quoted JSONPath keys, reverse indexes and named arguments. SET/INSERT/REPLACE accept
+one scalar path and one JSON value; REMOVE accepts one scalar path. Path lists, repeated
+path/value pairs and BigQuery strip-null options are not DuckDB overloads. Values such as
+`'"hello"'` are JSON strings; `'hello'` is invalid JSON, and numeric SQL literals need an
+explicit JSON conversion. The library does not quote values or reinterpret paths to make
+these calls resemble another dialect.
+
+Scope/shape contracts return JSON for mutation, deep merge, merge-patch diff and null stripping;
+`json_normalize` returns VARCHAR. Static typing recognizes the pinned positional and fixed named
+signatures, not arbitrary schema-owned UDFs. Native binding still decides argument types and
+JSON/path validity. Nullability follows argument roles: REMOVE may return SQL NULL when removing
+the root; deep merge and patch diff can ignore a SQL NULL base, and a later deep-merge patch can
+replace a SQL NULL intermediate. SQL NULL is not JSON `null`.
+
+Deep merge skips JSON-null object patch members where the original is also an object, while
+merge patch deletes those keys. Arrays replace rather than concatenate. Normalization sorts
+object keys recursively but preserves array order and duplicate keys; it can change numeric
+serialization and is not a cross-engine canonical-byte guarantee. Null stripping removes
+JSON-null object members but retains null array elements and empty containers. Native diff tests
+cover representable round trips, not every JSON document: applying the diff from `{}` to
+`{"a":null}` returns `{}`, because merge-patch null deletes a key. Native tests pin that limit.
+
+The existing JSON nodes and raw function calls preserve these operations without app-side
+JSON evaluation or new AST classes. Cross-target execution refuses unverified same-name
+translations in either direction; previews carry a finding instead of claiming equivalence.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

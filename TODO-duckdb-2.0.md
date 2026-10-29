@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-012.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-014.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -250,17 +250,46 @@ and IDE introspection/completion are separate contracts.
   annotation ledgers and ABI controls. No ledgers or IDE/connection configuration were changed.
   Native reference: v2.0.0 unnest_group_by.test, fetch_first.test and final GROUP BY/LIMIT docs.
 
-- [ ] `DDB20-013` JSON mutation functions [AUDIT].
+- [x] `DDB20-013` JSON mutation functions [DONE].
   All four names are captured; basic calls parse/generate and pass native acceptance.
   Pin [json_set/json_insert/json_replace/json_remove][json], overloads, path/value lists,
   JSONPath/JSON Pointer, missing paths, arrays, duplicate keys, invalid JSON and SQL NULL
   versus JSON null. Audit generic JSON AST nodes before assuming another dialect's semantics.
+  Existing JSONSet/JSONRemove/JSONStripNulls and raw call nodes preserve the actual argument/path
+  text; no new AST classes or JSONPath reinterpretation are needed. Added pinned builtin signature,
+  JSON/VARCHAR return-type and nullability contracts for all eight functions in DDB20-013/014,
+  including fixed named-argument roles. Schema-owned UDFs and unmodeled signatures stay unknown.
+  Native mutations have one scalar path, not path lists or variadic path/value pairs; values are
+  JSON documents, not automatically quoted SQL strings/numbers. Native error controls pin those
+  overload limits and malformed JSON/paths, wildcards and invalid options. Positive result tests
+  cover missing/existing/nested paths, JSON Pointer escapes, quoted keys, duplicate keys, root
+  replacement/removal, zero-based/reverse array indexes, append/end bounds, removal shifts, SQL NULL
+  versus JSON null, column paths, named parameters and repeated prepared execution. Same-name
+  cross-target previews flag and executable generation refuses unproved translations in either
+  direction. Native generation does not silently repair invalid overloads or alter JSON values.
 
-- [ ] `DDB20-014` JSON patching and normalization [AUDIT].
+- [x] `DDB20-014` JSON patching and normalization [DONE].
   Audit `json_merge_patch_diff`, `json_deep_merge`, `json_normalize`, `json_strip_nulls`
   and their final overloads. Prove RFC 7396 delete-on-null versus deep-merge skip-on-null,
   recursive object-key sorting with preserved array order, and object-null stripping without
   removing null array elements. Add dedicated nodes only where semantics/typing require them.
+  Native tests distinguish deep merge's JSON-null member skipping from merge patch deletion,
+  whole-array/scalar replacement, left-to-right variadic patches and SQL NULL intermediate reset
+  followed by recovery. Diff tests cover nested changes/removals, unchanged members, arrays/scalars,
+  SQL NULL and representable round trips. The docs' unrestricted diff round-trip claim is too broad:
+  diff({}, {"a":null}) is {"a":null}, whose merge patch produces {}, not the requested null member.
+  Keep that measured counterexample; do not invent an app-side workaround or promise universal
+  RFC 7396 representability. Normalization returns VARCHAR, sorts nested objects but not arrays,
+  preserves duplicate members and can reserialize numbers. Stripping retains null array elements,
+  scalar roots and empty containers while removing null-valued object members recursively.
+  Bundled catalog signatures already match the engine and now have exact overload/return tests;
+  no generated catalogs or global hazard/null-propagation ledgers were rewritten.
+  Evidence for DDB20-013/014: DuckdbJsonMutationTest, DuckdbJsonMutationResultTest and exact
+  FunctionCatalogTest overload assertions. Full gates passed: 1,302 core, 115 metadata and 81
+  DuckDB verifier/native tests. Existing corpus/annotation/serde/ABI gates remain intact; no
+  driver, IDE, connection-setting, publication or consumer-pin changes. Native sources reviewed:
+  json_modify.cpp, json_deep_merge.cpp, json_merge_patch_diff.cpp, json_normalize.cpp,
+  json_strip_nulls.cpp and their v2.0.0 SQL tests; measured results bound the semantic claims.
 
 - [ ] `DDB20-015` VARIANT end-to-end behavior [AUDIT].
   Type/cast syntax and new function metadata exist. Cover storage DDL, JSON conversion,
