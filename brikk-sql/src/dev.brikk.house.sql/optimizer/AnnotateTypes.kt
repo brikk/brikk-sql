@@ -3,6 +3,8 @@ package dev.brikk.house.sql.optimizer
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.AnnotatorRef
 import dev.brikk.house.sql.ast.Anonymous
+import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.hasKeyedAggregatePayload
 import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ColumnDef
@@ -352,6 +354,9 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate
     fun <E : Expression> annotate(expression: E, annotateScope: Boolean = true): E {
+        if (dialect.name == "duckdb" && expression.hasKeyedAggregatePayload()) {
+            throw OptimizeError("Recursive USING KEY aggregate types require the declarative CTE contract, not SELECT type annotation")
+        }
         // This flag is used to avoid costly scope traversals when we only care about
         // annotating non-column expressions (partial type inference)
         if (annotateScope) {
@@ -502,6 +507,10 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate_scope
     fun annotateScope(scope: Scope) {
+        if (dialect.name == "duckdb" && (scope.expression.hasKeyedAggregatePayload() ||
+                scope.expression.findAncestor<CTE>()?.hasKeyedAggregatePayload() == true)) {
+            throw OptimizeError("Recursive USING KEY aggregate types require the declarative CTE contract")
+        }
         val mappingSchema = schema as? MappingSchema
         if (mappingSchema != null) {
             for (tableColumn in scope.tableColumns) {

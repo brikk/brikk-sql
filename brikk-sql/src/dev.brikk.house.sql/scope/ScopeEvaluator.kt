@@ -1,6 +1,13 @@
 package dev.brikk.house.sql.scope
 
 import dev.brikk.house.sql.ast.AggFunc
+import dev.brikk.house.sql.ast.Avg
+import dev.brikk.house.sql.ast.Sum
+import dev.brikk.house.sql.ast.Min
+import dev.brikk.house.sql.ast.Max
+import dev.brikk.house.sql.ast.ArrayAgg
+import dev.brikk.house.sql.ast.GroupConcat
+import dev.brikk.house.sql.ast.Union
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
@@ -99,8 +106,8 @@ internal class Frame(
 /** A CTE visible by [name]; [synthetic] ones come from pipe lowering and have no name in the text. */
 internal class Cte(val name: Identifier, val row: Row, val synthetic: Boolean)
 
-internal class Env(val ctes: List<Cte>, val outer: Frame?) {
-    fun withOuter(frame: Frame?) = Env(ctes, frame)
+internal class Env(val ctes: List<Cte>, val outer: Frame?, val recurring: List<Cte> = emptyList(), val keyedAnchor: Boolean = false) {
+    fun withOuter(frame: Frame?) = Env(ctes, frame, recurring, keyedAnchor)
 }
 
 /** Where pipe lowering moved a stage's own nodes, to name what computes a column and to find SET targets. */
@@ -339,14 +346,91 @@ internal class ScopeEvaluator(
             val name = alias.thisArg as? Identifier ?: continue
             val body = cte.thisArg as? Expression ?: continue
             val synthetic = !names.positioned(name)
+            val union = body.unnest() as? Union
+            if (dialect.name == "duckdb" && with.recursive && union != null && !(cte.args["key_expressions"] as? List<*>).isNullOrEmpty()) {
+                val row = keyedCte(cte, alias, name, union, Env(ctes, env.outer, env.recurring, env.keyedAnchor), synthetic)
+                if (!synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, row.knowledge,
+                    ScopeRelation(stored(name), RelationKind.CTE, row.knowledge, stored(name), declaration = declared(name)))
+                ctes = ctes + Cte(name, row, synthetic)
+                continue
+            }
             val visible = if (with.recursive) ctes + Cte(name, Row(emptyList(), Knowledge.UNKNOWN), synthetic) else ctes
-            val row = query(body, Env(visible, env.outer), if (synthetic) "SELECT" else name.name)
+            val row = query(body, Env(visible, env.outer, env.recurring, env.keyedAnchor), if (synthetic) "SELECT" else name.name)
             val defined = Row(renamedColumns(row.columns, alias), row.knowledge)
             if (!synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, defined.knowledge,
                 ScopeRelation(stored(name), RelationKind.CTE, defined.knowledge, stored(name), declaration = declared(name)))
             ctes = ctes + Cte(name, defined, synthetic)
         }
-        return Env(ctes, env.outer)
+        return Env(ctes, env.outer, env.recurring, env.keyedAnchor)
+    }
+
+    /** Native binding has separate raw-candidate and finalized-state contracts. No fixed point is evaluated here. */
+    private fun keyedCte(cte: CTE, alias: TableAlias, name: Identifier, union: Union, env: Env, synthetic: Boolean): Row {
+        val seed = query(union.left, Env(env.ctes, env.outer, env.recurring, keyedAnchor = true), name.name)
+        val raw = Row(renamedColumns(seed.columns, alias).map { column ->
+            computed(column.name, Nullability.UNKNOWN, "recursive candidate", column.sqlType).copy(declaration = column.declaration)
+        }, seed.knowledge)
+        val frame = Frame(listOf(bound(raw, name, synthetic, RelationKind.CTE, name.name)), null)
+        val columns = raw.columns.toMutableList()
+        for (key in (cte.args["key_expressions"] as? List<*>).orEmpty().filterIsInstance<Expression>()) {
+            checkCanceled()
+            if (key is Identifier) { record(key, null, unqualified(frame, key)); continue }
+            expression(key, frame, env.withOuter(null))
+            val value = key.unwrapped()
+            if (value is Column && key !is Alias) continue
+            val destination = (key as? Alias)?.args?.get("alias") as? Identifier
+            val first = value.thisArg as? Column
+            val index = if (destination != null) {
+                record(destination, null, unqualified(frame, destination))
+                raw.columns.indexOfFirst { it.name == stored(destination) }
+            } else first?.let { arg -> raw.columns.indexOfFirst { same(arg.name, it.name) } } ?: -1
+            if (index < 0) {
+                // An unmodeled expression may target another slot. Never substitute its seed type.
+                for (i in columns.indices) columns[i] = columns[i].copy(sqlType = null)
+            } else {
+                columns[index] = computed(columns[index].name, if (value is Count) Nullability.NON_NULL else Nullability.UNKNOWN,
+                    "USING KEY", keyedAggregateType(value)).copy(declaration = columns[index].declaration)
+            }
+        }
+        val finalized = Row(columns, raw.knowledge)
+        val working = if (union.args["distinct"] == false) raw else finalized
+        query(union.right, Env(env.ctes + Cte(name, working, synthetic), env.outer,
+            env.recurring + Cte(name, finalized, synthetic)), name.name)
+        return finalized
+    }
+
+    /** VALUES anchors have DuckDB col0... names before the authored CTE alias list is applied. */
+    private fun keyedValues(node: Values, env: Env): Row {
+        val tuples = node.expressionsArg.filterIsInstance<Tuple>()
+        tuples.forEach { expression(it, env.outer, env) }
+        val width = tuples.firstOrNull()?.expressionsArg?.size ?: return Row(emptyList(), Knowledge.UNKNOWN)
+        if (tuples.any { it.expressionsArg.size != width }) return Row(emptyList(), Knowledge.UNKNOWN)
+        return Row((0 until width).map { index ->
+            val types = tuples.map { (it.expressionsArg[index] as? Expression)?.let(::sqlTypeOf) }
+            val type = if (types.any { it == null }) null else types.filterNot { it == "NULL" }.distinct().singleOrNull()
+            computed("col$index", Nullability.UNKNOWN, "VALUES", type)
+        }, Knowledge.FULL)
+    }
+
+    /** Only return types proved by the pinned builtin family; unknown aggregates stay unknown. */
+    private fun keyedAggregateType(value: Expression): String? {
+        val first = value.thisArg as? Expression
+        val input = first?.let(::sqlTypeOf)
+        val type = input?.let { try { dataTypeFromStr(it, dialect).thisArg } catch (_: ParseError) { null } }
+        return when (value) {
+            is Count -> "BIGINT"
+            is Avg -> if (type in DataType.INTEGER_TYPES || type in DataType.REAL_TYPES) "DOUBLE" else null
+            is Sum -> when (type) {
+                DType.TINYINT, DType.SMALLINT, DType.INT, DType.BIGINT, DType.INT128,
+                DType.UTINYINT, DType.USMALLINT, DType.UINT, DType.UBIGINT, DType.BOOLEAN -> "INT128"
+                DType.FLOAT, DType.DOUBLE -> "DOUBLE"
+                else -> null
+            }
+            is Min, is Max -> input.takeIf { value.expressionsArg.isEmpty() }
+            is ArrayAgg -> input?.let { "ARRAY<$it>" }
+            is GroupConcat -> "VARCHAR"
+            else -> null
+        }
     }
 
     private fun select(select: Select, env: Env, context: String): Row {
@@ -545,6 +629,13 @@ internal class ScopeEvaluator(
         val parts = pathParts.filterIsInstance<Identifier>()
         val name = parts.lastOrNull() ?: return unknownRelation(node.name, RelationKind.OTHER)
         if (caretMarker != null && caretMarker in name.name && caretCtes == null) caretCtes = env.ctes.filterNot { it.synthetic }
+        if (dialect.name == "duckdb" && parts.size == 2 && same(parts[0], "recurring", columns = false)) {
+            env.recurring.lastOrNull { same(name, stored(it.name), columns = false) }?.let { cte ->
+                val relation = bound(cte.row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name))
+                if (!cte.synthetic) reference(ReferenceKind.TABLE, name, Resolution.RESOLVED, cte.row.knowledge, relation = relation.relation, start = parts.first())
+                return Binding(relation.name, relation.qualifiable, relation.relation, relation.columns, parts.map(::stored))
+            }
+        }
         if (node.db.isEmpty() && node.catalog.isEmpty()) {
             cte(name, env)?.let { (cte, row) ->
                 val relation = bound(row, name, cte.synthetic, RelationKind.CTE, cte.name.name, declared(cte.name))
@@ -931,6 +1022,7 @@ internal class ScopeEvaluator(
     }
 
     private fun values(node: Values, env: Env): Row {
+        if (dialect.name == "duckdb" && env.keyedAnchor) return keyedValues(node, env)
         node.expressionsArg.filterIsInstance<Expression>().forEach { expression(it, env.outer, env) }
         // Unnamed VALUES columns get dialect-specific names (col0, _col0, column1): only an alias's names are known.
         val names = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()

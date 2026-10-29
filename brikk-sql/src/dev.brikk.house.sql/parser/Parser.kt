@@ -2207,7 +2207,7 @@ open class Parser(
             raiseError("Expected CTE to have alias")
         }
 
-        val keyExpressions = if (matchTextSeq("USING", "KEY")) parseWrappedIdVars() else null
+        val keyExpressions = if (matchTextSeq("USING", "KEY")) parseCteKeyExpressions() else null
 
         if (!match(TokenType.ALIAS) && !optionalAliasTokenCte) {
             retreat(startIndex)
@@ -2258,6 +2258,8 @@ open class Parser(
             )
         )
     }
+
+    protected open fun parseCteKeyExpressions(): List<Expression> = parseWrappedIdVars()
 
     // sqlglot: Parser._parse_table_alias
     open fun parseTableAlias(aliasTokens: Collection<TokenType>? = null): TableAlias? {

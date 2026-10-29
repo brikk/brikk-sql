@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-017.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-018.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -352,10 +352,36 @@ and IDE introspection/completion are separate contracts.
   corpora/annotation/serde/ABI gates remain intact; four exact native AST registrations were added,
   not exempted from the Python manifest's existing checks. No IDE connection or publication changes.
 
-- [ ] `DDB20-018` Recursive USING KEY aggregate payloads [AUDIT].
-  Generic key-expression support exists. Pin `USING KEY (a, avg(b))`, recurring-table
+- [x] `DDB20-018` Recursive USING KEY aggregate payloads [DONE].
+  Generic key-expression AST/generation slots exist. Pin `USING KEY (a, avg(b))`, recurring-table
   references, UNION versus UNION ALL, output types and terminating result probes after
   the recursive execution rewrite. Include ordinary recursive CTE regression controls.
+  The actual parser was identifier-only despite the earlier triage. DuckDB now parses full key/
+  aggregate expressions and aliased destinations while retaining the old Identifier AST shape of
+  plain keys. The documented TABLE cte shorthand is normalized to SELECT * so WITH can attach.
+  Scope analysis separates raw UNION ALL candidates from finalized recurring/final CTE rows;
+  UNION's working table uses finalized types too. Aggregate arguments bind against CTE aliases and
+  raw anchor types, not outer tables or the aggregate result. Known AVG, SUM, MIN/MAX, COUNT, LIST
+  and string-aggregate contracts preserve promoted/result types; unknown aggregates/overloads stay
+  unknown, never silently inherit the seed type. Recursive row values have computed provenance.
+  Only active recursive-member recurring.name references are virtual CTE inputs, not physical
+  source tables or ordinary outer/sibling references. VALUES seed rows are typed in this context.
+  Shapes use these declarative contracts without executing recursion. SELECT optimizer qualification,
+  generic aggregate-state type annotation, lineage and unproved cross-target execution explicitly
+  refuse; raw/native generation preserves hints, UNION spelling and aggregate destinations.
+  Native tests pin the documented average/maximum, aggregate aliases, list snapshots, SQL result
+  metadata and raw-versus-finalized type visibility. A cyclic shortest-path query converges under
+  UNION; stable keyed averages terminate when finalized state stops changing. Private sequences
+  prove UNION/ALL can have identical final rows but different recursive work, and final draining
+  across 2,049 rows does not rerun the recursive build. Invalid key/aggregate overlaps, destinations,
+  missing fields and DISTINCT/FILTER/ORDER BY modifiers have binder-error controls. Ordinary
+  recursive CTE and recurring-table execution controls remain green. Native queries have deadlines;
+  this is not a claim that arbitrary recursive queries terminate or that binding is statically complete.
+  Evidence: DuckdbKeyedRecursiveTest and DuckdbKeyedRecursiveResultTest. Full gates passed 1,318 core,
+  115 metadata and 102 DuckDB verifier/native tests, including the unchanged generated corpus,
+  annotation, serde and JVM compatibility gates. No new AST classes or published data-class fields,
+  connection changes, driver workaround or publication. Reviewed v2.0.0 bind_recursive_cte_node.cpp
+  and recursive_cte_key_{aggregation,union,snapshot,final_drain}.test alongside the final WITH docs.
 
 - [ ] `DDB20-019` CONNECT / DISCONNECT [AUDIT].
   SessionConnect/SessionDisconnect nodes and simple URI/attached-name/options cases exist.
@@ -678,6 +704,8 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   native DuckDB returns HUGEINT. Reconcile DuckDB-specific aggregate promotions here; the UNNEST
   batch proves SUM row values, not exact static SUM return-type parity. COUNT/MAX shape controls
   and native results remain separate from that broader aggregate-typing gap.
+  DDB20-018 has a separate proved USING KEY SUM(INT) output contract, canonical INT128/native
+  HUGEINT. Ordinary SELECT aggregate promotion remains open here; do not infer it was fixed globally.
 
 - [ ] `DDB20-074` Table-function identifier-to-string deprecation [AUDIT].
   Review the release's deprecated implicit identifier-to-string conversion for table functions.

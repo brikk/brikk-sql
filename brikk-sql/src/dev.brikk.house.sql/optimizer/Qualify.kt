@@ -3,6 +3,7 @@ package dev.brikk.house.sql.optimizer
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.hasSideEffectingCte
+import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 
@@ -77,6 +78,9 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if (resolvedDialect.name == "duckdb" && expression.hasKeyedCte()) {
+        throw OptimizeError("Automatic qualification across recursive USING KEY state is not modeled")
+    }
     if (resolvedDialect.name == "duckdb" && expression.hasSideEffectingCte()) {
         throw OptimizeError("Automatic qualification across side-effecting CTEs is not modeled")
     }

@@ -24,6 +24,8 @@ import dev.brikk.house.sql.ast.DML
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.desugarPipes
 import dev.brikk.house.sql.ast.hasSideEffectingCte
+import dev.brikk.house.sql.ast.hasKeyedCte
+import dev.brikk.house.sql.ast.isRecurringCteReference
 import dev.brikk.house.sql.ast.namedSelects
 import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
@@ -390,6 +392,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
             val parts = table.parts
             if (parts.isEmpty() || parts.any { it !is Identifier }) continue
             val target = sideEffects && isPhysicalWriteTarget(table)
+            if (dialectObj.name == "duckdb" && table.isRecurringCteReference()) continue
             if (!target && (resolved[table] == false || sideEffects && visibleCteReference(table))) continue
             out.add(catalogPath(parts.map { it.name }))
         }
@@ -469,7 +472,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
-        if (dialectObj.name == "duckdb" && tree.hasSideEffectingCte()) return sideEffectingCteShape(tree, inputs)
+        if (dialectObj.name == "duckdb" && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
         val schema = buildSchema(inputs, rejectNormalizedDuplicates = prepared.hasStarRename())
         val qualified = qualify(
@@ -562,8 +565,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         inputs: ShapeCatalog? = null,
         expandStars: Boolean = false,
     ): String {
-        if (expandStars && inputs != null && dialectObj.name == "duckdb" && ast.hasSideEffectingCte()) {
-            throw UnsupportedError("Cannot expand stars or qualify across side-effecting CTEs")
+        if (expandStars && inputs != null && dialectObj.name == "duckdb" && (ast.hasSideEffectingCte() || ast.hasKeyedCte())) {
+            throw UnsupportedError("Cannot expand stars or qualify across side-effecting or USING KEY CTEs")
         }
         var tree = desugarPipes(ast, dialectObj, copy = true)
         val hasRename = tree.findAll<Star>().any { !(it.args["rename"] as? List<*>).isNullOrEmpty() }
@@ -647,7 +650,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     /** Read the declarative CTE output contract without sending write SQL through SELECT optimizers. */
-    private fun sideEffectingCteShape(tree: Expression, inputs: ShapeCatalog): Shape {
+    private fun declarativeCteShape(tree: Expression, inputs: ShapeCatalog): Shape {
         fun fact(shape: Shape, origin: ColumnOrigin) = RelationFact(shape.columns.map { column ->
             ColumnFact(column.name, column.type, nullability = when (column.nullable) {
                 true -> Nullability.NULLABLE
@@ -677,7 +680,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         val scope = RelationScope.analyze(dialectObj.generate(tree.copy()), dialectObj.name, facts)
         val output = scope.output
         if (!scope.parsed || output == null || output.knowledge != Knowledge.FULL) {
-            throw ShapeError("Complete RETURNING/output facts are required for a side-effecting CTE shape")
+            throw ShapeError("Complete declarative output facts are required for this CTE shape")
         }
         return Shape(output.columns.map { column ->
             ColumnShape(column.name, column.sqlType?.let { renderType(dataTypeFromStr(it, dialectObj, udt = true)) } ?: "UNKNOWN",

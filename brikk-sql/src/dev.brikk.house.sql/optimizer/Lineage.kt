@@ -2,6 +2,7 @@ package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.hasSideEffectingCte
+import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Merge
 import dev.brikk.house.sql.ast.DerivedTable
@@ -197,6 +198,9 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if (expression.hasKeyedCte()) {
+        throw SqlglotError("Cannot infer recursive USING KEY aggregate-state lineage")
+    }
 
     if (scope == null && (expression is dev.brikk.house.sql.ast.DuckdbPrepare || expression is dev.brikk.house.sql.ast.DuckdbExecute)) {
         throw SqlglotError("Prepared/session statements do not expose a query result for lineage")

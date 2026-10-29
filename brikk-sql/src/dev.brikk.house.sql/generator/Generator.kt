@@ -392,6 +392,9 @@ open class Generator(
             spanStack.clear()
             spanStack.addLast(mutableListOf())
         }
+        if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
+            unexecutable("$targetName has no verified recursive USING KEY translation")
+        }
         if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
             if (duckdbSessionDefaults == true || duckdbSessionDefaults == null && expr.walk().any { parameter ->
                     (parameter is Parameter || parameter is Placeholder && parameter.thisArg != null) && parameter.name.any { it !in '0'..'9' }

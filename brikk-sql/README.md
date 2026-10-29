@@ -351,6 +351,27 @@ the library adds no retry or driver workaround. JDBC duplicate copies current se
 at creation, but later changes remain local. Native tests also prove PREPARE/editor analysis do
 not run writes and that each deliberate EXECUTE runs once with its current defaults.
 
+DuckDB recursive `USING KEY` accepts aggregate payload expressions and explicit destination
+aliases. Plain keys keep their existing Identifier serde shape. The documented `TABLE cte`
+query shorthand renders as `SELECT * FROM cte`. Analysis uses separate contracts for raw
+candidate rows, finalized `recurring.cte` state and the final result. `UNION ALL` feeds raw
+candidates to the next iteration; `UNION` feeds only new/changed finalized rows, with aggregate
+result types. The aggregate arguments themselves read the raw anchor-column contract.
+
+Scopes/completion expose the CTE's declared aliases in each stage. Known aggregate families
+provide final AVG, promoted SUM, COUNT, MIN/MAX, LIST and string-result types; unmodeled
+overloads stay unknown instead of borrowing seed types. The final row is computed, not direct
+seed-value provenance. `recurring.cte` is recognized only in its recursive member and is not
+reported as a physical input. Shape inference reads these contracts without evaluating a
+fixed point. Generic SELECT qualification/type rewrites, lineage and unproved cross-target
+execution refuse keyed aggregate-state transformations; ordinary recursive CTE paths remain.
+
+Native tests cover aggregate output types and aliases, frozen recurring snapshots, UNION versus
+ALL work, a convergent cyclic shortest-path graph and final-state draining without another
+recursive build. Error controls retain native restrictions on aggregate modifiers and key/
+payload targets. The probes are bounded or use native keyed convergence and have query deadlines;
+the library does not prove termination, emulate recursion, or add an app-side materialization rule.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

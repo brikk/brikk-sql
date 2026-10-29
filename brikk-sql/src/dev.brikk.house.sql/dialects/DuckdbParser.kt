@@ -300,6 +300,13 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        if (match(TokenType.TABLE)) {
+            val table = parseTableParts() ?: raiseError("Expected relation after TABLE")
+            return parseQueryModifiers(expression(dev.brikk.house.sql.ast.Select(args(
+                "expressions" to listOf(dev.brikk.house.sql.ast.Star()),
+                "from_" to dev.brikk.house.sql.ast.From(args("this" to table)),
+            ))))
+        }
         if (matchTextSeq("PREPARE")) {
             val name = parseIdVar() ?: raiseError("Expected prepared statement name")
             if (!matchTextSeq("AS")) raiseError("Expected AS after prepared statement name")
@@ -507,6 +514,14 @@ open class DuckdbParser(
         // anonymous parameters make it semantic; metadata survives copy/serde.
         if (node.findAll<Placeholder>().any { it.thisArg == null }) node.meta["duckdb_pagination_position"] = start
     }
+
+    override fun parseCteKeyExpressions(): List<Expression> = parseWrappedCsv({
+        val key = parseExpression()
+        // Preserve the published/serde shape of plain keys; aggregate arguments are Columns.
+        if (key is dev.brikk.house.sql.ast.Column && key.parts.size == 1 && key.thisArg is dev.brikk.house.sql.ast.Identifier) {
+            (key.thisArg as dev.brikk.house.sql.ast.Identifier).copy()
+        } else key
+    }).also { if (it.isEmpty()) raiseError("USING KEY requires at least one expression") }
 
     override fun parseCte(): Expression? {
         val cte = super.parseCte() as? CTE ?: return null
