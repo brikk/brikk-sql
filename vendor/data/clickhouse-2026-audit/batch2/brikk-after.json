@@ -1,0 +1,384 @@
+[
+    {
+        "id": "CH26-Q01",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=3, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=5, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 AFTER number >= 5"
+    },
+    {
+        "id": "CH26-Q02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(until=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT UNTIL number >= 3"
+    },
+    {
+        "id": "CH26-Q03",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), until=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=6, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT AFTER number >= 2 UNTIL number >= 6"
+    },
+    {
+        "id": "CH26-Q04",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=2, is_string=false), after=In(this=Column(this=Identifier(this=number, quoted=false)), expressions=[Literal(this=2, is_string=false), Literal(this=6, is_string=false)]), all=true), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 AFTER number IN (2, 6) ALL"
+    },
+    {
+        "id": "CH26-Q05",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear()])",
+        "generated": "SELECT year()"
+    },
+    {
+        "id": "CH26-Q06",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, side=LEFT)])",
+        "generated": "SELECT * FROM a NATURAL LEFT JOIN b"
+    },
+    {
+        "id": "CH26-Q07",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseAtLocal(this=Column(this=Identifier(this=dt, quoted=false)))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT dt AT LOCAL FROM t"
+    },
+    {
+        "id": "CH26-Q08",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseCompoundInterval(this=Literal(this=1:30, is_string=true), unit=Var(this=HOUR), expression=Var(this=MINUTE))])",
+        "generated": "SELECT INTERVAL '1:30' HOUR TO MINUTE"
+    },
+    {
+        "id": "CH26-Q09",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=clusterAllReplicas, expressions=[Literal(this=default, is_string=true), Column(this=Identifier(this=query_log, quoted=false), table=Identifier(this=system, quoted=false)), ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=skip_unavailable_shards, quoted=false), expression=Literal(this=1, is_string=false))])]))))",
+        "generated": "SELECT * FROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)"
+    },
+    {
+        "id": "CH26-T01",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=v, quoted=false), kind=ClickhouseNativeType(this=USERDEFINED, kind=QBit, expressions=[DataType(this=FLOAT, nested=false, nullable=false), Literal(this=128, is_string=false), Literal(this=32, is_string=false)], nested=true, nullable=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Struct(), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (v QBit(Float32, 128, 32)) ENGINE=MergeTree ORDER BY tuple()"
+    },
+    {
+        "id": "CH26-T02",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=g, quoted=false), kind=ClickhouseNativeType(this=USERDEFINED, kind=MultiPoint, nested=false, nullable=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Struct(), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (g MultiPoint) ENGINE=MergeTree ORDER BY tuple()"
+    },
+    {
+        "id": "CH26-B2-Q10",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=3, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]), offset=Offset(expression=Literal(this=1, is_string=false)))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 OFFSET 1 AFTER number >= 3"
+    },
+    {
+        "id": "CH26-B2-Q11",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Neg(this=Literal(this=2, is_string=false)), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT -2 AFTER number >= 3"
+    },
+    {
+        "id": "CH26-B2-Q12",
+        "root": "Select",
+        "ast": "Select(expressions=[Alias(this=Anonymous(this=intDiv, expressions=[Column(this=Identifier(this=number, quoted=false)), Literal(this=2, is_string=false)]), alias=Identifier(this=k, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=1, is_string=false), after=GTE(this=Column(this=Identifier(this=k, quoted=false)), expression=Literal(this=1, is_string=false)), all=false, limit_options=LimitOptions(percent=false, rows=false, with_ties=true)), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=8, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=k, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT intDiv(number, 2) AS k FROM numbers(8) ORDER BY k LIMIT 1 WITH TIES AFTER k >= 1"
+    },
+    {
+        "id": "CH26-B2-Q13",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitBy(this=Limit(expression=Literal(this=2, is_string=false), expressions=[Mod(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))]), expression=ClickhouseLimitRange(expression=Literal(this=2, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)), all=false)), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 BY number % 2 LIMIT 2 AFTER number >= 1"
+    },
+    {
+        "id": "CH26-B2-Q14",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=Limit(expression=Column(this=Identifier(this=after, quoted=false)), expressions=[Column(this=Identifier(this=number, quoted=false))]), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=4, is_string=false)]))), with_=With(expressions=[CTE(this=Literal(this=2, is_string=false), alias=TableAlias(this=Identifier(this=after, quoted=false)), scalar=true)]))",
+        "generated": "WITH 2 AS after SELECT number FROM numbers(4) LIMIT after BY number"
+    },
+    {
+        "id": "CH26-B2-Q15",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=Limit(expression=Column(this=Identifier(this=until, quoted=false))), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=4, is_string=false)]))), offset=Offset(expression=Literal(this=1, is_string=false)), with_=With(expressions=[CTE(this=Literal(this=2, is_string=false), alias=TableAlias(this=Identifier(this=until, quoted=false)), scalar=true)]))",
+        "generated": "WITH 2 AS until SELECT number FROM numbers(4) LIMIT until OFFSET 1"
+    },
+    {
+        "id": "CH26-B2-J01",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false), alias=TableAlias(this=Identifier(this=l, quoted=false)))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false), alias=TableAlias(this=Identifier(this=r, quoted=false))), method=NATURAL, side=FULL, kind=OUTER)])",
+        "generated": "SELECT * FROM a AS l NATURAL FULL OUTER JOIN b AS r"
+    },
+    {
+        "id": "CH26-B2-J02",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, side=LEFT, global_=GLOBAL)])",
+        "generated": "SELECT * FROM a GLOBAL NATURAL LEFT JOIN b"
+    },
+    {
+        "id": "CH26-B2-J03",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false), table=Identifier(this=l, quoted=false))], from_=From(this=Table(this=Identifier(this=a, quoted=false), alias=TableAlias(this=Identifier(this=l, quoted=false)))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false), alias=TableAlias(this=Identifier(this=r, quoted=false))), method=NATURAL, side=RIGHT)])",
+        "generated": "SELECT l.id FROM a AS l NATURAL RIGHT JOIN b AS r"
+    },
+    {
+        "id": "CH26-B2-I01",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseCompoundInterval(this=Literal(this=1-2, is_string=true), unit=Var(this=YEAR), expression=Var(this=MONTH))])",
+        "generated": "SELECT INTERVAL '1-2' YEAR TO MONTH"
+    },
+    {
+        "id": "CH26-B2-I02",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseCompoundInterval(this=Literal(this=1 02:03:04, is_string=true), unit=Var(this=DAY), expression=Var(this=SECOND))])",
+        "generated": "SELECT INTERVAL '1 02:03:04' DAY TO SECOND"
+    },
+    {
+        "id": "CH26-B2-I03",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseCompoundInterval(this=Literal(this=30:02, is_string=true), unit=Var(this=MINUTE), expression=Var(this=SECOND))])",
+        "generated": "SELECT INTERVAL '30:02' MINUTE TO SECOND"
+    },
+    {
+        "id": "CH26-B2-I04",
+        "root": "Select",
+        "ast": "Select(expressions=[Alias(this=Interval(this=Literal(this=1, is_string=true), unit=Var(this=HOUR)), alias=Identifier(this=TO, quoted=false))])",
+        "generated": "SELECT INTERVAL '1' HOUR AS TO"
+    },
+    {
+        "id": "CH26-B2-R01",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=remote, expressions=[Literal(this=target, is_string=true), Column(this=Identifier(this=t, quoted=false), table=Identifier(this=db, quoted=false)), ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=max_threads, quoted=false), expression=Literal(this=1, is_string=false))])]))))",
+        "generated": "SELECT * FROM remote('target', db.t, SETTINGS max_threads = 1)"
+    },
+    {
+        "id": "CH26-B2-R02",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=remoteSecure, expressions=[Literal(this=target, is_string=true), Column(this=Identifier(this=t, quoted=false), table=Identifier(this=db, quoted=false)), ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=max_threads, quoted=false), expression=Literal(this=1, is_string=false))])]))))",
+        "generated": "SELECT * FROM remoteSecure('target', db.t, SETTINGS max_threads = 1)"
+    },
+    {
+        "id": "CH26-B2-R03",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=cluster, expressions=[Literal(this=target, is_string=true), Column(this=Identifier(this=t, quoted=false), table=Identifier(this=db, quoted=false)), ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=max_threads, quoted=false), expression=Literal(this=1, is_string=false))])]))), settings=[EQ(this=Column(this=Identifier(this=max_threads, quoted=false)), expression=Literal(this=2, is_string=false))])",
+        "generated": "SELECT * FROM cluster('target', db.t, SETTINGS max_threads = 1) SETTINGS max_threads = 2"
+    },
+    {
+        "id": "CH26-B2-R04",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=remote, expressions=[Literal(this=target, is_string=true), Column(this=Identifier(this=t, quoted=false), table=Identifier(this=db, quoted=false)), Column(this=Identifier(this=SETTINGS, quoted=false))]))))",
+        "generated": "SELECT * FROM remote('target', db.t, SETTINGS)"
+    },
+    {
+        "id": "CH26-B2-R05",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=remote, expressions=[Literal(this=target, is_string=true), Column(this=Identifier(this=t, quoted=false), table=Identifier(this=db, quoted=false)), ClickhouseFunctionSettings(expressions=[Identifier(this=skip_unavailable_shards, quoted=false)])]))))",
+        "generated": "SELECT * FROM remote('target', db.t, SETTINGS skip_unavailable_shards)"
+    },
+    {
+        "id": "CH26-B2-T03",
+        "root": "Select",
+        "ast": "Select(expressions=[Cast(this=Anonymous(this=range, expressions=[Literal(this=16, is_string=false)]), to=ClickhouseNativeType(this=USERDEFINED, kind=QBit, expressions=[DataType(this=TINYINT, nested=false, nullable=false), Literal(this=16, is_string=false), Literal(this=8, is_string=false)], nested=true, nullable=false))])",
+        "generated": "SELECT CAST(range(16) AS QBit(Int8, 16, 8))"
+    },
+    {
+        "id": "CH26-B2-T04",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=v, quoted=false), kind=ClickhouseNativeType(this=USERDEFINED, kind=QBit, expressions=[DataType(this=USERDEFINED, kind=BFloat16, nullable=false), Literal(this=128, is_string=false), Literal(this=32, is_string=false)], nested=true, nullable=false)), ColumnDef(this=Identifier(this=g, quoted=false), kind=DataType(this=ARRAY, expressions=[ClickhouseNativeType(this=USERDEFINED, kind=MultiPoint, nested=false, nullable=false)], nested=true, nullable=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=Memory, quoted=false))]), concurrently=false)",
+        "generated": "CREATE TABLE t (v QBit(BFloat16, 128, 32), g Array(MultiPoint)) ENGINE=Memory"
+    },
+    {
+        "id": "CH26-B2-Y02",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear(expressions=[Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:30:00, is_string=true), Literal(this=UTC, is_string=true)]), Literal(this=America/New_York, is_string=true)])])",
+        "generated": "SELECT year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America/New_York')"
+    },
+    {
+        "id": "CH26-B2-A01",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=giniIf, expressions=[Column(this=Identifier(this=number, quoted=false)), GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=0, is_string=false))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT giniIf(number, number >= 0) FROM numbers(2)"
+    },
+    {
+        "id": "CH26-B2-A02",
+        "root": "Select",
+        "ast": "Select(expressions=[ParameterizedAgg(this=groupFormat, expressions=[Literal(this=TSV, is_string=true)], params=[Column(this=Identifier(this=number, quoted=false))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT groupFormat('TSV')(number) FROM numbers(2)"
+    },
+    {
+        "id": "CH26-B2-A03",
+        "root": "Select",
+        "ast": "Select(expressions=[RegrSlope(this=Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), expression=Column(this=Identifier(this=number, quoted=false)))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT regr_slope(number * 2, number) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-B2-N01",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 22.\n  SELECT 1 LIMIT 2 \u001b[4mAFTER\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-N02",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 22.\n  SELECT 1 LIMIT 2 \u001b[4mUNTIL\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-N03",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 16.\n  SELECT 1 LIMIT \u001b[4m2\u001b[0m AFTER x OFFSET 1"
+    },
+    {
+        "id": "CH26-B2-N04",
+        "error": "NATURAL JOIN cannot use strictness, CROSS or PASTE modifiers. Line 1, Col: 37.\n  SELECT * FROM a NATURAL ALL LEFT \u001b[4mJOIN\u001b[0m b"
+    },
+    {
+        "id": "CH26-B2-N05",
+        "error": "NATURAL JOIN cannot use strictness, CROSS or PASTE modifiers. Line 1, Col: 34.\n  SELECT * FROM a NATURAL CROSS \u001b[4mJOIN\u001b[0m b"
+    },
+    {
+        "id": "CH26-B2-N06",
+        "error": "NATURAL JOIN cannot have ON or USING. Line 1, Col: 43.\n  SELECT * FROM a NATURAL JOIN b ON a.x = b.\u001b[4mx\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-N07",
+        "error": "Invalid compound interval qualifier. Line 1, Col: 34.\n  SELECT INTERVAL '1' SECOND TO \u001b[4mHOUR\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-N08",
+        "error": "Invalid compound interval qualifier. Line 1, Col: 32.\n  SELECT INTERVAL 1 HOUR TO \u001b[4mMINUTE\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-N09",
+        "error": "Expected setting value. Line 1, Col: 56.\n  SELECT * FROM remote('x', db.t, SETTINGS max_threads = \u001b[4m)\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-N10",
+        "error": "Expected ) after table function. Line 1, Col: 56.\n  SELECT * FROM remote('x', db.t, SETTINGS max_threads = \u001b[4m1\u001b[0m"
+    },
+    {
+        "id": "CH26-B2-E01",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=3, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=5, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 AFTER number >= 5"
+    },
+    {
+        "id": "CH26-B2-E02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(until=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT UNTIL number >= 3"
+    },
+    {
+        "id": "CH26-B2-E03",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), until=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=6, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT AFTER number >= 2 UNTIL number >= 6"
+    },
+    {
+        "id": "CH26-B2-E04",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=2, is_string=false), after=In(this=Column(this=Identifier(this=number, quoted=false)), expressions=[Literal(this=2, is_string=false), Literal(this=6, is_string=false)]), all=true), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 AFTER number IN (2, 6) ALL"
+    },
+    {
+        "id": "CH26-B2-E05",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=3, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]), offset=Offset(expression=Literal(this=1, is_string=false)))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 OFFSET 1 AFTER number >= 3"
+    },
+    {
+        "id": "CH26-B2-E06",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Neg(this=Literal(this=2, is_string=false)), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT -2 AFTER number >= 3"
+    },
+    {
+        "id": "CH26-B2-E07",
+        "root": "Select",
+        "ast": "Select(expressions=[Alias(this=Anonymous(this=intDiv, expressions=[Column(this=Identifier(this=number, quoted=false)), Literal(this=2, is_string=false)]), alias=Identifier(this=k, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=1, is_string=false), after=GTE(this=Column(this=Identifier(this=k, quoted=false)), expression=Literal(this=1, is_string=false)), all=false, limit_options=LimitOptions(percent=false, rows=false, with_ties=true)), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=8, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=k, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT intDiv(number, 2) AS k FROM numbers(8) ORDER BY k LIMIT 1 WITH TIES AFTER k >= 1"
+    },
+    {
+        "id": "CH26-B2-E08",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitBy(this=Limit(expression=Literal(this=2, is_string=false), expressions=[Mod(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))]), expression=ClickhouseLimitRange(expression=Literal(this=2, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)), all=false)), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 BY number % 2 LIMIT 2 AFTER number >= 1"
+    },
+    {
+        "id": "CH26-B2-E09",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, kind=INNER)], order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT * FROM a NATURAL INNER JOIN b ORDER BY id"
+    },
+    {
+        "id": "CH26-B2-E10",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, side=LEFT)], order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT * FROM a NATURAL LEFT JOIN b ORDER BY id"
+    },
+    {
+        "id": "CH26-B2-E11",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, side=RIGHT)], order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT * FROM a NATURAL RIGHT JOIN b ORDER BY id"
+    },
+    {
+        "id": "CH26-B2-E12",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, side=FULL)], order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT * FROM a NATURAL FULL JOIN b ORDER BY id"
+    },
+    {
+        "id": "CH26-B2-E13",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseAtLocal(this=Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:30:00, is_string=true), Literal(this=UTC, is_string=true)]))], settings=[EQ(this=Column(this=Identifier(this=session_timezone, quoted=false)), expression=Literal(this=America/New_York, is_string=true))])",
+        "generated": "SELECT toDateTime('2026-01-01 00:30:00', 'UTC') AT LOCAL SETTINGS session_timezone = 'America/New_York'"
+    },
+    {
+        "id": "CH26-B2-E14",
+        "root": "Select",
+        "ast": "Select(expressions=[Add(this=Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:00:00, is_string=true), Literal(this=UTC, is_string=true)]), expression=ClickhouseCompoundInterval(this=Literal(this=1:30, is_string=true), unit=Var(this=HOUR), expression=Var(this=MINUTE)))])",
+        "generated": "SELECT toDateTime('2026-01-01 00:00:00', 'UTC') + INTERVAL '1:30' HOUR TO MINUTE"
+    },
+    {
+        "id": "CH26-B2-E15",
+        "root": "Select",
+        "ast": "Select(expressions=[Add(this=Anonymous(this=toDate, expressions=[Literal(this=2026-01-01, is_string=true)]), expression=ClickhouseCompoundInterval(this=Literal(this=1-2, is_string=true), unit=Var(this=YEAR), expression=Var(this=MONTH)))])",
+        "generated": "SELECT toDate('2026-01-01') + INTERVAL '1-2' YEAR TO MONTH"
+    },
+    {
+        "id": "CH26-B2-E16",
+        "root": "Select",
+        "ast": "Select(expressions=[Cast(this=Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false), Literal(this=4, is_string=false)], value_constructor=false), to=ClickhouseNativeType(this=USERDEFINED, kind=QBit, expressions=[DataType(this=FLOAT, nested=false, nullable=false), Literal(this=4, is_string=false)], nested=true, nullable=false)), Anonymous(this=arrayElement, expressions=[Cast(this=Anonymous(this=range, expressions=[Literal(this=16, is_string=false)]), to=ClickhouseNativeType(this=USERDEFINED, kind=QBit, expressions=[DataType(this=TINYINT, nested=false, nullable=false), Literal(this=16, is_string=false), Literal(this=8, is_string=false)], nested=true, nullable=false)), Literal(this=9, is_string=false)])])",
+        "generated": "SELECT CAST([1, 2, 3, 4] AS QBit(Float32, 4)), arrayElement(CAST(range(16) AS QBit(Int8, 16, 8)), 9)"
+    },
+    {
+        "id": "CH26-B2-E17",
+        "root": "Select",
+        "ast": "Select(expressions=[Cast(this=Array(expressions=[Tuple(expressions=[Literal(this=1., is_string=false), Literal(this=2., is_string=false)])], value_constructor=false), to=ClickhouseNativeType(this=USERDEFINED, kind=MultiPoint, nested=false, nullable=false)), Typeof(this=Cast(this=Cast(this=Array(expressions=[Tuple(expressions=[Literal(this=1., is_string=false), Literal(this=2., is_string=false)])], value_constructor=false), to=ClickhouseNativeType(this=USERDEFINED, kind=MultiPoint, nested=false, nullable=false)), to=DataType(this=GEOMETRY, nested=false, nullable=false)))])",
+        "generated": "SELECT CAST([(1., 2.)] AS MultiPoint), toTypeName(CAST(CAST([(1., 2.)] AS MultiPoint) AS GEOMETRY))"
+    },
+    {
+        "id": "CH26-B2-E18",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear()])",
+        "generated": "SELECT year()"
+    },
+    {
+        "id": "CH26-B2-E19",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear(expressions=[Anonymous(this=toDateTime, expressions=[Literal(this=2026-01-01 00:30:00, is_string=true), Literal(this=UTC, is_string=true)]), Literal(this=America/New_York, is_string=true)])])",
+        "generated": "SELECT year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America/New_York')"
+    },
+    {
+        "id": "CH26-B2-E20",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=giniIf, expressions=[Column(this=Identifier(this=number, quoted=false)), GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=0, is_string=false))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT giniIf(number, number >= 0) FROM numbers(2)"
+    },
+    {
+        "id": "CH26-B2-E21",
+        "root": "Select",
+        "ast": "Select(expressions=[ParameterizedAgg(this=groupFormat, expressions=[Literal(this=TSV, is_string=true)], params=[Column(this=Identifier(this=number, quoted=false))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT groupFormat('TSV')(number) FROM numbers(2)"
+    },
+    {
+        "id": "CH26-B2-E22",
+        "root": "Select",
+        "ast": "Select(expressions=[RegrSlope(this=Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), expression=Column(this=Identifier(this=number, quoted=false)))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT regr_slope(number * 2, number) FROM numbers(3)"
+    }
+]

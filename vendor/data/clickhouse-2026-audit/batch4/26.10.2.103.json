@@ -1,0 +1,651 @@
+{
+  "captured_at": "2026-10-29T00:38:01.099601+00:00",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-B4-C01\",\"formatted\":\"SELECT CAST(-7, 'Int64') \\/ CAST(2, 'Int64')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CH26-B4-C02\",\"formatted\":\"SELECT CAST(-7, 'Int64') \\/ CAST(2, 'Int64')\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CH26-B4-C03\",\"formatted\":\"SELECT\\n    accurateCastOrNull(256, 'UInt8'),\\n    CAST(256, 'Nullable(UInt8)')\"}\n{\"id\":\"CH26-B4-C04\",\"formatted\":\"SELECT accurateCastOrNull('[1,2]', 'Array(Int32)')\"}\n{\"id\":\"CH26-B4-C05\",\"formatted\":\"SELECT\\n    a.number,\\n    b.n\\nFROM numbers(2) AS a\\nLEFT JOIN LATERAL\\n(\\n    SELECT a.number + 10 AS n\\n) AS b ON true\\nSETTINGS allow_experimental_lateral_join = 1\"}\n{\"id\":\"CH26-B4-C06\",\"formatted\":\"SELECT\\n    sumMap(number, toString(number % 2)),\\n    avgMap(number, toString(number % 2))\\nFROM numbers(3)\"}\n{\"id\":\"CH26-B4-C07\",\"formatted\":\"SELECT tupleElement(CAST(NULL, 'Nullable(Tuple(x Int32))'), 'x')\\nSETTINGS enable_nullable_tuple_type = 1\"}\n{\"id\":\"CH26-B4-C08\",\"formatted\":\"SELECT\\n    arrayFlattenedLength([[1, 2], [3]]),\\n    LENGTH([[1, 2], [3]])\"}\n{\"id\":\"CH26-B4-C09\",\"formatted\":\"SELECT\\n    regr_avgx(y, x),\\n    regr_avgy(y, x),\\n    regr_count(y, x),\\n    regr_intercept(y, x),\\n    regr_r2(y, x),\\n    regr_slope(y, x),\\n    regr_sxx(y, x),\\n    regr_sxy(y, x),\\n    regr_syy(y, x)\\nFROM\\n(\\n    SELECT\\n        number AS x,\\n        (number * 2) + 1 AS y\\n    FROM numbers(3)\\n)\"}\n{\"id\":\"CH26-B4-C10\",\"formatted\":\"SELECT *\\nFROM\\n(\\n    SELECT\\n        number,\\n        r\\n    FROM\\n    (\\n        SELECT *\\n        FROM\\n        (\\n            SELECT *\\n            FROM numbers(2)\\n        ) AS a\\n        NATURAL LEFT JOIN\\n        (\\n            SELECT\\n                0 AS number,\\n                'R' AS r\\n        ) AS b\\n    )\\n)\\nORDER BY number ASC\"}\n{\"id\":\"CH26-B4-C11\",\"formatted\":\"SELECT\\n    year(),\\n    year(toDate('2026-01-01'))\"}\n{\"id\":\"CH26-B4-C12\",\"formatted\":\"SELECT toDateTime('2026-01-01 00:00:00') + toTime('01:00:00')\"}\n{\"id\":\"CH26-B4-C13\",\"formatted\":\"SELECT\\n    v,\\n    toTypeName(v)\\nFROM\\n(\\n    SELECT 7 \\/ 2 AS v\\n    SETTINGS sql_compatible_division_for_integers = 0\\n)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CH26-B4-R01\",\"formatted\":\"WITH\\n    c AS MATERIALIZED\\n    (\\n        SELECT number\\n        FROM numbers(3)\\n    )\\nSELECT sum(number)\\nFROM c\"}\n{\"id\":\"CH26-B4-R02\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` Int32,\\n    PROJECTION p\\n    (\\n        SELECT x\\n        WHERE x > 0\\n        ORDER BY x\\n    )\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-B4-R03\",\"formatted\":\"SELECT 'a_b' LIKE 'a!_%' ESCAPE '!'\"}\n{\"id\":\"CH26-B4-R04\",\"formatted\":\"SELECT (CAST('{\\\"a\\\":{\\\"b\\\":42}}', 'JSON')['a'])['b']\"}\n{\"id\":\"CH26-B4-R05\",\"formatted\":\"SELECT\\n    number,\\n    sum(number) OVER (ORDER BY number ASC GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING)\\nFROM numbers(3)\\nORDER BY number ASC\"}\n{\"id\":\"CH26-B4-R06\",\"formatted\":\"SELECT *\\nFROM numbers(3)\"}\n{\"id\":\"CH26-B4-R07\",\"formatted\":\"SELECT *\\nFROM\\n(\\n    SELECT number\\n    FROM\\n    (\\n        SELECT *\\n        FROM\\n        (\\n            SELECT *\\n            FROM numbers(4)\\n        )\\n        WHERE number > 1\\n    )\\n)\\nORDER BY number ASC\"}\n{\"id\":\"CH26-B4-R08\",\"formatted\":\"SELECT [1, 2, 3]\"}\n{\"id\":\"CH26-B4-R09\",\"formatted\":\"SELECT sumMap(map('a', number, 'b', number * 2))\\nFROM numbers(3)\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CH26-B4-C01",
+      "formatted": "SELECT CAST(-7, 'Int64') / CAST(2, 'Int64')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CH26-B4-C02",
+      "formatted": "SELECT CAST(-7, 'Int64') / CAST(2, 'Int64')\nSETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+      "id": "CH26-B4-C03",
+      "formatted": "SELECT\n    accurateCastOrNull(256, 'UInt8'),\n    CAST(256, 'Nullable(UInt8)')"
+    },
+    {
+      "id": "CH26-B4-C04",
+      "formatted": "SELECT accurateCastOrNull('[1,2]', 'Array(Int32)')"
+    },
+    {
+      "id": "CH26-B4-C05",
+      "formatted": "SELECT\n    a.number,\n    b.n\nFROM numbers(2) AS a\nLEFT JOIN LATERAL\n(\n    SELECT a.number + 10 AS n\n) AS b ON true\nSETTINGS allow_experimental_lateral_join = 1"
+    },
+    {
+      "id": "CH26-B4-C06",
+      "formatted": "SELECT\n    sumMap(number, toString(number % 2)),\n    avgMap(number, toString(number % 2))\nFROM numbers(3)"
+    },
+    {
+      "id": "CH26-B4-C07",
+      "formatted": "SELECT tupleElement(CAST(NULL, 'Nullable(Tuple(x Int32))'), 'x')\nSETTINGS enable_nullable_tuple_type = 1"
+    },
+    {
+      "id": "CH26-B4-C08",
+      "formatted": "SELECT\n    arrayFlattenedLength([[1, 2], [3]]),\n    LENGTH([[1, 2], [3]])"
+    },
+    {
+      "id": "CH26-B4-C09",
+      "formatted": "SELECT\n    regr_avgx(y, x),\n    regr_avgy(y, x),\n    regr_count(y, x),\n    regr_intercept(y, x),\n    regr_r2(y, x),\n    regr_slope(y, x),\n    regr_sxx(y, x),\n    regr_sxy(y, x),\n    regr_syy(y, x)\nFROM\n(\n    SELECT\n        number AS x,\n        (number * 2) + 1 AS y\n    FROM numbers(3)\n)"
+    },
+    {
+      "id": "CH26-B4-C10",
+      "formatted": "SELECT *\nFROM\n(\n    SELECT\n        number,\n        r\n    FROM\n    (\n        SELECT *\n        FROM\n        (\n            SELECT *\n            FROM numbers(2)\n        ) AS a\n        NATURAL LEFT JOIN\n        (\n            SELECT\n                0 AS number,\n                'R' AS r\n        ) AS b\n    )\n)\nORDER BY number ASC"
+    },
+    {
+      "id": "CH26-B4-C11",
+      "formatted": "SELECT\n    year(),\n    year(toDate('2026-01-01'))"
+    },
+    {
+      "id": "CH26-B4-C12",
+      "formatted": "SELECT toDateTime('2026-01-01 00:00:00') + toTime('01:00:00')"
+    },
+    {
+      "id": "CH26-B4-C13",
+      "formatted": "SELECT\n    v,\n    toTypeName(v)\nFROM\n(\n    SELECT 7 / 2 AS v\n    SETTINGS sql_compatible_division_for_integers = 0\n)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CH26-B4-R01",
+      "formatted": "WITH\n    c AS MATERIALIZED\n    (\n        SELECT number\n        FROM numbers(3)\n    )\nSELECT sum(number)\nFROM c"
+    },
+    {
+      "id": "CH26-B4-R02",
+      "formatted": "CREATE TABLE t\n(\n    `x` Int32,\n    PROJECTION p\n    (\n        SELECT x\n        WHERE x > 0\n        ORDER BY x\n    )\n)\nENGINE = MergeTree\nORDER BY x"
+    },
+    {
+      "id": "CH26-B4-R03",
+      "formatted": "SELECT 'a_b' LIKE 'a!_%' ESCAPE '!'"
+    },
+    {
+      "id": "CH26-B4-R04",
+      "formatted": "SELECT (CAST('{\"a\":{\"b\":42}}', 'JSON')['a'])['b']"
+    },
+    {
+      "id": "CH26-B4-R05",
+      "formatted": "SELECT\n    number,\n    sum(number) OVER (ORDER BY number ASC GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING)\nFROM numbers(3)\nORDER BY number ASC"
+    },
+    {
+      "id": "CH26-B4-R06",
+      "formatted": "SELECT *\nFROM numbers(3)"
+    },
+    {
+      "id": "CH26-B4-R07",
+      "formatted": "SELECT *\nFROM\n(\n    SELECT number\n    FROM\n    (\n        SELECT *\n        FROM\n        (\n            SELECT *\n            FROM numbers(4)\n        )\n        WHERE number > 1\n    )\n)\nORDER BY number ASC"
+    },
+    {
+      "id": "CH26-B4-R08",
+      "formatted": "SELECT [1, 2, 3]"
+    },
+    {
+      "id": "CH26-B4-R09",
+      "formatted": "SELECT sumMap(map('a', number, 'b', number * 2))\nFROM numbers(3)"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-B4-C01\",\"formatted\":\"SELECT CAST(-7, 'Int64') \\/ CAST(2, 'Int64')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CH26-B4-C02\",\"formatted\":\"SELECT CAST(-7, 'Int64') \\/ CAST(2, 'Int64')\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CH26-B4-C03\",\"formatted\":\"SELECT\\n    accurateCastOrNull(256, 'UInt8'),\\n    CAST(256, 'Nullable(UInt8)')\"}\n{\"id\":\"CH26-B4-C04\",\"formatted\":\"SELECT accurateCastOrNull('[1,2]', 'Array(Int32)')\"}\n{\"id\":\"CH26-B4-C05\",\"formatted\":\"SELECT\\n    a.number,\\n    b.n\\nFROM numbers(2) AS a\\nLEFT JOIN LATERAL\\n(\\n    SELECT a.number + 10 AS n\\n) AS b ON true\\nSETTINGS allow_experimental_lateral_join = 1\"}\n{\"id\":\"CH26-B4-C06\",\"formatted\":\"SELECT\\n    sumMap(number, toString(number % 2)),\\n    avgMap(number, toString(number % 2))\\nFROM numbers(3)\"}\n{\"id\":\"CH26-B4-C07\",\"formatted\":\"SELECT tupleElement(CAST(NULL, 'Nullable(Tuple(x Int32))'), 'x')\\nSETTINGS enable_nullable_tuple_type = 1\"}\n{\"id\":\"CH26-B4-C08\",\"formatted\":\"SELECT\\n    arrayFlattenedLength([[1, 2], [3]]),\\n    LENGTH([[1, 2], [3]])\"}\n{\"id\":\"CH26-B4-C09\",\"formatted\":\"SELECT\\n    regr_avgx(y, x),\\n    regr_avgy(y, x),\\n    regr_count(y, x),\\n    regr_intercept(y, x),\\n    regr_r2(y, x),\\n    regr_slope(y, x),\\n    regr_sxx(y, x),\\n    regr_sxy(y, x),\\n    regr_syy(y, x)\\nFROM\\n(\\n    SELECT\\n        number AS x,\\n        (number * 2) + 1 AS y\\n    FROM numbers(3)\\n)\"}\n{\"id\":\"CH26-B4-C10\",\"formatted\":\"SELECT *\\nFROM\\n(\\n    SELECT\\n        number,\\n        r\\n    FROM\\n    (\\n        SELECT *\\n        FROM\\n        (\\n            SELECT *\\n            FROM numbers(2)\\n        ) AS a\\n        NATURAL LEFT JOIN\\n        (\\n            SELECT\\n                0 AS number,\\n                'R' AS r\\n        ) AS b\\n    )\\n)\\nORDER BY number ASC\"}\n{\"id\":\"CH26-B4-C11\",\"formatted\":\"SELECT\\n    year(),\\n    year(toDate('2026-01-01'))\"}\n{\"id\":\"CH26-B4-C12\",\"formatted\":\"SELECT toDateTime('2026-01-01 00:00:00') + toTime('01:00:00')\"}\n{\"id\":\"CH26-B4-C13\",\"formatted\":\"SELECT\\n    v,\\n    toTypeName(v)\\nFROM\\n(\\n    SELECT 7 \\/ 2 AS v\\n    SETTINGS sql_compatible_division_for_integers = 0\\n)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CH26-B4-R01\",\"formatted\":\"WITH\\n    c AS MATERIALIZED\\n    (\\n        SELECT number\\n        FROM numbers(3)\\n    )\\nSELECT sum(number)\\nFROM c\"}\n{\"id\":\"CH26-B4-R02\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` Int32,\\n    PROJECTION p\\n    (\\n        SELECT x\\n        WHERE x > 0\\n        ORDER BY x\\n    )\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-B4-R03\",\"formatted\":\"SELECT 'a_b' LIKE 'a!_%' ESCAPE '!'\"}\n{\"id\":\"CH26-B4-R04\",\"formatted\":\"SELECT (CAST('{\\\"a\\\":{\\\"b\\\":42}}', 'JSON')['a'])['b']\"}\n{\"id\":\"CH26-B4-R05\",\"formatted\":\"SELECT\\n    number,\\n    sum(number) OVER (ORDER BY number ASC GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING)\\nFROM numbers(3)\\nORDER BY number ASC\"}\n{\"id\":\"CH26-B4-R06\",\"formatted\":\"SELECT *\\nFROM numbers(3)\"}\n{\"id\":\"CH26-B4-R07\",\"formatted\":\"SELECT *\\nFROM\\n(\\n    SELECT number\\n    FROM\\n    (\\n        SELECT *\\n        FROM\\n        (\\n            SELECT *\\n            FROM numbers(4)\\n        )\\n        WHERE number > 1\\n    )\\n)\\nORDER BY number ASC\"}\n{\"id\":\"CH26-B4-R08\",\"formatted\":\"SELECT [1, 2, 3]\"}\n{\"id\":\"CH26-B4-R09\",\"formatted\":\"SELECT sumMap(map('a', number, 'b', number * 2))\\nFROM numbers(3)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CH26-B4-E01",
+      "returncode": 0,
+      "stdout": "0\t0\t1\t1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E02",
+      "returncode": 0,
+      "stdout": "{\"name\":\"YEAR\",\"alias_to\":\"toYear\",\"deterministic\":1}\n{\"name\":\"now\",\"alias_to\":\"\",\"deterministic\":0}\n{\"name\":\"toYear\",\"alias_to\":\"\",\"deterministic\":1}\n{\"name\":\"today\",\"alias_to\":\"\",\"deterministic\":0}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E03",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function toYear doesn't match: passed 0, should be 1 or 2: In scope SELECT year(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CH26-B4-E04",
+      "returncode": 0,
+      "stdout": "2026\t2025\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E05",
+      "returncode": 0,
+      "stdout": "-3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E06",
+      "returncode": 0,
+      "stdout": "-3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E07",
+      "returncode": 0,
+      "stdout": "-3\tInt64\t3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E08",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E09",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Int64'), CAST(0, 'Int64')) AS `divide(CAST(1, 'Int64'), CAST(0, 'Int64'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CH26-B4-E10",
+      "returncode": 0,
+      "stdout": "9223372036854776000\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E11",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST('-9223372036854775808', 'Int64'), CAST(-1, 'Int64')) AS `divide(CAST('-9223372036854775808', 'Int64'), CAST(-1, 'Int64'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CH26-B4-E12",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E13",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E14",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: Cannot create column with type 'Nullable(Tuple(x Int32))' because Nullable Tuple type is not allowed. Set setting enable_nullable_tuple_type = 1 in order to allow it: In scope SELECT tupleElement(CAST(NULL, 'Nullable(Tuple(x Int32))'), 'x') SETTINGS enable_nullable_tuple_type = 0. (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CH26-B4-E15",
+      "returncode": 0,
+      "stdout": "2026-01-01 01:00:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E16",
+      "returncode": 0,
+      "stdout": "2026-01-01 01:00:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E17",
+      "returncode": 0,
+      "stdout": "{'0':2,'1':1}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E18",
+      "returncode": 0,
+      "stdout": "{'0':1,'1':1}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E19",
+      "returncode": 0,
+      "stdout": "{'a':3,'b':6}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E20",
+      "returncode": 0,
+      "stdout": "(['a','b'],[1,2])\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E21",
+      "returncode": 0,
+      "stdout": "1\t3\t3\t1\t1\t2\t2\t4\t8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E22",
+      "returncode": 0,
+      "stdout": "3\t2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E23",
+      "returncode": 0,
+      "stdout": "4\t0\t\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E24",
+      "returncode": 0,
+      "stdout": "4\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E25",
+      "returncode": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E26",
+      "returncode": 0,
+      "stdout": "\\N\t0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E27",
+      "returncode": 0,
+      "stdout": "\\N\t42\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E28",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Type Array(Int32) is not supported for accurateCastOrNull because it cannot be inside Nullable: In scope SELECT accurateCastOrNull('[1,2]', 'Array(Int32)'). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CH26-B4-E29",
+      "returncode": 0,
+      "stdout": "0\t10\n1\t11\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E30",
+      "returncode": 88,
+      "stdout": "",
+      "stderr": "Code: 344. DB::Exception: LATERAL JOIN is experimental. Set 'allow_experimental_lateral_join = 1' to enable it. (SUPPORT_IS_DISABLED)\n"
+    },
+    {
+      "id": "CH26-B4-E31",
+      "returncode": 0,
+      "stdout": "0\tR\n1\t\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E32",
+      "returncode": 0,
+      "stdout": "2\n3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E33",
+      "returncode": 0,
+      "stdout": "3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E34",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E35",
+      "returncode": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E36",
+      "returncode": 0,
+      "stdout": "0\t1\n1\t3\n2\t2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E37",
+      "returncode": 0,
+      "stdout": "0\n1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E38",
+      "returncode": 0,
+      "stdout": "[1,2,3]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E39",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E40",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E41",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CH26-B4-E01",
+      "sql": "SELECT countIf(name = 'catboostEvaluate'), countIf(name = 'windowID'), countIf(name = 'tumble'), countIf(name = 'hop') FROM system.functions",
+      "returncode": 0,
+      "stdout": "0\t0\t1\t1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E02",
+      "sql": "SELECT name, alias_to, deterministic FROM system.functions WHERE name IN ('YEAR', 'toYear', 'now', 'today') ORDER BY name FORMAT JSONEachRow",
+      "returncode": 0,
+      "stdout": "{\"name\":\"YEAR\",\"alias_to\":\"toYear\",\"deterministic\":1}\n{\"name\":\"now\",\"alias_to\":\"\",\"deterministic\":0}\n{\"name\":\"toYear\",\"alias_to\":\"\",\"deterministic\":1}\n{\"name\":\"today\",\"alias_to\":\"\",\"deterministic\":0}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E03",
+      "sql": "SELECT year()",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function toYear doesn't match: passed 0, should be 1 or 2: In scope SELECT year(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CH26-B4-E04",
+      "sql": "SELECT year(toDate('2026-01-01')), year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America/New_York')",
+      "returncode": 0,
+      "stdout": "2026\t2025\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E05",
+      "sql": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64), toTypeName(CAST(-7 AS Int64) / CAST(2 AS Int64))",
+      "returncode": 0,
+      "stdout": "-3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E06",
+      "sql": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64), toTypeName(CAST(-7 AS Int64) / CAST(2 AS Int64)) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 0,
+      "stdout": "-3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E07",
+      "sql": "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64), toTypeName(CAST(-7 AS Int64) / CAST(2 AS Int64)), CAST(7 AS Int64) / CAST(2 AS Int64) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "-3\tInt64\t3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E08",
+      "sql": "SELECT CAST(1 AS Int64) / CAST(0 AS Int64) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E09",
+      "sql": "SELECT CAST(1 AS Int64) / CAST(0 AS Int64) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Int64'), CAST(0, 'Int64')) AS `divide(CAST(1, 'Int64'), CAST(0, 'Int64'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CH26-B4-E10",
+      "sql": "SELECT CAST('-9223372036854775808' AS Int64) / CAST(-1 AS Int64) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 0,
+      "stdout": "9223372036854776000\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E11",
+      "sql": "SELECT CAST('-9223372036854775808' AS Int64) / CAST(-1 AS Int64) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST('-9223372036854775808', 'Int64'), CAST(-1, 'Int64')) AS `divide(CAST('-9223372036854775808', 'Int64'), CAST(-1, 'Int64'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CH26-B4-E12",
+      "sql": "SELECT CAST(7 AS Float64) / 2, toTypeName(CAST(7 AS Float64) / 2) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E13",
+      "sql": "SELECT CAST(NULL AS Nullable(Tuple(x Int32))).x SETTINGS enable_nullable_tuple_type = 1",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E14",
+      "sql": "SELECT CAST(NULL AS Nullable(Tuple(x Int32))).x SETTINGS enable_nullable_tuple_type = 0",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: Cannot create column with type 'Nullable(Tuple(x Int32))' because Nullable Tuple type is not allowed. Set setting enable_nullable_tuple_type = 1 in order to allow it: In scope SELECT tupleElement(CAST(NULL, 'Nullable(Tuple(x Int32))'), 'x') SETTINGS enable_nullable_tuple_type = 0. (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CH26-B4-E15",
+      "sql": "SELECT toDate('2026-01-01') + toTime('01:00:00')",
+      "returncode": 0,
+      "stdout": "2026-01-01 01:00:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E16",
+      "sql": "SELECT toDateTime('2026-01-01 00:00:00') + toTime('01:00:00')",
+      "returncode": 0,
+      "stdout": "2026-01-01 01:00:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E17",
+      "sql": "SELECT sumMap(number, toString(number % 2)) FROM numbers(3)",
+      "returncode": 0,
+      "stdout": "{'0':2,'1':1}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E18",
+      "sql": "SELECT avgMap(number, toString(number % 2)) FROM numbers(3)",
+      "returncode": 0,
+      "stdout": "{'0':1,'1':1}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E19",
+      "sql": "SELECT sumMap(map('a', number, 'b', number * 2)) FROM numbers(3)",
+      "returncode": 0,
+      "stdout": "{'a':3,'b':6}\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E20",
+      "sql": "SELECT sumMap(key, value) FROM (SELECT ['a', 'b'] AS key, [1, 2] AS value)",
+      "returncode": 0,
+      "stdout": "(['a','b'],[1,2])\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E21",
+      "sql": "SELECT regr_avgx(y, x), regr_avgy(y, x), regr_count(y, x), regr_intercept(y, x), regr_r2(y, x), regr_slope(y, x), regr_sxx(y, x), regr_sxy(y, x), regr_syy(y, x) FROM (SELECT number AS x, number * 2 + 1 AS y FROM numbers(3))",
+      "returncode": 0,
+      "stdout": "1\t3\t3\t1\t1\t2\t2\t4\t8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E22",
+      "sql": "SELECT arrayFlattenedLength([[1, 2], [3]]), LENGTH([[1, 2], [3]])",
+      "returncode": 0,
+      "stdout": "3\t2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E23",
+      "sql": "SELECT arrayFlattenedLength([[CAST(NULL AS Nullable(Int32)), 1], [2, 3]]), arrayFlattenedLength([]), arrayFlattenedLength(NULL)",
+      "returncode": 0,
+      "stdout": "4\t0\t\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E24",
+      "sql": "SELECT arrayFlattenedLength([[1, 2], [3, 4]])",
+      "returncode": 0,
+      "stdout": "4\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E25",
+      "sql": "SELECT LENGTH([[1, 2], [3, 4]])",
+      "returncode": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E26",
+      "sql": "SELECT TRY_CAST(256 AS UInt8), CAST(256 AS Nullable(UInt8))",
+      "returncode": 0,
+      "stdout": "\\N\t0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E27",
+      "sql": "SELECT TRY_CAST('abc' AS Int32), TRY_CAST('42' AS Int32)",
+      "returncode": 0,
+      "stdout": "\\N\t42\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E28",
+      "sql": "SELECT TRY_CAST('[1,2]' AS Array(Int32))",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Type Array(Int32) is not supported for accurateCastOrNull because it cannot be inside Nullable: In scope SELECT accurateCastOrNull('[1,2]', 'Array(Int32)'). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CH26-B4-E29",
+      "sql": "SELECT a.number, b.n FROM numbers(2) AS a LEFT JOIN LATERAL (SELECT a.number + 10 AS n) AS b ON TRUE SETTINGS allow_experimental_lateral_join = 1",
+      "returncode": 0,
+      "stdout": "0\t10\n1\t11\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E30",
+      "sql": "SELECT a.number, b.n FROM numbers(2) AS a LEFT JOIN LATERAL (SELECT a.number + 10 AS n) AS b ON TRUE",
+      "returncode": 88,
+      "stdout": "",
+      "stderr": "Code: 344. DB::Exception: LATERAL JOIN is experimental. Set 'allow_experimental_lateral_join = 1' to enable it. (SUPPORT_IS_DISABLED)\n"
+    },
+    {
+      "id": "CH26-B4-E31",
+      "sql": "WITH a AS (SELECT * FROM numbers(2)), __tmp1 AS (SELECT number, r FROM a NATURAL LEFT JOIN (SELECT 0 AS number, 'R' AS r) AS b) SELECT * FROM __tmp1 ORDER BY number",
+      "returncode": 0,
+      "stdout": "0\tR\n1\t\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E32",
+      "sql": "WITH __tmp1 AS (SELECT number FROM numbers(4) WHERE number > 1) SELECT * FROM __tmp1 ORDER BY number",
+      "returncode": 0,
+      "stdout": "2\n3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E33",
+      "sql": "WITH c AS MATERIALIZED (SELECT number FROM numbers(3)) SELECT sum(number) FROM c",
+      "returncode": 0,
+      "stdout": "3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E34",
+      "sql": "SELECT 'a_b' LIKE 'a!_%' ESCAPE '!'",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E35",
+      "sql": "SELECT CAST('{\"a\":{\"b\":42}}' AS JSON)['a']['b']",
+      "returncode": 0,
+      "stdout": "42\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E36",
+      "sql": "SELECT number, sum(number) OVER (ORDER BY number GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING) FROM numbers(3) ORDER BY number",
+      "returncode": 0,
+      "stdout": "0\t1\n1\t3\n2\t2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E37",
+      "sql": "SELECT * FROM numbers(3)",
+      "returncode": 0,
+      "stdout": "0\n1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E38",
+      "sql": "SELECT [1, 2, 3]",
+      "returncode": 0,
+      "stdout": "[1,2,3]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E39",
+      "sql": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v SETTINGS sql_compatible_division_for_integers = 0) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E40",
+      "sql": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v SETTINGS sql_compatible_division_for_integers = 1) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B4-E41",
+      "sql": "SELECT v, toTypeName(v) FROM (SELECT 7 / 2 AS v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,0 +1,496 @@
+{
+  "captured_at": "2026-10-28T21:10:29.058315+00:00",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-Q01\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 3\\n AFTER number >= 5\"}\n{\"id\":\"CH26-Q02\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT\\n UNTIL number >= 3\"}\n{\"id\":\"CH26-Q03\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT\\n AFTER number >= 2\\n UNTIL number >= 6\"}\n{\"id\":\"CH26-Q04\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 2\\n AFTER number IN (2, 6) ALL\"}\n{\"id\":\"CH26-Q05\",\"formatted\":\"SELECT year()\"}\n{\"id\":\"CH26-Q06\",\"formatted\":\"SELECT *\\nFROM a\\nNATURAL LEFT JOIN b\"}\n{\"id\":\"CH26-Q07\",\"formatted\":\"SELECT toTimeZone(dt, timeZone())\\nFROM t\"}\n{\"id\":\"CH26-Q08\",\"formatted\":\"SELECT (toIntervalHour(1), toIntervalMinute(30))\"}\n{\"id\":\"CH26-Q09\",\"formatted\":\"SELECT *\\nFROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)\"}\n{\"id\":\"CH26-T01\",\"formatted\":\"CREATE TABLE t\\n(\\n    `v` QBit(Float32, 128, 32)\\n)\\nENGINE = MergeTree\\nORDER BY tuple()\"}\n{\"id\":\"CH26-T02\",\"formatted\":\"CREATE TABLE t\\n(\\n    `g` MultiPoint\\n)\\nENGINE = MergeTree\\nORDER BY tuple()\"}\n{\"id\":\"CH26-B2-Q10\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 1, 3\\n AFTER number >= 3\"}\n{\"id\":\"CH26-B2-Q11\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT -2\\n AFTER number >= 3\"}\n{\"id\":\"CH26-B2-Q12\",\"formatted\":\"SELECT intDiv(number, 2) AS k\\nFROM numbers(8)\\nORDER BY k ASC\\nLIMIT 1\\n WITH TIES\\n AFTER k >= 1\"}\n{\"id\":\"CH26-B2-Q13\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 2 BY number % 2\\nLIMIT 2\\n AFTER number >= 1\"}\n{\"id\":\"CH26-B2-Q14\",\"formatted\":\"WITH\\n    2 AS after\\nSELECT number\\nFROM numbers(4)\\nLIMIT after BY number\"}\n{\"id\":\"CH26-B2-Q15\",\"formatted\":\"WITH\\n    2 AS until\\nSELECT number\\nFROM numbers(4)\\nLIMIT 1, until\"}\n{\"id\":\"CH26-B2-J01\",\"formatted\":\"SELECT *\\nFROM a AS l\\nNATURAL FULL OUTER JOIN b AS r\"}\n{\"id\":\"CH26-B2-J02\",\"formatted\":\"SELECT *\\nFROM a\\nGLOBAL NATURAL LEFT JOIN b\"}\n{\"id\":\"CH26-B2-J03\",\"formatted\":\"SELECT l.id\\nFROM a AS l\\nNATURAL RIGHT JOIN b AS r\"}\n{\"id\":\"CH26-B2-I01\",\"formatted\":\"SELECT (toIntervalYear(1), toIntervalMonth(2))\"}\n{\"id\":\"CH26-B2-I02\",\"formatted\":\"SELECT (toIntervalDay(1), toIntervalHour(2), toIntervalMinute(3), toIntervalSecond(4))\"}\n{\"id\":\"CH26-B2-I03\",\"formatted\":\"SELECT (toIntervalMinute(30), toIntervalSecond(2))\"}\n{\"id\":\"CH26-B2-I04\",\"formatted\":\"SELECT toIntervalHour('1') AS TO\"}\n{\"id\":\"CH26-B2-R01\",\"formatted\":\"SELECT *\\nFROM remote('target', db.t, SETTINGS max_threads = 1)\"}\n{\"id\":\"CH26-B2-R02\",\"formatted\":\"SELECT *\\nFROM remoteSecure('target', db.t, SETTINGS max_threads = 1)\"}\n{\"id\":\"CH26-B2-R03\",\"formatted\":\"SELECT *\\nFROM cluster('target', db.t, SETTINGS max_threads = 1)\\nSETTINGS max_threads = 2\"}\n{\"id\":\"CH26-B2-R04\",\"formatted\":\"SELECT *\\nFROM remote('target', db.t, SETTINGS)\"}\n{\"id\":\"CH26-B2-R05\",\"formatted\":\"SELECT *\\nFROM remote('target', db.t, SETTINGS skip_unavailable_shards)\"}\n{\"id\":\"CH26-B2-T03\",\"formatted\":\"SELECT CAST(range(16), 'QBit(Int8, 16, 8)')\"}\n{\"id\":\"CH26-B2-T04\",\"formatted\":\"CREATE TABLE t\\n(\\n    `v` QBit(BFloat16, 128, 32),\\n    `g` Array(MultiPoint)\\n)\\nENGINE = Memory\"}\n{\"id\":\"CH26-B2-Y02\",\"formatted\":\"SELECT year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America\\/New_York')\"}\n{\"id\":\"CH26-B2-A01\",\"formatted\":\"SELECT giniIf(number, number >= 0)\\nFROM numbers(2)\"}\n{\"id\":\"CH26-B2-A02\",\"formatted\":\"SELECT groupFormat('TSV')(number)\\nFROM numbers(2)\"}\n{\"id\":\"CH26-B2-A03\",\"formatted\":\"SELECT regr_slope(number * 2, number)\\nFROM numbers(3)\"}\n{\"id\":\"CH26-B2-N01\",\"formatted\":null}\n{\"id\":\"CH26-B2-N02\",\"formatted\":null}\n{\"id\":\"CH26-B2-N03\",\"formatted\":null}\n{\"id\":\"CH26-B2-N04\",\"formatted\":null}\n{\"id\":\"CH26-B2-N05\",\"formatted\":null}\n{\"id\":\"CH26-B2-N06\",\"formatted\":null}\n{\"id\":\"CH26-B2-N07\",\"formatted\":null}\n{\"id\":\"CH26-B2-N08\",\"formatted\":null}\n{\"id\":\"CH26-B2-N09\",\"formatted\":null}\n{\"id\":\"CH26-B2-N10\",\"formatted\":null}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CH26-Q01",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT 3\n AFTER number >= 5"
+    },
+    {
+      "id": "CH26-Q02",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT\n UNTIL number >= 3"
+    },
+    {
+      "id": "CH26-Q03",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT\n AFTER number >= 2\n UNTIL number >= 6"
+    },
+    {
+      "id": "CH26-Q04",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT 2\n AFTER number IN (2, 6) ALL"
+    },
+    {
+      "id": "CH26-Q05",
+      "formatted": "SELECT year()"
+    },
+    {
+      "id": "CH26-Q06",
+      "formatted": "SELECT *\nFROM a\nNATURAL LEFT JOIN b"
+    },
+    {
+      "id": "CH26-Q07",
+      "formatted": "SELECT toTimeZone(dt, timeZone())\nFROM t"
+    },
+    {
+      "id": "CH26-Q08",
+      "formatted": "SELECT (toIntervalHour(1), toIntervalMinute(30))"
+    },
+    {
+      "id": "CH26-Q09",
+      "formatted": "SELECT *\nFROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)"
+    },
+    {
+      "id": "CH26-T01",
+      "formatted": "CREATE TABLE t\n(\n    `v` QBit(Float32, 128, 32)\n)\nENGINE = MergeTree\nORDER BY tuple()"
+    },
+    {
+      "id": "CH26-T02",
+      "formatted": "CREATE TABLE t\n(\n    `g` MultiPoint\n)\nENGINE = MergeTree\nORDER BY tuple()"
+    },
+    {
+      "id": "CH26-B2-Q10",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT 1, 3\n AFTER number >= 3"
+    },
+    {
+      "id": "CH26-B2-Q11",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT -2\n AFTER number >= 3"
+    },
+    {
+      "id": "CH26-B2-Q12",
+      "formatted": "SELECT intDiv(number, 2) AS k\nFROM numbers(8)\nORDER BY k ASC\nLIMIT 1\n WITH TIES\n AFTER k >= 1"
+    },
+    {
+      "id": "CH26-B2-Q13",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT 2 BY number % 2\nLIMIT 2\n AFTER number >= 1"
+    },
+    {
+      "id": "CH26-B2-Q14",
+      "formatted": "WITH\n    2 AS after\nSELECT number\nFROM numbers(4)\nLIMIT after BY number"
+    },
+    {
+      "id": "CH26-B2-Q15",
+      "formatted": "WITH\n    2 AS until\nSELECT number\nFROM numbers(4)\nLIMIT 1, until"
+    },
+    {
+      "id": "CH26-B2-J01",
+      "formatted": "SELECT *\nFROM a AS l\nNATURAL FULL OUTER JOIN b AS r"
+    },
+    {
+      "id": "CH26-B2-J02",
+      "formatted": "SELECT *\nFROM a\nGLOBAL NATURAL LEFT JOIN b"
+    },
+    {
+      "id": "CH26-B2-J03",
+      "formatted": "SELECT l.id\nFROM a AS l\nNATURAL RIGHT JOIN b AS r"
+    },
+    {
+      "id": "CH26-B2-I01",
+      "formatted": "SELECT (toIntervalYear(1), toIntervalMonth(2))"
+    },
+    {
+      "id": "CH26-B2-I02",
+      "formatted": "SELECT (toIntervalDay(1), toIntervalHour(2), toIntervalMinute(3), toIntervalSecond(4))"
+    },
+    {
+      "id": "CH26-B2-I03",
+      "formatted": "SELECT (toIntervalMinute(30), toIntervalSecond(2))"
+    },
+    {
+      "id": "CH26-B2-I04",
+      "formatted": "SELECT toIntervalHour('1') AS TO"
+    },
+    {
+      "id": "CH26-B2-R01",
+      "formatted": "SELECT *\nFROM remote('target', db.t, SETTINGS max_threads = 1)"
+    },
+    {
+      "id": "CH26-B2-R02",
+      "formatted": "SELECT *\nFROM remoteSecure('target', db.t, SETTINGS max_threads = 1)"
+    },
+    {
+      "id": "CH26-B2-R03",
+      "formatted": "SELECT *\nFROM cluster('target', db.t, SETTINGS max_threads = 1)\nSETTINGS max_threads = 2"
+    },
+    {
+      "id": "CH26-B2-R04",
+      "formatted": "SELECT *\nFROM remote('target', db.t, SETTINGS)"
+    },
+    {
+      "id": "CH26-B2-R05",
+      "formatted": "SELECT *\nFROM remote('target', db.t, SETTINGS skip_unavailable_shards)"
+    },
+    {
+      "id": "CH26-B2-T03",
+      "formatted": "SELECT CAST(range(16), 'QBit(Int8, 16, 8)')"
+    },
+    {
+      "id": "CH26-B2-T04",
+      "formatted": "CREATE TABLE t\n(\n    `v` QBit(BFloat16, 128, 32),\n    `g` Array(MultiPoint)\n)\nENGINE = Memory"
+    },
+    {
+      "id": "CH26-B2-Y02",
+      "formatted": "SELECT year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America/New_York')"
+    },
+    {
+      "id": "CH26-B2-A01",
+      "formatted": "SELECT giniIf(number, number >= 0)\nFROM numbers(2)"
+    },
+    {
+      "id": "CH26-B2-A02",
+      "formatted": "SELECT groupFormat('TSV')(number)\nFROM numbers(2)"
+    },
+    {
+      "id": "CH26-B2-A03",
+      "formatted": "SELECT regr_slope(number * 2, number)\nFROM numbers(3)"
+    },
+    {
+      "id": "CH26-B2-N01",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N02",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N03",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N04",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N05",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N06",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N07",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N08",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N09",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B2-N10",
+      "formatted": null
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-Q01\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 3\\n AFTER number >= 5\"}\n{\"id\":\"CH26-Q02\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT\\n UNTIL number >= 3\"}\n{\"id\":\"CH26-Q03\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT\\n AFTER number >= 2\\n UNTIL number >= 6\"}\n{\"id\":\"CH26-Q04\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 2\\n AFTER number IN (2, 6) ALL\"}\n{\"id\":\"CH26-Q05\",\"formatted\":\"SELECT year()\"}\n{\"id\":\"CH26-Q06\",\"formatted\":\"SELECT *\\nFROM a\\nNATURAL LEFT JOIN b\"}\n{\"id\":\"CH26-Q07\",\"formatted\":\"SELECT toTimeZone(dt, timeZone())\\nFROM t\"}\n{\"id\":\"CH26-Q08\",\"formatted\":\"SELECT (toIntervalHour(1), toIntervalMinute(30))\"}\n{\"id\":\"CH26-Q09\",\"formatted\":\"SELECT *\\nFROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)\"}\n{\"id\":\"CH26-T01\",\"formatted\":\"CREATE TABLE t\\n(\\n    `v` QBit(Float32, 128, 32)\\n)\\nENGINE = MergeTree\\nORDER BY tuple()\"}\n{\"id\":\"CH26-T02\",\"formatted\":\"CREATE TABLE t\\n(\\n    `g` MultiPoint\\n)\\nENGINE = MergeTree\\nORDER BY tuple()\"}\n{\"id\":\"CH26-B2-Q10\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 1, 3\\n AFTER number >= 3\"}\n{\"id\":\"CH26-B2-Q11\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT -2\\n AFTER number >= 3\"}\n{\"id\":\"CH26-B2-Q12\",\"formatted\":\"SELECT intDiv(number, 2) AS k\\nFROM numbers(8)\\nORDER BY k ASC\\nLIMIT 1\\n WITH TIES\\n AFTER k >= 1\"}\n{\"id\":\"CH26-B2-Q13\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 2 BY number % 2\\nLIMIT 2\\n AFTER number >= 1\"}\n{\"id\":\"CH26-B2-Q14\",\"formatted\":\"WITH\\n    2 AS after\\nSELECT number\\nFROM numbers(4)\\nLIMIT after BY number\"}\n{\"id\":\"CH26-B2-Q15\",\"formatted\":\"WITH\\n    2 AS until\\nSELECT number\\nFROM numbers(4)\\nLIMIT 1, until\"}\n{\"id\":\"CH26-B2-J01\",\"formatted\":\"SELECT *\\nFROM a AS l\\nNATURAL FULL OUTER JOIN b AS r\"}\n{\"id\":\"CH26-B2-J02\",\"formatted\":\"SELECT *\\nFROM a\\nGLOBAL NATURAL LEFT JOIN b\"}\n{\"id\":\"CH26-B2-J03\",\"formatted\":\"SELECT l.id\\nFROM a AS l\\nNATURAL RIGHT JOIN b AS r\"}\n{\"id\":\"CH26-B2-I01\",\"formatted\":\"SELECT (toIntervalYear(1), toIntervalMonth(2))\"}\n{\"id\":\"CH26-B2-I02\",\"formatted\":\"SELECT (toIntervalDay(1), toIntervalHour(2), toIntervalMinute(3), toIntervalSecond(4))\"}\n{\"id\":\"CH26-B2-I03\",\"formatted\":\"SELECT (toIntervalMinute(30), toIntervalSecond(2))\"}\n{\"id\":\"CH26-B2-I04\",\"formatted\":\"SELECT toIntervalHour('1') AS TO\"}\n{\"id\":\"CH26-B2-R01\",\"formatted\":\"SELECT *\\nFROM remote('target', db.t, SETTINGS max_threads = 1)\"}\n{\"id\":\"CH26-B2-R02\",\"formatted\":\"SELECT *\\nFROM remoteSecure('target', db.t, SETTINGS max_threads = 1)\"}\n{\"id\":\"CH26-B2-R03\",\"formatted\":\"SELECT *\\nFROM cluster('target', db.t, SETTINGS max_threads = 1)\\nSETTINGS max_threads = 2\"}\n{\"id\":\"CH26-B2-R04\",\"formatted\":\"SELECT *\\nFROM remote('target', db.t, SETTINGS)\"}\n{\"id\":\"CH26-B2-R05\",\"formatted\":\"SELECT *\\nFROM remote('target', db.t, SETTINGS skip_unavailable_shards)\"}\n{\"id\":\"CH26-B2-T03\",\"formatted\":\"SELECT CAST(range(16), 'QBit(Int8, 16, 8)')\"}\n{\"id\":\"CH26-B2-T04\",\"formatted\":\"CREATE TABLE t\\n(\\n    `v` QBit(BFloat16, 128, 32),\\n    `g` Array(MultiPoint)\\n)\\nENGINE = Memory\"}\n{\"id\":\"CH26-B2-Y02\",\"formatted\":\"SELECT year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America\\/New_York')\"}\n{\"id\":\"CH26-B2-A01\",\"formatted\":\"SELECT giniIf(number, number >= 0)\\nFROM numbers(2)\"}\n{\"id\":\"CH26-B2-A02\",\"formatted\":\"SELECT groupFormat('TSV')(number)\\nFROM numbers(2)\"}\n{\"id\":\"CH26-B2-A03\",\"formatted\":\"SELECT regr_slope(number * 2, number)\\nFROM numbers(3)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CH26-B2-E01",
+      "returncode": 0,
+      "stdout": "5\n6\n7\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E02",
+      "returncode": 0,
+      "stdout": "0\n1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E03",
+      "returncode": 0,
+      "stdout": "2\n3\n4\n5\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E04",
+      "returncode": 0,
+      "stdout": "2\n3\n6\n7\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E05",
+      "returncode": 48,
+      "stdout": "",
+      "stderr": "Code: 48. DB::Exception: OFFSET is not supported together with LIMIT AFTER/UNTIL. (NOT_IMPLEMENTED)\n"
+    },
+    {
+      "id": "CH26-B2-E06",
+      "returncode": 48,
+      "stdout": "",
+      "stderr": "Code: 48. DB::Exception: Fractional and negative LIMIT/OFFSET are not supported with LIMIT AFTER/UNTIL. (NOT_IMPLEMENTED)\n"
+    },
+    {
+      "id": "CH26-B2-E07",
+      "returncode": 48,
+      "stdout": "",
+      "stderr": "Code: 48. DB::Exception: LIMIT WITH TIES is not supported with LIMIT AFTER/UNTIL. (NOT_IMPLEMENTED)\n"
+    },
+    {
+      "id": "CH26-B2-E08",
+      "returncode": 0,
+      "stdout": "1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E09",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E10",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n2\tL2\t\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E11",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n3\t\tR3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E12",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n2\tL2\t\n3\t\tR3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E13",
+      "returncode": 0,
+      "stdout": "2025-12-31 19:30:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E14",
+      "returncode": 0,
+      "stdout": "2026-01-01 01:30:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E15",
+      "returncode": 0,
+      "stdout": "2027-03-01\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E16",
+      "returncode": 0,
+      "stdout": "[1,2,3,4]\t8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E17",
+      "returncode": 0,
+      "stdout": "[(1,2)]\tGeometry\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E18",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function toYear doesn't match: passed 0, should be 1 or 2: In scope SELECT year(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CH26-B2-E19",
+      "returncode": 0,
+      "stdout": "2025\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E20",
+      "returncode": 0,
+      "stdout": "0.5\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E21",
+      "returncode": 0,
+      "stdout": "0\\n1\\n\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E22",
+      "returncode": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CH26-B2-E01",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 AFTER number >= 5",
+      "returncode": 0,
+      "stdout": "5\n6\n7\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E02",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT UNTIL number >= 3",
+      "returncode": 0,
+      "stdout": "0\n1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E03",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT AFTER number >= 2 UNTIL number >= 6",
+      "returncode": 0,
+      "stdout": "2\n3\n4\n5\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E04",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 AFTER number IN (2, 6) ALL",
+      "returncode": 0,
+      "stdout": "2\n3\n6\n7\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E05",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 OFFSET 1 AFTER number >= 3",
+      "returncode": 48,
+      "stdout": "",
+      "stderr": "Code: 48. DB::Exception: OFFSET is not supported together with LIMIT AFTER/UNTIL. (NOT_IMPLEMENTED)\n"
+    },
+    {
+      "id": "CH26-B2-E06",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT -2 AFTER number >= 3",
+      "returncode": 48,
+      "stdout": "",
+      "stderr": "Code: 48. DB::Exception: Fractional and negative LIMIT/OFFSET are not supported with LIMIT AFTER/UNTIL. (NOT_IMPLEMENTED)\n"
+    },
+    {
+      "id": "CH26-B2-E07",
+      "sql": "SELECT intDiv(number, 2) AS k FROM numbers(8) ORDER BY k LIMIT 1 WITH TIES AFTER k >= 1",
+      "returncode": 48,
+      "stdout": "",
+      "stderr": "Code: 48. DB::Exception: LIMIT WITH TIES is not supported with LIMIT AFTER/UNTIL. (NOT_IMPLEMENTED)\n"
+    },
+    {
+      "id": "CH26-B2-E08",
+      "sql": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 BY number % 2 LIMIT 2 AFTER number >= 1",
+      "returncode": 0,
+      "stdout": "1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E09",
+      "sql": "SELECT * FROM a NATURAL INNER JOIN b ORDER BY id",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E10",
+      "sql": "SELECT * FROM a NATURAL LEFT JOIN b ORDER BY id",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n2\tL2\t\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E11",
+      "sql": "SELECT * FROM a NATURAL RIGHT JOIN b ORDER BY id",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n3\t\tR3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E12",
+      "sql": "SELECT * FROM a NATURAL FULL JOIN b ORDER BY id",
+      "returncode": 0,
+      "stdout": "1\tL1\tR1\n2\tL2\t\n3\t\tR3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E13",
+      "sql": "SELECT toDateTime('2026-01-01 00:30:00', 'UTC') AT LOCAL SETTINGS session_timezone = 'America/New_York'",
+      "returncode": 0,
+      "stdout": "2025-12-31 19:30:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E14",
+      "sql": "SELECT toDateTime('2026-01-01 00:00:00', 'UTC') + INTERVAL '1:30' HOUR TO MINUTE",
+      "returncode": 0,
+      "stdout": "2026-01-01 01:30:00\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E15",
+      "sql": "SELECT toDate('2026-01-01') + INTERVAL '1-2' YEAR TO MONTH",
+      "returncode": 0,
+      "stdout": "2027-03-01\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E16",
+      "sql": "SELECT CAST([1, 2, 3, 4] AS QBit(Float32, 4)), arrayElement(CAST(range(16) AS QBit(Int8, 16, 8)), 9)",
+      "returncode": 0,
+      "stdout": "[1,2,3,4]\t8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E17",
+      "sql": "SELECT CAST([(1., 2.)] AS MultiPoint), toTypeName(CAST(CAST([(1., 2.)] AS MultiPoint) AS GEOMETRY))",
+      "returncode": 0,
+      "stdout": "[(1,2)]\tGeometry\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E18",
+      "sql": "SELECT year()",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function toYear doesn't match: passed 0, should be 1 or 2: In scope SELECT year(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CH26-B2-E19",
+      "sql": "SELECT year(toDateTime('2026-01-01 00:30:00', 'UTC'), 'America/New_York')",
+      "returncode": 0,
+      "stdout": "2025\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E20",
+      "sql": "SELECT giniIf(number, number >= 0) FROM numbers(2)",
+      "returncode": 0,
+      "stdout": "0.5\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E21",
+      "sql": "SELECT groupFormat('TSV')(number) FROM numbers(2)",
+      "returncode": 0,
+      "stdout": "0\\n1\\n\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B2-E22",
+      "sql": "SELECT regr_slope(number * 2, number) FROM numbers(3)",
+      "returncode": 0,
+      "stdout": "2\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "captures": {
+    "functions": {
+      "query": "SELECT name, is_aggregate, case_insensitive, alias_to, introduced_in, deterministic, higher_order FROM system.functions ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-functions-26.8.34.13.tsv",
+      "sha256": "4bb4d88292b4c903a803fa0333a635e43f5ba992dcbb5a22272124369da70032"
+    },
+    "table-functions": {
+      "query": "SELECT name, allow_readonly, description FROM system.table_functions ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-table-functions-26.8.34.13.tsv",
+      "sha256": "b5468f672b2d17a9c884130ecd2c9fadfe04adf50445f0d5cb0493103047e11c"
+    },
+    "keywords": {
+      "query": "SELECT keyword AS word, 'UNKNOWN' AS category, '' AS token FROM system.keywords ORDER BY keyword FORMAT TSVWithNames",
+      "file": "clickhouse-keywords-26.8.34.13.tsv",
+      "sha256": "ab015ebbd9e66acf6d44812abd99f133c14d06aeb07d8782de102d0c7984ce22"
+    },
+    "types": {
+      "query": "SELECT name, case_insensitive, alias_to, description, syntax, introduced_in FROM system.data_type_families ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-types-26.8.34.13.tsv",
+      "sha256": "9cbc26cfb274d18e8d4c936b1573a5aba9924d1fc4a9c0f2cc428a83893fe6fe"
+    },
+    "settings": {
+      "query": "SELECT name, type, default, alias_for, is_obsolete, tier, description FROM system.settings WHERE name IN ('enable_streaming_queries','enable_nullable_tuple_type','allow_nullable_tuple_in_extracted_subcolumns','allow_experimental_lateral_join','sql_compatible_division_for_integers','enable_trino_dialect','enable_json_ast_dialect','allow_experimental_eval_table_function','enable_ipcrypt','enable_xgboost','enable_elasticsearch','enable_analyzer','allow_experimental_analyzer','allow_experimental_window_view','compatibility','session_timezone','timezone','join_default_strictness','group_by_use_nulls','validate_group_by_all_key_types','max_bytes_before_external_distinct','max_bytes_ratio_before_external_distinct','max_bytes_before_external_set','run_query_in_background','query_cache_for_subqueries','ai_function_text_default_credentials','ai_function_embedding_default_credentials','enable_logsql_dialect','enable_pco_codec','enable_alp_codec','allow_experimental_codecs') ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-settings-26.8.34.13.tsv",
+      "sha256": "e8ae86163d8c1c8e89e6ceb9935bbc6b75740dfc0c584beb7e7c6862c0f13b0b"
+    },
+    "documentation": {
+      "query": "SELECT name, toString(type) AS type, source, description FROM system.documentation WHERE name IN ('LIMIT','FROM','JOIN','CREATE TOKEN','CREATE HANDLER','QBit','MultiPoint','Tuple','year','arrayTopK','arrayBottomK','MVTEncode','groupFormat','randomHadamardTransform','xxHash64Spark','dictGetRoot','gini','mergedJSONPatch','notHas','parseQueryToJSON','formatQueryFromJSON','arrayFlattenedLength','parseISO8601Duration','hierarchicalKMeans','assignCentroid','arrayMinIndex','arrayMaxIndex','arrayRemoveAt','mapRemove','mapEntries','mapContainsKeyValue','obfuscate','elasticsearch','predictXGBoost','normalizedQueryHashUnordered') ORDER BY type, name FORMAT JSONEachRow",
+      "file": "clickhouse-documentation-26.8.34.13.jsonl",
+      "sha256": "32048a1ef469eaaa4f8151903a853aec81a97ebd97c3cb3087c90dd0afb206a3"
+    },
+    "statements": {
+      "query": "SELECT name, syntax, description, parent_name, related FROM system.statements ORDER BY name FORMAT JSONEachRow",
+      "unavailable": {
+        "returncode": 60,
+        "stdout": "",
+        "stderr": "Code: 60. DB::Exception: Unknown table expression identifier 'system.statements' in scope SELECT name, syntax, description, parent_name, related FROM system.statements ORDER BY name ASC. (UNKNOWN_TABLE)\n"
+      }
+    },
+    "build-options": {
+      "query": "SELECT name, value FROM system.build_options ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-build-options-26.8.34.13.tsv",
+      "sha256": "39226fe1ee5d398f6db25fe56fdd690a2c811e6622733c17be60a94e1b14e946"
+    }
+  }
+}

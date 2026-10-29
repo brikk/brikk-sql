@@ -1464,7 +1464,10 @@ private fun expandStarsInScope(
                 if (name in columnsToExclude || (merged && name in coalescedColumns)) {
                     continue
                 }
-                if (ilikePattern != null &&
+                val nativeStar = if (expression is Column) expression.thisArg as? Expression else expression
+                val nativePattern = nativeStar?.let { dev.brikk.house.sql.ast.clickhouseStarPattern(it) }
+                if (nativePattern != null && !nativePattern.matches(name)) continue
+                if (nativePattern == null && ilikePattern != null &&
                     !Regex(ilikePattern, RegexOption.IGNORE_CASE).matches(name)
                 ) {
                     continue

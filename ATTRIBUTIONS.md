@@ -128,6 +128,28 @@ SOFTWARE.
 `GeneratedKeywords.kt` hold its `system.keywords`. No ClickHouse source code is included in the catalog artifact.
 ClickHouse is licensed under the Apache License 2.0; see vendor/README.md for provenance.
 
+`vendor/data/clickhouse-2026-audit/` includes native formatter output and finite-query
+results from official ClickHouse 26.8.34.13 LTS and 26.10.2.103 stable builds. STREAM
+grammar handling follows the pinned Apache-2.0 upstream parser; source links and
+immutable engine digests are recorded with the fixtures. Brikk's AST observations
+and regression cases are separate from the historical function catalog.
+
+The official-build registry, type, settings, build-option and embedded-documentation
+captures `vendor/data/clickhouse-*-26.8.34.13.*` and `clickhouse-*-26.10.2.103.*`
+and their generated Kotlin metadata also derive from those Apache-2.0 ClickHouse
+builds. Capture manifests retain the exact image digests, queries and SHA-256 hashes.
+No documentation prose is treated as a machine-readable function signature.
+
+The ClickHouse batch-3 parser/analyzer corrections and audit fixtures reference the
+same Apache-2.0 upstream's v26.10.2.103-stable parser and function-composition source.
+The fixture file records the source URLs; native observations retain the image
+digests. No source statement from the DDL fixtures is executed by the verifier.
+
+The final batch-4 behavior captures and regression reruns use those same immutable
+Apache-2.0 ClickHouse images. The PostgreSQL cardinality source contract is cited
+from the PostgreSQL array-functions documentation, separately from the native
+ClickHouse target results; this is not a live PostgreSQL equivalence capture.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

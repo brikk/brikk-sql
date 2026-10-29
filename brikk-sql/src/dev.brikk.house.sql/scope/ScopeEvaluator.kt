@@ -302,6 +302,16 @@ internal class ScopeEvaluator(
 
     /** The relations [node] contributes to a FROM clause; [lateral] is what it may correlate with. */
     private fun source(node: Expression, env: Env, lateral: Frame): List<Binding> {
+        if (node is dev.brikk.house.sql.ast.ClickhouseStream) {
+            val bindings = source(node.thisArg as? Expression ?: return emptyList(), env, lateral)
+            val frame = Frame(bindings, env.outer)
+            (node.args["watermark"] as? Expression)?.let { expression(it, frame, env) }
+            (node.args["expression"] as? Expression)?.let { expression(it, frame, env) }
+            return bindings
+        }
+        if (node is dev.brikk.house.sql.ast.Final) {
+            return source(node.thisArg as? Expression ?: return emptyList(), env, lateral)
+        }
         val base: Binding = when (node) {
             is Table -> table(node, env, lateral)
             is TableAlias -> {
@@ -502,6 +512,7 @@ internal class ScopeEvaluator(
 
     private fun star(star: Star, bindings: List<Binding>, merged: List<ScopeColumn>, frame: Frame, env: Env, context: String): Pair<List<ScopeColumn>, Knowledge> {
         var columns = expandStar(bindings, merged).map { it.copy(relation = "", relationKind = null) }
+        dev.brikk.house.sql.ast.clickhouseStarPattern(star)?.let { pattern -> columns = columns.filter { pattern.matches(it.name) } }
         val knowledge = Frame(bindings, null).absence
         // Modifiers name input columns: references resolve where the star reads.
         val pool = Frame(bindings, null, merged)

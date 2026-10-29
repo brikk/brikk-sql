@@ -14,31 +14,33 @@ class FunctionCatalogTest {
 
     @Test
     fun clickhouseCatalogLoadsVendoredSystemFunctions() {
+        val historical = CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
         // 1570 system.functions definitions less 9 `__` internals, plus 87 system.table_functions.
-        assertEquals(1648, CLICKHOUSE_FUNCTION_CATALOG.size)
-        assertTrue("length" in CLICKHOUSE_FUNCTION_CATALOG)
-        assertEquals(FunctionKind.AGGREGATE, CLICKHOUSE_FUNCTION_CATALOG["groupBitAnd"]!!.kind)
+        assertEquals(1648, historical.size)
+        assertTrue("length" in historical)
+        assertEquals(FunctionKind.AGGREGATE, historical["groupBitAnd"]!!.kind)
         assertEquals(
-            CLICKHOUSE_FUNCTION_CATALOG["groupBitAnd"],
-            CLICKHOUSE_FUNCTION_CATALOG["BIT_AND"],
+            historical["groupBitAnd"],
+            historical["BIT_AND"],
         )
         // system.functions exposes no signatures; do not fabricate overloads.
-        assertTrue(CLICKHOUSE_FUNCTION_CATALOG["length"]!!.overloads.isEmpty())
+        assertTrue(historical["length"]!!.overloads.isEmpty())
     }
 
     @Test
     fun clickhouseCatalogHasTheTableFunctionsDump() {
+        val historical = CLICKHOUSE_26_5_1_1_FUNCTION_CATALOG
         // Pinned to vendor/data/clickhouse-table-functions-26.5.1.1.tsv (87 rows).
-        val tables = CLICKHOUSE_FUNCTION_CATALOG.functions.filter { it.kind == FunctionKind.TABLE_VALUED }
+        val tables = historical.functions.filter { it.kind == FunctionKind.TABLE_VALUED }
         assertEquals(87, tables.size)
         for (name in listOf("numbers", "s3", "file", "url", "remote", "generate_series", "null")) {
-            assertTrue(CLICKHOUSE_FUNCTION_CATALOG.getAll(name).any { it.kind == FunctionKind.TABLE_VALUED }, name)
+            assertTrue(historical.getAll(name).any { it.kind == FunctionKind.TABLE_VALUED }, name)
         }
         // Names in both dumps are defined once per kind.
         for (name in listOf("file", "format", "fuzzQuery")) {
-            assertEquals(setOf(FunctionKind.SCALAR, FunctionKind.TABLE_VALUED), CLICKHOUSE_FUNCTION_CATALOG.getAll(name).map { it.kind }.toSet(), name)
+            assertEquals(setOf(FunctionKind.SCALAR, FunctionKind.TABLE_VALUED), historical.getAll(name).map { it.kind }.toSet(), name)
         }
-        assertEquals(listOf(FunctionKind.SCALAR), CLICKHOUSE_FUNCTION_CATALOG.getAll("length").map { it.kind })
+        assertEquals(listOf(FunctionKind.SCALAR), historical.getAll("length").map { it.kind })
     }
 
     @Test

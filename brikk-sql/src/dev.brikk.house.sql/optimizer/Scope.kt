@@ -781,7 +781,7 @@ private fun traverseTables(scope: Scope, acc: MutableList<Scope>) {
         var expression = expressions[i]
         i++
 
-        if (expression is Final) {
+        while (expression is Final || expression is dev.brikk.house.sql.ast.ClickhouseStream) {
             expression = expression.thisArg as Expression
         }
         if (expression is Table) {

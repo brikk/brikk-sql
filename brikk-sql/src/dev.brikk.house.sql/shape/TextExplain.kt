@@ -123,6 +123,9 @@ private fun hasUserParameters(tokens: List<Token>): Boolean = tokens.zipWithNext
 private val STATEMENTS = setOf(
     Insert::class, Update::class, Delete::class, Merge::class, Create::class, Drop::class, Alter::class, Command::class,
     Into::class, Copy::class, TruncateTable::class, Use::class, SetStatement::class, Transaction::class, Commit::class, Rollback::class,
+    dev.brikk.house.sql.ast.ClickhouseExplain::class, dev.brikk.house.sql.ast.ClickhouseCreateToken::class,
+    dev.brikk.house.sql.ast.ClickhouseUserAuthentication::class, dev.brikk.house.sql.ast.ClickhouseHandler::class,
+    dev.brikk.house.sql.ast.ClickhouseHypotheticalIndex::class, dev.brikk.house.sql.ast.ClickhouseSystem::class,
 )
 
 private const val PARAMETERS = "The query has parameters: resolve them with Execute before EXPLAIN."

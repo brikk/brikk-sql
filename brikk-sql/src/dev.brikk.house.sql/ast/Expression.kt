@@ -556,6 +556,8 @@ abstract class Expression(initArgs: Args = emptyMap()) {
     override fun toString(): String = buildString { toS(this@Expression, this) }
 
     private fun toS(node: kotlin.Any?, sb: StringBuilder) {
+        // Recursive debug formatting bypasses a child's virtual toString. Never unwrap credentials here.
+        if (node is ClickhouseCredential) { sb.append("ClickhouseCredential([REDACTED])"); return }
         when (node) {
             is Expression -> {
                 sb.append(node::class.simpleName).append('(')

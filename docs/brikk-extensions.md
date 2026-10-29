@@ -2054,6 +2054,105 @@ evidence, reproduction and limits are in
 [the JSON report](research/trino-484-doris-4.1.5-json.md). No public API, release,
 publication or consumer dependency pin changes are included.
 
+## 60. ClickHouse streaming reads and Tuple aggregate combinators
+
+`ClickhouseStream` represents `table [AS alias] [FINAL] [SAMPLE ...] STREAM`
+and its BOUNDED, UNORDERED, CURSOR and WATERMARK options. STREAM no longer becomes
+an implicit alias. Explicit `AS stream`, quoted aliases and tables/columns named
+stream remain available. Cursor and watermark children survive serde; scope analysis
+retains the underlying relation and resolves watermark references against it.
+
+The `-Tuple` aggregate combinator uses the existing combined aggregate nodes, including
+parameterized/nested suffixes and window calls. A second argument list no longer becomes
+an alias list. Other dialects refuse unproved STREAM/Tuple translations rather than
+dropping behavior or emitting an unsupported native call.
+
+Native parse/finite execution evidence targets digest-pinned ClickHouse 26.8.34.13 LTS
+and 26.10.2.103 stable. Streaming execution remains gated by the server's
+`enable_streaming_queries`; generation does not enable it. Named-tuple result checks
+are not a general static tuple-typing or cross-dialect equivalence claim. See
+[the evidence report](research/clickhouse-2026-catchup.md) and `Clickhouse2026CatchupTest`.
+Metadata remains pinned to 26.5.1.1 until the separate catalog step is implemented.
+
+## 61. Versioned ClickHouse metadata and native query/type syntax
+
+Metadata snapshots retain the embedded 26.5.1.1 capture and add official-build
+26.8.34.13 LTS and 26.10.2.103 stable registries. The default catalog uses 26.10.
+Per-name case flags apply to precise lookup/completion, and type-family case flags
+are independent. Legacy lookup and JSON contracts remain unchanged. Existing
+constructor/default bridges and TypeDef.copy entry points are retained.
+
+Native AST nodes cover LIMIT boundary ranges and combined LIMIT BY, AT LOCAL,
+compound intervals, trailing remote/cluster SETTINGS, QBit and MultiPoint. NATURAL
+joins use the existing join method and preserve scope/source identity. Compound
+interval lookahead must not consume TO bounds in WITH FILL or TTL destinations.
+Remote function parsers retain their function-name positions. New aggregate names
+can resolve parameter lists/combinators without reclassifying old window-only ASTs.
+
+Native formatter acceptance is not execution support: both pinned builds reject
+zero-argument year(), and 26.10 rejects OFFSET/negative-count/WITH-TIES combinations
+with boundary LIMIT. Their actual outcomes are pinned, not rewritten into successful
+ordinary expressions. The two-argument year timezone form no longer drops its zone.
+New native-only forms refuse unproved cross-dialect translations, and boundary
+limits do not enter the ordinary pipe-slice arithmetic path.
+
+See [the batch 2 evidence and reproduction](research/clickhouse-2026-batch2.md).
+Function overloads and first-availability facts are not fabricated from embedded
+documentation. Historical semantic proofs and certification policy are unchanged.
+
+## 62. ClickHouse 2026 analysis and structured utilities
+
+ClickhouseStar is a Star with native LIKE/ILIKE name filtering. Qualification,
+shape, relation scope, subquery completion and lineage share that filtering.
+Bare built-in names are recognized in statement contexts without stealing quoted
+or qualified columns, ordinary calls or standalone identifier fragments. Native
+date-part and EXTRACT additions keep units out of column scope; unproved return
+types stay unknown.
+
+Composition, implicit lambdas, local argument references and function designators
+have separate native nodes. Binding contexts follow the captured 26.10 higher-order
+flags. A function-valued `|` cannot become integer BitwiseOr or an unproved
+cross-dialect rewrite. Ordinary bitwise functions and other dialects are unchanged.
+
+Structured utilities cover APPEND INCREMENTAL refresh mode, hypothetical indexes,
+EXPLAIN ANALYZE/WHATIF, enum additions, token/authentication grants, handlers,
+projection indexes/settings, supported projection ALTER and constraint actions,
+and unified SYSTEM background commands. Unrelated Command behavior stays intact.
+New statement-effect information is descriptive, not authorization. Credential
+nodes mask debug output and have explicit redacted SQL rendering; normal SQL and
+serde remain lossless and therefore must not be used as redacted logging formats.
+
+The verifier test asserts that even executing EXPLAIN and credential DDL are only
+hex data in formatQuery. Native DDL vectors are never run. See the
+[batch 3 report](research/clickhouse-2026-batch3.md) for exact coverage, native
+observations, reproduction and unsupported combinations. No failure ledgers or
+historical semantic proofs are relaxed by these additions.
+
+## 63. ClickHouse version-sensitive semantics and final gates
+
+Native TRY_CAST retains its accurate-cast syntax and failure contract rather than
+becoming CAST to Nullable. Its grammar availability is recorded for the measured
+26.10 snapshot, not inferred from the function registry or backported to 26.8.
+Foreign-source legacy lowering and historical semantic certification remain separate.
+
+Source-aware integer division emits diagnostics when the ClickHouse session setting
+is unknown, refuses unproved conversion from explicitly enabled SQL-compatible
+integer mode, and respects measured nested query overrides. Explicit integer mode
+does not inherit the old Float64 typing assumption. Nullable Tuple field extraction
+keeps the container's nullability. PostgreSQL cardinality uses arrayFlattenedLength;
+Trino, native ClickHouse and ordinary Length/ArraySize handling are not globally changed.
+
+Lowered NATURAL pipe joins have original/lowered native evidence on both pins.
+Experimental LATERAL requires proven query-level enablement in executable generation.
+Other existing pipe refusals remain. Current WINDOW VIEW advertising is retired while
+historical patterns and catalog snapshots remain available through their own exports.
+
+The native runner accepts explicit per-pin result/error expectations and the audit
+can capture actual executable pipe lowering and source-aware target examples. Final
+checks cover every earlier batch again without editing failure ledgers or historical
+hazard provenance. See [the final handoff](research/clickhouse-2026-batch4.md) for
+commands, counts, version boundaries, optional skips and remaining limitations.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

@@ -1,0 +1,234 @@
+[
+    {
+        "id": "CH26-S01",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false))], from_=From(this=Table(this=Identifier(this=t, quoted=false), alias=TableAlias(this=Identifier(this=STREAM, quoted=false)))))",
+        "generated": "SELECT x FROM t AS STREAM"
+    },
+    {
+        "id": "CH26-S02",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 51.\n  SELECT a.x FROM db.t AS a FINAL SAMPLE 1 / 2 \u001b[4mSTREAM\u001b[0m BOUNDED UNORDERED WHERE a.x > 0 LIMIT 2"
+    },
+    {
+        "id": "CH26-S03",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 31.\n  SELECT ts FROM t STREAM \u001b[4mBOUNDED\u001b[0m CURSOR {'shard': {'part': 2}} WATERMARK FOR ts AS ts - INTERVAL 1 SECOND IDLE TIMEOUT INTERVAL 2 SE"
+    },
+    {
+        "id": "CH26-S04",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 43.\n  SELECT x FROM (SELECT x FROM t) AS a \u001b[4mSTREAM\u001b[0m BOUNDED LIMIT 2"
+    },
+    {
+        "id": "CH26-A01",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=sumTuple, expressions=[Column(this=Identifier(this=t, quoted=false))]), Aliases(this=Anonymous(this=quantileTuple, expressions=[Literal(this=0.5, is_string=false)]), expressions=[Identifier(this=t, quoted=false)])], from_=From(this=Table(this=Identifier(this=src, quoted=false))))",
+        "generated": "SELECT sumTuple(t), quantileTuple(0.5) AS (t) FROM src"
+    },
+    {
+        "id": "CH26-A02",
+        "error": "Expecting ). Line 1, Col: 61.\n  SELECT sumTupleIf(t, x > 0), quantileExactTupleIf(0.5)(t, x \u001b[4m>\u001b[0m 0) FROM src"
+    },
+    {
+        "id": "CH26-A03",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 68.\n  SELECT sumTuple(t) OVER (PARTITION BY k), quantileTuple(0.5)(t) \u001b[4mOVER\u001b[0m (PARTITION BY k) FROM src"
+    },
+    {
+        "id": "CH26-Q01",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 60.\n  SELECT number FROM numbers(10) ORDER BY number LIMIT 3 \u001b[4mAFTER\u001b[0m number >= 5"
+    },
+    {
+        "id": "CH26-Q02",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 65.\n  SELECT number FROM numbers(10) ORDER BY number LIMIT UNTIL \u001b[4mnumber\u001b[0m >= 3"
+    },
+    {
+        "id": "CH26-Q03",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 65.\n  SELECT number FROM numbers(10) ORDER BY number LIMIT AFTER \u001b[4mnumber\u001b[0m >= 2 UNTIL number >= 6"
+    },
+    {
+        "id": "CH26-Q04",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 60.\n  SELECT number FROM numbers(10) ORDER BY number LIMIT 2 \u001b[4mAFTER\u001b[0m number IN (2, 6) ALL"
+    },
+    {
+        "id": "CH26-Q05",
+        "error": "Required keyword: 'this' missing for Year. Line 1, Col: 13.\n  SELECT year(\u001b[4m)\u001b[0m"
+    },
+    {
+        "id": "CH26-Q06",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 23.\n  SELECT * FROM a \u001b[4mNATURAL\u001b[0m LEFT JOIN b"
+    },
+    {
+        "id": "CH26-Q07",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 18.\n  SELECT dt AT \u001b[4mLOCAL\u001b[0m FROM t"
+    },
+    {
+        "id": "CH26-Q08",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 37.\n  SELECT INTERVAL '1:30' HOUR TO \u001b[4mMINUTE\u001b[0m"
+    },
+    {
+        "id": "CH26-Q09",
+        "error": "Expecting ). Line 1, Col: 94.\n  SELECT * FROM clusterAllReplicas('default', system.query_log, SETTINGS \u001b[4mskip_unavailable_shards\u001b[0m = 1)"
+    },
+    {
+        "id": "CH26-T01",
+        "error": "Expecting ). Line 1, Col: 22.\n  CREATE TABLE t (v \u001b[4mQBit\u001b[0m(Float32, 128, 32)) ENGINE = MergeTree ORDER BY tuple()"
+    },
+    {
+        "id": "CH26-T02",
+        "error": "Expecting ). Line 1, Col: 28.\n  CREATE TABLE t (g \u001b[4mMultiPoint\u001b[0m) ENGINE = MergeTree ORDER BY tuple()"
+    },
+    {
+        "id": "CH26-M01",
+        "root": "Select",
+        "ast": "Select(expressions=[Like(this=Star(), expression=Literal(this=a%, is_string=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT * LIKE 'a%' FROM t"
+    },
+    {
+        "id": "CH26-M02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Star(ilike=Literal(this=a%, is_string=true)), table=Identifier(this=t, quoted=false))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT t.* ILIKE 'a%' FROM t"
+    },
+    {
+        "id": "CH26-M03",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=LOCALTIME, quoted=false)), Column(this=Identifier(this=LOCALTIMESTAMP, quoted=false)), Column(this=Identifier(this=SESSION_USER, quoted=false))])",
+        "generated": "SELECT LOCALTIME, LOCALTIMESTAMP, SESSION_USER"
+    },
+    {
+        "id": "CH26-M04",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=date_part, expressions=[Literal(this=isodow, is_string=true), Column(this=Identifier(this=dt, quoted=false))])], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT date_part('isodow', dt) FROM t"
+    },
+    {
+        "id": "CH26-M05",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=Hello, is_string=true), Literal(this=World, is_string=true)], value_constructor=false), expression=BitwiseOr(this=Column(this=Identifier(this=lower, quoted=false)), expression=Column(this=Identifier(this=reverse, quoted=false))))])",
+        "generated": "SELECT arrayMap(lower | reverse, ['Hello', 'World'])"
+    },
+    {
+        "id": "CH26-M06",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false), expression=Add(this=Mul(this=Column(this=Identifier(this=_1, quoted=false)), expression=Literal(this=2, is_string=false)), expression=Literal(this=1, is_string=false)))])",
+        "generated": "SELECT arrayMap(_1 * 2 + 1, [1, 2, 3])"
+    },
+    {
+        "id": "CH26-D01",
+        "root": "Command",
+        "ast": "Command(this=CREATE, expression= MATERIALIZED VIEW v REFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst AS SELECT * FROM src)",
+        "generated": "CREATE MATERIALIZED VIEW v REFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst AS SELECT * FROM src"
+    },
+    {
+        "id": "CH26-D02",
+        "root": "Command",
+        "ast": "Command(this=CREATE, expression= TOKEN VALID FOR INTERVAL 30 DAY GRANTS (SELECT ON db.t))",
+        "generated": "CREATE TOKEN VALID FOR INTERVAL 30 DAY GRANTS (SELECT ON db.t)"
+    },
+    {
+        "id": "CH26-D03",
+        "root": "Command",
+        "ast": "Command(this=CREATE, expression= HANDLER h URL '/test' AS SELECT 1)",
+        "generated": "CREATE HANDLER h URL '/test' AS SELECT 1"
+    },
+    {
+        "id": "CH26-D04",
+        "root": "Command",
+        "ast": "Command(this=CREATE, expression= HYPOTHETICAL INDEX idx ON t (x) TYPE minmax)",
+        "generated": "CREATE HYPOTHETICAL INDEX idx ON t (x) TYPE minmax"
+    },
+    {
+        "id": "CH26-D05",
+        "root": "Command",
+        "ast": "Command(this=EXPLAIN, expression=Literal(this=WHATIF SELECT * FROM t WHERE x > 10, is_string=true))",
+        "generated": "EXPLAIN WHATIF SELECT * FROM t WHERE x > 10"
+    },
+    {
+        "id": "CH26-D06",
+        "root": "Command",
+        "ast": "Command(this=EXPLAIN, expression=Literal(this=ANALYZE SELECT 1, is_string=true))",
+        "generated": "EXPLAIN ANALYZE SELECT 1"
+    },
+    {
+        "id": "CH26-D07",
+        "root": "Command",
+        "ast": "Command(this=ALTER, expression= TABLE t MODIFY COLUMN status ADD ENUM VALUES ('new' = 3))",
+        "generated": "ALTER TABLE t MODIFY COLUMN status ADD ENUM VALUES ('new' = 3)"
+    },
+    {
+        "id": "CH26-P01",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=c, quoted=false))), with_=With(expressions=[CTE(this=Select(expressions=[Literal(this=1, is_string=false)]), alias=TableAlias(this=Identifier(this=c, quoted=false)), materialized=true)]))",
+        "generated": "WITH c AS MATERIALIZED (SELECT 1) SELECT * FROM c"
+    },
+    {
+        "id": "CH26-P02",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false)), ProjectionDef(this=Identifier(this=p, quoted=false), expression=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (x Int32, PROJECTION p (SELECT x WHERE x > 0 ORDER BY x)) ENGINE=MergeTree ORDER BY x"
+    },
+    {
+        "id": "CH26-P03",
+        "root": "Select",
+        "ast": "Select(expressions=[Escape(this=Like(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=a!_%, is_string=true)), expression=Literal(this=!, is_string=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT x LIKE 'a!_%' ESCAPE '!' FROM t"
+    },
+    {
+        "id": "CH26-P04",
+        "root": "Select",
+        "ast": "Select(expressions=[Bracket(this=Bracket(this=Column(this=Identifier(this=j, quoted=false)), expressions=[Literal(this=key1, is_string=true)]), expressions=[Literal(this=key2, is_string=true)])], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT j['key1']['key2'] FROM t"
+    },
+    {
+        "id": "CH26-P05",
+        "root": "Select",
+        "ast": "Select(expressions=[Cast(this=Null(), to=DataType(this=STRUCT, expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false)), ColumnDef(this=Identifier(this=y, quoted=false), kind=DataType(this=TEXT, nested=false, nullable=false))], nested=true, nullable=true))])",
+        "generated": "SELECT CAST(NULL AS Nullable(Tuple(x Int32, y String)))"
+    },
+    {
+        "id": "CH26-P06",
+        "root": "Select",
+        "ast": "Select(expressions=[Window(this=Sum(this=Column(this=Identifier(this=x, quoted=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=y, quoted=false)), nulls_first=false)]), spec=WindowSpec(kind=GROUPS, start=CURRENT ROW, end=Literal(this=1, is_string=false), end_side=FOLLOWING), over=OVER)], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT sum(x) OVER (ORDER BY y GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING) FROM t"
+    },
+    {
+        "id": "CH26-P07",
+        "root": "PipeQuery",
+        "ast": "PipeQuery(this=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false)))), expressions=[PipeWhere(this=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=1, is_string=false)))), PipeAggregate(expressions=[Alias(this=Count(big_int=true), alias=Identifier(this=c, quoted=false))], group=[Column(this=Identifier(this=y, quoted=false))]), PipeOrderBy(this=Order(expressions=[Ordered(this=Column(this=Identifier(this=c, quoted=false)), desc=true, nulls_first=false)])), PipeLimit(this=Limit(expression=Literal(this=10, is_string=false)))])",
+        "generated": "FROM t |> WHERE x > 1 |> AGGREGATE count() AS c GROUP BY y |> ORDER BY c DESC |> LIMIT 10"
+    },
+    {
+        "id": "CH26-P08",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT * FROM t"
+    },
+    {
+        "id": "CH26-P09",
+        "root": "Select",
+        "ast": "Select(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false), TryCast(this=Literal(this=abc, is_string=true), to=DataType(this=INT, nested=false, nullable=false), safe=true)])",
+        "generated": "SELECT [1, 2, 3], CAST('abc' AS Nullable(Int32))"
+    },
+    {
+        "id": "CH26-P10",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[Column(this=Identifier(this=value, quoted=false)), Column(this=Identifier(this=key, quoted=false))])], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT sumMap(value, key) FROM t"
+    },
+    {
+        "id": "CH26-P11",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))), joins=[Join(this=Lateral(this=Subquery(this=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=Table(this=Identifier(this=u, quoted=false))), where=Where(this=EQ(this=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=u, quoted=false)), expression=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=t, quoted=false)))))), view=false, outer=false, alias=TableAlias(this=Identifier(this=s, quoted=false))), side=LEFT, on=Boolean(this=true))])",
+        "generated": "SELECT * FROM t LEFT JOIN LATERAL (SELECT x FROM u WHERE u.id = t.id LIMIT 2) AS s ON TRUE"
+    },
+    {
+        "id": "CH26-N01",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 29.\n  SELECT * FROM t STREAM \u001b[4mCURSOR\u001b[0m {'p': -1}"
+    },
+    {
+        "id": "CH26-N02",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 32.\n  SELECT * FROM t STREAM \u001b[4mWATERMARK\u001b[0m FOR ts AS"
+    },
+    {
+        "id": "CH26-N03",
+        "error": "Invalid expression / Unexpected token. Line 1, Col: 32.\n  SELECT * FROM t STREAM \u001b[4mWATERMARK\u001b[0m FOR ts AS ts IDLE TIMEOUT INTERVAL -1 SECOND"
+    }
+]

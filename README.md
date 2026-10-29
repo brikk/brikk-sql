@@ -75,6 +75,30 @@ serialization forms, interval precision, window-frame exclusion and NEAREST
 relations. The native parser and captured metadata use the same version.
 See [the compatibility notes](docs/brikk-extensions.md#58-trino-484-sql-and-metadata).
 
+ClickHouse `STREAM` reads and the `-Tuple` aggregate combinator have native
+parse/finite-result checks against pinned 26.8.34.13 LTS and 26.10.2.103 builds.
+Streaming execution still requires the server setting `enable_streaming_queries`.
+Metadata now has 26.5.1.1, 26.8.34.13 LTS and 26.10.2.103 stable snapshots, with
+26.10.2.103 as the unknown-server default. Boundary LIMIT forms, NATURAL JOIN,
+AT LOCAL, compound intervals, trailing remote-function SETTINGS, QBit and MultiPoint
+have structured parser coverage. Native execution limits remain explicit: the
+pinned engines reject `year()` and some LIMIT-range combinations.
+See the [batch 1](docs/research/clickhouse-2026-catchup.md) and
+[batch 2 evidence](docs/research/clickhouse-2026-batch2.md).
+
+The [batch 3 evidence](docs/research/clickhouse-2026-batch3.md) covers name-filtered
+stars, bare built-ins, date-part analysis, higher-order composition/implicit arguments,
+and structured refresh, index, EXPLAIN, authentication, handler and ALTER forms.
+DDL coverage is parse-only. EXPLAIN ANALYZE is explicitly classified as executing
+its enclosed query; the editor verifier still only formats SQL passed as data.
+
+The eight-step catch-up is complete within the [final coverage and limits](docs/research/clickhouse-2026-batch4.md).
+Native TRY_CAST keeps its accurate-cast behavior, integer division retains
+setting-dependent diagnostics, nullable tuple fields keep nullability, and
+PostgreSQL cardinality uses the all-dimensions count without changing Trino's
+outer-array behavior. Lowered NATURAL joins are measured on both pins; LATERAL
+remains experimental and setting-dependent. Historical semantic proofs are unchanged.
+
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
 The opt-in API leaves the existing rendering paths unchanged.

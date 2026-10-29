@@ -35,21 +35,38 @@ class MetadataSnapshot(
         grammarForms: List<GrammarForm>? = null,
     ) : this(engineVersion, functions, keywords, pragmas, settings, extensions, extensionFunctions, tableFunctions, grammarForms, null)
 
-    private val typesByName: Map<String, TypeDef> by lazy { types.orEmpty().associateBy { functions.nameKey(it.name) } }
+    private val typesByName: Map<String, TypeDef> by lazy {
+        types.orEmpty().associateBy { if (it.caseInsensitive == null) functions.nameKey(it.name) else it.name }
+    }
+    private val insensitiveTypes: Map<String, TypeDef> by lazy {
+        types.orEmpty().filter { it.caseInsensitive == true }.associateBy { it.name.uppercase() }
+    }
 
     /** The [TableFunctionInfo] for [name], matched by the dialect's name policy. */
     fun tableFunction(name: String): TableFunctionInfo? =
         functions.nameKey(name).let { key -> tableFunctions?.find { functions.nameKey(it.name) == key } }
 
     /** The built-in type or alias [name], matched by the dialect's name policy; null when unknown or [types] is. */
-    fun type(name: String): TypeDef? = typesByName[functions.nameKey(name)]
+    fun type(name: String): TypeDef? = insensitiveTypes[name.uppercase()] ?: typesByName[name]
+        ?: typesByName[functions.nameKey(name)]?.takeIf { it.caseInsensitive == null }
 }
 
 /**
  * A type name the engine accepts: a type or an alias of one ([logicalType] is the type it names) and the
- * engine's [category] of it (`NUMERIC`, `STRING`, ...) when it has one.
+ * engine's [category] of it (`NUMERIC`, `STRING`, ...) when it has one. A captured
+ * [caseInsensitive] flag overrides the dialect default; null means not captured.
  */
-data class TypeDef(val name: String, val logicalType: String, val category: String? = null)
+data class TypeDef(
+    val name: String, val logicalType: String, val category: String? = null,
+    val caseInsensitive: Boolean? = null,
+) {
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(name: String, logicalType: String, category: String? = null) : this(name, logicalType, category, null)
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(name: String = this.name, logicalType: String = this.logicalType, category: String? = this.category): TypeDef =
+        copy(name, logicalType, category, caseInsensitive)
+}
 
 /** Every bundled snapshot of one dialect, oldest first, and where the engine's documentation lives ([docs]), if bundled. */
 class DialectMetadata(

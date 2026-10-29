@@ -396,7 +396,42 @@ Never infer universal equivalence from matching samples or replace historical
 non-JSON evidence with these versions. The metadata generator consumes the reviewed
 `brikk-sql/testResources/semantics/trino-doris-hazards.json`, not raw probe counts.
 
+## `data/clickhouse-2026-audit/`
+
+Targeted 2026 SQL audit and STREAM/Tuple-combinator regression evidence. `engines.json`
+pins official 26.8.34.13 LTS and 26.10.2.103 stable images by digest; `cases.json` records
+stable case IDs and native acceptance/execution expectations. Native JSON captures include
+raw parser output and exact native/generated finite-query results. Brikk before/after captures
+record ASTs, output and errors, not semantic certification. Reproduce with
+`tools/probe_clickhouse_2026.py` and `tools/clickhouse_2026_audit.kts`; see
+`docs/research/clickhouse-2026-catchup.md` for commands, provenance and limitations.
+These probes do not replace or relabel the historical 26.5.1.1 catalogs or hazard evidence.
+ClickHouse-derived parser output is Apache-2.0 licensed.
+
+The final ClickHouse `batch4-cases.json` and `batch4/` evidence cover setting/version
+differences, retained regression forms and actual original/lowered results. Per-pin
+expected results/errors keep older-engine failures visible. Fresh reruns of the first
+three batches are saved under `batch4/regression/`, not over older captures or the
+historical semantic-hazard evidence. See `docs/research/clickhouse-2026-batch4.md`.
+
+The ClickHouse audit's `batch3-cases.json` and `batch3/` evidence cover analysis
+corrections and structured DDL/EXPLAIN on the same pinned engines. DDL and executing
+EXPLAIN statements are supplied to native formatQuery as hex data only. The separate
+finite execution vectors are SELECT expressions, not tokens, handlers or mutations.
+See `docs/research/clickhouse-2026-batch3.md` for grammar provenance and limitations.
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
+
+The original embedded capture below is retained. Current official-build captures
+for **26.8.34.13** and **26.10.2.103** are versioned alongside it. Their
+`clickhouse-capture-<version>.json` manifests pin exact engine images, queries and
+content hashes. `tools/capture_clickhouse_metadata.py` reproduces function, table
+function, keyword and type-family registries, selected query settings, build options
+and embedded documentation. `system.statements` is recorded as unavailable on 26.8.
+Documentation syntax and introduction strings are raw evidence, not inferred
+overloads or first-availability facts. See `docs/research/clickhouse-2026-batch2.md`.
+`tools/generate_clickhouse_functions.py` renders all captured snapshots by default;
+the public catalog alias uses 26.10.2.103. The historical files are not relabeled.
 
 ClickHouse **26.5.1.1**'s complete function registry (`system.functions`), one row per
 function, 4 tab-separated columns: `name`, `is_aggregate`, `case_insensitive`, `alias_to`.

@@ -1,0 +1,302 @@
+[
+    {
+        "id": "CH26-S01",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false))], from_=From(this=ClickhouseStream(this=Table(this=Identifier(this=t, quoted=false)), bounded=false, unordered=false)))",
+        "generated": "SELECT x FROM t STREAM"
+    },
+    {
+        "id": "CH26-S02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false), table=Identifier(this=a, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=ClickhouseStream(this=Final(this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false), alias=TableAlias(this=Identifier(this=a, quoted=false)), sample=TableSample(size=Div(this=Literal(this=1, is_string=false), expression=Literal(this=2, is_string=false), typed=false, safe=false)))), bounded=true, unordered=true)), where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false), table=Identifier(this=a, quoted=false)), expression=Literal(this=0, is_string=false))))",
+        "generated": "SELECT a.x FROM db.t AS a FINAL SAMPLE 1 / 2 STREAM BOUNDED UNORDERED WHERE a.x > 0 LIMIT 2"
+    },
+    {
+        "id": "CH26-S03",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=ts, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=ClickhouseStream(this=Table(this=Identifier(this=t, quoted=false)), bounded=true, unordered=false, cursor=ClickhouseStreamCursor(expressions=[PropertyEQ(this=Literal(this=shard, is_string=true), expression=ClickhouseStreamCursor(expressions=[PropertyEQ(this=Literal(this=part, is_string=true), expression=Literal(this=2, is_string=false))]))]), watermark=Column(this=Identifier(this=ts, quoted=false)), expression=Sub(this=Column(this=Identifier(this=ts, quoted=false)), expression=Interval(this=Literal(this=1, is_string=true), unit=Var(this=SECOND))), idle_timeout=Interval(this=Literal(this=2, is_string=true), unit=Var(this=SECOND)))))",
+        "generated": "SELECT ts FROM t STREAM BOUNDED CURSOR {'shard': {'part': 2}} WATERMARK FOR ts AS ts - INTERVAL '1' SECOND IDLE TIMEOUT INTERVAL 2 SECOND LIMIT 2"
+    },
+    {
+        "id": "CH26-S04",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=ClickhouseStream(this=Subquery(this=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], from_=From(this=Table(this=Identifier(this=t, quoted=false)))), alias=TableAlias(this=Identifier(this=a, quoted=false))), bounded=true, unordered=false)))",
+        "generated": "SELECT x FROM (SELECT x FROM t) AS a STREAM BOUNDED LIMIT 2"
+    },
+    {
+        "id": "CH26-A01",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=sumTuple, expressions=[Column(this=Identifier(this=t, quoted=false))]), CombinedParameterizedAgg(this=quantileTuple, expressions=[Literal(this=0.5, is_string=false)], params=[Column(this=Identifier(this=t, quoted=false))])], from_=From(this=Table(this=Identifier(this=src, quoted=false))))",
+        "generated": "SELECT sumTuple(t), quantileTuple(0.5)(t) FROM src"
+    },
+    {
+        "id": "CH26-A02",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=sumTupleIf, expressions=[Column(this=Identifier(this=t, quoted=false)), GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))]), CombinedParameterizedAgg(this=quantileExactTupleIf, expressions=[Literal(this=0.5, is_string=false)], params=[Column(this=Identifier(this=t, quoted=false)), GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))])], from_=From(this=Table(this=Identifier(this=src, quoted=false))))",
+        "generated": "SELECT sumTupleIf(t, x > 0), quantileExactTupleIf(0.5)(t, x > 0) FROM src"
+    },
+    {
+        "id": "CH26-A03",
+        "root": "Select",
+        "ast": "Select(expressions=[Window(this=CombinedAggFunc(this=sumTuple, expressions=[Column(this=Identifier(this=t, quoted=false))]), partition_by=[Column(this=Identifier(this=k, quoted=false))], over=OVER), Window(this=CombinedParameterizedAgg(this=quantileTuple, expressions=[Literal(this=0.5, is_string=false)], params=[Column(this=Identifier(this=t, quoted=false))]), partition_by=[Column(this=Identifier(this=k, quoted=false))], over=OVER)], from_=From(this=Table(this=Identifier(this=src, quoted=false))))",
+        "generated": "SELECT sumTuple(t) OVER (PARTITION BY k), quantileTuple(0.5)(t) OVER (PARTITION BY k) FROM src"
+    },
+    {
+        "id": "CH26-Q01",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=3, is_string=false), after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=5, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 3 AFTER number >= 5"
+    },
+    {
+        "id": "CH26-Q02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(until=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=3, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT UNTIL number >= 3"
+    },
+    {
+        "id": "CH26-Q03",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(after=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false)), until=GTE(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=6, is_string=false)), all=false), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT AFTER number >= 2 UNTIL number >= 6"
+    },
+    {
+        "id": "CH26-Q04",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=number, quoted=false))], limit=ClickhouseLimitRange(expression=Literal(this=2, is_string=false), after=In(this=Column(this=Identifier(this=number, quoted=false)), expressions=[Literal(this=2, is_string=false), Literal(this=6, is_string=false)]), all=true), from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=10, is_string=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=number, quoted=false)), nulls_first=false)]))",
+        "generated": "SELECT number FROM numbers(10) ORDER BY number LIMIT 2 AFTER number IN (2, 6) ALL"
+    },
+    {
+        "id": "CH26-Q05",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseYear()])",
+        "generated": "SELECT year()"
+    },
+    {
+        "id": "CH26-Q06",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), method=NATURAL, side=LEFT)])",
+        "generated": "SELECT * FROM a NATURAL LEFT JOIN b"
+    },
+    {
+        "id": "CH26-Q07",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseAtLocal(this=Column(this=Identifier(this=dt, quoted=false)))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT dt AT LOCAL FROM t"
+    },
+    {
+        "id": "CH26-Q08",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseCompoundInterval(this=Literal(this=1:30, is_string=true), unit=Var(this=HOUR), expression=Var(this=MINUTE))])",
+        "generated": "SELECT INTERVAL '1:30' HOUR TO MINUTE"
+    },
+    {
+        "id": "CH26-Q09",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=clusterAllReplicas, expressions=[Literal(this=default, is_string=true), Column(this=Identifier(this=query_log, quoted=false), table=Identifier(this=system, quoted=false)), ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=skip_unavailable_shards, quoted=false), expression=Literal(this=1, is_string=false))])]))))",
+        "generated": "SELECT * FROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)"
+    },
+    {
+        "id": "CH26-T01",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=v, quoted=false), kind=ClickhouseNativeType(this=USERDEFINED, kind=QBit, expressions=[DataType(this=FLOAT, nested=false, nullable=false), Literal(this=128, is_string=false), Literal(this=32, is_string=false)], nested=true, nullable=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Struct(), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (v QBit(Float32, 128, 32)) ENGINE=MergeTree ORDER BY tuple()"
+    },
+    {
+        "id": "CH26-T02",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=g, quoted=false), kind=ClickhouseNativeType(this=USERDEFINED, kind=MultiPoint, nested=false, nullable=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Struct(), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (g MultiPoint) ENGINE=MergeTree ORDER BY tuple()"
+    },
+    {
+        "id": "CH26-M01",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseStar(like=Literal(this=a%, is_string=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT * LIKE 'a%' FROM t"
+    },
+    {
+        "id": "CH26-M02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=ClickhouseStar(ilike=Literal(this=a%, is_string=true)), table=Identifier(this=t, quoted=false))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT t.* ILIKE 'a%' FROM t"
+    },
+    {
+        "id": "CH26-M03",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseBuiltin(this=LOCALTIME), ClickhouseBuiltin(this=LOCALTIMESTAMP), ClickhouseBuiltin(this=SESSION_USER)])",
+        "generated": "SELECT LOCALTIME, LOCALTIMESTAMP, SESSION_USER"
+    },
+    {
+        "id": "CH26-M04",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseDatePart(this=Literal(this=isodow, is_string=true), expression=Column(this=Identifier(this=dt, quoted=false)))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT date_part('isodow', dt) FROM t"
+    },
+    {
+        "id": "CH26-M05",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=Hello, is_string=true), Literal(this=World, is_string=true)], value_constructor=false), expression=ClickhouseComposition(this=ClickhouseFunctionReference(this=Identifier(this=lower, quoted=false)), expression=ClickhouseFunctionReference(this=Identifier(this=reverse, quoted=false))))])",
+        "generated": "SELECT arrayMap(lower | reverse, ['Hello', 'World'])"
+    },
+    {
+        "id": "CH26-M06",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Add(this=Mul(this=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1), expression=Literal(this=2, is_string=false)), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(_1 * 2 + 1, [1, 2, 3])"
+    },
+    {
+        "id": "CH26-D01",
+        "root": "Create",
+        "ast": "Create(this=Table(this=Identifier(this=v, quoted=false)), kind=VIEW, replace=false, refresh=false, unique=false, expression=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=src, quoted=false)))), exists=false, properties=Properties(expressions=[MaterializedProperty(), ClickhouseRefresh(this=AutoRefreshProperty(this=Interval(this=Literal(this=1, is_string=true), unit=Var(this=MINUTE)), cadence=EVERY, append=true)), ToTableProperty(this=Table(this=Identifier(this=dst, quoted=false)))]), concurrently=false)",
+        "generated": "CREATE MATERIALIZED VIEW v REFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst AS SELECT * FROM src"
+    },
+    {
+        "id": "CH26-D02",
+        "root": "ClickhouseCreateToken",
+        "ast": "ClickhouseCreateToken(valid_kind=FOR, valid=Interval(this=Literal(this=30, is_string=false), unit=Var(this=DAY)), grants=[ClickhouseGrant(this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), expressions=[Var(this=SELECT)])])",
+        "generated": "CREATE TOKEN VALID FOR INTERVAL 30 DAY GRANTS (SELECT ON db.t)"
+    },
+    {
+        "id": "CH26-D03",
+        "root": "ClickhouseHandler",
+        "ast": "ClickhouseHandler(this=Identifier(this=h, quoted=false), kind=CREATE, exists=false, url=Literal(this=/test, is_string=true), expression=Select(expressions=[Literal(this=1, is_string=false)]))",
+        "generated": "CREATE HANDLER h URL '/test' AS SELECT 1"
+    },
+    {
+        "id": "CH26-D04",
+        "root": "ClickhouseHypotheticalIndex",
+        "ast": "ClickhouseHypotheticalIndex(this=Identifier(this=idx, quoted=false), table=Table(this=Identifier(this=t, quoted=false)), expression=Tuple(expressions=[Column(this=Identifier(this=x, quoted=false))]), type=Identifier(this=minmax, quoted=false), exists=false)",
+        "generated": "CREATE HYPOTHETICAL INDEX idx ON t (x) TYPE minmax"
+    },
+    {
+        "id": "CH26-D05",
+        "root": "ClickhouseExplain",
+        "ast": "ClickhouseExplain(this=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))), where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=10, is_string=false)))), kind=WHATIF)",
+        "generated": "EXPLAIN WHATIF SELECT * FROM t WHERE x > 10"
+    },
+    {
+        "id": "CH26-D06",
+        "root": "ClickhouseExplain",
+        "ast": "ClickhouseExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), kind=ANALYZE)",
+        "generated": "EXPLAIN ANALYZE SELECT 1"
+    },
+    {
+        "id": "CH26-D07",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=status, quoted=false), kind=ENUM, exists=false, expressions=[EQ(this=Literal(this=new, is_string=true), expression=Literal(this=3, is_string=false))])], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MODIFY COLUMN status ADD ENUM VALUES ('new' = 3)"
+    },
+    {
+        "id": "CH26-P01",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=c, quoted=false))), with_=With(expressions=[CTE(this=Select(expressions=[Literal(this=1, is_string=false)]), alias=TableAlias(this=Identifier(this=c, quoted=false)), materialized=true)]))",
+        "generated": "WITH c AS MATERIALIZED (SELECT 1) SELECT * FROM c"
+    },
+    {
+        "id": "CH26-P02",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false)), ProjectionDef(this=Identifier(this=p, quoted=false), expression=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (x Int32, PROJECTION p (SELECT x WHERE x > 0 ORDER BY x)) ENGINE=MergeTree ORDER BY x"
+    },
+    {
+        "id": "CH26-P03",
+        "root": "Select",
+        "ast": "Select(expressions=[Escape(this=Like(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=a!_%, is_string=true)), expression=Literal(this=!, is_string=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT x LIKE 'a!_%' ESCAPE '!' FROM t"
+    },
+    {
+        "id": "CH26-P04",
+        "root": "Select",
+        "ast": "Select(expressions=[Bracket(this=Bracket(this=Column(this=Identifier(this=j, quoted=false)), expressions=[Literal(this=key1, is_string=true)]), expressions=[Literal(this=key2, is_string=true)])], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT j['key1']['key2'] FROM t"
+    },
+    {
+        "id": "CH26-P05",
+        "root": "Select",
+        "ast": "Select(expressions=[Cast(this=Null(), to=DataType(this=STRUCT, expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=INT, nested=false, nullable=false)), ColumnDef(this=Identifier(this=y, quoted=false), kind=DataType(this=TEXT, nested=false, nullable=false))], nested=true, nullable=true))])",
+        "generated": "SELECT CAST(NULL AS Nullable(Tuple(x Int32, y String)))"
+    },
+    {
+        "id": "CH26-P06",
+        "root": "Select",
+        "ast": "Select(expressions=[Window(this=Sum(this=Column(this=Identifier(this=x, quoted=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=y, quoted=false)), nulls_first=false)]), spec=WindowSpec(kind=GROUPS, start=CURRENT ROW, end=Literal(this=1, is_string=false), end_side=FOLLOWING), over=OVER)], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT sum(x) OVER (ORDER BY y GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING) FROM t"
+    },
+    {
+        "id": "CH26-P07",
+        "root": "PipeQuery",
+        "ast": "PipeQuery(this=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false)))), expressions=[PipeWhere(this=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=1, is_string=false)))), PipeAggregate(expressions=[Alias(this=Count(big_int=true), alias=Identifier(this=c, quoted=false))], group=[Column(this=Identifier(this=y, quoted=false))]), PipeOrderBy(this=Order(expressions=[Ordered(this=Column(this=Identifier(this=c, quoted=false)), desc=true, nulls_first=false)])), PipeLimit(this=Limit(expression=Literal(this=10, is_string=false)))])",
+        "generated": "FROM t |> WHERE x > 1 |> AGGREGATE count() AS c GROUP BY y |> ORDER BY c DESC |> LIMIT 10"
+    },
+    {
+        "id": "CH26-P08",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT * FROM t"
+    },
+    {
+        "id": "CH26-P09",
+        "root": "Select",
+        "ast": "Select(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false), TryCast(this=Literal(this=abc, is_string=true), to=DataType(this=INT, nested=false, nullable=false), safe=true)])",
+        "generated": "SELECT [1, 2, 3], TRY_CAST('abc' AS Int32)"
+    },
+    {
+        "id": "CH26-P10",
+        "root": "Select",
+        "ast": "Select(expressions=[AnonymousAggFunc(this=sumMap, expressions=[Column(this=Identifier(this=value, quoted=false)), Column(this=Identifier(this=key, quoted=false))])], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT sumMap(value, key) FROM t"
+    },
+    {
+        "id": "CH26-P11",
+        "root": "Select",
+        "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))), joins=[Join(this=Lateral(this=Subquery(this=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=Table(this=Identifier(this=u, quoted=false))), where=Where(this=EQ(this=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=u, quoted=false)), expression=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=t, quoted=false)))))), view=false, outer=false, alias=TableAlias(this=Identifier(this=s, quoted=false))), side=LEFT, on=Boolean(this=true))])",
+        "generated": "SELECT * FROM t LEFT JOIN LATERAL (SELECT x FROM u WHERE u.id = t.id LIMIT 2) AS s ON TRUE"
+    },
+    {
+        "id": "CH26-N01",
+        "error": "Expected unsigned stream cursor value. Line 1, Col: 37.\n  SELECT * FROM t STREAM CURSOR {'p': \u001b[4m-\u001b[0m1}"
+    },
+    {
+        "id": "CH26-N02",
+        "error": "Expected watermark expression. Line 1, Col: 42.\n  SELECT * FROM t STREAM WATERMARK FOR ts \u001b[4mAS\u001b[0m"
+    },
+    {
+        "id": "CH26-N03",
+        "error": "Expected unsigned integer idle timeout. Line 1, Col: 67.\n  SELECT * FROM t STREAM WATERMARK FOR ts AS ts IDLE TIMEOUT \u001b[4mINTERVAL\u001b[0m -1 SECOND"
+    },
+    {
+        "id": "CH26-E01",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=ClickhouseStream(this=Table(this=Identifier(this=t, quoted=false)), bounded=true, unordered=false)))",
+        "generated": "SELECT x FROM t STREAM BOUNDED LIMIT 2"
+    },
+    {
+        "id": "CH26-E02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false))], limit=Limit(expression=Literal(this=2, is_string=false)), from_=From(this=ClickhouseStream(this=Table(this=Identifier(this=t, quoted=false)), bounded=true, unordered=false, watermark=Column(this=Identifier(this=ts, quoted=false)), expression=Sub(this=Column(this=Identifier(this=ts, quoted=false)), expression=Interval(this=Literal(this=1, is_string=true), unit=Var(this=SECOND))), idle_timeout=Interval(this=Literal(this=1, is_string=true), unit=Var(this=SECOND)))))",
+        "generated": "SELECT x FROM t STREAM BOUNDED WATERMARK FOR ts AS ts - INTERVAL '1' SECOND IDLE TIMEOUT INTERVAL 1 SECOND LIMIT 2"
+    },
+    {
+        "id": "CH26-E03",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=sumTuple, expressions=[Tuple(expressions=[Add(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)), Mul(this=Paren(this=Add(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false))), expression=Literal(this=2, is_string=false))])]), CombinedParameterizedAgg(this=quantileExactTuple, expressions=[Literal(this=0.5, is_string=false)], params=[Tuple(expressions=[Add(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)), Mul(this=Paren(this=Add(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false))), expression=Literal(this=2, is_string=false))])])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT sumTuple((number + 1, (number + 1) * 2)), quantileExactTuple(0.5)((number + 1, (number + 1) * 2)) FROM numbers(2)"
+    },
+    {
+        "id": "CH26-E04",
+        "root": "Select",
+        "ast": "Select(expressions=[CombinedAggFunc(this=sumTupleIf, expressions=[Tuple(expressions=[Column(this=Identifier(this=number, quoted=false)), Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))]), GT(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=0, is_string=false))]), CombinedParameterizedAgg(this=quantileExactTupleIf, expressions=[Literal(this=0.5, is_string=false)], params=[Tuple(expressions=[Column(this=Identifier(this=number, quoted=false)), Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))]), GT(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=0, is_string=false))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=3, is_string=false)]))))",
+        "generated": "SELECT sumTupleIf((number, number * 2), number > 0), quantileExactTupleIf(0.5)((number, number * 2), number > 0) FROM numbers(3)"
+    },
+    {
+        "id": "CH26-E05",
+        "root": "Select",
+        "ast": "Select(expressions=[Alias(this=CombinedAggFunc(this=sumTuple, expressions=[Cast(this=Tuple(expressions=[Add(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false)), Mul(this=Paren(this=Add(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=1, is_string=false))), expression=Literal(this=2, is_string=false))]), to=DataType(this=STRUCT, expressions=[ColumnDef(this=Identifier(this=a, quoted=false), kind=DataType(this=UBIGINT, nested=false, nullable=false)), ColumnDef(this=Identifier(this=b, quoted=false), kind=DataType(this=UBIGINT, nested=false, nullable=false))], nested=true, nullable=false))]), alias=Identifier(this=v, quoted=false)), Anonymous(this=tupleNames, expressions=[Column(this=Identifier(this=v, quoted=false))])], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT sumTuple(CAST((number + 1, (number + 1) * 2) AS Tuple(a UInt64, b UInt64))) AS v, tupleNames(v) FROM numbers(2)"
+    },
+    {
+        "id": "CH26-E06",
+        "root": "Select",
+        "ast": "Select(expressions=[Window(this=CombinedAggFunc(this=sumTuple, expressions=[Tuple(expressions=[Column(this=Identifier(this=number, quoted=false)), Mul(this=Column(this=Identifier(this=number, quoted=false)), expression=Literal(this=2, is_string=false))])]), over=OVER)], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)]))))",
+        "generated": "SELECT sumTuple((number, number * 2)) OVER () FROM numbers(2)"
+    }
+]
