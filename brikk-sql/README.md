@@ -472,6 +472,40 @@ checks remain enabled, auto-install/autoload are disabled, and the source binary
 No network repository or user's trust/extension store is used. Without the explicit dependency,
 the signed-binary tests report skips rather than substituting unsigned or unrelated evidence.
 
+DuckDB 2.0 external-resource syntax is structured: CREATE, REGISTER ... FROM <handle>, DESTROY,
+SHOW [ALL], ATTACH TO and CONNECT TO, including NEW TEMPORARY sources. Provider/type strings,
+resource identifiers, handle expressions and option values remain authored data. Creation options
+belong to the resource source; attachment/connection options are a different bag. ATTACH requires
+an AS alias between its bags. CONNECT to a newly provisioned temporary source cannot take a
+second option bag. CREATE/REGISTER without a name can be parsed but executable generation
+refuses the known native binder error instead of inventing a name or changing ownership.
+
+Ordinary SHOW lists the instance's registrations; SHOW ALL invokes native discovery callbacks.
+Both have a fixed eight-column runtime contract with computed provenance, nullable discovery
+fields and an opaque MAP(VARCHAR, VARCHAR) handle, not a guessed provider-specific schema.
+The other management statements expose no query output shape. SELECT qualification/type
+rewrites, lifecycle lineage, handle-subquery dependency inference and unproved cross-target
+execution refuse rather than treating resources as physical tables or inlining their callbacks.
+
+All verifier channels stay parse-only for this syntax and recognizable resource API calls,
+including the trusted corpus oracle. Neither SHOW ALL nor EXPLAIN/prepare is a validation
+fallback: binding options/handles can evaluate expressions, and discovery can call providers.
+Pinned native controls show bind-time sequence effects; autocommit JDBC prepare can also hit
+DuckDB 2.0's internal read-only-transaction error. That error is isolated in a test, with no
+production retry, transaction workaround, lifecycle emulation or change to a user's session.
+Parser/editor/verifier diagnostics redact resource details. AST/serde/generated SQL, native
+execution errors and native listing rows can still contain sensitive handles/URIs and tokens.
+
+Native execution tests use only SQL mock recipes, sequences and owned scratch DuckDB files.
+They cover CREATE versus REGISTER callback counts, quoted names, local versus discovery lists,
+borrowed versus owned attachment cleanup, post-provision failure cleanup, option collisions,
+failed DESTROY retaining registration and explicit repair. CONNECT cleanup is tested against
+the local backend's unsupported-routing error, not a live provider connection. No cloud resource,
+provider extension, remote service, installation, or user's database/resource is touched. These
+tests do not certify provider APIs, billing, polling deadlines or general teardown reliability.
+No dedicated public DuckDB 2.0 documentation page was found for this syntax; the grammar and
+runtime contracts are pinned to native source/tests, and metadata deliberately invents no URL.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

@@ -27,6 +27,7 @@ import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.desugarPipes
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.duckdbExtensionResult
+import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
 import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
@@ -167,7 +168,7 @@ internal class ScopeAnalysis(
                 if (parsed.statements.size == 1) output = row.toFact()
             } else {
                 evaluator.statement(lowered, root)
-                if (parsed.statements.size == 1 && dialect.name == "duckdb") output = lowered.duckdbExtensionResult()
+                if (parsed.statements.size == 1 && dialect.name == "duckdb") output = lowered.duckdbExtensionResult() ?: lowered.duckdbExternalResourceResult()
             }
             references += evaluator.references
             diagnostics += evaluator.diagnostics

@@ -14,6 +14,7 @@ import dev.brikk.house.sql.ast.TriggerReferencing
 import dev.brikk.house.sql.ast.TriggerEvent
 import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
 import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Alias
 import dev.brikk.house.sql.ast.Anonymous
@@ -155,6 +156,7 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
+        if (node.isDuckdbExternalResourceStatement()) return true
         if (node.isDuckdbExtensionManagement()) return true
         if (node.isDuckdbRecursiveViewDefinition()) throw dev.brikk.house.sql.generator.UnsupportedError("Recursive view self-reference scope is not modeled")
         if (dialect.name == "duckdb" && node.isTriggerDdl()) {

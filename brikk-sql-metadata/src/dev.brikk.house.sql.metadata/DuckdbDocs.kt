@@ -13,6 +13,15 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
     base = "https://duckdb.org/docs/current/",
     statements = listOf(
         // Databases and extensions.
+        // Native 2.0 syntax without a dedicated published documentation page. Do not invent a URL.
+        DocsEntry("ATTACH TO [NEW TEMPORARY] EXTERNAL RESOURCE", null, "ATTACH TO EXTERNAL RESOURCE",
+            "Borrows a registered resource or provisions a temporary one. Creation and attachment options are separate."),
+        DocsEntry("CONNECT TO [NEW TEMPORARY] EXTERNAL RESOURCE", null, "CONNECT TO EXTERNAL RESOURCE",
+            "Routes through a resource endpoint. Binding options and executing recipes are not editor validation."),
+        DocsEntry("CREATE EXTERNAL RESOURCE", null, "CREATE EXTERNAL RESOURCE", "Provisions and registers a named resource through a native recipe."),
+        DocsEntry("REGISTER EXTERNAL RESOURCE", null, "REGISTER EXTERNAL RESOURCE", "Adopts a handle through a native status callback; it does not call create."),
+        DocsEntry("DESTROY EXTERNAL RESOURCE", null, "DESTROY EXTERNAL RESOURCE", "Runs native teardown before removing the registration."),
+        DocsEntry("SHOW [ALL] EXTERNAL RESOURCES", null, "SHOW EXTERNAL RESOURCES", "ALL invokes discovery callbacks; ordinary SHOW lists the local registry."),
         DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "core_extensions/ducklake", "DuckLake",
             "Attaches a DuckLake catalog: tables in Parquet files with their metadata in a catalog database.", literalPrefix = "ducklake:"),
         DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "${STATEMENTS}attach", "ATTACH", "Attaches a database file or another database system."),

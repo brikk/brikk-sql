@@ -24,6 +24,7 @@ open class DuckdbDialect : Dialect() {
     override val singleStatementTriggers: Boolean get() = true
 
     override fun diagnosticMessage(sql: String, message: String): String = when {
+        mayContainDuckdbExternalResources(sql) -> REDACTED_RESOURCE_DIAGNOSTIC
         mayContainDuckdbRouting(sql) -> REDACTED_ROUTING_DIAGNOSTIC
         mayContainDuckdbExtensionManagement(sql) -> REDACTED_EXTENSION_DIAGNOSTIC
         else -> message

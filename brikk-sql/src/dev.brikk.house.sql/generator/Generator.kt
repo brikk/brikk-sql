@@ -397,6 +397,8 @@ open class Generator(
         }
         if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExtensionManagement() })
             unexecutable("$targetName has no verified DuckDB extension/repository management translation")
+        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExternalResourceStatement() || it is DuckdbExternalResourceSource })
+            unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
         if (expr.findAll<SecureProperty>().any()) {
             // Among the implemented targets only DuckDB has a verified secure-view
             // contract. An origin-less AST is not permission to emit an unsafe DDL.
@@ -4805,6 +4807,35 @@ open class Generator(
             }
             is DuckdbLoadExtension -> "LOAD $target$from" + sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
             else -> error("Not an extension management statement")
+        }
+    }
+
+    internal fun duckdbExternalResourceSql(expression: Expression): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB external-resource statements")
+        fun options(node: Expression): String = expressions(node).let { if (it.isEmpty()) "" else " ($it)" }
+        val target = sql(expression, "this")
+        val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+        return when (expression) {
+            is DuckdbCreateExternalResource -> {
+                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
+                "CREATE EXTERNAL RESOURCE $target$alias${options(expression)}"
+            }
+            is DuckdbRegisterExternalResource -> {
+                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
+                val handle = sql(expression, "expression")
+                "REGISTER EXTERNAL RESOURCE $target$alias FROM $handle"
+            }
+            is DuckdbDestroyExternalResource -> "DESTROY EXTERNAL RESOURCE $target"
+            is DuckdbShowExternalResources -> "SHOW${if (expression.args["all"] == true) " ALL" else ""} EXTERNAL RESOURCES"
+            is DuckdbExternalResourceSource -> if (expression.args["temporary"] == true)
+                "NEW TEMPORARY EXTERNAL RESOURCE $target${options(expression)}" else "EXTERNAL RESOURCE $target"
+            is DuckdbAttachExternalResource -> "ATTACH TO $target$alias${options(expression)}"
+            is DuckdbConnectExternalResource -> {
+                if ((expression.thisArg as? DuckdbExternalResourceSource)?.args?.get("temporary") == true && expression.expressionsArg.isNotEmpty())
+                    unexecutable("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
+                "CONNECT TO $target${options(expression)}"
+            }
+            else -> error("Not an external resource node")
         }
     }
 

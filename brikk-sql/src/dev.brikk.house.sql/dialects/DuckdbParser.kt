@@ -302,6 +302,31 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        if (currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING)) {
+            if (currToken.text.equals("REGISTER", true) && nextToken.text.equals("EXTERNAL", true)) {
+                advance()
+                resourceKeywords()
+                val type = resourceType()
+                val alias = if (match(TokenType.ALIAS)) resourceName() else null
+                if (!match(TokenType.FROM)) raiseError("REGISTER EXTERNAL RESOURCE requires FROM and a handle expression")
+                return expression(dev.brikk.house.sql.ast.DuckdbRegisterExternalResource(args(
+                    "this" to type, "alias" to alias, "expression" to (parseExpression() ?: raiseError("Expected resource handle")),
+                )))
+            }
+            if (currToken.text.equals("DESTROY", true) && nextToken.text.equals("EXTERNAL", true)) {
+                advance()
+                resourceKeywords()
+                return expression(dev.brikk.house.sql.ast.DuckdbDestroyExternalResource(args("this" to resourceName())))
+            }
+            if (currToken.text.equals("CONNECT", true) && nextToken.text.equals("TO", true)) {
+                advance(2)
+                val source = externalResourceSource()
+                if (source.args["temporary"] == true && currToken.tokenType == TokenType.L_PAREN)
+                    raiseError("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
+                val options = resourceOptions()
+                return expression(dev.brikk.house.sql.ast.DuckdbConnectExternalResource(args("this" to source, "expressions" to options)))
+            }
+        }
         if (match(TokenType.TABLE)) {
             val table = parseTableParts() ?: raiseError("Expected relation after TABLE")
             return parseQueryModifiers(expression(dev.brikk.house.sql.ast.Select(args(
@@ -383,6 +408,16 @@ open class DuckdbParser(
     }
 
     override fun parseCreate(): Expression {
+        var resourceOffset = index
+        while (tokens.getOrNull(resourceOffset)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY")) resourceOffset++
+        if (tokens.getOrNull(resourceOffset)?.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) &&
+            tokens.getOrNull(resourceOffset)?.text.equals("EXTERNAL", true) && tokens.getOrNull(resourceOffset + 1)?.text.equals("RESOURCE", true)) {
+            if (resourceOffset != index) raiseError("CREATE EXTERNAL RESOURCE does not accept CREATE modifiers")
+            resourceKeywords()
+            val type = resourceType()
+            val alias = if (match(TokenType.ALIAS)) resourceName() else null
+            return expression(dev.brikk.house.sql.ast.DuckdbCreateExternalResource(args("this" to type, "alias" to alias, "expressions" to resourceOptions())))
+        }
         val repositoryOffset = if (currToken.text.equals("OR", ignoreCase = true)) 2 else 0
         if (tokens.getOrNull(index + repositoryOffset)?.let { it.tokenType != TokenType.IDENTIFIER && it.text.equals("EXTENSION", ignoreCase = true) } == true)
             return parseExtensionRepositoryCreate()
@@ -762,6 +797,12 @@ open class DuckdbParser(
 
     // sqlglot: DuckDBParser._parse_attach_detach
     open fun parseAttachDetach(isAttach: Boolean = true): Expression {
+        if (isAttach && matchTextSeq("TO")) {
+            val source = externalResourceSource()
+            if (!match(TokenType.ALIAS)) raiseError("ATTACH TO EXTERNAL RESOURCE requires AS and an attachment alias")
+            val alias = resourceName()
+            return expression(dev.brikk.house.sql.ast.DuckdbAttachExternalResource(args("this" to source, "alias" to alias, "expressions" to resourceOptions())))
+        }
         fun parseAttachOption(): Expression = expression(
             AttachOption(
                 args(
@@ -798,9 +839,82 @@ open class DuckdbParser(
 
     // sqlglot: Parser._parse_show (dispatch through SHOW_PARSERS via _find_parser)
     open fun parseShow(): Expression {
+        // SHOW is a command token in the ordinary tokenizer. Re-tokenize only this
+        // resource form, retaining offsets and leaving existing SHOW contracts intact.
+        if (currToken.tokenType == TokenType.STRING) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            val body = lexed.tokens.filter { it.start >= start && it.end < end }
+            if (body.firstOrNull()?.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) &&
+                (body.firstOrNull()?.text.equals("EXTERNAL", true) ||
+                    body.firstOrNull()?.text.equals("ALL", true) && body.getOrNull(1)?.text.equals("EXTERNAL", true))) {
+                if (lexed.failureOffset != null) raiseError("Incomplete SHOW EXTERNAL RESOURCES")
+                val parser = DuckdbParser(errorLevel, tokenizerConfig).apply {
+                    captureSourceRanges = this@DuckdbParser.captureSourceRanges
+                    checkCanceled = this@DuckdbParser.checkCanceled
+                }
+                val parsed = parser.parseIntoWith(body, sql) { (it as DuckdbParser).parseShowExternalResources() }
+                advance()
+                return parsed ?: throw ParseError("Expected SHOW EXTERNAL RESOURCES")
+            }
+        } else if (currToken.tokenType != TokenType.IDENTIFIER && (currToken.text.equals("EXTERNAL", true) || currToken.text.equals("ALL", true) && nextToken.text.equals("EXTERNAL", true))) {
+            return parseShowExternalResources()
+        }
         val parser = findParser(showParsers)
         if (parser != null) return parser(this)
         return parseAsCommand(prevToken)
+    }
+
+    private fun resourceWords(vararg words: String): Boolean {
+        if (words.indices.any { offset -> tokens.getOrNull(index + offset)?.let {
+                it.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING) || !it.text.equals(words[offset], true)
+            } != false }) return false
+        advance(words.size)
+        return true
+    }
+
+    private fun resourceKeywords() {
+        if (!resourceWords("EXTERNAL", "RESOURCE")) raiseError("Expected EXTERNAL RESOURCE")
+    }
+
+    private fun resourceType(): Expression? {
+        if (currToken.tokenType != TokenType.STRING) return raiseError("External resource type must be a literal string")
+        return parseString()
+    }
+
+    private fun resourceName(): Expression? {
+        if (currToken.tokenType == TokenType.NUMBER) return raiseError("Expected external resource identifier")
+        val name = parseIdVar(anyToken = false)
+        if (name !is Identifier) return raiseError("Expected external resource identifier")
+        return name
+    }
+
+    private fun resourceOptions(): List<Expression>? {
+        if (currToken.tokenType != TokenType.L_PAREN) return null
+        val seen = HashSet<String>()
+        return parseWrappedCsv({
+            val name = resourceName()
+            if (name != null && !seen.add(name.name.lowercase())) raiseError("Duplicate external resource option")
+            if (currToken.tokenType == TokenType.EQ) raiseError("External resource options use whitespace, not assignment syntax")
+            val value = if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) null else parseAssignment()
+            expression(AttachOption(args("this" to name, "expression" to value)))
+        }).also { if (it.isEmpty()) raiseError("Expected at least one external resource option") }
+    }
+
+    private fun externalResourceSource(): dev.brikk.house.sql.ast.DuckdbExternalResourceSource {
+        val temporary = resourceWords("NEW")
+        if (temporary && !resourceWords("TEMPORARY")) raiseError("Expected NEW TEMPORARY EXTERNAL RESOURCE")
+        resourceKeywords()
+        val target = if (temporary) resourceType() else resourceName()
+        val options = if (temporary) resourceOptions() else null
+        return expression(dev.brikk.house.sql.ast.DuckdbExternalResourceSource(args("this" to target, "temporary" to temporary, "expressions" to options)))
+    }
+
+    private fun parseShowExternalResources(): Expression {
+        val all = resourceWords("ALL")
+        if (!resourceWords("EXTERNAL", "RESOURCES")) raiseError("Expected SHOW [ALL] EXTERNAL RESOURCES")
+        return expression(dev.brikk.house.sql.ast.DuckdbShowExternalResources(args("all" to all)))
     }
 
     // sqlglot: DuckDBParser._parse_force — FORCE can only be followed by INSTALL or

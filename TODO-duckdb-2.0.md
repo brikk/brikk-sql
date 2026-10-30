@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-022.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-023.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -539,10 +539,48 @@ and IDE introspection/completion are separate contracts.
   parse-only native controls for LOAD aliases and versioned installs. Evidence logs:
   /tmp/opencode/duckdb-repositories-full-final.log and /tmp/opencode/duckdb-repositories-final-controls.log.
 
-- [ ] `DDB20-023` External-resource statements [ADD].
+- [x] `DDB20-023` External-resource statements [DONE].
   Currently opaque. Classify/model final CREATE/REGISTER/SHOW/CONNECT TO/DESTROY EXTERNAL
   RESOURCE forms, resource types, handles and options; check their statement boundaries,
   generation and cross-dialect refusal. This is not an authorization to create real resources.
+  Added structured CREATE/REGISTER/DESTROY/SHOW [ALL] and ATTACH/CONNECT TO statements, with a
+  distinct NEW TEMPORARY versus borrowed source node. Types remain literal strings, names quoted
+  identifiers, handles arbitrary authored expressions and option bags separate. Native mandatory
+  attachment aliases and the CONNECT temporary second-bag prohibition are enforced. CREATE and
+  REGISTER without a name remain parseable but executable generation refuses the native binder
+  error; no alias, ownership rule, handle conversion or provider-specific schema is invented.
+  SHOW has the fixed native eight-column contract (name/type/managed/state/reference/uri/
+  attached_db_type/handle), computed provenance and an opaque MAP(VARCHAR, VARCHAR) handle.
+  SHOW ALL permits unnamed discovered rows and invokes discovery callbacks; it is not a local-only
+  catalog read. Other statements have no query output shape. SELECT optimizer rewrites, lifecycle
+  lineage, handle-subquery dependencies and unproved cross-target execution explicitly refuse.
+  Parser/editor/verifier diagnostics redact resource details, not the AST/serde/emitted SQL.
+  Raw native execution errors and listing values can expose handles/URIs/tokens. All verifier
+  channels stay parse-only for resource statements and recognized APIs, including quoted API calls;
+  unsupported non-SELECT serialization stays Unverified, never a prepare/EXPLAIN execution fallback.
+  Native prepare spies, registry/type-list snapshots and unused sequences show validation invokes
+  no create/status/destroy/list callbacks and never evaluates option/handle expressions. Native
+  control prepares in an explicit test transaction do evaluate nextval at binding; in autocommit,
+  pinned JDBC 2.0 can instead raise its internal read-only-but-changed transaction error. The
+  invalidated control database is discarded; there is no production retry or transaction workaround.
+  Native execution fixtures are SQL-only mock recipes and owned scratch DuckDB files, not real
+  external resources. They pin callback counts, REGISTER skipping create, duplicate-name checks,
+  discovery union/deduplication, quoted names, borrowing versus temporary ownership, post-create
+  failure cleanup, supplied-option collisions and failed teardown retaining registration until
+  explicit repair. CONNECT cleanup uses the local backend's unsupported-routing error; no live
+  provider/remote CONNECT, cloud API, billing, polling deadline or general teardown is certified.
+  Reviewed pinned external_resource{,_source}.gram and transformers, bind_external_resource.cpp,
+  bind_attach.cpp, physical_external_resource.cpp, external_resources.cpp and the lifecycle,
+  discovery, attach/failure, option-collision and round-trip native tests. No dedicated final
+  public documentation page was found; metadata uses null links instead of inventing a URL.
+  Evidence: DuckdbExternalResourceTest and DuckdbExternalResourceResultTest. Full gates passed
+  1,346 core, 115 metadata and 145 DuckDB verifier/native tests with both earlier signed fixtures
+  enabled, zero skips. Seven native nodes are explicitly registered under brikk.duckdb; existing
+  Python corpora, annotation/serde ledgers, public data-class JVM signatures and IntelliJ APIs
+  remain unchanged. No user connection, real provider/resource, installation, billing action,
+  consumer pin, merge or publication changes. Full log: /tmp/opencode/duckdb-external-resources-full.log.
+  Final 16 focused controls also passed, including parameter order across the two option bags and
+  quoted API-call no-bind coverage. Log: /tmp/opencode/duckdb-external-resources-final-controls.log.
 
 - [ ] `DDB20-024` EXPLAIN (SQL) and explain options [ADD].
   Native grammar accepts it, while brikk preserves an opaque command. Introduce structured

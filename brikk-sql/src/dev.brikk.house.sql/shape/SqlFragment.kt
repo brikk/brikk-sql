@@ -28,6 +28,8 @@ import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isRecurringCteReference
 import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
+import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
 import dev.brikk.house.sql.dialects.duckdbExtensionResult
 import dev.brikk.house.sql.ast.isSecureViewDefinition
 import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
@@ -368,6 +370,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      */
     val sourceTables: List<String> by lazy {
         val tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        if (tree.isDuckdbExternalResourceStatement() && tree.walk().any { it is Select || it is SetOperation })
+            throw ShapeError("External resource handle/option subquery dependencies are not modeled")
         if (tree.isDuckdbRecursiveViewDefinition()) throw ShapeError("Recursive view self-reference dependencies are not modeled")
         val sideEffects = tree.hasSideEffectingCte()
         val resolved = java.util.IdentityHashMap<Table, Boolean>()
@@ -482,6 +486,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree.isDuckdbExternalResourceStatement()) {
+            val output = tree.duckdbExternalResourceResult() ?: throw ShapeError("This external-resource statement has no query output shape")
+            return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = it.nullability != Nullability.NON_NULL) })
+        }
         if (tree.isDuckdbExtensionManagement()) {
             val result = tree.duckdbExtensionResult() ?: throw ShapeError("This extension/repository management statement has no query output shape")
             return Shape(result.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })

@@ -5,6 +5,7 @@ import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
 import dev.brikk.house.sql.ast.isSecureViewDefinition
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Merge
@@ -201,6 +202,7 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if (expression.isDuckdbExternalResourceStatement()) throw SqlglotError("External-resource lifecycle state is not query-result lineage")
     if (expression.isDuckdbExtensionManagement()) throw SqlglotError("Repository identity/fingerprints are runtime management results, not query-result lineage")
     if (expression.isSecureViewDefinition()) throw SqlglotError("SECURE VIEW DDL has no query-result lineage; analyze its authored body separately")
     if (expression.isTriggerDdl()) throw SqlglotError("Trigger DDL does not expose its body's query-result lineage")

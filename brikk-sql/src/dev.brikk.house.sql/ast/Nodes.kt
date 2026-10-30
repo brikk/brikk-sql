@@ -640,6 +640,13 @@ internal fun registerNativeDuckdbNodes(m: MutableMap<String, ExpressionRegistry.
     m["DuckdbDropExtensionRepository"] = ExpressionRegistry.Entry(module) { DuckdbDropExtensionRepository() }
     m["DuckdbInstallExtension"] = ExpressionRegistry.Entry(module) { DuckdbInstallExtension() }
     m["DuckdbLoadExtension"] = ExpressionRegistry.Entry(module) { DuckdbLoadExtension() }
+    m["DuckdbCreateExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbCreateExternalResource() }
+    m["DuckdbRegisterExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbRegisterExternalResource() }
+    m["DuckdbDestroyExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbDestroyExternalResource() }
+    m["DuckdbShowExternalResources"] = ExpressionRegistry.Entry(module) { DuckdbShowExternalResources() }
+    m["DuckdbExternalResourceSource"] = ExpressionRegistry.Entry(module) { DuckdbExternalResourceSource() }
+    m["DuckdbAttachExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbAttachExternalResource() }
+    m["DuckdbConnectExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbConnectExternalResource() }
 }
 
 // sqlglot: query.Subquery(Expression, DerivedTable, Query) — is_subquery
