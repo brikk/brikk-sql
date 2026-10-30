@@ -74,6 +74,9 @@ open class DatafusionDialect : Dialect() {
             heredocStringAlternative = TokenType.PARAMETER,
             hasHexStrings = true,
             unescapedSequences = PostgresTokenizerTables.UNESCAPED_SEQUENCES,
-        )
+        ).withStringEscapes(
+            numericEscapes = PostgresTokenizerTables.NUMERIC_ESCAPES,
+            dropUnknownEscapes = true,
+        ).withStrictEncodedStrings()
     }
 }

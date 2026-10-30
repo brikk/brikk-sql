@@ -1070,6 +1070,13 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
         val octal = peek in '0'..'7'
         val spec = config.numericEscapes[if (octal) '0' else peek] ?: return null
         var (value, end) = readNumericEscape(start + if (octal) 0 else 1, spec)
+        if (config.strictEncodedStrings) {
+            val emptyHex = peek == 'x' && end == start + 1
+            val byteEscape = octal || spec.maxValue <= 0xFF
+            if ((!emptyHex && value < 0) || value == 0 || value in 0xD800..0xDFFF || (byteEscape && value > 127)) {
+                throw TokenError("Invalid encoded string escape from $line:$start")
+            }
+        }
         val bytes = config.numericEscapesAreBytes && (spec.base == 8 || spec.maxValue <= 0xFF)
         if (bytes && value >= 0) value = value and 0xFF
         if (value in 0xD800..0xDFFF) {

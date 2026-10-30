@@ -1,0 +1,3193 @@
+{
+  "schema_version": 1,
+  "capture_sha256": "2d0a7589a07fccaf767fc727ba6a6c7eba492713acd8f0ba6587dd8336eaef04",
+  "inventory": [
+    {
+      "name": "abs",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-abs"
+    },
+    {
+      "name": "acos",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-acos"
+    },
+    {
+      "name": "acosh",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-acosh"
+    },
+    {
+      "name": "any_value",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "approx_distinct",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "approx_median",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-approx_median"
+    },
+    {
+      "name": "approx_percentile_cont",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-approx_percentile_cont"
+    },
+    {
+      "name": "approx_percentile_cont_with_weight",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-approx_percentile_cont_with_weight"
+    },
+    {
+      "name": "array_add",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_agg",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_any_value",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_append",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_avg",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_cat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_compact",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_concat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_contains",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_dims",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_distance",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_distinct",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_element",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_empty",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_except",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_extract",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_has",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_has_all",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_has_any",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_indexof",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_intersect",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_join",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_max",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_min",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_ndims",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_normalize",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_pop_back",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_pop_front",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_position",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_positions",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_prepend",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_product",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_push_back",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_push_front",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_remove",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_remove_all",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_remove_n",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_repeat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_replace",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_replace_all",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_replace_n",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_resize",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_reverse",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_scale",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_slice",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_sort",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_subtract",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_sum",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_to_string",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "array_union",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrays_overlap",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrays_zip",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrow_cast",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrow_field",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrow_metadata",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrow_try_cast",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "arrow_typeof",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "ascii",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-ascii"
+    },
+    {
+      "name": "asin",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-asin"
+    },
+    {
+      "name": "asinh",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-asinh"
+    },
+    {
+      "name": "atan",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-atan"
+    },
+    {
+      "name": "atan2",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-atan2"
+    },
+    {
+      "name": "atanh",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-atanh"
+    },
+    {
+      "name": "avg",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-avg"
+    },
+    {
+      "name": "bit_and",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-bit_and"
+    },
+    {
+      "name": "bit_length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-bit_length"
+    },
+    {
+      "name": "bit_or",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-bit_or"
+    },
+    {
+      "name": "bit_xor",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-bit_xor"
+    },
+    {
+      "name": "bool_and",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-bool_and"
+    },
+    {
+      "name": "bool_or",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-bool_or"
+    },
+    {
+      "name": "btrim",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-btrim"
+    },
+    {
+      "name": "cardinality",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "cast_to_type",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "cbrt",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-cbrt"
+    },
+    {
+      "name": "ceil",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-ceil"
+    },
+    {
+      "name": "char_length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-char_length"
+    },
+    {
+      "name": "character_length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-character_length"
+    },
+    {
+      "name": "chr",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-chr"
+    },
+    {
+      "name": "coalesce",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "concat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "concat_ws",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "contains",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-contains"
+    },
+    {
+      "name": "corr",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-corr"
+    },
+    {
+      "name": "cos",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-cos"
+    },
+    {
+      "name": "cosh",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-cosh"
+    },
+    {
+      "name": "cosine_distance",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "cot",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-cot"
+    },
+    {
+      "name": "count",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "covar",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-covar"
+    },
+    {
+      "name": "covar_pop",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-covar_pop"
+    },
+    {
+      "name": "covar_samp",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-covar_samp"
+    },
+    {
+      "name": "cume_dist",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "current_date",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "current_time",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "current_timestamp",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "date_bin",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "date_format",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "date_part",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "date_trunc",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-date_trunc"
+    },
+    {
+      "name": "datepart",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "datetrunc",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-datetrunc"
+    },
+    {
+      "name": "decode",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-decode"
+    },
+    {
+      "name": "degrees",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-degrees"
+    },
+    {
+      "name": "dense_rank",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "digest",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-digest"
+    },
+    {
+      "name": "dot_product",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "element_at",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "empty",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "encode",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-encode"
+    },
+    {
+      "name": "ends_with",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-ends_with"
+    },
+    {
+      "name": "exp",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-exp"
+    },
+    {
+      "name": "factorial",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-factorial"
+    },
+    {
+      "name": "file_row_index",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "find_in_set",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-find_in_set"
+    },
+    {
+      "name": "first_value",
+      "kinds": [
+        "AGGREGATE",
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "flatten",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "floor",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-floor"
+    },
+    {
+      "name": "from_unixtime",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-from_unixtime"
+    },
+    {
+      "name": "gcd",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "generate_series",
+      "kinds": [
+        "SCALAR",
+        "TABLE"
+      ],
+      "execution_probe": "exec-generate_series"
+    },
+    {
+      "name": "get_field",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "greatest",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "grouping",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "ifnull",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-ifnull"
+    },
+    {
+      "name": "initcap",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-initcap"
+    },
+    {
+      "name": "inner_product",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "input_file_name",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "instr",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-instr"
+    },
+    {
+      "name": "isnan",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-isnan"
+    },
+    {
+      "name": "iszero",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-iszero"
+    },
+    {
+      "name": "lag",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "last_value",
+      "kinds": [
+        "AGGREGATE",
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "lcm",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "lead",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "least",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "left",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-left"
+    },
+    {
+      "name": "length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-length"
+    },
+    {
+      "name": "levenshtein",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-levenshtein"
+    },
+    {
+      "name": "list_add",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_any_value",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_append",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_avg",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_cat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_compact",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_concat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_contains",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_dims",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_distance",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_distinct",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_element",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_empty",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_except",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_extract",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_has",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_has_all",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_has_any",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_indexof",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_intersect",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_join",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_max",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_ndims",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_normalize",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_pop_back",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_pop_front",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_position",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_positions",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_prepend",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_product",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_push_back",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_push_front",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_remove",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_remove_all",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_remove_n",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_repeat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_replace",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_replace_all",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_replace_n",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_resize",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_reverse",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_scale",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_slice",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_sort",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_subtract",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_sum",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_to_string",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_union",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "list_zip",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "ln",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-ln"
+    },
+    {
+      "name": "log",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-log"
+    },
+    {
+      "name": "log10",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-log10"
+    },
+    {
+      "name": "log2",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-log2"
+    },
+    {
+      "name": "lower",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-lower"
+    },
+    {
+      "name": "lpad",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-lpad"
+    },
+    {
+      "name": "ltrim",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-ltrim"
+    },
+    {
+      "name": "make_array",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "make_date",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-make_date"
+    },
+    {
+      "name": "make_list",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "make_time",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-make_time"
+    },
+    {
+      "name": "map",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "map_entries",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "map_extract",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "map_keys",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "map_values",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "max",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "md5",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-md5"
+    },
+    {
+      "name": "mean",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-mean"
+    },
+    {
+      "name": "median",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-median"
+    },
+    {
+      "name": "min",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "named_struct",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "nanvl",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-nanvl"
+    },
+    {
+      "name": "now",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "nth_value",
+      "kinds": [
+        "AGGREGATE",
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "ntile",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "nullif",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "nvl",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-nvl"
+    },
+    {
+      "name": "nvl2",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "octet_length",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-octet_length"
+    },
+    {
+      "name": "overlay",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-overlay"
+    },
+    {
+      "name": "percent_rank",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "percentile_cont",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-percentile_cont"
+    },
+    {
+      "name": "pi",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "position",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-position"
+    },
+    {
+      "name": "pow",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-pow"
+    },
+    {
+      "name": "power",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-power"
+    },
+    {
+      "name": "quantile_cont",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-quantile_cont"
+    },
+    {
+      "name": "radians",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-radians"
+    },
+    {
+      "name": "rand",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "random",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "range",
+      "kinds": [
+        "SCALAR",
+        "TABLE"
+      ],
+      "execution_probe": "exec-range"
+    },
+    {
+      "name": "rank",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "regexp_count",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-regexp_count"
+    },
+    {
+      "name": "regexp_instr",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-regexp_instr"
+    },
+    {
+      "name": "regexp_like",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-regexp_like"
+    },
+    {
+      "name": "regexp_match",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-regexp_match"
+    },
+    {
+      "name": "regexp_replace",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-regexp_replace"
+    },
+    {
+      "name": "regr_avgx",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_avgx"
+    },
+    {
+      "name": "regr_avgy",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_avgy"
+    },
+    {
+      "name": "regr_count",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_count"
+    },
+    {
+      "name": "regr_intercept",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_intercept"
+    },
+    {
+      "name": "regr_r2",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_r2"
+    },
+    {
+      "name": "regr_slope",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_slope"
+    },
+    {
+      "name": "regr_sxx",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_sxx"
+    },
+    {
+      "name": "regr_sxy",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_sxy"
+    },
+    {
+      "name": "regr_syy",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-regr_syy"
+    },
+    {
+      "name": "repeat",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-repeat"
+    },
+    {
+      "name": "replace",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-replace"
+    },
+    {
+      "name": "reverse",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-reverse"
+    },
+    {
+      "name": "right",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-right"
+    },
+    {
+      "name": "round",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-round"
+    },
+    {
+      "name": "row",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "row_number",
+      "kinds": [
+        "WINDOW"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "rpad",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-rpad"
+    },
+    {
+      "name": "rtrim",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-rtrim"
+    },
+    {
+      "name": "sha224",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sha224"
+    },
+    {
+      "name": "sha256",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sha256"
+    },
+    {
+      "name": "sha384",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sha384"
+    },
+    {
+      "name": "sha512",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sha512"
+    },
+    {
+      "name": "signum",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-signum"
+    },
+    {
+      "name": "sin",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sin"
+    },
+    {
+      "name": "sinh",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sinh"
+    },
+    {
+      "name": "split_part",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-split_part"
+    },
+    {
+      "name": "sqrt",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-sqrt"
+    },
+    {
+      "name": "starts_with",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-starts_with"
+    },
+    {
+      "name": "stddev",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-stddev"
+    },
+    {
+      "name": "stddev_pop",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-stddev_pop"
+    },
+    {
+      "name": "stddev_samp",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-stddev_samp"
+    },
+    {
+      "name": "string_agg",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-string_agg"
+    },
+    {
+      "name": "string_to_array",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-string_to_array"
+    },
+    {
+      "name": "string_to_list",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-string_to_list"
+    },
+    {
+      "name": "strpos",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-strpos"
+    },
+    {
+      "name": "struct",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "substr",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-substr"
+    },
+    {
+      "name": "substr_index",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-substr_index"
+    },
+    {
+      "name": "substring",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-substring"
+    },
+    {
+      "name": "substring_index",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-substring_index"
+    },
+    {
+      "name": "sum",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-sum"
+    },
+    {
+      "name": "tan",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-tan"
+    },
+    {
+      "name": "tanh",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-tanh"
+    },
+    {
+      "name": "to_char",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_date",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_hex",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-to_hex"
+    },
+    {
+      "name": "to_local_time",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_time",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_timestamp",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_timestamp_micros",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_timestamp_millis",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_timestamp_nanos",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_timestamp_seconds",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "to_unixtime",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "today",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "translate",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-translate"
+    },
+    {
+      "name": "trim",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-trim"
+    },
+    {
+      "name": "trunc",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-trunc"
+    },
+    {
+      "name": "try_cast_to_type",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "union_extract",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "union_tag",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "upper",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": "exec-upper"
+    },
+    {
+      "name": "uuid",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "var",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-var"
+    },
+    {
+      "name": "var_pop",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-var_pop"
+    },
+    {
+      "name": "var_population",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-var_population"
+    },
+    {
+      "name": "var_samp",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-var_samp"
+    },
+    {
+      "name": "var_sample",
+      "kinds": [
+        "AGGREGATE"
+      ],
+      "execution_probe": "exec-var_sample"
+    },
+    {
+      "name": "version",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    },
+    {
+      "name": "with_metadata",
+      "kinds": [
+        "SCALAR"
+      ],
+      "execution_probe": null,
+      "execution_limit": "No immutable scalar/aggregate sample with representable primitive argument types; covered by parser-only markers"
+    }
+  ],
+  "cases": [
+    {
+      "id": "exec-abs",
+      "name": "abs",
+      "execute": true,
+      "sql": "SELECT abs(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-acos",
+      "name": "acos",
+      "execute": true,
+      "sql": "SELECT acos(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-acosh",
+      "name": "acosh",
+      "execute": true,
+      "sql": "SELECT acosh(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-approx_median",
+      "name": "approx_median",
+      "execute": true,
+      "sql": "SELECT approx_median(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-approx_percentile_cont",
+      "name": "approx_percentile_cont",
+      "execute": true,
+      "sql": "SELECT approx_percentile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-approx_percentile_cont_with_weight",
+      "name": "approx_percentile_cont_with_weight",
+      "execute": true,
+      "sql": "SELECT approx_percentile_cont_with_weight(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-ascii",
+      "name": "ascii",
+      "execute": true,
+      "sql": "SELECT ascii(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-asin",
+      "name": "asin",
+      "execute": true,
+      "sql": "SELECT asin(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-asinh",
+      "name": "asinh",
+      "execute": true,
+      "sql": "SELECT asinh(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-atan",
+      "name": "atan",
+      "execute": true,
+      "sql": "SELECT atan(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-atan2",
+      "name": "atan2",
+      "execute": true,
+      "sql": "SELECT atan2(CAST(NULL AS REAL), CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-atanh",
+      "name": "atanh",
+      "execute": true,
+      "sql": "SELECT atanh(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-avg",
+      "name": "avg",
+      "execute": true,
+      "sql": "SELECT avg(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-bit_and",
+      "name": "bit_and",
+      "execute": true,
+      "sql": "SELECT bit_and(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-bit_length",
+      "name": "bit_length",
+      "execute": true,
+      "sql": "SELECT bit_length(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-bit_or",
+      "name": "bit_or",
+      "execute": true,
+      "sql": "SELECT bit_or(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-bit_xor",
+      "name": "bit_xor",
+      "execute": true,
+      "sql": "SELECT bit_xor(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-bool_and",
+      "name": "bool_and",
+      "execute": true,
+      "sql": "SELECT bool_and(CAST(NULL AS BOOLEAN)) AS v"
+    },
+    {
+      "id": "exec-bool_or",
+      "name": "bool_or",
+      "execute": true,
+      "sql": "SELECT bool_or(CAST(NULL AS BOOLEAN)) AS v"
+    },
+    {
+      "id": "exec-btrim",
+      "name": "btrim",
+      "execute": true,
+      "sql": "SELECT btrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-cbrt",
+      "name": "cbrt",
+      "execute": true,
+      "sql": "SELECT cbrt(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-ceil",
+      "name": "ceil",
+      "execute": true,
+      "sql": "SELECT ceil(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-char_length",
+      "name": "char_length",
+      "execute": true,
+      "sql": "SELECT char_length(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-character_length",
+      "name": "character_length",
+      "execute": true,
+      "sql": "SELECT character_length(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-chr",
+      "name": "chr",
+      "execute": true,
+      "sql": "SELECT chr(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-contains",
+      "name": "contains",
+      "execute": true,
+      "sql": "SELECT contains(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-corr",
+      "name": "corr",
+      "execute": true,
+      "sql": "SELECT corr(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-cos",
+      "name": "cos",
+      "execute": true,
+      "sql": "SELECT cos(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-cosh",
+      "name": "cosh",
+      "execute": true,
+      "sql": "SELECT cosh(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-cot",
+      "name": "cot",
+      "execute": true,
+      "sql": "SELECT cot(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-covar",
+      "name": "covar",
+      "execute": true,
+      "sql": "SELECT covar(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-covar_pop",
+      "name": "covar_pop",
+      "execute": true,
+      "sql": "SELECT covar_pop(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-covar_samp",
+      "name": "covar_samp",
+      "execute": true,
+      "sql": "SELECT covar_samp(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-date_trunc",
+      "name": "date_trunc",
+      "execute": true,
+      "sql": "SELECT date_trunc(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-datetrunc",
+      "name": "datetrunc",
+      "execute": true,
+      "sql": "SELECT datetrunc(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-decode",
+      "name": "decode",
+      "execute": true,
+      "sql": "SELECT decode(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-degrees",
+      "name": "degrees",
+      "execute": true,
+      "sql": "SELECT degrees(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-digest",
+      "name": "digest",
+      "execute": true,
+      "sql": "SELECT digest(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-encode",
+      "name": "encode",
+      "execute": true,
+      "sql": "SELECT encode(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-ends_with",
+      "name": "ends_with",
+      "execute": true,
+      "sql": "SELECT ends_with(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-exp",
+      "name": "exp",
+      "execute": true,
+      "sql": "SELECT exp(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-factorial",
+      "name": "factorial",
+      "execute": true,
+      "sql": "SELECT factorial(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-find_in_set",
+      "name": "find_in_set",
+      "execute": true,
+      "sql": "SELECT find_in_set(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-floor",
+      "name": "floor",
+      "execute": true,
+      "sql": "SELECT floor(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-from_unixtime",
+      "name": "from_unixtime",
+      "execute": true,
+      "sql": "SELECT from_unixtime(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-generate_series",
+      "name": "generate_series",
+      "execute": true,
+      "sql": "SELECT generate_series(CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-ifnull",
+      "name": "ifnull",
+      "execute": true,
+      "sql": "SELECT ifnull(CAST(NULL AS BOOLEAN), CAST(NULL AS BOOLEAN)) AS v"
+    },
+    {
+      "id": "exec-initcap",
+      "name": "initcap",
+      "execute": true,
+      "sql": "SELECT initcap(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-instr",
+      "name": "instr",
+      "execute": true,
+      "sql": "SELECT instr(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-isnan",
+      "name": "isnan",
+      "execute": true,
+      "sql": "SELECT isnan(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-iszero",
+      "name": "iszero",
+      "execute": true,
+      "sql": "SELECT iszero(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-left",
+      "name": "left",
+      "execute": true,
+      "sql": "SELECT left(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-length",
+      "name": "length",
+      "execute": true,
+      "sql": "SELECT length(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-levenshtein",
+      "name": "levenshtein",
+      "execute": true,
+      "sql": "SELECT levenshtein(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-ln",
+      "name": "ln",
+      "execute": true,
+      "sql": "SELECT ln(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-log",
+      "name": "log",
+      "execute": true,
+      "sql": "SELECT log(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-log10",
+      "name": "log10",
+      "execute": true,
+      "sql": "SELECT log10(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-log2",
+      "name": "log2",
+      "execute": true,
+      "sql": "SELECT log2(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-lower",
+      "name": "lower",
+      "execute": true,
+      "sql": "SELECT lower(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-lpad",
+      "name": "lpad",
+      "execute": true,
+      "sql": "SELECT lpad(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-ltrim",
+      "name": "ltrim",
+      "execute": true,
+      "sql": "SELECT ltrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-make_date",
+      "name": "make_date",
+      "execute": true,
+      "sql": "SELECT make_date(CAST(NULL AS INT), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+    },
+    {
+      "id": "exec-make_time",
+      "name": "make_time",
+      "execute": true,
+      "sql": "SELECT make_time(CAST(NULL AS INT), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+    },
+    {
+      "id": "exec-md5",
+      "name": "md5",
+      "execute": true,
+      "sql": "SELECT md5(CAST(NULL AS BYTEA)) AS v"
+    },
+    {
+      "id": "exec-mean",
+      "name": "mean",
+      "execute": true,
+      "sql": "SELECT mean(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-median",
+      "name": "median",
+      "execute": true,
+      "sql": "SELECT median(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-nanvl",
+      "name": "nanvl",
+      "execute": true,
+      "sql": "SELECT nanvl(CAST(NULL AS REAL), CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-nvl",
+      "name": "nvl",
+      "execute": true,
+      "sql": "SELECT nvl(CAST(NULL AS BOOLEAN), CAST(NULL AS BOOLEAN)) AS v"
+    },
+    {
+      "id": "exec-octet_length",
+      "name": "octet_length",
+      "execute": true,
+      "sql": "SELECT octet_length(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-overlay",
+      "name": "overlay",
+      "execute": true,
+      "sql": "SELECT overlay(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-percentile_cont",
+      "name": "percentile_cont",
+      "execute": true,
+      "sql": "SELECT percentile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-position",
+      "name": "position",
+      "execute": true,
+      "sql": "SELECT position(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-pow",
+      "name": "pow",
+      "execute": true,
+      "sql": "SELECT pow(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-power",
+      "name": "power",
+      "execute": true,
+      "sql": "SELECT power(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-quantile_cont",
+      "name": "quantile_cont",
+      "execute": true,
+      "sql": "SELECT quantile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-radians",
+      "name": "radians",
+      "execute": true,
+      "sql": "SELECT radians(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-range",
+      "name": "range",
+      "execute": true,
+      "sql": "SELECT range(CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-regexp_count",
+      "name": "regexp_count",
+      "execute": true,
+      "sql": "SELECT regexp_count(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-regexp_instr",
+      "name": "regexp_instr",
+      "execute": true,
+      "sql": "SELECT regexp_instr(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-regexp_like",
+      "name": "regexp_like",
+      "execute": true,
+      "sql": "SELECT regexp_like(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-regexp_match",
+      "name": "regexp_match",
+      "execute": true,
+      "sql": "SELECT regexp_match(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-regexp_replace",
+      "name": "regexp_replace",
+      "execute": true,
+      "sql": "SELECT regexp_replace(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-regr_avgx",
+      "name": "regr_avgx",
+      "execute": true,
+      "sql": "SELECT regr_avgx(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_avgy",
+      "name": "regr_avgy",
+      "execute": true,
+      "sql": "SELECT regr_avgy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_count",
+      "name": "regr_count",
+      "execute": true,
+      "sql": "SELECT regr_count(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_intercept",
+      "name": "regr_intercept",
+      "execute": true,
+      "sql": "SELECT regr_intercept(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_r2",
+      "name": "regr_r2",
+      "execute": true,
+      "sql": "SELECT regr_r2(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_slope",
+      "name": "regr_slope",
+      "execute": true,
+      "sql": "SELECT regr_slope(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_sxx",
+      "name": "regr_sxx",
+      "execute": true,
+      "sql": "SELECT regr_sxx(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_sxy",
+      "name": "regr_sxy",
+      "execute": true,
+      "sql": "SELECT regr_sxy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-regr_syy",
+      "name": "regr_syy",
+      "execute": true,
+      "sql": "SELECT regr_syy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-repeat",
+      "name": "repeat",
+      "execute": true,
+      "sql": "SELECT repeat(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-replace",
+      "name": "replace",
+      "execute": true,
+      "sql": "SELECT replace(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-reverse",
+      "name": "reverse",
+      "execute": true,
+      "sql": "SELECT reverse(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-right",
+      "name": "right",
+      "execute": true,
+      "sql": "SELECT right(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-round",
+      "name": "round",
+      "execute": true,
+      "sql": "SELECT round(CAST(NULL AS REAL), CAST(NULL AS INT)) AS v"
+    },
+    {
+      "id": "exec-rpad",
+      "name": "rpad",
+      "execute": true,
+      "sql": "SELECT rpad(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-rtrim",
+      "name": "rtrim",
+      "execute": true,
+      "sql": "SELECT rtrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-sha224",
+      "name": "sha224",
+      "execute": true,
+      "sql": "SELECT sha224(CAST(NULL AS BYTEA)) AS v"
+    },
+    {
+      "id": "exec-sha256",
+      "name": "sha256",
+      "execute": true,
+      "sql": "SELECT sha256(CAST(NULL AS BYTEA)) AS v"
+    },
+    {
+      "id": "exec-sha384",
+      "name": "sha384",
+      "execute": true,
+      "sql": "SELECT sha384(CAST(NULL AS BYTEA)) AS v"
+    },
+    {
+      "id": "exec-sha512",
+      "name": "sha512",
+      "execute": true,
+      "sql": "SELECT sha512(CAST(NULL AS BYTEA)) AS v"
+    },
+    {
+      "id": "exec-signum",
+      "name": "signum",
+      "execute": true,
+      "sql": "SELECT signum(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-sin",
+      "name": "sin",
+      "execute": true,
+      "sql": "SELECT sin(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-sinh",
+      "name": "sinh",
+      "execute": true,
+      "sql": "SELECT sinh(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-split_part",
+      "name": "split_part",
+      "execute": true,
+      "sql": "SELECT split_part(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-sqrt",
+      "name": "sqrt",
+      "execute": true,
+      "sql": "SELECT sqrt(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-starts_with",
+      "name": "starts_with",
+      "execute": true,
+      "sql": "SELECT starts_with(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-stddev",
+      "name": "stddev",
+      "execute": true,
+      "sql": "SELECT stddev(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-stddev_pop",
+      "name": "stddev_pop",
+      "execute": true,
+      "sql": "SELECT stddev_pop(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-stddev_samp",
+      "name": "stddev_samp",
+      "execute": true,
+      "sql": "SELECT stddev_samp(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-string_agg",
+      "name": "string_agg",
+      "execute": true,
+      "sql": "SELECT string_agg(CAST(NULL AS VARCHAR), NULL) AS v"
+    },
+    {
+      "id": "exec-string_to_array",
+      "name": "string_to_array",
+      "execute": true,
+      "sql": "SELECT string_to_array(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-string_to_list",
+      "name": "string_to_list",
+      "execute": true,
+      "sql": "SELECT string_to_list(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-strpos",
+      "name": "strpos",
+      "execute": true,
+      "sql": "SELECT strpos(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-substr",
+      "name": "substr",
+      "execute": true,
+      "sql": "SELECT substr(CAST(NULL AS VARCHAR), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+    },
+    {
+      "id": "exec-substr_index",
+      "name": "substr_index",
+      "execute": true,
+      "sql": "SELECT substr_index(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-substring",
+      "name": "substring",
+      "execute": true,
+      "sql": "SELECT substring(CAST(NULL AS VARCHAR), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+    },
+    {
+      "id": "exec-substring_index",
+      "name": "substring_index",
+      "execute": true,
+      "sql": "SELECT substring_index(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-sum",
+      "name": "sum",
+      "execute": true,
+      "sql": "SELECT sum(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-tan",
+      "name": "tan",
+      "execute": true,
+      "sql": "SELECT tan(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-tanh",
+      "name": "tanh",
+      "execute": true,
+      "sql": "SELECT tanh(CAST(NULL AS REAL)) AS v"
+    },
+    {
+      "id": "exec-to_hex",
+      "name": "to_hex",
+      "execute": true,
+      "sql": "SELECT to_hex(CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-translate",
+      "name": "translate",
+      "execute": true,
+      "sql": "SELECT translate(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-trim",
+      "name": "trim",
+      "execute": true,
+      "sql": "SELECT trim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-trunc",
+      "name": "trunc",
+      "execute": true,
+      "sql": "SELECT trunc(CAST(NULL AS REAL), CAST(NULL AS BIGINT)) AS v"
+    },
+    {
+      "id": "exec-upper",
+      "name": "upper",
+      "execute": true,
+      "sql": "SELECT upper(CAST(NULL AS VARCHAR)) AS v"
+    },
+    {
+      "id": "exec-var",
+      "name": "var",
+      "execute": true,
+      "sql": "SELECT var(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-var_pop",
+      "name": "var_pop",
+      "execute": true,
+      "sql": "SELECT var_pop(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-var_population",
+      "name": "var_population",
+      "execute": true,
+      "sql": "SELECT var_population(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-var_samp",
+      "name": "var_samp",
+      "execute": true,
+      "sql": "SELECT var_samp(CAST(NULL AS DOUBLE)) AS v"
+    },
+    {
+      "id": "exec-var_sample",
+      "name": "var_sample",
+      "execute": true,
+      "sql": "SELECT var_sample(CAST(NULL AS DOUBLE)) AS v"
+    }
+  ]
+}

@@ -44,6 +44,13 @@ class TokenizerConfig(
     private var numericPolicy = NumericPolicy()
     private var commentPolicy = CommentPolicy()
     private var bytePolicy = false
+    private var encodedStringPolicy = false
+    /** sqlparser E-strings reject NUL, surrogate escapes and non-ASCII byte escapes. */
+    val strictEncodedStrings: Boolean get() = encodedStringPolicy
+
+    fun withStrictEncodedStrings(): TokenizerConfig = copyWith(emptyMap(), unescapedSequences).also {
+        it.encodedStringPolicy = true
+    }
     val byteStringsAreBytes: Boolean get() = bytePolicy
 
     fun withByteStringPolicy(byteStringsAreBytes: Boolean): TokenizerConfig =
@@ -190,6 +197,7 @@ class TokenizerConfig(
         it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy
         it.lexicalPolicy = lexicalPolicy
         it.insertDataPolicy = insertDataPolicy
+        it.encodedStringPolicy = encodedStringPolicy
     }
 
     companion object {

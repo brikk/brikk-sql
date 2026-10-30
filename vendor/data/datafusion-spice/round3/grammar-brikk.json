@@ -1,0 +1,922 @@
+{
+    "schema_version": 1,
+    "dialect": "datafusion",
+    "evidence": "local parser and generator observations only",
+    "cases": [
+        {
+            "id": "DFG-position-comma",
+            "sql": "SELECT position('abc', 'b') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=position, expressions=[Literal(this=abc, is_string=true), Literal(this=b, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT position('abc', 'b') AS v"
+        },
+        {
+            "id": "DFG-position-ansi",
+            "sql": "SELECT position('b' IN 'abc') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "StrPosition",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=StrPosition(this=Literal(this=abc, is_string=true), substr=Literal(this=b, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT strpos('abc', 'b') AS v"
+        },
+        {
+            "id": "DFG-substring-comma",
+            "sql": "SELECT substring('abcdef', 2, 3) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Substring",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Substring(this=Literal(this=abcdef, is_string=true), start=Literal(this=2, is_string=false), length=Literal(this=3, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT substring('abcdef', 2, 3) AS v"
+        },
+        {
+            "id": "DFG-substring-ansi",
+            "sql": "SELECT substring('abcdef' FROM 2 FOR 3) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Substring",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Substring(this=Literal(this=abcdef, is_string=true), start=Literal(this=2, is_string=false), length=Literal(this=3, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT substring('abcdef', 2, 3) AS v"
+        },
+        {
+            "id": "DFG-trim",
+            "sql": "SELECT trim(BOTH 'x' FROM 'xxabxx') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Trim",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Trim(this=Literal(this=xxabxx, is_string=true), position=BOTH, expression=Literal(this=x, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT trim('xxabxx', 'x') AS v"
+        },
+        {
+            "id": "DFG-overlay",
+            "sql": "SELECT overlay('abcdef' PLACING 'XY' FROM 2 FOR 3) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Overlay",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Overlay(this=Literal(this=abcdef, is_string=true), expression=Literal(this=XY, is_string=true), from_=Literal(this=2, is_string=false), for_=Literal(this=3, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT OVERLAY('abcdef' PLACING 'XY' FROM 2 FOR 3) AS v"
+        },
+        {
+            "id": "DFG-isnan",
+            "sql": "SELECT isnan(CAST('NaN' AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=isnan, expressions=[Cast(this=Literal(this=NaN, is_string=true), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT isnan(CAST('NaN' AS DOUBLE)) AS v"
+        },
+        {
+            "id": "DFG-hex-function",
+            "sql": "SELECT to_hex(255) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=to_hex, expressions=[Literal(this=255, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT to_hex(255) AS v"
+        },
+        {
+            "id": "DFG-signum",
+            "sql": "SELECT signum(0.0) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=signum, expressions=[Literal(this=0.0, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT signum(0.0) AS v"
+        },
+        {
+            "id": "DFG-variance",
+            "sql": "SELECT var_pop(v) AS p, var_samp(v) AS s FROM (VALUES (1), (2), (4)) t(v)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Alias",
+                        "From",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Values",
+                        "Column",
+                        "Column",
+                        "Tuple",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Identifier",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=var_pop, expressions=[Column(this=Identifier(this=v, quoted=false))]), alias=Identifier(this=p, quoted=false)), Alias(this=AnonymousAggFunc(this=var_samp, expressions=[Column(this=Identifier(this=v, quoted=false))]), alias=Identifier(this=s, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=4, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=v, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT var_pop(v) AS p, var_samp(v) AS s FROM (VALUES (1), (2), (4)) AS t(v)"
+        },
+        {
+            "id": "DFG-filter",
+            "sql": "SELECT sum(v) FILTER (WHERE v > 1) AS v FROM (VALUES (1), (2), (3)) t(v)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "Filter",
+                        "Identifier",
+                        "Values",
+                        "Sum",
+                        "Where",
+                        "Tuple",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "GT",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Filter(this=Sum(this=Column(this=Identifier(this=v, quoted=false))), expression=Where(this=GT(this=Column(this=Identifier(this=v, quoted=false)), expression=Literal(this=1, is_string=false)))), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=3, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=v, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT sum(v) FILTER(WHERE v > 1) AS v FROM (VALUES (1), (2), (3)) AS t(v)"
+        },
+        {
+            "id": "DFG-ordered-first",
+            "sql": "SELECT first_value(v ORDER BY v DESC) AS v FROM (VALUES (1), (2)) t(v)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "FirstValue",
+                        "Identifier",
+                        "Values",
+                        "Order",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Ordered",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=FirstValue(this=Order(this=Column(this=Identifier(this=v, quoted=false)), expressions=[Ordered(this=Column(this=Identifier(this=v, quoted=false)), desc=true, nulls_first=true)])), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=v, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT first_value(v ORDER BY v DESC) AS v FROM (VALUES (1), (2)) AS t(v)"
+        },
+        {
+            "id": "DFG-distinct-array",
+            "sql": "SELECT array_agg(DISTINCT v ORDER BY v DESC) AS v FROM (VALUES (1), (2), (1)) t(v)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "ArrayAgg",
+                        "Identifier",
+                        "Values",
+                        "Order",
+                        "Tuple",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Distinct",
+                        "Ordered",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Column",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ArrayAgg(this=Order(this=Distinct(expressions=[Column(this=Identifier(this=v, quoted=false))]), expressions=[Ordered(this=Column(this=Identifier(this=v, quoted=false)), desc=true, nulls_first=true)])), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=1, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=v, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT array_agg(DISTINCT v ORDER BY v DESC) AS v FROM (VALUES (1), (2), (1)) AS t(v)"
+        },
+        {
+            "id": "DFG-distinct-count",
+            "sql": "SELECT count(DISTINCT a,b) AS v FROM (VALUES (1,2),(1,3),(NULL,2)) t(a,b)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Values",
+                        "Distinct",
+                        "Tuple",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Column",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Null",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=count, expressions=[Distinct(expressions=[Column(this=Identifier(this=a, quoted=false)), Column(this=Identifier(this=b, quoted=false))])]), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=3, is_string=false)]), Tuple(expressions=[Null(), Literal(this=2, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=a, quoted=false), Identifier(this=b, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT count(DISTINCT a, b) AS v FROM (VALUES (1, 2), (1, 3), (NULL, 2)) AS t(a, b)"
+        },
+        {
+            "id": "DFG-window-null-treatment",
+            "sql": "SELECT id, first_value(v) IGNORE NULLS OVER (ORDER BY id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS v FROM (VALUES (1,NULL), (2,9)) t(id,v) ORDER BY id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Alias",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Window",
+                        "Identifier",
+                        "Values",
+                        "Ordered",
+                        "IgnoreNulls",
+                        "Order",
+                        "WindowSpec",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "FirstValue",
+                        "Ordered",
+                        "Literal",
+                        "Null",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Column",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false)), Alias(this=Window(this=IgnoreNulls(this=FirstValue(this=Column(this=Identifier(this=v, quoted=false)))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]), spec=WindowSpec(kind=ROWS, start=UNBOUNDED, start_side=PRECEDING, end=CURRENT ROW), over=OVER), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false), Null()]), Tuple(expressions=[Literal(this=2, is_string=false), Literal(this=9, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=id, quoted=false), Identifier(this=v, quoted=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT id, first_value(v) IGNORE NULLS OVER (ORDER BY id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS v FROM (VALUES (1, NULL), (2, 9)) AS t(id, v) ORDER BY id"
+        },
+        {
+            "id": "DFG-array-index",
+            "sql": "SELECT [10,20,30][1] AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Bracket",
+                        "Identifier",
+                        "Array",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Bracket(this=Array(expressions=[Literal(this=10, is_string=false), Literal(this=20, is_string=false), Literal(this=30, is_string=false)], value_constructor=false), expressions=[Literal(this=0, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ARRAY[10, 20, 30][1] AS v"
+        },
+        {
+            "id": "DFG-array-slice",
+            "sql": "SELECT [10,20,30][1:2] AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Bracket",
+                        "Identifier",
+                        "Array",
+                        "Slice",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Bracket(this=Array(expressions=[Literal(this=10, is_string=false), Literal(this=20, is_string=false), Literal(this=30, is_string=false)], value_constructor=false), expressions=[Slice(this=Literal(this=1, is_string=false), expression=Literal(this=2, is_string=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ARRAY[10, 20, 30][1:2] AS v"
+        },
+        {
+            "id": "DFG-struct-alias",
+            "sql": "SELECT struct(1 AS a, 'b' AS b) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Alias",
+                        "Alias",
+                        "Literal",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=struct, expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=a, quoted=false)), Alias(this=Literal(this=b, is_string=true), alias=Identifier(this=b, quoted=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT struct(1 AS a, 'b' AS b) AS v"
+        },
+        {
+            "id": "DFG-date-format",
+            "sql": "SELECT date_format(DATE '2024-01-02', '%d/%m/%Y') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Literal",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=date_format, expressions=[Cast(this=Literal(this=2024-01-02, is_string=true), to=DataType(this=DATE, nested=false)), Literal(this=%d/%m/%Y, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT date_format(CAST('2024-01-02' AS DATE), '%d/%m/%Y') AS v"
+        },
+        {
+            "id": "DFG-null-cast",
+            "sql": "SELECT CAST(NULL AS DECIMAL(18,3)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Cast",
+                        "Identifier",
+                        "Null",
+                        "DataType",
+                        "DataTypeParam",
+                        "DataTypeParam",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Cast(this=Null(), to=DataType(this=DECIMAL, expressions=[DataTypeParam(this=Literal(this=18, is_string=false)), DataTypeParam(this=Literal(this=3, is_string=false))], nested=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT CAST(NULL AS DECIMAL(18, 3)) AS v"
+        },
+        {
+            "id": "DFG-cte-join",
+            "sql": "WITH a AS (SELECT 1 AS id), b AS (SELECT 1 AS id, 2 AS v) SELECT a.id, b.v FROM a LEFT JOIN b USING (id) ORDER BY a.id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Column",
+                        "From",
+                        "Join",
+                        "Order",
+                        "With",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Table",
+                        "Table",
+                        "Identifier",
+                        "Ordered",
+                        "CTE",
+                        "CTE",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Select",
+                        "TableAlias",
+                        "Select",
+                        "TableAlias",
+                        "Identifier",
+                        "Identifier",
+                        "Alias",
+                        "Identifier",
+                        "Alias",
+                        "Alias",
+                        "Identifier",
+                        "Literal",
+                        "Identifier",
+                        "Literal",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false), table=Identifier(this=a, quoted=false)), Column(this=Identifier(this=v, quoted=false), table=Identifier(this=b, quoted=false))], from_=From(this=Table(this=Identifier(this=a, quoted=false))), joins=[Join(this=Table(this=Identifier(this=b, quoted=false)), side=LEFT, using=[Identifier(this=id, quoted=false)])], order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=a, quoted=false)), nulls_first=false)]), with_=With(expressions=[CTE(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=id, quoted=false))]), alias=TableAlias(this=Identifier(this=a, quoted=false))), CTE(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=id, quoted=false)), Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=v, quoted=false))]), alias=TableAlias(this=Identifier(this=b, quoted=false)))]))"
+                }
+            ],
+            "generated": "WITH a AS (SELECT 1 AS id), b AS (SELECT 1 AS id, 2 AS v) SELECT a.id, b.v FROM a LEFT JOIN b USING (id) ORDER BY a.id"
+        },
+        {
+            "id": "DFG-set-query",
+            "sql": "SELECT v FROM (SELECT 2 AS v UNION ALL SELECT 1 AS v) t ORDER BY v LIMIT 1 OFFSET 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Limit",
+                        "From",
+                        "Order",
+                        "Offset",
+                        "Identifier",
+                        "Literal",
+                        "Subquery",
+                        "Ordered",
+                        "Literal",
+                        "Union",
+                        "TableAlias",
+                        "Column",
+                        "Select",
+                        "Select",
+                        "Identifier",
+                        "Identifier",
+                        "Alias",
+                        "Alias",
+                        "Literal",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=v, quoted=false))], limit=Limit(expression=Literal(this=1, is_string=false)), from_=From(this=Subquery(this=Union(this=Select(expressions=[Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=v, quoted=false))]), distinct=false, expression=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=v, quoted=false))])), alias=TableAlias(this=Identifier(this=t, quoted=false)))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=v, quoted=false)), nulls_first=false)]), offset=Offset(expression=Literal(this=1, is_string=false)))"
+                }
+            ],
+            "generated": "SELECT v FROM (SELECT 2 AS v UNION ALL SELECT 1 AS v) AS t ORDER BY v LIMIT 1 OFFSET 1"
+        },
+        {
+            "id": "DFG-grouping-sets",
+            "sql": "SELECT a, sum(b) AS s FROM (VALUES (1,2),(1,3)) t(a,b) GROUP BY GROUPING SETS ((a), ()) ORDER BY a NULLS LAST",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Alias",
+                        "From",
+                        "Group",
+                        "Order",
+                        "Identifier",
+                        "Sum",
+                        "Identifier",
+                        "Values",
+                        "GroupingSets",
+                        "Ordered",
+                        "Column",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Paren",
+                        "Tuple",
+                        "Column",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=a, quoted=false)), Alias(this=Sum(this=Column(this=Identifier(this=b, quoted=false))), alias=Identifier(this=s, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=3, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=a, quoted=false), Identifier(this=b, quoted=false)]))), group=Group(expressions=[GroupingSets(expressions=[Paren(this=Column(this=Identifier(this=a, quoted=false))), Tuple()])]), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=a, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT a, sum(b) AS s FROM (VALUES (1, 2), (1, 3)) AS t(a, b) GROUP BY GROUPING SETS ((a), ()) ORDER BY a NULLS LAST"
+        },
+        {
+            "id": "DFG-wildcard-replace",
+            "sql": "SELECT * REPLACE (a+1 AS a) FROM (SELECT 1 AS a, 2 AS b) t",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Alias",
+                        "Subquery",
+                        "Add",
+                        "Identifier",
+                        "Select",
+                        "TableAlias",
+                        "Column",
+                        "Literal",
+                        "Alias",
+                        "Alias",
+                        "Identifier",
+                        "Identifier",
+                        "Literal",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Star(replace=[Alias(this=Add(this=Column(this=Identifier(this=a, quoted=false)), expression=Literal(this=1, is_string=false)), alias=Identifier(this=a, quoted=false))])], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=a, quoted=false)), Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=b, quoted=false))]), alias=TableAlias(this=Identifier(this=t, quoted=false)))))"
+                }
+            ],
+            "generated": "SELECT * REPLACE (a + 1 AS a) FROM (SELECT 1 AS a, 2 AS b) AS t"
+        },
+        {
+            "id": "DFG-wildcard-except",
+            "sql": "SELECT * EXCEPT (b) FROM (SELECT 1 AS a, 2 AS b) t",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Column",
+                        "Subquery",
+                        "Identifier",
+                        "Select",
+                        "TableAlias",
+                        "Alias",
+                        "Alias",
+                        "Identifier",
+                        "Literal",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Star(except_=[Column(this=Identifier(this=b, quoted=false))])], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=a, quoted=false)), Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=b, quoted=false))]), alias=TableAlias(this=Identifier(this=t, quoted=false)))))"
+                }
+            ],
+            "generated": "SELECT * EXCEPT (b) FROM (SELECT 1 AS a, 2 AS b) AS t"
+        },
+        {
+            "id": "DFG-correlated",
+            "sql": "SELECT x, (SELECT count(*) FROM (VALUES (1),(2)) b(y) WHERE y = x) AS n FROM (VALUES (1),(3)) a(x) ORDER BY x",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Alias",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Subquery",
+                        "Identifier",
+                        "Values",
+                        "Ordered",
+                        "Select",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Count",
+                        "From",
+                        "Where",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Star",
+                        "Values",
+                        "EQ",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Column",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=x, quoted=false)), Alias(this=Subquery(this=Select(expressions=[Count(this=Star(), big_int=true)], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)])], alias=TableAlias(this=Identifier(this=b, quoted=false), columns=[Identifier(this=y, quoted=false)]))), where=Where(this=EQ(this=Column(this=Identifier(this=y, quoted=false)), expression=Column(this=Identifier(this=x, quoted=false)))))), alias=Identifier(this=n, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=3, is_string=false)])], alias=TableAlias(this=Identifier(this=a, quoted=false), columns=[Identifier(this=x, quoted=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT x, (SELECT count(*) FROM (VALUES (1), (2)) AS b(y) WHERE y = x) AS n FROM (VALUES (1), (3)) AS a(x) ORDER BY x"
+        },
+        {
+            "id": "DFG-escape-hex",
+            "sql": "SELECT E'\\x41' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=A), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'A' AS v"
+        },
+        {
+            "id": "DFG-escape-unicode",
+            "sql": "SELECT E'\\u0041' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=A), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'A' AS v"
+        },
+        {
+            "id": "DFG-escape-octal",
+            "sql": "SELECT E'\\101' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=A), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'A' AS v"
+        },
+        {
+            "id": "DFG-escape-unknown",
+            "sql": "SELECT E'\\q' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=q), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'q' AS v"
+        },
+        {
+            "id": "DFG-escape-invalid",
+            "sql": "SELECT E'\\uD800' AS v",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.TokenError",
+            "message": "Invalid encoded string escape from 1:10"
+        },
+        {
+            "id": "DFG-invalid-comma",
+            "sql": "SELECT array_agg(v, ORDER BY v) FROM t",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "ORDER BY must follow a function argument, not a comma. Line 1, Col: 31.\n  SELECT array_agg(v, ORDER BY v) FROM t"
+        },
+        {
+            "id": "DFG-invalid-empty-arg",
+            "sql": "SELECT concat(a,,b)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected function argument after comma. Line 1, Col: 17.\n  SELECT concat(a,,b)"
+        },
+        {
+            "id": "DFG-quoted-function",
+            "sql": "SELECT \"SUM\"(1) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=Identifier(this=SUM, quoted=true), expressions=[Literal(this=1, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT \"SUM\"(1) AS v"
+        },
+        {
+            "id": "DFG-quoted-aggregate",
+            "sql": "SELECT \"sum\"(v) AS v FROM (VALUES (1),(2)) t(v)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Values",
+                        "Identifier",
+                        "Column",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=Identifier(this=sum, quoted=true), expressions=[Column(this=Identifier(this=v, quoted=false))]), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=v, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT \"sum\"(v) AS v FROM (VALUES (1), (2)) AS t(v)"
+        }
+    ]
+}

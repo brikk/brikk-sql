@@ -89,6 +89,7 @@ open class DatafusionGenerator(
     override val supportsWindowExclude: Boolean get() = false
 
     override val dialectNullOrdering: String get() = "nulls_are_large"
+    override val dialectIndexOffset: Int get() = 1
     override val parameterToken: String get() = "$"
     override val byteStart: String get() = "E'"
     override val byteEnd: String get() = "'"
@@ -136,7 +137,7 @@ open class DatafusionGenerator(
 
     private fun sourceFunctionSql(expression: Expression): String {
         val sourceName = expression.meta["datafusion_function_name"] as? String
-        val functionName = sourceName ?: (expression as Func).sqlName()
+        val functionName = sourceName ?: if (expression is StrPosition) "strpos" else (expression as Func).sqlName()
         val args = expression.args.values.flatMap { value ->
             if (value is List<*>) value else listOf(value)
         }
@@ -181,6 +182,8 @@ open class DatafusionGenerator(
     // brikk: names that DataFusion spells differently and that BASE parses as generic
     // Anonymous functions (no dedicated AST node). Applied before lowercasing.
     override fun anonymousSql(expression: Anonymous): String {
+        if (expression.thisArg is Identifier) return func(sql(expression.thisArg), *expression.expressionsArg.toTypedArray(), normalize = false)
+        if (expression.meta["datafusion_native_call"] == true) return super.anonymousSql(expression)
         val parent = expression.parent
         val isQualified = parent is Dot && expression === parent.expressionArg
         if (!isQualified) {
@@ -199,6 +202,19 @@ open class DatafusionGenerator(
             }
         }
         return super.anonymousSql(expression)
+    }
+
+    override fun anonymousaggfuncSql(expression: AnonymousAggFunc): String =
+        if (expression.thisArg is Identifier) func(sql(expression.thisArg), *expression.expressionsArg.toTypedArray(), normalize = false)
+        else super.anonymousaggfuncSql(expression)
+
+    override fun distinctSql(expression: Distinct): String {
+        val call = generateSequence(expression.parent) { it.parent }.firstOrNull { it is Func }
+        if (call?.meta?.get("datafusion_native_call") == true) {
+            val values = expressions(expression, flat = true)
+            return if (values.isEmpty()) "DISTINCT" else "DISTINCT $values"
+        }
+        return super.distinctSql(expression)
     }
 
     companion object {
