@@ -537,6 +537,29 @@ Unverified rather than binder-based acceptance or a false parser rejection. The 
 DuckDB text-EXPLAIN editor action remains refused. Tests use owned memory tables, sequences
 and scratch output files; generated SQL/plan text can be sensitive and is not sanitized output.
 
+DuckDB 2.0 OVERLAY accepts either `OVERLAY(string PLACING replacement FROM start [FOR count])`
+or three/four comma-separated positional arguments. Both use the existing Overlay node and
+may regenerate in keyword form. Mixing the two forms is rejected. Bare OVERLAY's special
+grammar rejects named arguments; the quoted ordinary call `"overlay"(...)` accepts them and
+retains its quoted name and authored argument order. Invalid arities stay inspectable without
+losing arguments, but their typing stays unknown and executable generation refuses them.
+
+Successful builtin calls return VARCHAR even when the source is SQL NULL. NULL in any present
+operand propagates; omitted count is distinct from an explicit NULL count. An omitted or
+negative count uses the replacement's Unicode code-point length, zero inserts without removal,
+and starts beyond the source append. Zero/negative starts are accepted and affect the removed
+span, e.g. `overlay('abcdef','XY',0,2)` returns `XYbcdef`, not `XYcdef`. Native tests pin BIGINT
+boundaries, multibyte characters, combining marks and emoji: this is neither byte nor grapheme
+indexing, and the library does not normalize Unicode or emulate the operation with substrings.
+
+Scopes/shapes use the fixed string return type and all present operands' NULL contracts, with
+computed provenance; column lineage/completion still inspect the arguments. Qualified UDFs
+remain ordinary calls with unknown builtin contracts. Unproved DuckDB-to-other-engine and
+reverse same-name translations refuse execution. No generated catalog/corpus is refreshed:
+tests compare the two captured 2.0 overloads with the real engine and confirm absence from 1.5.6.
+The omitted default count is never expanded into a second replacement expression; native
+sequence and prepared-binding controls prove no duplicated evaluation or reordered binds.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

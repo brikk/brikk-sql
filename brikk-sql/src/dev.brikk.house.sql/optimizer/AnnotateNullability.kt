@@ -33,6 +33,8 @@ import dev.brikk.house.sql.ast.aliasColumnNames
 import dev.brikk.house.sql.ast.selects
 import dev.brikk.house.sql.ast.sqlName
 import dev.brikk.house.sql.dialects.Dialect
+import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
+import dev.brikk.house.sql.dialects.duckdbOverlayArguments
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
@@ -416,6 +418,8 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if (dialect.name == "duckdb" && ((node as Expression).isDuckdbOverlayCall() || node is dev.brikk.house.sql.ast.Overlay))
+            return (node as Expression).duckdbOverlayArguments()?.let(::operatorRule)
         val json = if (dialect.name == "duckdb") (node as Expression).duckdbJsonCall() else null
         if (json != null) {
             val arguments = json.boundArguments ?: return null

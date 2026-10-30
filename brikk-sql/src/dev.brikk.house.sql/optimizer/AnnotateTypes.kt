@@ -53,6 +53,8 @@ import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
+import dev.brikk.house.sql.dialects.duckdbOverlayArguments
+import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbVariantReturnType
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 
@@ -632,6 +634,8 @@ class TypeAnnotator(
             val spec = expressionMetadata[expr::class]
 
             when {
+                dialect.name == "duckdb" && (expr is dev.brikk.house.sql.ast.Overlay || expr.isDuckdbOverlayCall()) ->
+                    setType(expr, if (expr.duckdbOverlayArguments() != null) DType.VARCHAR else DType.UNKNOWN)
                 duckdbJson != null -> setType(expr, duckdbJson.returnType ?: DType.UNKNOWN)
                 dialect.name == "duckdb" && expr.isDuckdbVariantFunction() -> setType(expr, expr.duckdbVariantReturnType() ?: DType.UNKNOWN)
                 spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)

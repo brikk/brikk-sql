@@ -9804,7 +9804,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_overlay
-    fun parseOverlay(): Expression {
+    open fun parseOverlay(): Expression {
         fun parseOverlayArg(text: String): Expression? =
             if (match(TokenType.COMMA) || matchTextSeq(text)) parseBitwise() else null
 

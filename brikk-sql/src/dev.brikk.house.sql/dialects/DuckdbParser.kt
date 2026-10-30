@@ -28,6 +28,7 @@ import dev.brikk.house.sql.ast.DuckdbDeallocate
 import dev.brikk.house.sql.ast.DuckdbResetVariable
 import dev.brikk.house.sql.ast.Insert
 import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Values
@@ -1042,6 +1043,37 @@ open class DuckdbParser(
 
         return super.parsePrimary()
     }
+
+    override fun parseOverlay(): Expression {
+        val start = index
+        val source = parseDisjunction()
+        if (matchTextSeq("PLACING")) {
+            val replacement = parseDisjunction() ?: raiseError("Expected OVERLAY replacement")
+            if (!match(TokenType.FROM)) raiseError("OVERLAY PLACING requires FROM")
+            val offset = parseDisjunction() ?: raiseError("Expected OVERLAY start")
+            val count = if (matchTextSeq("FOR")) parseDisjunction() ?: raiseError("Expected OVERLAY count") else null
+            if (currToken.tokenType != TokenType.R_PAREN) raiseError("Do not mix OVERLAY keyword and comma syntax")
+            return expression(dev.brikk.house.sql.ast.Overlay(args("this" to source, "expression" to replacement, "from_" to offset, "for_" to count)))
+        }
+        retreat(start)
+        val values = parseCsv { parseDisjunction() }
+        if (values.isEmpty() || currToken.tokenType != TokenType.R_PAREN) raiseError("Expected OVERLAY positional expressions")
+        // Native parsing accepts other arities; binding rejects them. Keep every
+        // argument instead of truncating extras or manufacturing a missing start.
+        if (values.size !in 3..4) return expression(Anonymous(args("this" to "overlay", "expressions" to values)))
+        return expression(dev.brikk.house.sql.ast.Overlay(args("this" to values[0], "expression" to values[1], "from_" to values[2], "for_" to values.getOrNull(3))))
+    }
+
+    override fun parseFunction(
+        functions: Map<String, (List<Expression?>) -> Expression>?,
+        anonymous: Boolean,
+        optionalParens: Boolean,
+        anyToken: Boolean,
+    ): Expression? = super.parseFunction(functions,
+        // Quoting bypasses DuckDB's special OVERLAY grammar. The ordinary function
+        // call admits named arguments; retain the quoted identifier and authored order.
+        anonymous || currToken.tokenType == TokenType.IDENTIFIER && currToken.text.equals("overlay", true),
+        optionalParens, anyToken)
 }
 
 /**

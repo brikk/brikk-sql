@@ -9,6 +9,8 @@ import dev.brikk.house.sql.ast.Set as SetNode
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 import dev.brikk.house.sql.dialects.explainProblems
+import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
+import dev.brikk.house.sql.dialects.duckdbOverlayArguments
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -402,6 +404,14 @@ open class Generator(
             unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
         if (dialect.name != "duckdb" && expr.findAll<DuckdbExplain>().any())
             unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
+        if (expr.walk().any { it.isDuckdbOverlayCall() }) {
+            if (sourceDialect.equals("duckdb", true) && dialect.name != "duckdb")
+                unexecutable("$targetName has no verified DuckDB OVERLAY offset/count/Unicode translation")
+            if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true))
+                unexecutable("DuckDB OVERLAY is not a verified same-name translation from $sourceDialect")
+            if (dialect.name == "duckdb" && expr.walk().any { it.isDuckdbOverlayCall() && it.duckdbOverlayArguments() == null })
+                unexecutable("DuckDB OVERLAY has no valid modeled three/four-argument signature")
+        }
         if (expr.findAll<SecureProperty>().any()) {
             // Among the implemented targets only DuckDB has a verified secure-view
             // contract. An origin-less AST is not permission to emit an unsafe DDL.

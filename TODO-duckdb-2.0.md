@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-024.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-025.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -621,9 +621,37 @@ and IDE introspection/completion are separate contracts.
   PREPARE, exact parameter discovery and unquoted ANALYSE canonicalization. Focused log:
   /tmp/opencode/duckdb-explain-final-controls.log.
 
-- [ ] `DDB20-025` OVERLAY [AUDIT].
+- [x] `DDB20-025` OVERLAY [DONE].
   Generic parser/AST support exists. Pin DuckDB spelling, generation, signature, NULLs,
   offsets/lengths and actual string results before claiming a verified cross-dialect mapping.
+  Final documentation and pinned overlay.test/overlay.cpp confirm keyword and comma forms,
+  3/4-argument VARCHAR/VARCHAR/BIGINT[/BIGINT] signatures and VARCHAR output. The generic Overlay
+  AST/serde shape is retained; the DuckDB parser now rejects mixed forms, accepts full operand
+  expressions and preserves wrong-arity comma calls without truncation so binding errors remain
+  distinguishable from syntax errors. Bare named arguments are natively rejected, but quoting
+  the ordinary function name admits them. Those calls retain quoting and authored order; argument
+  roles are matched only for static return/NULL facts, never reordered in emitted SQL.
+  Fixed DuckDB typing that formerly inherited the first operand's type: successful OVERLAY is
+  VARCHAR even for a NULL source. Nullability considers every present operand; explicit NULL
+  count is not omitted count. Negative/omitted count uses replacement code-point length, zero
+  inserts, past-end starts append and zero/negative starts affect the replacement end independently
+  from the clamped prefix. UTF-8 code points, not bytes or graphemes, determine positions/lengths.
+  Native controls cover combining marks/emoji, BIGINT extremes, empty strings, all NULL positions,
+  vectorized nullable data, parser versus binder failures, prepared binds and volatile operands.
+  No substring/concat or default-count expansion duplicates replacement evaluation. Symbolic
+  scopes/shapes, lineage and completion retain ordinary column argument behavior and computed
+  provenance. Qualified UDFs do not inherit the builtin contract. Unverified same-name cross-target
+  transformations refuse in both directions; no non-DuckDB backend equivalence is certified.
+  Exact bundled/native overload comparison and older-capture absence are tested without refreshing
+  generated metadata/corpora or changing the public Overlay shape. Final docs: sql/functions/text#overlay;
+  native evidence: test/sql/function/string/overlay.test and src/function/scalar/string/overlay.cpp.
+  Evidence: DuckdbOverlayTest, DuckdbOverlayResultTest and DuckdbOverlayMetadataTest. Full gates
+  passed 1,358 core, 116 metadata and 159 DuckDB verifier/native tests with both signed fixtures
+  enabled, zero skips. No new AST nodes or public data-class fields; existing generated catalogs,
+  corpus/annotation/serde ledgers, JVM signatures and IntelliJ APIs remain unchanged. No user
+  connections, installations, consumer pins, merge or publication changes.
+  Full log: /tmp/opencode/duckdb-overlay-full.log.
+  Final 13 focused controls passed. Log: /tmp/opencode/duckdb-overlay-final-controls.log.
 
 - [ ] `DDB20-026` COPY partitioning and ORDER_BY [AUDIT].
   Use the actual option names `PARTITION_BY` and `ORDER_BY`, not only generic ORDER BY text.
