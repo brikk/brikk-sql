@@ -433,6 +433,14 @@ acceptance criteria, the four exact CONCAT formatter spellings and reproduction.
 The existing probe and self-contained fixture tests cover this new evidence;
 historical audit, catalog and semantic-hazard captures are not changed.
 
+CHSEM-002 adds an internal callable-fact sidecar for eight researched functions,
+with both tagged C++ source excerpts/full-file hashes and 56 original-call probes
+per engine. The source evidence is reproduced by
+`tools/capture_clickhouse_callable_sources.py`; the existing native runner captures
+the finite argument/type/error cases. See [the callable guide](data/clickhouse-semantic/callables-README.md)
+for exact input subsets, native-vs-explicit arity, aliases and unknowns. No registry
+overloads or historical semantic certifications are inferred from these probes.
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 The original embedded capture below is retained. Current official-build captures

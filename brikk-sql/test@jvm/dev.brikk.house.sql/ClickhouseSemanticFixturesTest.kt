@@ -7,6 +7,7 @@ import dev.brikk.house.sql.ast.Select
 import dev.brikk.house.sql.ast.Serde
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.sql
+import dev.brikk.house.sql.dialects.clickhouseCallableFacts
 import dev.brikk.house.sql.optimizer.annotateTypes
 import dev.brikk.house.sql.parser.parseOne
 import java.io.File
@@ -15,10 +16,28 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /** Syntax/serialization gate and optional native-probe input, not a semantic validator. */
 class ClickhouseSemanticFixturesTest {
     private val json = Json { prettyPrint = true }
+
+    @Test
+    fun callableFactsReferenceTheExactVersionedSources() {
+        val root = projectRoot()
+        val fixtures = Json.parseToJsonElement(File(root, "vendor/data/clickhouse-semantic/callables-cases.json").readText()).jsonObject
+        val names = fixtures.getValue("execution").jsonArray.map { it.jsonObject.getValue("function").jsonPrimitive.content }.toSet()
+        val sources = Json.parseToJsonElement(File(root, "vendor/data/clickhouse-semantic/callable-sources.json").readText()).jsonObject
+        for (snapshot in sources.getValue("snapshots").jsonArray) {
+            val version = snapshot.jsonObject.getValue("version").jsonPrimitive.content
+            val ids = snapshot.jsonObject.getValue("sources").jsonArray.map { it.jsonObject.getValue("id").jsonPrimitive.content }.toSet()
+            for (name in names) {
+                val facts = assertNotNull(clickhouseCallableFacts(name, version), "$version/$name")
+                assertTrue(ids.containsAll(facts.sourceIds), "$version/$name: ${facts.sourceIds}")
+            }
+        }
+    }
 
     @Test
     fun semanticFixturesRoundTripAndCaptureCurrentAnalysisWithoutCertifyingIt() {

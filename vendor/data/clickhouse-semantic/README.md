@@ -6,6 +6,9 @@ the SQL examples E01–E06 reproduce the forms in the ClickHouse announcement li
 in `cases.json`, with explicit-lambda controls and result-type columns added.
 ClickHouse is Apache-2.0 licensed; see `ATTRIBUTIONS.md`.
 
+CHSEM-002 adds a separate [callable-fact guide](callables-README.md), source excerpts
+and native argument/type probes. It leaves all CHSEM-001 inputs and captures intact.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

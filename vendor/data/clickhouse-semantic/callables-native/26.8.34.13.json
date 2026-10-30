@@ -1,0 +1,587 @@
+{
+  "captured_at": "2026-10-30T21:12:04.585674+00:00",
+  "fixture_sha256": "2b06496d2a1898f89a7404f99e806560c0363585205353c82ac2186d90e25e2e",
+  "brikk_sha256": null,
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-002-E01\",\"formatted\":\"SELECT\\n    lower('ABC') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E02\",\"formatted\":\"SELECT\\n    upper(toFixedString('abc', 3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E03\",\"formatted\":\"SELECT\\n    lower(toFixedString('ABC', 3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E04\",\"formatted\":\"SELECT\\n    domainWithoutWWW('https:\\/\\/www.example.com\\/path') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E05\",\"formatted\":\"SELECT\\n    hex(domainWithoutWWW(toFixedString('https:\\/\\/www.example.com', 23))) AS value,\\n    toTypeName(domainWithoutWWW(toFixedString('https:\\/\\/www.example.com', 23))) AS type\"}\n{\"id\":\"CHSEM-002-E06\",\"formatted\":\"SELECT\\n    hex(firstSignificantSubdomain(toFixedString('https:\\/\\/news.example.com', 24))) AS value,\\n    toTypeName(firstSignificantSubdomain(toFixedString('https:\\/\\/news.example.com', 24))) AS type\"}\n{\"id\":\"CHSEM-002-E07\",\"formatted\":\"SELECT\\n    firstSignificantSubdomain('https:\\/\\/news.example.com') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E08\",\"formatted\":\"SELECT\\n    trimBoth(' x ') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E09\",\"formatted\":\"SELECT\\n    trimBoth('xxABCxx', 'x') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E10\",\"formatted\":\"SELECT\\n    trimBoth(toFixedString(' x ', 3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E11\",\"formatted\":\"SELECT\\n    trimBoth('xxx', c) AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT arrayJoin(['x', 'y']) AS c\\n)\"}\n{\"id\":\"CHSEM-002-E12\",\"formatted\":\"SELECT\\n    trimBoth('xxx', toFixedString('x', 1)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E13\",\"formatted\":\"SELECT trimBoth()\"}\n{\"id\":\"CHSEM-002-E14\",\"formatted\":\"SELECT trimBoth('x', 'y', 'z')\"}\n{\"id\":\"CHSEM-002-E15\",\"formatted\":\"SELECT trimBoth(toUInt8(1))\"}\n{\"id\":\"CHSEM-002-E16\",\"formatted\":\"SELECT\\n    toString(toInt32(12)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E17\",\"formatted\":\"SELECT\\n    toString(toDate('2026-10-30')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E18\",\"formatted\":\"SELECT\\n    toString(toDateTime('2026-10-30 00:00:00', 'UTC'), 'Asia\\/Tokyo') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E19\",\"formatted\":\"SELECT\\n    toString(toDateTime64('2026-10-30 00:00:00.123', 3, 'UTC'), 'Asia\\/Tokyo') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E20\",\"formatted\":\"SELECT toString(toUInt8(1), 'UTC')\"}\n{\"id\":\"CHSEM-002-E21\",\"formatted\":\"SELECT toString()\"}\n{\"id\":\"CHSEM-002-E22\",\"formatted\":\"SELECT toString(toDateTime('2026-10-30 00:00:00', 'UTC'), 'UTC', 'UTC')\"}\n{\"id\":\"CHSEM-002-E23\",\"formatted\":\"SELECT\\n    toString(toFixedString('abc', 3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E24\",\"formatted\":\"SELECT\\n    concat() AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E25\",\"formatted\":\"SELECT\\n    concat('x') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E26\",\"formatted\":\"SELECT\\n    concat('x', toUInt8(12)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E27\",\"formatted\":\"SELECT\\n    concat(toFixedString('ab', 2), 'c') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E28\",\"formatted\":\"SELECT\\n    concat([toUInt8(1)], [toUInt8(2)]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E29\",\"formatted\":\"SELECT\\n    multiply(toUInt8(2), toUInt8(3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E30\",\"formatted\":\"SELECT\\n    multiply(toUInt64(2), toUInt64(3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E31\",\"formatted\":\"SELECT\\n    multiply(toInt8(-2), toUInt8(3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E32\",\"formatted\":\"SELECT\\n    multiply(toFloat32(2), toFloat32(3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E33\",\"formatted\":\"SELECT\\n    multiply(toFloat64(2), toUInt8(3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E34\",\"formatted\":\"SELECT\\n    multiply(toUInt8(2), toInt32(3)) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E35\",\"formatted\":\"SELECT multiply('2', '3')\"}\n{\"id\":\"CHSEM-002-E36\",\"formatted\":\"SELECT multiply()\"}\n{\"id\":\"CHSEM-002-E37\",\"formatted\":\"SELECT multiply(1)\"}\n{\"id\":\"CHSEM-002-E38\",\"formatted\":\"SELECT multiply(1, 2, 3)\"}\n{\"id\":\"CHSEM-002-E39\",\"formatted\":\"SELECT lower()\"}\n{\"id\":\"CHSEM-002-E40\",\"formatted\":\"SELECT lower('a', 'b')\"}\n{\"id\":\"CHSEM-002-E41\",\"formatted\":\"SELECT lower(toUInt8(1))\"}\n{\"id\":\"CHSEM-002-E42\",\"formatted\":\"SELECT upper()\"}\n{\"id\":\"CHSEM-002-E43\",\"formatted\":\"SELECT upper(toUInt8(1))\"}\n{\"id\":\"CHSEM-002-E44\",\"formatted\":\"SELECT domainWithoutWWW()\"}\n{\"id\":\"CHSEM-002-E45\",\"formatted\":\"SELECT domainWithoutWWW(toUInt8(1))\"}\n{\"id\":\"CHSEM-002-E46\",\"formatted\":\"SELECT firstSignificantSubdomain()\"}\n{\"id\":\"CHSEM-002-E47\",\"formatted\":\"SELECT firstSignificantSubdomain(toUInt8(1))\"}\n{\"id\":\"CHSEM-002-E48\",\"formatted\":\"SELECT\\n    LCASE('ABC') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E49\",\"formatted\":\"SELECT\\n    UCASE('abc') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E50\",\"formatted\":\"SELECT\\n    trimBoth(' x ') AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E51\",\"formatted\":\"SELECT MULTIPLY(2, 3)\"}\n{\"id\":\"CHSEM-002-E52\",\"formatted\":\"SELECT DOMAINWITHOUTWWW('https:\\/\\/example.com')\"}\n{\"id\":\"CHSEM-002-E53\",\"formatted\":\"SELECT TOSTRING(1)\"}\n{\"id\":\"CHSEM-002-E54\",\"formatted\":\"SELECT\\n    toTypeName(domainWithoutWWW(materialize(toFixedString('https:\\/\\/www.example.com', 23)))) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E55\",\"formatted\":\"SELECT\\n    toTypeName(firstSignificantSubdomain(materialize(toFixedString('https:\\/\\/news.example.com', 24)))) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-002-E56\",\"formatted\":\"SELECT\\n    toString(NULL, 1, 2) AS value,\\n    toTypeName(value) AS type\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-002-E01",
+      "formatted": "SELECT\n    lower('ABC') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E02",
+      "formatted": "SELECT\n    upper(toFixedString('abc', 3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E03",
+      "formatted": "SELECT\n    lower(toFixedString('ABC', 3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E04",
+      "formatted": "SELECT\n    domainWithoutWWW('https://www.example.com/path') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E05",
+      "formatted": "SELECT\n    hex(domainWithoutWWW(toFixedString('https://www.example.com', 23))) AS value,\n    toTypeName(domainWithoutWWW(toFixedString('https://www.example.com', 23))) AS type"
+    },
+    {
+      "id": "CHSEM-002-E06",
+      "formatted": "SELECT\n    hex(firstSignificantSubdomain(toFixedString('https://news.example.com', 24))) AS value,\n    toTypeName(firstSignificantSubdomain(toFixedString('https://news.example.com', 24))) AS type"
+    },
+    {
+      "id": "CHSEM-002-E07",
+      "formatted": "SELECT\n    firstSignificantSubdomain('https://news.example.com') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E08",
+      "formatted": "SELECT\n    trimBoth(' x ') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E09",
+      "formatted": "SELECT\n    trimBoth('xxABCxx', 'x') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E10",
+      "formatted": "SELECT\n    trimBoth(toFixedString(' x ', 3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E11",
+      "formatted": "SELECT\n    trimBoth('xxx', c) AS value,\n    toTypeName(value) AS type\nFROM\n(\n    SELECT arrayJoin(['x', 'y']) AS c\n)"
+    },
+    {
+      "id": "CHSEM-002-E12",
+      "formatted": "SELECT\n    trimBoth('xxx', toFixedString('x', 1)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E13",
+      "formatted": "SELECT trimBoth()"
+    },
+    {
+      "id": "CHSEM-002-E14",
+      "formatted": "SELECT trimBoth('x', 'y', 'z')"
+    },
+    {
+      "id": "CHSEM-002-E15",
+      "formatted": "SELECT trimBoth(toUInt8(1))"
+    },
+    {
+      "id": "CHSEM-002-E16",
+      "formatted": "SELECT\n    toString(toInt32(12)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E17",
+      "formatted": "SELECT\n    toString(toDate('2026-10-30')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E18",
+      "formatted": "SELECT\n    toString(toDateTime('2026-10-30 00:00:00', 'UTC'), 'Asia/Tokyo') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E19",
+      "formatted": "SELECT\n    toString(toDateTime64('2026-10-30 00:00:00.123', 3, 'UTC'), 'Asia/Tokyo') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E20",
+      "formatted": "SELECT toString(toUInt8(1), 'UTC')"
+    },
+    {
+      "id": "CHSEM-002-E21",
+      "formatted": "SELECT toString()"
+    },
+    {
+      "id": "CHSEM-002-E22",
+      "formatted": "SELECT toString(toDateTime('2026-10-30 00:00:00', 'UTC'), 'UTC', 'UTC')"
+    },
+    {
+      "id": "CHSEM-002-E23",
+      "formatted": "SELECT\n    toString(toFixedString('abc', 3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E24",
+      "formatted": "SELECT\n    concat() AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E25",
+      "formatted": "SELECT\n    concat('x') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E26",
+      "formatted": "SELECT\n    concat('x', toUInt8(12)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E27",
+      "formatted": "SELECT\n    concat(toFixedString('ab', 2), 'c') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E28",
+      "formatted": "SELECT\n    concat([toUInt8(1)], [toUInt8(2)]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E29",
+      "formatted": "SELECT\n    multiply(toUInt8(2), toUInt8(3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E30",
+      "formatted": "SELECT\n    multiply(toUInt64(2), toUInt64(3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E31",
+      "formatted": "SELECT\n    multiply(toInt8(-2), toUInt8(3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E32",
+      "formatted": "SELECT\n    multiply(toFloat32(2), toFloat32(3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E33",
+      "formatted": "SELECT\n    multiply(toFloat64(2), toUInt8(3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E34",
+      "formatted": "SELECT\n    multiply(toUInt8(2), toInt32(3)) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E35",
+      "formatted": "SELECT multiply('2', '3')"
+    },
+    {
+      "id": "CHSEM-002-E36",
+      "formatted": "SELECT multiply()"
+    },
+    {
+      "id": "CHSEM-002-E37",
+      "formatted": "SELECT multiply(1)"
+    },
+    {
+      "id": "CHSEM-002-E38",
+      "formatted": "SELECT multiply(1, 2, 3)"
+    },
+    {
+      "id": "CHSEM-002-E39",
+      "formatted": "SELECT lower()"
+    },
+    {
+      "id": "CHSEM-002-E40",
+      "formatted": "SELECT lower('a', 'b')"
+    },
+    {
+      "id": "CHSEM-002-E41",
+      "formatted": "SELECT lower(toUInt8(1))"
+    },
+    {
+      "id": "CHSEM-002-E42",
+      "formatted": "SELECT upper()"
+    },
+    {
+      "id": "CHSEM-002-E43",
+      "formatted": "SELECT upper(toUInt8(1))"
+    },
+    {
+      "id": "CHSEM-002-E44",
+      "formatted": "SELECT domainWithoutWWW()"
+    },
+    {
+      "id": "CHSEM-002-E45",
+      "formatted": "SELECT domainWithoutWWW(toUInt8(1))"
+    },
+    {
+      "id": "CHSEM-002-E46",
+      "formatted": "SELECT firstSignificantSubdomain()"
+    },
+    {
+      "id": "CHSEM-002-E47",
+      "formatted": "SELECT firstSignificantSubdomain(toUInt8(1))"
+    },
+    {
+      "id": "CHSEM-002-E48",
+      "formatted": "SELECT\n    LCASE('ABC') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E49",
+      "formatted": "SELECT\n    UCASE('abc') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E50",
+      "formatted": "SELECT\n    trimBoth(' x ') AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E51",
+      "formatted": "SELECT MULTIPLY(2, 3)"
+    },
+    {
+      "id": "CHSEM-002-E52",
+      "formatted": "SELECT DOMAINWITHOUTWWW('https://example.com')"
+    },
+    {
+      "id": "CHSEM-002-E53",
+      "formatted": "SELECT TOSTRING(1)"
+    },
+    {
+      "id": "CHSEM-002-E54",
+      "formatted": "SELECT\n    toTypeName(domainWithoutWWW(materialize(toFixedString('https://www.example.com', 23)))) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E55",
+      "formatted": "SELECT\n    toTypeName(firstSignificantSubdomain(materialize(toFixedString('https://news.example.com', 24)))) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-002-E56",
+      "formatted": "SELECT\n    toString(NULL, 1, 2) AS value,\n    toTypeName(value) AS type"
+    }
+  ],
+  "brikk_parse_query": null,
+  "execution": [
+    {
+      "id": "CHSEM-002-E01",
+      "returncode": 0,
+      "stdout": "abc\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E02",
+      "returncode": 0,
+      "stdout": "ABC\tFixedString(3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E03",
+      "returncode": 0,
+      "stdout": "abc\tFixedString(3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E04",
+      "returncode": 0,
+      "stdout": "example.com\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E05",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: Column of type FixedString is not supported by this function: In scope SELECT hex(domainWithoutWWW(toFixedString('https://www.example.com', 23))) AS value, toTypeName(domainWithoutWWW(toFixedString('https://www.example.com', 23))) AS type. (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-002-E06",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: Column of type FixedString is not supported by this function: In scope SELECT hex(firstSignificantSubdomain(toFixedString('https://news.example.com', 24))) AS value, toTypeName(firstSignificantSubdomain(toFixedString('https://news.example.com', 24))) AS type. (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-002-E07",
+      "returncode": 0,
+      "stdout": "example\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E08",
+      "returncode": 0,
+      "stdout": "x\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E09",
+      "returncode": 0,
+      "stdout": "ABC\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E10",
+      "returncode": 0,
+      "stdout": "x\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E11",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: A value of illegal type was provided as 2nd argument 'trim_character' to function 'trimBoth'. Expected: const String, got: String: In scope SELECT trimBoth('xxx', c) AS value, toTypeName(value) AS type FROM (SELECT arrayJoin(['x', 'y']) AS c). (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-002-E12",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: A value of illegal type was provided as 2nd argument 'trim_character' to function 'trimBoth'. Expected: const String, got: FixedString(1): In scope SELECT trimBoth('xxx', toFixedString('x', 1)) AS value, toTypeName(value) AS type. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E13",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'trimBoth'. Expected 1 mandatory argument and 1 optional argument, got 0 arguments: In scope SELECT trimBoth(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E14",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'trimBoth'. Expected 1 mandatory argument and 1 optional argument, got 3 arguments: In scope SELECT trimBoth('x', 'y', 'z'). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E15",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: A value of illegal type was provided as 1st argument 'input_string' to function 'trimBoth'. Expected: String or FixedString, got: UInt8: In scope SELECT trimBoth(toUInt8(1)). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E16",
+      "returncode": 0,
+      "stdout": "12\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E17",
+      "returncode": 0,
+      "stdout": "2026-10-30\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E18",
+      "returncode": 0,
+      "stdout": "2026-10-30 09:00:00\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E19",
+      "returncode": 0,
+      "stdout": "2026-10-30 09:00:00.123\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E20",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'toString'. Expected 1 argument, got 2 arguments: In scope SELECT toString(toUInt8(1), 'UTC'). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E21",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'toString'. Expected 1 argument, got 0 arguments: In scope SELECT toString(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E22",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'toString'. Expected 1 mandatory argument and 1 optional argument, got 3 arguments: In scope SELECT toString(toDateTime('2026-10-30 00:00:00', 'UTC'), 'UTC', 'UTC'). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E23",
+      "returncode": 0,
+      "stdout": "abc\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E24",
+      "returncode": 0,
+      "stdout": "\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E25",
+      "returncode": 0,
+      "stdout": "x\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E26",
+      "returncode": 0,
+      "stdout": "x12\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E27",
+      "returncode": 0,
+      "stdout": "abc\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E28",
+      "returncode": 0,
+      "stdout": "[1,2]\tArray(UInt8)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E29",
+      "returncode": 0,
+      "stdout": "6\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E30",
+      "returncode": 0,
+      "stdout": "6\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E31",
+      "returncode": 0,
+      "stdout": "-6\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E32",
+      "returncode": 0,
+      "stdout": "6\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E33",
+      "returncode": 0,
+      "stdout": "6\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E34",
+      "returncode": 0,
+      "stdout": "6\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E35",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types String and String of arguments of function multiply: In scope SELECT multiply('2', '3'). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E36",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function multiply doesn't match: passed 0, should be 2: In scope SELECT multiply(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E37",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function multiply doesn't match: passed 1, should be 2: In scope SELECT multiply(1). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E38",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function multiply doesn't match: passed 3, should be 2: In scope SELECT multiply(1, 2, 3). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E39",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function lower doesn't match: passed 0, should be 1: In scope SELECT lower(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E40",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function lower doesn't match: passed 2, should be 1: In scope SELECT lower('a', 'b'). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E41",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function lower: In scope SELECT lower(toUInt8(1)). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E42",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function upper doesn't match: passed 0, should be 1: In scope SELECT upper(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E43",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function upper: In scope SELECT upper(toUInt8(1)). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E44",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function domainWithoutWWW doesn't match: passed 0, should be 1: In scope SELECT domainWithoutWWW(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E45",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function domainWithoutWWW: In scope SELECT domainWithoutWWW(toUInt8(1)). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E46",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function firstSignificantSubdomain doesn't match: passed 0, should be 1: In scope SELECT firstSignificantSubdomain(). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-002-E47",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function firstSignificantSubdomain: In scope SELECT firstSignificantSubdomain(toUInt8(1)). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-002-E48",
+      "returncode": 0,
+      "stdout": "abc\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E49",
+      "returncode": 0,
+      "stdout": "ABC\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E50",
+      "returncode": 0,
+      "stdout": "x\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E51",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `MULTIPLY` does not exist. In scope SELECT MULTIPLY(2, 3). Maybe you meant: ['multiply','multiIf']. (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-002-E52",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `DOMAINWITHOUTWWW` does not exist. In scope SELECT DOMAINWITHOUTWWW('https://example.com'). Maybe you meant: ['domainWithoutWWW','domainWithoutWWWRFC']. (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-002-E53",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `TOSTRING` does not exist. In scope SELECT TOSTRING(1). Maybe you meant: ['toString','h3ToString']. (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-002-E54",
+      "returncode": 0,
+      "stdout": "FixedString(23)\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E55",
+      "returncode": 0,
+      "stdout": "FixedString(24)\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-002-E56",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": []
+}

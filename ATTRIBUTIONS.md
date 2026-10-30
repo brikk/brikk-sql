@@ -156,6 +156,13 @@ official composition announcement and tagged analyzer source; its guide records
 the authored controls, exact engine digests and result/error evidence. This adds
 no ClickHouse source code to the published library and claims no overload catalog.
 
+The CHSEM-002 `callable-sources.json` in that directory includes selected
+Apache-2.0 C++ declaration excerpts from the exact same release tags, with original
+paths, line ranges and whole-file hashes. `tools/capture_clickhouse_callable_sources.py`
+reproduces them. The internal Kotlin callable-fact descriptions follow those
+declarations, with native argument/type observations recorded separately. The
+excerpts are research evidence, not source bundled into the published library.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

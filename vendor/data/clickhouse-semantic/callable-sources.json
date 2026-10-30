@@ -1,0 +1,488 @@
+{
+  "license": "Apache-2.0",
+  "snapshots": [
+    {
+      "version": "26.8.34.13",
+      "tag": "v26.8.34.13-lts",
+      "sources": [
+        {
+          "id": "CHSEM-002-S01",
+          "path": "src/Functions/FunctionStringToString.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/FunctionStringToString.h",
+          "sha256": "0be81a0814c965cce4ebfa7272c2e98fce255d55eab3b57dec3d3a05b856b704",
+          "excerpts": [
+            {
+              "start_line": 21,
+              "end_line": 87,
+              "text": "template <typename Impl, typename Name, bool is_injective = false>\nclass FunctionStringToString final : public IFunction\n{\npublic:\n    static constexpr auto name = Name::name;\n    static FunctionPtr create(ContextPtr)\n    {\n        return std::make_shared<FunctionStringToString>();\n    }\n\n    String getName() const override\n    {\n        return name;\n    }\n\n    size_t getNumberOfArguments() const override\n    {\n        return 1;\n    }\n\n    bool isInjective(const ColumnsWithTypeAndName &) const override\n    {\n        return is_injective;\n    }\n\n    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override\n    {\n        return true;\n    }\n\n    DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override\n    {\n        if (!isStringOrFixedString(arguments[0]))\n            throw Exception(ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT, \"Illegal type {} of argument of function {}\",\n                arguments[0]->getName(), getName());\n\n        return arguments[0];\n    }\n\n    DataTypePtr getReturnTypeForDefaultImplementationForDynamic() const override\n    {\n        /// In case of default implementation for Dynamic always return String even for FixedString types\n        /// to avoid Dynamic result of this function.\n        return std::make_shared<DataTypeString>();\n    }\n\n    bool useDefaultImplementationForConstants() const override { return true; }\n\n    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override\n    {\n        const ColumnPtr column = arguments[0].column;\n        if (const ColumnString * col = checkAndGetColumn<ColumnString>(column.get()))\n        {\n            auto col_res = ColumnString::create();\n            Impl::vector(col->getChars(), col->getOffsets(), col_res->getChars(), col_res->getOffsets(), input_rows_count);\n            return col_res;\n        }\n        if (const ColumnFixedString * col_fixed = checkAndGetColumn<ColumnFixedString>(column.get()))\n        {\n            auto col_res = ColumnFixedString::create(col_fixed->getN());\n            Impl::vectorFixed(col_fixed->getChars(), col_fixed->getN(), col_res->getChars(), input_rows_count);\n            return col_res;\n        }\n        throw Exception(\n            ErrorCodes::ILLEGAL_COLUMN, \"Illegal column {} of argument of function {}\", arguments[0].column->getName(), getName());\n    }\n};"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S02",
+          "path": "src/Functions/lower.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/lower.cpp",
+          "sha256": "fa45f1e6da75705d5e66ed7823b29818ff54f48d0970940a77985b67931a313e",
+          "excerpts": [
+            {
+              "start_line": 12,
+              "end_line": 16,
+              "text": "struct NameLower\n{\n    static constexpr auto name = \"lower\";\n};\nusing FunctionLower = FunctionStringToString<LowerUpperImpl<'A', 'Z'>, NameLower>;"
+            },
+            {
+              "start_line": 45,
+              "end_line": 46,
+              "text": "    factory.registerFunction<FunctionLower>(documentation, FunctionFactory::Case::Insensitive);\n    factory.registerAlias(\"lcase\", NameLower::name, FunctionFactory::Case::Insensitive);"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S03",
+          "path": "src/Functions/upper.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/upper.cpp",
+          "sha256": "82e6391538eb6a5b43e32cfbbcf49c782429709c42b36334fd9501b2e6531e06",
+          "excerpts": [
+            {
+              "start_line": 11,
+              "end_line": 15,
+              "text": "struct NameUpper\n{\n    static constexpr auto name = \"upper\";\n};\nusing FunctionUpper = FunctionStringToString<LowerUpperImpl<'a', 'z'>, NameUpper>;"
+            },
+            {
+              "start_line": 44,
+              "end_line": 45,
+              "text": "    factory.registerFunction<FunctionUpper>(documentation, FunctionFactory::Case::Insensitive);\n    factory.registerAlias(\"ucase\", FunctionUpper::name, FunctionFactory::Case::Insensitive);"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S04",
+          "path": "src/Functions/URL/domainWithoutWWW.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/URL/domainWithoutWWW.cpp",
+          "sha256": "b28c822612ac09964b4ee9e2b3db7aa7ee53bfbda773bfe4f475ef8cf562416a",
+          "excerpts": [
+            {
+              "start_line": 8,
+              "end_line": 9,
+              "text": "struct NameDomainWithoutWWW { static constexpr auto name = \"domainWithoutWWW\"; };\nusing FunctionDomainWithoutWWW = FunctionStringToString<ExtractSubstringImpl<ExtractDomain<true, false>>, NameDomainWithoutWWW>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S05",
+          "path": "src/Functions/URL/firstSignificantSubdomain.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/URL/firstSignificantSubdomain.cpp",
+          "sha256": "e565f7e7810bd8d0859b5efc090913c842072f11def00b8616ebc204d0ce0d92",
+          "excerpts": [
+            {
+              "start_line": 9,
+              "end_line": 10,
+              "text": "struct NameFirstSignificantSubdomain { static constexpr auto name = \"firstSignificantSubdomain\"; };\nusing FunctionFirstSignificantSubdomain = FunctionStringToString<ExtractSubstringImpl<ExtractFirstSignificantSubdomain<true, false>>, NameFirstSignificantSubdomain>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S06",
+          "path": "src/Functions/trim.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/trim.cpp",
+          "sha256": "13495dba09511de79a0b2e3acf92b9f08db80d832a4203ddcb7ae42d1b1857e3",
+          "excerpts": [
+            {
+              "start_line": 28,
+              "end_line": 60,
+              "text": "class FunctionTrim final : public IFunction\n{\npublic:\n    FunctionTrim(const char * name_, bool trim_left_, bool trim_right_)\n        : function_name(name_), trim_left(trim_left_), trim_right(trim_right_) {}\n\n    static FunctionPtr create(ContextPtr, const char * name, bool trim_left, bool trim_right)\n    {\n        return std::make_shared<FunctionTrim>(name, trim_left, trim_right);\n    }\n\n    String getName() const override { return function_name; }\n    bool isVariadic() const override { return true; }\n    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }\n    bool useDefaultImplementationForConstants() const override { return true; }\n    size_t getNumberOfArguments() const override { return 0; }\n\n    DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override\n    {\n        FunctionArgumentDescriptors mandatory_args{\n            {\"input_string\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isStringOrFixedString), nullptr, \"String or FixedString\"}\n        };\n\n        FunctionArgumentDescriptors optional_args{\n            {\"trim_character\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isString), isColumnConst, \"const String\"}\n        };\n\n        validateFunctionArguments(*this, arguments, mandatory_args, optional_args);\n\n        return std::make_shared<DataTypeString>();\n    }\n\n    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override"
+            },
+            {
+              "start_line": 403,
+              "end_line": 403,
+              "text": "    factory.registerAlias(\"trim\", \"trimBoth\");"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S07",
+          "path": "src/Functions/concat.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/concat.cpp",
+          "sha256": "2f57f4db31d871e88087300264ef60fb12d28b39b739a7d1cc0849d8ea38e081",
+          "excerpts": [
+            {
+              "start_line": 197,
+              "end_line": 255,
+              "text": "class ConcatOverloadResolver final : public IFunctionOverloadResolver\n{\npublic:\n    static constexpr auto name = \"concat\";\n    static FunctionOverloadResolverPtr create(ContextPtr context) { return std::make_unique<ConcatOverloadResolver>(context); }\n\n    explicit ConcatOverloadResolver(ContextPtr context_)\n        : to_string(FunctionFactory::instance().getImpl(\"toString\", context_))\n        , array_concat(FunctionFactory::instance().getImpl(\"arrayConcat\", context_))\n        , map_concat(FunctionFactory::instance().getImpl(\"mapConcat\", context_))\n        , tuple_concat(FunctionFactory::instance().getImpl(\"tupleConcat\", context_))\n    {\n    }\n\n    String getName() const override { return name; }\n    size_t getNumberOfArguments() const override { return 0; }\n    bool isVariadic() const override { return true; }\n\n    bool isInjective(const ColumnsWithTypeAndName & arguments) const override\n    {\n        /// When called with a single argument, concat delegates to toString, so the claim has to be\n        /// the one toString makes: it depends on the argument type, because rendering a date-time in a\n        /// time zone that has a UTC offset transition maps two distinct instants onto one string.\n        return arguments.size() == 1 && to_string->isInjective(arguments);\n    }\n\n    FunctionBasePtr buildImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr & return_type) const override\n    {\n        if (arguments.size() == 1)\n            return to_string->build(arguments);\n        if (!arguments.empty() && std::ranges::all_of(arguments, [](const auto & elem) { return isArray(elem.type); }))\n            return array_concat->build(arguments);\n        if (!arguments.empty() && std::ranges::all_of(arguments, [](const auto & elem) { return isMap(elem.type); }))\n            return map_concat->build(arguments);\n        if (!arguments.empty() && std::ranges::all_of(arguments, [](const auto & elem) { return isTuple(elem.type); }))\n            return tuple_concat->build(arguments);\n        return std::make_unique<FunctionToFunctionBaseAdaptor>(\n            ConcatImpl::create(nullptr),\n            DataTypes{std::from_range_t{}, arguments | std::views::transform([](auto & elem) { return elem.type; })},\n            return_type);\n    }\n\n    DataTypePtr getReturnTypeImpl(const DataTypes &) const override\n    {\n        /// We always return Strings from concat, even if arguments were fixed strings.\n        return std::make_shared<DataTypeString>();\n    }\n\n    DataTypePtr getReturnTypeForDefaultImplementationForDynamic() const override\n    {\n        return std::make_shared<DataTypeString>();\n    }\n\nprivate:\n    FunctionOverloadResolverPtr to_string;\n    FunctionOverloadResolverPtr array_concat;\n    FunctionOverloadResolverPtr map_concat;\n    FunctionOverloadResolverPtr tuple_concat;\n};"
+            },
+            {
+              "start_line": 51,
+              "end_line": 64,
+              "text": "    DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override\n    {\n        if (arguments.size() == 1)\n            throw Exception(ErrorCodes::TOO_FEW_ARGUMENTS_FOR_FUNCTION, \"Number of arguments for function {} should not be 1\", getName());\n\n        return std::make_shared<DataTypeString>();\n    }\n\n    DataTypePtr getReturnTypeForDefaultImplementationForDynamic() const override\n    {\n        return std::make_shared<DataTypeString>();\n    }\n\n    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override"
+            },
+            {
+              "start_line": 64,
+              "end_line": 83,
+              "text": "    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override\n    {\n        if (arguments.empty())\n        {\n            auto res_data = ColumnString::create();\n            res_data->insertDefault();\n            return ColumnConst::create(std::move(res_data), input_rows_count);\n        }\n        if (arguments.size() == 1)\n            return arguments[0].column;\n        /// Format function is not proven to be faster for two arguments.\n        /// Actually there is overhead of 2 to 5 extra instructions for each string for checking empty strings in FormatImpl.\n        /// Though, benchmarks are really close, for most examples we saw executeBinary is slightly faster (0-3%).\n        /// For 3 and more arguments FormatStringImpl is much faster (up to 50-60%).\n        if (arguments.size() == 2)\n            return executeBinary(arguments, input_rows_count);\n        return executeFormatImpl(arguments, input_rows_count);\n    }\n\nprivate:"
+            },
+            {
+              "start_line": 328,
+              "end_line": 328,
+              "text": "    factory.registerFunction<ConcatOverloadResolver>(documentation, FunctionFactory::Case::Insensitive);"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S08",
+          "path": "src/Functions/multiply.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/multiply.cpp",
+          "sha256": "4c987c92180ca961a414dc689ab176ebd79e84d23ef24742bcfa2a2f25430705",
+          "excerpts": [
+            {
+              "start_line": 9,
+              "end_line": 57,
+              "text": "template <typename A, typename B>\nstruct MultiplyImpl\n{\n    using ResultType = typename NumberTraits::ResultOfAdditionMultiplication<A, B>::Type;\n    static const constexpr bool allow_fixed_string = false;\n    static const constexpr bool allow_string_integer = false;\n\n    template <typename Result = ResultType>\n    static NO_SANITIZE_UNDEFINED Result apply(A a, B b)\n    {\n        if constexpr (is_big_int_v<A> || is_big_int_v<B>)\n        {\n            using CastA = std::conditional_t<is_floating_point<B>, B, A>;\n            using CastB = std::conditional_t<is_floating_point<A>, A, B>;\n\n            return static_cast<Result>(static_cast<CastA>(a)) * static_cast<Result>(static_cast<CastB>(b));\n        }\n        else\n            return static_cast<Result>(a) * static_cast<Result>(b);\n    }\n\n    /// Apply operation and check overflow. It's used for Decimal operations. @returns true if overflowed, false otherwise.\n    template <typename Result = ResultType>\n    static bool apply(A a, B b, Result & c)\n    {\n        if constexpr (std::is_same_v<Result, float> || std::is_same_v<Result, double>)\n        {\n            c = static_cast<Result>(a) * b;\n            return false;\n        }\n        else\n            return common::mulOverflow(static_cast<Result>(a), b, c);\n    }\n\n#if USE_EMBEDDED_COMPILER\n    static constexpr bool compilable = true;\n\n    static llvm::Value * compile(llvm::IRBuilder<> & b, llvm::Value * left, llvm::Value * right, bool)\n    {\n        return left->getType()->isIntegerTy() ? b.CreateMul(left, right) : b.CreateFMul(left, right);\n    }\n#endif\n};\n\nstruct NameMultiply\n{\n    static constexpr auto name = \"multiply\";\n};\nusing FunctionMultiply = BinaryArithmeticOverloadResolver<MultiplyImpl, NameMultiply>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S09",
+          "path": "src/Functions/FunctionBinaryArithmetic.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/FunctionBinaryArithmetic.h",
+          "sha256": "35a4325287c60c544c045ec1c00500f0c4a04b8889275c69ba4de34dff2371eb",
+          "excerpts": [
+            {
+              "start_line": 3999,
+              "end_line": 4012,
+              "text": "class BinaryArithmeticOverloadResolver final : public IFunctionOverloadResolver\n{\npublic:\n    static constexpr auto name = Name::name;\n    static FunctionOverloadResolverPtr create(ContextPtr context_)\n    {\n        return std::make_unique<BinaryArithmeticOverloadResolver>(context_);\n    }\n\n    explicit BinaryArithmeticOverloadResolver(ContextPtr context_) : context(context_) {}\n\n    String getName() const override { return name; }\n    size_t getNumberOfArguments() const override { return 2; }\n    bool isVariadic() const override { return false; }"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S10",
+          "path": "src/DataTypes/NumberTraits.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/DataTypes/NumberTraits.h",
+          "sha256": "ddbe90469aec92e839c08de7e37126dfec7ab7031227ec973910e3f833e58949",
+          "excerpts": [
+            {
+              "start_line": 32,
+              "end_line": 43,
+              "text": "constexpr size_t nextSize(size_t size)\n{\n    if (size < 8)\n        return size * 2;\n    return size;\n}\n\ntemplate <bool is_signed, bool is_floating, size_t size>\nstruct Construct\n{\n    using Type = Error;\n};"
+            },
+            {
+              "start_line": 45,
+              "end_line": 64,
+              "text": "template <> struct Construct<false, false, 1> { using Type = UInt8; };\ntemplate <> struct Construct<false, false, 2> { using Type = UInt16; };\ntemplate <> struct Construct<false, false, 4> { using Type = UInt32; };\ntemplate <> struct Construct<false, false, 8> { using Type = UInt64; };\ntemplate <> struct Construct<false, false, 16> { using Type = UInt128; };\ntemplate <> struct Construct<false, false, 32> { using Type = UInt256; };\ntemplate <> struct Construct<false, true, 1> { using Type = BFloat16; };\ntemplate <> struct Construct<false, true, 2> { using Type = BFloat16; };\ntemplate <> struct Construct<false, true, 4> { using Type = Float32; };\ntemplate <> struct Construct<false, true, 8> { using Type = Float64; };\ntemplate <> struct Construct<true, false, 1> { using Type = Int8; };\ntemplate <> struct Construct<true, false, 2> { using Type = Int16; };\ntemplate <> struct Construct<true, false, 4> { using Type = Int32; };\ntemplate <> struct Construct<true, false, 8> { using Type = Int64; };\ntemplate <> struct Construct<true, false, 16> { using Type = Int128; };\ntemplate <> struct Construct<true, false, 32> { using Type = Int256; };\ntemplate <> struct Construct<true, true, 1> { using Type = BFloat16; };\ntemplate <> struct Construct<true, true, 2> { using Type = BFloat16; };\ntemplate <> struct Construct<true, true, 4> { using Type = Float32; };\ntemplate <> struct Construct<true, true, 8> { using Type = Float64; };"
+            },
+            {
+              "start_line": 73,
+              "end_line": 79,
+              "text": "template <typename A, typename B> struct ResultOfAdditionMultiplication\n{\n    using Type = typename Construct<\n        is_signed_v<A> || is_signed_v<B>,\n        is_floating_point<A> || is_floating_point<B>,\n        nextSize(max(sizeof(A), sizeof(B)))>::Type;\n};"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S11",
+          "path": "src/Functions/FunctionsConversion.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/FunctionsConversion.h",
+          "sha256": "60fb7ad719804cbb88d5bdf53f5ac35ac08bca2d5b64e9d9a8b90462ea1d9a88",
+          "excerpts": [
+            {
+              "start_line": 3188,
+              "end_line": 3225,
+              "text": "class FunctionConvert final : public IFunction\n{\npublic:\n    using Monotonic = MonotonicityImpl;\n\n    static constexpr auto name = Name::name;\n    static constexpr bool to_datetime64 = std::is_same_v<ToDataType, DataTypeDateTime64>;\n    static constexpr bool to_time64 = std::is_same_v<ToDataType, DataTypeTime64>;\n    static constexpr bool to_decimal = IsDataTypeDecimal<ToDataType> && !(to_datetime64 || to_time64);\n\n    static FunctionPtr create(ContextPtr context)\n    {\n        return std::make_shared<FunctionConvert>(context, default_date_time_overflow_behavior);\n    }\n\n    static FunctionPtr createFromSettings(const FunctionConvertSettings & settings)\n    {\n        return std::make_shared<FunctionConvert>(settings);\n    }\n\n    FunctionConvert(ContextPtr context, FormatSettings::DateTimeOverflowBehavior date_time_overflow_behavior)\n        : settings(context, date_time_overflow_behavior)\n    {\n    }\n\n    explicit FunctionConvert(const FunctionConvertSettings & settings_)\n        : settings(settings_)\n    {\n    }\n\n    String getName() const override\n    {\n        return name;\n    }\n\n    bool isVariadic() const override { return true; }\n    size_t getNumberOfArguments() const override { return 0; }\n    bool isInjective(const ColumnsWithTypeAndName & sample_columns) const override"
+            },
+            {
+              "start_line": 3246,
+              "end_line": 3278,
+              "text": "    DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override\n    {\n        NullPresence null_presence = getNullPresense(arguments);\n\n        /// When cast_keep_nullable is enabled, treat Dynamic and Variant\n        /// as Nullable because they can contain nulls.\n        if (settings.cast_keep_nullable)\n        {\n            for (const auto & arg : arguments)\n            {\n                if (isDynamic(*arg.type) || isVariant(*arg.type))\n                {\n                    null_presence.has_nullable = true;\n                    break;\n                }\n            }\n        }\n\n        if (null_presence.has_null_constant)\n        {\n            return makeNullable(std::make_shared<DataTypeNothing>());\n        }\n        if (null_presence.has_nullable)\n        {\n            auto nested_columns = Block(createBlockWithNestedColumns(arguments));\n            auto return_type = getReturnTypeImplRemovedNullable(ColumnsWithTypeAndName(nested_columns.begin(), nested_columns.end()));\n            return makeNullable(return_type);\n        }\n\n        return getReturnTypeImplRemovedNullable(arguments);\n    }\n\n    DataTypePtr getReturnTypeImplRemovedNullable(const ColumnsWithTypeAndName & arguments) const"
+            },
+            {
+              "start_line": 3278,
+              "end_line": 3311,
+              "text": "    DataTypePtr getReturnTypeImplRemovedNullable(const ColumnsWithTypeAndName & arguments) const\n    {\n        FunctionArgumentDescriptors mandatory_args = {{\"Value\", nullptr, nullptr, \"any type\"}};\n        FunctionArgumentDescriptors optional_args;\n\n        if constexpr (to_decimal)\n        {\n            mandatory_args.push_back({\"scale\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isNativeInteger), &isColumnConst, \"const Integer\"});\n        }\n\n        if (!to_decimal && (isDateTime64<Name, ToDataType>(arguments) || isTime64<Name, ToDataType>(arguments)))\n        {\n            mandatory_args.push_back({\"scale\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isNativeInteger), &isColumnConst, \"const Integer\"});\n        }\n\n        // toString(DateTime or DateTime64, [timezone: String])\n        if ((std::is_same_v<Name, NameToString> && !arguments.empty() && (isDateTime64(arguments[0].type) || isDateTime(arguments[0].type)))\n            // toUnixTimestamp(value[, timezone : String])\n            || std::is_same_v<Name, NameToUnixTimestamp>\n            // toDate(value[, timezone : String])\n            || std::is_same_v<ToDataType, DataTypeDate> // TODO: shall we allow timestamp argument for toDate? DateTime knows nothing about timezones and this argument is ignored below.\n            // toDate32(value[, timezone : String])\n            || std::is_same_v<ToDataType, DataTypeDate32>\n            // toDateTime(value[, timezone: String])\n            || std::is_same_v<ToDataType, DataTypeDateTime>\n            // toDateTime64(value, scale : Integer[, timezone: String])\n            || std::is_same_v<ToDataType, DataTypeDateTime64>)\n        {\n            optional_args.push_back({\"timezone\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isString), nullptr, \"String\"});\n        }\n\n            validateFunctionArguments(*this, arguments, mandatory_args, optional_args);\n\n        if constexpr (std::is_same_v<ToDataType, DataTypeInterval>)"
+            },
+            {
+              "start_line": 3372,
+              "end_line": 3372,
+              "text": "                return std::make_shared<ToDataType>();"
+            },
+            {
+              "start_line": 4672,
+              "end_line": 4672,
+              "text": "using FunctionToString = FunctionConvert<DataTypeString, NameToString, ToStringMonotonicity>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S12",
+          "path": "src/Functions/IFunction.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/IFunction.h",
+          "sha256": "58005e1397912481a4e5d9d862254023655b1fcd69832db8034c383bf2b2e19c",
+          "excerpts": [
+            {
+              "start_line": 724,
+              "end_line": 724,
+              "text": "    virtual bool isVariadic() const { return false; }"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S14",
+          "path": "src/Functions/StringHelpers.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.8.34.13-lts/src/Functions/StringHelpers.h",
+          "sha256": "7395d8e15bb2f263353c18d3d499f2f5a6c5d0c08309cf0969dec552f957fbbc",
+          "excerpts": [
+            {
+              "start_line": 101,
+              "end_line": 104,
+              "text": "    static void vectorFixed(const ColumnString::Chars &, size_t, ColumnString::Chars &, size_t)\n    {\n        throw Exception(ErrorCodes::ILLEGAL_COLUMN, \"Column of type FixedString is not supported by this function\");\n    }"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "26.10.2.103",
+      "tag": "v26.10.2.103-stable",
+      "sources": [
+        {
+          "id": "CHSEM-002-S01",
+          "path": "src/Functions/FunctionStringToString.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/FunctionStringToString.h",
+          "sha256": "0be81a0814c965cce4ebfa7272c2e98fce255d55eab3b57dec3d3a05b856b704",
+          "excerpts": [
+            {
+              "start_line": 21,
+              "end_line": 87,
+              "text": "template <typename Impl, typename Name, bool is_injective = false>\nclass FunctionStringToString final : public IFunction\n{\npublic:\n    static constexpr auto name = Name::name;\n    static FunctionPtr create(ContextPtr)\n    {\n        return std::make_shared<FunctionStringToString>();\n    }\n\n    String getName() const override\n    {\n        return name;\n    }\n\n    size_t getNumberOfArguments() const override\n    {\n        return 1;\n    }\n\n    bool isInjective(const ColumnsWithTypeAndName &) const override\n    {\n        return is_injective;\n    }\n\n    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override\n    {\n        return true;\n    }\n\n    DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override\n    {\n        if (!isStringOrFixedString(arguments[0]))\n            throw Exception(ErrorCodes::ILLEGAL_TYPE_OF_ARGUMENT, \"Illegal type {} of argument of function {}\",\n                arguments[0]->getName(), getName());\n\n        return arguments[0];\n    }\n\n    DataTypePtr getReturnTypeForDefaultImplementationForDynamic() const override\n    {\n        /// In case of default implementation for Dynamic always return String even for FixedString types\n        /// to avoid Dynamic result of this function.\n        return std::make_shared<DataTypeString>();\n    }\n\n    bool useDefaultImplementationForConstants() const override { return true; }\n\n    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override\n    {\n        const ColumnPtr column = arguments[0].column;\n        if (const ColumnString * col = checkAndGetColumn<ColumnString>(column.get()))\n        {\n            auto col_res = ColumnString::create();\n            Impl::vector(col->getChars(), col->getOffsets(), col_res->getChars(), col_res->getOffsets(), input_rows_count);\n            return col_res;\n        }\n        if (const ColumnFixedString * col_fixed = checkAndGetColumn<ColumnFixedString>(column.get()))\n        {\n            auto col_res = ColumnFixedString::create(col_fixed->getN());\n            Impl::vectorFixed(col_fixed->getChars(), col_fixed->getN(), col_res->getChars(), input_rows_count);\n            return col_res;\n        }\n        throw Exception(\n            ErrorCodes::ILLEGAL_COLUMN, \"Illegal column {} of argument of function {}\", arguments[0].column->getName(), getName());\n    }\n};"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S02",
+          "path": "src/Functions/lower.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/lower.cpp",
+          "sha256": "fa45f1e6da75705d5e66ed7823b29818ff54f48d0970940a77985b67931a313e",
+          "excerpts": [
+            {
+              "start_line": 12,
+              "end_line": 16,
+              "text": "struct NameLower\n{\n    static constexpr auto name = \"lower\";\n};\nusing FunctionLower = FunctionStringToString<LowerUpperImpl<'A', 'Z'>, NameLower>;"
+            },
+            {
+              "start_line": 45,
+              "end_line": 46,
+              "text": "    factory.registerFunction<FunctionLower>(documentation, FunctionFactory::Case::Insensitive);\n    factory.registerAlias(\"lcase\", NameLower::name, FunctionFactory::Case::Insensitive);"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S03",
+          "path": "src/Functions/upper.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/upper.cpp",
+          "sha256": "82e6391538eb6a5b43e32cfbbcf49c782429709c42b36334fd9501b2e6531e06",
+          "excerpts": [
+            {
+              "start_line": 11,
+              "end_line": 15,
+              "text": "struct NameUpper\n{\n    static constexpr auto name = \"upper\";\n};\nusing FunctionUpper = FunctionStringToString<LowerUpperImpl<'a', 'z'>, NameUpper>;"
+            },
+            {
+              "start_line": 44,
+              "end_line": 45,
+              "text": "    factory.registerFunction<FunctionUpper>(documentation, FunctionFactory::Case::Insensitive);\n    factory.registerAlias(\"ucase\", FunctionUpper::name, FunctionFactory::Case::Insensitive);"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S04",
+          "path": "src/Functions/URL/domainWithoutWWW.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/URL/domainWithoutWWW.cpp",
+          "sha256": "b28c822612ac09964b4ee9e2b3db7aa7ee53bfbda773bfe4f475ef8cf562416a",
+          "excerpts": [
+            {
+              "start_line": 8,
+              "end_line": 9,
+              "text": "struct NameDomainWithoutWWW { static constexpr auto name = \"domainWithoutWWW\"; };\nusing FunctionDomainWithoutWWW = FunctionStringToString<ExtractSubstringImpl<ExtractDomain<true, false>>, NameDomainWithoutWWW>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S05",
+          "path": "src/Functions/URL/firstSignificantSubdomain.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/URL/firstSignificantSubdomain.cpp",
+          "sha256": "f575fa5d2e3df27dbd7ecca4bd4b24cc5df506e3a449e296b426de6a46710452",
+          "excerpts": [
+            {
+              "start_line": 9,
+              "end_line": 10,
+              "text": "struct NameFirstSignificantSubdomain { static constexpr auto name = \"firstSignificantSubdomain\"; };\nusing FunctionFirstSignificantSubdomain = FunctionStringToString<ExtractSubstringImpl<ExtractFirstSignificantSubdomain<true, false>>, NameFirstSignificantSubdomain>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S06",
+          "path": "src/Functions/trim.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/trim.cpp",
+          "sha256": "d50c53edbba1060ab2631ab3b4d9977f6cbc0a6e3ff7cf487499141967a78b1d",
+          "excerpts": [
+            {
+              "start_line": 28,
+              "end_line": 60,
+              "text": "class FunctionTrim final : public IFunction\n{\npublic:\n    FunctionTrim(const char * name_, bool trim_left_, bool trim_right_)\n        : function_name(name_), trim_left(trim_left_), trim_right(trim_right_) {}\n\n    static FunctionPtr create(ContextPtr, const char * name, bool trim_left, bool trim_right)\n    {\n        return std::make_shared<FunctionTrim>(name, trim_left, trim_right);\n    }\n\n    String getName() const override { return function_name; }\n    bool isVariadic() const override { return true; }\n    bool isSuitableForShortCircuitArgumentsExecution(const DataTypesWithConstInfo & /*arguments*/) const override { return true; }\n    bool useDefaultImplementationForConstants() const override { return true; }\n    size_t getNumberOfArguments() const override { return 0; }\n\n    DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override\n    {\n        FunctionArgumentDescriptors mandatory_args{\n            {\"input_string\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isStringOrFixedString), nullptr, \"String or FixedString\"}\n        };\n\n        FunctionArgumentDescriptors optional_args{\n            {\"trim_character\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isString), isColumnConst, \"const String\"}\n        };\n\n        validateFunctionArguments(*this, arguments, mandatory_args, optional_args);\n\n        return std::make_shared<DataTypeString>();\n    }\n\n    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override"
+            },
+            {
+              "start_line": 403,
+              "end_line": 403,
+              "text": "    factory.registerAlias(\"trim\", \"trimBoth\");"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S07",
+          "path": "src/Functions/concat.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/concat.cpp",
+          "sha256": "c922ab655eae5a97386a4c8d0287ff1181606c1e87191a3825b9f40ace65e340",
+          "excerpts": [
+            {
+              "start_line": 197,
+              "end_line": 255,
+              "text": "class ConcatOverloadResolver final : public IFunctionOverloadResolver\n{\npublic:\n    static constexpr auto name = \"concat\";\n    static FunctionOverloadResolverPtr create(ContextPtr context) { return std::make_unique<ConcatOverloadResolver>(context); }\n\n    explicit ConcatOverloadResolver(ContextPtr context_)\n        : to_string(FunctionFactory::instance().getImpl(\"toString\", context_))\n        , array_concat(FunctionFactory::instance().getImpl(\"arrayConcat\", context_))\n        , map_concat(FunctionFactory::instance().getImpl(\"mapConcat\", context_))\n        , tuple_concat(FunctionFactory::instance().getImpl(\"tupleConcat\", context_))\n    {\n    }\n\n    String getName() const override { return name; }\n    size_t getNumberOfArguments() const override { return 0; }\n    bool isVariadic() const override { return true; }\n\n    bool isInjective(const ColumnsWithTypeAndName & arguments) const override\n    {\n        /// When called with a single argument, concat delegates to toString, so the claim has to be\n        /// the one toString makes: it depends on the argument type, because rendering a date-time in a\n        /// time zone that has a UTC offset transition maps two distinct instants onto one string.\n        return arguments.size() == 1 && to_string->isInjective(arguments);\n    }\n\n    FunctionBasePtr buildImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr & return_type) const override\n    {\n        if (arguments.size() == 1)\n            return to_string->build(arguments);\n        if (!arguments.empty() && std::ranges::all_of(arguments, [](const auto & elem) { return isArray(elem.type); }))\n            return array_concat->build(arguments);\n        if (!arguments.empty() && std::ranges::all_of(arguments, [](const auto & elem) { return isMap(elem.type); }))\n            return map_concat->build(arguments);\n        if (!arguments.empty() && std::ranges::all_of(arguments, [](const auto & elem) { return isTuple(elem.type); }))\n            return tuple_concat->build(arguments);\n        return std::make_unique<FunctionToFunctionBaseAdaptor>(\n            ConcatImpl::create(nullptr),\n            DataTypes{std::from_range_t{}, arguments | std::views::transform([](auto & elem) { return elem.type; })},\n            return_type);\n    }\n\n    DataTypePtr getReturnTypeImpl(const DataTypes &) const override\n    {\n        /// We always return Strings from concat, even if arguments were fixed strings.\n        return std::make_shared<DataTypeString>();\n    }\n\n    DataTypePtr getReturnTypeForDefaultImplementationForDynamic() const override\n    {\n        return std::make_shared<DataTypeString>();\n    }\n\nprivate:\n    FunctionOverloadResolverPtr to_string;\n    FunctionOverloadResolverPtr array_concat;\n    FunctionOverloadResolverPtr map_concat;\n    FunctionOverloadResolverPtr tuple_concat;\n};"
+            },
+            {
+              "start_line": 51,
+              "end_line": 64,
+              "text": "    DataTypePtr getReturnTypeImpl(const DataTypes & arguments) const override\n    {\n        if (arguments.size() == 1)\n            throw Exception(ErrorCodes::TOO_FEW_ARGUMENTS_FOR_FUNCTION, \"Number of arguments for function {} should not be 1\", getName());\n\n        return std::make_shared<DataTypeString>();\n    }\n\n    DataTypePtr getReturnTypeForDefaultImplementationForDynamic() const override\n    {\n        return std::make_shared<DataTypeString>();\n    }\n\n    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override"
+            },
+            {
+              "start_line": 64,
+              "end_line": 83,
+              "text": "    ColumnPtr executeImpl(const ColumnsWithTypeAndName & arguments, const DataTypePtr &, size_t input_rows_count) const override\n    {\n        if (arguments.empty())\n        {\n            auto res_data = ColumnString::create();\n            res_data->insertDefault();\n            return ColumnConst::create(std::move(res_data), input_rows_count);\n        }\n        if (arguments.size() == 1)\n            return arguments[0].column;\n        /// Format function is not proven to be faster for two arguments.\n        /// Actually there is overhead of 2 to 5 extra instructions for each string for checking empty strings in FormatImpl.\n        /// Though, benchmarks are really close, for most examples we saw executeBinary is slightly faster (0-3%).\n        /// For 3 and more arguments FormatStringImpl is much faster (up to 50-60%).\n        if (arguments.size() == 2)\n            return executeBinary(arguments, input_rows_count);\n        return executeFormatImpl(arguments, input_rows_count);\n    }\n\nprivate:"
+            },
+            {
+              "start_line": 332,
+              "end_line": 332,
+              "text": "    factory.registerFunction<ConcatOverloadResolver>(documentation, FunctionFactory::Case::Insensitive);"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S08",
+          "path": "src/Functions/multiply.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/multiply.cpp",
+          "sha256": "4c987c92180ca961a414dc689ab176ebd79e84d23ef24742bcfa2a2f25430705",
+          "excerpts": [
+            {
+              "start_line": 9,
+              "end_line": 57,
+              "text": "template <typename A, typename B>\nstruct MultiplyImpl\n{\n    using ResultType = typename NumberTraits::ResultOfAdditionMultiplication<A, B>::Type;\n    static const constexpr bool allow_fixed_string = false;\n    static const constexpr bool allow_string_integer = false;\n\n    template <typename Result = ResultType>\n    static NO_SANITIZE_UNDEFINED Result apply(A a, B b)\n    {\n        if constexpr (is_big_int_v<A> || is_big_int_v<B>)\n        {\n            using CastA = std::conditional_t<is_floating_point<B>, B, A>;\n            using CastB = std::conditional_t<is_floating_point<A>, A, B>;\n\n            return static_cast<Result>(static_cast<CastA>(a)) * static_cast<Result>(static_cast<CastB>(b));\n        }\n        else\n            return static_cast<Result>(a) * static_cast<Result>(b);\n    }\n\n    /// Apply operation and check overflow. It's used for Decimal operations. @returns true if overflowed, false otherwise.\n    template <typename Result = ResultType>\n    static bool apply(A a, B b, Result & c)\n    {\n        if constexpr (std::is_same_v<Result, float> || std::is_same_v<Result, double>)\n        {\n            c = static_cast<Result>(a) * b;\n            return false;\n        }\n        else\n            return common::mulOverflow(static_cast<Result>(a), b, c);\n    }\n\n#if USE_EMBEDDED_COMPILER\n    static constexpr bool compilable = true;\n\n    static llvm::Value * compile(llvm::IRBuilder<> & b, llvm::Value * left, llvm::Value * right, bool)\n    {\n        return left->getType()->isIntegerTy() ? b.CreateMul(left, right) : b.CreateFMul(left, right);\n    }\n#endif\n};\n\nstruct NameMultiply\n{\n    static constexpr auto name = \"multiply\";\n};\nusing FunctionMultiply = BinaryArithmeticOverloadResolver<MultiplyImpl, NameMultiply>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S09",
+          "path": "src/Functions/FunctionBinaryArithmetic.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/FunctionBinaryArithmetic.h",
+          "sha256": "5e186efd2071a23887397bcaa0b87489597f474989c83ae448a2cbd1f554fd7a",
+          "excerpts": [
+            {
+              "start_line": 4536,
+              "end_line": 4549,
+              "text": "class BinaryArithmeticOverloadResolver final : public IFunctionOverloadResolver\n{\npublic:\n    static constexpr auto name = Name::name;\n    static FunctionOverloadResolverPtr create(ContextPtr context_)\n    {\n        return std::make_unique<BinaryArithmeticOverloadResolver>(context_);\n    }\n\n    explicit BinaryArithmeticOverloadResolver(ContextPtr context_) : context(context_) {}\n\n    String getName() const override { return name; }\n    size_t getNumberOfArguments() const override { return 2; }\n    bool isVariadic() const override { return false; }"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S10",
+          "path": "src/DataTypes/NumberTraits.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/DataTypes/NumberTraits.h",
+          "sha256": "ddbe90469aec92e839c08de7e37126dfec7ab7031227ec973910e3f833e58949",
+          "excerpts": [
+            {
+              "start_line": 32,
+              "end_line": 43,
+              "text": "constexpr size_t nextSize(size_t size)\n{\n    if (size < 8)\n        return size * 2;\n    return size;\n}\n\ntemplate <bool is_signed, bool is_floating, size_t size>\nstruct Construct\n{\n    using Type = Error;\n};"
+            },
+            {
+              "start_line": 45,
+              "end_line": 64,
+              "text": "template <> struct Construct<false, false, 1> { using Type = UInt8; };\ntemplate <> struct Construct<false, false, 2> { using Type = UInt16; };\ntemplate <> struct Construct<false, false, 4> { using Type = UInt32; };\ntemplate <> struct Construct<false, false, 8> { using Type = UInt64; };\ntemplate <> struct Construct<false, false, 16> { using Type = UInt128; };\ntemplate <> struct Construct<false, false, 32> { using Type = UInt256; };\ntemplate <> struct Construct<false, true, 1> { using Type = BFloat16; };\ntemplate <> struct Construct<false, true, 2> { using Type = BFloat16; };\ntemplate <> struct Construct<false, true, 4> { using Type = Float32; };\ntemplate <> struct Construct<false, true, 8> { using Type = Float64; };\ntemplate <> struct Construct<true, false, 1> { using Type = Int8; };\ntemplate <> struct Construct<true, false, 2> { using Type = Int16; };\ntemplate <> struct Construct<true, false, 4> { using Type = Int32; };\ntemplate <> struct Construct<true, false, 8> { using Type = Int64; };\ntemplate <> struct Construct<true, false, 16> { using Type = Int128; };\ntemplate <> struct Construct<true, false, 32> { using Type = Int256; };\ntemplate <> struct Construct<true, true, 1> { using Type = BFloat16; };\ntemplate <> struct Construct<true, true, 2> { using Type = BFloat16; };\ntemplate <> struct Construct<true, true, 4> { using Type = Float32; };\ntemplate <> struct Construct<true, true, 8> { using Type = Float64; };"
+            },
+            {
+              "start_line": 73,
+              "end_line": 79,
+              "text": "template <typename A, typename B> struct ResultOfAdditionMultiplication\n{\n    using Type = typename Construct<\n        is_signed_v<A> || is_signed_v<B>,\n        is_floating_point<A> || is_floating_point<B>,\n        nextSize(max(sizeof(A), sizeof(B)))>::Type;\n};"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S11",
+          "path": "src/Functions/FunctionsConversion.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/FunctionsConversion.h",
+          "sha256": "38f37329cb8d756f18ae874dfc9988ecebdde9f59eac3715eb534d8896cf1ade",
+          "excerpts": [
+            {
+              "start_line": 3654,
+              "end_line": 3693,
+              "text": "class FunctionConvert final : public IFunction\n{\npublic:\n    using Monotonic = MonotonicityImpl;\n\n    static constexpr auto name = Name::name;\n    static constexpr bool to_datetime64 = std::is_same_v<ToDataType, DataTypeDateTime64>;\n    static constexpr bool to_time64 = std::is_same_v<ToDataType, DataTypeTime64>;\n    static constexpr bool to_decimal = IsDataTypeDecimal<ToDataType> && !(to_datetime64 || to_time64);\n\n    static FunctionPtr create(ContextPtr context)\n    {\n        return std::make_shared<FunctionConvert>(context, default_date_time_overflow_behavior);\n    }\n\n    static FunctionPtr createFromSettings(const FunctionConvertSettings & settings)\n    {\n        return std::make_shared<FunctionConvert>(settings);\n    }\n\n    FunctionConvert(ContextPtr context, FormatSettings::DateTimeOverflowBehavior date_time_overflow_behavior)\n        : settings(context, date_time_overflow_behavior)\n    {\n    }\n\n    explicit FunctionConvert(const FunctionConvertSettings & settings_)\n        : settings(settings_)\n    {\n    }\n\n    String getName() const override\n    {\n        return name;\n    }\n\n    void updateHash(SipHash & hash) const override { settings.updateHash(hash); }\n\n    bool isVariadic() const override { return true; }\n    size_t getNumberOfArguments() const override { return 0; }\n    bool isInjective(const ColumnsWithTypeAndName & sample_columns) const override"
+            },
+            {
+              "start_line": 3714,
+              "end_line": 3746,
+              "text": "    DataTypePtr getReturnTypeImpl(const ColumnsWithTypeAndName & arguments) const override\n    {\n        NullPresence null_presence = getNullPresense(arguments);\n\n        /// When cast_keep_nullable is enabled, treat Dynamic and Variant\n        /// as Nullable because they can contain nulls.\n        if (settings.cast_keep_nullable)\n        {\n            for (const auto & arg : arguments)\n            {\n                if (isDynamic(*arg.type) || isVariant(*arg.type))\n                {\n                    null_presence.has_nullable = true;\n                    break;\n                }\n            }\n        }\n\n        if (null_presence.has_null_constant)\n        {\n            return makeNullable(std::make_shared<DataTypeNothing>());\n        }\n        if (null_presence.has_nullable)\n        {\n            auto nested_columns = Block(createBlockWithNestedColumns(arguments));\n            auto return_type = getReturnTypeImplRemovedNullable(ColumnsWithTypeAndName(nested_columns.begin(), nested_columns.end()));\n            return makeNullable(return_type);\n        }\n\n        return getReturnTypeImplRemovedNullable(arguments);\n    }\n\n    DataTypePtr getReturnTypeImplRemovedNullable(const ColumnsWithTypeAndName & arguments) const"
+            },
+            {
+              "start_line": 3746,
+              "end_line": 3779,
+              "text": "    DataTypePtr getReturnTypeImplRemovedNullable(const ColumnsWithTypeAndName & arguments) const\n    {\n        FunctionArgumentDescriptors mandatory_args = {{\"Value\", nullptr, nullptr, \"any type\"}};\n        FunctionArgumentDescriptors optional_args;\n\n        if constexpr (to_decimal)\n        {\n            mandatory_args.push_back({\"scale\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isNativeInteger), &isColumnConst, \"const Integer\"});\n        }\n\n        if (!to_decimal && (isDateTime64<Name, ToDataType>(arguments) || isTime64<Name, ToDataType>(arguments)))\n        {\n            mandatory_args.push_back({\"scale\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isNativeInteger), &isColumnConst, \"const Integer\"});\n        }\n\n        // toString(DateTime or DateTime64, [timezone: String])\n        if ((std::is_same_v<Name, NameToString> && !arguments.empty() && (isDateTime64(arguments[0].type) || isDateTime(arguments[0].type)))\n            // toUnixTimestamp(value[, timezone : String])\n            || std::is_same_v<Name, NameToUnixTimestamp>\n            // toDate(value[, timezone : String])\n            || std::is_same_v<ToDataType, DataTypeDate> // TODO: shall we allow timestamp argument for toDate? DateTime knows nothing about timezones and this argument is ignored below.\n            // toDate32(value[, timezone : String])\n            || std::is_same_v<ToDataType, DataTypeDate32>\n            // toDateTime(value[, timezone: String])\n            || std::is_same_v<ToDataType, DataTypeDateTime>\n            // toDateTime64(value, scale : Integer[, timezone: String])\n            || std::is_same_v<ToDataType, DataTypeDateTime64>)\n        {\n            optional_args.push_back({\"timezone\", static_cast<FunctionArgumentDescriptor::TypeValidator>(&isString), nullptr, \"String\"});\n        }\n\n            validateFunctionArguments(*this, arguments, mandatory_args, optional_args);\n\n        if constexpr (std::is_same_v<ToDataType, DataTypeInterval>)"
+            },
+            {
+              "start_line": 3840,
+              "end_line": 3840,
+              "text": "                return std::make_shared<ToDataType>();"
+            },
+            {
+              "start_line": 5390,
+              "end_line": 5390,
+              "text": "using FunctionToString = FunctionConvert<DataTypeString, NameToString, ToStringMonotonicity>;"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S12",
+          "path": "src/Functions/IFunction.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/IFunction.h",
+          "sha256": "0a897c9131d61bcc8dff776c8196fa31b242718d3b712bf7b8f5fb61bdf4945a",
+          "excerpts": [
+            {
+              "start_line": 800,
+              "end_line": 800,
+              "text": "    virtual bool isVariadic() const { return false; }"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S14",
+          "path": "src/Functions/StringHelpers.h",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Functions/StringHelpers.h",
+          "sha256": "7395d8e15bb2f263353c18d3d499f2f5a6c5d0c08309cf0969dec552f957fbbc",
+          "excerpts": [
+            {
+              "start_line": 101,
+              "end_line": 104,
+              "text": "    static void vectorFixed(const ColumnString::Chars &, size_t, ColumnString::Chars &, size_t)\n    {\n        throw Exception(ErrorCodes::ILLEGAL_COLUMN, \"Column of type FixedString is not supported by this function\");\n    }"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-002-S13",
+          "path": "src/Analyzer/Resolve/resolveFunction.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Analyzer/Resolve/resolveFunction.cpp",
+          "sha256": "d1ecbaf334be3efc84fdbce5cfd4fac66935b388f17b7243f7c60f7c9eef51ac",
+          "excerpts": [
+            {
+              "start_line": 2335,
+              "end_line": 2396,
+              "text": "        auto resolve_identifier_operand = [&](const IdentifierNode & operand, std::optional<size_t> required_arity) -> QueryTreeNodePtr\n        {\n            const auto & operand_identifier = operand.getIdentifier();\n            if (!operand_identifier.isShort())\n                return nullptr;\n\n            auto function_lookup = tryResolveIdentifier({operand_identifier, IdentifierLookupContext::FUNCTION}, scope, {});\n            if (function_lookup.resolved_identifier && function_lookup.resolved_identifier->getNodeType() == QueryTreeNodeType::LAMBDA)\n                return function_lookup.resolved_identifier->clone();\n\n            /// Mirroring the bare-function-name rewrite above, a column or an alias with the same\n            /// name keeps priority over a registered function (and over the placeholder syntax):\n            /// `WITH 10 AS negate SELECT arrayMap(negate | toString, [7])` is an error rather\n            /// than a composition of the function `negate`.\n            auto expression_lookup = tryResolveIdentifier({operand_identifier, IdentifierLookupContext::EXPRESSION}, scope, {});\n            if (expression_lookup.isResolved())\n                throw Exception(ErrorCodes::BAD_ARGUMENTS,\n                    \"Each operand of the function composition operator `|` must be a function, but the identifier {} \"\n                    \"resolves to an expression. In scope {}\",\n                    backQuote(operand_identifier.getFullName()),\n                    scope.scope_node->formatASTForErrorMessage());\n\n            auto operand_arity = tryGetRegisteredFunctionArity(operand_identifier.getFullName(), scope.context);\n            if (!operand_arity)\n                return nullptr;\n\n            size_t lambda_arity = operand_arity->fixed_arity;\n            if (lambda_arity == 0 && operand_arity->is_variadic)\n            {\n                if (!required_arity)\n                    throw Exception(ErrorCodes::BAD_ARGUMENTS,\n                        \"Cannot compose the variadic function {}: its number of arguments is not known. \"\n                        \"Use argument placeholders: {}(_1, ..., _N). In scope {}\",\n                        backQuote(operand_identifier.getFullName()),\n                        operand_identifier.getFullName(),\n                        scope.scope_node->formatASTForErrorMessage());\n                lambda_arity = *required_arity;\n            }\n\n            /// A fixed-arity zero-argument function: composing it makes no sense.\n            if (lambda_arity == 0)\n                return nullptr;\n\n            Names lambda_argument_names;\n            lambda_argument_names.reserve(lambda_arity);\n\n            auto function_call = std::make_shared<FunctionNode>(operand_identifier.getFullName());\n            auto & function_call_arguments = function_call->getArguments().getNodes();\n            function_call_arguments.reserve(lambda_arity);\n\n            for (size_t i = 0; i < lambda_arity; ++i)\n            {\n                String argument_name = \"__function_ref_arg_\" + std::to_string(i);\n                lambda_argument_names.push_back(argument_name);\n                function_call_arguments.push_back(std::make_shared<IdentifierNode>(Identifier{argument_name}));\n            }\n\n            auto lambda_arguments_node = std::make_shared<LambdaArgumentsNode>(std::move(lambda_argument_names));\n            return std::make_shared<LambdaNode>(std::move(lambda_arguments_node), std::move(function_call), false /*is_operator*/);\n        };\n\n        /// A composition in any argument position is fused into a single lambda. The composition"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
