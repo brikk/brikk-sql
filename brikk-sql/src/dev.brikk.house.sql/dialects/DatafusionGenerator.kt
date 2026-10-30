@@ -55,7 +55,7 @@ open class DatafusionGenerator(
     comments: Boolean = true,
     // brikk: DataFusion lowercases function names (polyglot NormalizeFunctions::Lower)
     normalizeFunctions: kotlin.Any = "lower",
-    tokenizerConfig: TokenizerConfig = TokenizerConfig.BASE,
+    tokenizerConfig: TokenizerConfig = DatafusionDialect.TOKENIZER_CONFIG,
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
 ) : Generator(
@@ -88,7 +88,20 @@ open class DatafusionGenerator(
     // brikk: window frame EXCLUDE unsupported — polyglot supports_window_exclude=false
     override val supportsWindowExclude: Boolean get() = false
 
-    override val dialectNullOrdering: String get() = "nulls_are_last"
+    override val dialectNullOrdering: String get() = "nulls_are_large"
+    override val parameterToken: String get() = "$"
+    override val byteStart: String get() = "E'"
+    override val byteEnd: String get() = "'"
+    override val hexStart: String get() = "X'"
+    override val hexEnd: String get() = "'"
+    override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
+
+    override fun bytestringSql(expression: ByteString): String {
+        if (expression.args["is_bytes"] == true) return super.bytestringSql(expression)
+        val text = expression.thisArg as? String ?: ""
+        return "E'${escapeStr(text, escapeBackslash = true, delimiter = "'", escapedDelimiter = "''", isByteString = true)}'"
+    }
 
     override fun castSql(expression: Cast, safePrefix: String?): String =
         if (expression.meta["datafusion_cast_style"] == "dcolon") {
@@ -148,6 +161,19 @@ open class DatafusionGenerator(
             sourceFunctionSql(expression)
         }
 
+    private fun datafusionStringAgg(expression: GroupConcat): String {
+        // ORDER BY follows the delimiter in DataFusion. Work on a copy so rendering
+        // never removes the order from a caller's AST, including DISTINCT inputs.
+        val value = (expression.thisArg as Expression).copy()
+        // Only the aggregate's outer Order is its modifier. An ORDER BY in a
+        // scalar subquery argument belongs to that subquery and must stay there.
+        val order = value as? Order
+        val argument = order?.thisArg as? Expression ?: value
+        order?.set("this", null)
+        val separator = expression.args["separator"] ?: Literal.string(",")
+        return "string_agg(${sql(argument)}, ${sql(separator)}${order?.let { sql(it) }.orEmpty()})"
+    }
+
     // ------------------------------------------------------------------
     // Renames for generic (Anonymous) function nodes
     // ------------------------------------------------------------------
@@ -185,15 +211,25 @@ open class DatafusionGenerator(
                 e.args.values.flatMap { v -> if (v is List<*>) v else listOf(v) }.toTypedArray()
 
             // brikk: GROUP_CONCAT -> string_agg (dedicated exp.GroupConcat node)
-            reg(GroupConcat::class) { e -> func("string_agg", *flattenArgs(e)) }
+            reg(GroupConcat::class) { e -> (this as DatafusionGenerator).datafusionStringAgg(e as GroupConcat) }
             // brikk: TIME_TO_STR -> to_char (dedicated exp.TimeToStr node)
             reg(TimeToStr::class) { e -> func("to_char", *flattenArgs(e)) }
             // brikk: postgres-style regex-match operators (sqlparser-rs PGRegexMatch);
             // DataFusion renders them as operators, not function calls
-            reg(RegexpLike::class) { e -> binary(e as Binary, "~") }
+            reg(RegexpLike::class) { e ->
+                if (e.args["flag"] != null) func("regexp_like", e.thisArg, e.expressionArg, e.args["flag"])
+                else binary(e as Binary, "~")
+            }
             reg(RegexpILike::class) { e -> binary(e as Binary, "~*") }
             reg(NEQ::class) { e -> binary(e as Binary, e.meta["operator"] as? String ?: "!=") }
             reg(ArrayNode::class) { e -> "ARRAY[${expressions(e)}]" }
+            reg(ArrayContainsAll::class) { e -> binary(e as Binary, "@>") }
+            reg(ArrayContainedBy::class) { e -> binary(e as Binary, "<@") }
+            reg(ToChar::class) { e -> func("to_char", e.thisArg, e.args["format"], e.args["nlsparam"]) }
+            reg(DateBin::class) { e ->
+                if (e.meta["datafusion_date_bin"] == true) func("date_bin", e.thisArg, e.expressionArg, e.args["origin"])
+                else functionFallbackSql(e as Func)
+            }
             reg(Unnest::class) { e -> (this as DatafusionGenerator).datafusionUnnestSql(e as Unnest) }
             reg(GenerateSeries::class) { e -> (this as DatafusionGenerator).generateSeriesSql(e as GenerateSeries) }
 

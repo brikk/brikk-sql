@@ -66,6 +66,17 @@ class ReferenceProtocolTest(unittest.TestCase):
 
 
 class CommittedEvidenceTest(unittest.TestCase):
+    def test_round_two_accepted_upstream_queries_keep_their_observations(self):
+        root = probe.ROOT / "vendor/data/datafusion-spice/round2"
+        capture = json.loads((root / "datafusion-observations.json").read_text())
+        self.assertEqual(capture["fixtures_sha256"], probe.sha256(root / "cases.json"))
+        self.assertEqual(capture["brikk_observations_sha256"], probe.sha256(root / "brikk-observations.json"))
+        cases = capture["profiles"]["datafusion-55.2.0"]["cases"]
+        self.assertEqual([c["id"] for c in cases], [c["id"] for c in probe.load_cases(root / "cases.json")])
+        accepted = [c for c in cases if c["original"].get("execute", {}).get("status") == "accepted"]
+        self.assertGreaterEqual(len(accepted), 31)
+        self.assertTrue(all(c["comparison"] == "same-observation" for c in accepted))
+
     def test_captures_match_current_inputs_and_cover_all_expected_cases(self):
         fixtures = probe.load_cases(probe.FIXTURES)
         brikk = probe.ROOT / "vendor/data/datafusion-spice/brikk-observations.json"

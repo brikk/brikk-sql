@@ -1,8 +1,10 @@
 package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.BitwiseNot
+import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.DataType
+import dev.brikk.house.sql.ast.DateBin
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GenerateSeries
 import dev.brikk.house.sql.ast.Literal
@@ -18,10 +20,9 @@ import dev.brikk.house.sql.parser.fromArgList
  * DataFusion parser — brikk-native, NO sqlglot oracle. It uses the BASE [Parser]
  * grammar and records DataFusion surface spelling needed for readable round trips.
  *
- * The polyglot fixture corpus and the curated DataFusion sqllogictest parse subset are
- * accepted by the BASE grammar with ONE delta (see below). Concretely, the following
- * are already BASE parser behaviors (verified via the fixture/SLT parse gates, not a
- * sqlglot oracle):
+ * The polyglot fixture corpus and the curated DataFusion sqllogictest parse subset
+ * use the BASE grammar with local lexical and function overrides. The following
+ * are already BASE parser behaviors (verified via the fixture/SLT parse gates):
  *  - `::` cast operator and CAST/TRY_CAST
  *  - `arrow_cast(...)` / `arrow_typeof(...)` (parse as anonymous functions)
  *  - QUALIFY, SELECT * EXCEPT (...) and SELECT * EXCLUDE (...)
@@ -36,7 +37,9 @@ import dev.brikk.house.sql.parser.fromArgList
  * [DatafusionDialect.TOKENIZER_CONFIG] remaps `~` to RLIKE (base RANGE_PARSERS then
  * builds exp.RegexpLike) and [unaryParsers] restores prefix `~x` as BitwiseNot.
  *
- * DataFusion-specific handling also covers one-argument generate_series(stop), source
+ * Native reference cases additionally establish variadic map and sort calls, date_bin's
+ * origin argument, and nulls-as-largest ordering. DataFusion-specific handling covers
+ * one-argument generate_series(stop), source
  * function/type aliases, `::` casts, SELECT ALL, comparison spelling, and explicit null
  * ordering. Arrow-native type modeling and typing metadata remain separate future work.
  */
@@ -46,7 +49,7 @@ open class DatafusionParser(
     tokenizerConfig: TokenizerConfig = DatafusionDialect.TOKENIZER_CONFIG,
 ) : Parser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig) {
 
-    override val nullOrdering: String get() = "nulls_are_last"
+    override val nullOrdering: String get() = "nulls_are_large"
 
     override val preserveOperatorSpelling: Boolean get() = true
 
@@ -104,15 +107,25 @@ open class DatafusionParser(
 
         private val PRESERVED_TYPE_NAMES = setOf("BYTEA", "DECIMAL", "INT", "INTEGER", "NUMERIC", "VARCHAR")
 
-        private val FUNCTIONS = BaseParserTables.FUNCTIONS +
-            ("GENERATE_SERIES" to { values: List<Expression?> ->
+        private val FUNCTIONS = BaseParserTables.FUNCTIONS + mapOf(
+            // The shared Map and ArraySort shapes model different argument contracts.
+            // Preserve all native arguments until an Arrow-specific model is introduced.
+            "MAP" to { values: List<Expression?> -> Anonymous(args("this" to "map", "expressions" to values)) },
+            "ARRAY_SORT" to { values: List<Expression?> -> Anonymous(args("this" to "array_sort", "expressions" to values)) },
+            "DATE_BIN" to { values: List<Expression?> ->
+                if (values.size in 2..3) DateBin(args("this" to values[0], "expression" to values[1], "origin" to values.getOrNull(2)))
+                    .also { it.meta["datafusion_date_bin"] = true }
+                else Anonymous(args("this" to "date_bin", "expressions" to values))
+            },
+            "GENERATE_SERIES" to { values: List<Expression?> ->
                 val args = if (values.size == 1) listOf(Literal.number("0")) + values else values
                 fromArgList(listOf("start", "end", "step", "is_end_exclusive"), false) {
                     GenerateSeries(it)
                 }(args).also {
                     if (values.size == 1) it.meta["datafusion_omitted_series_start"] = true
                 }
-            })
+            },
+        )
 
         private val COLUMN_OPERATORS = BaseParserTables.COLUMN_OPERATORS +
             (TokenType.DCOLON to { p: Parser, this_: Expression?, to: Expression? ->

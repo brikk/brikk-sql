@@ -6,6 +6,8 @@ use serde::Deserialize;
 use serde_json::{Value, json};
 use std::io::{self, BufRead, Write};
 
+#[cfg(not(feature = "spice"))]
+mod catalog;
 #[cfg(feature = "spice")]
 mod spice;
 
@@ -180,7 +182,19 @@ async fn handle(request: &Request) -> Value {
                 json!({"status":"unavailable","message":"Use the pinned Spice runtime execution adapter"})
             }
         }
-        _ => json!({"status":"request-error","message":"operation must be parse or execute"}),
+        "catalog" if request.sql.is_empty() && request.setup.is_empty() => {
+            #[cfg(not(feature = "spice"))]
+            {
+                catalog::capture().await
+            }
+            #[cfg(feature = "spice")]
+            {
+                json!({"status":"unavailable","message":"Capture Spice catalogs from its runtime"})
+            }
+        }
+        _ => {
+            json!({"status":"request-error","message":"operation must be parse, execute, or catalog with empty sql/setup"})
+        }
     };
     result["id"] = json!(request.id);
     result["protocol_version"] = json!(1);

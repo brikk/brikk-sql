@@ -4,7 +4,7 @@
 
 - [x] DFS-001: Pin engine profiles and preserve the compatibility audit as reproducible fixtures.
 - [x] DFS-002: Build version-pinned parser and execution reference adapters.
-- [ ] DFS-003: Capture and generate separate DataFusion and Spice metadata catalogs.
+- [x] DFS-003: Capture and generate separate DataFusion and Spice metadata catalogs.
 - [ ] DFS-004: Correct DataFusion parsing and SQL generation, starting with silent rewrites.
 - [ ] DFS-005: Add the Spice dialect and its product-specific SQL behavior.
 - [ ] DFS-006: Complete types, parameters, scope, output shapes, lineage, and semantic limits.

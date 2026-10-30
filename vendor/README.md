@@ -23,6 +23,13 @@ released binary and runs in a disposable local runtime. Updates must retain old 
 review new dependency pins and profile changes, regenerate captures, and run the protocol
 and native controls. See the [baseline findings](../docs/research/datafusion-spice-reference-baseline.md).
 
+The same version directories now contain full `metadata-capture.json` files. Capture with
+`tools/capture_datafusion_spice_metadata.py`, then regenerate the Kotlin catalogs with
+`tools/generate_datafusion_metadata.py`. Runtime SQL signatures are representative samples;
+only matched finite registry constraints become strict overload entries. Source-backed
+Spice overrides identify scalar stubs without inventing signatures. Historical baseline
+observations stay intact; the first post-fix observations live under `data/datafusion-spice/round2/`.
+
 ## `lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar`
 
 The standalone Doris SQL parser (`fe-sql-parser`) from Apache Doris — the authoritative ANTLR

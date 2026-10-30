@@ -123,3 +123,21 @@ its results are not native v2.4.0 evidence. The importer accepts the original re
 the current small regression corpus and commands above do not depend on that temporary export.
 
 See `docs/research/datafusion-spice-reference-baseline.md` for findings and remaining work.
+
+## Metadata capture
+
+The upstream reference also accepts `{"id":"catalog","operation":"catalog","sql":""}`.
+It exports scalar/aggregate/window/table registrations, native signature constraints,
+aliases and volatility, SQL information-schema samples, settings, and sqlparser keywords.
+The Spice parser package reports this operation unavailable; capture its inventory from
+the released runtime instead.
+
+```sh
+python3 tools/capture_datafusion_spice_metadata.py --upstream build/datafusion-reference/debug/brikk-datafusion-reference --spiced /tmp/opencode/spice-2.4.0-runtime/spiced
+python3 tools/generate_datafusion_metadata.py
+```
+
+Introspection samples are not complete overloads. The generator keeps them as separate
+evidence, preserves same-named kinds, and leaves unsupported constraints unknown. Source
+overrides have pinned provenance and must name functions in the actual runtime inventory.
+See `docs/research/datafusion-spice-round2.md` for metadata policy and current regressions.

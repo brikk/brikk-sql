@@ -58,6 +58,12 @@ versioned registry/settings facts and parser/execution results from Apache-2.0-l
 Spice/DataFusion software. The released Spice binary is downloaded for local checks and
 is not redistributed here. Source revisions and checksums are in the provenance manifests.
 
+`GeneratedDatafusionFunctionCatalog.kt` and `GeneratedSpiceFunctionCatalog.kt` are generated
+from these runtime/registry facts. Function descriptions and examples retain the source
+engines' documentation through the metadata evidence API. Their capture hashes and pinned
+source overrides identify the exact inputs; generated code does not imply a broader engine
+or build compatibility claim.
+
 ## Apache Doris
 
 Doris-derived artifacts are included from https://github.com/apache/doris and
