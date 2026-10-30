@@ -20,7 +20,7 @@ import java.util.concurrent.CancellationException
  *
  * Binding evaluates some expressions (table-function arguments such as `range(nextval('s'))`),
  * and the engine has external access enabled, so this oracle is for trusted corpus SQL only.
- * Editors use [ParseOnlyDuckdbVerifier]. Routing statements never use prepare/bind even here;
+ * Editors use [ParseOnlyDuckdbVerifier]. Routing and extension-management statements never use prepare/bind even here;
  * they remain unverified when the parse-only channel cannot serialize them.
  *
  * Cold start: the first [verify] boots an embedded DuckDB; the connection is created lazily
@@ -58,7 +58,8 @@ public class DuckdbVerifier internal constructor(
             is SerializedSql.Failed -> if (serialized.type == "not implemented") {
                 // CONNECT option binding can evaluate expressions or acquire resources. Never
                 // turn routing validation into prepare/bind, even in the trusted corpus oracle.
-                if (dev.brikk.house.sql.dialects.mayContainDuckdbRouting(sql)) serialized.toParseOnlyResult(sql) else verifyByPrepare(sql)
+                if (dev.brikk.house.sql.dialects.mayContainDuckdbRouting(sql) ||
+                    dev.brikk.house.sql.dialects.mayContainDuckdbExtensionManagement(sql)) serialized.toParseOnlyResult(sql) else verifyByPrepare(sql)
             } else {
                 val message = listOfNotNull(serialized.type, serialized.message).joinToString(": ")
                 VerifyResult.Rejected(serialized.errorIn(sql, message.ifEmpty { serialized.document }))

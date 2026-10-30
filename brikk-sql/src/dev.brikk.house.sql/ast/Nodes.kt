@@ -636,6 +636,10 @@ internal fun registerNativeDuckdbNodes(m: MutableMap<String, ExpressionRegistry.
     m["DuckdbDeallocate"] = ExpressionRegistry.Entry(module) { DuckdbDeallocate() }
     m["DuckdbResetVariable"] = ExpressionRegistry.Entry(module) { DuckdbResetVariable() }
     m["DuckdbRecursiveViewProperty"] = ExpressionRegistry.Entry(module) { DuckdbRecursiveViewProperty() }
+    m["DuckdbCreateExtensionRepository"] = ExpressionRegistry.Entry(module) { DuckdbCreateExtensionRepository() }
+    m["DuckdbDropExtensionRepository"] = ExpressionRegistry.Entry(module) { DuckdbDropExtensionRepository() }
+    m["DuckdbInstallExtension"] = ExpressionRegistry.Entry(module) { DuckdbInstallExtension() }
+    m["DuckdbLoadExtension"] = ExpressionRegistry.Entry(module) { DuckdbLoadExtension() }
 }
 
 // sqlglot: query.Subquery(Expression, DerivedTable, Query) — is_subquery

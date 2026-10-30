@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-021.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-022.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -492,11 +492,52 @@ and IDE introspection/completion are separate contracts.
   secure view returns only allowed rows. Logs: /tmp/opencode/duckdb-secure-view-verified.log and
   /tmp/opencode/duckdb-secure-view-final-controls.log.
 
-- [ ] `DDB20-022` Custom extension repositories [ADD].
+- [x] `DDB20-022` Custom extension repositories [DONE].
   Currently opaque. Model final CREATE [OR REPLACE] EXTENSION REPOSITORY, WITH PREFIX,
   PUBLIC KEY(S), DROP, INSTALL/LOAD FROM and INSTALL AND LOAD as applicable. Keep repository
   selection distinct from grammar activation; do not fetch keys/install modules during editor
   analysis, normalize key material unsafely, or expose secrets in logs.
+  Added native AST nodes for repository CREATE/DROP, extended INSTALL and LOAD. Simple INSTALL
+  retains its earlier manifest-backed AST/serde shape. Final grammar includes optional WITH/USING,
+  PUBLIC KEY or KEYS with comma-separated literal strings, IF NOT EXISTS/OR REPLACE exclusivity,
+  FROM identifier versus string, INSTALL VERSION, FORCE INSTALL AND LOAD and LOAD AS. Prefix/key
+  strings are preserved, including PEM whitespace; static analysis does not validate or normalize
+  cryptographic data, fetch a key, read trust files, install/load code or activate a grammar.
+  CREATE exposes the native management result (repository_name VARCHAR, prefix VARCHAR,
+  key_fingerprints VARCHAR[]), not query/table lineage. Other actions have no query output shape;
+  SELECT qualification, type rewrites of new nodes and unproved cross-target management refuse;
+  simple INSTALL's existing literal annotation is preserved along with its exact serde. Registration
+  leaves the native active-grammar list unchanged. Repository selection is not a grammar preference.
+  Parser/editor/verifier diagnostics redact repository details. Raw AST/serde/emitted SQL and native
+  execution exceptions remain sensitive. Even the trusted corpus verifier never prepares/binds
+  management statements; serializer limitations remain Unverified, and a prepare spy plus private
+  filesystem controls show validation writes no trust/extension files or registration state.
+  Native results pin fingerprint arrays/types, RSA/PEM normalization by the engine only, multiple
+  pinned keys, replacement/existence/drop, local metadata fetching and pin-once persistence across
+  instances. Runtime undecided/allowed/forbidden policy and configuration lock checks remain native.
+  Signed private repository tests pin real install/load with signatures enabled, per-repository
+  layout/bare-load isolation, existing-key loads under undecided, wrong-key/origin rejection and
+  fresh-instance key rotation/forbidden trust. Quoted FROM in INSTALL AND LOAD really can install
+  then fail to load; no rollback, identifier rewrite, retry or application-side trust emulation.
+  Opt-in fixture re-signs only a private inet.duckdb_extension copy with ephemeral RSA keys and
+  writes only its own trust/extension directories. It does not contact a network repository,
+  change user trust, disable signatures or certify that revocation unloads already-resident code.
+  Final documentation: extensions/extension_repositories and sql/statements/load_and_install.
+  Reviewed pinned load.gram/transform_load.cpp/bind_load.cpp/physical_load.cpp, repository manager
+  and native extension_repositories{,_lock}, repository_not_autoloaded and install_and_load tests.
+  Evidence: DuckdbExtensionRepositoryTest, DuckdbExtensionRepositoryResultTest and
+  DuckdbSignedRepositoryResultTest. Full gates passed 1,340 core, 115 metadata and 135 DuckDB
+  verifier/native tests with both signed-repository and loopback Quack fixtures enabled, zero
+  skips. Existing Python corpora, annotated-serde manifests/ledgers and public data-class JVM
+  signatures remain unchanged; four native nodes are explicitly registered under brikk.duckdb.
+  Opt-in source fixture was the existing v2.0.0 linux_amd64 inet.duckdb_extension, SHA-256
+  b1e8776d27d351eceec714c958304eb9011b27a181a4f182e9370a12b939d2c6. Set
+  BRIKK_DUCKDB_REPOSITORY_EXTENSION to a trusted matching file to run those signed-binary controls.
+  No source binary, user connection/store, grammar preference, IntelliJ API, driver-result
+  workaround, consumer pin, merge or publication was changed.
+  Final 15 focused controls also passed, including direct LOAD with a string repository and
+  parse-only native controls for LOAD aliases and versioned installs. Evidence logs:
+  /tmp/opencode/duckdb-repositories-full-final.log and /tmp/opencode/duckdb-repositories-final-controls.log.
 
 - [ ] `DDB20-023` External-resource statements [ADD].
   Currently opaque. Classify/model final CREATE/REGISTER/SHOW/CONNECT TO/DESTROY EXTERNAL

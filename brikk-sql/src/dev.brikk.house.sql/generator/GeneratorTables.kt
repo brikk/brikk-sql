@@ -550,6 +550,8 @@ object GeneratorTables {
         reg(Show::class) { e -> showSql(e as Show) }
         reg(HistoricalData::class) { e -> historicaldataSql(e as HistoricalData) }
         reg(Install::class) { e -> installSql(e as Install) }
+        for (node in listOf(DuckdbCreateExtensionRepository::class, DuckdbDropExtensionRepository::class,
+            DuckdbInstallExtension::class, DuckdbLoadExtension::class)) reg(node) { e -> duckdbExtensionSql(e) }
         reg(Summarize::class) { e -> summarizeSql(e as Summarize) }
         reg(Attach::class) { e -> attachSql(e as Attach) }
         reg(Detach::class) { e -> detachSql(e as Detach) }

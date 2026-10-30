@@ -19,6 +19,11 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("DETACH", "${STATEMENTS}attach", "DETACH"),
         DocsEntry("USE", "${STATEMENTS}use", "USE"),
         DocsEntry("UPDATE EXTENSIONS", "${STATEMENTS}update_extensions", "UPDATE EXTENSIONS"),
+        DocsEntry("CREATE [OR REPLACE] EXTENSION REPOSITORY", "extensions/extension_repositories", "CREATE EXTENSION REPOSITORY",
+            "Pins repository signing keys. Without explicit keys, execution fetches them from the prefix. Introduced in DuckDB 2.0."),
+        DocsEntry("DROP EXTENSION REPOSITORY", "extensions/extension_repositories", "DROP EXTENSION REPOSITORY"),
+        DocsEntry("[FORCE] INSTALL AND LOAD", "${STATEMENTS}load_and_install", "INSTALL AND LOAD",
+            "Installs then loads an extension. A custom repository identifier and a string are not interchangeable."),
         DocsEntry("[FORCE] INSTALL|LOAD", "${STATEMENTS}load_and_install", "LOAD / INSTALL", "Installs or loads an extension."),
         DocsEntry("[FORCE] CHECKPOINT", "${STATEMENTS}checkpoint", "CHECKPOINT"),
         DocsEntry("VACUUM", "${STATEMENTS}vacuum", "VACUUM"),
@@ -72,6 +77,7 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
                 "duckdb_indexes", "duckdb_keywords", "duckdb_memory", "duckdb_optimizers", "duckdb_schemas", "duckdb_secrets", "duckdb_sequences",
                 "duckdb_settings", "duckdb_tables", "duckdb_temporary_files", "duckdb_types", "duckdb_variables", "duckdb_views")
                 .associateWith { "sql/meta/duckdb_table_functions" } +
-            mapOf("glob" to "sql/functions/utility", "unnest" to "sql/query_syntax/unnest")
+            mapOf("glob" to "sql/functions/utility", "unnest" to "sql/query_syntax/unnest",
+                "duckdb_extension_repositories" to "extensions/extension_repositories")
         ),
 )

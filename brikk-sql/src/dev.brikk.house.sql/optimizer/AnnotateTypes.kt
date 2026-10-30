@@ -6,6 +6,7 @@ import dev.brikk.house.sql.ast.Anonymous
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.hasKeyedAggregatePayload
 import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
 import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Bracket
 import dev.brikk.house.sql.ast.Column
@@ -356,6 +357,10 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate
     fun <E : Expression> annotate(expression: E, annotateScope: Boolean = true): E {
+        // Keep simple INSTALL's published literal-annotation/serde behavior. The new
+        // management nodes have runtime result contracts, not SELECT expression types.
+        if (expression.isDuckdbExtensionManagement() && expression !is dev.brikk.house.sql.ast.Install)
+            throw OptimizeError("Extension/repository management requires its native result contract")
         if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference typing is not modeled")
         if (dialect.name == "duckdb" && expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require image/transition scope contracts")
         if (dialect.name == "duckdb" && expression.hasKeyedAggregatePayload()) {

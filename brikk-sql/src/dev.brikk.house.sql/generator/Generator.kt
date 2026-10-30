@@ -395,6 +395,8 @@ open class Generator(
         if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
             unexecutable("$targetName has no verified recursive USING KEY translation")
         }
+        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExtensionManagement() })
+            unexecutable("$targetName has no verified DuckDB extension/repository management translation")
         if (expr.findAll<SecureProperty>().any()) {
             // Among the implemented targets only DuckDB has a verified secure-view
             // contract. An origin-less AST is not permission to emit an unsafe DDL.
@@ -4778,8 +4780,32 @@ open class Generator(
 
     // sqlglot: Generator.install_sql (base: unsupported)
     open fun installSql(expression: Install): String {
+        unexecutable("$targetName cannot execute DuckDB extension installation")
         unsupported("Unsupported INSTALL statement")
         return ""
+    }
+
+    internal fun duckdbExtensionSql(expression: Expression): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB extension/repository management")
+        val target = sql(expression, "this")
+        val from = sql(expression, "from_").let { if (it.isEmpty()) "" else " FROM $it" }
+        return when (expression) {
+            is DuckdbCreateExtensionRepository -> {
+                val replace = if (expression.args["replace"] == true) " OR REPLACE" else ""
+                val exists = if (expression.args["exists"] == true) " IF NOT EXISTS" else ""
+                val keys = expressions(expression).let { if (it.isEmpty()) "" else " USING PUBLIC ${if (expression.expressionsArg.size == 1) "KEY" else "KEYS"} $it" }
+                "CREATE$replace EXTENSION REPOSITORY$exists $target WITH PREFIX ${sql(expression, "prefix")}$keys"
+            }
+            is DuckdbDropExtensionRepository -> "DROP EXTENSION REPOSITORY${if (expression.args["exists"] == true) " IF EXISTS" else ""} $target"
+            is DuckdbInstallExtension -> {
+                val force = if (expression.args["force"] == true) "FORCE " else ""
+                val load = if (expression.args["load"] == true) " AND LOAD" else ""
+                val version = sql(expression, "version").let { if (it.isEmpty()) "" else " VERSION $it" }
+                "${force}INSTALL$load $target$from$version"
+            }
+            is DuckdbLoadExtension -> "LOAD $target$from" + sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+            else -> error("Not an extension management statement")
+        }
     }
 
     // sqlglot: Generator.summarize_sql

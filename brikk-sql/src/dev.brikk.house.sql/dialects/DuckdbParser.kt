@@ -27,6 +27,7 @@ import dev.brikk.house.sql.ast.DuckdbExecute
 import dev.brikk.house.sql.ast.DuckdbDeallocate
 import dev.brikk.house.sql.ast.DuckdbResetVariable
 import dev.brikk.house.sql.ast.Insert
+import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Values
 import dev.brikk.house.sql.ast.With
@@ -382,6 +383,9 @@ open class DuckdbParser(
     }
 
     override fun parseCreate(): Expression {
+        val repositoryOffset = if (currToken.text.equals("OR", ignoreCase = true)) 2 else 0
+        if (tokens.getOrNull(index + repositoryOffset)?.let { it.tokenType != TokenType.IDENTIFIER && it.text.equals("EXTENSION", ignoreCase = true) } == true)
+            return parseExtensionRepositoryCreate()
         val createStart = index
         var cursor = index
         while (tokens.getOrNull(cursor)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY", "PERSISTENT", "CONSTRAINT", "UNIQUE", "SECURE", "RECURSIVE")) cursor++
@@ -454,6 +458,11 @@ open class DuckdbParser(
     }
 
     override fun parseDropWithKind(kind: String?, exists: Boolean): Expression {
+        if (kind == null && currToken.tokenType != TokenType.IDENTIFIER && matchTextSeq("EXTENSION")) {
+            if (!matchTextSeq("REPOSITORY")) raiseError("Expected EXTENSION REPOSITORY")
+            val ifExists = exists || parseRepositoryExists(false)
+            return expression(dev.brikk.house.sql.ast.DuckdbDropExtensionRepository(args("this" to extensionAtom(), "exists" to ifExists)))
+        }
         if (kind != null || !match(TokenType.TRIGGER)) return super.parseDropWithKind(kind, exists)
         val ifExists = exists || parseExists()
         val name = parseIdVar() ?: raiseError("Expected trigger name")
@@ -805,15 +814,66 @@ open class DuckdbParser(
     }
 
     // sqlglot: DuckDBParser._parse_install
-    open fun parseInstall(force: Boolean = false): Expression = expression(
-        Install(
-            args(
-                "this" to parseIdVar(),
-                "from_" to if (match(TokenType.FROM)) parseVarOrString() else null,
-                "force" to force,
-            )
-        )
-    )
+    open fun parseInstall(force: Boolean = false): Expression {
+        val load = if (matchTextSeq("AND")) {
+            if (!matchTextSeq("LOAD")) raiseError("Expected LOAD after INSTALL AND")
+            true
+        } else false
+        val target = extensionAtom()
+        val from = if (match(TokenType.FROM)) {
+            // Keep the existing simple INSTALL serde contract. Quoted identifiers must
+            // remain Identifier nodes instead of losing their quotes through parseVar.
+            if (currToken.tokenType == TokenType.STRING || currToken.tokenType == TokenType.IDENTIFIER) extensionAtom()
+            else extensionAtom()?.let { expression(Var(args("this" to it.name))) }
+        } else null
+        val version = if (matchTextSeq("VERSION")) extensionAtom() else null
+        return if (load || version != null) expression(dev.brikk.house.sql.ast.DuckdbInstallExtension(args(
+            "this" to target, "from_" to from, "force" to force, "load" to load, "version" to version,
+        ))) else expression(Install(args("this" to target, "from_" to from, "force" to force)))
+    }
+
+    private fun extensionAtom(identifierOnly: Boolean = false): Expression? {
+        if (!identifierOnly && currToken.tokenType == TokenType.STRING) return parseString()!!
+        if (currToken.tokenType == TokenType.NUMBER) return raiseError("Expected extension/repository identifier or literal string")
+        val atom = parseIdVar(anyToken = false)
+        if (atom !is Identifier) return raiseError("Expected extension/repository identifier or literal string")
+        return atom
+    }
+
+    private fun parseRepositoryExists(not: Boolean): Boolean {
+        if (!matchTextSeq("IF")) return false
+        if (not && !matchTextSeq("NOT")) raiseError("Expected IF NOT EXISTS")
+        if (!matchTextSeq("EXISTS")) raiseError("Expected EXISTS")
+        return true
+    }
+
+    private fun parseExtensionRepositoryCreate(): Expression {
+        val replace = matchTextSeq("OR", "REPLACE")
+        if (!matchTextSeq("EXTENSION", "REPOSITORY")) raiseError("Expected CREATE EXTENSION REPOSITORY")
+        val exists = parseRepositoryExists(true)
+        if (replace && exists) raiseError("Cannot combine OR REPLACE with IF NOT EXISTS")
+        val name = extensionAtom()
+        matchTextSeq("WITH")
+        if (!matchTextSeq("PREFIX") || currToken.tokenType != TokenType.STRING) raiseError("Expected literal repository PREFIX")
+        val prefix = parseString()
+        val keys = if (matchTextSeq("USING") || currToken.text.equals("PUBLIC", ignoreCase = true)) {
+            if (!matchTextSeq("PUBLIC") || !matchTexts(setOf("KEY", "KEYS"))) raiseError("Expected PUBLIC KEY or PUBLIC KEYS")
+            parseCsv {
+                if (currToken.tokenType != TokenType.STRING) raiseError("Expected literal public key")
+                parseString()
+            }
+        } else null
+        return expression(dev.brikk.house.sql.ast.DuckdbCreateExtensionRepository(args(
+            "this" to name, "prefix" to prefix, "expressions" to keys, "replace" to replace, "exists" to exists,
+        )))
+    }
+
+    open fun parseDuckdbLoad(): Expression {
+        val target = extensionAtom()
+        val from = if (match(TokenType.FROM)) extensionAtom() else null
+        val alias = if (match(TokenType.ALIAS)) extensionAtom(identifierOnly = true) else null
+        return expression(dev.brikk.house.sql.ast.DuckdbLoadExtension(args("this" to target, "from_" to from, "alias" to alias)))
+    }
 
     // sqlglot: DuckDBParser._parse_primary (#N positional columns)
     override fun parsePrimary(): Expression? {
@@ -1153,6 +1213,7 @@ object DuckdbParserTables {
             TokenType.DETACH to { p -> (p as DuckdbParser).parseAttachDetach(isAttach = false) },
             TokenType.FORCE to { p -> (p as DuckdbParser).parseForce() },
             TokenType.INSTALL to { p -> (p as DuckdbParser).parseInstall() },
+            TokenType.LOAD to { p -> (p as DuckdbParser).parseDuckdbLoad() },
             TokenType.SHOW to { p -> (p as DuckdbParser).parseShow() },
         )
 

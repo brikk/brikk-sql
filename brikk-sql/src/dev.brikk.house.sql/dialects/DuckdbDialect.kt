@@ -23,8 +23,11 @@ open class DuckdbDialect : Dialect() {
     override val name: String get() = "duckdb"
     override val singleStatementTriggers: Boolean get() = true
 
-    override fun diagnosticMessage(sql: String, message: String): String =
-        if (mayContainDuckdbRouting(sql)) REDACTED_ROUTING_DIAGNOSTIC else message
+    override fun diagnosticMessage(sql: String, message: String): String = when {
+        mayContainDuckdbRouting(sql) -> REDACTED_ROUTING_DIAGNOSTIC
+        mayContainDuckdbExtensionManagement(sql) -> REDACTED_EXTENSION_DIAGNOSTIC
+        else -> message
+    }
 
     override fun tokenize(sql: String): List<dev.brikk.house.sql.parser.Token> = try {
         super.tokenize(sql)

@@ -27,6 +27,8 @@ import dev.brikk.house.sql.ast.hasSideEffectingCte
 import dev.brikk.house.sql.ast.hasKeyedCte
 import dev.brikk.house.sql.ast.isRecurringCteReference
 import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.dialects.duckdbExtensionResult
 import dev.brikk.house.sql.ast.isSecureViewDefinition
 import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.isTriggerName
@@ -480,6 +482,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree.isDuckdbExtensionManagement()) {
+            val result = tree.duckdbExtensionResult() ?: throw ShapeError("This extension/repository management statement has no query output shape")
+            return Shape(result.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+        }
         if (tree.isSecureViewDefinition()) throw ShapeError("SECURE VIEW DDL has no query output shape; analyze its body separately")
         if (tree.isTriggerDdl()) throw ShapeError("Trigger DDL has no query output shape")
         if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {

@@ -438,6 +438,40 @@ general authorization, definition secrecy, timing-side-channel protection or a b
 predicate pushdown. Persistent secure views require native storage format v2.0.0 or newer;
 older storage fails instead of downgrading the view. Temporary secure views remain possible.
 
+DuckDB 2.0 extension repositories are structured statements, including CREATE/OR REPLACE/
+IF NOT EXISTS, literal PREFIX and PUBLIC KEY(S), and DROP/IF EXISTS. INSTALL AND LOAD,
+INSTALL VERSION, explicit LOAD FROM and LOAD AS retain their operands. Simple INSTALL keeps
+its earlier AST/serde shape. Prefixes, URLs and multiline key bytes remain authored data;
+analysis does not normalize keys, resolve repository names, fetch metadata, install/load code
+or change grammar activation. Parser/editor/verifier diagnostics redact repository details;
+AST/serde/emitted SQL and raw native execution exceptions are still sensitive logging channels.
+
+The spelling of FROM is significant. A repository identifier and a string are not interchangeable:
+for a custom repository, INSTALL AND LOAD FROM 'name' can install successfully and then fail
+to load because the load step loses the repository selection. That partial installation is
+not rolled back, and the library never retries it or rewrites the string into an identifier.
+Repository selection is separate from a grammar profile, and registration does not load a module.
+
+CREATE returns repository_name VARCHAR, prefix VARCHAR and key_fingerprints VARCHAR[]. Those
+are native runtime management results, with computed provenance, not table-column lineage.
+Other extension-management statements have no query output shape. SELECT qualification and
+type rewrites of new management nodes refuse; simple INSTALL keeps its earlier literal-annotation
+contract. Unproved cross-target execution refuses. All verifier channels stay
+parse-only for management, including the trusted corpus oracle; unsupported non-SELECT
+serialization remains Unverified instead of preparing/binding or manufacturing acceptance.
+
+Native tests cover pinned fingerprints, PEM/key rotation, metadata fetched only at explicit
+execution, stored trust across instances, runtime policy tightening and configuration locks.
+The optional signed-binary fixture also tests private repository installs, bare-load isolation,
+string-versus-identifier partial success, wrong-key/origin failures and fresh-session loading
+after key changes or forbidden trust. It does not promise to unload already-resident code.
+Run it with BRIKK_DUCKDB_REPOSITORY_EXTENSION set to a trusted matching v2.0.0 file named
+inet.duckdb_extension. The fixture re-signs a scratch copy with ephemeral RSA keys, registers
+only a private trust directory and installs only into a private extension directory. Signature
+checks remain enabled, auto-install/autoload are disabled, and the source binary is untouched.
+No network repository or user's trust/extension store is used. Without the explicit dependency,
+the signed-binary tests report skips rather than substituting unsigned or unrelated evidence.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every
