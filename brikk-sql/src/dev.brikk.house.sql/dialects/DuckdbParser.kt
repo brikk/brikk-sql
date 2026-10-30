@@ -1345,13 +1345,14 @@ object DuckdbParserTables {
         put("QUANTILE_CONT", fromArgList(listOf("this", "expression"), false) { PercentileCont(it) })
         put("QUANTILE_DISC", fromArgList(listOf("this", "expression"), false) { PercentileDisc(it) })
         put("RANGE", buildGenerateSeries(endExclusive = true))
-        put("REGEXP_EXTRACT", buildRegexpExtract(all = false))
-        put("REGEXP_EXTRACT_ALL", buildRegexpExtract(all = true))
+        put("REGEXP_EXTRACT", buildDuckdbRegexpExtract(all = false))
+        put("REGEXP_EXTRACT_ALL", buildDuckdbRegexpExtract(all = true))
         put(
             "REGEXP_MATCHES",
             fromArgList(listOf("this", "expression", "flag", "full_match"), false) { RegexpLike(it) },
         )
         put("REGEXP_REPLACE") { a ->
+            if (a.size !in 3..4) Anonymous(args("this" to "regexp_replace", "expressions" to a)) else
             RegexpReplace(
                 args(
                     "this" to seqGet(a, 0),

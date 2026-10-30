@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-029.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-030.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -787,15 +787,46 @@ and IDE introspection/completion are separate contracts.
   generated catalogs/corpora, ledgers, public data-class signatures and IntelliJ APIs remain
   unchanged. No user connections, consumer pins, merge or publication changes.
 
-- [ ] `DDB20-030` Regular-expression function additions [AUDIT].
+- [x] `DDB20-030` Regular-expression function additions [DONE].
   Pin the third-argument options overload `regexp_extract('ABC', 'abc', 'i')`, ordinary
   group/options forms, named captures and list/struct results of regexp_extract_all where
   documented. Check overload selection, return types and invalid replacement handling.
+  Existing regex nodes retain positional syntax; out-of-range native arities stay anonymous
+  with all operands instead of truncating extras. Native same-dialect extraction/replacement
+  bypasses cross-engine flag filtering/default expansion, preserving options and native errors.
+  DuckDB scope/shape contracts distinguish VARCHAR, string lists, constant named STRUCT fields
+  and lists of those structs. Dynamic/unmodeled names/roles stay unknown; qualified UDFs do
+  not inherit builtin facts. Native evidence stays outside the unchanged annotation corpus.
+  Registry return signatures remain nominal VARCHAR/VARCHAR[]; named-list binding supplies
+  the actual STRUCT/list-of-STRUCT shape. No generated metadata recapture is performed.
+  Native controls cover the third VARCHAR options overload, group/options/name lists, named
+  RE2 captures, no matches, optional-group empty string versus NULL fields, NULL arguments,
+  invalid flags/patterns/rewrites, first/global replacement, Unicode, prepared bind order
+  and once-only volatile subjects. New options/name-list/named-role cross-target mappings
+  refuse without broadening existing ordinary mappings. Final docs sql/functions/regular_expressions;
+  pinned regex_extract.test, regex_extract_all.test, regex_extract_all_struct.test and
+  regex_replace.test. No host regex execution, user resources or SQL retries.
+  The existing canonical omission of a literal zero group without flags is preserved;
+  no parameter/options/name-list expression is removed. Evidence: DuckdbRegexAdditionsTest,
+  DuckdbRegexAdditionsMetadataTest and DuckdbRegexAdditionsResultTest. Fresh full gates
+  passed 1,378 core, 119 metadata and 193 native/verifier tests with both signed fixtures
+  enabled, zero skips. Log /tmp/opencode/duckdb-regex-additions-final-full.log. No new AST
+  nodes/public data-class fields, generated catalogs/corpora or ledger changes, IntelliJ
+  calls, user connections, consumer pins, merge or publication. DDB20-037 operators and
+  DDB20-031 live extension-window/IDE evidence remain separate and incomplete.
+  Final nine focused controls passed again: /tmp/opencode/duckdb-regex-additions-final-controls.log.
 
 - [ ] `DDB20-031` Window functions as catalog entries [AUDIT].
   DuckdbDump already maps native `window` to FunctionKind.WINDOW. Verify captured built-ins,
   live extension-defined windows, OVER-context completion and scalar/aggregate/window name
   distinctions. Do not lose window rows or assume every window function is an aggregate.
+  Follow-on audit after DDB20-030: DuckdbDump groups by (name, kind), maps native window
+  rows distinctly, and FunctionCatalog.getAll retains coexisting kinds. Shared completion
+  styling maps WINDOW separately from AGGREGATE. These are not proofs of live extension
+  registration or actual OVER-context IDE behavior. The pinned native source has the
+  loadable-extension-demo duckweed window, but no built/signed window fixture is available
+  in this checkout. Leave this item open for a qualified fixture and IDE controls; do not
+  relabel scalar/aggregate mocks or synthetic catalog rows as live window evidence.
 
 - [ ] `DDB20-032` Parquet schema parameter and virtual columns [AUDIT].
   Pin the documented `schema` argument, field-ID/name/default/type shape, named parameters,

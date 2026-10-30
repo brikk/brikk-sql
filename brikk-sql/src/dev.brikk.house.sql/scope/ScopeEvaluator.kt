@@ -67,6 +67,8 @@ import dev.brikk.house.sql.ast.outputName
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.duckdbRegexName
+import dev.brikk.house.sql.dialects.duckdbRegexReturnType
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
@@ -974,6 +976,9 @@ internal class ScopeEvaluator(
     /** The type from the expression and its columns' exact SQL types, never from display types. */
     private fun sqlTypeOf(value: Expression): String? {
         val copy = value.copy()
+        // Native shape evidence stays outside the SQLGlot-faithful annotation corpus.
+        if (dialect.name == "duckdb") for (node in copy.walk()) if (node.duckdbRegexName() != null)
+            node.typeSlot = node.duckdbRegexReturnType() ?: DataType(args("this" to DType.UNKNOWN))
         for ((original, typed) in value.walk().zip(copy.walk())) {
             val sqlType = resolved[original]?.sqlType ?: continue
             typed.typeSlot = try {

@@ -472,6 +472,14 @@ open class DuckdbGenerator(
 
     // sqlglot: generators.duckdb._regexp_extract_sql
     open fun regexpExtractSql(expression: Expression): String {
+        if ((sourceDialect == null || sourceDialect.equals("duckdb",true)) && expression.duckdbRegexArguments() != null) {
+            val values=expression.duckdbRegexArguments()!!
+            // Preserve the existing harmless canonical omission of literal group zero,
+            // never an authored options/name-list/parameter expression.
+            val group=values.getOrNull(2)
+            val native=if(values.size==3 && group is Literal && !group.isString && group.name=="0")values.take(2)else values
+            return func(expression.duckdbRegexName()!!,*native.toTypedArray())
+        }
         var this_ = expression.thisArg as Expression
         var group = expression.args["group"] as? Expression
         var params = expression.args["parameters"] as? Expression
@@ -2094,6 +2102,8 @@ open class DuckdbGenerator(
     // marker) must have 'g' forced. DuckDB-parsed calls carry single_replace=true
     // (DuckdbParser) and keep their literal flags for a byte-identical round trip.
     open fun regexpreplaceSql(expression: RegexpReplace): String {
+        if ((sourceDialect == null || sourceDialect.equals("duckdb",true)) && expression.args["single_replace"] == true && expression.duckdbRegexArguments() != null)
+            return func("REGEXP_REPLACE",*expression.duckdbRegexArguments()!!.toTypedArray())
         var subject = expression.thisArg as? Expression
         val pattern = expression.args["expression"]
         val replacement = expression.args["replacement"] as? Expression ?: Literal.string("")

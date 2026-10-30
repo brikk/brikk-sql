@@ -649,6 +649,25 @@ Sequence mutations survive ROLLBACK; no compensation/retry is added. Catalog seq
 and currval are shared by duplicate connections in the pinned engine, not PostgreSQL-style
 session-local currval. Native parser-only checks do not bind range(setval(...)) or run it.
 
+DuckDB 2.0 regex extraction keeps the third-argument VARCHAR options overload separate
+from numeric groups and name lists. Native same-dialect extraction/replacement generation
+preserves authored options, including invalid options that must still raise native errors;
+it does not strip `e`, restrict flags to another engine's subset, expand default groups or
+drop wrong-arity operands. Native calls retain RE2 replacement/backreference behavior and
+first versus global replacement. New options/name-list or named-role cross-target mappings
+refuse; existing ordinary mappings are not broadened.
+
+Native scope/shape typing reports VARCHAR, VARCHAR[], STRUCT of VARCHAR fields or a list
+of those structs from a valid constant name list. Dynamic/unmodeled name lists/signatures
+stay unknown. The SQLGlot-faithful annotation corpus is unchanged: native shape evidence is
+applied separately. Captured registry return types are nominal VARCHAR/VARCHAR[], while
+portable shape rendering uses the equivalent canonical TEXT spelling.
+Name-list binding changes the actual result type. Scalar missing captures yield empty
+strings; unmatched optional groups in extract_all structs are SQL NULL. Scalar NULL group
+yields an empty string, while extract_all NULL group yields NULL. Options can fail binding
+rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
+binding checks; no host regex engine or invented capture schema is used.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

@@ -39,6 +39,9 @@ import dev.brikk.house.sql.dialects.duckdbPathFunctionName
 import dev.brikk.house.sql.dialects.duckdbPathArguments
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.duckdbSetvalArguments
+import dev.brikk.house.sql.dialects.duckdbRegexName
+import dev.brikk.house.sql.dialects.duckdbRegexArguments
+import dev.brikk.house.sql.dialects.duckdbRegexReturnType
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
@@ -422,6 +425,15 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if (dialect.name == "duckdb" && (node as Expression).duckdbRegexName() != null) {
+            if(node.duckdbRegexReturnType()==null)return null
+            val arguments=node.duckdbRegexArguments() ?: return null
+            // Scalar extraction's NULL group yields '', not SQL NULL. Options bind
+            // as non-null constants or error; they do not add nullable successful rows.
+            val count=if(node.duckdbRegexName()=="REGEXP_EXTRACT" || node.duckdbRegexName()=="REGEXP_EXTRACT_ALL" &&
+                arguments.getOrNull(2) is dev.brikk.house.sql.ast.Array)2 else 3
+            return operatorRule(arguments.take(count))
+        }
         if (dialect.name == "duckdb" && (node as Expression).isDuckdbSetval()) {
             val arguments = node.duckdbSetvalArguments() ?: return null
             val verdicts = arguments.map { if (it is dev.brikk.house.sql.ast.Boolean) false else get(it) }
