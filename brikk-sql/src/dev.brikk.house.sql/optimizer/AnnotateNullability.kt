@@ -35,6 +35,8 @@ import dev.brikk.house.sql.ast.sqlName
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbOverlayArguments
+import dev.brikk.house.sql.dialects.duckdbPathFunctionName
+import dev.brikk.house.sql.dialects.duckdbPathArguments
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
@@ -418,6 +420,13 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if (dialect.name == "duckdb") {
+            val path = (node as Expression).duckdbPathFunctionName()
+            if (path != null) {
+                val arguments = node.duckdbPathArguments() ?: return null
+                return if (path == "HIVE_PARTITION_COMPONENT") false else operatorRule(arguments)
+            }
+        }
         if (dialect.name == "duckdb" && ((node as Expression).isDuckdbOverlayCall() || node is dev.brikk.house.sql.ast.Overlay))
             return (node as Expression).duckdbOverlayArguments()?.let(::operatorRule)
         val json = if (dialect.name == "duckdb") (node as Expression).duckdbJsonCall() else null

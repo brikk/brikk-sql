@@ -295,7 +295,8 @@ internal class ScopeEvaluator(
         val knowledge = bindings.fold(Knowledge.FULL) { known, binding -> worst(known, binding.knowledge) }
         val frame = Frame(listOf(Binding("__copy_input", true,
             ScopeRelation("__copy_input", RelationKind.OTHER, knowledge), columns)), null)
-        for (option in (node.args["params"] as? List<*>).orEmpty().filterIsInstance<dev.brikk.house.sql.ast.CopyParameter>()) {
+        val options = (node.args["params"] as? List<*>).orEmpty().filterIsInstance<dev.brikk.house.sql.ast.CopyParameter>()
+        for (option in options) {
             val name = (option.thisArg as? Expression)?.name?.uppercase()
             if (name !in setOf("PARTITION_BY", "ORDER_BY")) continue
             val value = option.expressionArg as? Expression ?: continue
@@ -309,6 +310,19 @@ internal class ScopeEvaluator(
                     throw dev.brikk.house.sql.generator.UnsupportedError("Subqueries are not allowed in COPY ORDER_BY")
                 expression(term, frame, env)
             }
+        }
+        val path = options.singleOrNull { (it.thisArg as? Expression)?.name.equals("PARTITION_PATH", true) }?.expressionArg as? Expression
+        if (path != null) {
+            if (path.walk().any { it is AggFunc || it is Window || it is Select || it is Subquery || it is SetOperation || it is Lambda ||
+                    it is Column && it.qualifier().isNotEmpty() })
+                throw dev.brikk.house.sql.generator.UnsupportedError("Qualified columns, aggregates, windows, subqueries and lambdas are not PARTITION_PATH scalar inputs")
+            val partition = options.singleOrNull { (it.thisArg as? Expression)?.name.equals("PARTITION_BY", true) }?.expressionArg as? Expression
+            val terms = if (partition is Tuple) partition.expressionsArg.filterIsInstance<Expression>() else listOfNotNull(partition)
+            val identifiers = terms.filterIsInstance<Column>().mapNotNull { it.thisArg as? Identifier }
+            val selected = if (terms.any { it is Star || it is Column && it.thisArg is Star }) columns
+                else columns.filter { column -> identifiers.any { same(it, column.name) } }
+            val partitions = Frame(listOf(anonymous(Row(selected, knowledge))), null)
+            expression(path, partitions, env)
         }
         val files = copyFlag(node, "RETURN_FILES")
         val stats = copyFlag(node, "RETURN_STATS")

@@ -1097,9 +1097,14 @@ open class DuckdbParser(
                 if (terms.isEmpty()) raiseError("Expected COPY $name terms")
                 matchRParen()
                 expression(dev.brikk.house.sql.ast.Tuple(args("expressions" to terms)))
-            } else if (name in setOf("ORDER_BY", "PARTITION_BY")) parseDisjunction()
+            } else if (name in setOf("ORDER_BY", "PARTITION_BY", "PARTITION_PATH")) parseDisjunction()
             else parseUnquotedField() ?: parseBracket(null)
             if (name == "ORDER_BY" && value == null) raiseError("Expected COPY ORDER_BY value")
+            if (name == "PARTITION_PATH") {
+                if (value == null) raiseError("PARTITION_PATH expects an expression")
+                if (value is dev.brikk.house.sql.ast.Tuple || value is dev.brikk.house.sql.ast.Paren && value.thisArg is dev.brikk.house.sql.ast.Alias)
+                    raiseError("PARTITION_PATH expects a single expression without ordering modifiers")
+            }
             options += expression(dev.brikk.house.sql.ast.CopyParameter(args("this" to option, "expression" to value)))
             if (currToken.tokenType == TokenType.R_PAREN) break
             if (!match(TokenType.COMMA) || currToken.tokenType == TokenType.R_PAREN) raiseError("Expected comma-separated COPY options")

@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-026.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-027.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -698,13 +698,47 @@ and IDE introspection/completion are separate contracts.
   zero skips with both signed fixtures enabled. Final source compiled from scratch under
   /tmp/opencode/duckdb-copy-layout-verified-build. Ordinary COPY option AST shapes and all
   original serde/annotation/corpus ledgers pass unchanged. Full evidence log:
-  /tmp/opencode/duckdb-copy-layout-verified-full.log. DDB20-027 PARTITION_PATH remains open.
+  /tmp/opencode/duckdb-copy-layout-verified-full.log. PARTITION_PATH was left to DDB20-027.
   Final 16 focused controls passed again. Log: /tmp/opencode/duckdb-copy-layout-final-controls.log.
 
-- [ ] `DDB20-027` Custom PARTITION_PATH [AUDIT].
+- [x] `DDB20-027` Custom PARTITION_PATH [DONE].
   Cover CASE/function expressions, requirement for PARTITION_BY, incompatibility with
   HIVE_FILE_PATTERN, relative/nonempty paths, rejection of `..`, and distinct paths per partition.
   Include `hive_partition_component` and `path_join` metadata/result controls and NULL encoding.
+  Targeted COPY parsing retains full CASE/function/concatenation/scalar path expressions in
+  the existing CopyParameter value, without changing ordinary option ASTs. Missing expressions,
+  parenthesized expression lists/order modifiers and duplicate options reject statically.
+  PARTITION_PATH joins the existing qualification/cross-target file-layout refusal guard.
+  Symbolic scopes and completion use only ordinary unqualified PARTITION_BY output columns;
+  other exported columns are absent, and known aggregates/windows/subqueries/lambdas or qualified
+  column references refuse rather than pretend to be ordinary row inputs. COPY CTE results
+  retain computed Count/Files/statistics contracts, not exported-row lineage.
+  Existing metadata contains both exact helper signatures. DuckDB-only typing/NULL evidence
+  adds VARCHAR for modeled unqualified helper calls: hive_partition_component encodes NULL
+  values to its default marker, escapes literal marker collisions and stringifies even a NULL
+  name, while path_join propagates SQL NULL across all supplied components. Qualified UDFs and
+  unmodeled signatures remain unknown. No same-name cross-target helper equivalence is claimed.
+  Final docs: data/partitioning/partitioned_writes#custom-partition-paths. Pinned source/tests:
+  generic COPY option transformer, PartitionPathBinder, physical_copy_to_file.cpp,
+  partitioned/partition_path.test and partition_path_json.test, path_join.cpp/.test and
+  hive_partition_component.cpp/.test. Native controls exercise case/nested/numeric/struct
+  expressions; partition-only binding; HIVE_FILE_PATTERN true/false conflicts; NULL/empty,
+  absolute/remote and parent-segment path errors; normalized collisions, nested/prefix paths;
+  and native helper/Hive escaping including Unicode and NULL-marker value collisions.
+  Paths are not statically evaluated, normalized or converted with host-language helpers.
+  Runtime failure may leave earlier partition output; no retry or rollback emulation is added.
+  Empty sources evaluate no path expression, including volatile/NULL/parent-segment cases.
+  Pinned JDBC classifies the tested empty COPY CTE plus outer SELECT as update count zero,
+  not a ResultSet. Controls execute it once without retry; no production workaround is added.
+  Evidence: DuckdbPartitionPathTest, DuckdbPartitionPathResultTest and
+  DuckdbPathFunctionsMetadataTest. Full gates passed 1,371 core, 117 metadata and 180
+  DuckDB native/verifier tests with both signed fixtures enabled, zero skips. Production
+  sources compiled fresh in /tmp/opencode/duckdb-partition-path-verified-build. Existing
+  generated catalogs/corpora and all serde/annotation ledgers remain unchanged. No new
+  AST classes or public data fields/JVM shape changes, IntelliJ API calls, user connection
+  or installation changes, consumer pins, merge or publication. Full log:
+  /tmp/opencode/duckdb-partition-path-final-full.log.
+  Final 19 focused controls passed again. Log: /tmp/opencode/duckdb-partition-path-final-controls.log.
 
 - [ ] `DDB20-028` SHOW configuration settings [AUDIT].
   Pin `SHOW threads`, table-name collisions and `show_behavior` auto/table/setting.

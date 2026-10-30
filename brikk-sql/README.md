@@ -590,7 +590,38 @@ columns, qualified source names, ordinal constants, unsupported partition expres
 ORDER_BY subqueries from syntax errors. Empty ORDER_BY is refused statically; native COPY
 first parses it, then its order-list parser rejects it during binding. COPY itself cannot
 be serialized by json_serialize_sql, so parse-only verifier success is not a binding check.
-Custom PARTITION_PATH behavior remains separate work.
+DuckDB 2.0 `PARTITION_PATH` retains a scalar expression in the COPY option bag, including
+CASE, function calls and parenthesized expressions. It binds only to unqualified PARTITION_BY
+output columns. Scope completion offers that subset, not every exported column or the source
+SELECT's table namespace. Known aggregates, windows, subqueries, lambdas and qualified column
+references explicitly refuse symbolic scope. Automatic qualification, exported-row lineage
+and unverified cross-target layout execution remain refused. COPY result contracts are still
+Count/Files/statistics. Static analysis and parse-only verification never evaluate the path.
+
+Native controls pin the requirement for PARTITION_BY and the incompatibility with an explicitly
+specified HIVE_FILE_PATTERN, even false. Non-string path results cast natively to VARCHAR.
+Runtime paths must be non-NULL, nonempty after removing empty/dot components, relative to the
+target and free of `..` components. Different partitions cannot share a normalized directory;
+one partition's directory may contain another partition's directory. The library does not
+normalize authored paths, precompute names, provision resources, retry COPY or emulate rollback.
+A runtime failure can follow earlier partition writes. Tests use only isolated local targets.
+
+The bundled metadata already captures `hive_partition_component(VARCHAR, ANY) -> VARCHAR`
+and variadic `path_join(VARCHAR, ...) -> VARCHAR`; generated catalogs are unchanged. The first
+helper encodes both names and values, maps NULL values to `__HIVE_DEFAULT_PARTITION__`, and
+escapes a literal marker value to avoid a collision. Even a NULL name becomes the text `NULL`,
+so successful modeled calls are non-null strings. `path_join` propagates any SQL NULL and
+normalizes its components, unlike the raw PARTITION_PATH expression's directory validation.
+No URL-encoding or host-language path-join substitute is emitted. Qualified same-name UDFs
+retain unknown contracts, and unproved helper translations refuse in both directions.
+Native file controls cover Hive-equivalent escaping, Parquet/CSV/JSON output, nested/prefix
+directories, row sorting, rotation, prepared bindings, repeated executions and per-partition
+volatile path evaluation. No global file order or filesystem-independent helper semantics are
+certified.
+Empty sources have no partitions and do not evaluate even an otherwise invalid path expression.
+The pinned JDBC driver reports the tested empty COPY CTE as update count zero despite its
+outer SELECT. Tests use execute once, not executeQuery followed by a retry; no production
+classification workaround is added.
 
 ### Certified transpilation
 
