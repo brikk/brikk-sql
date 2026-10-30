@@ -1064,6 +1064,49 @@ open class DuckdbParser(
         return expression(dev.brikk.house.sql.ast.Overlay(args("this" to values[0], "expression" to values[1], "from_" to values[2], "for_" to values.getOrNull(3))))
     }
 
+    override fun parseCopyParameters(): List<Expression> {
+        // Keep the existing PostgreSQL-compatible legacy option parser outside ().
+        if (prevToken.tokenType != TokenType.L_PAREN) return super.parseCopyParameters()
+        val options = mutableListOf<Expression>()
+        val seen = mutableSetOf<String>()
+        while (currToken.exists && currToken.tokenType != TokenType.R_PAREN) {
+            val option = parseVar(anyToken = true)
+            if (option == null) { raiseError("Expected COPY option"); break }
+            val name = when (option.name.uppercase()) {
+                "ORDER BY" -> "ORDER_BY"
+                "PARTITION BY", "PARTITIONED BY", "PARTITIONED_BY" -> "PARTITION_BY"
+                else -> option.name.uppercase()
+            }
+            if (!seen.add(name)) raiseError("Unexpected duplicate COPY option $name")
+            option.set("this", name)
+            val value = if (name in setOf("ORDER_BY", "PARTITION_BY") && match(TokenType.L_PAREN)) {
+                val terms = parseCsv {
+                    val term = parseDisjunction() ?: return@parseCsv null
+                    if (name == "PARTITION_BY") {
+                        if (currToken.tokenType in setOf(TokenType.ASC, TokenType.DESC) || currToken.text.equals("NULLS", true))
+                            raiseError("Ordering modifiers require COPY ORDER_BY")
+                        return@parseCsv term
+                    }
+                    // Do not infer defaults. COPY resolves both defaults in its executing session.
+                    val desc = when { match(TokenType.ASC) -> false; match(TokenType.DESC) -> true; else -> null }
+                    val nulls = when { matchTextSeq("NULLS", "FIRST") -> true; matchTextSeq("NULLS", "LAST") -> false; else -> null }
+                    expression(dev.brikk.house.sql.ast.Ordered(args("this" to term, "desc" to desc, "nulls_first" to (nulls ?: false)))).also {
+                        if (nulls == null) it.meta["duckdb_copy_default_null_order"] = true
+                    }
+                }
+                if (terms.isEmpty()) raiseError("Expected COPY $name terms")
+                matchRParen()
+                expression(dev.brikk.house.sql.ast.Tuple(args("expressions" to terms)))
+            } else if (name in setOf("ORDER_BY", "PARTITION_BY")) parseDisjunction()
+            else parseUnquotedField() ?: parseBracket(null)
+            if (name == "ORDER_BY" && value == null) raiseError("Expected COPY ORDER_BY value")
+            options += expression(dev.brikk.house.sql.ast.CopyParameter(args("this" to option, "expression" to value)))
+            if (currToken.tokenType == TokenType.R_PAREN) break
+            if (!match(TokenType.COMMA) || currToken.tokenType == TokenType.R_PAREN) raiseError("Expected comma-separated COPY options")
+        }
+        return options
+    }
+
     override fun parseFunction(
         functions: Map<String, (List<Expression?>) -> Expression>?,
         anonymous: Boolean,

@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-025.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-026.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -653,10 +653,53 @@ and IDE introspection/completion are separate contracts.
   Full log: /tmp/opencode/duckdb-overlay-full.log.
   Final 13 focused controls passed. Log: /tmp/opencode/duckdb-overlay-final-controls.log.
 
-- [ ] `DDB20-026` COPY partitioning and ORDER_BY [AUDIT].
+- [x] `DDB20-026` COPY partitioning and ORDER_BY [DONE].
   Use the actual option names `PARTITION_BY` and `ORDER_BY`, not only generic ORDER BY text.
   Pin multiple partition columns, ORDER_BY alone and together with partitioning, expressions,
   ASC/DESC/NULLS ordering, option placement and the rows written within each partition.
+  DuckDB-specific COPY options now retain structured parenthesized ORDER_BY expression
+  terms using the existing Copy/CopyParameter/Tuple/Ordered nodes. Underscore option names
+  and the native spaced/partitioned aliases canonicalize to PARTITION_BY/ORDER_BY without
+  moving options or operands. Explicit ASC/DESC/NULLS flags survive copy/serde/generation;
+  omitted direction and NULL order remain session-resolved, not frozen to library defaults.
+  PARTITION_BY selects COPY output columns, including projected aliases and multiple keys;
+  arbitrary row partition expressions must be projected first, not invented as native support.
+  Symbolic scopes/completion bind ordinary columns and ordering expressions against that
+  output row, not the SELECT source namespace. Textual order SQL/dynamic or qualified partition lists
+  explicitly refuse symbolic scope; automatic qualification and cross-target execution
+  refuse unmodeled layout transformations. COPY CTE result shapes remain Count/Files/stats,
+  with computed provenance and no fabricated exported-row lineage.
+  Native controls inspect physical Parquet/CSV rows, expressions, collations, NULL keys,
+  omitted versus explicitly written partition columns, session defaults, parallel writes
+  and file rotation. ORDER_BY alone writes a directory even for a .parquet/.csv target name;
+  sorting is within each file, not a global file order or stable-tie guarantee. Prepared
+  source/destination/order parameters and volatile source/order operands pin bind order,
+  repeated execution and no library-added duplicated evaluation. Native source expressions
+  run once per row in the fixture, but the native partitioned sorting plan evaluates a
+  volatile order key twice per row; no exactly-once ORDER_BY guarantee is claimed.
+  Invalid duplicates/modifier placement
+  remain parser errors; missing columns, source qualifiers, ordinals, partition expressions
+  and ORDER_BY subqueries are native binding failures before any destination is opened.
+  Empty ORDER_BY is statically refused although native COPY initially parses it and its
+  order-list parser fails later at binding. Native json_serialize_sql cannot serialize COPY;
+  this remains parse-only verifier evidence, never EXPLAIN/prepare fallback or execution.
+  Final docs: sql/statements/copy#copy--to-options and
+  data/partitioning/partitioned_writes#sorting-rows-within-partitions. Pinned implementation: generic
+  COPY-option transformer, bind_copy.cpp and bind_helpers.cpp; tests include
+  copy_column_identifier_conversion.test, copy_order_by_collation.test,
+  copy_order_by_subquery.test and partitioned/partitioned_order_by.test.
+  Focused evidence: DuckdbCopyLayoutTest and DuckdbCopyLayoutResultTest, all 16 controls
+  passed with fresh build outputs in /tmp/opencode/duckdb-copy-layout-build. This avoids
+  the original build directory's stale DuckdbGenerator class observed during incremental
+  testing. Log: /tmp/opencode/duckdb-copy-layout-clean-focused.log. No new AST node or
+  public data-class field, generated catalog/corpus refresh, ledger weakening, IntelliJ
+  API use, user connection/installation changes, consumer pins, merge or publication.
+  Final full gates passed 1,365 core, 116 metadata and 168 DuckDB native/verifier tests,
+  zero skips with both signed fixtures enabled. Final source compiled from scratch under
+  /tmp/opencode/duckdb-copy-layout-verified-build. Ordinary COPY option AST shapes and all
+  original serde/annotation/corpus ledgers pass unchanged. Full evidence log:
+  /tmp/opencode/duckdb-copy-layout-verified-full.log. DDB20-027 PARTITION_PATH remains open.
+  Final 16 focused controls passed again. Log: /tmp/opencode/duckdb-copy-layout-final-controls.log.
 
 - [ ] `DDB20-027` Custom PARTITION_PATH [AUDIT].
   Cover CASE/function expressions, requirement for PARTITION_BY, incompatibility with

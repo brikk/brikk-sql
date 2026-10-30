@@ -284,8 +284,31 @@ internal class ScopeEvaluator(
     }
 
     private fun copy(node: Copy, env: Env): Row {
-        (node.thisArg as? Expression)?.let { input ->
-            if (input.isQuery()) query(input, env) else source(input, env, Frame(emptyList(), env.outer))
+        val input = node.thisArg as? Expression
+        val bindings = when {
+            input == null -> emptyList()
+            input.isQuery() -> listOf(anonymous(query(input, env)))
+            else -> source(input, env, Frame(emptyList(), env.outer))
+        }
+        // COPY's ordering has its own binding, not the SELECT's FROM names or outer scope.
+        val columns = bindings.flatMap { it.columns }.map { it.copy(relation = "", relationKind = null) }
+        val knowledge = bindings.fold(Knowledge.FULL) { known, binding -> worst(known, binding.knowledge) }
+        val frame = Frame(listOf(Binding("__copy_input", true,
+            ScopeRelation("__copy_input", RelationKind.OTHER, knowledge), columns)), null)
+        for (option in (node.args["params"] as? List<*>).orEmpty().filterIsInstance<dev.brikk.house.sql.ast.CopyParameter>()) {
+            val name = (option.thisArg as? Expression)?.name?.uppercase()
+            if (name !in setOf("PARTITION_BY", "ORDER_BY")) continue
+            val value = option.expressionArg as? Expression ?: continue
+            val terms = if (value is Tuple) value.expressionsArg.filterIsInstance<Expression>() else listOf(value)
+            for (term in terms) {
+                if (name == "PARTITION_BY" && term !is Column && term !is Star ||
+                    name == "PARTITION_BY" && term is Column && term.qualifier().isNotEmpty() ||
+                    name == "ORDER_BY" && value !is Tuple && term !is Column)
+                    throw dev.brikk.house.sql.generator.UnsupportedError("Dynamic/textual or qualified partition-name COPY layout scope is not modeled")
+                if (term.walk().any { it is Select || it is Subquery || it is SetOperation })
+                    throw dev.brikk.house.sql.generator.UnsupportedError("Subqueries are not allowed in COPY ORDER_BY")
+                expression(term, frame, env)
+            }
         }
         val files = copyFlag(node, "RETURN_FILES")
         val stats = copyFlag(node, "RETURN_STATS")

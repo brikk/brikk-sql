@@ -5817,7 +5817,7 @@ open class Parser(
     open val copyParamsAreCsv: kotlin.Boolean get() = true
 
     // sqlglot: Parser._parse_copy_parameters
-    protected fun parseCopyParameters(): List<Expression> {
+    protected open fun parseCopyParameters(): List<Expression> {
         val sep = if (copyParamsAreCsv) TokenType.COMMA else null
 
         val options = mutableListOf<Expression>()

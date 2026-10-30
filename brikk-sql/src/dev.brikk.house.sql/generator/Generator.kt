@@ -11,6 +11,7 @@ import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 import dev.brikk.house.sql.dialects.explainProblems
 import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbOverlayArguments
+import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -404,6 +405,9 @@ open class Generator(
             unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
         if (dialect.name != "duckdb" && expr.findAll<DuckdbExplain>().any())
             unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
+        if (expr.hasDuckdbCopyLayout() && sourceDialect != null && !sourceDialect.equals(dialect.name, true) &&
+            (dialect.name == "duckdb" || sourceDialect.equals("duckdb", true)))
+            unexecutable("DuckDB COPY PARTITION_BY/ORDER_BY has no verified cross-target file-layout translation")
         if (expr.walk().any { it.isDuckdbOverlayCall() }) {
             if (sourceDialect.equals("duckdb", true) && dialect.name != "duckdb")
                 unexecutable("$targetName has no verified DuckDB OVERLAY offset/count/Unicode translation")

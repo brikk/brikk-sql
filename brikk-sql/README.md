@@ -560,6 +560,38 @@ tests compare the two captured 2.0 overloads with the real engine and confirm ab
 The omitted default count is never expanded into a second replacement expression; native
 sequence and prepared-binding controls prove no duplicated evaluation or reordered binds.
 
+DuckDB 2.0 COPY layout options use the native `PARTITION_BY` and `ORDER_BY` names.
+`PARTITION_BY (region, day)` selects output columns; compute a new partition key in the
+source SELECT and refer to its output alias rather than treating `PARTITION_BY` as a
+row-expression clause. `ORDER_BY (abs(value) DESC NULLS LAST, id ASC)` has structured
+ordering terms. It can appear alone or with partitioning, in either option order. The
+parser retains option order, expression order, explicit direction and NULL ordering.
+Omitted ordering defaults remain omitted, so DuckDB resolves them in the executing session.
+Copy/CopyParameter/Tuple/Ordered are existing AST nodes; no new public AST shape is needed.
+
+Native tests inspect physical file rows for Parquet and CSV, multiple partition columns,
+projected aliases, NULL keys, collations and explicit WRITE_PARTITION_COLUMNS. In DuckDB
+2.0, ORDER_BY alone creates an output directory even when its name ends in `.parquet` or
+`.csv`. Partitioned output is sorted within each physical file, including parallel writes
+and file rotation; the library does not promise an order across files or stable ties.
+Neither options nor source expressions are evaluated by static analysis or native
+parse-only validation. Prepared native controls include source, destination and ordering
+parameters and repeated executions. Sequence controls pin once-per-row source evaluation
+and the native plan's twice-per-row volatile sort-key evaluation. The library preserves
+that behavior; it does not promise exactly-once ORDER_BY evaluation or expand sort keys.
+
+Symbolic scopes and completion bind ordinary layout columns/ordering expressions against
+the COPY output row, not the source SELECT's FROM namespace. CTE results remain the COPY
+Count/Files/statistics contract rather than the exported row. Textual ordering SQL and
+dynamic or qualified partition-column lists can round-trip to native execution, but their symbolic
+scope explicitly refuses rather than inventing references. Automatic qualification and
+cross-target layout execution also refuse. Native binder controls distinguish missing
+columns, qualified source names, ordinal constants, unsupported partition expressions and
+ORDER_BY subqueries from syntax errors. Empty ORDER_BY is refused statically; native COPY
+first parses it, then its order-list parser rejects it during binding. COPY itself cannot
+be serialized by json_serialize_sql, so parse-only verifier success is not a binding check.
+Custom PARTITION_PATH behavior remains separate work.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

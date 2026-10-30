@@ -64,6 +64,23 @@ open class DuckdbGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
 
+    override fun copyparameterSql(expression: CopyParameter): String {
+        val value = expression.expressionArg
+        if (expression.isDuckdbCopyLayout() && (expression.thisArg as? Expression)?.name.equals("ORDER_BY", true) && value is Tuple) {
+            if (value.expressionsArg.isEmpty() || value.expressionsArg.any { it !is Ordered }) {
+                unexecutable("COPY ORDER_BY requires modeled ordering terms; refusing to drop malformed terms")
+                return super.copyparameterSql(expression)
+            }
+            val terms = value.expressionsArg.filterIsInstance<Ordered>().joinToString(", ") { term ->
+                sql(term, "this") + when (term.args["desc"]) { true -> " DESC"; false -> " ASC"; else -> "" } +
+                    if (term.meta["duckdb_copy_default_null_order"] == true) "" else
+                        when (term.args["nulls_first"]) { true -> " NULLS FIRST"; false -> " NULLS LAST"; else -> "" }
+            }
+            return "ORDER_BY ($terms)"
+        }
+        return super.copyparameterSql(expression)
+    }
+
     // brikk extension #55: DuckDB 2.0.0 has no STRAIGHT_JOIN.
     override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
 
