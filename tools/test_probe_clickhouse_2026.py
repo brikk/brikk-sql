@@ -6,6 +6,29 @@ import probe_clickhouse_2026 as probe
 
 
 class NativeProbeSafetyTest(unittest.TestCase):
+    def test_semantic_execution_vectors_only_enter_parser_capture_when_requested(self):
+        fixture = {"cases": [{"id": "syntax"}], "execution": [{"id": "semantic-error"}]}
+        self.assertEqual([{"id": "syntax"}], probe.parsing_cases(fixture))
+        fixture["parse_execution"] = True
+        self.assertEqual([{"id": "syntax"}, {"id": "semantic-error"}], probe.parsing_cases(fixture))
+
+    def test_expected_error_can_require_the_specific_semantic_rule(self):
+        case = {"error_code": 36, "error_name": "BAD_ARGUMENTS", "error_contains": ["Mixing", "ambiguous"]}
+        self.assertTrue(probe.expected_execution(case,
+            {"returncode": 36, "stdout": "", "stderr": "Mixing placeholders is ambiguous (BAD_ARGUMENTS)"}))
+        self.assertFalse(probe.expected_execution(case,
+            {"returncode": 36, "stdout": "", "stderr": "Wrong composition operand (BAD_ARGUMENTS)"}))
+
+    def test_parser_expectations_are_independent_of_semantic_expectations(self):
+        case = {"id": "composition", "parse_expectations": {"26.8.34.13": False, "26.10.2.103": True},
+                "expectations": {"26.10.2.103": {"error_code": 36, "error_name": "BAD_ARGUMENTS"}}}
+        self.assertFalse(probe.parsing_expectation(case, "26.8.34.13"))
+        self.assertTrue(probe.parsing_expectation(case, "26.10.2.103"))
+        with self.assertRaises(ValueError):
+            probe.parsing_expectation(case, "26.9.1")
+        self.assertFalse(probe.parsing_expectation({"accept": False}, "26.10.2.103"))
+        self.assertTrue(probe.parsing_expectation({}, "26.10.2.103"))
+
     def test_versioned_outcomes_require_an_explicit_expectation_for_each_pin(self):
         case = {"id": "changed", "expectations": {
             "26.8.34.13": {"error_code": 43, "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"},

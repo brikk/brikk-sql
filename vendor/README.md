@@ -420,6 +420,19 @@ EXPLAIN statements are supplied to native formatQuery as hex data only. The sepa
 finite execution vectors are SELECT expressions, not tokens, handlers or mutations.
 See `docs/research/clickhouse-2026-batch3.md` for grammar provenance and limitations.
 
+## `data/clickhouse-semantic/`
+
+CHSEM-001 establishes composition/lambda semantic fixtures on the same digest-pinned
+26.8.34.13 and 26.10.2.103 engines, without implementing a validator. It includes
+48 finite SELECT cases with separate parser and result/type/error expectations on
+both pins, two syntax negatives, raw original/generated native observations and a
+Brikk pre-implementation baseline. Input hashes link the native evidence to the
+exact fixture and baseline files. There are no version-skipped execution cases.
+See [the fixture guide](data/clickhouse-semantic/README.md) for source URLs,
+acceptance criteria, the four exact CONCAT formatter spellings and reproduction.
+The existing probe and self-contained fixture tests cover this new evidence;
+historical audit, catalog and semantic-hazard captures are not changed.
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 The original embedded capture below is retained. Current official-build captures

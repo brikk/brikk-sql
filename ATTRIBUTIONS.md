@@ -150,6 +150,12 @@ Apache-2.0 ClickHouse images. The PostgreSQL cardinality source contract is cite
 from the PostgreSQL array-functions documentation, separately from the native
 ClickHouse target results; this is not a live PostgreSQL equivalence capture.
 
+`vendor/data/clickhouse-semantic/` retains formatter output and finite-query
+results from those same Apache-2.0 builds for CHSEM-001. The fixture links the
+official composition announcement and tagged analyzer source; its guide records
+the authored controls, exact engine digests and result/error evidence. This adds
+no ClickHouse source code to the published library and claims no overload catalog.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

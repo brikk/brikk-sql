@@ -1,0 +1,856 @@
+{
+  "captured_at": "2026-10-30T19:10:54.731944+00:00",
+  "fixture_sha256": "eaaae661f4b175e6965faf5524e3e1a737fa2ad592a7c1d02d1454a51bf4239e",
+  "brikk_sha256": "92a262c718faaef0cfb2d4d123a61310cf1304e6e49615c3728db9264755995b",
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-001-P01\",\"formatted\":null}\n{\"id\":\"CHSEM-001-P02\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E01\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E02\",\"formatted\":\"WITH\\n    ['https:\\/\\/WWW.ClickHouse.com\\/docs', 'https:\\/\\/GitHub.com\\/ClickHouse\\/ClickHouse', 'https:\\/\\/www.anthropic.com\\/news'] AS urls\\nSELECT\\n    arrayMap(x -> upper(firstSignificantSubdomain(domainWithoutWWW(lower(x)))), urls) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E03\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E04\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E05\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E06\",\"formatted\":\"WITH\\n    [49.99, 189., 19.5] AS prices,\\n    [2, 1, 4] AS quantities\\nSELECT\\n    arrayMap((p, q) -> concat('$', toString(multiply(p, q))), prices, quantities) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E07\",\"formatted\":\"SELECT\\n    arrayMap(lower, ['Hello', 'WORLD']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E08\",\"formatted\":\"SELECT\\n    arrayMap(trimBoth(_), [' x ', ' y ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E09\",\"formatted\":\"SELECT\\n    arrayMap((_1 * 2) + 1, [1, 2, 3]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E10\",\"formatted\":\"SELECT\\n    arrayMap(_ + _, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E11\",\"formatted\":\"SELECT\\n    arrayMap(_2 - _1, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E12\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _1, [1, 2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E13\",\"formatted\":\"SELECT\\n    arrayMap(_2, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E14\",\"formatted\":\"SELECT\\n    arrayMap(_2 + 1, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E15\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _2, [1], [2], [3]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E16\",\"formatted\":\"SELECT\\n    arrayMap(_ + _1, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E17\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E18\",\"formatted\":\"SELECT\\n    arrayMap(_0 + 1, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E19\",\"formatted\":\"SELECT\\n    arrayMap(_129 + 1, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E20\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E21\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(x -> (x + _1), [1]), [10]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E22\",\"formatted\":\"SELECT\\n    arrayMap(_1 -> (_1 + 1), [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E23\",\"formatted\":\"SELECT\\n    arrayMap(_1 + t.n, [1, 2]) AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT toUInt8(10) AS n\\n) AS t\"}\n{\"id\":\"CHSEM-001-E24\",\"formatted\":\"SELECT\\n    (t._1 + t._2) + t._ AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT\\n        toUInt8(1) AS _1,\\n        toUInt8(2) AS _2,\\n        toUInt8(3) AS _\\n) AS t\"}\n{\"id\":\"CHSEM-001-E25\",\"formatted\":\"SELECT\\n    arrayMap(x -> (x + 1), [1, 2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E26\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> (x + y), [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E27\",\"formatted\":\"SELECT\\n    arrayMap(x -> arrayMap(y -> (x + y), [1, 2]), [10, 20]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E28\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E29\",\"formatted\":\"SELECT\\n    bitOr(1, 2) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E30\",\"formatted\":\"SELECT\\n    arrayMap(x -> upper(trimBoth(x)), [' x ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E31\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E32\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E33\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E34\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E35\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E36\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E37\",\"formatted\":\"SELECT\\n    arrayMap(_ + _, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E38\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _2, [1, 2], [3]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E39\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E40\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E41\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E42\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E43\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E44\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E45\",\"formatted\":\"SELECT\\n    arrayMap(upper(trimBoth(_)), [' x ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E46\",\"formatted\":\"SELECT\\n    arrayMap(upper(trimBoth(_1)), [' x ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E47\",\"formatted\":null}\n{\"id\":\"CHSEM-001-E48\",\"formatted\":null}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-001-P01",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-P02",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E01",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E02",
+      "formatted": "WITH\n    ['https://WWW.ClickHouse.com/docs', 'https://GitHub.com/ClickHouse/ClickHouse', 'https://www.anthropic.com/news'] AS urls\nSELECT\n    arrayMap(x -> upper(firstSignificantSubdomain(domainWithoutWWW(lower(x)))), urls) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E03",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E04",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E05",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E06",
+      "formatted": "WITH\n    [49.99, 189., 19.5] AS prices,\n    [2, 1, 4] AS quantities\nSELECT\n    arrayMap((p, q) -> concat('$', toString(multiply(p, q))), prices, quantities) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E07",
+      "formatted": "SELECT\n    arrayMap(lower, ['Hello', 'WORLD']) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E08",
+      "formatted": "SELECT\n    arrayMap(trimBoth(_), [' x ', ' y ']) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E09",
+      "formatted": "SELECT\n    arrayMap((_1 * 2) + 1, [1, 2, 3]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E10",
+      "formatted": "SELECT\n    arrayMap(_ + _, [1], [2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E11",
+      "formatted": "SELECT\n    arrayMap(_2 - _1, [1], [2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E12",
+      "formatted": "SELECT\n    arrayMap(_1 + _1, [1, 2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E13",
+      "formatted": "SELECT\n    arrayMap(_2, [1], [2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E14",
+      "formatted": "SELECT\n    arrayMap(_2 + 1, [1]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E15",
+      "formatted": "SELECT\n    arrayMap(_1 + _2, [1], [2], [3]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E16",
+      "formatted": "SELECT\n    arrayMap(_ + _1, [1], [2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E17",
+      "formatted": "SELECT\n    arrayMap(_1 + _, [1], [2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E18",
+      "formatted": "SELECT\n    arrayMap(_0 + 1, [1]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E19",
+      "formatted": "SELECT\n    arrayMap(_129 + 1, [1]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E20",
+      "formatted": "SELECT\n    arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E21",
+      "formatted": "SELECT\n    arrayMap(arrayMap(x -> (x + _1), [1]), [10]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E22",
+      "formatted": "SELECT\n    arrayMap(_1 -> (_1 + 1), [1]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E23",
+      "formatted": "SELECT\n    arrayMap(_1 + t.n, [1, 2]) AS value,\n    toTypeName(value) AS type\nFROM\n(\n    SELECT toUInt8(10) AS n\n) AS t"
+    },
+    {
+      "id": "CHSEM-001-E24",
+      "formatted": "SELECT\n    (t._1 + t._2) + t._ AS value,\n    toTypeName(value) AS type\nFROM\n(\n    SELECT\n        toUInt8(1) AS _1,\n        toUInt8(2) AS _2,\n        toUInt8(3) AS _\n) AS t"
+    },
+    {
+      "id": "CHSEM-001-E25",
+      "formatted": "SELECT\n    arrayMap(x -> (x + 1), [1, 2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E26",
+      "formatted": "SELECT\n    arrayMap((x, y) -> (x + y), [1], [2]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E27",
+      "formatted": "SELECT\n    arrayMap(x -> arrayMap(y -> (x + y), [1, 2]), [10, 20]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E28",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E29",
+      "formatted": "SELECT\n    bitOr(1, 2) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E30",
+      "formatted": "SELECT\n    arrayMap(x -> upper(trimBoth(x)), [' x ']) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E31",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E32",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E33",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E34",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E35",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E36",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E37",
+      "formatted": "SELECT\n    arrayMap(_ + _, [1]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E38",
+      "formatted": "SELECT\n    arrayMap(_1 + _2, [1, 2], [3]) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E39",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E40",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E41",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E42",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E43",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E44",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E45",
+      "formatted": "SELECT\n    arrayMap(upper(trimBoth(_)), [' x ']) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E46",
+      "formatted": "SELECT\n    arrayMap(upper(trimBoth(_1)), [' x ']) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-001-E47",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-001-E48",
+      "formatted": null
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-001-E02\",\"formatted\":\"WITH\\n    ['https:\\/\\/WWW.ClickHouse.com\\/docs', 'https:\\/\\/GitHub.com\\/ClickHouse\\/ClickHouse', 'https:\\/\\/www.anthropic.com\\/news'] AS urls\\nSELECT\\n    arrayMap(x -> upper(firstSignificantSubdomain(domainWithoutWWW(lower(x)))), urls) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E06\",\"formatted\":\"WITH\\n    [49.99, 189., 19.5] AS prices,\\n    [2, 1, 4] AS quantities\\nSELECT\\n    arrayMap((p, q) -> CONCAT('$', toString(multiply(p, q))), prices, quantities) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E07\",\"formatted\":\"SELECT\\n    arrayMap(lower, ['Hello', 'WORLD']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E08\",\"formatted\":\"SELECT\\n    arrayMap(trimBoth(_), [' x ', ' y ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E09\",\"formatted\":\"SELECT\\n    arrayMap((_1 * 2) + 1, [1, 2, 3]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E10\",\"formatted\":\"SELECT\\n    arrayMap(_ + _, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E11\",\"formatted\":\"SELECT\\n    arrayMap(_2 - _1, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E12\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _1, [1, 2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E13\",\"formatted\":\"SELECT\\n    arrayMap(_2, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E14\",\"formatted\":\"SELECT\\n    arrayMap(_2 + 1, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E15\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _2, [1], [2], [3]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E16\",\"formatted\":\"SELECT\\n    arrayMap(_ + _1, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E17\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _, [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E18\",\"formatted\":\"SELECT\\n    arrayMap(_0 + 1, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E19\",\"formatted\":\"SELECT\\n    arrayMap(_129 + 1, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E20\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E21\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(x -> (x + _1), [1]), [10]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E22\",\"formatted\":\"SELECT\\n    arrayMap(_1 -> (_1 + 1), [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E23\",\"formatted\":\"SELECT\\n    arrayMap(_1 + t.n, [1, 2]) AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT toUInt8(10) AS n\\n) AS t\"}\n{\"id\":\"CHSEM-001-E24\",\"formatted\":\"SELECT\\n    (t._1 + t._2) + t._ AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT\\n        toUInt8(1) AS _1,\\n        toUInt8(2) AS _2,\\n        toUInt8(3) AS _\\n) AS t\"}\n{\"id\":\"CHSEM-001-E25\",\"formatted\":\"SELECT\\n    arrayMap(x -> (x + 1), [1, 2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E26\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> (x + y), [1], [2]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E27\",\"formatted\":\"SELECT\\n    arrayMap(x -> arrayMap(y -> (x + y), [1, 2]), [10, 20]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E29\",\"formatted\":\"SELECT\\n    bitOr(1, 2) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E30\",\"formatted\":\"SELECT\\n    arrayMap(x -> upper(trimBoth(x)), [' x ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E37\",\"formatted\":\"SELECT\\n    arrayMap(_ + _, [1]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E38\",\"formatted\":\"SELECT\\n    arrayMap(_1 + _2, [1, 2], [3]) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E45\",\"formatted\":\"SELECT\\n    arrayMap(upper(trimBoth(_)), [' x ']) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-001-E46\",\"formatted\":\"SELECT\\n    arrayMap(upper(trimBoth(_1)), [' x ']) AS value,\\n    toTypeName(value) AS type\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-001-E01",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 150 (|): | domainWithoutWWW | firstSignificantSubdomain | upper, urls) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E02",
+      "returncode": 0,
+      "stdout": "['CLICKHOUSE','GITHUB','ANTHROPIC']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E03",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 25 (|): | upper, [' ClickHouse ', ' Anthropic ', ' OpenAI ']) AS value, toTypeName(value) AS type. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E04",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper, [' ClickHouse ']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E05",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 97 (|): | toString | concat('$', _), prices, quantities) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E06",
+      "returncode": 0,
+      "stdout": "['$99.98','$189','$78']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E07",
+      "returncode": 0,
+      "stdout": "['hello','world']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E08",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(trimBoth(_), [' x ', ' y ']) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E09",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap((_1 * 2) + 1, [1, 2, 3]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E10",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(_ + _, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E11",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2 - _1, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E12",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _1, [1, 2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E13",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E14",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2 + 1, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E15",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _2, [1], [2], [3]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E16",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(_ + _1, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E17",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E18",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_0` in scope SELECT arrayMap(_0 + 1, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E19",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_129` in scope SELECT arrayMap(_129 + 1, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E20",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E21",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope x -> (x + _1). (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E22",
+      "returncode": 0,
+      "stdout": "[2]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E23",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + t.n, [1, 2]) AS value, toTypeName(value) AS type FROM (SELECT toUInt8(10) AS n) AS t. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E24",
+      "returncode": 0,
+      "stdout": "6\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E25",
+      "returncode": 0,
+      "stdout": "[2,3]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E26",
+      "returncode": 0,
+      "stdout": "[3]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E27",
+      "returncode": 0,
+      "stdout": "[[11,12],[21,22]]\tArray(Array(UInt16))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E28",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 10 (|): | 2 AS value, toTypeName(value) AS type. Expected one of: token, DoubleColon, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS, identifier, Comma, FROM, PREWHERE, WHERE, GROUP BY, WITH, HAVING, WINDOW, QUALIFY, ORDER BY, LIMIT, OFFSET, FETCH, SETTINGS, UNION, EXCEPT, INTERSECT, INTO OUTFILE, FORMAT, ParallelWithClause, PARALLEL WITH, end of query. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E29",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E30",
+      "returncode": 0,
+      "stdout": "['X']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E31",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | multiply, ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E32",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | toString, [2, 3], [4, 5]) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E33",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 24 (|): | upper, ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E34",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 32 (|): | upper, ['y']) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E35",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, [1, 2]) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E36",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 46 (|): | upper, ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E37",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(_ + _, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E38",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _2, [1, 2], [3]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E39",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 28 (|): | upper, ['B']) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E40",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | upper, [1]) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E41",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 29 (|): | lower | upper, [1, 2]) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E42",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 27 (|): | (_1 * 2), [1], [2]) AS value, toTypeName(value) AS type. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E43",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | trim, [' X ']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E44",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | concat, ['X']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E45",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(upper(trimBoth(_)), [' x ']) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E46",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(upper(trimBoth(_1)), [' x ']) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E47",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | (_ * 2), [1, 2]) AS value, toTypeName(value) AS type. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E48",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | concat(_1, _2), ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-001-E01",
+      "sql": "WITH ['https://WWW.ClickHouse.com/docs', 'https://GitHub.com/ClickHouse/ClickHouse', 'https://www.anthropic.com/news'] AS urls SELECT arrayMap(lower | domainWithoutWWW | firstSignificantSubdomain | upper, urls) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 150 (|): | domainWithoutWWW | firstSignificantSubdomain | upper, urls) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E02",
+      "sql": "WITH ['https://WWW.ClickHouse.com/docs', 'https://GitHub.com/ClickHouse/ClickHouse', 'https://www.anthropic.com/news'] AS urls SELECT arrayMap(x -> upper(firstSignificantSubdomain(domainWithoutWWW(lower(x)))), urls) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "['CLICKHOUSE','GITHUB','ANTHROPIC']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E03",
+      "sql": "SELECT arrayMap(TRIM(_) | upper, [' ClickHouse ', ' Anthropic ', ' OpenAI ']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 25 (|): | upper, [' ClickHouse ', ' Anthropic ', ' OpenAI ']) AS value, toTypeName(value) AS type. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E04",
+      "sql": "SELECT arrayMap(trim | upper, [' ClickHouse ']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper, [' ClickHouse ']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E05",
+      "sql": "WITH [49.99, 189.00, 19.50] AS prices, [2, 1, 4] AS quantities SELECT arrayMap(multiply(_1, _2) | toString | CONCAT('$', _), prices, quantities) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 97 (|): | toString | CONCAT('$', _), prices, quantities) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E06",
+      "sql": "WITH [49.99, 189.00, 19.50] AS prices, [2, 1, 4] AS quantities SELECT arrayMap((p, q) -> CONCAT('$', toString(multiply(p, q))), prices, quantities) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "['$99.98','$189','$78']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E07",
+      "sql": "SELECT arrayMap(lower, ['Hello', 'WORLD']) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "['hello','world']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E08",
+      "sql": "SELECT arrayMap(TRIM(_), [' x ', ' y ']) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(trimBoth(_), [' x ', ' y ']) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E09",
+      "sql": "SELECT arrayMap(_1 * 2 + 1, [1, 2, 3]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap((_1 * 2) + 1, [1, 2, 3]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E10",
+      "sql": "SELECT arrayMap(_ + _, [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(_ + _, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E11",
+      "sql": "SELECT arrayMap(_2 - _1, [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2 - _1, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E12",
+      "sql": "SELECT arrayMap(_1 + _1, [1, 2]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _1, [1, 2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E13",
+      "sql": "SELECT arrayMap(_2, [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E14",
+      "sql": "SELECT arrayMap(_2 + 1, [1]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2 + 1, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E15",
+      "sql": "SELECT arrayMap(_1 + _2, [1], [2], [3]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _2, [1], [2], [3]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E16",
+      "sql": "SELECT arrayMap(_ + _1, [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(_ + _1, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E17",
+      "sql": "SELECT arrayMap(_1 + _, [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _, [1], [2]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E18",
+      "sql": "SELECT arrayMap(_0 + 1, [1]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_0` in scope SELECT arrayMap(_0 + 1, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E19",
+      "sql": "SELECT arrayMap(_129 + 1, [1]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_129` in scope SELECT arrayMap(_129 + 1, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E20",
+      "sql": "SELECT arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E21",
+      "sql": "SELECT arrayMap(arrayMap(x -> x + _1, [1]), [10]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope x -> (x + _1). (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E22",
+      "sql": "SELECT arrayMap(_1 -> _1 + 1, [1]) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "[2]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E23",
+      "sql": "SELECT arrayMap(_1 + t.n, [1, 2]) AS value, toTypeName(value) AS type FROM (SELECT toUInt8(10) AS n) AS t",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + t.n, [1, 2]) AS value, toTypeName(value) AS type FROM (SELECT toUInt8(10) AS n) AS t. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E24",
+      "sql": "SELECT t._1 + t._2 + t._ AS value, toTypeName(value) AS type FROM (SELECT toUInt8(1) AS _1, toUInt8(2) AS _2, toUInt8(3) AS _) AS t",
+      "returncode": 0,
+      "stdout": "6\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E25",
+      "sql": "SELECT arrayMap(x -> x + 1, [1, 2]) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "[2,3]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E26",
+      "sql": "SELECT arrayMap((x, y) -> x + y, [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "[3]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E27",
+      "sql": "SELECT arrayMap(x -> arrayMap(y -> x + y, [1, 2]), [10, 20]) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "[[11,12],[21,22]]\tArray(Array(UInt16))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E28",
+      "sql": "SELECT 1 | 2 AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 10 (|): | 2 AS value, toTypeName(value) AS type. Expected one of: token, DoubleColon, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS, identifier, Comma, FROM, PREWHERE, WHERE, GROUP BY, WITH, HAVING, WINDOW, QUALIFY, ORDER BY, LIMIT, OFFSET, FETCH, SETTINGS, UNION, EXCEPT, INTERSECT, INTO OUTFILE, FORMAT, ParallelWithClause, PARALLEL WITH, end of query. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E29",
+      "sql": "SELECT bitOr(1, 2) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E30",
+      "sql": "SELECT arrayMap(x -> upper(TRIM(x)), [' x ']) AS value, toTypeName(value) AS type",
+      "returncode": 0,
+      "stdout": "['X']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-001-E31",
+      "sql": "SELECT arrayMap(upper | multiply, ['x']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | multiply, ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E32",
+      "sql": "SELECT arrayMap(multiply | toString, [2, 3], [4, 5]) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | toString, [2, 3], [4, 5]) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E33",
+      "sql": "SELECT arrayMap(concat | upper, ['x']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 24 (|): | upper, ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E34",
+      "sql": "SELECT arrayMap(CONCAT('x', _) | upper, ['y']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 32 (|): | upper, ['y']) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E35",
+      "sql": "SELECT arrayMap(lower | upper, [1, 2]) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, [1, 2]) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E36",
+      "sql": "SELECT arrayMap(brikkMissingSemanticFunction | upper, ['x']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 46 (|): | upper, ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E37",
+      "sql": "SELECT arrayMap(_ + _, [1]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(_ + _, [1]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E38",
+      "sql": "SELECT arrayMap(_1 + _2, [1, 2], [3]) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(_1 + _2, [1, 2], [3]) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E39",
+      "sql": "SELECT arrayMap(lower('a') | upper, ['B']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 28 (|): | upper, ['B']) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E40",
+      "sql": "SELECT arrayMap(toString | upper, [1]) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | upper, [1]) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E41",
+      "sql": "SELECT arrayMap(toString(_) | lower | upper, [1, 2]) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 29 (|): | lower | upper, [1, 2]) AS value, toTypeName(value) AS type. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E42",
+      "sql": "SELECT arrayMap((_1 + _2) | (_1 * 2), [1], [2]) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 27 (|): | (_1 * 2), [1], [2]) AS value, toTypeName(value) AS type. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E43",
+      "sql": "SELECT arrayMap(lower | trim, [' X ']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | trim, [' X ']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E44",
+      "sql": "SELECT arrayMap(lower | concat, ['X']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | concat, ['X']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E45",
+      "sql": "SELECT arrayMap(upper(TRIM(_)), [' x ']) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(upper(trimBoth(_)), [' x ']) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E46",
+      "sql": "SELECT arrayMap(upper(TRIM(_1)), [' x ']) AS value, toTypeName(value) AS type",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_1` in scope SELECT arrayMap(upper(trimBoth(_1)), [' x ']) AS value, toTypeName(value) AS type: Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-001-E47",
+      "sql": "SELECT arrayMap((_1 + 1) | (_ * 2), [1, 2]) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | (_ * 2), [1, 2]) AS value, toTypeName(value) AS type. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-001-E48",
+      "sql": "SELECT arrayMap(lower | CONCAT(_1, _2), ['x']) AS value, toTypeName(value) AS type",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | CONCAT(_1, _2), ['x']) AS value, toTypeName(value) AS type. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    }
+  ]
+}

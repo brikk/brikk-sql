@@ -7,6 +7,7 @@ hex strings; only the separate finite execution fixtures run. Every process has 
 """
 import argparse
 import datetime
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -14,6 +15,20 @@ import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "vendor/data/clickhouse-2026-audit"
+
+
+def parsing_cases(fixtures):
+    # Semantic failures can still be valid syntax. Opt in to formatting every finite
+    # execution vector too, without duplicating SQL or changing historical audits.
+    return fixtures["cases"] + (fixtures["execution"] if fixtures.get("parse_execution", False) else [])
+
+
+def parsing_expectation(case, version):
+    if "parse_expectations" not in case:
+        return case.get("accept", True)
+    if version not in case["parse_expectations"]:
+        raise ValueError(f"Missing explicit parser expectation: {case['id']}/{version}")
+    return case["parse_expectations"][version]
 
 
 def query(engine, sql, streaming=False):
@@ -38,13 +53,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
     parser.add_argument("--engine", action="append", help="Exact pinned version; defaults to both")
-    parser.add_argument("--brikk", type=pathlib.Path, help="JSON observations from clickhouse_2026_audit.kts")
+    parser.add_argument("--brikk", type=pathlib.Path, help="JSON observations from the audit script or fixture test")
     parser.add_argument("--cases", type=pathlib.Path, default=DATA / "cases.json")
     parser.add_argument("--task", action="append", help="Plan tasks whose generated parsing is checked; defaults to CH26-002")
     args = parser.parse_args()
-    fixtures = json.loads(args.cases.read_text())
+    fixture_bytes = args.cases.read_bytes()
+    fixtures = json.loads(fixture_bytes)
+    parse_cases = parsing_cases(fixtures)
     tasks = set(args.task or ["CH26-002"])
-    brikk = {r["id"]: r for r in json.loads(args.brikk.read_text())} if args.brikk else {}
+    brikk_bytes = args.brikk.read_bytes() if args.brikk else None
+    brikk = {r["id"]: r for r in json.loads(brikk_bytes)} if brikk_bytes is not None else {}
     engines = json.loads((DATA / "engines.json").read_text())["engines"]
     if args.engine:
         known = {e["version"] for e in engines}
@@ -57,22 +75,22 @@ def main():
         version = query(engine, "SELECT version()")
         if version["returncode"] != 0 or version["stdout"].strip() != engine["version"]:
             raise RuntimeError(f"Pinned engine mismatch: {engine}: {version}")
-        tuples = ",".join("('" + c["id"] + "','" + c["sql"].encode().hex() + "')" for c in fixtures["cases"])
+        tuples = ",".join("('" + c["id"] + "','" + c["sql"].encode().hex() + "')" for c in parse_cases)
         parsed = query(engine, "SELECT item.1 AS id, formatQueryOrNull(unhex(item.2)) AS formatted "
                        f"FROM (SELECT arrayJoin([{tuples}]) AS item) FORMAT JSONEachRow")
         if parsed["returncode"] != 0:
             raise RuntimeError(parsed)
         rows = [json.loads(line) for line in parsed["stdout"].splitlines()]
-        for case, row in zip(fixtures["cases"], rows, strict=True):
+        for case, row in zip(parse_cases, rows, strict=True):
             assert case["id"] == row["id"]
             # Older engines are observations only for syntax introduced in later releases.
-            if tuple(map(int, case["release"].split("."))) <= tuple(map(int, engine["version"].split(".")[:2])):
-                if (row["formatted"] is not None) != case.get("accept", True):
+            if tuple(map(int, case.get("release", "0.0").split("."))) <= tuple(map(int, engine["version"].split(".")[:2])):
+                if (row["formatted"] is not None) != parsing_expectation(case, engine["version"]):
                     failures.append(engine["version"] + "/" + case["id"] + ": native parse expectation")
         brikk_parsed = None
         if args.brikk:
-            fixed = [c for c in fixtures["cases"] if c["task"] in tasks and c.get("accept", True)
-                     and tuple(map(int, c["release"].split("."))) <= tuple(map(int, engine["version"].split(".")[:2]))]
+            fixed = [c for c in parse_cases if c["task"] in tasks and parsing_expectation(c, engine["version"])
+                     and tuple(map(int, c.get("release", "0.0").split("."))) <= tuple(map(int, engine["version"].split(".")[:2]))]
             generated_tuples = []
             for case in fixed:
                 generated = brikk[case["id"]].get("generated")
@@ -114,6 +132,8 @@ def main():
                 if not expected_execution(expected, result):
                     failures.append(engine["version"] + "/" + case["id"] + ": Brikk execution expectation")
         report = {"captured_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                  "fixture_sha256": hashlib.sha256(fixture_bytes).hexdigest(),
+                  "brikk_sha256": hashlib.sha256(brikk_bytes).hexdigest() if brikk_bytes is not None else None,
                   "engine": engine, "version_query": version, "parse_query": parsed,
                   "parsed": rows, "brikk_parse_query": brikk_parsed,
                   "execution": execution, "brikk_execution": brikk_execution}
@@ -129,7 +149,8 @@ def main():
 def expected_execution(case, result):
     if "error_code" in case:
         return (result["returncode"] == case["error_code"] % 256 and result["stdout"] == ""
-                and case["error_name"] in result["stderr"])
+                and case["error_name"] in result["stderr"]
+                and all(text in result["stderr"] for text in case.get("error_contains", [])))
     return result["returncode"] == 0 and result["stdout"] == case["stdout"]
 
 

@@ -1,0 +1,73 @@
+# ClickHouse semantic validation
+
+Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence is complete;
+production semantic-validator implementation has not started.
+Keep these IDs stable so individual items can be discussed and resumed by label.
+
+## Context
+
+The CH26 catch-up added structured composition and implicit-lambda nodes, correct
+argument binding, scope/lineage handling, SQL round trips and representative native
+execution evidence. It deliberately left argument-aware higher-order typing,
+function-specific argument validation and cross-dialect conversion unknown.
+The ClickHouse catalog currently records names, aliases and kinds, not overloads.
+
+Start with offline validation of composition and `arrayMap`, including the examples
+in https://x.com/ClickHouseDB/status/2116123022285259254. This is a bounded extension,
+not a claim of full ClickHouse analyzer parity. The existing `formatQuery` verifier
+checks parsing only and must not be relabeled as semantic validation.
+
+## First implementation slice
+
+- [x] CHSEM-001: Establish version-pinned semantic fixtures and acceptance criteria. Reuse the existing 26.10.2.103 native probe infrastructure; capture valid and invalid composition, variadic designators, placeholder counts, mixed placeholder forms and nested bindings. Retain 26.8 controls and record actual results/errors rather than assuming rules from examples.
+- [ ] CHSEM-002: Define conservative callable-signature facts. Record proven argument-count, variadic and input/result rules for the initial functions: lower, upper, domainWithoutWWW, firstSignificantSubdomain, trim, multiply, toString and concat. Keep bare function designators distinct from explicit calls; preserve version, alias and case policy. Missing facts mean unknown, not valid or invalid.
+- [ ] CHSEM-003: Implement contextual lambda argument typing. Derive `_`, `_1` and `_2` types from the corresponding array elements; cover explicit lambdas, nested higher-order scopes, captured physical columns and multiple arrays. Leave ordinary underscore-named columns unchanged.
+- [ ] CHSEM-004: Implement composition argument validation. Check stage argument counts, placeholder requirements and provable input incompatibilities using native-backed rules. Diagnose bare variadic designators such as `trim | upper` without rejecting the valid `trim(_) | upper` form. Do not infer runtime array-length equality from matching argument counts.
+- [ ] CHSEM-005: Infer composition and arrayMap results. Propagate stage results through supported chains and compute array element types without inventing precision, nullability or overload facts. Track incomplete knowledge explicitly and preserve existing generic/dialect typing behavior.
+- [ ] CHSEM-006: Expose positioned offline semantic diagnostics through the shared library. Keep semantic results separate from parser acceptance; distinguish proven errors from unavailable knowledge. Test statement/script offsets and consumer-facing integration without adding new internal or experimental IntelliJ API calls.
+- [ ] CHSEM-007: Qualify and document the bounded slice. Add self-contained positive/negative, AST serde, scope/lineage, typing and diagnostic tests; compare original/generated finite results and errors against pinned native fixtures. Run affected modules, full regression and binary-compatibility gates, record skips, and document exact coverage and remaining unknowns.
+
+## Follow-up scope, not part of the first slice
+
+- [ ] CHSEM-008: Extend proven contracts to common array/map higher-order functions. Prioritize arrayFilter, arrayExists, arrayAll, arraySort and mapApply; account for their different argument binding and result rules. Establish separate native fixtures for each added family.
+- [ ] CHSEM-009: Expand composite and overload typing. Research Nullable, LowCardinality, tuples, numeric promotion, decimal precision/scale, constant-dependent rules and settings/version boundaries. Add only measured rules; retain explicit unknowns for UDFs and unsupported overloads.
+- [ ] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
+
+## Constraints and resumption
+
+- User authorized CHSEM-002 after completing CHSEM-001. Commit and push this branch after each round; stop before CHSEM-003 until further direction.
+- Resume at CHSEM-002; do not treat the unchecked follow-ups as implemented or certified.
+- Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
+- Preserve existing source ranges, safe verifier behavior and historical native evidence.
+- Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
+- Do not weaken corpus ledgers, suppress compatibility/API warnings or widen semantic certification to pass tests.
+- Branch commits and pushes are authorized after each round. Publication, releases, consumer dependency changes and sibling-repository edits remain out of scope.
+
+## CHSEM-001 result
+
+Evidence and acceptance criteria: `vendor/data/clickhouse-semantic/README.md`.
+Stable IDs CHSEM-001-P01–P02 cover syntax negatives; CHSEM-001-E01–E48 cover
+finite results/types and expected errors. Both engine pins execute all 48 cases
+as originally authored and as generated by Brikk, with no version skips.
+Native formatting is checked separately from execution. Four exact CONCAT casing
+differences are documented and checked against both native registries, not hidden
+by generic case-folding or corpus-ledger changes.
+
+Notable constraints for the next items: variadic designators behave differently
+on the left and right; anonymous placeholders must be direct call arguments;
+mixed placeholders fail within an operand but may work across separate stages;
+and runtime array-length errors are distinct from lambda argument-count errors.
+The native guide links individual cases and the tagged analyzer source.
+
+Validation: 1,437 core/metadata JVM tests passed, including binary compatibility;
+19 ClickHouse Python tests passed. The complete Python tool suite passed 67 tests
+with one opt-in Toolchain-model skip after supplying the existing SQLGlot pin
+from a temporary checkout. No production code, published APIs, consumer pins,
+historical semantic evidence or IntelliJ API usage changed. Full verifier/IDE
+suites were not run for this fixture-only step.
+
+References: `docs/research/clickhouse-2026-batch3.md`,
+`docs/research/clickhouse-2026-batch4.md`,
+`brikk-sql/src/dev.brikk.house.sql/dialects/ClickhouseHigherOrder.kt`,
+`brikk-sql/src/dev.brikk.house.sql/optimizer/AnnotateTypes.kt`,
+`brikk-sql/src/dev.brikk.house.sql/diagnostics/SqlDiagnostics.kt`.

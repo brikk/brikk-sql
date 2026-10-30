@@ -1,0 +1,386 @@
+[
+    {
+        "id": "CHSEM-001-E01",
+        "root": "Select",
+        "generated": "WITH ['https://WWW.ClickHouse.com/docs', 'https://GitHub.com/ClickHouse/ClickHouse', 'https://www.anthropic.com/news'] AS urls SELECT arrayMap(lower | domainWithoutWWW | firstSignificantSubdomain | upper, urls) AS value, toTypeName(value) AS type",
+        "composition_count": 3,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E02",
+        "root": "Select",
+        "generated": "WITH ['https://WWW.ClickHouse.com/docs', 'https://GitHub.com/ClickHouse/ClickHouse', 'https://www.anthropic.com/news'] AS urls SELECT arrayMap(x -> upper(firstSignificantSubdomain(domainWithoutWWW(lower(x)))), urls) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E03",
+        "root": "Select",
+        "generated": "SELECT arrayMap(TRIM(_) | upper, [' ClickHouse ', ' Anthropic ', ' OpenAI ']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E04",
+        "root": "Select",
+        "generated": "SELECT arrayMap(trim | upper, [' ClickHouse ']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E05",
+        "root": "Select",
+        "generated": "WITH [49.99, 189.00, 19.50] AS prices, [2, 1, 4] AS quantities SELECT arrayMap(multiply(_1, _2) | toString | CONCAT('$', _), prices, quantities) AS value, toTypeName(value) AS type",
+        "composition_count": 2,
+        "implicit_lambda_count": 2,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E06",
+        "root": "Select",
+        "generated": "WITH [49.99, 189.00, 19.50] AS prices, [2, 1, 4] AS quantities SELECT arrayMap((p, q) -> CONCAT('$', toString(multiply(p, q))), prices, quantities) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E07",
+        "root": "Select",
+        "generated": "SELECT arrayMap(lower, ['Hello', 'WORLD']) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E08",
+        "root": "Select",
+        "generated": "SELECT arrayMap(TRIM(_), [' x ', ' y ']) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E09",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 * 2 + 1, [1, 2, 3]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E10",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_ + _, [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E11",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_2 - _1, [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E12",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 + _1, [1, 2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E13",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_2, [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E14",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_2 + 1, [1]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E15",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 + _2, [1], [2], [3]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E16",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_ + _1, [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E17",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 + _, [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E18",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_0 + 1, [1]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E19",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_129 + 1, [1]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E20",
+        "root": "Select",
+        "generated": "SELECT arrayMap(arrayMap(_ + 1, _1), [[1, 2]]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 2,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E21",
+        "root": "Select",
+        "generated": "SELECT arrayMap(arrayMap(x -> x + _1, [1]), [10]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E22",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 -> _1 + 1, [1]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E23",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 + t.n, [1, 2]) AS value, toTypeName(value) AS type FROM (SELECT toUInt8(10) AS n) AS t",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E24",
+        "root": "Select",
+        "generated": "SELECT t._1 + t._2 + t._ AS value, toTypeName(value) AS type FROM (SELECT toUInt8(1) AS _1, toUInt8(2) AS _2, toUInt8(3) AS _) AS t",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E25",
+        "root": "Select",
+        "generated": "SELECT arrayMap(x -> x + 1, [1, 2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E26",
+        "root": "Select",
+        "generated": "SELECT arrayMap((x, y) -> x + y, [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E27",
+        "root": "Select",
+        "generated": "SELECT arrayMap(x -> arrayMap(y -> x + y, [1, 2]), [10, 20]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E28",
+        "root": "Select",
+        "generated": "SELECT 1 | 2 AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E29",
+        "root": "Select",
+        "generated": "SELECT bitOr(1, 2) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E30",
+        "root": "Select",
+        "generated": "SELECT arrayMap(x -> upper(TRIM(x)), [' x ']) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E31",
+        "root": "Select",
+        "generated": "SELECT arrayMap(upper | multiply, ['x']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E32",
+        "root": "Select",
+        "generated": "SELECT arrayMap(multiply | toString, [2, 3], [4, 5]) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E33",
+        "root": "Select",
+        "generated": "SELECT arrayMap(concat | upper, ['x']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E34",
+        "root": "Select",
+        "generated": "SELECT arrayMap(CONCAT('x', _) | upper, ['y']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E35",
+        "root": "Select",
+        "generated": "SELECT arrayMap(lower | upper, [1, 2]) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E36",
+        "root": "Select",
+        "generated": "SELECT arrayMap(brikkMissingSemanticFunction | upper, ['x']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E37",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_ + _, [1]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E38",
+        "root": "Select",
+        "generated": "SELECT arrayMap(_1 + _2, [1, 2], [3]) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E39",
+        "root": "Select",
+        "generated": "SELECT arrayMap(lower('a') | upper, ['B']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E40",
+        "root": "Select",
+        "generated": "SELECT arrayMap(toString | upper, [1]) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E41",
+        "root": "Select",
+        "generated": "SELECT arrayMap(toString(_) | lower | upper, [1, 2]) AS value, toTypeName(value) AS type",
+        "composition_count": 2,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E42",
+        "root": "Select",
+        "generated": "SELECT arrayMap((_1 + _2) | (_1 * 2), [1], [2]) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 2,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E43",
+        "root": "Select",
+        "generated": "SELECT arrayMap(lower | trim, [' X ']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E44",
+        "root": "Select",
+        "generated": "SELECT arrayMap(lower | concat, ['X']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 0,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E45",
+        "root": "Select",
+        "generated": "SELECT arrayMap(upper(TRIM(_)), [' x ']) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E46",
+        "root": "Select",
+        "generated": "SELECT arrayMap(upper(TRIM(_1)), [' x ']) AS value, toTypeName(value) AS type",
+        "composition_count": 0,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E47",
+        "root": "Select",
+        "generated": "SELECT arrayMap((_1 + 1) | (_ * 2), [1, 2]) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 2,
+        "value_type": "Nullable(UNKNOWN)"
+    },
+    {
+        "id": "CHSEM-001-E48",
+        "root": "Select",
+        "generated": "SELECT arrayMap(lower | CONCAT(_1, _2), ['x']) AS value, toTypeName(value) AS type",
+        "composition_count": 1,
+        "implicit_lambda_count": 1,
+        "value_type": "Nullable(UNKNOWN)"
+    }
+]
