@@ -358,6 +358,7 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator.annotate
     fun <E : Expression> annotate(expression: E, annotateScope: Boolean = true): E {
+        if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("EXPLAIN returns plan text, not its child's expression types")
         if (expression.isDuckdbExternalResourceStatement()) throw OptimizeError("External-resource statements require native handle/result contracts")
         // Keep simple INSTALL's published literal-annotation/serde behavior. The new
         // management nodes have runtime result contracts, not SELECT expression types.

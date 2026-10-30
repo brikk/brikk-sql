@@ -20,7 +20,7 @@ import java.util.concurrent.CancellationException
  *
  * Binding evaluates some expressions (table-function arguments such as `range(nextval('s'))`),
  * and the engine has external access enabled, so this oracle is for trusted corpus SQL only.
- * Editors use [ParseOnlyDuckdbVerifier]. Routing, extension and external-resource management never use prepare/bind even here;
+ * Editors use [ParseOnlyDuckdbVerifier]. EXPLAIN, routing, extension and external-resource management never use prepare/bind even here;
  * they remain unverified when the parse-only channel cannot serialize them.
  *
  * Cold start: the first [verify] boots an embedded DuckDB; the connection is created lazily
@@ -53,6 +53,9 @@ public class DuckdbVerifier internal constructor(
             // The parse channel itself failed, so no grammar verdict was obtained.
             return unavailable(e, sql)
         }
+        // Transformer option errors are not parser errors. EXPLAIN gets exactly
+        // the editor's parse-only verdict mapping, never a bind-based verdict.
+        if (dev.brikk.house.sql.dialects.mayContainDuckdbExplain(sql)) return serialized.toParseOnlyResult(sql)
         return when (serialized) {
             SerializedSql.Parsed -> VerifyResult.Accepted
             is SerializedSql.Failed -> if (serialized.type == "not implemented") {
@@ -60,7 +63,8 @@ public class DuckdbVerifier internal constructor(
                 // turn routing validation into prepare/bind, even in the trusted corpus oracle.
                 if (dev.brikk.house.sql.dialects.mayContainDuckdbRouting(sql) ||
                     dev.brikk.house.sql.dialects.mayContainDuckdbExtensionManagement(sql) ||
-                    dev.brikk.house.sql.dialects.mayContainDuckdbExternalResources(sql)) serialized.toParseOnlyResult(sql) else verifyByPrepare(sql)
+                    dev.brikk.house.sql.dialects.mayContainDuckdbExternalResources(sql) ||
+                    dev.brikk.house.sql.dialects.mayContainDuckdbExplain(sql)) serialized.toParseOnlyResult(sql) else verifyByPrepare(sql)
             } else {
                 val message = listOfNotNull(serialized.type, serialized.message).joinToString(": ")
                 VerifyResult.Rejected(serialized.errorIn(sql, message.ifEmpty { serialized.document }))

@@ -28,6 +28,7 @@ import dev.brikk.house.sql.ast.DuckdbDeallocate
 import dev.brikk.house.sql.ast.DuckdbResetVariable
 import dev.brikk.house.sql.ast.Insert
 import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
 import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Values
 import dev.brikk.house.sql.ast.With
@@ -302,6 +303,10 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        if (currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) && currToken.text.equals("EXPLAIN", true)) {
+            advance()
+            return parseDuckdbExplain()
+        }
         if (currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING)) {
             if (currToken.text.equals("REGISTER", true) && nextToken.text.equals("EXTERNAL", true)) {
                 advance()
@@ -374,6 +379,20 @@ open class DuckdbParser(
     }
 
     override fun parseCommand(): Expression {
+        if (prevToken.text.equals("EXPLAIN", true) && currToken.tokenType == TokenType.STRING) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            if (lexed.failureOffset != null) raiseError("Incomplete EXPLAIN statement")
+            val body = lexed.tokens.filter { it.start >= start && it.end < end }
+            val parser = DuckdbParser(errorLevel, tokenizerConfig).apply {
+                captureSourceRanges = this@DuckdbParser.captureSourceRanges
+                checkCanceled = this@DuckdbParser.checkCanceled
+            }
+            val parsed = parser.parseIntoWith(body, sql) { (it as DuckdbParser).parseDuckdbExplain() }
+            advance()
+            return parsed ?: throw ParseError("Expected EXPLAIN statement")
+        }
         // Preserve existing RESET-setting command/token contracts. Only RESET VARIABLE is
         // structured; the editor tokenizer gives its identifier the original absolute range.
         if (prevToken.text.equals("RESET", ignoreCase = true) && currToken.tokenType == TokenType.STRING &&
@@ -394,6 +413,32 @@ open class DuckdbParser(
             }
         }
         return super.parseCommand()
+    }
+
+    private fun parseDuckdbExplain(): Expression {
+        // The normal tokenizer has one opaque command-tail STRING. Editor tokens
+        // already expose the tail; both routes arrive at this structured entry point.
+        if (currToken.tokenType == TokenType.STRING && prevToken.text.equals("EXPLAIN", true)) return parseCommand()
+        val analyze = if (currToken.tokenType != TokenType.IDENTIFIER && matchTexts(setOf("ANALYZE", "ANALYSE"))) true else false
+        val options = if (currToken.tokenType == TokenType.L_PAREN) parseWrappedCsv({
+            val name = parseIdVar(anyToken = false) ?: raiseError("Expected EXPLAIN option name")
+            if (currToken.tokenType == TokenType.EQ) raiseError("EXPLAIN options use whitespace, not assignment syntax")
+            val value = if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) null else parseAssignment()
+            expression(dev.brikk.house.sql.ast.DuckdbExplainOption(args("this" to name, "expression" to value)))
+        }).also { if (it.isEmpty()) raiseError("Expected EXPLAIN options") } else null
+        val heads = setOf("ALTER", "ANALYZE", "ANALYSE", "CALL", "CHECKPOINT", "COPY", "CREATE", "DEALLOCATE", "DELETE", "DROP", "EXECUTE",
+            "INSERT", "LOAD", "MERGE", "PRAGMA", "PREPARE", "SELECT", "FROM", "WITH", "VALUES", "TABLE", "PIVOT", "UNPIVOT",
+            "BEGIN", "START", "COMMIT", "ROLLBACK", "END", "ABORT", "UPDATE", "VACUUM", "SET", "RESET")
+        if (currToken.tokenType != TokenType.L_PAREN && (currToken.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING) || currToken.text.uppercase() !in heads) &&
+            !(currToken.text.equals("FORCE", true) && nextToken.text.equals("CHECKPOINT", true)))
+            raiseError("Expected a DuckDB explainable statement")
+        val childStart = currToken
+        var child = parseStatement() ?: raiseError("Expected EXPLAIN child statement")
+        if (child is dev.brikk.house.sql.ast.Command && currToken.exists) child = parseAsCommand(childStart)
+        if (child?.isDuckdbExternalResourceStatement() == true || child is dev.brikk.house.sql.ast.DuckdbCreateExtensionRepository ||
+            child is dev.brikk.house.sql.ast.DuckdbDropExtensionRepository)
+            raiseError("This management statement is not an EXPLAIN body in DuckDB 2.0")
+        return expression(dev.brikk.house.sql.ast.DuckdbExplain(args("this" to child, "analyze" to analyze, "expressions" to options)))
     }
 
     override fun parseTriggerAction(): Expression? {
@@ -1007,6 +1052,9 @@ object DuckdbParserTables {
 
     val TOKENIZER_CONFIG: TokenizerConfig =
         dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB.withIdentifiers(mapOf('`' to "`"))
+            // Existing non-command token, dedicated parser above. Keeping the tail
+            // tokenized is necessary for exact body/option parameter intervals.
+            .withKeywords(mapOf("EXPLAIN" to TokenType.DESCRIBE))
 
     // sqlglot: DuckDBParser.NO_PAREN_FUNCTIONS
     val NO_PAREN_FUNCTIONS: Map<TokenType, () -> Expression> =

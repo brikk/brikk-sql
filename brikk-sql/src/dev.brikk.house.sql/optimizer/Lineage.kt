@@ -202,6 +202,7 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw SqlglotError("EXPLAIN plan text has computed provenance, not child-result lineage")
     if (expression.isDuckdbExternalResourceStatement()) throw SqlglotError("External-resource lifecycle state is not query-result lineage")
     if (expression.isDuckdbExtensionManagement()) throw SqlglotError("Repository identity/fingerprints are runtime management results, not query-result lineage")
     if (expression.isSecureViewDefinition()) throw SqlglotError("SECURE VIEW DDL has no query-result lineage; analyze its authored body separately")

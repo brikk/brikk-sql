@@ -156,6 +156,10 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
+        if (node is dev.brikk.house.sql.ast.DuckdbExplain) {
+            (node.thisArg as? Expression)?.let { statement(it, env) }
+            return true
+        }
         if (node.isDuckdbExternalResourceStatement()) return true
         if (node.isDuckdbExtensionManagement()) return true
         if (node.isDuckdbRecursiveViewDefinition()) throw dev.brikk.house.sql.generator.UnsupportedError("Recursive view self-reference scope is not modeled")

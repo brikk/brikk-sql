@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-023.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-024.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -582,10 +582,44 @@ and IDE introspection/completion are separate contracts.
   Final 16 focused controls also passed, including parameter order across the two option bags and
   quoted API-call no-bind coverage. Log: /tmp/opencode/duckdb-external-resources-final-controls.log.
 
-- [ ] `DDB20-024` EXPLAIN (SQL) and explain options [ADD].
+- [x] `DDB20-024` EXPLAIN (SQL) and explain options [DONE].
   Native grammar accepts it, while brikk preserves an opaque command. Introduce structured
   options before inspecting/transforming them; include FORMAT/ANALYZE option interactions.
   Do not introduce EXPLAIN as an editor-validation fallback because binding can have side effects.
+  Added native EXPLAIN/option nodes with ordered options and a retained child statement. A local
+  lexer overlay keeps EXPLAIN tails tokenized for exact parameter intervals rather than treating
+  every operand as an opaque command string. Copy/serde/regeneration preserves options and bind
+  order. Prefix/unquoted-option ANALYSE canonicalizes to ANALYZE, not quoted "ANALYSE", whose
+  native meaning is different. Existing raw child families stay inspectable but execution,
+  dependency inference and uncertain parameter binding explicitly refuse.
+  Native ANALYZE option presence always enables execution, even with false/0; its argument is
+  ignored rather than evaluated. Repetition does not run the child twice. SQL is an argument-less,
+  single option and cannot coexist with ANALYZE or FORMAT. FORMAT constants/identifiers/DEFAULT
+  stay structured; duplicate/missing/dynamic/unknown values and unknown options are not silently
+  dropped or normalized into another mode. WEB requires a client renderer and is not statically
+  certified; no browser/UI is opened. Unsupported SQL-export child families explicitly refuse.
+  The result contract is two computed VARCHAR columns, explain_key/explain_value, even for JSON
+  or SQL output. Child scopes/dependencies are distinct from format-name expressions and from
+  plan-text lineage. Generic wrapper qualification/type rewrites and cross-target plans refuse.
+  Native controls cover renderer strings, explain_output row counts, SQL query/DML export,
+  explicit execution of exported SQL, ignored ANALYZE expressions, exactly-once DML analysis,
+  and COPY writing only an owned scratch file under ANALYZE. Standard/SQL EXPLAIN may still
+  evaluate table-function arguments at binding; volatile scalar output alone is not executed.
+  All verifier channels stay parse-only for EXPLAIN, including the trusted corpus oracle;
+  transformer option errors are not mislabeled parser errors. Prepare spies, untouched sequences
+  and unchanged tables prove validation never executes a wrapper or binds its child. Existing
+  prepareTextExplain DuckDB refusal stays intact; no EXPLAIN-based validation fallback was added.
+  Reviewed final guides/meta/explain, guides/meta/explain_analyze and dev/profiling documentation,
+  pinned explain.gram/transform_explain.cpp/bind_explain.cpp and explain/SQL-export native tests.
+  Evidence: DuckdbExplainTest and DuckdbExplainResultTest. Full gates passed 1,352 core,
+  115 metadata and 153 DuckDB verifier/native tests with both prior signed fixtures enabled,
+  zero skips. Two native nodes are explicitly registered under brikk.duckdb; generated tokenizer
+  tables/corpora, annotation/serde ledgers, public data-class JVM shapes and IntelliJ APIs remain
+  unchanged. No user session, driver-result workaround, consumer pin, merge or publication changes.
+  Full log: /tmp/opencode/duckdb-explain-full-final.log.
+  Final 14 focused controls also passed, including ignored option-subquery scope fencing under
+  PREPARE, exact parameter discovery and unquoted ANALYSE canonicalization. Focused log:
+  /tmp/opencode/duckdb-explain-final-controls.log.
 
 - [ ] `DDB20-025` OVERLAY [AUDIT].
   Generic parser/AST support exists. Pin DuckDB spelling, generation, signature, NULLs,

@@ -555,6 +555,12 @@ object GeneratorTables {
         for (node in listOf(DuckdbCreateExternalResource::class, DuckdbRegisterExternalResource::class,
             DuckdbDestroyExternalResource::class, DuckdbShowExternalResources::class, DuckdbExternalResourceSource::class,
             DuckdbAttachExternalResource::class, DuckdbConnectExternalResource::class)) reg(node) { e -> duckdbExternalResourceSql(e) }
+        reg(DuckdbExplain::class) { e -> duckdbExplainSql(e as DuckdbExplain) }
+        reg(DuckdbExplainOption::class) { e ->
+            val name = e.thisArg as? Identifier
+            val keyword = if (name?.quoted != true && name?.name?.uppercase() in setOf("ANALYZE", "ANALYSE")) "ANALYZE" else sql(e, "this")
+            keyword + sql(e, "expression").let { if (it.isEmpty()) "" else " $it" }
+        }
         reg(Summarize::class) { e -> summarizeSql(e as Summarize) }
         reg(Attach::class) { e -> attachSql(e as Attach) }
         reg(Detach::class) { e -> detachSql(e as Detach) }

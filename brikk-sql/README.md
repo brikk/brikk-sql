@@ -506,6 +506,37 @@ tests do not certify provider APIs, billing, polling deadlines or general teardo
 No dedicated public DuckDB 2.0 documentation page was found for this syntax; the grammar and
 runtime contracts are pinned to native source/tests, and metadata deliberately invents no URL.
 
+DuckDB EXPLAIN has a structured wrapper and ordered option nodes for SQL, FORMAT and ANALYZE,
+with its child statement retained through copy/serde/generation. The lexer keeps EXPLAIN tails
+tokenized, so parameter intervals and authored bind order remain available. Prefix ANALYSE and
+the unquoted ANALYSE option canonicalize to ANALYZE without turning the option into a quoted
+identifier. Invalid option combinations remain inspectable but refuse executable generation;
+unmodeled renderer names, CLI-only WEB and unresolved bindings in ignored ANALYZE arguments
+also refuse. Child statement families still represented by a raw command are preserved for
+inspection, not certified for execution, dependency inference or parameter binding.
+
+ANALYZE's presence enables execution. In native 2.0, even ANALYZE false or ANALYZE 0 executes
+the child; its argument is not a boolean switch and expressions in it are ignored. Repeated
+ANALYZE options do not execute the child repeatedly. SQL occurs once without arguments and
+cannot combine with ANALYZE or FORMAT. FORMAT accepts supported constant names, identifiers
+and DEFAULT, not an arbitrary evaluated expression. Context-specific renderer lookup is not
+emulated by the library, and no browser or renderer UI is launched.
+
+EXPLAIN always returns explain_key VARCHAR and explain_value VARCHAR, including SQL export,
+JSON formatting and ANALYZE; it does not expose the child's row shape or a typed JSON value.
+Child column scopes can be inspected separately from option names, and source inventory uses
+the child. Plan text has computed provenance, not child-result lineage. Automatic wrapper
+qualification/type rewrites and unproved cross-target option/plan translation explicitly refuse.
+
+Native tests distinguish SQL export, plan generation, binding effects and child execution.
+SQL mode exports native optimized SQL without executing the child, but binding range(nextval())
+still advances a sequence. Explicit execution of exported DML is a separate operation; ANALYZE
+executes DML/COPY itself. Neither EXPLAIN nor EXPLAIN SQL is an editor-validation fallback.
+All verifiers remain parse-only for EXPLAIN, with transformer/renderer limitations left
+Unverified rather than binder-based acceptance or a false parser rejection. The existing
+DuckDB text-EXPLAIN editor action remains refused. Tests use owned memory tables, sequences
+and scratch output files; generated SQL/plan text can be sensitive and is not sanitized output.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

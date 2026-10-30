@@ -30,6 +30,7 @@ import dev.brikk.house.sql.ast.isTriggerDdl
 import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
 import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
 import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
+import dev.brikk.house.sql.dialects.duckdbExplainResult
 import dev.brikk.house.sql.dialects.duckdbExtensionResult
 import dev.brikk.house.sql.ast.isSecureViewDefinition
 import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
@@ -369,7 +370,11 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * use dialect normalization, including its quoted-name rules, as lineage does.
      */
     val sourceTables: List<String> by lazy {
-        val tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        var tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
+            tree = tree.thisArg as? Expression ?: throw ShapeError("EXPLAIN has no structured child")
+            if (tree is dev.brikk.house.sql.ast.Command) throw ShapeError("Raw EXPLAIN child dependencies are not modeled")
+        }
         if (tree.isDuckdbExternalResourceStatement() && tree.walk().any { it is Select || it is SetOperation })
             throw ShapeError("External resource handle/option subquery dependencies are not modeled")
         if (tree.isDuckdbRecursiveViewDefinition()) throw ShapeError("Recursive view self-reference dependencies are not modeled")
@@ -399,6 +404,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         // DFS arg order: deterministic, though the WITH clause is attached after the
         // Select body parses, so outer sources precede CTE-body sources.
         for (table in tree.findAll<Table>(bfs = false)) {
+            if (table.findAncestor<dev.brikk.house.sql.ast.DuckdbExplainOption>() != null) continue
             // Tables outside query scopes (e.g. DML targets) retain the existing
             // inventory behavior. Functions and unresolved placeholders are not tables.
             val parts = table.parts
@@ -486,6 +492,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
+            val output = tree.duckdbExplainResult() ?: throw ShapeError("EXPLAIN options or child context are invalid/unmodeled")
+            return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+        }
         if (tree.isDuckdbExternalResourceStatement()) {
             val output = tree.duckdbExternalResourceResult() ?: throw ShapeError("This external-resource statement has no query output shape")
             return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = it.nullability != Nullability.NON_NULL) })

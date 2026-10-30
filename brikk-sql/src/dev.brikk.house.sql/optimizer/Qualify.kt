@@ -82,6 +82,7 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("Qualify an EXPLAIN child explicitly; automatic wrapper rewriting is not modeled")
     if (expression.isDuckdbExternalResourceStatement()) throw OptimizeError("External-resource options and handles are not SELECT qualification inputs")
     if (expression.isDuckdbExtensionManagement()) throw OptimizeError("Extension/repository management is not a SELECT qualification input")
     if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference qualification is not modeled")

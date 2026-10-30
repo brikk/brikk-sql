@@ -28,6 +28,7 @@ import dev.brikk.house.sql.ast.desugarPipes
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.duckdbExtensionResult
 import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
+import dev.brikk.house.sql.dialects.duckdbExplainResult
 import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
@@ -135,7 +136,8 @@ internal fun Expression.isQuery(): Boolean = this is Select || this is SetOperat
 internal fun Expression.outermostQueries(): List<Expression> {
     val out = ArrayList<Expression>()
     fun visit(node: Expression) {
-        if (node.isQuery()) out += node else node.iterExpressions().forEach(::visit)
+        if (node is dev.brikk.house.sql.ast.DuckdbExplain) (node.thisArg as? Expression)?.let(::visit)
+        else if (node.isQuery()) out += node else node.iterExpressions().forEach(::visit)
     }
     visit(this)
     return out
@@ -168,7 +170,7 @@ internal class ScopeAnalysis(
                 if (parsed.statements.size == 1) output = row.toFact()
             } else {
                 evaluator.statement(lowered, root)
-                if (parsed.statements.size == 1 && dialect.name == "duckdb") output = lowered.duckdbExtensionResult() ?: lowered.duckdbExternalResourceResult()
+                if (parsed.statements.size == 1 && dialect.name == "duckdb") output = lowered.duckdbExtensionResult() ?: lowered.duckdbExternalResourceResult() ?: lowered.duckdbExplainResult()
             }
             references += evaluator.references
             diagnostics += evaluator.diagnostics

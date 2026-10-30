@@ -8,6 +8,7 @@ import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
+import dev.brikk.house.sql.dialects.explainProblems
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -399,6 +400,8 @@ open class Generator(
             unexecutable("$targetName has no verified DuckDB extension/repository management translation")
         if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExternalResourceStatement() || it is DuckdbExternalResourceSource })
             unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
+        if (dialect.name != "duckdb" && expr.findAll<DuckdbExplain>().any())
+            unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
         if (expr.findAll<SecureProperty>().any()) {
             // Among the implemented targets only DuckDB has a verified secure-view
             // contract. An origin-less AST is not permission to emit an unsafe DDL.
@@ -4837,6 +4840,15 @@ open class Generator(
             }
             else -> error("Not an external resource node")
         }
+    }
+
+    internal fun duckdbExplainSql(expression: DuckdbExplain): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
+        expression.explainProblems().forEach(::unexecutable)
+        val analyze = if (expression.args["analyze"] == true) " ANALYZE" else ""
+        val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
+        val child = sql(expression, "this")
+        return "EXPLAIN$analyze$options $child"
     }
 
     // sqlglot: Generator.summarize_sql
