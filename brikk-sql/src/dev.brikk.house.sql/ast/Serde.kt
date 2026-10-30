@@ -138,6 +138,7 @@ object ExpressionRegistry {
         registerNativeDorisNodes(m)
         registerNativeDuckdbNodes(m)
         registerNativeClickhouseNodes(m)
+        registerNativeSpiceNodes(m)
     }
 
     fun newInstance(simpleName: String): Expression =

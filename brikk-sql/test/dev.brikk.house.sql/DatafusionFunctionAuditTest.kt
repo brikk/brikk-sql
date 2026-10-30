@@ -41,6 +41,9 @@ class DatafusionFunctionAuditTest {
             .walk().filterIsInstance<AggFunc>().count() == 3)
         assertTrue(parseOne("SELECT \"sum\"(x) FROM t", "datafusion").walk().any { it is AnonymousAggFunc })
         assertEquals("SELECT \"sum\"(x) FROM t", parseOne("SELECT \"sum\"(x) FROM t", "datafusion").sql("datafusion"))
+        val comments = parseOne("SELECT abs /* function-comment */ (x /* argument-comment */)", "datafusion").sql("datafusion")
+        assertEquals(1, Regex("function-comment").findAll(comments).count())
+        assertEquals(1, Regex("argument-comment").findAll(comments).count())
     }
 
     @Test

@@ -21,6 +21,7 @@ import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.fromArgList
+import dev.brikk.house.sql.parser.updatePositions
 import dev.brikk.house.sql.metadata.FunctionCatalog
 import dev.brikk.house.sql.metadata.FunctionKind
 
@@ -120,7 +121,7 @@ open class DatafusionParser(
             if (prevToken.tokenType == TokenType.COMMA) raiseError("Expected function argument after comma")
             if (values.any { it is Order && it.thisArg == null }) raiseError("ORDER BY must follow a function argument, not a comma")
             val result = if (anonymous || qualified || quoted) {
-                val name: Any = if (quoted) expression(Identifier(args("this" to sourceName, "quoted" to true)), token) else sourceName
+                val name: Any = if (quoted) Identifier(args("this" to sourceName, "quoted" to true)).updatePositions(token) else sourceName
                 val arguments = args("this" to name, "expressions" to values)
                 val quotedAggregate = quoted && !qualified && nativeCatalog.functions.any {
                     it.kind == FunctionKind.AGGREGATE && (it.name == sourceName || sourceName in it.aliases)
@@ -129,7 +130,8 @@ open class DatafusionParser(
             } else nativeFunction(sourceName, values)
             result.meta["datafusion_native_call"] = true
             if (!quoted && !qualified && upper in PRESERVED_FUNCTION_NAMES) result.meta["datafusion_function_name"] = sourceName
-            expression(result, token)
+            validateExpression(result).updatePositions(token)
+            result.addComments(token.comments)
             matchRParen(result)
             return parseWindow(result)
         }

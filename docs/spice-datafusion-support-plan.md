@@ -6,7 +6,7 @@
 - [x] DFS-002: Build version-pinned parser and execution reference adapters.
 - [x] DFS-003: Capture and generate separate DataFusion and Spice metadata catalogs.
 - [x] DFS-004: Correct DataFusion parsing and SQL generation, starting with silent rewrites.
-- [ ] DFS-005: Add the Spice dialect and its product-specific SQL behavior.
+- [x] DFS-005: Add the Spice dialect and its product-specific SQL behavior.
 - [ ] DFS-006: Complete types, parameters, scope, output shapes, lineage, and semantic limits.
 - [ ] DFS-007: Add IDE dialect identities, parsing, highlighting, and source-position support.
 - [ ] DFS-008: Connect IDE completion, documentation, resolution, and inspections.

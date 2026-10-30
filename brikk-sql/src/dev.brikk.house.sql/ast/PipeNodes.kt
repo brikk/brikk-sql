@@ -299,4 +299,5 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "ClickhouseExplain", "ClickhouseHypotheticalIndex", "ClickhouseHandler", "ClickhouseCreateToken",
     "ClickhouseGrant", "ClickhouseUserAuthentication", "ClickhouseAuthenticationMethod", "ClickhouseCredential",
     "ClickhouseAlterAction", "ClickhouseProjection", "ClickhouseSystem", "ClickhouseRefresh",
+    "SpiceExplain", "SpicePrepare", "SpiceExecute", "SpiceShow", "SpiceReset",
 )

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "fixtures_sha256": "af6958313d16030fda00944f7e800e4fe10f92969fcd1b46b395564ae2e7770e",
+  "brikk_observations_sha256": "06dc668ecbe5a2809a07925c2d335aeda1d134e78646a6e6f74f7e6f56f3b351",
+  "profiles": {
+    "datafusion-55.2.0": {
+      "binary_sha256": "fd17acc93e434f1439919d13a36cf92c146b368aa33146361560ef4e7e7170a5",
+      "cases": [
+        {
+          "id": "DFS-copy",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "DFS-copy/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "CopyTo(CopyToStatement { source: Query(Query { with: None, body: Select(Select { select_token: TokenWithSpan { token: Word(Word { value: \"SELECT\", quote_style: None, keyword: SELECT }), span: Span(Location(1,7)..Location(1,13)) }, optimizer_hints: [], distinct: None, select_modifiers: None, top: None, top_before_distinct: false, projection: [UnnamedExpr(Value(ValueWithSpan { value: Number(\"1\", false), span: Span(Location(1,14)..Location(1,15)) }))], exclude: None, into: None, from: [], lateral_views: [], prewhere: None, selection: None, connect_by: [], group_by: Expressions([], []), cluster_by: [], distribute_by: [], sort_by: [], having: None, named_window: [], qualify: None, window_before_qualify: false, value_table_mode: None, flavor: Standard }), order_by: None, limit_clause: None, fetch: None, locks: [], for_clause: None, settings: None, format_clause: None, pipe_operators: [] }), target: \"output.csv\", partitioned_by: [], stored_as: Some(\"CSV\"), options: [] })",
+                  "kind": "CopyTo",
+                  "sql": "COPY (SELECT 1) TO output.csv STORED AS CSV"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "DFS-copy/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "CopyTo(CopyToStatement { source: Query(Query { with: None, body: Select(Select { select_token: TokenWithSpan { token: Word(Word { value: \"SELECT\", quote_style: None, keyword: SELECT }), span: Span(Location(1,7)..Location(1,13)) }, optimizer_hints: [], distinct: None, select_modifiers: None, top: None, top_before_distinct: false, projection: [UnnamedExpr(Value(ValueWithSpan { value: Number(\"1\", false), span: Span(Location(1,14)..Location(1,15)) }))], exclude: None, into: None, from: [], lateral_views: [], prewhere: None, selection: None, connect_by: [], group_by: Expressions([], []), cluster_by: [], distribute_by: [], sort_by: [], having: None, named_window: [], qualify: None, window_before_qualify: false, value_table_mode: None, flavor: Standard }), order_by: None, limit_clause: None, fetch: None, locks: [], for_clause: None, settings: None, format_clause: None, pipe_operators: [] }), target: \"output.csv\", partitioned_by: [], stored_as: Some(\"CSV\"), options: [] })",
+                  "kind": "CopyTo",
+                  "sql": "COPY (SELECT 1) TO output.csv STORED AS CSV"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "DFS-external-table",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "DFS-external-table/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "CreateExternalTable(CreateExternalTable { name: ObjectName([Identifier(Ident { value: \"t\", quote_style: None, span: Span(Location(1,23)..Location(1,24)) })]), columns: [ColumnDef { name: Ident { value: \"id\", quote_style: None, span: Span(Location(1,26)..Location(1,28)) }, data_type: Int(None), options: [] }], file_type: \"CSV\", locations: [\"input.csv\"], table_partition_cols: [], order_exprs: [], if_not_exists: false, or_replace: false, temporary: false, unbounded: false, options: [], constraints: [] })",
+                  "kind": "CreateExternalTable",
+                  "sql": "CREATE EXTERNAL TABLE t STORED AS CSV LOCATION 'input.csv'"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "DFS-external-table/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "CreateExternalTable(CreateExternalTable { name: ObjectName([Identifier(Ident { value: \"t\", quote_style: None, span: Span(Location(1,23)..Location(1,24)) })]), columns: [ColumnDef { name: Ident { value: \"id\", quote_style: None, span: Span(Location(1,26)..Location(1,28)) }, data_type: Int(None), options: [] }], file_type: \"CSV\", locations: [\"input.csv\"], table_partition_cols: [], order_exprs: [], if_not_exists: false, or_replace: false, temporary: false, unbounded: false, options: [], constraints: [] })",
+                  "kind": "CreateExternalTable",
+                  "sql": "CREATE EXTERNAL TABLE t STORED AS CSV LOCATION 'input.csv'"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -6,6 +6,8 @@ import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.GeneratorTables
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.String
@@ -78,6 +80,19 @@ open class DatafusionGenerator(
 
     // brikk: COPY ... TO (no INTO keyword) — polyglot copy_has_into_keyword=false
     override val copyHasIntoKeyword: Boolean get() = false
+    override val copyParamsAreWrapped: Boolean get() = false
+    override val dialectCopyParamsAreCsv: Boolean get() = false
+    override val propertiesLocation get() = PROPERTY_LOCATIONS
+
+    private fun nativeFileFormat(value: kotlin.Any?): String {
+        val name = (value as? Expression)?.name.orEmpty()
+        if (!Regex("[A-Za-z][A-Za-z0-9_]*").matches(name)) throw UnsupportedError("Expected a native file format name")
+        return name
+    }
+
+    override fun copyparameterSql(expression: CopyParameter): String =
+        if (expression.name.equals("STORED", true)) "STORED AS ${nativeFileFormat(expression.expressionArg)}"
+        else super.copyparameterSql(expression)
 
     // brikk: DataFusion has no LIKE ANY/ALL quantifiers — polyglot supports_like_quantifiers=false
     override val supportsLikeQuantifiers: Boolean get() = false
@@ -218,6 +233,8 @@ open class DatafusionGenerator(
     }
 
     companion object {
+        private val PROPERTY_LOCATIONS = GeneratorTables.PROPERTIES_LOCATION +
+            (FileFormatProperty::class to GeneratorTables.PropLocation.POST_SCHEMA)
         // brikk: dispatch-map overlay (dedicated AST nodes that need renaming). Names
         // that parse to Anonymous are handled in [anonymousSql] instead.
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
@@ -239,6 +256,7 @@ open class DatafusionGenerator(
             reg(RegexpILike::class) { e -> binary(e as Binary, "~*") }
             reg(NEQ::class) { e -> binary(e as Binary, e.meta["operator"] as? String ?: "!=") }
             reg(ArrayNode::class) { e -> "ARRAY[${expressions(e)}]" }
+            reg(FileFormatProperty::class) { e -> "STORED AS ${(this as DatafusionGenerator).nativeFileFormat(e.thisArg)}" }
             reg(ArrayContainsAll::class) { e -> binary(e as Binary, "@>") }
             reg(ArrayContainedBy::class) { e -> binary(e as Binary, "<@") }
             reg(ToChar::class) { e -> func("to_char", e.thisArg, e.args["format"], e.args["nlsparam"]) }

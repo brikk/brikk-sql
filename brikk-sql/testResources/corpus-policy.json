@@ -1,6 +1,6 @@
 {
   "sqlglot_dialects": ["", "mysql", "doris", "starrocks", "presto", "trino", "duckdb", "postgres", "clickhouse", "hive", "spark2", "spark", "bigquery"],
-  "native_dialects": ["datafusion"],
+  "native_dialects": ["datafusion", "spice"],
   "excluded_dialects": ["athena", "databricks", "dremio", "drill", "druid", "dune", "exasol", "fabric", "materialize", "oracle", "prql", "redshift", "risingwave", "singlestore", "snowflake", "solr", "sqlite", "tableau", "teradata", "tsql"],
   "gated_dialect_fixtures": ["bigquery", "clickhouse", "doris", "duckdb", "hive", "mysql", "postgres", "presto", "spark", "starrocks", "trino"],
   "named_identity_deferral": {

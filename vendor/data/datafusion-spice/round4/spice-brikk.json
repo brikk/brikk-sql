@@ -1,0 +1,2587 @@
+{
+    "schema_version": 1,
+    "dialect": "spice",
+    "evidence": "local parser and generator observations only",
+    "cases": [
+        {
+            "id": "DFS-regex-flags",
+            "sql": "SELECT regexp_like('ABC', 'abc', 'i') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "RegexpLike",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=RegexpLike(this=Literal(this=ABC, is_string=true), expression=Literal(this=abc, is_string=true), flag=Literal(this=i, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regexp_like('ABC', 'abc', 'i') AS v"
+        },
+        {
+            "id": "DFS-like-order",
+            "sql": "SELECT like('spice.ai', 'spice%') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=like, expressions=[Literal(this=spice.ai, is_string=true), Literal(this=spice%, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT like('spice.ai', 'spice%') AS v"
+        },
+        {
+            "id": "DFS-map-variadic",
+            "sql": "SELECT map('a', 1, 'b', 2) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=map, expressions=[Literal(this=a, is_string=true), Literal(this=1, is_string=false), Literal(this=b, is_string=true), Literal(this=2, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT map('a', 1, 'b', 2) AS v"
+        },
+        {
+            "id": "DFS-to-char-format",
+            "sql": "SELECT to_char('2023-03-01'::date, '%d-%m-%Y') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ToChar",
+                        "Identifier",
+                        "Cast",
+                        "Literal",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ToChar(this=Cast(this=Literal(this=2023-03-01, is_string=true), to=DataType(this=DATE, nested=false)), format=Literal(this=%d-%m-%Y, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT to_char('2023-03-01'::DATE, '%d-%m-%Y') AS v"
+        },
+        {
+            "id": "DFS-array-sort-nulls",
+            "sql": "SELECT array_sort([3, NULL, 1, 2], 'DESC', 'NULLS LAST') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Array",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Null",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=array_sort, expressions=[Array(expressions=[Literal(this=3, is_string=false), Null(), Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Literal(this=DESC, is_string=true), Literal(this=NULLS LAST, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT array_sort(ARRAY[3, NULL, 1, 2], 'DESC', 'NULLS LAST') AS v"
+        },
+        {
+            "id": "DFS-date-bin-origin",
+            "sql": "SELECT date_bin(INTERVAL '1 day', TIMESTAMP '2023-01-02 02:00:00', '2023-01-01T03:00:00') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "DateBin",
+                        "Identifier",
+                        "Interval",
+                        "Cast",
+                        "Literal",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=DateBin(this=Interval(this=Literal(this=1, is_string=true), unit=Var(this=DAY)), expression=Cast(this=Literal(this=2023-01-02 02:00:00, is_string=true), to=DataType(this=TIMESTAMP, nested=false)), origin=Literal(this=2023-01-01T03:00:00, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT date_bin(INTERVAL '1' DAY, CAST('2023-01-02 02:00:00' AS TIMESTAMP), '2023-01-01T03:00:00') AS v"
+        },
+        {
+            "id": "DFS-date-add",
+            "sql": "SELECT date_add(DATE '2024-02-27', 3) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Literal",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=date_add, expressions=[Cast(this=Literal(this=2024-02-27, is_string=true), to=DataType(this=DATE, nested=false)), Literal(this=3, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT date_add(CAST('2024-02-27' AS DATE), 3) AS v"
+        },
+        {
+            "id": "DFS-date-add-int32",
+            "sql": "SELECT date_add(DATE '2024-02-27', CAST(3 AS INT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Literal",
+                        "DataType",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=date_add, expressions=[Cast(this=Literal(this=2024-02-27, is_string=true), to=DataType(this=DATE, nested=false)), Cast(this=Literal(this=3, is_string=false), to=DataType(this=INT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT date_add(CAST('2024-02-27' AS DATE), CAST(3 AS INT)) AS v"
+        },
+        {
+            "id": "DFS-string-agg-order",
+            "sql": "SELECT string_agg(name, ', ' ORDER BY name DESC) AS v FROM (VALUES ('Ada'), ('Bob')) AS t(name)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Values",
+                        "Column",
+                        "Order",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Identifier",
+                        "Literal",
+                        "Ordered",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=string_agg, expressions=[Column(this=Identifier(this=name, quoted=false)), Order(this=Literal(this=, , is_string=true), expressions=[Ordered(this=Column(this=Identifier(this=name, quoted=false)), desc=true, nulls_first=true)])]), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=Ada, is_string=true)]), Tuple(expressions=[Literal(this=Bob, is_string=true)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=name, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT string_agg(name, ', ' ORDER BY name DESC) AS v FROM (VALUES ('Ada'), ('Bob')) AS t(name)"
+        },
+        {
+            "id": "DFS-json-arrow",
+            "sql": "SELECT '{\"user\":{\"age\":30}}' -> 'user' ->> 'age' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "JSONExtractScalar",
+                        "Identifier",
+                        "JSONExtract",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=JSONExtractScalar(this=JSONExtract(this=Literal(this={\"user\":{\"age\":30}}, is_string=true), expression=Literal(this=user, is_string=true)), expression=Literal(this=age, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT '{\"user\":{\"age\":30}}' -> 'user' ->> 'age' AS v"
+        },
+        {
+            "id": "DFS-truncate-partition",
+            "sql": "SELECT truncate(10, 101) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=truncate, expressions=[Literal(this=10, is_string=false), Literal(this=101, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT truncate(10, 101) AS v"
+        },
+        {
+            "id": "DFS-array-agg-comma",
+            "sql": "SELECT array_agg(c, ORDER BY d) AS v FROM (VALUES (1, 2), (2, 1)) AS t(c, d)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "ORDER BY must follow a function argument, not a comma. Line 1, Col: 31.\n  SELECT array_agg(c, ORDER BY d) AS v FROM (VALUES (1, 2), (2, 1)) AS t(c, d)"
+        },
+        {
+            "id": "DFS-array-agg-control",
+            "sql": "SELECT array_agg(c ORDER BY d) AS v FROM (VALUES (1, 2), (2, 1)) AS t(c, d)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "ArrayAgg",
+                        "Identifier",
+                        "Values",
+                        "Order",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Ordered",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ArrayAgg(this=Order(this=Column(this=Identifier(this=c, quoted=false)), expressions=[Ordered(this=Column(this=Identifier(this=d, quoted=false)), nulls_first=false)])), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false), Literal(this=1, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=c, quoted=false), Identifier(this=d, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT array_agg(c ORDER BY d) AS v FROM (VALUES (1, 2), (2, 1)) AS t(c, d)"
+        },
+        {
+            "id": "DFS-xor-hash",
+            "sql": "SELECT 5 # 3 AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "BitwiseXor",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=BitwiseXor(this=Literal(this=5, is_string=false), expression=Literal(this=3, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT 5 # 3 AS v"
+        },
+        {
+            "id": "DFS-xor-caret",
+            "sql": "SELECT 5 ^ 3 AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Literal(this=5, is_string=false), expression=Literal(this=3, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT 5 ^ 3 AS v"
+        },
+        {
+            "id": "DFS-array-contains-op",
+            "sql": "SELECT make_array(1,2,3) @> make_array(1,3) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ArrayContainsAll",
+                        "Identifier",
+                        "Anonymous",
+                        "Anonymous",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ArrayContainsAll(this=Anonymous(this=make_array, expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)]), expression=Anonymous(this=make_array, expressions=[Literal(this=1, is_string=false), Literal(this=3, is_string=false)])), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT make_array(1, 2, 3) @> make_array(1, 3) AS v"
+        },
+        {
+            "id": "DFS-array-contained-op",
+            "sql": "SELECT make_array(1,3) <@ make_array(1,2,3) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ArrayContainedBy",
+                        "Identifier",
+                        "Anonymous",
+                        "Anonymous",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ArrayContainedBy(this=Anonymous(this=make_array, expressions=[Literal(this=1, is_string=false), Literal(this=3, is_string=false)]), expression=Anonymous(this=make_array, expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)])), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT make_array(1, 3) <@ make_array(1, 2, 3) AS v"
+        },
+        {
+            "id": "DFS-escape-string",
+            "sql": "SELECT E'foo\\nbar' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=foo\nbar), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'foo\\nbar' AS v"
+        },
+        {
+            "id": "DFS-hex-literal",
+            "sql": "SELECT bitmap_count(x'0F') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "HexString"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=bitmap_count, expressions=[HexString(this=0F)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bitmap_count(X'0F') AS v"
+        },
+        {
+            "id": "DFS-json-key-exists",
+            "sql": "SELECT '{\"color\":\"black\"}' ? 'color' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "JSONBContainsTopKey",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=JSONBContainsTopKey(this=Literal(this={\"color\":\"black\"}, is_string=true), expression=Literal(this=color, is_string=true)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT '{\"color\":\"black\"}' ? 'color' AS v"
+        },
+        {
+            "id": "DFS-json-named",
+            "sql": "SELECT json_get_int('{\"a\":{\"b\":7}}', 'a', 'b') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=json_get_int, expressions=[Literal(this={\"a\":{\"b\":7}}, is_string=true), Literal(this=a, is_string=true), Literal(this=b, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT json_get_int('{\"a\":{\"b\":7}}', 'a', 'b') AS v"
+        },
+        {
+            "id": "DFS-vector-two-args",
+            "sql": "SELECT * FROM vector_search(documents, 'hello')",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Table",
+                        "Anonymous",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=vector_search, expressions=[Column(this=Identifier(this=documents, quoted=false)), Literal(this=hello, is_string=true)]))))"
+                }
+            ],
+            "generated": "SELECT * FROM vector_search(documents, 'hello')"
+        },
+        {
+            "id": "DFS-search-nested",
+            "sql": "SELECT * FROM rrf(vector_search(documents, 'hello'), text_search(documents, 'hello', body), join_key => 'id')",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Table",
+                        "Anonymous",
+                        "Anonymous",
+                        "Anonymous",
+                        "Kwarg",
+                        "Column",
+                        "Literal",
+                        "Column",
+                        "Literal",
+                        "Column",
+                        "Var",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=rrf, expressions=[Anonymous(this=vector_search, expressions=[Column(this=Identifier(this=documents, quoted=false)), Literal(this=hello, is_string=true)]), Anonymous(this=text_search, expressions=[Column(this=Identifier(this=documents, quoted=false)), Literal(this=hello, is_string=true), Column(this=Identifier(this=body, quoted=false))]), Kwarg(this=Var(this=join_key), expression=Literal(this=id, is_string=true))]))))"
+                }
+            ],
+            "generated": "SELECT * FROM rrf(vector_search(documents, 'hello'), text_search(documents, 'hello', body), join_key => 'id')"
+        },
+        {
+            "id": "DFS-search-options",
+            "sql": "SELECT * FROM rerank(vector_search(documents, 'hello', limit => 50), document => 'body', model => 'local', limit => 10)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Table",
+                        "Anonymous",
+                        "Anonymous",
+                        "Kwarg",
+                        "Kwarg",
+                        "Kwarg",
+                        "Column",
+                        "Literal",
+                        "Kwarg",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Identifier",
+                        "Var",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=rerank, expressions=[Anonymous(this=vector_search, expressions=[Column(this=Identifier(this=documents, quoted=false)), Literal(this=hello, is_string=true), Kwarg(this=Var(this=limit), expression=Literal(this=50, is_string=false))]), Kwarg(this=Var(this=document), expression=Literal(this=body, is_string=true)), Kwarg(this=Var(this=model), expression=Literal(this=local, is_string=true)), Kwarg(this=Var(this=limit), expression=Literal(this=10, is_string=false))]))))"
+                }
+            ],
+            "generated": "SELECT * FROM rerank(vector_search(documents, 'hello', limit => 50), document => 'body', model => 'local', limit => 10)"
+        },
+        {
+            "id": "DFS-ai-named",
+            "sql": "SELECT ai_if(body, 'refund', model => 'local', on_error => 'null') FROM documents",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Anonymous",
+                        "From",
+                        "Column",
+                        "Literal",
+                        "Kwarg",
+                        "Kwarg",
+                        "Table",
+                        "Identifier",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Anonymous(this=ai_if, expressions=[Column(this=Identifier(this=body, quoted=false)), Literal(this=refund, is_string=true), Kwarg(this=Var(this=model), expression=Literal(this=local, is_string=true)), Kwarg(this=Var(this=on_error), expression=Literal(this=null, is_string=true))])], from_=From(this=Table(this=Identifier(this=documents, quoted=false))))"
+                }
+            ],
+            "generated": "SELECT ai_if(body, 'refund', model => 'local', on_error => 'null') FROM documents"
+        },
+        {
+            "id": "DFS-bind-dollar",
+            "sql": "SELECT $1, $2 WHERE $1 > $2",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Parameter",
+                        "Parameter",
+                        "Where",
+                        "Literal",
+                        "Literal",
+                        "GT",
+                        "Parameter",
+                        "Parameter",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Parameter(this=Literal(this=1, is_string=false)), Parameter(this=Literal(this=2, is_string=false))], where=Where(this=GT(this=Parameter(this=Literal(this=1, is_string=false)), expression=Parameter(this=Literal(this=2, is_string=false)))))"
+                }
+            ],
+            "generated": "SELECT $1, $2 WHERE $1 > $2"
+        },
+        {
+            "id": "DFS-bind-question",
+            "sql": "SELECT ? WHERE ? > 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Placeholder",
+                        "Where",
+                        "GT",
+                        "Placeholder",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Placeholder()], where=Where(this=GT(this=Placeholder(), expression=Literal(this=1, is_string=false))))"
+                }
+            ],
+            "generated": "SELECT ? WHERE ? > 1"
+        },
+        {
+            "id": "DFS-show-functions",
+            "sql": "SHOW FUNCTIONS LIKE '%json%'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceShow",
+                    "nodes": [
+                        "SpiceShow",
+                        "Literal"
+                    ],
+                    "ast": "SpiceShow(this=FUNCTIONS, like=Literal(this=%json%, is_string=true), full=false)"
+                }
+            ],
+            "generated": "SHOW FUNCTIONS LIKE '%json%'"
+        },
+        {
+            "id": "DFS-show-tables",
+            "sql": "SHOW TABLES",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceShow",
+                    "nodes": [
+                        "SpiceShow"
+                    ],
+                    "ast": "SpiceShow(this=TABLES, full=false)"
+                }
+            ],
+            "generated": "SHOW TABLES"
+        },
+        {
+            "id": "DFS-show-columns",
+            "sql": "SHOW COLUMNS FROM sample",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceShow",
+                    "nodes": [
+                        "SpiceShow",
+                        "Table",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceShow(this=COLUMNS, target=Table(this=Identifier(this=sample, quoted=false)), full=false)"
+                }
+            ],
+            "generated": "SHOW COLUMNS FROM sample"
+        },
+        {
+            "id": "DFS-show-all",
+            "sql": "SHOW ALL",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceShow",
+                    "nodes": [
+                        "SpiceShow"
+                    ],
+                    "ast": "SpiceShow(this=ALL, full=false)"
+                }
+            ],
+            "generated": "SHOW ALL"
+        },
+        {
+            "id": "DFS-explain-options",
+            "sql": "EXPLAIN (ANALYZE, METRICS 'rows,timing', LEVEL dev, FORMAT pgjson) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=METRICS), expression=Literal(this=rows,timing, is_string=true)), PropertyEQ(this=Var(this=LEVEL), expression=Identifier(this=dev, quoted=false)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=pgjson, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE, METRICS 'rows,timing', LEVEL dev, FORMAT pgjson) SELECT 1"
+        },
+        {
+            "id": "DFS-explain-analyze",
+            "sql": "EXPLAIN ANALYZE FORMAT pgjson SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=pgjson, quoted=false))], list=false)"
+                }
+            ],
+            "generated": "EXPLAIN ANALYZE FORMAT pgjson SELECT 1"
+        },
+        {
+            "id": "DFS-explain-plain",
+            "sql": "EXPLAIN SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "SpiceExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN SELECT 1"
+        },
+        {
+            "id": "DFS-prepare",
+            "sql": "PREPARE p(INT) AS SELECT $1 + 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpicePrepare",
+                    "nodes": [
+                        "SpicePrepare",
+                        "Identifier",
+                        "DataType",
+                        "Select",
+                        "Add",
+                        "Parameter",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "SpicePrepare(this=Identifier(this=p, quoted=false), expressions=[DataType(this=INT, nested=false)], expression=Select(expressions=[Add(this=Parameter(this=Literal(this=1, is_string=false)), expression=Literal(this=1, is_string=false))]), typed=true)"
+                }
+            ],
+            "generated": "PREPARE p(INT) AS SELECT $1 + 1"
+        },
+        {
+            "id": "DFS-execute",
+            "sql": "EXECUTE p(20)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExecute",
+                    "nodes": [
+                        "SpiceExecute",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "SpiceExecute(this=Identifier(this=p, quoted=false), expressions=[Literal(this=20, is_string=false)], parenthesized=true)"
+                }
+            ],
+            "generated": "EXECUTE p(20)"
+        },
+        {
+            "id": "DFS-create",
+            "sql": "CREATE TABLE t (id INT, name VARCHAR)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Table",
+                        "ColumnDef",
+                        "ColumnDef",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Identifier",
+                        "DataType"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false)), ColumnDef(this=Identifier(this=name, quoted=false), kind=DataType(this=VARCHAR, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t (id INT, name VARCHAR)"
+        },
+        {
+            "id": "DFS-ctas",
+            "sql": "CREATE TABLE t AS SELECT 1 AS id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Table",
+                        "Select",
+                        "Identifier",
+                        "Alias",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, replace=false, refresh=false, unique=false, expression=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=id, quoted=false))]), exists=false, concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t AS SELECT 1 AS id"
+        },
+        {
+            "id": "DFS-cluster-by",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY (id)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ClusterProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Column(this=Identifier(this=id, quoted=false))])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t (id INT) CLUSTER BY (id)"
+        },
+        {
+            "id": "DFS-cluster-no-generic-leak",
+            "sql": "CREATE TABLE `t` (id INT) CLUSTER BY (id)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Backtick identifiers are not supported by Spice's PostgreSQL parser profile. Line 1, Col: 6.\n  CREATE TABLE `t` (id INT) CLUSTER BY (id)"
+        },
+        {
+            "id": "DFS-create-view",
+            "sql": "CREATE VIEW v AS SELECT 1 AS id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Table",
+                        "Select",
+                        "Identifier",
+                        "Alias",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Table(this=Identifier(this=v, quoted=false)), kind=VIEW, replace=false, refresh=false, unique=false, expression=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=id, quoted=false))]), exists=false, concurrently=false)"
+                }
+            ],
+            "generated": "CREATE VIEW v AS SELECT 1 AS id"
+        },
+        {
+            "id": "DFS-alter-table",
+            "sql": "ALTER TABLE t ADD COLUMN value INT",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Alter",
+                    "nodes": [
+                        "Alter",
+                        "Table",
+                        "ColumnDef",
+                        "Identifier",
+                        "Identifier",
+                        "DataType"
+                    ],
+                    "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ColumnDef(this=Identifier(this=value, quoted=false), kind=DataType(this=INT, nested=false), exists=false)], only=false, not_valid=false, check=false, cascade=false, iceberg=false)"
+                }
+            ],
+            "generated": "ALTER TABLE t ADD COLUMN value INT"
+        },
+        {
+            "id": "DFS-drop-table",
+            "sql": "DROP TABLE IF EXISTS t",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Drop",
+                    "nodes": [
+                        "Drop",
+                        "Table",
+                        "Identifier"
+                    ],
+                    "ast": "Drop(exists=true, tables=[Table(this=Identifier(this=t, quoted=false))], kind=TABLE, temporary=false, materialized=false, cascade=false, restrict=false, constraints=false, purge=false, concurrently=false, sync=false, iceberg=false, force=false)"
+                }
+            ],
+            "generated": "DROP TABLE IF EXISTS t"
+        },
+        {
+            "id": "DFS-copy",
+            "sql": "COPY (SELECT 1) TO 'output.csv' STORED AS CSV",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Copy",
+                    "nodes": [
+                        "Copy",
+                        "Subquery",
+                        "Credentials",
+                        "Literal",
+                        "CopyParameter",
+                        "Select",
+                        "Var",
+                        "Var",
+                        "Literal"
+                    ],
+                    "ast": "Copy(this=Subquery(this=Select(expressions=[Literal(this=1, is_string=false)])), kind=false, credentials=Credentials(), files=[Literal(this=output.csv, is_string=true)], params=[CopyParameter(this=Var(this=STORED), expression=Var(this=CSV))])"
+                }
+            ],
+            "generated": "COPY (SELECT 1) TO 'output.csv' STORED AS CSV"
+        },
+        {
+            "id": "DFS-external-table",
+            "sql": "CREATE EXTERNAL TABLE t (id INT) STORED AS CSV LOCATION 'input.csv'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ExternalProperty",
+                        "FileFormatProperty",
+                        "LocationProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Var",
+                        "Literal"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ExternalProperty(), FileFormatProperty(this=Var(this=CSV), hive_format=true), LocationProperty(this=Literal(this=input.csv, is_string=true))]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE EXTERNAL TABLE t (id INT) STORED AS CSV LOCATION 'input.csv'"
+        },
+        {
+            "id": "DFS-insert",
+            "sql": "INSERT INTO t VALUES (1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Insert",
+                    "nodes": [
+                        "Insert",
+                        "Table",
+                        "Values",
+                        "Identifier",
+                        "Tuple",
+                        "Literal"
+                    ],
+                    "ast": "Insert(is_function=false, this=Table(this=Identifier(this=t, quoted=false)), stored=false, by_name=false, exists=false, partition=false, settings=false, default=false, expression=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)])]), overwrite=false, ignore=false, source=false)"
+                }
+            ],
+            "generated": "INSERT INTO t VALUES (1)"
+        },
+        {
+            "id": "DFS-update",
+            "sql": "UPDATE t SET id = 2 WHERE id = 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Update",
+                    "nodes": [
+                        "Update",
+                        "Table",
+                        "EQ",
+                        "Where",
+                        "Identifier",
+                        "Column",
+                        "Literal",
+                        "EQ",
+                        "Identifier",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Update(this=Table(this=Identifier(this=t, quoted=false)), expressions=[EQ(this=Column(this=Identifier(this=id, quoted=false)), expression=Literal(this=2, is_string=false))], where=Where(this=EQ(this=Column(this=Identifier(this=id, quoted=false)), expression=Literal(this=1, is_string=false))))"
+                }
+            ],
+            "generated": "UPDATE t SET id = 2 WHERE id = 1"
+        },
+        {
+            "id": "DFS-delete",
+            "sql": "DELETE FROM t WHERE id = 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Delete",
+                    "nodes": [
+                        "Delete",
+                        "Table",
+                        "Where",
+                        "Identifier",
+                        "EQ",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Delete(this=Table(this=Identifier(this=t, quoted=false)), using=false, cluster=false, where=Where(this=EQ(this=Column(this=Identifier(this=id, quoted=false)), expression=Literal(this=1, is_string=false))))"
+                }
+            ],
+            "generated": "DELETE FROM t WHERE id = 1"
+        },
+        {
+            "id": "DFS-merge",
+            "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE SET id = s.id WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Merge",
+                    "nodes": [
+                        "Merge",
+                        "Table",
+                        "Table",
+                        "EQ",
+                        "Whens",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Column",
+                        "When",
+                        "When",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Update",
+                        "Insert",
+                        "EQ",
+                        "Tuple",
+                        "Tuple",
+                        "Column",
+                        "Column",
+                        "Column",
+                        "Column",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Merge(this=Table(this=Identifier(this=t, quoted=false)), using=Table(this=Identifier(this=s, quoted=false)), on=EQ(this=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=t, quoted=false)), expression=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=s, quoted=false))), using_cond=false, whens=Whens(expressions=[When(matched=true, source=false, then=Update(expressions=[EQ(this=Column(this=Identifier(this=id, quoted=false)), expression=Column(this=Identifier(this=id, quoted=false), table=Identifier(this=s, quoted=false)))])), When(matched=false, source=false, then=Insert(this=Tuple(expressions=[Column(this=Identifier(this=id, quoted=false))]), expression=Tuple(expressions=[Column(this=Identifier(this=id, quoted=false), table=Identifier(this=s, quoted=false))])))]))"
+                }
+            ],
+            "generated": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE SET id = s.id WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id)"
+        },
+        {
+            "id": "DFS-set",
+            "sql": "SET datafusion.execution.batch_size = 1024",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Set",
+                    "nodes": [
+                        "Set",
+                        "SetItem",
+                        "EQ",
+                        "Column",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Set(expressions=[SetItem(this=EQ(this=Column(this=Identifier(this=batch_size, quoted=false), table=Identifier(this=execution, quoted=false), db=Identifier(this=datafusion, quoted=false)), expression=Literal(this=1024, is_string=false)))], unset=false, tag=false)"
+                }
+            ],
+            "generated": "SET datafusion.execution.batch_size = 1024"
+        },
+        {
+            "id": "DFS-reset",
+            "sql": "RESET datafusion.execution.batch_size",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceReset",
+                    "nodes": [
+                        "SpiceReset",
+                        "Dot",
+                        "Dot",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceReset(this=Dot(this=Dot(this=Identifier(this=datafusion, quoted=false), expression=Identifier(this=execution, quoted=false)), expression=Identifier(this=batch_size, quoted=false)))"
+                }
+            ],
+            "generated": "RESET datafusion.execution.batch_size"
+        },
+        {
+            "id": "DFS-use",
+            "sql": "USE spice.public",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Use",
+                    "nodes": [
+                        "Use",
+                        "Table",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Use(this=Table(this=Identifier(this=public, quoted=false), db=Identifier(this=spice, quoted=false)))"
+                }
+            ],
+            "generated": "USE spice.public"
+        },
+        {
+            "id": "DFS-qualify",
+            "sql": "SELECT id, row_number() OVER (ORDER BY id) AS n FROM (VALUES (2), (1)) AS t(id) QUALIFY n = 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Alias",
+                        "From",
+                        "Qualify",
+                        "Identifier",
+                        "Window",
+                        "Identifier",
+                        "Values",
+                        "EQ",
+                        "RowNumber",
+                        "Order",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Literal",
+                        "Ordered",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false)), Alias(this=Window(this=RowNumber(), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]), over=OVER), alias=Identifier(this=n, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=1, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=id, quoted=false)]))), qualify=Qualify(this=EQ(this=Column(this=Identifier(this=n, quoted=false)), expression=Literal(this=1, is_string=false))))"
+                }
+            ],
+            "generated": "SELECT id, row_number() OVER (ORDER BY id) AS n FROM (VALUES (2), (1)) AS t(id) QUALIFY n = 1"
+        },
+        {
+            "id": "DFS-star-replace",
+            "sql": "SELECT * REPLACE (upper(name) AS name) FROM (VALUES ('Ada')) AS t(name)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Wildcard modifiers are not supported by the pinned Spice PostgreSQL parser profile. Line 1, Col: 43.\n  SELECT * REPLACE (upper(name) AS name) FROM (VALUES ('Ada')) AS t(name)"
+        },
+        {
+            "id": "DFS-star-ilike",
+            "sql": "SELECT * ILIKE '%date%' FROM (SELECT DATE '2024-01-01' AS order_date, 1 AS id) AS t",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Wildcard modifiers are not supported by the pinned Spice PostgreSQL parser profile. Line 1, Col: 28.\n  SELECT * ILIKE '%date%' FROM (SELECT DATE '2024-01-01' AS order_date, 1 AS id) AS t"
+        },
+        {
+            "id": "DFS-group-order-all",
+            "sql": "SELECT a, max(b) AS b FROM (VALUES (1, 2), (1, 3)) AS t(a,b) GROUP BY ALL ORDER BY ALL",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Alias",
+                        "From",
+                        "Group",
+                        "Order",
+                        "Identifier",
+                        "Max",
+                        "Identifier",
+                        "Values",
+                        "Ordered",
+                        "Column",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=a, quoted=false)), Alias(this=Max(this=Column(this=Identifier(this=b, quoted=false))), alias=Identifier(this=b, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)]), Tuple(expressions=[Literal(this=1, is_string=false), Literal(this=3, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=a, quoted=false), Identifier(this=b, quoted=false)]))), group=Group(all=true), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=ALL, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT a, max(b) AS b FROM (VALUES (1, 2), (1, 3)) AS t(a, b) GROUP BY ALL ORDER BY ALL"
+        },
+        {
+            "id": "DFS-default-nulls-desc",
+            "sql": "SELECT v FROM (VALUES (1), (NULL), (2)) AS t(v) ORDER BY v DESC",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Values",
+                        "Ordered",
+                        "Tuple",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Literal",
+                        "Null",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Null()]), Tuple(expressions=[Literal(this=2, is_string=false)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=v, quoted=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=v, quoted=false)), desc=true, nulls_first=true)]))"
+                }
+            ],
+            "generated": "SELECT v FROM (VALUES (1), (NULL), (2)) AS t(v) ORDER BY v DESC"
+        },
+        {
+            "id": "DFS-star-except",
+            "sql": "SELECT * EXCEPT (age) FROM (SELECT 'Ada' AS name, 30 AS age) AS t",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Wildcard modifiers are not supported by the pinned Spice PostgreSQL parser profile. Line 1, Col: 26.\n  SELECT * EXCEPT (age) FROM (SELECT 'Ada' AS name, 30 AS age) AS t"
+        },
+        {
+            "id": "DFS-case-alias",
+            "sql": "SELECT MixedColumn FROM (SELECT 7 AS MixedColumn) AS MixedRows",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Subquery",
+                        "Select",
+                        "TableAlias",
+                        "Alias",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=MixedColumn, quoted=false))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=7, is_string=false), alias=Identifier(this=MixedColumn, quoted=false))]), alias=TableAlias(this=Identifier(this=MixedRows, quoted=false)))))"
+                }
+            ],
+            "generated": "SELECT MixedColumn FROM (SELECT 7 AS MixedColumn) AS MixedRows"
+        },
+        {
+            "id": "DFS-case-folding",
+            "sql": "SELECT mixedcolumn FROM (SELECT 7 AS MixedColumn) AS MixedRows",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Subquery",
+                        "Select",
+                        "TableAlias",
+                        "Alias",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=mixedcolumn, quoted=false))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=7, is_string=false), alias=Identifier(this=MixedColumn, quoted=false))]), alias=TableAlias(this=Identifier(this=MixedRows, quoted=false)))))"
+                }
+            ],
+            "generated": "SELECT mixedcolumn FROM (SELECT 7 AS MixedColumn) AS MixedRows"
+        },
+        {
+            "id": "DFS-case-quoted",
+            "sql": "SELECT \"MixedColumn\" FROM (SELECT 7 AS \"MixedColumn\") AS t",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Subquery",
+                        "Select",
+                        "TableAlias",
+                        "Alias",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=MixedColumn, quoted=true))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=7, is_string=false), alias=Identifier(this=MixedColumn, quoted=true))]), alias=TableAlias(this=Identifier(this=t, quoted=false)))))"
+                }
+            ],
+            "generated": "SELECT \"MixedColumn\" FROM (SELECT 7 AS \"MixedColumn\") AS t"
+        },
+        {
+            "id": "DFS-dotted-identifier",
+            "sql": "SELECT \"a.b\".id FROM (SELECT 9 AS id) AS \"a.b\"",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Identifier",
+                        "Subquery",
+                        "Select",
+                        "TableAlias",
+                        "Alias",
+                        "Identifier",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false), table=Identifier(this=a.b, quoted=true))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=9, is_string=false), alias=Identifier(this=id, quoted=false))]), alias=TableAlias(this=Identifier(this=a.b, quoted=true)))))"
+                }
+            ],
+            "generated": "SELECT \"a.b\".id FROM (SELECT 9 AS id) AS \"a.b\""
+        },
+        {
+            "id": "DFS-catalog-qualified",
+            "sql": "SELECT id FROM spice.public.sample ORDER BY id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Table",
+                        "Ordered",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false))], from_=From(this=Table(this=Identifier(this=sample, quoted=false), db=Identifier(this=public, quoted=false), catalog=Identifier(this=spice, quoted=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT id FROM spice.public.sample ORDER BY id"
+        },
+        {
+            "id": "DFS-schema-qualified",
+            "sql": "SELECT id FROM public.sample ORDER BY id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Table",
+                        "Ordered",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false))], from_=From(this=Table(this=Identifier(this=sample, quoted=false), db=Identifier(this=public, quoted=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT id FROM public.sample ORDER BY id"
+        },
+        {
+            "id": "DFS-dotted-table-quoted",
+            "sql": "SELECT id FROM \"a.b\"",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Table",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false))], from_=From(this=Table(this=Identifier(this=a.b, quoted=true))))"
+                }
+            ],
+            "generated": "SELECT id FROM \"a.b\""
+        },
+        {
+            "id": "DFS-dotted-table-unquoted",
+            "sql": "SELECT id FROM a.b",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Table",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false))], from_=From(this=Table(this=Identifier(this=b, quoted=false), db=Identifier(this=a, quoted=false))))"
+                }
+            ],
+            "generated": "SELECT id FROM a.b"
+        },
+        {
+            "id": "DFS-view-casing",
+            "sql": "SELECT \"MixedColumn\" FROM mixedrows",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Table",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=MixedColumn, quoted=true))], from_=From(this=Table(this=Identifier(this=mixedrows, quoted=false))))"
+                }
+            ],
+            "generated": "SELECT \"MixedColumn\" FROM mixedrows"
+        },
+        {
+            "id": "DFS-view-casing-mismatch",
+            "sql": "SELECT \"MixedColumn\" FROM MixedRows",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "From",
+                        "Identifier",
+                        "Table",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=MixedColumn, quoted=true))], from_=From(this=Table(this=Identifier(this=MixedRows, quoted=false))))"
+                }
+            ],
+            "generated": "SELECT \"MixedColumn\" FROM MixedRows"
+        },
+        {
+            "id": "DFS-arrow-type",
+            "sql": "SELECT arrow_typeof(arrow_cast(1, 'UInt64')) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Anonymous",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=arrow_typeof, expressions=[Anonymous(this=arrow_cast, expressions=[Literal(this=1, is_string=false), Literal(this=UInt64, is_string=true)])]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT arrow_typeof(arrow_cast(1, 'UInt64')) AS v"
+        },
+        {
+            "id": "DFS-script",
+            "sql": "SELECT 1; SELECT 2",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Literal(this=1, is_string=false)])"
+                },
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Literal(this=2, is_string=false)])"
+                }
+            ],
+            "generated": "SELECT 1; SELECT 2"
+        },
+        {
+            "id": "DFS-script-bad-tail",
+            "sql": "SELECT 1; SELECT (",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'this' missing for Paren. Line 1, Col: 18.\n  SELECT 1; SELECT ("
+        },
+        {
+            "id": "DFS-comment-bad-tail",
+            "sql": "SELECT 1; /* unterminated",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.TokenError",
+            "message": "Missing */ from 1:10"
+        },
+        {
+            "id": "DFS-empty-comment",
+            "sql": "-- no statement",
+            "status": "accepted",
+            "statements": [],
+            "generated": ""
+        },
+        {
+            "id": "DFS-unicode-error",
+            "sql": "SELECT '😀';\r\nSELECT é + )",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'expression' missing for Add. Line 2, Col: 12.\n  SELECT '😀';\r\nSELECT é + )"
+        },
+        {
+            "id": "DFS-dollar-string",
+            "sql": "SELECT $$a;b$$ AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "RawString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=RawString(this=a;b), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT 'a;b' AS v"
+        },
+        {
+            "id": "DFS-unknown-function",
+            "sql": "SELECT deliberately_unknown_function(1) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=deliberately_unknown_function, expressions=[Literal(this=1, is_string=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT deliberately_unknown_function(1) AS v"
+        },
+        {
+            "id": "DFS-escape-backslash",
+            "sql": "SELECT E'foo\\\\nbar' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=foo\\nbar), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'foo\\\\nbar' AS v"
+        },
+        {
+            "id": "DFS-escape-quote",
+            "sql": "SELECT E'it\\'s' AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "ByteString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=ByteString(this=it's), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT E'it''s' AS v"
+        },
+        {
+            "id": "DFS-tagged-dollar",
+            "sql": "SELECT $tag$a;b$tag$ AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "RawString",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=RawString(this=a;b), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT 'a;b' AS v"
+        },
+        {
+            "id": "DFS-string-agg-distinct",
+            "sql": "SELECT string_agg(DISTINCT name, ', ' ORDER BY name DESC) AS v FROM (VALUES ('Ada'), ('Bob'), ('Ada')) AS t(name)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Values",
+                        "Order",
+                        "Tuple",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Distinct",
+                        "Ordered",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Literal",
+                        "Column",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=string_agg, expressions=[Order(this=Distinct(expressions=[Column(this=Identifier(this=name, quoted=false)), Literal(this=, , is_string=true)]), expressions=[Ordered(this=Column(this=Identifier(this=name, quoted=false)), desc=true, nulls_first=true)])]), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=Ada, is_string=true)]), Tuple(expressions=[Literal(this=Bob, is_string=true)]), Tuple(expressions=[Literal(this=Ada, is_string=true)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=name, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT string_agg(DISTINCT name, ', ' ORDER BY name DESC) AS v FROM (VALUES ('Ada'), ('Bob'), ('Ada')) AS t(name)"
+        },
+        {
+            "id": "DFS-regex-flags-filter",
+            "sql": "SELECT count(*) AS v FROM (VALUES ('Abc'), ('xyz')) AS t(s) WHERE regexp_like(s, '^a', 'i')",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "Where",
+                        "Count",
+                        "Identifier",
+                        "Values",
+                        "RegexpLike",
+                        "Star",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Count(this=Star(), big_int=true), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=Abc, is_string=true)]), Tuple(expressions=[Literal(this=xyz, is_string=true)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=s, quoted=false)]))), where=Where(this=RegexpLike(this=Column(this=Identifier(this=s, quoted=false)), expression=Literal(this=^a, is_string=true), flag=Literal(this=i, is_string=true))))"
+                }
+            ],
+            "generated": "SELECT count(*) AS v FROM (VALUES ('Abc'), ('xyz')) AS t(s) WHERE regexp_like(s, '^a', 'i')"
+        },
+        {
+            "id": "DFS-date-bin-no-origin",
+            "sql": "SELECT date_bin(INTERVAL '1 day', TIMESTAMP '2023-01-02 02:00:00') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "DateBin",
+                        "Identifier",
+                        "Interval",
+                        "Cast",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=DateBin(this=Interval(this=Literal(this=1, is_string=true), unit=Var(this=DAY)), expression=Cast(this=Literal(this=2023-01-02 02:00:00, is_string=true), to=DataType(this=TIMESTAMP, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT date_bin(INTERVAL '1' DAY, CAST('2023-01-02 02:00:00' AS TIMESTAMP)) AS v"
+        },
+        {
+            "id": "DFS-map-arrays",
+            "sql": "SELECT map(['a', 'b'], [1, 2]) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Array",
+                        "Array",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=map, expressions=[Array(expressions=[Literal(this=a, is_string=true), Literal(this=b, is_string=true)], value_constructor=false), Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT map(ARRAY['a', 'b'], ARRAY[1, 2]) AS v"
+        },
+        {
+            "id": "DFS-array-sort-first",
+            "sql": "SELECT array_sort([3, NULL, 1], 'ASC', 'NULLS FIRST') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Array",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Null",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=array_sort, expressions=[Array(expressions=[Literal(this=3, is_string=false), Null(), Literal(this=1, is_string=false)], value_constructor=false), Literal(this=ASC, is_string=true), Literal(this=NULLS FIRST, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT array_sort(ARRAY[3, NULL, 1], 'ASC', 'NULLS FIRST') AS v"
+        },
+        {
+            "id": "DFS-string-agg-scalar-subquery",
+            "sql": "SELECT string_agg((SELECT name FROM (VALUES ('a'), ('b')) AS t(name) ORDER BY name DESC LIMIT 1), ',') AS v FROM (VALUES (1), (2)) AS u(id)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Values",
+                        "Subquery",
+                        "Literal",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Select",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Limit",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Literal",
+                        "Values",
+                        "Ordered",
+                        "Tuple",
+                        "Tuple",
+                        "TableAlias",
+                        "Column",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=string_agg, expressions=[Subquery(this=Select(expressions=[Column(this=Identifier(this=name, quoted=false))], limit=Limit(expression=Literal(this=1, is_string=false)), from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=a, is_string=true)]), Tuple(expressions=[Literal(this=b, is_string=true)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=name, quoted=false)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=name, quoted=false)), desc=true, nulls_first=true)]))), Literal(this=,, is_string=true)]), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)]), Tuple(expressions=[Literal(this=2, is_string=false)])], alias=TableAlias(this=Identifier(this=u, quoted=false), columns=[Identifier(this=id, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT string_agg((SELECT name FROM (VALUES ('a'), ('b')) AS t(name) ORDER BY name DESC LIMIT 1), ',') AS v FROM (VALUES (1), (2)) AS u(id)"
+        },
+        {
+            "id": "SPICE-pow-chain",
+            "sql": "SELECT 2 ^ 3 ^ 2 AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Pow",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Pow(this=Literal(this=2, is_string=false), expression=Literal(this=3, is_string=false)), expression=Literal(this=2, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT 2 ^ 3 ^ 2 AS v"
+        },
+        {
+            "id": "SPICE-pow-negation",
+            "sql": "SELECT -2 ^ 2 AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Neg",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Neg(this=Literal(this=2, is_string=false)), expression=Literal(this=2, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT -2 ^ 2 AS v"
+        },
+        {
+            "id": "SPICE-xor-expression",
+            "sql": "SELECT (5 # 3) + 1 AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Add",
+                        "Identifier",
+                        "Paren",
+                        "Literal",
+                        "BitwiseXor",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Add(this=Paren(this=BitwiseXor(this=Literal(this=5, is_string=false), expression=Literal(this=3, is_string=false))), expression=Literal(this=1, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT (5 # 3) + 1 AS v"
+        },
+        {
+            "id": "SPICE-json-index",
+            "sql": "SELECT '{\"a\":[10,20]}' -> 'a' ->> 0 AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "JSONExtractScalar",
+                        "Identifier",
+                        "JSONExtract",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=JSONExtractScalar(this=JSONExtract(this=Literal(this={\"a\":[10,20]}, is_string=true), expression=Literal(this=a, is_string=true)), expression=Literal(this=0, is_string=false)), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT '{\"a\":[10,20]}' -> 'a' ->> 0 AS v"
+        },
+        {
+            "id": "SPICE-json-key-expression",
+            "sql": "SELECT doc ->> key AS v FROM (VALUES ('{\"a\":7}', 'a')) t(doc,key)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "From",
+                        "JSONExtractScalar",
+                        "Identifier",
+                        "Values",
+                        "Column",
+                        "Column",
+                        "Tuple",
+                        "TableAlias",
+                        "Identifier",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=JSONExtractScalar(this=Column(this=Identifier(this=doc, quoted=false)), expression=Column(this=Identifier(this=key, quoted=false))), alias=Identifier(this=v, quoted=false))], from_=From(this=Values(expressions=[Tuple(expressions=[Literal(this={\"a\":7}, is_string=true), Literal(this=a, is_string=true)])], alias=TableAlias(this=Identifier(this=t, quoted=false), columns=[Identifier(this=doc, quoted=false), Identifier(this=key, quoted=false)]))))"
+                }
+            ],
+            "generated": "SELECT doc ->> key AS v FROM (VALUES ('{\"a\":7}', 'a')) AS t(doc, key)"
+        },
+        {
+            "id": "SPICE-json-flatten-table",
+            "sql": "SELECT path, value, type FROM flatten_json('{\"a\":1,\"b\":[2]}') ORDER BY path",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Column",
+                        "Column",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Table",
+                        "Ordered",
+                        "Anonymous",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=path, quoted=false)), Column(this=Identifier(this=value, quoted=false)), Column(this=Identifier(this=type, quoted=false))], from_=From(this=Table(this=Anonymous(this=flatten_json, expressions=[Literal(this={\"a\":1,\"b\":[2]}, is_string=true)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=path, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT path, value, type FROM flatten_json('{\"a\":1,\"b\":[2]}') ORDER BY path"
+        },
+        {
+            "id": "SPICE-json-tree-table",
+            "sql": "SELECT id, parent, fullkey, type, atom FROM json_tree('{\"a\":[1,2]}') ORDER BY id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Column",
+                        "Column",
+                        "Column",
+                        "Column",
+                        "Column",
+                        "From",
+                        "Order",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier",
+                        "Table",
+                        "Ordered",
+                        "Anonymous",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Column(this=Identifier(this=id, quoted=false)), Column(this=Identifier(this=parent, quoted=false)), Column(this=Identifier(this=fullkey, quoted=false)), Column(this=Identifier(this=type, quoted=false)), Column(this=Identifier(this=atom, quoted=false))], from_=From(this=Table(this=Anonymous(this=json_tree, expressions=[Literal(this={\"a\":[1,2]}, is_string=true)]))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=id, quoted=false)), nulls_first=false)]))"
+                }
+            ],
+            "generated": "SELECT id, parent, fullkey, type, atom FROM json_tree('{\"a\":[1,2]}') ORDER BY id"
+        },
+        {
+            "id": "SPICE-json-get-variadic",
+            "sql": "SELECT json_get_int('{\"a\":{\"b\":7}}', 'a', 'b') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=json_get_int, expressions=[Literal(this={\"a\":{\"b\":7}}, is_string=true), Literal(this=a, is_string=true), Literal(this=b, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT json_get_int('{\"a\":{\"b\":7}}', 'a', 'b') AS v"
+        },
+        {
+            "id": "SPICE-like-function",
+            "sql": "SELECT like('spice.ai', 'spice%') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=like, expressions=[Literal(this=spice.ai, is_string=true), Literal(this=spice%, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT like('spice.ai', 'spice%') AS v"
+        },
+        {
+            "id": "SPICE-truncate-string",
+            "sql": "SELECT truncate(2, 'United Kingdom') AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=truncate, expressions=[Literal(this=2, is_string=false), Literal(this=United Kingdom, is_string=true)]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT truncate(2, 'United Kingdom') AS v"
+        },
+        {
+            "id": "SPICE-search-multi-query",
+            "sql": "SELECT * FROM vector_search(docs, ['a','b'], body, limit => 5)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Table",
+                        "Anonymous",
+                        "Column",
+                        "Array",
+                        "Column",
+                        "Kwarg",
+                        "Identifier",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Var",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=vector_search, expressions=[Column(this=Identifier(this=docs, quoted=false)), Array(expressions=[Literal(this=a, is_string=true), Literal(this=b, is_string=true)], value_constructor=false), Column(this=Identifier(this=body, quoted=false)), Kwarg(this=Var(this=limit), expression=Literal(this=5, is_string=false))]))))"
+                }
+            ],
+            "generated": "SELECT * FROM vector_search(docs, ARRAY['a', 'b'], body, limit => 5)"
+        },
+        {
+            "id": "SPICE-search-weighted",
+            "sql": "SELECT * FROM rrf(vector_search(docs, 'q', rank_weight => 20), text_search(docs, 'q', body), join_key => 'id', k => 60.0)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Table",
+                        "Anonymous",
+                        "Anonymous",
+                        "Anonymous",
+                        "Kwarg",
+                        "Kwarg",
+                        "Column",
+                        "Literal",
+                        "Kwarg",
+                        "Column",
+                        "Literal",
+                        "Column",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Identifier",
+                        "Var",
+                        "Literal",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=rrf, expressions=[Anonymous(this=vector_search, expressions=[Column(this=Identifier(this=docs, quoted=false)), Literal(this=q, is_string=true), Kwarg(this=Var(this=rank_weight), expression=Literal(this=20, is_string=false))]), Anonymous(this=text_search, expressions=[Column(this=Identifier(this=docs, quoted=false)), Literal(this=q, is_string=true), Column(this=Identifier(this=body, quoted=false))]), Kwarg(this=Var(this=join_key), expression=Literal(this=id, is_string=true)), Kwarg(this=Var(this=k), expression=Literal(this=60.0, is_string=false))]))))"
+                }
+            ],
+            "generated": "SELECT * FROM rrf(vector_search(docs, 'q', rank_weight => 20), text_search(docs, 'q', body), join_key => 'id', k => 60.0)"
+        },
+        {
+            "id": "SPICE-rerank",
+            "sql": "SELECT * FROM rerank(rrf(vector_search(docs, 'q'), text_search(docs, 'q')), document => 'body', model => 'local', limit => 5)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Star",
+                        "From",
+                        "Table",
+                        "Anonymous",
+                        "Anonymous",
+                        "Kwarg",
+                        "Kwarg",
+                        "Kwarg",
+                        "Anonymous",
+                        "Anonymous",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Column",
+                        "Literal",
+                        "Column",
+                        "Literal",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Star()], from_=From(this=Table(this=Anonymous(this=rerank, expressions=[Anonymous(this=rrf, expressions=[Anonymous(this=vector_search, expressions=[Column(this=Identifier(this=docs, quoted=false)), Literal(this=q, is_string=true)]), Anonymous(this=text_search, expressions=[Column(this=Identifier(this=docs, quoted=false)), Literal(this=q, is_string=true)])]), Kwarg(this=Var(this=document), expression=Literal(this=body, is_string=true)), Kwarg(this=Var(this=model), expression=Literal(this=local, is_string=true)), Kwarg(this=Var(this=limit), expression=Literal(this=5, is_string=false))]))))"
+                }
+            ],
+            "generated": "SELECT * FROM rerank(rrf(vector_search(docs, 'q'), text_search(docs, 'q')), document => 'body', model => 'local', limit => 5)"
+        },
+        {
+            "id": "SPICE-ai-decide",
+            "sql": "SELECT ai_decide(body, '{\"urgent\":{\"type\":\"noul\",\"instructions\":\"Urgent?\"}}', model => 'local') FROM docs",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Anonymous",
+                        "From",
+                        "Column",
+                        "Literal",
+                        "Kwarg",
+                        "Table",
+                        "Identifier",
+                        "Var",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Select(expressions=[Anonymous(this=ai_decide, expressions=[Column(this=Identifier(this=body, quoted=false)), Literal(this={\"urgent\":{\"type\":\"noul\",\"instructions\":\"Urgent?\"}}, is_string=true), Kwarg(this=Var(this=model), expression=Literal(this=local, is_string=true))])], from_=From(this=Table(this=Identifier(this=docs, quoted=false))))"
+                }
+            ],
+            "generated": "SELECT ai_decide(body, '{\"urgent\":{\"type\":\"noul\",\"instructions\":\"Urgent?\"}}', model => 'local') FROM docs"
+        },
+        {
+            "id": "SPICE-embed-array",
+            "sql": "SELECT embed(['one','two'], 'local')",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Anonymous",
+                        "Array",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Anonymous(this=embed, expressions=[Array(expressions=[Literal(this=one, is_string=true), Literal(this=two, is_string=true)], value_constructor=false), Literal(this=local, is_string=true)])])"
+                }
+            ],
+            "generated": "SELECT embed(ARRAY['one', 'two'], 'local')"
+        },
+        {
+            "id": "SPICE-explain-disabled",
+            "sql": "EXPLAIN (ANALYZE OFF, FORMAT pgjson) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=OFF)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=pgjson, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE OFF, FORMAT pgjson) SELECT 1"
+        },
+        {
+            "id": "SPICE-explain-costs",
+            "sql": "EXPLAIN (COSTS TRUE, FORMAT tree) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=COSTS), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=tree, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (COSTS TRUE, FORMAT tree) SELECT 1"
+        },
+        {
+            "id": "SPICE-explain-parenthesized",
+            "sql": "EXPLAIN (SELECT 1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Subquery",
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "SpiceExplain(this=Subquery(this=Select(expressions=[Literal(this=1, is_string=false)])), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN (SELECT 1)"
+        },
+        {
+            "id": "SPICE-explain-bad-format",
+            "sql": "EXPLAIN (FORMAT json) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported EXPLAIN format json. Line 1, Col: 21.\n  EXPLAIN (FORMAT json) SELECT 1"
+        },
+        {
+            "id": "SPICE-explain-buffers",
+            "sql": "EXPLAIN (BUFFERS) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported EXPLAIN option BUFFERS. Line 1, Col: 17.\n  EXPLAIN (BUFFERS) SELECT 1"
+        },
+        {
+            "id": "SPICE-prepare-empty-types",
+            "sql": "PREPARE p() AS SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected at least one PREPARE parameter type. Line 1, Col: 14.\n  PREPARE p() AS SELECT 1"
+        },
+        {
+            "id": "SPICE-prepare-untyped",
+            "sql": "PREPARE p AS SELECT $1 + 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpicePrepare",
+                    "nodes": [
+                        "SpicePrepare",
+                        "Identifier",
+                        "Select",
+                        "Add",
+                        "Parameter",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "SpicePrepare(this=Identifier(this=p, quoted=false), expression=Select(expressions=[Add(this=Parameter(this=Literal(this=1, is_string=false)), expression=Literal(this=1, is_string=false))]), typed=false)"
+                }
+            ],
+            "generated": "PREPARE p AS SELECT $1 + 1"
+        },
+        {
+            "id": "SPICE-execute-empty",
+            "sql": "EXECUTE p()",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExecute",
+                    "nodes": [
+                        "SpiceExecute",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceExecute(this=Identifier(this=p, quoted=false), parenthesized=true)"
+                }
+            ],
+            "generated": "EXECUTE p()"
+        },
+        {
+            "id": "SPICE-show-setting",
+            "sql": "SHOW datafusion.execution.batch_size",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceShow",
+                    "nodes": [
+                        "SpiceShow",
+                        "Dot",
+                        "Dot",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceShow(this=SETTING, target=Dot(this=Dot(this=Identifier(this=datafusion, quoted=false), expression=Identifier(this=execution, quoted=false)), expression=Identifier(this=batch_size, quoted=false)), full=false)"
+                }
+            ],
+            "generated": "SHOW datafusion.execution.batch_size"
+        },
+        {
+            "id": "SPICE-show-full-columns",
+            "sql": "SHOW FULL COLUMNS FROM spice.public.sample",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceShow",
+                    "nodes": [
+                        "SpiceShow",
+                        "Table",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceShow(this=COLUMNS, target=Table(this=Identifier(this=sample, quoted=false), db=Identifier(this=public, quoted=false), catalog=Identifier(this=spice, quoted=false)), full=true)"
+                }
+            ],
+            "generated": "SHOW FULL COLUMNS FROM spice.public.sample"
+        },
+        {
+            "id": "SPICE-create-cluster-ctas",
+            "sql": "CREATE TABLE t CLUSTER BY (id) AS SELECT 1 AS id",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Table",
+                        "Select",
+                        "Properties",
+                        "Identifier",
+                        "Alias",
+                        "ClusterProperty",
+                        "Literal",
+                        "Identifier",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, replace=false, refresh=false, unique=false, expression=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=id, quoted=false))]), exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Column(this=Identifier(this=id, quoted=false))])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t CLUSTER BY (id) AS SELECT 1 AS id"
+        },
+        {
+            "id": "SPICE-create-cluster-backticks",
+            "sql": "CREATE TABLE `t` (id INT) CLUSTER BY (id)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Backtick identifiers are not supported by Spice's PostgreSQL parser profile. Line 1, Col: 6.\n  CREATE TABLE `t` (id INT) CLUSTER BY (id)"
+        },
+        {
+            "id": "SPICE-explain-missing-query",
+            "sql": "EXPLAIN ANALYZE",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected explained statement. Line 1, Col: 15.\n  EXPLAIN ANALYZE"
+        },
+        {
+            "id": "SPICE-prepare-missing-query",
+            "sql": "PREPARE p(INT) AS",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected prepared statement body. Line 1, Col: 17.\n  PREPARE p(INT) AS"
+        },
+        {
+            "id": "SPICE-show-missing-table",
+            "sql": "SHOW COLUMNS FROM",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected table name but got <Token token_type: TokenType.SENTINEL, text: , line: 1, col: 1, start: 0, end: 0, lineStart: 1, colStart: 1, comments: []>. Line 1, Col: 17.\n  SHOW COLUMNS FROM"
+        },
+        {
+            "id": "SPICE-explain-values",
+            "sql": "EXPLAIN VALUES (1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceExplain",
+                    "nodes": [
+                        "SpiceExplain",
+                        "Values",
+                        "Tuple",
+                        "Literal"
+                    ],
+                    "ast": "SpiceExplain(this=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)])]), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN VALUES (1)"
+        },
+        {
+            "id": "SPICE-prepare-values",
+            "sql": "PREPARE p AS VALUES ($1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpicePrepare",
+                    "nodes": [
+                        "SpicePrepare",
+                        "Identifier",
+                        "Values",
+                        "Tuple",
+                        "Parameter",
+                        "Literal"
+                    ],
+                    "ast": "SpicePrepare(this=Identifier(this=p, quoted=false), expression=Values(expressions=[Tuple(expressions=[Parameter(this=Literal(this=1, is_string=false))])]), typed=false)"
+                }
+            ],
+            "generated": "PREPARE p AS VALUES ($1)"
+        },
+        {
+            "id": "SPICE-reset-all",
+            "sql": "RESET ALL",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "SpiceReset",
+                    "nodes": [
+                        "SpiceReset",
+                        "Identifier"
+                    ],
+                    "ast": "SpiceReset(this=Identifier(this=ALL, quoted=false))"
+                }
+            ],
+            "generated": "RESET ALL"
+        },
+        {
+            "id": "SPICE-power-nested",
+            "sql": "SELECT power(2, power(3, 2)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Literal",
+                        "Pow",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Literal(this=2, is_string=false), expression=Pow(this=Literal(this=3, is_string=false), expression=Literal(this=2, is_string=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT power(2, power(3, 2)) AS v"
+        },
+        {
+            "id": "SPICE-pow-parenthesized",
+            "sql": "SELECT 2 ^ (3 ^ 2) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Literal",
+                        "Paren",
+                        "Pow",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Literal(this=2, is_string=false), expression=Paren(this=Pow(this=Literal(this=3, is_string=false), expression=Literal(this=2, is_string=false)))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT 2 ^ (3 ^ 2) AS v"
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "DFS-copy",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "COPY (SELECT 1) TO 'output.csv' STORED AS CSV"
+    },
+    {
+      "id": "DFS-external-table",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE EXTERNAL TABLE t (id INT) STORED AS CSV LOCATION 'input.csv'"
+    }
+  ]
+}

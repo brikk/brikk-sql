@@ -1,0 +1,57 @@
+{
+    "schema_version": 1,
+    "dialect": "datafusion",
+    "evidence": "local parser and generator observations only",
+    "cases": [
+        {
+            "id": "DFS-copy",
+            "sql": "COPY (SELECT 1) TO 'output.csv' STORED AS CSV",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Copy",
+                    "nodes": [
+                        "Copy",
+                        "Subquery",
+                        "Credentials",
+                        "Literal",
+                        "CopyParameter",
+                        "Select",
+                        "Var",
+                        "Var",
+                        "Literal"
+                    ],
+                    "ast": "Copy(this=Subquery(this=Select(expressions=[Literal(this=1, is_string=false)])), kind=false, credentials=Credentials(), files=[Literal(this=output.csv, is_string=true)], params=[CopyParameter(this=Var(this=STORED), expression=Var(this=CSV))])"
+                }
+            ],
+            "generated": "COPY (SELECT 1) TO 'output.csv' STORED AS CSV"
+        },
+        {
+            "id": "DFS-external-table",
+            "sql": "CREATE EXTERNAL TABLE t (id INT) STORED AS CSV LOCATION 'input.csv'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ExternalProperty",
+                        "FileFormatProperty",
+                        "LocationProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Var",
+                        "Literal"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ExternalProperty(), FileFormatProperty(this=Var(this=CSV), hive_format=true), LocationProperty(this=Literal(this=input.csv, is_string=true))]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE EXTERNAL TABLE t (id INT) STORED AS CSV LOCATION 'input.csv'"
+        }
+    ]
+}
