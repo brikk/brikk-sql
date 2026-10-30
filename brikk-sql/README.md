@@ -637,6 +637,18 @@ Native prepared SHOW captures its setting value at bind time; a newly executed S
 later SET, but an existing prepared SHOW retains its earlier value. No auto-reprepare or retry
 is added to manufacture a fresh value.
 
+DuckDB 2.0 `setval(sequence_name, value [, is_called])` retains its two/three-argument
+native call. Successful modeled calls return BIGINT and propagate any supplied SQL NULL;
+an omitted is_called defaults natively to true, not NULL. Static shapes use only those
+declarative facts. The library never resolves or invokes a sequence to analyze a fragment.
+Automatic qualification and sequence-state lineage refuse, avoiding volatile alias expansion
+or fictitious state dependencies. Same-name cross-target execution is unproved and refuses.
+Native controls pin default/false nextval behavior, currval, positive/negative increments,
+bounds, NULL calls without mutation, ordered prepared bindings and exactly-once operands.
+Sequence mutations survive ROLLBACK; no compensation/retry is added. Catalog sequence state
+and currval are shared by duplicate connections in the pinned engine, not PostgreSQL-style
+session-local currval. Native parser-only checks do not bind range(setval(...)) or run it.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every

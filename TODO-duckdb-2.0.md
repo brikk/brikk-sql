@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-028.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-029.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -765,10 +765,27 @@ and IDE introspection/completion are separate contracts.
   data-class fields, generated catalogs/corpora or ledger changes, IntelliJ calls, user
   connection changes, consumer pins, merge or publication.
 
-- [ ] `DDB20-029` setval [AUDIT].
+- [x] `DDB20-029` setval [DONE].
   Function metadata already explicitly asserts setval exists. Pin overloads, default and
   false `is_called`, nextval/currval effects, increments and scope. Execute sequence probes
   deliberately in isolated tests; never invoke them to supply editor metadata or validation.
+  Existing anonymous call/serde/generation preserves two/three positional or modeled named
+  arguments and authored bind order. DuckDB-only typing is BIGINT on success, with strict
+  NULL propagation across supplied arguments; omitted is_called is not an explicit NULL.
+  Static shape facts do not resolve/invoke sequences. Automatic qualification/volatile alias
+  expansion, sequence-state lineage and unproved cross-target same-name mappings refuse.
+  Native controls pin default true/false, currval, schema-qualified sequence strings, positive
+  and negative increments, range errors, NULL no-mutation calls, repeated prepared execution
+  and once-only volatile operands. ROLLBACK does not undo setval. Duplicate connections share
+  sequence/currval catalog state, unlike PostgreSQL session-local currval; no session emulation.
+  Exact captured/native signatures need no recapture. Final docs sql/statements/create_sequence
+  #setting-the-sequence-value; pinned setval.test and scalar/sequence/nextval.cpp. Parse-only
+  validation never binds range(setval(...)); no mutation retry or rollback emulation is added.
+  Evidence: DuckdbSetvalTest, DuckdbSetvalMetadataTest, DuckdbSetvalResultTest. Fresh full
+  gates passed 1,375 core, 118 metadata and 188 native/verifier tests with both signed
+  fixtures enabled, zero skips. Log /tmp/opencode/duckdb-setval-full.log. Existing AST,
+  generated catalogs/corpora, ledgers, public data-class signatures and IntelliJ APIs remain
+  unchanged. No user connections, consumer pins, merge or publication changes.
 
 - [ ] `DDB20-030` Regular-expression function additions [AUDIT].
   Pin the third-argument options overload `regexp_extract('ABC', 'abc', 'i')`, ordinary

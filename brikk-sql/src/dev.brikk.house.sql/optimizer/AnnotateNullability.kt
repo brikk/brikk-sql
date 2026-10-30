@@ -37,6 +37,8 @@ import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbOverlayArguments
 import dev.brikk.house.sql.dialects.duckdbPathFunctionName
 import dev.brikk.house.sql.dialects.duckdbPathArguments
+import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.duckdbSetvalArguments
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
@@ -420,6 +422,11 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if (dialect.name == "duckdb" && (node as Expression).isDuckdbSetval()) {
+            val arguments = node.duckdbSetvalArguments() ?: return null
+            val verdicts = arguments.map { if (it is dev.brikk.house.sql.ast.Boolean) false else get(it) }
+            return when { verdicts.any { it == true } -> true; verdicts.all { it == false } -> false; else -> null }
+        }
         if (dialect.name == "duckdb") {
             val path = (node as Expression).duckdbPathFunctionName()
             if (path != null) {

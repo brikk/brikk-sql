@@ -14,6 +14,7 @@ import dev.brikk.house.sql.dialects.duckdbOverlayArguments
 import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
 import dev.brikk.house.sql.dialects.duckdbPathFunctionName
 import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -409,6 +410,9 @@ open class Generator(
             unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
         if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbNameShow() })
             unexecutable("DuckDB SHOW name/query resolution has no verified cross-target translation")
+        if (expr.walk().any { it.isDuckdbSetval() } && sourceDialect != null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name == "duckdb" || sourceDialect.equals("duckdb",true)))
+            unexecutable("DuckDB SETVAL sequence-state behavior has no verified cross-target translation")
         if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true) &&
             expr.walk().any { it is Show || it is Command && it.name.equals("SHOW", true) })
             unexecutable("DuckDB SHOW is not a verified setting/table resolution translation from $sourceDialect")
