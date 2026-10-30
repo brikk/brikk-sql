@@ -12,6 +12,9 @@ and native argument/type probes. It leaves all CHSEM-001 inputs and captures int
 CHSEM-003 adds [contextual lambda input typing](lambda-input-README.md), with separate
 annotation/native evidence and an explicit CHSEM-011 parser-gap control.
 
+CHSEM-004 adds the internal [composition rule checker](composition-README.md), with
+separate error/unknown reports and 50 original-query controls on both pins.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

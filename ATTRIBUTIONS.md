@@ -167,6 +167,11 @@ CHSEM-003's `lambda-input-native/` captures in the same directory contain additi
 finite argument-type and error observations from the same pinned Apache-2.0 images.
 They remain separate from the earlier callable and historical semantic captures.
 
+CHSEM-004's `composition-native/` captures add original-query result/error evidence
+from the same pinned Apache-2.0 builds. The internal rule checker follows the tagged
+composition and callable declarations already cited in that directory; it does not
+replace historical evidence or claim native whole-query/execution equivalence.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

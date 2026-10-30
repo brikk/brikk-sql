@@ -1,0 +1,527 @@
+{
+  "captured_at": "2026-10-30T22:47:56.919805+00:00",
+  "fixture_sha256": "6300d142ff1f026f8c39da2f455fab43fe7be15827562098808db092a9ea5462",
+  "brikk_sha256": null,
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-004-E01\",\"formatted\":\"SELECT arrayMap(trim | upper, [' x '])\"}\n{\"id\":\"CHSEM-004-E02\",\"formatted\":\"SELECT arrayMap(trimBoth(_) | upper, [' x '])\"}\n{\"id\":\"CHSEM-004-E03\",\"formatted\":\"SELECT arrayMap(lower | trim, [' X '])\"}\n{\"id\":\"CHSEM-004-E04\",\"formatted\":\"SELECT arrayMap(concat | upper, ['x'])\"}\n{\"id\":\"CHSEM-004-E05\",\"formatted\":\"SELECT arrayMap(concat('x', _) | upper, ['y'])\"}\n{\"id\":\"CHSEM-004-E06\",\"formatted\":\"SELECT arrayMap(toString | upper, [1])\"}\n{\"id\":\"CHSEM-004-E07\",\"formatted\":\"SELECT arrayMap(toString(_) | upper, [1])\"}\n{\"id\":\"CHSEM-004-E08\",\"formatted\":\"SELECT arrayMap(lower | concat, ['X'])\"}\n{\"id\":\"CHSEM-004-E09\",\"formatted\":\"SELECT arrayMap(upper | multiply, ['x'])\"}\n{\"id\":\"CHSEM-004-E10\",\"formatted\":\"SELECT arrayMap(lower | concat(_1, _2), ['x'])\"}\n{\"id\":\"CHSEM-004-E11\",\"formatted\":\"SELECT arrayMap(multiply | toString, [2])\"}\n{\"id\":\"CHSEM-004-E12\",\"formatted\":\"SELECT arrayMap(multiply | toString, [2], [3])\"}\n{\"id\":\"CHSEM-004-E13\",\"formatted\":\"SELECT arrayMap(multiply(_1, _) | toString, [2], [3])\"}\n{\"id\":\"CHSEM-004-E14\",\"formatted\":\"SELECT arrayMap(upper(trimBoth(_)) | lower, [' x '])\"}\n{\"id\":\"CHSEM-004-E15\",\"formatted\":\"SELECT arrayMap(upper(trimBoth(_1)) | lower, [' x '])\"}\n{\"id\":\"CHSEM-004-E16\",\"formatted\":\"SELECT arrayMap(_129, [1])\"}\n{\"id\":\"CHSEM-004-E17\",\"formatted\":\"SELECT arrayMap(_2, [1])\"}\n{\"id\":\"CHSEM-004-E18\",\"formatted\":\"SELECT arrayMap(tuple(_, _), [1], ['a'])\"}\n{\"id\":\"CHSEM-004-E19\",\"formatted\":\"SELECT arrayMap(lower | upper, [1, 2])\"}\n{\"id\":\"CHSEM-004-E20\",\"formatted\":\"SELECT arrayMap(multiply(_1, _2) | lower, [2], [3])\"}\n{\"id\":\"CHSEM-004-E21\",\"formatted\":\"SELECT arrayMap((multiply(_1, _2) | toString) | upper, [2], [3])\"}\n{\"id\":\"CHSEM-004-E22\",\"formatted\":\"SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([1], 'Array(UInt8)'))\"}\n{\"id\":\"CHSEM-004-E23\",\"formatted\":\"SELECT arrayMap(trimBoth(_1, 'x', 'y') | upper, ['x'])\"}\n{\"id\":\"CHSEM-004-E24\",\"formatted\":\"SELECT arrayMap(x -> toString(NULL, 1, 2), ['x'])\"}\n{\"id\":\"CHSEM-004-E25\",\"formatted\":\"SELECT arrayMap(x -> toString(accurateCastOrNull('bad', 'UInt8'), 'UTC'), ['x'])\"}\n{\"id\":\"CHSEM-004-E26\",\"formatted\":\"SELECT arrayMap(multiply(_1, _2) | toString, [1, 2], [3])\"}\n{\"id\":\"CHSEM-004-E27\",\"formatted\":\"SELECT arrayMap(domainWithoutWWW(_) | upper, CAST(['abc'], 'Array(FixedString(3))'))\"}\n{\"id\":\"CHSEM-004-E28\",\"formatted\":\"SELECT arrayMap(domainWithoutWWW(_) | upper, CAST([], 'Array(FixedString(3))'))\"}\n{\"id\":\"CHSEM-004-E29\",\"formatted\":\"WITH\\n    (x -> upper(x)) AS trim\\nSELECT arrayMap(trim | upper, ['x'])\"}\n{\"id\":\"CHSEM-004-E30\",\"formatted\":\"SELECT arrayMap(trim | upper, ['x'])\\nFROM\\n(\\n    SELECT 1 AS trim\\n) AS t\"}\n{\"id\":\"CHSEM-004-E31\",\"formatted\":\"WITH\\n    arrayMap(trim | upper, ['x']) AS unused\\nSELECT 1\"}\n{\"id\":\"CHSEM-004-E32\",\"formatted\":\"SELECT arrayMap((x -> toString(x)) | (y -> toTypeName(y)), CAST([1], 'Array(UInt8)'))\"}\n{\"id\":\"CHSEM-004-E33\",\"formatted\":\"SELECT arrayMap(brikkMissingSemanticFunction | upper, ['x'])\"}\n{\"id\":\"CHSEM-004-E34\",\"formatted\":\"SELECT arrayMap(LCASE | UCASE, ['X'])\"}\n{\"id\":\"CHSEM-004-E35\",\"formatted\":\"SELECT arrayMap(TOSTRING | upper, [1])\"}\n{\"id\":\"CHSEM-004-E36\",\"formatted\":\"SELECT arrayMap(TRIMBOTH(_) | upper, ['x'])\"}\n{\"id\":\"CHSEM-004-E37\",\"formatted\":\"SELECT arrayMap(lower('a') | upper, ['B'])\"}\n{\"id\":\"CHSEM-004-E38\",\"formatted\":\"SELECT arrayMap(lower | upper, 1)\"}\n{\"id\":\"CHSEM-004-E39\",\"formatted\":\"SELECT arrayMap(_.x | upper, CAST([tuple('a')], 'Array(Tuple(x String))'))\"}\n{\"id\":\"CHSEM-004-E40\",\"formatted\":\"SELECT arrayMap(_1.x | upper, CAST([tuple('a')], 'Array(Tuple(x String))'))\"}\n{\"id\":\"CHSEM-004-E41\",\"formatted\":\"SELECT arrayMap(lower | upper, CAST([NULL], 'Array(Nullable(UInt8))'))\"}\n{\"id\":\"CHSEM-004-E42\",\"formatted\":\"SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([0], 'Array(DateTime)'))\"}\n{\"id\":\"CHSEM-004-E43\",\"formatted\":\"SELECT arrayMap(concat(_1, _2) | lower, CAST([[1]], 'Array(Array(UInt8))'), CAST([[2]], 'Array(Array(UInt8))'))\"}\n{\"id\":\"CHSEM-004-E44\",\"formatted\":\"SELECT arrayMap(x -> lower(t.n), t.a)\\nFROM\\n(\\n    SELECT\\n        accurateCastOrNull('bad', 'UInt8') AS n,\\n        CAST(['x'], 'Array(String)') AS a\\n) AS t\"}\n{\"id\":\"CHSEM-004-E45\",\"formatted\":\"SELECT\\n    CAST([1], 'Array(UInt8)') AS a,\\n    arrayMap(lower | upper, a)\\nFROM\\n(\\n    SELECT CAST(['x'], 'Array(String)') AS a\\n) AS t\\nSETTINGS prefer_column_name_to_alias = 1\"}\n{\"id\":\"CHSEM-004-E46\",\"formatted\":\"WITH\\n    ((f, a) -> ['ok']) AS arrayMap\\nSELECT arrayMap(trim | upper, ['x'])\"}\n{\"id\":\"CHSEM-004-E47\",\"formatted\":\"SELECT arrayMap(lower | upper, CAST(['x'], 'Array(CHAR)'))\"}\n{\"id\":\"CHSEM-004-E48\",\"formatted\":\"SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([0], 'Array(TIMESTAMP)'))\"}\n{\"id\":\"CHSEM-004-E49\",\"formatted\":\"SELECT arrayMap(x -> multiply(NULL, 1, 2), ['x'])\"}\n{\"id\":\"CHSEM-004-E50\",\"formatted\":\"SELECT arrayMap(x -> trimBoth(NULL, 'x', 'y'), ['x'])\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-004-E01",
+      "formatted": "SELECT arrayMap(trim | upper, [' x '])"
+    },
+    {
+      "id": "CHSEM-004-E02",
+      "formatted": "SELECT arrayMap(trimBoth(_) | upper, [' x '])"
+    },
+    {
+      "id": "CHSEM-004-E03",
+      "formatted": "SELECT arrayMap(lower | trim, [' X '])"
+    },
+    {
+      "id": "CHSEM-004-E04",
+      "formatted": "SELECT arrayMap(concat | upper, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E05",
+      "formatted": "SELECT arrayMap(concat('x', _) | upper, ['y'])"
+    },
+    {
+      "id": "CHSEM-004-E06",
+      "formatted": "SELECT arrayMap(toString | upper, [1])"
+    },
+    {
+      "id": "CHSEM-004-E07",
+      "formatted": "SELECT arrayMap(toString(_) | upper, [1])"
+    },
+    {
+      "id": "CHSEM-004-E08",
+      "formatted": "SELECT arrayMap(lower | concat, ['X'])"
+    },
+    {
+      "id": "CHSEM-004-E09",
+      "formatted": "SELECT arrayMap(upper | multiply, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E10",
+      "formatted": "SELECT arrayMap(lower | concat(_1, _2), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E11",
+      "formatted": "SELECT arrayMap(multiply | toString, [2])"
+    },
+    {
+      "id": "CHSEM-004-E12",
+      "formatted": "SELECT arrayMap(multiply | toString, [2], [3])"
+    },
+    {
+      "id": "CHSEM-004-E13",
+      "formatted": "SELECT arrayMap(multiply(_1, _) | toString, [2], [3])"
+    },
+    {
+      "id": "CHSEM-004-E14",
+      "formatted": "SELECT arrayMap(upper(trimBoth(_)) | lower, [' x '])"
+    },
+    {
+      "id": "CHSEM-004-E15",
+      "formatted": "SELECT arrayMap(upper(trimBoth(_1)) | lower, [' x '])"
+    },
+    {
+      "id": "CHSEM-004-E16",
+      "formatted": "SELECT arrayMap(_129, [1])"
+    },
+    {
+      "id": "CHSEM-004-E17",
+      "formatted": "SELECT arrayMap(_2, [1])"
+    },
+    {
+      "id": "CHSEM-004-E18",
+      "formatted": "SELECT arrayMap(tuple(_, _), [1], ['a'])"
+    },
+    {
+      "id": "CHSEM-004-E19",
+      "formatted": "SELECT arrayMap(lower | upper, [1, 2])"
+    },
+    {
+      "id": "CHSEM-004-E20",
+      "formatted": "SELECT arrayMap(multiply(_1, _2) | lower, [2], [3])"
+    },
+    {
+      "id": "CHSEM-004-E21",
+      "formatted": "SELECT arrayMap((multiply(_1, _2) | toString) | upper, [2], [3])"
+    },
+    {
+      "id": "CHSEM-004-E22",
+      "formatted": "SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([1], 'Array(UInt8)'))"
+    },
+    {
+      "id": "CHSEM-004-E23",
+      "formatted": "SELECT arrayMap(trimBoth(_1, 'x', 'y') | upper, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E24",
+      "formatted": "SELECT arrayMap(x -> toString(NULL, 1, 2), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E25",
+      "formatted": "SELECT arrayMap(x -> toString(accurateCastOrNull('bad', 'UInt8'), 'UTC'), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E26",
+      "formatted": "SELECT arrayMap(multiply(_1, _2) | toString, [1, 2], [3])"
+    },
+    {
+      "id": "CHSEM-004-E27",
+      "formatted": "SELECT arrayMap(domainWithoutWWW(_) | upper, CAST(['abc'], 'Array(FixedString(3))'))"
+    },
+    {
+      "id": "CHSEM-004-E28",
+      "formatted": "SELECT arrayMap(domainWithoutWWW(_) | upper, CAST([], 'Array(FixedString(3))'))"
+    },
+    {
+      "id": "CHSEM-004-E29",
+      "formatted": "WITH\n    (x -> upper(x)) AS trim\nSELECT arrayMap(trim | upper, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E30",
+      "formatted": "SELECT arrayMap(trim | upper, ['x'])\nFROM\n(\n    SELECT 1 AS trim\n) AS t"
+    },
+    {
+      "id": "CHSEM-004-E31",
+      "formatted": "WITH\n    arrayMap(trim | upper, ['x']) AS unused\nSELECT 1"
+    },
+    {
+      "id": "CHSEM-004-E32",
+      "formatted": "SELECT arrayMap((x -> toString(x)) | (y -> toTypeName(y)), CAST([1], 'Array(UInt8)'))"
+    },
+    {
+      "id": "CHSEM-004-E33",
+      "formatted": "SELECT arrayMap(brikkMissingSemanticFunction | upper, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E34",
+      "formatted": "SELECT arrayMap(LCASE | UCASE, ['X'])"
+    },
+    {
+      "id": "CHSEM-004-E35",
+      "formatted": "SELECT arrayMap(TOSTRING | upper, [1])"
+    },
+    {
+      "id": "CHSEM-004-E36",
+      "formatted": "SELECT arrayMap(TRIMBOTH(_) | upper, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E37",
+      "formatted": "SELECT arrayMap(lower('a') | upper, ['B'])"
+    },
+    {
+      "id": "CHSEM-004-E38",
+      "formatted": "SELECT arrayMap(lower | upper, 1)"
+    },
+    {
+      "id": "CHSEM-004-E39",
+      "formatted": "SELECT arrayMap(_.x | upper, CAST([tuple('a')], 'Array(Tuple(x String))'))"
+    },
+    {
+      "id": "CHSEM-004-E40",
+      "formatted": "SELECT arrayMap(_1.x | upper, CAST([tuple('a')], 'Array(Tuple(x String))'))"
+    },
+    {
+      "id": "CHSEM-004-E41",
+      "formatted": "SELECT arrayMap(lower | upper, CAST([NULL], 'Array(Nullable(UInt8))'))"
+    },
+    {
+      "id": "CHSEM-004-E42",
+      "formatted": "SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([0], 'Array(DateTime)'))"
+    },
+    {
+      "id": "CHSEM-004-E43",
+      "formatted": "SELECT arrayMap(concat(_1, _2) | lower, CAST([[1]], 'Array(Array(UInt8))'), CAST([[2]], 'Array(Array(UInt8))'))"
+    },
+    {
+      "id": "CHSEM-004-E44",
+      "formatted": "SELECT arrayMap(x -> lower(t.n), t.a)\nFROM\n(\n    SELECT\n        accurateCastOrNull('bad', 'UInt8') AS n,\n        CAST(['x'], 'Array(String)') AS a\n) AS t"
+    },
+    {
+      "id": "CHSEM-004-E45",
+      "formatted": "SELECT\n    CAST([1], 'Array(UInt8)') AS a,\n    arrayMap(lower | upper, a)\nFROM\n(\n    SELECT CAST(['x'], 'Array(String)') AS a\n) AS t\nSETTINGS prefer_column_name_to_alias = 1"
+    },
+    {
+      "id": "CHSEM-004-E46",
+      "formatted": "WITH\n    ((f, a) -> ['ok']) AS arrayMap\nSELECT arrayMap(trim | upper, ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E47",
+      "formatted": "SELECT arrayMap(lower | upper, CAST(['x'], 'Array(CHAR)'))"
+    },
+    {
+      "id": "CHSEM-004-E48",
+      "formatted": "SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([0], 'Array(TIMESTAMP)'))"
+    },
+    {
+      "id": "CHSEM-004-E49",
+      "formatted": "SELECT arrayMap(x -> multiply(NULL, 1, 2), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E50",
+      "formatted": "SELECT arrayMap(x -> trimBoth(NULL, 'x', 'y'), ['x'])"
+    }
+  ],
+  "brikk_parse_query": null,
+  "execution": [
+    {
+      "id": "CHSEM-004-E01",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Cannot compose the variadic function `trim`: its number of arguments is not known. Use argument placeholders: trim(_1, ..., _N). In scope SELECT arrayMap(trim | upper, [' x ']). (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E02",
+      "returncode": 0,
+      "stdout": "['X']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E03",
+      "returncode": 0,
+      "stdout": "['x']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E04",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Cannot compose the variadic function `concat`: its number of arguments is not known. Use argument placeholders: concat(_1, ..., _N). In scope SELECT arrayMap(concat | upper, ['x']). (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E05",
+      "returncode": 0,
+      "stdout": "['XY']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E06",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Cannot compose the variadic function `toString`: its number of arguments is not known. Use argument placeholders: toString(_1, ..., _N). In scope SELECT arrayMap(toString | upper, [1]). (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E07",
+      "returncode": 0,
+      "stdout": "['1']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E08",
+      "returncode": 0,
+      "stdout": "['x']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E09",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: The right operand of the function composition operator `|` must be a function of one argument, got 2 arguments: multiply. (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E10",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: The right operand of the function composition operator `|` must be a function of one argument, got 2 arguments: concat(_1, _2). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E11",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E12",
+      "returncode": 0,
+      "stdout": "['6']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E13",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Mixing the anonymous argument placeholder `_` with numbered placeholders `_N` in one expression is ambiguous: multiply(_1, _). Use only numbered placeholders. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E14",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: The anonymous argument placeholder `_` must be a direct argument of the call: upper(trimBoth(_)). Use numbered placeholders `_1`, `_2`, ... at deeper levels. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E15",
+      "returncode": 0,
+      "stdout": "['x']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E16",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Argument placeholder `_129` is not allowed: at most 128 lambda arguments are supported. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E17",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E18",
+      "returncode": 0,
+      "stdout": "[(1,'a')]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E19",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function lower: In scope lambda(tuple(__composed_arg_1), upper(lower(__composed_arg_1))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E20",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt16 of argument of function lower: In scope lambda((__composed_arg_1, __composed_arg_2), lower(multiply(__composed_arg_1, __composed_arg_2))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E21",
+      "returncode": 0,
+      "stdout": "['6']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E22",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'toString'. Expected 1 argument, got 2 arguments: In scope lambda(tuple(__composed_arg_1), upper(toString(__composed_arg_1, 'UTC'))). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E23",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'trimBoth'. Expected 1 mandatory argument and 1 optional argument, got 3 arguments: In scope lambda(tuple(__composed_arg_1), upper(trimBoth(__composed_arg_1, 'x', 'y'))). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E24",
+      "returncode": 0,
+      "stdout": "[NULL]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E25",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: An incorrect number of arguments was specified for function 'toString'. Expected 1 argument, got 2 arguments: In scope x -> toString(accurateCastOrNull('bad', 'UInt8'), 'UTC'). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E26",
+      "returncode": 190,
+      "stdout": "",
+      "stderr": "Code: 190. DB::Exception: Arrays passed to arrayMap must have equal size. Argument 3 has size 1 which differs with the size of another argument, 2. (SIZES_OF_ARRAYS_DONT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E27",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: Column of type FixedString is not supported by this function: while executing 'FUNCTION domainWithoutWWW(__composed_arg_1 :: 0) -> domainWithoutWWW(__composed_arg_1) FixedString(3) : 1'. (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-004-E28",
+      "returncode": 0,
+      "stdout": "[]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E29",
+      "returncode": 0,
+      "stdout": "['X']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E30",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Each operand of the function composition operator `|` must be a function, but the identifier `trim` resolves to an expression. In scope SELECT arrayMap(trim | upper, ['x']) FROM (SELECT 1 AS trim) AS t. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E31",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E32",
+      "returncode": 0,
+      "stdout": "['String']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E33",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Each operand of the function composition operator `|` must be a function: a lambda, the name of a function, or an expression with argument placeholders `_`, `_1`, `_2`, ... Got brikkMissingSemanticFunction. If you meant bitwise OR, use the function bitOr. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E34",
+      "returncode": 0,
+      "stdout": "['X']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E35",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Each operand of the function composition operator `|` must be a function: a lambda, the name of a function, or an expression with argument placeholders `_`, `_1`, `_2`, ... Got TOSTRING. If you meant bitwise OR, use the function bitOr. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E36",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `TRIMBOTH` does not exist. Maybe you meant: ['trimBoth']. In scope lambda(tuple(__composed_arg_1), upper(TRIMBOTH(__composed_arg_1))). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-004-E37",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Each operand of the function composition operator `|` must be a function: a lambda, the name of a function, or an expression with argument placeholders `_`, `_1`, `_2`, ... Got lower('a'). If you meant bitwise OR, use the function bitOr. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E38",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Argument 2 of function arrayMap must be Array. Found UInt8 instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E39",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Member access on the anonymous argument placeholder `_` is not supported: _.x. Use a numbered placeholder: `_1.name`. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E40",
+      "returncode": 0,
+      "stdout": "['A']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E41",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function lower: In scope lambda(tuple(__composed_arg_1), upper(lower(__composed_arg_1))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E42",
+      "returncode": 0,
+      "stdout": "['1970-01-01 00:00:00']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E43",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type Array(UInt8) of argument of function lower: In scope lambda((__composed_arg_1, __composed_arg_2), lower(arrayConcat(__composed_arg_1, __composed_arg_2))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E44",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal type UInt8 of argument of function lower: In scope x -> lower(t.n). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-004-E45",
+      "returncode": 0,
+      "stdout": "[1]\t['X']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E46",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Cannot compose the variadic function `trim`: its number of arguments is not known. Use argument placeholders: trim(_1, ..., _N). In scope WITH ((f, a) -> ['ok']) AS arrayMap SELECT arrayMap(trim | upper, ['x']). (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-004-E47",
+      "returncode": 0,
+      "stdout": "['X']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E48",
+      "returncode": 0,
+      "stdout": "['1970-01-01 00:00:00']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E49",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function multiply doesn't match: passed 3, should be 2: In scope x -> multiply(NULL, 1, 2). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E50",
+      "returncode": 0,
+      "stdout": "[NULL]\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": []
+}

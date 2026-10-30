@@ -1,8 +1,8 @@
 # ClickHouse semantic validation
 
 Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence,
-CHSEM-002 callable facts and CHSEM-003 contextual input typing are complete.
-Composition validation, result inference and diagnostics remain separate work.
+CHSEM-002 callable facts, CHSEM-003 contextual input typing and CHSEM-004 internal
+composition validation are complete. Result annotation and editor diagnostics remain separate work.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -23,7 +23,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-001: Establish version-pinned semantic fixtures and acceptance criteria. Reuse the existing 26.10.2.103 native probe infrastructure; capture valid and invalid composition, variadic designators, placeholder counts, mixed placeholder forms and nested bindings. Retain 26.8 controls and record actual results/errors rather than assuming rules from examples.
 - [x] CHSEM-002: Define conservative callable-signature facts. Record proven argument-count, variadic and input/result rules for the initial functions: lower, upper, domainWithoutWWW, firstSignificantSubdomain, trim, multiply, toString and concat. Keep bare function designators distinct from explicit calls; preserve version, alias and case policy. Missing facts mean unknown, not valid or invalid.
 - [x] CHSEM-003: Implement contextual lambda argument typing. Derive `_`, `_1` and `_2` types from the corresponding array elements; cover explicit lambdas, nested higher-order scopes, captured physical columns and multiple arrays. Leave ordinary underscore-named columns unchanged.
-- [ ] CHSEM-004: Implement composition argument validation. Check stage argument counts, placeholder requirements and provable input incompatibilities using native-backed rules. Diagnose bare variadic designators such as `trim | upper` without rejecting the valid `trim(_) | upper` form. Do not infer runtime array-length equality from matching argument counts.
+- [x] CHSEM-004: Implement composition argument validation. Check stage argument counts, placeholder requirements and provable input incompatibilities using native-backed rules. Diagnose bare variadic designators such as `trim | upper` without rejecting the valid `trim(_) | upper` form. Do not infer runtime array-length equality from matching argument counts.
 - [ ] CHSEM-005: Infer composition and arrayMap results. Propagate stage results through supported chains and compute array element types without inventing precision, nullability or overload facts. Track incomplete knowledge explicitly and preserve existing generic/dialect typing behavior.
 - [ ] CHSEM-006: Expose positioned offline semantic diagnostics through the shared library. Keep semantic results separate from parser acceptance; distinguish proven errors from unavailable knowledge. Test statement/script offsets and consumer-facing integration without adding new internal or experimental IntelliJ API calls.
 - [ ] CHSEM-007: Qualify and document the bounded slice. Add self-contained positive/negative, AST serde, scope/lineage, typing and diagnostic tests; compare original/generated finite results and errors against pinned native fixtures. Run affected modules, full regression and binary-compatibility gates, record skips, and document exact coverage and remaining unknowns.
@@ -37,8 +37,8 @@ checks parsing only and must not be relabeled as semantic validation.
 
 ## Constraints and resumption
 
-- User authorized CHSEM-003 after completing CHSEM-002. Commit and push this branch after each round; stop before CHSEM-004 until further direction. CHSEM-011 is recorded follow-up work, not authorization to expand this round.
-- Resume at CHSEM-004; do not treat the unchecked follow-ups as implemented or certified.
+- User authorized CHSEM-004 after completing CHSEM-003, with commit/push at the end. Stop before CHSEM-005 until further direction. CHSEM-011 remains recorded follow-up work, not authorization to expand this round.
+- Resume at CHSEM-005; do not treat the unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -124,6 +124,43 @@ the ClickHouse-only suite passed 26 tests. The saved CHSEM-001 Brikk capture rem
 byte-identical. Earlier native/source captures, public JVM signatures, IntelliJ API
 use, release versions and consumer pins are unchanged. Custom IntelliJ platform
 suites were not run. Commit/push this round, then stop before CHSEM-004.
+
+## CHSEM-004 result
+
+Internal checker: `brikk-sql/src/dev.brikk.house.sql/optimizer/ClickhouseCompositionValidation.kt`.
+Evidence, precise limits and reproduction:
+`vendor/data/clickhouse-semantic/composition-README.md`.
+Read-only reports separate proven intrinsic argument errors from unresolved checks,
+without an accepted/isValid flag. Checks cover left variadic designators, unary
+right operands, arrayMap arity, placeholder bounds/conventions/depth/member access,
+non-callable operands, native-backed call counts and known input incompatibilities.
+Family-only propagation can prove a later-stage mismatch without computing widths
+or changing AST result types. Schema/cast/literal-family evidence is kept separate
+from generic annotation guesses.
+
+Resolution respects potentially shadowed names, unknown/foreign schemas, body
+aliases, SQL query boundaries and alias/column collisions. NULL/wrappers, incomplete
+constness, timezone values, unsupported contexts and CHSEM-011 remain unknown.
+WITH definitions may be unused; they are not eagerly diagnosed as executed calls.
+Array-length equality is never inferred from parameter counts. URL FixedString
+runtime restrictions do not become blanket type errors against empty-array queries.
+Only the exact 26.10.2.103 semantic target is enabled; other versions remain unknown.
+
+CHSEM-004-E01 through E50 have parser and original execution evidence on both exact
+digest pins, with zero execution skips. Self-contained gates verify that no native
+success gets a static error, and every reported rule failure matches a native error
+class. Unknown native failures are not relabeled as successful validation. Finding
+identity, read-only AST/SQL behavior, cancellation and bounded deep analysis are tested.
+
+Validation: full `./kotlin test` passed 1,799 tests with 61 optional integration
+assumption aborts and zero failures. The complete Python tool suite passed 78 tests
+with one opt-in Toolchain-model skip, using the unchanged temporary SQLGlot pin;
+the ClickHouse-only suite passed 30 tests. CHSEM-001 and CHSEM-003 Brikk captures are
+byte-identical to their saved versions. Historical fixtures/ledgers/native/source
+evidence, public JVM signatures, IntelliJ API use, release versions and consumer
+dependencies are unchanged. Custom IntelliJ platform suites were not run.
+This is the internal core check; public positioned diagnostics remain CHSEM-006.
+Commit/push this round, then stop before CHSEM-005.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

@@ -1,0 +1,527 @@
+{
+  "captured_at": "2026-10-30T22:47:57.250667+00:00",
+  "fixture_sha256": "6300d142ff1f026f8c39da2f455fab43fe7be15827562098808db092a9ea5462",
+  "brikk_sha256": null,
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-004-E01\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E02\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E03\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E04\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E05\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E06\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E07\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E08\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E09\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E10\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E11\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E12\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E13\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E14\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E15\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E16\",\"formatted\":\"SELECT arrayMap(_129, [1])\"}\n{\"id\":\"CHSEM-004-E17\",\"formatted\":\"SELECT arrayMap(_2, [1])\"}\n{\"id\":\"CHSEM-004-E18\",\"formatted\":\"SELECT arrayMap(tuple(_, _), [1], ['a'])\"}\n{\"id\":\"CHSEM-004-E19\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E20\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E21\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E22\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E23\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E24\",\"formatted\":\"SELECT arrayMap(x -> toString(NULL, 1, 2), ['x'])\"}\n{\"id\":\"CHSEM-004-E25\",\"formatted\":\"SELECT arrayMap(x -> toString(TRY_CAST('bad' AS UInt8), 'UTC'), ['x'])\"}\n{\"id\":\"CHSEM-004-E26\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E27\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E28\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E29\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E30\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E31\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E32\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E33\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E34\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E35\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E36\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E37\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E38\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E39\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E40\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E41\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E42\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E43\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E44\",\"formatted\":\"SELECT arrayMap(x -> lower(t.n), t.a)\\nFROM\\n(\\n    SELECT\\n        TRY_CAST('bad' AS UInt8) AS n,\\n        CAST(['x'], 'Array(String)') AS a\\n) AS t\"}\n{\"id\":\"CHSEM-004-E45\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E46\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E47\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E48\",\"formatted\":null}\n{\"id\":\"CHSEM-004-E49\",\"formatted\":\"SELECT arrayMap(x -> multiply(NULL, 1, 2), ['x'])\"}\n{\"id\":\"CHSEM-004-E50\",\"formatted\":\"SELECT arrayMap(x -> trimBoth(NULL, 'x', 'y'), ['x'])\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-004-E01",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E02",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E03",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E04",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E05",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E06",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E07",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E08",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E09",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E10",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E11",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E12",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E13",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E14",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E15",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E16",
+      "formatted": "SELECT arrayMap(_129, [1])"
+    },
+    {
+      "id": "CHSEM-004-E17",
+      "formatted": "SELECT arrayMap(_2, [1])"
+    },
+    {
+      "id": "CHSEM-004-E18",
+      "formatted": "SELECT arrayMap(tuple(_, _), [1], ['a'])"
+    },
+    {
+      "id": "CHSEM-004-E19",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E20",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E21",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E22",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E23",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E24",
+      "formatted": "SELECT arrayMap(x -> toString(NULL, 1, 2), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E25",
+      "formatted": "SELECT arrayMap(x -> toString(TRY_CAST('bad' AS UInt8), 'UTC'), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E26",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E27",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E28",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E29",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E30",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E31",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E32",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E33",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E34",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E35",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E36",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E37",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E38",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E39",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E40",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E41",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E42",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E43",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E44",
+      "formatted": "SELECT arrayMap(x -> lower(t.n), t.a)\nFROM\n(\n    SELECT\n        TRY_CAST('bad' AS UInt8) AS n,\n        CAST(['x'], 'Array(String)') AS a\n) AS t"
+    },
+    {
+      "id": "CHSEM-004-E45",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E46",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E47",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E48",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-004-E49",
+      "formatted": "SELECT arrayMap(x -> multiply(NULL, 1, 2), ['x'])"
+    },
+    {
+      "id": "CHSEM-004-E50",
+      "formatted": "SELECT arrayMap(x -> trimBoth(NULL, 'x', 'y'), ['x'])"
+    }
+  ],
+  "brikk_parse_query": null,
+  "execution": [
+    {
+      "id": "CHSEM-004-E01",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper, [' x ']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E02",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 25 (|): | upper, [' x ']). Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E03",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | trim, [' X ']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E04",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 24 (|): | upper, ['x']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E05",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 32 (|): | upper, ['y']). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E06",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | upper, [1]). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E07",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 29 (|): | upper, [1]). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E08",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | concat, ['X']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E09",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | multiply, ['x']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E10",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | concat(_1, _2), ['x']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E11",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | toString, [2]). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E12",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | toString, [2], [3]). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E13",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 33 (|): | toString, [2], [3]). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E14",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 32 (|): | lower, [' x ']). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E15",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 33 (|): | lower, [' x ']). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E16",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_129` in scope SELECT arrayMap(_129, [1]): Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-004-E17",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_2` in scope SELECT arrayMap(_2, [1]): Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-004-E18",
+      "returncode": 47,
+      "stdout": "",
+      "stderr": "Code: 47. DB::Exception: Unknown expression or function identifier `_` in scope SELECT arrayMap(tuple(_, _), [1], ['a']): Note: the query does not have the FROM clause. Did you forget to add it?. (UNKNOWN_IDENTIFIER)\n"
+    },
+    {
+      "id": "CHSEM-004-E19",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, [1, 2]). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E20",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 34 (|): | lower, [2], [3]). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E21",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 34 (|): | toString | upper, [2], [3]). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E22",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 37 (|): | upper, CAST([1] AS Array(UInt8))). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E23",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 40 (|): | upper, ['x']). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E24",
+      "returncode": 0,
+      "stdout": "[NULL]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-004-E25",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `TRY_CAST` does not exist. In scope x -> toString(TRY_CAST('bad' AS UInt8), 'UTC'). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-004-E26",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 34 (|): | toString, [1, 2], [3]). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E27",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 37 (|): | upper, CAST(['abc'] AS Array(FixedString(3)))). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E28",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 37 (|): | upper, CAST([] AS Array(FixedString(3)))). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E29",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 51 (|): | upper, ['x']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E30",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper, ['x']) FROM (SELECT 1 AS trim) t. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E31",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 20 (|): | upper, ['x']) AS unused SELECT 1. Expected one of: token, Comma, ClosingRoundBracket, token sequence, Dot, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E32",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 36 (|): | (y -> toTypeName(y)), CAST([1] AS Array(UInt8))). Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E33",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 46 (|): | upper, ['x']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E34",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | UCASE, ['X']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E35",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 26 (|): | upper, [1]). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E36",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 29 (|): | upper, ['x']). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E37",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 28 (|): | upper, ['B']). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E38",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, 1). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E39",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 21 (|): | upper, CAST([tuple('a')] AS Array(Tuple(x String)))). Expected one of: ParserArrayOfJSONIdentifierDelimiter, token sequence, OpeningSquareBracket, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E40",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper, CAST([tuple('a')] AS Array(Tuple(x String)))). Expected one of: ParserArrayOfJSONIdentifierDelimiter, token sequence, OpeningSquareBracket, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E41",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, CAST([NULL] AS Array(Nullable(UInt8)))). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E42",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 37 (|): | upper, CAST([0] AS Array(DateTime))). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E43",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 32 (|): | lower, CAST([[1]] AS Array(Array(UInt8))), CAST([[2]] AS Array(Array(UInt8)))). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E44",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `TRY_CAST` does not exist. In scope SELECT TRY_CAST('bad' AS UInt8) AS n, CAST(['x'], 'Array(String)') AS a. (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-004-E45",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 55 (|): | upper,a) FROM (SELECT CAST(['x'] AS Array(String)) a) t SETTINGS prefer_column_name_to_alias = 1. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS, end of query. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E46",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 57 (|): | upper,['x']). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E47",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper,CAST(['x'] AS Array(CHAR))). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E48",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 36 (|): | upper,CAST([0] AS Array(TIMESTAMP))). Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-004-E49",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function multiply doesn't match: passed 3, should be 2: In scope x -> multiply(NULL, 1, 2). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-004-E50",
+      "returncode": 0,
+      "stdout": "[NULL]\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": []
+}

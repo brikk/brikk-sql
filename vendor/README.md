@@ -448,6 +448,12 @@ generic literal widths, new arithmetic results and later composition stages are
 not guessed. A native-valid parenthesized explicit-lambda composition remains a
 named parser gap, CHSEM-011. See [the input-typing guide](data/clickhouse-semantic/lambda-input-README.md).
 
+CHSEM-004 adds read-only internal composition argument validation using the pinned
+facts. Its 50 original-query controls retain separate error/unknown reports and
+exact native outcomes on both pins, including successful scope/NULL/runtime controls
+that must not receive false errors. Family-level checking does not annotate result
+types or expose editor diagnostics. See [the rule-checker guide](data/clickhouse-semantic/composition-README.md).
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 The original embedded capture below is retained. Current official-build captures
