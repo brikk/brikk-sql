@@ -8,6 +8,7 @@ import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
 import dev.brikk.house.sql.ast.PipeCall
@@ -370,6 +371,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * use dialect normalization, including its quoted-name rules, as lineage does.
      */
     val sourceTables: List<String> by lazy {
+        if (ast.isDuckdbNameShow()) throw ShapeError("SHOW target dependencies depend on runtime name resolution")
         var tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
         if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
             tree = tree.thisArg as? Expression ?: throw ShapeError("EXPLAIN has no structured child")
@@ -492,6 +494,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if (tree.isDuckdbNameShow()) throw ShapeError("SHOW output depends on runtime show_behavior/catalog; it is not the target query shape")
         if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
             val output = tree.duckdbExplainResult() ?: throw ShapeError("EXPLAIN options or child context are invalid/unmodeled")
             return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })

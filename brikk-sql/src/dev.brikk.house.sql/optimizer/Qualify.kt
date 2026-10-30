@@ -11,6 +11,7 @@ import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
 
 // Import aliases: the rule functions share names with qualify()'s Boolean options
 // (which mirror Python's keyword arguments).
@@ -83,6 +84,7 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if (expression.isDuckdbNameShow()) throw OptimizeError("SHOW resolution requires runtime catalog/show_behavior, not SELECT qualification")
     if (resolvedDialect.name == "duckdb" && expression.hasDuckdbCopyLayout())
         throw OptimizeError("COPY layout options bind against output columns; automatic qualification is not modeled")
     if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("Qualify an EXPLAIN child explicitly; automatic wrapper rewriting is not modeled")

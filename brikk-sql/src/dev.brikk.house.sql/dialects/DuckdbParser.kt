@@ -909,7 +909,39 @@ open class DuckdbParser(
         }
         val parser = findParser(showParsers)
         if (parser != null) return parser(this)
+        if (currToken.tokenType == TokenType.STRING) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            val body = lexed.tokens.filter { it.start >= start && it.end < end }
+            if (body.firstOrNull()?.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING) ||
+                body.firstOrNull()?.text?.uppercase() !in setOf("DATABASES", "SCHEMAS", "TABLES", "ALL")) {
+                if (lexed.failureOffset != null) raiseError("Incomplete SHOW target")
+                val nested = DuckdbParser(errorLevel, tokenizerConfig).apply {
+                    captureSourceRanges = this@DuckdbParser.captureSourceRanges
+                    checkCanceled = this@DuckdbParser.checkCanceled
+                }
+                val result = nested.parseIntoWith(body, sql) { (it as DuckdbParser).parseShowNameBody() }
+                advance()
+                return result ?: throw ParseError("Expected SHOW target")
+            }
+        } else if (currToken.tokenType == TokenType.IDENTIFIER || currToken.text.uppercase() !in setOf("DATABASES", "SCHEMAS", "TABLES", "ALL")) return parseShowNameBody()
         return parseAsCommand(prevToken)
+    }
+
+    private fun parseShowNameBody(): Expression {
+        if (currToken.tokenType == TokenType.L_PAREN) {
+            val query = parseSelect(nested = true, parseSubqueryAlias = false)
+            return expression(Show(args("this" to "DUCKDB_QUERY", "query" to query)))
+        }
+        val target = if (currToken.tokenType == TokenType.STRING) parseString() else {
+            val parts = mutableListOf<Expression>()
+            parseIdVar()?.let(parts::add)
+            while (match(TokenType.DOT)) parts += parseIdVar() ?: throw ParseError("Expected SHOW name component")
+            if (parts.size > 1) dev.brikk.house.sql.ast.Dot.build(parts) else parts.singleOrNull()
+        }
+        if (target == null) raiseError("Expected SHOW name")
+        return expression(Show(args("this" to "DUCKDB_NAME", "target" to target)))
     }
 
     private fun resourceWords(vararg words: String): Boolean {

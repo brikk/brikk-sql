@@ -66,6 +66,7 @@ import dev.brikk.house.sql.ast.With
 import dev.brikk.house.sql.ast.outputName
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
@@ -156,6 +157,7 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
+        if (node.isDuckdbNameShow()) return true
         if (node is dev.brikk.house.sql.ast.DuckdbExplain) {
             (node.thisArg as? Expression)?.let { statement(it, env) }
             return true

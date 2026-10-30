@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-027.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-028.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -740,10 +740,30 @@ and IDE introspection/completion are separate contracts.
   /tmp/opencode/duckdb-partition-path-final-full.log.
   Final 19 focused controls passed again. Log: /tmp/opencode/duckdb-partition-path-final-controls.log.
 
-- [ ] `DDB20-028` SHOW configuration settings [AUDIT].
+- [x] `DDB20-028` SHOW configuration settings [DONE].
   Pin `SHOW threads`, table-name collisions and `show_behavior` auto/table/setting.
   Preserve the setting operation rather than blindly treating SHOW as DESCRIBE table.
   Record the 2.0 deprecation of SHOW for describing tables/views/queries.
+  Structured ordinary SHOW names/qualified names/string names and parenthesized queries
+  use the existing Show node with distinct DuckDB operation tags and authored targets.
+  Generation never rewrites them to DESCRIBE. Auto/table/setting resolution, table-name
+  collisions, qualified-name errors and setting changes are native responsibilities.
+  Scope output, query-result lineage, source dependencies and automatic qualification
+  explicitly avoid invented runtime facts; unproved cross-target SHOW execution refuses.
+  SHOW TABLES/ALL TABLES and legacy command forms retain their earlier representations.
+  Final docs sql/statements/show and pinned show_settings.test/bind_showref.cpp record
+  the 2.0 deprecation of describing tables/views/queries with SHOW. Native validation
+  remains parse-only: a described range(nextval(...)) must not bind during editor checks.
+  Native prepared SHOW snapshots the setting at bind time; fresh SHOW sees a later SET,
+  but repeated prepared execution retains the old value. No automatic reprepare or retry.
+  Prepared query controls use CAST(? AS type). The pre-existing generic strict-parser gap
+  for the combined ?::Type/QDCOLON token is not claimed fixed by SHOW support; lexical
+  parameter scanning alone does not prove strict parsing of that spelling.
+  Evidence: DuckdbShowSettingsTest and DuckdbShowSettingsResultTest. Fresh-build full gates
+  passed 1,373 core, 117 metadata and 183 native/verifier tests, zero skips with both signed
+  fixtures enabled. Log /tmp/opencode/duckdb-show-settings-verified-full.log. No new AST nodes,
+  data-class fields, generated catalogs/corpora or ledger changes, IntelliJ calls, user
+  connection changes, consumer pins, merge or publication.
 
 - [ ] `DDB20-029` setval [AUDIT].
   Function metadata already explicitly asserts setval exists. Pin overloads, default and

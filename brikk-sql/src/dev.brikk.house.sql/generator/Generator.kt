@@ -13,6 +13,7 @@ import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbOverlayArguments
 import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
 import dev.brikk.house.sql.dialects.duckdbPathFunctionName
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -406,6 +407,11 @@ open class Generator(
             unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
         if (dialect.name != "duckdb" && expr.findAll<DuckdbExplain>().any())
             unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
+        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbNameShow() })
+            unexecutable("DuckDB SHOW name/query resolution has no verified cross-target translation")
+        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true) &&
+            expr.walk().any { it is Show || it is Command && it.name.equals("SHOW", true) })
+            unexecutable("DuckDB SHOW is not a verified setting/table resolution translation from $sourceDialect")
         if (expr.hasDuckdbCopyLayout() && sourceDialect != null && !sourceDialect.equals(dialect.name, true) &&
             (dialect.name == "duckdb" || sourceDialect.equals("duckdb", true)))
             unexecutable("DuckDB COPY PARTITION_BY/PARTITION_PATH/ORDER_BY has no verified cross-target file-layout translation")

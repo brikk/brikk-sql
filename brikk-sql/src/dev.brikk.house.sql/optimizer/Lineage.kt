@@ -11,6 +11,7 @@ import dev.brikk.house.sql.ast.Update
 import dev.brikk.house.sql.ast.Merge
 import dev.brikk.house.sql.ast.DerivedTable
 import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
 import dev.brikk.house.sql.ast.Pivot
@@ -202,6 +203,7 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if (expression.isDuckdbNameShow()) throw SqlglotError("SHOW metadata/setting output is not target query-result lineage")
     if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw SqlglotError("EXPLAIN plan text has computed provenance, not child-result lineage")
     if (expression.isDuckdbExternalResourceStatement()) throw SqlglotError("External-resource lifecycle state is not query-result lineage")
     if (expression.isDuckdbExtensionManagement()) throw SqlglotError("Repository identity/fingerprints are runtime management results, not query-result lineage")

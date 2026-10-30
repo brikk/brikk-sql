@@ -237,6 +237,7 @@ open class DuckdbGenerator(
 
     // sqlglot: DuckDBGenerator.show_sql
     override fun showSql(expression: Show): String {
+        if (expression.isDuckdbNameShow()) return "SHOW " + sql(expression, if (expression.name == "DUCKDB_QUERY") "query" else "target")
         var from = sql(expression, "from_")
         if (from.isNotEmpty()) from = " FROM $from"
         return "SHOW ${expression.name}$from"

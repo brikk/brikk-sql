@@ -623,6 +623,20 @@ The pinned JDBC driver reports the tested empty COPY CTE as update count zero de
 outer SELECT. Tests use execute once, not executeQuery followed by a retry; no production
 classification workaround is added.
 
+DuckDB 2.0 `SHOW name` retains its authored SHOW operation and name quoting. It is not a
+DESCRIBE rewrite: `show_behavior='auto'` prefers a matching table, then a setting; `table`
+and `setting` restrict resolution. Qualified names cannot resolve to settings. SHOW of
+tables/views/queries is deprecated in 2.0 in favor of DESCRIBE; a parenthesized query still
+describes its columns regardless of show_behavior. Existing SHOW TABLES/ALL TABLES and
+other legacy command forms retain their previous representation. Symbolic analysis does
+not guess a setting/table result shape or pretend that described-query rows are returned.
+Qualification, result lineage, source dependencies and unproved cross-target SHOW execution
+refuse. Native controls compare modes, collisions, quoted/case-insensitive names, error
+classes, prepared execution and parse-only validation without binding the described query.
+Native prepared SHOW captures its setting value at bind time; a newly executed SHOW sees a
+later SET, but an existing prepared SHOW retains its earlier value. No auto-reprepare or retry
+is added to manufacture a fresh value.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every
