@@ -1,0 +1,266 @@
+[
+    {
+        "id": "CHSEM-003-E01",
+        "input_sql": "SELECT arrayMap(x -> toTypeName(x), CAST([1,2] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> toTypeName(x), CAST([1, 2] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E02",
+        "input_sql": "SELECT arrayMap(toTypeName(_), CAST([1] AS Array(UInt16))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(toTypeName(_), CAST([1] AS Array(UInt16))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "UInt16"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E03",
+        "input_sql": "SELECT arrayMap((x,y) -> concat(toTypeName(x), ':', toTypeName(y)), CAST([1] AS Array(UInt8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap((x, y) -> CONCAT(toTypeName(x), ':', toTypeName(y)), CAST([1] AS Array(UInt8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8",
+            "String"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E04",
+        "input_sql": "SELECT arrayMap(concat(toTypeName(_1), ':', toTypeName(_2)), CAST([1] AS Array(UInt8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(CONCAT(toTypeName(_1), ':', toTypeName(_2)), CAST([1] AS Array(UInt8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "UInt8",
+            "String"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E05",
+        "input_sql": "SELECT arrayMap(tuple(_,_), CAST([1] AS Array(Int8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(tuple(_, _), CAST([1] AS Array(Int8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "Int8",
+            "String"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E06",
+        "input_sql": "SELECT arrayMap(_2, CAST([1] AS Array(UInt8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(_2, CAST([1] AS Array(UInt8)), CAST(['a'] AS Array(String))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "String"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E07",
+        "input_sql": "SELECT arrayMap(tuple(_1,_1), CAST([1] AS Array(UInt32))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(tuple(_1, _1), CAST([1] AS Array(UInt32))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "UInt32",
+            "UInt32"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E08",
+        "input_sql": "SELECT arrayMap(xs -> arrayMap(x -> toTypeName(x), xs), CAST([[1,2]] AS Array(Array(UInt16)))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(xs -> arrayMap(x -> toTypeName(x), xs), CAST([[1, 2]] AS Array(Array(UInt16)))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "Array(UInt16)",
+            "UInt16"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E09",
+        "input_sql": "SELECT arrayMap(arrayMap(toTypeName(_), _1), CAST([[1]] AS Array(Array(UInt8)))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(arrayMap(toTypeName(_), _1), CAST([[1]] AS Array(Array(UInt8)))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "Array(UInt8)",
+            "UInt8"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E10",
+        "input_sql": "SELECT arrayMap(x -> arrayMap(concat(toTypeName(x), ':', toTypeName(_1)), CAST([2] AS Array(UInt64))), CAST([1] AS Array(Int16))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> arrayMap(CONCAT(toTypeName(x), ':', toTypeName(_1)), CAST([2] AS Array(UInt64))), CAST([1] AS Array(Int16))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "Int16"
+        ],
+        "implicit_types": [
+            "UInt64"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E11",
+        "input_sql": "SELECT arrayMap(arrayMap(y -> concat(toTypeName(y), ':', toTypeName(_1)), CAST(['a'] AS Array(String))), CAST([1] AS Array(Int8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(arrayMap(y -> CONCAT(toTypeName(y), ':', toTypeName(_1)), CAST(['a'] AS Array(String))), CAST([1] AS Array(Int8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "String"
+        ],
+        "implicit_types": [
+            "Int8"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E12",
+        "input_sql": "SELECT arrayMap(x -> arrayMap(x -> toTypeName(x), CAST(['a'] AS Array(String))), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> arrayMap(x -> toTypeName(x), CAST(['a'] AS Array(String))), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8",
+            "String"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E13",
+        "input_sql": "SELECT arrayMap(_1 -> arrayMap(_1 -> toTypeName(_1), CAST(['a'] AS Array(String))), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(_1 -> arrayMap(_1 -> toTypeName(_1), CAST(['a'] AS Array(String))), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8",
+            "String"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E14",
+        "input_sql": "SELECT arrayMap(x -> tuple(toTypeName(x), toTypeName(t.n)), t.a) AS value, toTypeName(value) AS type FROM (SELECT CAST([1] AS Array(UInt8)) AS a, CAST(10 AS UInt32) AS n) AS t",
+        "generated": "SELECT arrayMap(x -> tuple(toTypeName(x), toTypeName(t.n)), t.a) AS value, toTypeName(value) AS type FROM (SELECT CAST([1] AS Array(UInt8)) AS a, CAST(10 AS UInt32) AS n) AS t",
+        "formal_types": [
+            "UInt8"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E15",
+        "input_sql": "SELECT tuple(toTypeName(t._), toTypeName(t._1), toTypeName(t._2)) AS value, toTypeName(value) AS type FROM (SELECT CAST(1 AS Int16) AS _, CAST('a' AS String) AS _1, CAST(2 AS UInt8) AS _2) AS t",
+        "generated": "SELECT tuple(toTypeName(t._), toTypeName(t._1), toTypeName(t._2)) AS value, toTypeName(value) AS type FROM (SELECT CAST(1 AS Int16) AS _, CAST('a' AS String) AS _1, CAST(2 AS UInt8) AS _2) AS t",
+        "formal_types": [],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E16",
+        "input_sql": "SELECT arrayMap(_1 -> tuple(toTypeName(_1), toTypeName(t._1)), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type FROM (SELECT CAST('a' AS String) AS _1) AS t",
+        "generated": "SELECT arrayMap(_1 -> tuple(toTypeName(_1), toTypeName(t._1)), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type FROM (SELECT CAST('a' AS String) AS _1) AS t",
+        "formal_types": [
+            "UInt8"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E17",
+        "input_sql": "SELECT tuple(arrayMap(x -> toTypeName(x), CAST([1] AS Array(UInt8))), arrayMap(x -> toTypeName(x), CAST(['a'] AS Array(String)))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT tuple(arrayMap(x -> toTypeName(x), CAST([1] AS Array(UInt8))), arrayMap(x -> toTypeName(x), CAST(['a'] AS Array(String)))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8",
+            "String"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E18",
+        "input_sql": "SELECT arrayMap(toString(_) | toTypeName(_), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(toString(_) | toTypeName(_), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "UInt8",
+            "UNKNOWN"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E19",
+        "input_sql": "SELECT arrayMap((x,y) -> toTypeName(x), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap((x, y) -> toTypeName(x), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UNKNOWN",
+            "UNKNOWN"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E20",
+        "input_sql": "SELECT arrayMap(_ + _1, CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(_ + _1, CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "UNKNOWN",
+            "UNKNOWN"
+        ]
+    },
+    {
+        "id": "CHSEM-003-E21",
+        "input_sql": "SELECT arrayMap(x -> (SELECT x), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> (SELECT x), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E22",
+        "input_sql": "SELECT arrayMap(x -> toTypeName(x), 1) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> toTypeName(x), 1) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UNKNOWN"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E23",
+        "input_sql": "SELECT arrayMap(x -> arrayFilter(x -> length(x) > 0, CAST(['a'] AS Array(String))), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> arrayFilter(x -> LENGTH(x) > 0, CAST(['a'] AS Array(String))), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8",
+            "UNKNOWN"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E24",
+        "input_sql": "SELECT arrayMap(x -> toTypeName(x), CAST([1,NULL] AS Array(Nullable(UInt8)))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> toTypeName(x), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "Nullable(UInt8)"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E25",
+        "input_sql": "SELECT arrayMap(x -> toTypeName(x), CAST(['abc'] AS Array(FixedString(3)))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> toTypeName(x), CAST(['abc'] AS Array(FixedString(3)))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "FixedString(3)"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E26",
+        "input_sql": "SELECT arrayMap((x -> toString(x)) | (y -> toTypeName(y)), CAST([1] AS Array(UInt8))) AS value, toTypeName(value) AS type",
+        "known_parser_gap": "CHSEM-011"
+    },
+    {
+        "id": "CHSEM-003-E27",
+        "input_sql": "SELECT arrayMap(x -> toTypeName(x), arrayMap(y -> y, CAST([1] AS Array(UInt8)))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(x -> toTypeName(x), arrayMap(y -> y, CAST([1] AS Array(UInt8)))) AS value, toTypeName(value) AS type",
+        "formal_types": [
+            "UInt8",
+            "UNKNOWN"
+        ],
+        "implicit_types": []
+    },
+    {
+        "id": "CHSEM-003-E28",
+        "input_sql": "SELECT arrayMap(upper(trim(_)), CAST([' a '] AS Array(String))) AS value, toTypeName(value) AS type",
+        "generated": "SELECT arrayMap(upper(TRIM(_)), CAST([' a '] AS Array(String))) AS value, toTypeName(value) AS type",
+        "formal_types": [],
+        "implicit_types": [
+            "String"
+        ]
+    }
+]

@@ -2,6 +2,11 @@ package dev.brikk.house.sql
 
 import dev.brikk.house.sql.ast.ClickhouseComposition
 import dev.brikk.house.sql.ast.ClickhouseImplicitLambda
+import dev.brikk.house.sql.ast.ClickhouseLambdaArgument
+import dev.brikk.house.sql.ast.DataType
+import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.Lambda
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Select
 import dev.brikk.house.sql.ast.Serde
@@ -22,6 +27,49 @@ import kotlin.test.assertTrue
 /** Syntax/serialization gate and optional native-probe input, not a semantic validator. */
 class ClickhouseSemanticFixturesTest {
     private val json = Json { prettyPrint = true }
+
+    @Test
+    fun lambdaParameterTypesMatchTheNativeInputFixturesWithoutCertifyingCalls() {
+        val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/lambda-input-cases.json").readText()).jsonObject
+        fun type(node: Expression): String = if (node.isType(DType.UNKNOWN)) "UNKNOWN"
+            else (node.type as? DataType)?.sql("clickhouse") ?: "MISSING"
+        val observations = fixture.getValue("execution").jsonArray.map { row ->
+            val case = row.jsonObject
+            val id = case.getValue("id").jsonPrimitive.content
+            val gap = case["brikk_parser_gap"]
+            if (gap != null) return@map buildJsonObject {
+                put("id", id)
+                put("input_sql", case.getValue("sql"))
+                put("known_parser_gap", gap)
+            }
+            val ast = parseOne(case.getValue("sql").jsonPrimitive.content, "clickhouse")
+            assertIs<Select>(ast, id)
+            val generated = ast.sql("clickhouse")
+            assertEquals(ast, parseOne(generated, "clickhouse"), id)
+            val annotated = annotateTypes(ast, dialect = Dialects.CLICKHOUSE)
+            val formal = annotated.findAll<Lambda>(bfs = false).flatMap {
+                it.expressionsArg.filterIsInstance<Identifier>().asSequence()
+            }.map(::type).toList()
+            val implicit = annotated.findAll<ClickhouseLambdaArgument>(bfs = false).map(::type).toList()
+            assertEquals(case.getValue("formal_types").jsonArray.map { it.jsonPrimitive.content }, formal, id)
+            assertEquals(case.getValue("implicit_types").jsonArray.map { it.jsonPrimitive.content }, implicit, id)
+            assertEquals(annotated, Serde.load(Serde.dump(annotated)), id)
+            assertEquals(generated, annotated.sql("clickhouse"), id)
+            buildJsonObject {
+                put("id", id)
+                put("input_sql", case.getValue("sql"))
+                put("generated", generated)
+                put("formal_types", JsonArray(formal.map(::JsonPrimitive)))
+                put("implicit_types", JsonArray(implicit.map(::JsonPrimitive)))
+            }
+        }
+        System.getProperty("brikk.clickhouseLambdaInputOut")?.let { path ->
+            File(path).apply {
+                parentFile?.mkdirs()
+                writeText(json.encodeToString(JsonArray.serializer(), JsonArray(observations)) + "\n")
+            }
+        }
+    }
 
     @Test
     fun callableFactsReferenceTheExactVersionedSources() {

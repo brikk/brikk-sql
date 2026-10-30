@@ -591,6 +591,20 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator._annotate_expression
     private fun annotateExpression(expression: Expression, scope: Scope?) {
+        if (dialect.name == "clickhouse") {
+            ClickhouseLambdaTyping(
+                alreadyAnnotated = { expr -> expr.objectId in visited ||
+                    (!overwriteTypes && expr.type != null && !expr.isType(DType.UNKNOWN)) },
+                annotateNode = { expr -> annotateExpressionNode(expr, scope) },
+                bindType = { expr, type -> setType(expr, type?.copy()) },
+                usesGenericArithmetic = { expr ->
+                    val spec = this.expressionMetadata[expr::class]
+                    spec is TypingSpec.Annotate &&
+                        (spec.ref is AnnotatorRef.BinaryAnn || spec.ref is AnnotatorRef.UnaryAnn || spec.ref is AnnotatorRef.DivAnn)
+                },
+            ).annotate(expression)
+            return
+        }
         val stack = ArrayDeque<Pair<Expression, Boolean>>()
         stack.addLast(Pair(expression, false))
 
@@ -612,66 +626,71 @@ class TypeAnnotator(
                 continue
             }
 
-            if (scope != null && expr is Column && expr.text("table").isNotEmpty()) {
-                annotateColumn(expr, scope)
-                continue
-            }
+            annotateExpressionNode(expr, scope)
+        }
+    }
 
-            // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
-            // evidence, or its documented TEXT default (not a fabricated path type).
-            if (expr is JSONValue && dialect.name in setOf("postgres", "trino")) {
-                setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
-                continue
-            }
-            if (expr is dev.brikk.house.sql.ast.TrinoJsonSerialize && dialect.name == "trino") {
-                val returning = expr.args["returning"] as? Expression
-                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
-                setType(expr, type as? DataType ?: DType.VARCHAR)
-                continue
-            }
-            if (expr is dev.brikk.house.sql.ast.TrinoJsonPathCall && dialect.name == "trino") {
-                val returning = expr.args["returning"] as? Expression
-                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
-                setType(expr, type as? DataType ?: if (expr.text("kind") == "JSON_EXISTS") DType.BOOLEAN else DType.VARCHAR)
-                continue
-            }
-            if (expr is dev.brikk.house.sql.ast.JSONArray && dialect.name == "trino") {
-                val returning = expr.args["return_type"] as? Expression
-                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
-                setType(expr, type as? DataType ?: DType.VARCHAR)
-                continue
-            }
+    /** Shared node rules; ClickHouse's contextual walk changes binding/order, not these rules. */
+    private fun annotateExpressionNode(expr: Expression, scope: Scope?) {
+        if (scope != null && expr is Column && expr.text("table").isNotEmpty()) {
+            annotateColumn(expr, scope)
+            return
+        }
 
-            val spec = expressionMetadata[expr::class]
+        // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
+        // evidence, or its documented TEXT default (not a fabricated path type).
+        if (expr is JSONValue && dialect.name in setOf("postgres", "trino")) {
+            setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
+            return
+        }
+        if (expr is dev.brikk.house.sql.ast.TrinoJsonSerialize && dialect.name == "trino") {
+            val returning = expr.args["returning"] as? Expression
+            val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+            setType(expr, type as? DataType ?: DType.VARCHAR)
+            return
+        }
+        if (expr is dev.brikk.house.sql.ast.TrinoJsonPathCall && dialect.name == "trino") {
+            val returning = expr.args["returning"] as? Expression
+            val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+            setType(expr, type as? DataType ?: if (expr.text("kind") == "JSON_EXISTS") DType.BOOLEAN else DType.VARCHAR)
+            return
+        }
+        if (expr is dev.brikk.house.sql.ast.JSONArray && dialect.name == "trino") {
+            val returning = expr.args["return_type"] as? Expression
+            val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+            setType(expr, type as? DataType ?: DType.VARCHAR)
+            return
+        }
 
-            if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.Div &&
-                dev.brikk.house.sql.dialects.clickhouseBooleanSetting(expr, "sql_compatible_division_for_integers") == true) {
-                // divideExact's integer width depends on actual operand types. Do not report Float64
-                // just because the dialect's historical default uses fractional division.
-                val real = listOf(expr.left, expr.right).any { it.isType(DType.FLOAT, DType.DOUBLE) }
-                setType(expr, if (real) DType.DOUBLE else DType.UNKNOWN)
-                continue
-            }
+        val spec = expressionMetadata[expr::class]
 
-            if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
-                setType(expr, when (expr.name.uppercase()) {
-                    "LOCALTIME" -> DType.TIME
-                    "LOCALTIMESTAMP", "NOW", "CURRENT_TIMESTAMP" -> DType.DATETIME
-                    "SESSION_USER", "CURRENT_USER" -> DType.VARCHAR
-                    "CURRENT_DATE" -> DType.DATE
-                    else -> DType.UNKNOWN
-                })
-                continue
-            }
-            // Composition and implicit lambdas are function values, never integer operators.
-            // Keep their types unknown until argument-aware function typing is available.
+        if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.Div &&
+            dev.brikk.house.sql.dialects.clickhouseBooleanSetting(expr, "sql_compatible_division_for_integers") == true) {
+            // divideExact's integer width depends on actual operand types. Do not report Float64
+            // just because the dialect's historical default uses fractional division.
+            val real = listOf(expr.left, expr.right).any { it.isType(DType.FLOAT, DType.DOUBLE) }
+            setType(expr, if (real) DType.DOUBLE else DType.UNKNOWN)
+            return
+        }
 
-            when {
-                spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)
-                spec is TypingSpec.Returns -> setType(expr, spec.dtype)
-                spec is TypingSpec.ReturnsDataType -> setType(expr, spec.dtype)
-                else -> setType(expr, DType.UNKNOWN)
-            }
+        if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
+            setType(expr, when (expr.name.uppercase()) {
+                "LOCALTIME" -> DType.TIME
+                "LOCALTIMESTAMP", "NOW", "CURRENT_TIMESTAMP" -> DType.DATETIME
+                "SESSION_USER", "CURRENT_USER" -> DType.VARCHAR
+                "CURRENT_DATE" -> DType.DATE
+                else -> DType.UNKNOWN
+            })
+            return
+        }
+        // Function values/results remain unknown. CHSEM-003 only binds their arguments;
+        // composition validation and result propagation are separate later work.
+
+        when {
+            spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)
+            spec is TypingSpec.Returns -> setType(expr, spec.dtype)
+            spec is TypingSpec.ReturnsDataType -> setType(expr, spec.dtype)
+            else -> setType(expr, DType.UNKNOWN)
         }
     }
 

@@ -441,6 +441,13 @@ the finite argument/type/error cases. See [the callable guide](data/clickhouse-s
 for exact input subsets, native-vs-explicit arity, aliases and unknowns. No registry
 overloads or historical semantic certifications are inferred from these probes.
 
+CHSEM-003 adds ClickHouse-only arrayMap parameter binding and 28 version-pinned
+input-type/control cases. New annotations and original native outcomes are stored
+separately from earlier evidence. Known cast/schema element types are copied;
+generic literal widths, new arithmetic results and later composition stages are
+not guessed. A native-valid parenthesized explicit-lambda composition remains a
+named parser gap, CHSEM-011. See [the input-typing guide](data/clickhouse-semantic/lambda-input-README.md).
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 The original embedded capture below is retained. Current official-build captures

@@ -163,6 +163,10 @@ reproduces them. The internal Kotlin callable-fact descriptions follow those
 declarations, with native argument/type observations recorded separately. The
 excerpts are research evidence, not source bundled into the published library.
 
+CHSEM-003's `lambda-input-native/` captures in the same directory contain additional
+finite argument-type and error observations from the same pinned Apache-2.0 images.
+They remain separate from the earlier callable and historical semantic captures.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

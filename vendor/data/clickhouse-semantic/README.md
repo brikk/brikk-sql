@@ -9,6 +9,9 @@ ClickHouse is Apache-2.0 licensed; see `ATTRIBUTIONS.md`.
 CHSEM-002 adds a separate [callable-fact guide](callables-README.md), source excerpts
 and native argument/type probes. It leaves all CHSEM-001 inputs and captures intact.
 
+CHSEM-003 adds [contextual lambda input typing](lambda-input-README.md), with separate
+annotation/native evidence and an explicit CHSEM-011 parser-gap control.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

@@ -1,0 +1,307 @@
+{
+  "captured_at": "2026-10-30T21:45:04.618724+00:00",
+  "fixture_sha256": "b917c1a9932d70291fdd37d0e4af74be3bfc01d15ea8ce5c4eeb6c4e77d65a76",
+  "brikk_sha256": null,
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-003-E01\",\"formatted\":\"SELECT\\n    arrayMap(x -> toTypeName(x), CAST([1, 2], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E02\",\"formatted\":\"SELECT\\n    arrayMap(toTypeName(_), CAST([1], 'Array(UInt16)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E03\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> concat(toTypeName(x), ':', toTypeName(y)), CAST([1], 'Array(UInt8)'), CAST(['a'], 'Array(String)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E04\",\"formatted\":\"SELECT\\n    arrayMap(concat(toTypeName(_1), ':', toTypeName(_2)), CAST([1], 'Array(UInt8)'), CAST(['a'], 'Array(String)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E05\",\"formatted\":\"SELECT\\n    arrayMap(tuple(_, _), CAST([1], 'Array(Int8)'), CAST(['a'], 'Array(String)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E06\",\"formatted\":\"SELECT\\n    arrayMap(_2, CAST([1], 'Array(UInt8)'), CAST(['a'], 'Array(String)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E07\",\"formatted\":\"SELECT\\n    arrayMap(tuple(_1, _1), CAST([1], 'Array(UInt32)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E08\",\"formatted\":\"SELECT\\n    arrayMap(xs -> arrayMap(x -> toTypeName(x), xs), CAST([[1, 2]], 'Array(Array(UInt16))')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E09\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(toTypeName(_), _1), CAST([[1]], 'Array(Array(UInt8))')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E10\",\"formatted\":\"SELECT\\n    arrayMap(x -> arrayMap(concat(toTypeName(x), ':', toTypeName(_1)), CAST([2], 'Array(UInt64)')), CAST([1], 'Array(Int16)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E11\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(y -> concat(toTypeName(y), ':', toTypeName(_1)), CAST(['a'], 'Array(String)')), CAST([1], 'Array(Int8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E12\",\"formatted\":\"SELECT\\n    arrayMap(x -> arrayMap(x -> toTypeName(x), CAST(['a'], 'Array(String)')), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E13\",\"formatted\":\"SELECT\\n    arrayMap(_1 -> arrayMap(_1 -> toTypeName(_1), CAST(['a'], 'Array(String)')), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E14\",\"formatted\":\"SELECT\\n    arrayMap(x -> tuple(toTypeName(x), toTypeName(t.n)), t.a) AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT\\n        CAST([1], 'Array(UInt8)') AS a,\\n        CAST(10, 'UInt32') AS n\\n) AS t\"}\n{\"id\":\"CHSEM-003-E15\",\"formatted\":\"SELECT\\n    tuple(toTypeName(t._), toTypeName(t._1), toTypeName(t._2)) AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT\\n        CAST(1, 'Int16') AS _,\\n        CAST('a', 'String') AS _1,\\n        CAST(2, 'UInt8') AS _2\\n) AS t\"}\n{\"id\":\"CHSEM-003-E16\",\"formatted\":\"SELECT\\n    arrayMap(_1 -> tuple(toTypeName(_1), toTypeName(t._1)), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\\nFROM\\n(\\n    SELECT CAST('a', 'String') AS _1\\n) AS t\"}\n{\"id\":\"CHSEM-003-E17\",\"formatted\":\"SELECT\\n    tuple(arrayMap(x -> toTypeName(x), CAST([1], 'Array(UInt8)')), arrayMap(x -> toTypeName(x), CAST(['a'], 'Array(String)'))) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E18\",\"formatted\":\"SELECT\\n    arrayMap(toString(_) | toTypeName(_), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E19\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> toTypeName(x), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E20\",\"formatted\":\"SELECT\\n    arrayMap(_ + _1, CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E21\",\"formatted\":\"SELECT\\n    arrayMap(x -> (\\n        SELECT x\\n    ), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E22\",\"formatted\":\"SELECT\\n    arrayMap(x -> toTypeName(x), 1) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E23\",\"formatted\":\"SELECT\\n    arrayMap(x -> arrayFilter(x -> (length(x) > 0), CAST(['a'], 'Array(String)')), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E24\",\"formatted\":\"SELECT\\n    arrayMap(x -> toTypeName(x), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E25\",\"formatted\":\"SELECT\\n    arrayMap(x -> toTypeName(x), CAST(['abc'], 'Array(FixedString(3))')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E26\",\"formatted\":\"SELECT\\n    arrayMap((x -> toString(x)) | (y -> toTypeName(y)), CAST([1], 'Array(UInt8)')) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E27\",\"formatted\":\"SELECT\\n    arrayMap(x -> toTypeName(x), arrayMap(y -> y, CAST([1], 'Array(UInt8)'))) AS value,\\n    toTypeName(value) AS type\"}\n{\"id\":\"CHSEM-003-E28\",\"formatted\":\"SELECT\\n    arrayMap(upper(trimBoth(_)), CAST([' a '], 'Array(String)')) AS value,\\n    toTypeName(value) AS type\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-003-E01",
+      "formatted": "SELECT\n    arrayMap(x -> toTypeName(x), CAST([1, 2], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E02",
+      "formatted": "SELECT\n    arrayMap(toTypeName(_), CAST([1], 'Array(UInt16)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E03",
+      "formatted": "SELECT\n    arrayMap((x, y) -> concat(toTypeName(x), ':', toTypeName(y)), CAST([1], 'Array(UInt8)'), CAST(['a'], 'Array(String)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E04",
+      "formatted": "SELECT\n    arrayMap(concat(toTypeName(_1), ':', toTypeName(_2)), CAST([1], 'Array(UInt8)'), CAST(['a'], 'Array(String)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E05",
+      "formatted": "SELECT\n    arrayMap(tuple(_, _), CAST([1], 'Array(Int8)'), CAST(['a'], 'Array(String)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E06",
+      "formatted": "SELECT\n    arrayMap(_2, CAST([1], 'Array(UInt8)'), CAST(['a'], 'Array(String)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E07",
+      "formatted": "SELECT\n    arrayMap(tuple(_1, _1), CAST([1], 'Array(UInt32)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E08",
+      "formatted": "SELECT\n    arrayMap(xs -> arrayMap(x -> toTypeName(x), xs), CAST([[1, 2]], 'Array(Array(UInt16))')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E09",
+      "formatted": "SELECT\n    arrayMap(arrayMap(toTypeName(_), _1), CAST([[1]], 'Array(Array(UInt8))')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E10",
+      "formatted": "SELECT\n    arrayMap(x -> arrayMap(concat(toTypeName(x), ':', toTypeName(_1)), CAST([2], 'Array(UInt64)')), CAST([1], 'Array(Int16)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E11",
+      "formatted": "SELECT\n    arrayMap(arrayMap(y -> concat(toTypeName(y), ':', toTypeName(_1)), CAST(['a'], 'Array(String)')), CAST([1], 'Array(Int8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E12",
+      "formatted": "SELECT\n    arrayMap(x -> arrayMap(x -> toTypeName(x), CAST(['a'], 'Array(String)')), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E13",
+      "formatted": "SELECT\n    arrayMap(_1 -> arrayMap(_1 -> toTypeName(_1), CAST(['a'], 'Array(String)')), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E14",
+      "formatted": "SELECT\n    arrayMap(x -> tuple(toTypeName(x), toTypeName(t.n)), t.a) AS value,\n    toTypeName(value) AS type\nFROM\n(\n    SELECT\n        CAST([1], 'Array(UInt8)') AS a,\n        CAST(10, 'UInt32') AS n\n) AS t"
+    },
+    {
+      "id": "CHSEM-003-E15",
+      "formatted": "SELECT\n    tuple(toTypeName(t._), toTypeName(t._1), toTypeName(t._2)) AS value,\n    toTypeName(value) AS type\nFROM\n(\n    SELECT\n        CAST(1, 'Int16') AS _,\n        CAST('a', 'String') AS _1,\n        CAST(2, 'UInt8') AS _2\n) AS t"
+    },
+    {
+      "id": "CHSEM-003-E16",
+      "formatted": "SELECT\n    arrayMap(_1 -> tuple(toTypeName(_1), toTypeName(t._1)), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type\nFROM\n(\n    SELECT CAST('a', 'String') AS _1\n) AS t"
+    },
+    {
+      "id": "CHSEM-003-E17",
+      "formatted": "SELECT\n    tuple(arrayMap(x -> toTypeName(x), CAST([1], 'Array(UInt8)')), arrayMap(x -> toTypeName(x), CAST(['a'], 'Array(String)'))) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E18",
+      "formatted": "SELECT\n    arrayMap(toString(_) | toTypeName(_), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E19",
+      "formatted": "SELECT\n    arrayMap((x, y) -> toTypeName(x), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E20",
+      "formatted": "SELECT\n    arrayMap(_ + _1, CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E21",
+      "formatted": "SELECT\n    arrayMap(x -> (\n        SELECT x\n    ), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E22",
+      "formatted": "SELECT\n    arrayMap(x -> toTypeName(x), 1) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E23",
+      "formatted": "SELECT\n    arrayMap(x -> arrayFilter(x -> (length(x) > 0), CAST(['a'], 'Array(String)')), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E24",
+      "formatted": "SELECT\n    arrayMap(x -> toTypeName(x), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E25",
+      "formatted": "SELECT\n    arrayMap(x -> toTypeName(x), CAST(['abc'], 'Array(FixedString(3))')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E26",
+      "formatted": "SELECT\n    arrayMap((x -> toString(x)) | (y -> toTypeName(y)), CAST([1], 'Array(UInt8)')) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E27",
+      "formatted": "SELECT\n    arrayMap(x -> toTypeName(x), arrayMap(y -> y, CAST([1], 'Array(UInt8)'))) AS value,\n    toTypeName(value) AS type"
+    },
+    {
+      "id": "CHSEM-003-E28",
+      "formatted": "SELECT\n    arrayMap(upper(trimBoth(_)), CAST([' a '], 'Array(String)')) AS value,\n    toTypeName(value) AS type"
+    }
+  ],
+  "brikk_parse_query": null,
+  "execution": [
+    {
+      "id": "CHSEM-003-E01",
+      "returncode": 0,
+      "stdout": "['UInt8','UInt8']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E02",
+      "returncode": 0,
+      "stdout": "['UInt16']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E03",
+      "returncode": 0,
+      "stdout": "['UInt8:String']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E04",
+      "returncode": 0,
+      "stdout": "['UInt8:String']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E05",
+      "returncode": 0,
+      "stdout": "[(1,'a')]\tArray(Tuple(Int8, String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E06",
+      "returncode": 0,
+      "stdout": "['a']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E07",
+      "returncode": 0,
+      "stdout": "[(1,1)]\tArray(Tuple(UInt32, UInt32))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E08",
+      "returncode": 0,
+      "stdout": "[['UInt16','UInt16']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E09",
+      "returncode": 0,
+      "stdout": "[['UInt8']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E10",
+      "returncode": 0,
+      "stdout": "[['Int16:UInt64']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E11",
+      "returncode": 0,
+      "stdout": "[['String:Int8']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E12",
+      "returncode": 0,
+      "stdout": "[['String']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E13",
+      "returncode": 0,
+      "stdout": "[['String']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E14",
+      "returncode": 0,
+      "stdout": "[('UInt8','UInt32')]\tArray(Tuple(String, String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E15",
+      "returncode": 0,
+      "stdout": "('Int16','String','UInt8')\tTuple(String, String, String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E16",
+      "returncode": 0,
+      "stdout": "[('UInt8','String')]\tArray(Tuple(String, String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E17",
+      "returncode": 0,
+      "stdout": "(['UInt8'],['String'])\tTuple(Array(String), Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E18",
+      "returncode": 0,
+      "stdout": "['String']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E19",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-003-E20",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: Mixing the anonymous argument placeholder `_` with numbered placeholders `_N` in one expression is ambiguous: _ + _1. Use only numbered placeholders. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CHSEM-003-E21",
+      "returncode": 10,
+      "stdout": "",
+      "stderr": "Code: 10. DB::Exception: Not found column x in block __table1.dummy UInt8 UInt8(size = 0). (NOT_FOUND_COLUMN_IN_BLOCK)\n"
+    },
+    {
+      "id": "CHSEM-003-E22",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Argument 2 of function arrayMap must be Array. Found UInt8 instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-003-E23",
+      "returncode": 0,
+      "stdout": "[['a']]\tArray(Array(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E24",
+      "returncode": 0,
+      "stdout": "['Nullable(UInt8)','Nullable(UInt8)']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E25",
+      "returncode": 0,
+      "stdout": "['FixedString(3)']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E26",
+      "returncode": 0,
+      "stdout": "['String']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E27",
+      "returncode": 0,
+      "stdout": "['UInt8']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-003-E28",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: The anonymous argument placeholder `_` must be a direct argument of the call: upper(trimBoth(_)). Use numbered placeholders `_1`, `_2`, ... at deeper levels. (BAD_ARGUMENTS)\n"
+    }
+  ],
+  "brikk_execution": []
+}
