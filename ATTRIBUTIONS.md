@@ -40,6 +40,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Spice SQL reference adapter
+
+`tools/datafusion-reference/src/spice.rs` adapts the statement-level CLUSTER BY parser
+wrapper from [Spice.ai OSS](https://github.com/spiceai/spiceai),
+`crates/runtime/src/datafusion/planner/mod.rs`, release v2.4.0 at commit
+`78a47787ef74dec52d705bf9e26a0f9b7a26ca94`. Copyright 2024-2026 The Spice.ai OSS
+Authors, licensed under the Apache License 2.0. The adapter calls DFParser directly
+and adds script splitting with absolute error-position preservation. Its source header
+records the changes; the repository's LICENSE supplies the Apache license text.
+
+Fixtures under `vendor/data/datafusion-spice/` contain SQL examples adapted from the
+[Spice SQL documentation](https://spiceai.org/docs/reference/sql) and authored regression
+controls. Historical documentation observations are explicitly distinguished from native
+release evidence. `vendor/data/spice/2.4.0/` and `vendor/data/datafusion/55.2.0/` record
+versioned registry/settings facts and parser/execution results from Apache-2.0-licensed
+Spice/DataFusion software. The released Spice binary is downloaded for local checks and
+is not redistributed here. Source revisions and checksums are in the provenance manifests.
+
 ## Apache Doris
 
 Doris-derived artifacts are included from https://github.com/apache/doris and

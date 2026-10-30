@@ -1,0 +1,10 @@
+version: v1
+kind: Spicepod
+name: brikk-spice-reference
+views:
+  - name: sample
+    sql: "SELECT 1 AS id, 'Ada' AS name, 30 AS age, 'example' AS body UNION ALL SELECT 2, 'Bob', 40, 'second'"
+  - name: MixedRows
+    sql: 'SELECT 7 AS "MixedColumn"'
+  - name: '"a.b"'
+    sql: 'SELECT 9 AS id'

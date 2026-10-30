@@ -8,6 +8,21 @@ moment upstream publishes.
 This is distinct from `reference/` (gitignored full clones of upstream repos used as porting
 oracles) — `vendor/` contents are committed and shipped-adjacent.
 
+## DataFusion and Spice reference evidence
+
+`data/datafusion/55.2.0/` and `data/spice/2.4.0/` hold the initial version-pinned
+parser/execution evidence and dependency manifests. `data/datafusion-spice/` holds
+the stable audit SQL, current Brikk observations, and the separately labeled historical
+documentation audit. These are development fixtures, not a bundled engine or a claim
+that a production Spice dialect has shipped.
+
+Reproduction instructions and profile boundaries are in
+[`tools/datafusion-reference/README.md`](../tools/datafusion-reference/README.md).
+The Rust tools lock both dependency graphs. Spice execution requires the checksum-verified
+released binary and runs in a disposable local runtime. Updates must retain old evidence,
+review new dependency pins and profile changes, regenerate captures, and run the protocol
+and native controls. See the [baseline findings](../docs/research/datafusion-spice-reference-baseline.md).
+
 ## `lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar`
 
 The standalone Doris SQL parser (`fe-sql-parser`) from Apache Doris — the authoritative ANTLR
