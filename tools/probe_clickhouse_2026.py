@@ -31,6 +31,14 @@ def parsing_expectation(case, version):
     return case["parse_expectations"][version]
 
 
+def generated_parsing_query(tuples):
+    # A control release may reject every candidate. Keep the zero-row batch typed:
+    # arrayJoin([]) alone has Nothing elements, so item.1 is not a valid expression.
+    array = "[" + ",".join(tuples) + "]" if tuples else "CAST([] AS Array(Tuple(String,String)))"
+    return ("SELECT item.1 AS id, formatQueryOrNull(unhex(item.2)) AS formatted "
+            "FROM (SELECT arrayJoin(" + array + ") AS item) FORMAT JSONEachRow")
+
+
 def query(engine, sql, streaming=False):
     name = "brikk-ch26-audit-" + uuid.uuid4().hex
     cmd = ["docker", "run", "--rm", "--pull", "never", "--platform", "linux/amd64", "--name", name, "--network", "none",
@@ -98,8 +106,7 @@ def main():
                     failures.append(engine["version"] + "/" + case["id"] + ": Brikk generation failed")
                     continue
                 generated_tuples.append("('" + case["id"] + "','" + generated.encode().hex() + "')")
-            brikk_parsed = query(engine, "SELECT item.1 AS id, formatQueryOrNull(unhex(item.2)) AS formatted "
-                                 "FROM (SELECT arrayJoin([" + ",".join(generated_tuples) + "]) AS item) FORMAT JSONEachRow")
+            brikk_parsed = query(engine, generated_parsing_query(generated_tuples))
             if brikk_parsed["returncode"] != 0:
                 failures.append(engine["version"] + ": Brikk generated parser query failed")
             else:

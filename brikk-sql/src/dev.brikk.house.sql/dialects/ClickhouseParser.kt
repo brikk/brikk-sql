@@ -366,6 +366,12 @@ open class ClickhouseParser(
 
     override val bitwise get() = super.bitwise + mapOf(TokenType.PIPE to ::clickhouseCompose)
 
+    override fun parseParenItem(): Expression? {
+        val start = index
+        val lambda = tryParseLambda(onlyArrow = true)
+        return if (lambda != null) captureSyntax(start) { lambda } else super.parseParenItem()
+    }
+
     override fun parseStarOps(): Expression? {
         val start = index
         val token = prevToken

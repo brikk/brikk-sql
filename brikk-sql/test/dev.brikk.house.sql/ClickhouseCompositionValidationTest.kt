@@ -166,7 +166,8 @@ class ClickhouseCompositionValidationTest {
         }
         val parserGap = validate("SELECT arrayMap((x -> toString(x)) | (y -> toTypeName(y)),[1])")
         assertTrue(parserGap.errors.isEmpty())
-        assertTrue(ClickhouseCompositionUnknownReason.PARSER_GAP in reasons(parserGap))
+        assertFalse(ClickhouseCompositionUnknownReason.PARSER_GAP in reasons(parserGap))
+        assertTrue(ClickhouseCompositionUnknownReason.RESULT_FAMILY in reasons(parserGap))
         for (version in listOf("", "26.8.34.13", "26.10.2.104", "27.1.1.1")) {
             val report = validate("SELECT arrayMap(trim | upper,['x'])", version = version)
             assertTrue(report.errors.isEmpty())

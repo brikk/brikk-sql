@@ -36,8 +36,9 @@ class ClickhouseSemanticDiagnosticFixturesTest {
     fun everyPinnedRuleAndUnknownIsExposedWithStatementAndScriptPositions() {
         val input = File(projectRoot(), "vendor/data/clickhouse-semantic/composition-cases.json")
         val fixture = Json.parseToJsonElement(input.readText()).jsonObject
-        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/overload-refinements.json").readText()).jsonObject
-            .getValue("rules").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
+        val refinements = listOf("overload-refinements.json", "paren-lambda-refinements.json").flatMap { name ->
+            Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/$name").readText()).jsonObject.getValue("rules").jsonArray
+        }.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val historical = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/composition-brikk.json").readText())
             .jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val prefix = "SELECT '𝄞;';\r\n/* trim | upper */\r\n"

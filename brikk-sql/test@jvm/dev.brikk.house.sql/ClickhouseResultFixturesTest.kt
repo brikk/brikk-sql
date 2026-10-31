@@ -21,8 +21,9 @@ class ClickhouseResultFixturesTest {
     @Test
     fun supportedResultsAndExplicitUnknownsMatchThePinnedWitnesses() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/result-cases.json").readText()).jsonObject
-        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/overload-refinements.json").readText()).jsonObject
-            .getValue("results").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
+        val refinements = listOf("overload-refinements.json", "paren-lambda-refinements.json").flatMap { name ->
+            Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/$name").readText()).jsonObject.getValue("results").jsonArray
+        }.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val rows = fixture.getValue("execution").jsonArray.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
@@ -36,11 +37,14 @@ class ClickhouseResultFixturesTest {
             val restored = Serde.load(Serde.dump(ast)) as Expression
             assertEquals(result,type(map(restored)),id)
             val report = inferClickhouseCompositionResults(ast,"26.10.2.103")
+            refinements[id]?.get("unknown_reasons")?.let { expected ->
+                assertEquals(expected.jsonArray.map { it.jsonPrimitive.content }, report.validation.unknowns.map { it.reason.name }.distinct().sorted(), id)
+            }
             assertTrue(ast.findAll<ClickhouseComposition>().all { it.isType(DType.UNKNOWN) },id)
             buildJsonObject {
                 put("id",id)
                 put("input_sql",input)
-                if (case["brikk_parser_gap"] == null) put("generated",ast.sql("clickhouse"))
+                if (case["brikk_parser_gap"] == null || refinements[id]?.get("resolved_parser_gap") != null) put("generated",ast.sql("clickhouse"))
                 else put("known_parser_gap",case.getValue("brikk_parser_gap"))
                 put("result_type",result)
                 put("rules",JsonArray(report.validation.errors.map { it.rule.name }.distinct().sorted().map(::JsonPrimitive)))

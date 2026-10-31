@@ -18,8 +18,9 @@ class ClickhouseCompositionFixturesTest {
     @Test
     fun compositionRulesMatchThePinnedCasesWithoutMutatingTheirAst() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/composition-cases.json").readText()).jsonObject
-        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/overload-refinements.json").readText()).jsonObject
-            .getValue("rules").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
+        val refinements = listOf("overload-refinements.json", "paren-lambda-refinements.json").flatMap { name ->
+            Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/$name").readText()).jsonObject.getValue("rules").jsonArray
+        }.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val observations = fixture.getValue("execution").jsonArray.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
@@ -31,7 +32,7 @@ class ClickhouseCompositionFixturesTest {
             val rules = report.errors.map { it.rule.name }.distinct().sorted()
             val unknowns = report.unknowns.map { it.reason.name }.distinct().sorted()
             assertEquals((refinements[id]?.get("rules") ?: case.getValue("rules")).jsonArray.map { it.jsonPrimitive.content }.sorted(), rules, id)
-            val requiredUnknowns = case["required_unknowns"]?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty()
+            val requiredUnknowns = (refinements[id]?.get("unknown_reasons") ?: case["required_unknowns"])?.jsonArray?.map { it.jsonPrimitive.content }.orEmpty()
             assertTrue(unknowns.containsAll(requiredUnknowns), "$id: $unknowns")
             assertEquals(before, Serde.dump(ast), id)
             assertEquals(generated, ast.sql("clickhouse"), id)

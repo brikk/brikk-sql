@@ -4,7 +4,8 @@ Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence,
 CHSEM-002 callable facts, CHSEM-003 contextual input typing, CHSEM-004 internal
 composition validation, CHSEM-005 conditional result annotation and CHSEM-006
 public positioned diagnostics, CHSEM-007 qualification, CHSEM-008 higher-order
-contracts and CHSEM-009 bounded composite/overload typing are complete.
+contracts, CHSEM-009 bounded composite/overload typing, CHSEM-010 lowering
+assessment and CHSEM-011 parenthesized lambda parsing are complete.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -35,12 +36,12 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-008: Extend proven contracts to common array/map higher-order functions. Prioritize arrayFilter, arrayExists, arrayAll, arraySort and mapApply; account for their different argument binding and result rules. Establish separate native fixtures for each added family.
 - [x] CHSEM-009: Expand composite and overload typing. Research Nullable, LowCardinality, tuples, numeric promotion, decimal precision/scale, constant-dependent rules and settings/version boundaries. Add only measured rules; retain explicit unknowns for UDFs and unsupported overloads. Establish exact native literal-array element types before using generic integer hints in contextual lambda validation.
 - [x] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
-- [ ] CHSEM-011: Fix the existing ClickHouse parser gap for parenthesized explicit lambda operands inside composition. Native 26.10 accepts `(x -> toString(x)) | (y -> toTypeName(y))`, but Brikk currently creates JSONExtract nodes. CHSEM-003-E26 records the native boundary. Add correct structured parsing, source/serde/scope tests and native original/generated result checks without changing other dialects' JSON arrow operators. Until then, do not claim this SQL form has contextual typing or certified lowering.
+- [x] CHSEM-011: Fix the ClickHouse parser gap for parenthesized explicit lambda operands inside composition. Native 26.10 accepts `(x -> toString(x)) | (y -> toTypeName(y))`; Brikk previously created JSONExtract nodes. CHSEM-003-E26 retains that historical boundary. Structured parsing, source/serde/scope tests and native original/generated checks now cover the named form without changing other dialects' JSON arrows. Unresearched bodies remain unknown and cross-dialect lowering remains refused.
 
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-010 is complete; commit/push it separately, then continue authorized CHSEM-011. Do not treat unchecked follow-ups as implemented or certified.
+- CHSEM-001 through CHSEM-011 are complete. Commit/push CHSEM-011 after its gates, then stop. Unresearched overloads, global analyzer parity, production cross-dialect lowering, publication and consumer adoption remain outside these completed items.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -332,6 +333,34 @@ discovery passed 45. No production/IDE code, public signatures, corpus/hazard/
 certification rules, releases or consumer pins changed. Platform suites were not
 repeated. All owned probe containers were removed; startup failures are not treated
 as semantic evidence. Commit/push separately, then continue CHSEM-011.
+
+## CHSEM-011 result
+
+Parenthesized explicit ClickHouse lambda operands now reuse the existing lambda
+header/parser binding machinery instead of becoming JSONExtract nodes. Only the
+ClickHouse paren-item hook opts in; other dialects retain ordinary expression/JSON
+arrow parsing. Existing public parser JVM signatures remain available. Captures,
+shadowing, tuple fields, multi-parameter stages, nested parentheses, mixed operands,
+UTF-16 script positions, source origins, serde, typing and diagnostics are covered.
+Function values remain UNKNOWN and unresearched bodies are not accepted by inference.
+
+Thirteen original/generated finite execution vectors and two syntax negatives pass
+on both exact pins, with no execution/version skips. The 26.8 syntax rejections are
+explicit controls; its zero-eligible generated-format batch is typed, not a false
+parser acceptance. New refinements name bindings E26; rule/knowledge E29/E32/E46;
+and result/generated-SQL E32/E33. Existing native witnesses support the stronger
+current types. Historical fixtures, flags, raw captures, corpus ledgers and exact
+comparison rules remain intact. Details: paren-lambda-README.md in the semantic data
+folder. CHSEM-010's production cross-dialect refusal is unchanged.
+
+Validation: full JVM regression passed 1,846 tests with 61 optional integration
+assumption aborts and zero failures, including binary compatibility. Full IntelliJ
+platform regression passed 757 tests on 261.25134.95; other IDE versions were not
+run. Complete Python discovery passed 96 tests with one opt-in Toolchain-model skip
+using the unchanged SQLGlot pin; ClickHouse-only discovery passed 48. No new IDE API
+calls, old public signature removals, toolchain floor, release, publication or
+consumer dependency changes. Commit/push separately, then stop; all eleven IDs are
+complete within their documented bounds.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

@@ -12,7 +12,7 @@ DATA = ROOT / "vendor/data/clickhouse-semantic"
 
 
 class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
-    rounds = ("qualification", "higher-order", "overload")
+    rounds = ("qualification", "higher-order", "overload", "paren-lambda")
 
     def test_overload_source_and_refinement_proofs_keep_historical_captures(self):
         captured = json.loads((DATA / "overload-sources.json").read_text())
@@ -98,7 +98,8 @@ class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
         for name in self.rounds:
             fixture = DATA / f"{name}-cases.json"
             brikk = DATA / f"{name}-brikk.json"
-            cases = json.loads(fixture.read_text())["execution"]
+            fixture_data = json.loads(fixture.read_text())
+            cases = fixture_data["execution"]
             rows = json.loads(brikk.read_text())
             self.assertEqual([c["id"] for c in cases], [r["id"] for r in rows])
             for case, row in zip(cases, rows, strict=True):
@@ -114,8 +115,9 @@ class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(brikk.read_bytes()).hexdigest(), report["brikk_sha256"])
                 self.assertEqual(version + "\n", report["version_query"]["stdout"])
                 self.assertEqual(0, report["version_query"]["returncode"])
-                for phase in ("execution", "brikk_execution", "parsed"):
+                for phase in ("execution", "brikk_execution"):
                     self.assertEqual([c["id"] for c in cases], [r["id"] for r in report[phase]])
+                self.assertEqual([c["id"] for c in probe.parsing_cases(fixture_data)], [r["id"] for r in report["parsed"]])
                 originals = {r["id"]: r["formatted"] for r in report["parsed"]}
                 formatted = [json.loads(line) for line in report["brikk_parse_query"]["stdout"].splitlines()]
                 self.assertEqual(0, report["brikk_parse_query"]["returncode"])

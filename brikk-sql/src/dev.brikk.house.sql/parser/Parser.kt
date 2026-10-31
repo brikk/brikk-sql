@@ -9020,7 +9020,7 @@ open class Parser(
         val query = parseSelect()
 
         val expressions: MutableList<Expression> =
-            if (query != null) mutableListOf(query) else parseExpressions()
+            if (query != null) mutableListOf(query) else parseCsv { parseParenItem() }
 
         var this_: Expression? = expressions.firstOrNull()
 
@@ -9052,6 +9052,9 @@ open class Parser(
 
         return this_
     }
+
+    /** Dialects may recognize an explicit lambda here without changing ordinary expression parsing. */
+    protected open fun parseParenItem(): Expression? = parseExpression()
 
     // sqlglot: Parser._parse_primary
     open fun parsePrimary(): Expression? {
@@ -9402,27 +9405,7 @@ open class Parser(
             if (atom != null) return atom
         }
 
-        val startIndex = index
-
-        if (match(TokenType.L_PAREN)) {
-            val expressions = parseCsv { parseLambdaArg() }
-
-            if (!match(TokenType.R_PAREN)) {
-                retreat(startIndex)
-            } else if (matchSet(lambdas.keys)) {
-                return lambdas.getValue(prevToken.tokenType)(this, expressions)
-            } else {
-                retreat(startIndex)
-            }
-        } else if (typedLambdaArgs || nextTokenType in lambdas) {
-            val expressions = listOf(parseLambdaArg())
-
-            if (matchSet(lambdas.keys)) {
-                return lambdas.getValue(prevToken.tokenType)(this, expressions)
-            }
-
-            retreat(startIndex)
-        }
+        tryParseLambda(nextTokenType = nextTokenType)?.let { return it }
 
         val this_: Expression?
 
@@ -9438,6 +9421,36 @@ open class Parser(
                 parseOrder(parseHavingMax(parseRespectOrIgnoreNulls(this_)))
             )
         )
+    }
+
+    /** The existing lambda-header lookahead, with no expression fallback or argument modifiers. */
+    protected fun tryParseLambda(onlyArrow: kotlin.Boolean = false, nextTokenType: TokenType = nextToken.tokenType): Expression? {
+        val operators = if (onlyArrow) setOf(TokenType.ARROW).intersect(lambdas.keys) else lambdas.keys
+        val startIndex = index
+        fun parameter(): Expression? {
+            if (onlyArrow && currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.VAR) &&
+                (currToken.tokenType in setOf(TokenType.STRING, TokenType.NULL, TokenType.TRUE, TokenType.FALSE) ||
+                    currToken.tokenType.name.endsWith("_STRING") ||
+                    currToken.text.firstOrNull()?.let { it.isLetter() || it == '_' } != true)) return null
+            return parseLambdaArg()
+        }
+        if (match(TokenType.L_PAREN)) {
+            val expressions = parseCsv { parameter() }
+            if (!match(TokenType.R_PAREN)) {
+                retreat(startIndex)
+            } else if (matchSet(operators)) {
+                return lambdas.getValue(prevToken.tokenType)(this, expressions)
+            } else {
+                retreat(startIndex)
+            }
+        } else if (typedLambdaArgs || nextTokenType in operators) {
+            val expressions = listOf(parameter())
+            if (matchSet(operators)) {
+                return lambdas.getValue(prevToken.tokenType)(this, expressions)
+            }
+            retreat(startIndex)
+        }
+        return null
     }
 
     // sqlglot: Parser._replace_lambda

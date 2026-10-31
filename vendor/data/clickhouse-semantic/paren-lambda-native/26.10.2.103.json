@@ -1,0 +1,261 @@
+{
+  "captured_at": "2026-10-31T19:53:33.796077+00:00",
+  "fixture_sha256": "3976e6f0ee0ca558fc5313b6ccfb1f0c930a4d7edb791b1e6ac1398494de670c",
+  "brikk_sha256": "14bc06a6966dd3aeef04e1f3292c8a1688a8151f6bad79eb560f37c86f5f8b07",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-011-P01\",\"formatted\":null}\n{\"id\":\"CHSEM-011-P02\",\"formatted\":null}\n{\"id\":\"CHSEM-011-E01\",\"formatted\":\"SELECT arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([1, 2], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E02\",\"formatted\":\"SELECT arrayMap(((x, y) -> multiply(x, y)) | (z -> toString(z)), CAST([2], 'Array(UInt8)'), CAST([3], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E03\",\"formatted\":\"SELECT arrayMap(lower | (x -> upper(x)), ['Ab']) AS v\"}\n{\"id\":\"CHSEM-011-E04\",\"formatted\":\"SELECT arrayMap((x -> lower(x)) | upper, ['Ab']) AS v\"}\n{\"id\":\"CHSEM-011-E05\",\"formatted\":\"SELECT arrayMap((x -> lower(x)) | (y -> upper(y)), ['Ab']) AS v\"}\n{\"id\":\"CHSEM-011-E06\",\"formatted\":\"SELECT arrayMap((x -> CONCAT(x, t.s)) | (y -> upper(y)), t.a) AS v\\nFROM\\n(\\n    SELECT\\n        CAST(['a'], 'Array(String)') AS a,\\n        CAST('b', 'String') AS s\\n) AS t\"}\n{\"id\":\"CHSEM-011-E07\",\"formatted\":\"SELECT arrayMap((x -> arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([2], 'Array(UInt8)'))) | (z -> z), CAST([1], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E08\",\"formatted\":\"SELECT arrayMap((x -> toString(x)) | ((a, b) -> CONCAT(a, b)), CAST([1], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E09\",\"formatted\":\"SELECT arrayMap(((a, b) -> 'x') | upper, CAST([1], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E10\",\"formatted\":\"SELECT arrayMap((x -> x.n) | (y -> upper(y)), CAST([('a', 1)], 'Array(Tuple(n String, m UInt8))')) AS v\"}\n{\"id\":\"CHSEM-011-E11\",\"formatted\":\"SELECT arrayMap((x -> brikkMissingParenFunction(x)) | upper, ['a']) AS v\"}\n{\"id\":\"CHSEM-011-E12\",\"formatted\":\"SELECT arrayMap(((x -> lower(x)) | trimBoth(_)) | (y -> upper(y)), [' a ']) AS v\"}\n{\"id\":\"CHSEM-011-E13\",\"formatted\":\"WITH\\n    (x -> upper(x)) AS trim\\nSELECT arrayMap(trim | upper, ['x']) AS v\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-011-P01",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-011-P02",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-011-E01",
+      "formatted": "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([1, 2], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-011-E02",
+      "formatted": "SELECT arrayMap(((x, y) -> multiply(x, y)) | (z -> toString(z)), CAST([2], 'Array(UInt8)'), CAST([3], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-011-E03",
+      "formatted": "SELECT arrayMap(lower | (x -> upper(x)), ['Ab']) AS v"
+    },
+    {
+      "id": "CHSEM-011-E04",
+      "formatted": "SELECT arrayMap((x -> lower(x)) | upper, ['Ab']) AS v"
+    },
+    {
+      "id": "CHSEM-011-E05",
+      "formatted": "SELECT arrayMap((x -> lower(x)) | (y -> upper(y)), ['Ab']) AS v"
+    },
+    {
+      "id": "CHSEM-011-E06",
+      "formatted": "SELECT arrayMap((x -> CONCAT(x, t.s)) | (y -> upper(y)), t.a) AS v\nFROM\n(\n    SELECT\n        CAST(['a'], 'Array(String)') AS a,\n        CAST('b', 'String') AS s\n) AS t"
+    },
+    {
+      "id": "CHSEM-011-E07",
+      "formatted": "SELECT arrayMap((x -> arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([2], 'Array(UInt8)'))) | (z -> z), CAST([1], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-011-E08",
+      "formatted": "SELECT arrayMap((x -> toString(x)) | ((a, b) -> CONCAT(a, b)), CAST([1], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-011-E09",
+      "formatted": "SELECT arrayMap(((a, b) -> 'x') | upper, CAST([1], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-011-E10",
+      "formatted": "SELECT arrayMap((x -> x.n) | (y -> upper(y)), CAST([('a', 1)], 'Array(Tuple(n String, m UInt8))')) AS v"
+    },
+    {
+      "id": "CHSEM-011-E11",
+      "formatted": "SELECT arrayMap((x -> brikkMissingParenFunction(x)) | upper, ['a']) AS v"
+    },
+    {
+      "id": "CHSEM-011-E12",
+      "formatted": "SELECT arrayMap(((x -> lower(x)) | trimBoth(_)) | (y -> upper(y)), [' a ']) AS v"
+    },
+    {
+      "id": "CHSEM-011-E13",
+      "formatted": "WITH\n    (x -> upper(x)) AS trim\nSELECT arrayMap(trim | upper, ['x']) AS v"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-011-E01\",\"formatted\":\"SELECT arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([1, 2], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E02\",\"formatted\":\"SELECT arrayMap(((x, y) -> multiply(x, y)) | (z -> toString(z)), CAST([2], 'Array(UInt8)'), CAST([3], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E03\",\"formatted\":\"SELECT arrayMap(lower | (x -> upper(x)), ['Ab']) AS v\"}\n{\"id\":\"CHSEM-011-E04\",\"formatted\":\"SELECT arrayMap((x -> lower(x)) | upper, ['Ab']) AS v\"}\n{\"id\":\"CHSEM-011-E05\",\"formatted\":\"SELECT arrayMap((x -> lower(x)) | (y -> upper(y)), ['Ab']) AS v\"}\n{\"id\":\"CHSEM-011-E06\",\"formatted\":\"SELECT arrayMap((x -> CONCAT(x, t.s)) | (y -> upper(y)), t.a) AS v\\nFROM\\n(\\n    SELECT\\n        CAST(['a'], 'Array(String)') AS a,\\n        CAST('b', 'String') AS s\\n) AS t\"}\n{\"id\":\"CHSEM-011-E07\",\"formatted\":\"SELECT arrayMap((x -> arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([2], 'Array(UInt8)'))) | (z -> z), CAST([1], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E08\",\"formatted\":\"SELECT arrayMap((x -> toString(x)) | ((a, b) -> CONCAT(a, b)), CAST([1], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E09\",\"formatted\":\"SELECT arrayMap(((a, b) -> 'x') | upper, CAST([1], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-011-E10\",\"formatted\":\"SELECT arrayMap((x -> x.n) | (y -> upper(y)), CAST([('a', 1)], 'Array(Tuple(n String, m UInt8))')) AS v\"}\n{\"id\":\"CHSEM-011-E11\",\"formatted\":\"SELECT arrayMap((x -> brikkMissingParenFunction(x)) | upper, ['a']) AS v\"}\n{\"id\":\"CHSEM-011-E12\",\"formatted\":\"SELECT arrayMap(((x -> lower(x)) | trimBoth(_)) | (y -> upper(y)), [' a ']) AS v\"}\n{\"id\":\"CHSEM-011-E13\",\"formatted\":\"WITH\\n    (x -> upper(x)) AS trim\\nSELECT arrayMap(trim | upper, ['x']) AS v\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-011-E01",
+      "returncode": 0,
+      "stdout": "['1','2']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E02",
+      "returncode": 0,
+      "stdout": "['6']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E03",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E04",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E05",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E06",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E07",
+      "returncode": 0,
+      "stdout": "[['2']]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E08",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: The right operand of the function composition operator `|` must be a function of one argument, got 2 arguments: ((a, b) -> CONCAT(a, b)). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-011-E09",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-011-E10",
+      "returncode": 0,
+      "stdout": "['A']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E11",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `brikkMissingParenFunction` does not exist. In scope lambda(tuple(__composed_arg_1), upper(brikkMissingParenFunction(__composed_arg_1))). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-011-E12",
+      "returncode": 0,
+      "stdout": "['A']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E13",
+      "returncode": 0,
+      "stdout": "['X']\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-011-E01",
+      "sql": "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([1, 2] AS Array(UInt8))) AS v",
+      "returncode": 0,
+      "stdout": "['1','2']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E02",
+      "sql": "SELECT arrayMap(((x, y) -> multiply(x, y)) | (z -> toString(z)), CAST([2] AS Array(UInt8)), CAST([3] AS Array(UInt8))) AS v",
+      "returncode": 0,
+      "stdout": "['6']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E03",
+      "sql": "SELECT arrayMap(lower | (x -> upper(x)), ['Ab']) AS v",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E04",
+      "sql": "SELECT arrayMap((x -> lower(x)) | upper, ['Ab']) AS v",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E05",
+      "sql": "SELECT arrayMap((((x -> lower(x)))) | ((y -> upper(y))), ['Ab']) AS v",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E06",
+      "sql": "SELECT arrayMap((x -> CONCAT(x, t.s)) | (y -> upper(y)), t.a) AS v FROM (SELECT CAST(['a'] AS Array(String)) AS a, CAST('b' AS String) AS s) AS t",
+      "returncode": 0,
+      "stdout": "['AB']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E07",
+      "sql": "SELECT arrayMap((x -> arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([2] AS Array(UInt8)))) | (z -> z), CAST([1] AS Array(UInt8))) AS v",
+      "returncode": 0,
+      "stdout": "[['2']]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E08",
+      "sql": "SELECT arrayMap((x -> toString(x)) | ((a, b) -> CONCAT(a, b)), CAST([1] AS Array(UInt8))) AS v",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: The right operand of the function composition operator `|` must be a function of one argument, got 2 arguments: ((a, b) -> CONCAT(a, b)). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-011-E09",
+      "sql": "SELECT arrayMap(((a, b) -> 'x') | upper, CAST([1] AS Array(UInt8))) AS v",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-011-E10",
+      "sql": "SELECT arrayMap((x -> x.n) | (y -> upper(y)), CAST([('a', 1)] AS Array(Tuple(n String, m UInt8)))) AS v",
+      "returncode": 0,
+      "stdout": "['A']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E11",
+      "sql": "SELECT arrayMap((x -> brikkMissingParenFunction(x)) | upper, ['a']) AS v",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `brikkMissingParenFunction` does not exist. In scope lambda(tuple(__composed_arg_1), upper(brikkMissingParenFunction(__composed_arg_1))). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-011-E12",
+      "sql": "SELECT arrayMap((x -> lower(x)) | TRIM(_) | (y -> upper(y)), [' a ']) AS v",
+      "returncode": 0,
+      "stdout": "['A']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-011-E13",
+      "sql": "WITH (x -> upper(x)) AS trim SELECT arrayMap(trim | upper, ['x']) AS v",
+      "returncode": 0,
+      "stdout": "['X']\n",
+      "stderr": ""
+    }
+  ]
+}

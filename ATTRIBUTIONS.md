@@ -196,6 +196,10 @@ CHSEM-010's lowering assessment records finite native observations from the same
 ClickHouse images, Trino 484 and Doris 4.1.5, plus the existing DuckDB 2.0.0 JDBC
 artifact. These are research candidates, not new semantic-equivalence certificates.
 
+CHSEM-011's `paren-lambda-native/` captures contain original/generated finite
+execution and formatting observations from the same exact Apache-2.0 ClickHouse
+images. Historical parser-gap captures are preserved separately.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

@@ -26,6 +26,15 @@ class BinaryCompatibilityTest {
     private val marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
 
     @Test
+    fun lambdaHeaderFactoringPreservesTheExistingParserEntryPoints() {
+        val parser = dev.brikk.house.sql.parser.Parser::class.java
+        val expression = dev.brikk.house.sql.ast.Expression::class.java
+        assertEquals(expression, parser.getMethod("parseParen").returnType)
+        assertEquals(expression, parser.getMethod("parseLambda", Boolean::class.javaPrimitiveType).returnType)
+        parser.getDeclaredMethod("parseLambda\$default", parser, Boolean::class.javaPrimitiveType, Int::class.javaPrimitiveType, Any::class.java)
+    }
+
+    @Test
     fun positionedSemanticsKeepExistingDiagnosticDataClassSignatures() {
         val severity = dev.brikk.house.sql.diagnostics.DiagnosticSeverity::class.java
         val source = dev.brikk.house.sql.diagnostics.DiagnosticSource::class.java

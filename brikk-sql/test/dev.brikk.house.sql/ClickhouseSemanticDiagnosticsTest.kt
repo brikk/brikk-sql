@@ -84,7 +84,7 @@ class ClickhouseSemanticDiagnosticsTest {
             "SELECT arrayMap(trim(_),CAST([NULL] AS Array(Nullable(UInt8))))" to ClickhouseSemanticUnknownReason.NULL_OR_WRAPPER,
             "SELECT arrayMap(multiply,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8)))" to ClickhouseSemanticUnknownReason.ARRAY_LENGTHS,
             "SELECT arrayMap(domainWithoutWWW(_) | upper,CAST([] AS Array(FixedString(3))))" to ClickhouseSemanticUnknownReason.RUNTIME_RESTRICTION,
-            "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)),[1])" to ClickhouseSemanticUnknownReason.PARSER_GAP,
+            "SELECT arrayMap(t.lower | upper,['x'])" to ClickhouseSemanticUnknownReason.PARSER_GAP,
         )) {
             val report = analyze(sql)
             assertTrue(report.errors.isEmpty(), sql)

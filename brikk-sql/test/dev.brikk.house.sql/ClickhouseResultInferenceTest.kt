@@ -99,7 +99,7 @@ class ClickhouseResultInferenceTest {
             "SELECT arrayMap(x -> 'constant',1)",
             "SELECT arrayMap(trim(_),CAST([NULL] AS Array(Nullable(UInt8))))",
             "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(12,3))),CAST([2] AS Array(Float32)))",
-            "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)),[1])")) {
+            "SELECT arrayMap(t.lower | upper,['x'])")) {
             assertEquals("UNKNOWN", type(map(typed(sql))), sql)
         }
         val old = inferClickhouseCompositionResults(parseOne("SELECT arrayMap(lower | upper,['x'])","clickhouse"), "26.8.34.13")

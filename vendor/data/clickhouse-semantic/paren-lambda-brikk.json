@@ -1,0 +1,128 @@
+[
+    {
+        "id": "CHSEM-011-E01",
+        "input_sql": "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)),CAST([1,2] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([1, 2] AS Array(UInt8))) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-011-E02",
+        "input_sql": "SELECT arrayMap(((x,y) -> multiply(x,y)) | (z -> toString(z)),CAST([2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap(((x, y) -> multiply(x, y)) | (z -> toString(z)), CAST([2] AS Array(UInt8)), CAST([3] AS Array(UInt8))) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS"
+        ]
+    },
+    {
+        "id": "CHSEM-011-E03",
+        "input_sql": "SELECT arrayMap(lower | (x -> upper(x)),['Ab']) AS v",
+        "generated": "SELECT arrayMap(lower | (x -> upper(x)), ['Ab']) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-011-E04",
+        "input_sql": "SELECT arrayMap((x -> lower(x)) | upper,['Ab']) AS v",
+        "generated": "SELECT arrayMap((x -> lower(x)) | upper, ['Ab']) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-011-E05",
+        "input_sql": "SELECT arrayMap((((x -> lower(x)))) | ((y -> upper(y))),['Ab']) AS v",
+        "generated": "SELECT arrayMap((((x -> lower(x)))) | ((y -> upper(y))), ['Ab']) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-011-E06",
+        "input_sql": "SELECT arrayMap((x -> CONCAT(x,t.s)) | (y -> upper(y)),t.a) AS v FROM (SELECT CAST(['a'] AS Array(String)) AS a,CAST('b' AS String) AS s) AS t",
+        "generated": "SELECT arrayMap((x -> CONCAT(x, t.s)) | (y -> upper(y)), t.a) AS v FROM (SELECT CAST(['a'] AS Array(String)) AS a, CAST('b' AS String) AS s) AS t",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": [
+            "UNSUPPORTED_CONTEXT"
+        ]
+    },
+    {
+        "id": "CHSEM-011-E07",
+        "input_sql": "SELECT arrayMap((x -> arrayMap((x -> toString(x)) | (y -> upper(y)),CAST([2] AS Array(UInt8)))) | (z -> z),CAST([1] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap((x -> arrayMap((x -> toString(x)) | (y -> upper(y)), CAST([2] AS Array(UInt8)))) | (z -> z), CAST([1] AS Array(UInt8))) AS v",
+        "result_type": "Array(Array(String))",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-011-E08",
+        "input_sql": "SELECT arrayMap((x -> toString(x)) | ((a,b) -> CONCAT(a,b)),CAST([1] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap((x -> toString(x)) | ((a, b) -> CONCAT(a, b)), CAST([1] AS Array(UInt8))) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "RIGHT_OPERAND_ARITY"
+        ],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-011-E09",
+        "input_sql": "SELECT arrayMap(((a,b) -> 'x') | upper,CAST([1] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap(((a, b) -> 'x') | upper, CAST([1] AS Array(UInt8))) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "ARRAY_MAP_ARITY"
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-011-E10",
+        "input_sql": "SELECT arrayMap((x -> x.n) | (y -> upper(y)),CAST([('a',1)] AS Array(Tuple(n String,m UInt8)))) AS v",
+        "generated": "SELECT arrayMap((x -> x.n) | (y -> upper(y)), CAST([('a', 1)] AS Array(Tuple(n String, m UInt8)))) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER",
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-011-E11",
+        "input_sql": "SELECT arrayMap((x -> brikkMissingParenFunction(x)) | upper,['a']) AS v",
+        "generated": "SELECT arrayMap((x -> brikkMissingParenFunction(x)) | upper, ['a']) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER",
+            "UNRESEARCHED_CALLABLE"
+        ]
+    },
+    {
+        "id": "CHSEM-011-E12",
+        "input_sql": "SELECT arrayMap((x -> lower(x)) | trim(_) | (y -> upper(y)),[' a ']) AS v",
+        "generated": "SELECT arrayMap((x -> lower(x)) | TRIM(_) | (y -> upper(y)), [' a ']) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-011-E13",
+        "input_sql": "WITH (x -> upper(x)) AS trim SELECT arrayMap(trim | upper,['x']) AS v",
+        "generated": "WITH (x -> upper(x)) AS trim SELECT arrayMap(trim | upper, ['x']) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NAME_RESOLUTION",
+            "NULL_OR_WRAPPER",
+            "UNSUPPORTED_CONTEXT"
+        ]
+    }
+]

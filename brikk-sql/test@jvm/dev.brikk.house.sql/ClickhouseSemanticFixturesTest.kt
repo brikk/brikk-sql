@@ -31,7 +31,7 @@ class ClickhouseSemanticFixturesTest {
     @Test
     fun lambdaParameterTypesMatchTheNativeInputFixturesWithoutCertifyingCalls() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/lambda-input-cases.json").readText()).jsonObject
-        val refinements = listOf("lambda-input-results-refinements.json", "higher-order-refinements.json").flatMap { name ->
+        val refinements = listOf("lambda-input-results-refinements.json", "higher-order-refinements.json", "paren-lambda-refinements.json").flatMap { name ->
             Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/$name").readText()).jsonObject.getValue("cases").jsonArray
         }.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         fun type(node: Expression): String = if (node.isType(DType.UNKNOWN)) "UNKNOWN"
@@ -40,7 +40,7 @@ class ClickhouseSemanticFixturesTest {
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
             val gap = case["brikk_parser_gap"]
-            if (gap != null) return@map buildJsonObject {
+            if (gap != null && refinements[id]?.get("resolved_parser_gap") == null) return@map buildJsonObject {
                 put("id", id)
                 put("input_sql", case.getValue("sql"))
                 put("known_parser_gap", gap)

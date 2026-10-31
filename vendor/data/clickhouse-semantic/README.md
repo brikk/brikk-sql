@@ -39,6 +39,10 @@ CHSEM-010 [assesses cross-dialect lowering](lowering-README.md) independently.
 Explicit-lambda research candidates and paired outcomes do not enable production
 conversion; unproved composition/placeholder lowering still refuses.
 
+CHSEM-011 fixes [parenthesized explicit lambda operands](paren-lambda-README.md),
+with source/serde/scope/type diagnostics and paired original/generated execution.
+Historical parser-gap evidence is retained with named current refinements.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

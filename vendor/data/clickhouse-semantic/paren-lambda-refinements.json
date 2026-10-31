@@ -1,0 +1,13 @@
+{
+ "task":"CHSEM-011",
+ "cases":[{"id":"CHSEM-003-E26","resolved_parser_gap":"CHSEM-011","formal_types":["UInt8","String"],"implicit_types":[],"reason":"Parenthesized operands are now explicit Lambdas. Their arguments follow the existing cast and toString result proofs; toTypeName's own result remains unresearched."}],
+ "rules":[
+  {"id":"CHSEM-004-E29","rules":[],"unknown_reasons":["NAME_RESOLUTION","NULL_OR_WRAPPER","UNSUPPORTED_CONTEXT"],"reason":"The WITH definition is now correctly a Lambda, not a JSON arrow. Alias resolution remains unknown, including analysis of its definition."},
+  {"id":"CHSEM-004-E32","rules":[],"unknown_reasons":["RESULT_FAMILY"],"reason":"The parser gap is resolved. The toTypeName body remains outside the bounded result rules."},
+  {"id":"CHSEM-004-E46","rules":[],"unknown_reasons":["NAME_RESOLUTION","UNSUPPORTED_CONTEXT"],"reason":"The WITH function definition now has the correct Lambda structure. A potentially shadowed arrayMap is still not resolved as a builtin."}
+ ],
+ "results":[
+  {"id":"CHSEM-005-E33","resolved_parser_gap":"CHSEM-011","type":"Array(String)","reason":"The existing toString and upper rules now receive proper explicit Lambda operands. The saved native toTypeName witness already returns Array(String)."},
+  {"id":"CHSEM-005-E32","type":"UNKNOWN","unknown_reasons":["NAME_RESOLUTION","NULL_OR_WRAPPER","RESULT_FAMILY","UNSUPPORTED_CONTEXT"],"reason":"The WITH definition now generates as a Lambda instead of JSON extraction. Alias resolution remains unknown and the function definition is an unresearched context."}
+ ]
+}
