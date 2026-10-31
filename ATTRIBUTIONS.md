@@ -178,6 +178,10 @@ follows the tagged `NumberTraits::ResultOfAdditionMultiplication` declaration al
 cited in `callable-sources.json`; the complete pair matrix is independently observed
 from the engines rather than generated from that formula.
 
+CHSEM-007's `qualification-native/` captures add finite original/generated
+execution and parser observations from the same exact Apache-2.0 ClickHouse images.
+Earlier raw captures are preserved separately.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

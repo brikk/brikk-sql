@@ -23,6 +23,10 @@ CHSEM-006 exposes [positioned offline diagnostics](diagnostics-README.md) throug
 the shared library. Public errors and unknowns retain the existing 50-case rules;
 parser acceptance cannot suppress semantic findings.
 
+CHSEM-007 [qualifies the bounded slice](qualification-README.md) with integrated
+scope/lineage, serde, typing and diagnostic controls plus twelve original/generated
+finite execution pairs on each pin. This is not whole-analyzer or cross-dialect certification.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

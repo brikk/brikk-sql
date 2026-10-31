@@ -3,7 +3,7 @@
 Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence,
 CHSEM-002 callable facts, CHSEM-003 contextual input typing, CHSEM-004 internal
 composition validation, CHSEM-005 conditional result annotation and CHSEM-006
-public positioned diagnostics are complete. Qualification remains CHSEM-007.
+public positioned diagnostics and CHSEM-007 qualification are complete.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -27,7 +27,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-004: Implement composition argument validation. Check stage argument counts, placeholder requirements and provable input incompatibilities using native-backed rules. Diagnose bare variadic designators such as `trim | upper` without rejecting the valid `trim(_) | upper` form. Do not infer runtime array-length equality from matching argument counts.
 - [x] CHSEM-005: Infer composition and arrayMap results. Propagate stage results through supported chains and compute array element types without inventing precision, nullability or overload facts. Track incomplete knowledge explicitly and preserve existing generic/dialect typing behavior.
 - [x] CHSEM-006: Expose positioned offline semantic diagnostics through the shared library. Keep semantic results separate from parser acceptance; distinguish proven errors from unavailable knowledge. Test statement/script offsets and consumer-facing integration without adding new internal or experimental IntelliJ API calls.
-- [ ] CHSEM-007: Qualify and document the bounded slice. Add self-contained positive/negative, AST serde, scope/lineage, typing and diagnostic tests; compare original/generated finite results and errors against pinned native fixtures. Run affected modules, full regression and binary-compatibility gates, record skips, and document exact coverage and remaining unknowns.
+- [x] CHSEM-007: Qualify and document the bounded slice. Add self-contained positive/negative, AST serde, scope/lineage, typing and diagnostic tests; compare original/generated finite results and errors against pinned native fixtures. Run affected modules, full regression and binary-compatibility gates, record skips, and document exact coverage and remaining unknowns.
 
 ## Follow-up scope, not part of the first slice
 
@@ -38,8 +38,8 @@ checks parsing only and must not be relabeled as semantic validation.
 
 ## Constraints and resumption
 
-- User authorized CHSEM-006 after completing CHSEM-005. Commit/push after each round, then stop before CHSEM-007 until further direction. CHSEM-011 remains recorded follow-up work, not authorization to expand this round.
-- Resume at CHSEM-007; do not treat the unchecked follow-ups as implemented or certified.
+- User authorized CHSEM-007, CHSEM-008 and CHSEM-009 in order, with a separate commit/push after each. Stop before CHSEM-010. CHSEM-011 remains recorded follow-up work, not authorization to expand these rounds.
+- Resume at CHSEM-008, then CHSEM-009, both authorized; do not treat unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -228,6 +228,24 @@ skip using the unchanged temporary SQLGlot pin; ClickHouse-only discovery passed
 38 tests. Existing native captures back the same rules, with no new native execution
 or qualification claim this round. No release version, publication or toolchain
 floor changed. Commit/push this round, then stop before CHSEM-007.
+
+## CHSEM-007 result
+
+The first slice is qualified together by twelve self-contained vectors and an
+integrated serde/type/scope/public-diagnostic test, plus physical capture/array
+lineage after annotation and serde. Both exact pins passed original/generated
+formatting and all twelve finite result/error assertions, with no execution skips.
+Known type plus runtime failure and successful execution plus unknown result are
+explicit controls. No new semantic rules or production behavior were added.
+Coverage and remaining limits: `vendor/data/clickhouse-semantic/qualification-README.md`.
+
+Validation: full JVM suite passed 1,828 tests with 61 optional integration aborts
+and zero failures, including binary compatibility. Full IntelliJ platform suite
+passed 757 tests on 261.25134.95; other IDE versions were not run. Complete Python
+suite passed 87 tests with one opt-in Toolchain-model skip using the unchanged
+temporary SQLGlot pin; ClickHouse-only discovery passed 39. Historical evidence,
+corpus rules, public signatures, IntelliJ API usage, releases and consumer pins are
+unchanged. Commit/push CHSEM-007 separately, then continue authorized CHSEM-008.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

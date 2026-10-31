@@ -1,0 +1,121 @@
+[
+    {
+        "id": "CHSEM-007-E01",
+        "input_sql": "SELECT arrayMap(lower | upper,CAST(['Ab','cD'] AS Array(String))) AS v",
+        "generated": "SELECT arrayMap(lower | upper, CAST(['Ab', 'cD'] AS Array(String))) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-007-E02",
+        "input_sql": "SELECT arrayMap(trim(_) | upper,CAST([' x ',' y '] AS Array(String))) AS v",
+        "generated": "SELECT arrayMap(TRIM(_) | upper, CAST([' x ', ' y '] AS Array(String))) AS v",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-007-E03",
+        "input_sql": "SELECT arrayMap((x,y) -> x*y,CAST([2,4] AS Array(UInt8)),CAST([3,5] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap((x, y) -> x * y, CAST([2, 4] AS Array(UInt8)), CAST([3, 5] AS Array(UInt8))) AS v",
+        "result_type": "Array(UInt16)",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E04",
+        "input_sql": "SELECT arrayMap(x -> x,CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v",
+        "generated": "SELECT arrayMap(x -> x, CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v",
+        "result_type": "Array(Nullable(UInt8))",
+        "rules": [],
+        "unknowns": [
+            "INPUT_TYPE"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E05",
+        "input_sql": "SELECT arrayMap(xs -> arrayMap(x -> x,xs),CAST([[1,2],[3]] AS Array(Array(UInt16)))) AS v",
+        "generated": "SELECT arrayMap(xs -> arrayMap(x -> x, xs), CAST([[1, 2], [3]] AS Array(Array(UInt16)))) AS v",
+        "result_type": "Array(Array(UInt16))",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E06",
+        "input_sql": "SELECT arrayMap(x -> arrayMap(y -> CONCAT(x,y),CAST(['b'] AS Array(String))),CAST(['a'] AS Array(String))) AS v",
+        "generated": "SELECT arrayMap(x -> arrayMap(y -> CONCAT(x, y), CAST(['b'] AS Array(String))), CAST(['a'] AS Array(String))) AS v",
+        "result_type": "Array(Array(String))",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E07",
+        "input_sql": "SELECT arrayMap(trim | upper,['x']) AS v",
+        "generated": "SELECT arrayMap(trim | upper, ['x']) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "VARIADIC_LEFT_DESIGNATOR"
+        ],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E08",
+        "input_sql": "SELECT arrayMap(lower | upper,CAST([1] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap(lower | upper, CAST([1] AS Array(UInt8))) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "INPUT_TYPE"
+        ],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E09",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v",
+        "generated": "SELECT arrayMap(multiply, CAST([1, 2] AS Array(UInt8)), CAST([3] AS Array(UInt8))) AS v",
+        "result_type": "Array(UInt16)",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E10",
+        "input_sql": "SELECT arrayMap(x -> reverse(x),CAST(['abc'] AS Array(String))) AS v",
+        "generated": "SELECT arrayMap(x -> reverse(x), CAST(['abc'] AS Array(String))) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-007-E11",
+        "input_sql": "SELECT arrayMap(x -> x,CAST([1] AS Array(Decimal(12,3)))) AS v",
+        "generated": "SELECT arrayMap(x -> x, CAST([1] AS Array(Decimal(12, 3)))) AS v",
+        "result_type": "Array(Decimal(12, 3))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-007-E12",
+        "input_sql": "SELECT arrayMap((x,y) -> x,[1]) AS v",
+        "generated": "SELECT arrayMap((x, y) -> x, [1]) AS v",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "ARRAY_MAP_ARITY"
+        ],
+        "unknowns": []
+    }
+]

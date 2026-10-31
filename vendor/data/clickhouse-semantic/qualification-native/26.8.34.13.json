@@ -1,0 +1,236 @@
+{
+  "captured_at": "2026-10-31T05:33:06.596737+00:00",
+  "fixture_sha256": "ae26e2527c13e7b8a11ff2995eb5c5f9dadeed60c0577490f4bfb89e005f4af9",
+  "brikk_sha256": "5ee8be8aa40a00b2d57c7bc19c74c7657a6baf9d91e7c5fbc428e8f782f70045",
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-007-E01\",\"formatted\":null}\n{\"id\":\"CHSEM-007-E02\",\"formatted\":null}\n{\"id\":\"CHSEM-007-E03\",\"formatted\":\"SELECT arrayMap((x, y) -> (x * y), CAST([2, 4], 'Array(UInt8)'), CAST([3, 5], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-007-E04\",\"formatted\":\"SELECT arrayMap(x -> x, CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v\"}\n{\"id\":\"CHSEM-007-E05\",\"formatted\":\"SELECT arrayMap(xs -> arrayMap(x -> x, xs), CAST([[1, 2], [3]], 'Array(Array(UInt16))')) AS v\"}\n{\"id\":\"CHSEM-007-E06\",\"formatted\":\"SELECT arrayMap(x -> arrayMap(y -> CONCAT(x, y), CAST(['b'], 'Array(String)')), CAST(['a'], 'Array(String)')) AS v\"}\n{\"id\":\"CHSEM-007-E07\",\"formatted\":null}\n{\"id\":\"CHSEM-007-E08\",\"formatted\":null}\n{\"id\":\"CHSEM-007-E09\",\"formatted\":\"SELECT arrayMap(multiply, CAST([1, 2], 'Array(UInt8)'), CAST([3], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-007-E10\",\"formatted\":\"SELECT arrayMap(x -> reverse(x), CAST(['abc'], 'Array(String)')) AS v\"}\n{\"id\":\"CHSEM-007-E11\",\"formatted\":\"SELECT arrayMap(x -> x, CAST([1], 'Array(Decimal(12, 3))')) AS v\"}\n{\"id\":\"CHSEM-007-E12\",\"formatted\":\"SELECT arrayMap((x, y) -> x, [1]) AS v\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-007-E01",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-007-E02",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-007-E03",
+      "formatted": "SELECT arrayMap((x, y) -> (x * y), CAST([2, 4], 'Array(UInt8)'), CAST([3, 5], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E04",
+      "formatted": "SELECT arrayMap(x -> x, CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E05",
+      "formatted": "SELECT arrayMap(xs -> arrayMap(x -> x, xs), CAST([[1, 2], [3]], 'Array(Array(UInt16))')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E06",
+      "formatted": "SELECT arrayMap(x -> arrayMap(y -> CONCAT(x, y), CAST(['b'], 'Array(String)')), CAST(['a'], 'Array(String)')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E07",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-007-E08",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-007-E09",
+      "formatted": "SELECT arrayMap(multiply, CAST([1, 2], 'Array(UInt8)'), CAST([3], 'Array(UInt8)')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E10",
+      "formatted": "SELECT arrayMap(x -> reverse(x), CAST(['abc'], 'Array(String)')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E11",
+      "formatted": "SELECT arrayMap(x -> x, CAST([1], 'Array(Decimal(12, 3))')) AS v"
+    },
+    {
+      "id": "CHSEM-007-E12",
+      "formatted": "SELECT arrayMap((x, y) -> x, [1]) AS v"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-007-E03\",\"formatted\":\"SELECT arrayMap((x, y) -> (x * y), CAST([2, 4], 'Array(UInt8)'), CAST([3, 5], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-007-E04\",\"formatted\":\"SELECT arrayMap(x -> x, CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v\"}\n{\"id\":\"CHSEM-007-E05\",\"formatted\":\"SELECT arrayMap(xs -> arrayMap(x -> x, xs), CAST([[1, 2], [3]], 'Array(Array(UInt16))')) AS v\"}\n{\"id\":\"CHSEM-007-E06\",\"formatted\":\"SELECT arrayMap(x -> arrayMap(y -> CONCAT(x, y), CAST(['b'], 'Array(String)')), CAST(['a'], 'Array(String)')) AS v\"}\n{\"id\":\"CHSEM-007-E09\",\"formatted\":\"SELECT arrayMap(multiply, CAST([1, 2], 'Array(UInt8)'), CAST([3], 'Array(UInt8)')) AS v\"}\n{\"id\":\"CHSEM-007-E10\",\"formatted\":\"SELECT arrayMap(x -> reverse(x), CAST(['abc'], 'Array(String)')) AS v\"}\n{\"id\":\"CHSEM-007-E11\",\"formatted\":\"SELECT arrayMap(x -> x, CAST([1], 'Array(Decimal(12, 3))')) AS v\"}\n{\"id\":\"CHSEM-007-E12\",\"formatted\":\"SELECT arrayMap((x, y) -> x, [1]) AS v\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-007-E01",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper,CAST(['Ab','cD'] AS Array(String))) AS v. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E02",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 25 (|): | upper,CAST([' x ',' y '] AS Array(String))) AS v. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E03",
+      "returncode": 0,
+      "stdout": "[6,20]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E04",
+      "returncode": 0,
+      "stdout": "[1,NULL]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E05",
+      "returncode": 0,
+      "stdout": "[[1,2],[3]]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E06",
+      "returncode": 0,
+      "stdout": "[['ab']]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E07",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper,['x']) AS v. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E08",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper,CAST([1] AS Array(UInt8))) AS v. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E09",
+      "returncode": 190,
+      "stdout": "",
+      "stderr": "Code: 190. DB::Exception: Arrays passed to arrayMap must have equal size. Argument 3 has size 1 which differs with the size of another argument, 2. (SIZES_OF_ARRAYS_DONT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-007-E10",
+      "returncode": 0,
+      "stdout": "['cba']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E11",
+      "returncode": 0,
+      "stdout": "[1]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E12",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-007-E01",
+      "sql": "SELECT arrayMap(lower | upper, CAST(['Ab', 'cD'] AS Array(String))) AS v",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, CAST(['Ab', 'cD'] AS Array(String))) AS v. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E02",
+      "sql": "SELECT arrayMap(TRIM(_) | upper, CAST([' x ', ' y '] AS Array(String))) AS v",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 25 (|): | upper, CAST([' x ', ' y '] AS Array(String))) AS v. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E03",
+      "sql": "SELECT arrayMap((x, y) -> x * y, CAST([2, 4] AS Array(UInt8)), CAST([3, 5] AS Array(UInt8))) AS v",
+      "returncode": 0,
+      "stdout": "[6,20]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E04",
+      "sql": "SELECT arrayMap(x -> x, CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v",
+      "returncode": 0,
+      "stdout": "[1,NULL]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E05",
+      "sql": "SELECT arrayMap(xs -> arrayMap(x -> x, xs), CAST([[1, 2], [3]] AS Array(Array(UInt16)))) AS v",
+      "returncode": 0,
+      "stdout": "[[1,2],[3]]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E06",
+      "sql": "SELECT arrayMap(x -> arrayMap(y -> CONCAT(x, y), CAST(['b'] AS Array(String))), CAST(['a'] AS Array(String))) AS v",
+      "returncode": 0,
+      "stdout": "[['ab']]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E07",
+      "sql": "SELECT arrayMap(trim | upper, ['x']) AS v",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 22 (|): | upper, ['x']) AS v. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E08",
+      "sql": "SELECT arrayMap(lower | upper, CAST([1] AS Array(UInt8))) AS v",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, CAST([1] AS Array(UInt8))) AS v. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-007-E09",
+      "sql": "SELECT arrayMap(multiply, CAST([1, 2] AS Array(UInt8)), CAST([3] AS Array(UInt8))) AS v",
+      "returncode": 190,
+      "stdout": "",
+      "stderr": "Code: 190. DB::Exception: Arrays passed to arrayMap must have equal size. Argument 3 has size 1 which differs with the size of another argument, 2. (SIZES_OF_ARRAYS_DONT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-007-E10",
+      "sql": "SELECT arrayMap(x -> reverse(x), CAST(['abc'] AS Array(String))) AS v",
+      "returncode": 0,
+      "stdout": "['cba']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E11",
+      "sql": "SELECT arrayMap(x -> x, CAST([1] AS Array(Decimal(12, 3)))) AS v",
+      "returncode": 0,
+      "stdout": "[1]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-007-E12",
+      "sql": "SELECT arrayMap((x, y) -> x, [1]) AS v",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: First argument for this overload of arrayMap must be a function with 1 arguments, found Function((?, ?) -> ?) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    }
+  ]
+}
