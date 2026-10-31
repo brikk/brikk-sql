@@ -1043,9 +1043,31 @@ and IDE introspection/completion are separate contracts.
   and failed its two required fixture controls; no code or test suppression fixed that setup.
   No Plugin Verifier run, merge, publication or consumer update was performed.
 
-- [ ] `DDB20-038` Factorial precedence [AUDIT].
+- [x] `DDB20-038` Factorial precedence [DONE].
   Pin AST, generation and engine results for `2 * 3!` (12 in 2.0) versus `(2 * 3)!` (720),
   with surrounding unary/binary operators. The old parser's precedence is not the 2.0 contract.
+  Native source d54cbbe3df expression.gram classifies ! as cast/dot/subscript-level
+  indirection. DuckdbParser handles both literal fast paths and column/cast chains before
+  unary/exponent/multiplication; the existing Factorial AST generates an explicit function
+  with its exact operand. Copy/serde, prefix negation, complement, modulo, casts on either
+  side, NULL, HUGEINT/INT128 typing and strict scalar nullability have focused controls.
+  Negated regex/LIKE spellings retain range semantics. Adjacent !+, !*, !^ and !! are not
+  normalized into factorial plus another operator; these unmodeled compound operators
+  refuse. Whitespace-separated repeated suffixes retain native operand-type errors.
+  DuckdbFactorialPrecedenceResultTest checks original/generated/serde SQL against pinned
+  JDBC 2.0.0.0, including negative/overflow/type errors, parameter order and volatile operands
+  evaluated once. Executable cross-target factorial translation refuses unproved native
+  INTEGER input/HUGEINT output/error equivalence rather than assuming an identically named
+  function is safe. No other dialect's prefix ! behavior or corpus expectation is changed.
+  Final evidence: 1,399 core and 125 metadata tests passed with zero skips in the fresh
+  full build; the isolated native recheck passed all 221 tests, zero skips, with all signed
+  fixtures enabled. An earlier full run failed an existing repository control, and the
+  isolated recheck diagnosed temporary-file disk quota exhaustion while copying fixtures.
+  Removing only this session's two obsolete failed build directories restored the unchanged
+  native suite. No assertion, fixture requirement, timeout or ledger was weakened. Logs:
+  /tmp/opencode/duckdb-factorial-final.log and duckdb-factorial-native-recheck.log.
+  No public data-class signature, IntelliJ API, user connection, dependency pin, merge or
+  publication changes. Per user direction, stop here before DDB20-039; 039–042 remain open.
 
 - [ ] `DDB20-039` X/B literal types [AUDIT].
   Verify `X'...'` is BLOB and `B'...'` is BITSTRING, not old VARCHAR text with an x/b prefix.

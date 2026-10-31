@@ -668,6 +668,17 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Factorial precedence
+
+DuckDB 2.0 postfix factorial binds as a cast/subscript-level indirection, before prefix
+unary operators, exponentiation and multiplication. Thus `2 * 3!` generates
+`2 * FACTORIAL(3)`, while `(2 * 3)!` keeps the parenthesized product as FACTORIAL's operand.
+The shared Factorial node survives copy/serde; casts on either side retain their order.
+Result facts use INT128, DuckDB's native HUGEINT, and native negative/overflow/type errors
+are not folded away. Executable cross-target factorial translation refuses unproved
+input-width/result/error equivalence. Negated regex/LIKE spellings keep their range-parser
+meaning rather than donating their `!` to the preceding operand.
+
 ### Native regex operators
 
 For DuckDB 2.0 execution, use `SqlFragment(sql, "duckdb").toExecutable("duckdb")`.

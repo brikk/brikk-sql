@@ -434,6 +434,7 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Factorial)return operatorRule(operands(node))
         if(dialect.name=="duckdb") (node as Expression).duckdbGeoJsonScalarArguments()?.let { return operatorRule(it) }
         if (dialect.name == "duckdb" && (node as Expression).duckdbRegexName() != null) {
             if(node.duckdbRegexReturnType()==null)return null

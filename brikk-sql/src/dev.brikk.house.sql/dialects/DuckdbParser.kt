@@ -281,6 +281,29 @@ open class DuckdbParser(
         return super.negateRange(this_)
     }
 
+    // Native 2.0 expression.gram: factorial is an indirection alongside casts and
+    // subscripts, below prefix unary/exponent/multiplication, not a whole-term suffix.
+    override fun parseType(parseInterval: Boolean, fallbackToIdentifier: Boolean): Expression? {
+        val parsed = super.parseType(parseInterval, fallbackToIdentifier)
+        // Literal atoms can bypass parseColumnOps in the base parser's fast path.
+        return if (!fallbackToIdentifier && currToken.tokenType == TokenType.NOT && currToken.text == "!")
+            parseColumnOps(parsed) else parsed
+    }
+
+    override fun parseColumnOps(this_: Expression?): Expression? {
+        var current = super.parseColumnOps(this_)
+        while (current != null && currToken.tokenType == TokenType.NOT && currToken.text == "!") {
+            // The scanner splits negated regex/LIKE operator spellings into ! and ~...
+            // tokens. They belong to parseRange, not to the preceding scalar operand.
+            if (nextToken.text.startsWith("~") && currToken.end + 1 == nextToken.start) break
+            if (currToken.end + 1 == nextToken.start && nextToken.text.firstOrNull()?.let { it in "+-*/%^&|#<>=!" } == true)
+                raiseError("Adjacent !${nextToken.text} is an unmodeled operator, not a DuckDB factorial suffix")
+            advance()
+            current = super.parseColumnOps(expression(dev.brikk.house.sql.ast.Factorial(args("this" to current))))
+        }
+        return current
+    }
+
     override val exponent: Map<TokenType, NodeFactory> get() = DuckdbParserTables.EXPONENT
 
     override val functionsWithAliasedArgs: Set<String>
