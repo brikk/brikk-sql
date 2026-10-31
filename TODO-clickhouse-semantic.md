@@ -34,13 +34,13 @@ checks parsing only and must not be relabeled as semantic validation.
 
 - [x] CHSEM-008: Extend proven contracts to common array/map higher-order functions. Prioritize arrayFilter, arrayExists, arrayAll, arraySort and mapApply; account for their different argument binding and result rules. Establish separate native fixtures for each added family.
 - [x] CHSEM-009: Expand composite and overload typing. Research Nullable, LowCardinality, tuples, numeric promotion, decimal precision/scale, constant-dependent rules and settings/version boundaries. Add only measured rules; retain explicit unknowns for UDFs and unsupported overloads. Establish exact native literal-array element types before using generic integer hints in contextual lambda validation.
-- [ ] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
+- [x] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
 - [ ] CHSEM-011: Fix the existing ClickHouse parser gap for parenthesized explicit lambda operands inside composition. Native 26.10 accepts `(x -> toString(x)) | (y -> toTypeName(y))`, but Brikk currently creates JSONExtract nodes. CHSEM-003-E26 records the native boundary. Add correct structured parsing, source/serde/scope tests and native original/generated result checks without changing other dialects' JSON arrow operators. Until then, do not claim this SQL form has contextual typing or certified lowering.
 
 ## Constraints and resumption
 
-- User authorized CHSEM-007, CHSEM-008 and CHSEM-009 in order, with a separate commit/push after each. Stop before CHSEM-010. CHSEM-011 remains recorded follow-up work, not authorization to expand these rounds.
-- CHSEM-007 through CHSEM-009 are complete. Stop before CHSEM-010 pending further direction; do not treat unchecked follow-ups as implemented or certified.
+- User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
+- CHSEM-010 is complete; commit/push it separately, then continue authorized CHSEM-011. Do not treat unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -307,6 +307,31 @@ Python discovery passed 91 tests with one opt-in Toolchain-model skip using the
 unchanged temporary SQLGlot pin. No new IntelliJ API calls, old public signatures,
 toolchain floors, release versions, publication or consumer dependencies changed.
 Commit/push CHSEM-009 separately, then stop before CHSEM-010.
+
+## CHSEM-010 result
+
+Assessed eight explicit-lambda research candidates on DuckDB 2.0.0, Trino 484 and
+Doris 4.1.5, with original/reference execution on both exact ClickHouse pins.
+The captures retain versions, image/JDBC hashes, ordered String/NULL values and
+raw errors. Unicode differs on all targets; numeric width and padding differ on
+DuckDB/Trino. Doris's matching numeric witness and length error are not universal
+equivalence evidence. Both-error is never labeled equivalent. ASCII, trim, nullable
+and repeated pure-stage matches remain finite controls only.
+
+No production lowering was enabled. Refusal remains for all composition/implicit
+placeholder candidates, including invalid, unresolved, volatile and captured forms.
+Evaluation count, scope hygiene, wrappers, settings and URL-function semantics
+still need separate proofs for any future converter. Details and reproduction:
+`vendor/data/clickhouse-semantic/lowering-README.md`.
+
+Validation: all 24 target candidate grammars parse, but execution captures include
+the expected differences. Full JVM regression passed 1,840 tests with 61 optional
+integration aborts and zero failures, including binary compatibility. Complete
+Python suite passed 93 tests with one opt-in Toolchain-model skip; ClickHouse-only
+discovery passed 45. No production/IDE code, public signatures, corpus/hazard/
+certification rules, releases or consumer pins changed. Platform suites were not
+repeated. All owned probe containers were removed; startup failures are not treated
+as semantic evidence. Commit/push separately, then continue CHSEM-011.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

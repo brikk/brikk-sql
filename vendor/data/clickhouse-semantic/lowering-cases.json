@@ -1,0 +1,38 @@
+{
+ "task":"CHSEM-010",
+ "scope":"Research candidates only. Production composition/placeholder cross-dialect refusal remains unchanged.",
+ "cases":[
+  {"id":"CHSEM-010-E01","area":"ascii-string-chain","source":"SELECT arrayMap(lower | upper,['Ab','cD']) AS v","explicit":"SELECT arrayMap(x -> upper(lower(x)),['Ab','cD']) AS v","targets":{
+   "duckdb":"SELECT list_transform(['Ab','cD'],lambda x: upper(lower(x))) AS v",
+   "trino":"SELECT transform(ARRAY['Ab','cD'],x -> upper(lower(x))) AS v",
+   "doris":"SELECT array_map(x -> upper(lower(x)),['Ab','cD']) AS v"}},
+  {"id":"CHSEM-010-E02","area":"unicode-case-counterexample","source":"SELECT arrayMap(lower | CONCAT(_,'!'),['Ä','ABC']) AS v","explicit":"SELECT arrayMap(x -> CONCAT(lower(x),'!'),['Ä','ABC']) AS v","targets":{
+   "duckdb":"SELECT list_transform(['Ä','ABC'],lambda x: concat(lower(x),'!')) AS v",
+   "trino":"SELECT transform(ARRAY['Ä','ABC'],x -> concat(lower(x),'!')) AS v",
+   "doris":"SELECT array_map(x -> concat(lower(x),'!'),['Ä','ABC']) AS v"}},
+  {"id":"CHSEM-010-E03","area":"ascii-trim-chain","source":"SELECT arrayMap(trim(_) | upper,[' x ','']) AS v","explicit":"SELECT arrayMap(x -> upper(trim(x)),[' x ','']) AS v","targets":{
+   "duckdb":"SELECT list_transform([' x ',''],lambda x: upper(trim(x))) AS v",
+   "trino":"SELECT transform(ARRAY[' x ',''],x -> upper(trim(x))) AS v",
+   "doris":"SELECT array_map(x -> upper(trim(x)),[' x ','']) AS v"}},
+  {"id":"CHSEM-010-E04","area":"multiplication-width-counterexample","source":"SELECT arrayMap(multiply(_1,_2) | toString,CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v","explicit":"SELECT arrayMap((a,b) -> toString(a*b),CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v","targets":{
+   "duckdb":"SELECT list_transform(list_zip([255::UTINYINT],[255::UTINYINT]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v",
+   "trino":"SELECT zip_with(ARRAY[CAST(255 AS SMALLINT)],ARRAY[CAST(255 AS SMALLINT)],(a,b) -> CAST(a*b AS VARCHAR)) AS v",
+   "doris":"SELECT array_map((a,b) -> CAST(a*b AS STRING),CAST([255] AS ARRAY<SMALLINT>),CAST([255] AS ARRAY<SMALLINT>)) AS v"}},
+  {"id":"CHSEM-010-E05","area":"array-length-counterexample","source":"SELECT arrayMap(multiply(_1,_2) | toString,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v","explicit":"SELECT arrayMap((a,b) -> toString(a*b),CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v","targets":{
+   "duckdb":"SELECT list_transform(list_zip([1,2],[3]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v",
+   "trino":"SELECT zip_with(ARRAY[1,2],ARRAY[3],(a,b) -> CAST(a*b AS VARCHAR)) AS v",
+   "doris":"SELECT array_map((a,b) -> CAST(a*b AS STRING),[1,2],[3]) AS v"}},
+  {"id":"CHSEM-010-E06","area":"native-url-function-gap","source":"SELECT arrayMap(lower | domainWithoutWWW | upper,['https://www.Example.com']) AS v","explicit":"SELECT arrayMap(x -> upper(domainWithoutWWW(lower(x))),['https://www.Example.com']) AS v","targets":{
+   "duckdb":"SELECT list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v",
+   "trino":"SELECT transform(ARRAY['https://www.Example.com'],x -> upper(domainWithoutWWW(lower(x)))) AS v",
+   "doris":"SELECT array_map(x -> upper(domainWithoutWWW(lower(x))),['https://www.Example.com']) AS v"}},
+  {"id":"CHSEM-010-E07","area":"nullable-string-chain","source":"SELECT arrayMap(toString(_) | upper,CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v","explicit":"SELECT arrayMap(x -> upper(toString(x)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v","targets":{
+   "duckdb":"SELECT list_transform([1::UTINYINT,NULL],lambda x: upper(CAST(x AS VARCHAR))) AS v",
+   "trino":"SELECT transform(ARRAY[CAST(1 AS SMALLINT),NULL],x -> upper(CAST(x AS VARCHAR))) AS v",
+   "doris":"SELECT array_map(x -> upper(CAST(x AS STRING)),CAST([1,NULL] AS ARRAY<SMALLINT>)) AS v"}},
+  {"id":"CHSEM-010-E08","area":"repeated-placeholder-pure-stage","source":"SELECT arrayMap(lower | CONCAT(_1,_1),['Ab']) AS v","explicit":"SELECT arrayMap(x -> CONCAT(lower(x),lower(x)),['Ab']) AS v","targets":{
+   "duckdb":"SELECT list_transform(['Ab'],lambda x: concat(lower(x),lower(x))) AS v",
+   "trino":"SELECT transform(ARRAY['Ab'],x -> concat(lower(x),lower(x))) AS v",
+   "doris":"SELECT array_map(x -> concat(lower(x),lower(x)),['Ab']) AS v"}}
+ ]
+}

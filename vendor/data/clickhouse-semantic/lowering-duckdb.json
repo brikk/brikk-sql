@@ -1,0 +1,90 @@
+{
+    "engine": "duckdb",
+    "version": "v2.0.0",
+    "jdbc_artifact": "org.duckdb:duckdb_jdbc:2.0.0.0",
+    "jdbc_sha256": "5170daa90a43296705127ef3c80834ba1cd275ec9d765a9f7eee346ab0087186",
+    "fixture_sha256": "ae2d1b49eafbf8269a15eb50c97e31b428597beaf132ccf88b9c6fd94e4cf0fb",
+    "cases": [
+        {
+            "id": "CHSEM-010-E01",
+            "candidate": "SELECT list_transform(['Ab','cD'],lambda x: upper(lower(x))) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform(['Ab','cD'],lambda x: upper(lower(x))) AS v) AS probe",
+            "status": "value",
+            "raw": "[\"AB\",\"CD\"]",
+            "value": [
+                "AB",
+                "CD"
+            ]
+        },
+        {
+            "id": "CHSEM-010-E02",
+            "candidate": "SELECT list_transform(['Ä','ABC'],lambda x: concat(lower(x),'!')) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform(['Ä','ABC'],lambda x: concat(lower(x),'!')) AS v) AS probe",
+            "status": "value",
+            "raw": "[\"ä!\",\"abc!\"]",
+            "value": [
+                "ä!",
+                "abc!"
+            ]
+        },
+        {
+            "id": "CHSEM-010-E03",
+            "candidate": "SELECT list_transform([' x ',''],lambda x: upper(trim(x))) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform([' x ',''],lambda x: upper(trim(x))) AS v) AS probe",
+            "status": "value",
+            "raw": "[\"X\",\"\"]",
+            "value": [
+                "X",
+                ""
+            ]
+        },
+        {
+            "id": "CHSEM-010-E04",
+            "candidate": "SELECT list_transform(list_zip([255::UTINYINT],[255::UTINYINT]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform(list_zip([255::UTINYINT],[255::UTINYINT]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v) AS probe",
+            "status": "error",
+            "message": "Out of Range Error: Overflow in multiplication of UINT8 (255 * 255)!",
+            "sql_state": null
+        },
+        {
+            "id": "CHSEM-010-E05",
+            "candidate": "SELECT list_transform(list_zip([1,2],[3]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform(list_zip([1,2],[3]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v) AS probe",
+            "status": "value",
+            "raw": "[\"3\",null]",
+            "value": [
+                "3",
+                null
+            ]
+        },
+        {
+            "id": "CHSEM-010-E06",
+            "candidate": "SELECT list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v) AS probe",
+            "status": "error",
+            "message": "Catalog Error: Scalar Function with name domainwithoutwww does not exist!\nDid you mean \"min\"?\n\nLINE 1: ... list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v) AS probe\n                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^",
+            "sql_state": null
+        },
+        {
+            "id": "CHSEM-010-E07",
+            "candidate": "SELECT list_transform([1::UTINYINT,NULL],lambda x: upper(CAST(x AS VARCHAR))) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform([1::UTINYINT,NULL],lambda x: upper(CAST(x AS VARCHAR))) AS v) AS probe",
+            "status": "value",
+            "raw": "[\"1\",null]",
+            "value": [
+                "1",
+                null
+            ]
+        },
+        {
+            "id": "CHSEM-010-E08",
+            "candidate": "SELECT list_transform(['Ab'],lambda x: concat(lower(x),lower(x))) AS v",
+            "query": "SELECT to_json(v) FROM (SELECT list_transform(['Ab'],lambda x: concat(lower(x),lower(x))) AS v) AS probe",
+            "status": "value",
+            "raw": "[\"abab\"]",
+            "value": [
+                "abab"
+            ]
+        }
+    ]
+}

@@ -192,6 +192,10 @@ getLeastSupertype, DecimalUtils and default NULL return typing. `overload-native
 and `literal-types/` retain independent original/generated and integer-boundary
 observations from the same exact Apache-2.0 images. Earlier captures remain intact.
 
+CHSEM-010's lowering assessment records finite native observations from the same
+ClickHouse images, Trino 484 and Doris 4.1.5, plus the existing DuckDB 2.0.0 JDBC
+artifact. These are research candidates, not new semantic-equivalence certificates.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

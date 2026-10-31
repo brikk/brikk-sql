@@ -1,0 +1,857 @@
+{
+  "captured_at": "2026-10-31T19:29:40.235984+00:00",
+  "fixture_sha256": "ae2d1b49eafbf8269a15eb50c97e31b428597beaf132ccf88b9c6fd94e4cf0fb",
+  "duckdb_sha256": "4b33fa3082dd605c716852cffed9fd7d2fec72384aa0dd0671c3c988bacdf771",
+  "images": {
+    "trino": {
+      "requested_image": "trinodb/trino@sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f",
+      "image_id": "sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f",
+      "repo_digests": [
+        "trinodb/trino@sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f"
+      ]
+    },
+    "fe": {
+      "requested_image": "apache/doris@sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+      "image_id": "sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+      "repo_digests": [
+        "apache/doris@sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc"
+      ]
+    },
+    "be": {
+      "requested_image": "apache/doris@sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb",
+      "image_id": "sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb",
+      "repo_digests": [
+        "apache/doris@sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb"
+      ]
+    }
+  },
+  "versions": {
+    "trino": {
+      "returncode": 0,
+      "stdout": "484\n",
+      "stderr": ""
+    },
+    "frontend": {
+      "returncode": 0,
+      "stdout": "fe_3519d55c_bcda_41e0_adfa_ab65200d4c57\t127.0.0.1\t9010\t8030\t9030\t9020\t8070\tFOLLOWER\ttrue\t357774586\ttrue\ttrue\t11\t2026-10-31 19:28:52\t2026-10-31 19:29:05\ttrue\t\tdoris-4.1.5-release-917b20be838\tYes\tNULL\n",
+      "stderr": ""
+    },
+    "backend": {
+      "returncode": 0,
+      "stdout": "1793474932712\t127.0.0.1\t9050\t9060\t8040\t8060\t8050\t2026-10-31 19:29:00\t2026-10-31 19:29:06\ttrue\tfalse\t0\t0.000 \t0.000 \t1.000 B\t0.000 \t0.00 %\t0.00 %\t0.000 \t{\"location\" : \"default\"}\t\tdoris-4.1.5-release-917b20be838\t{\"lastSuccessReportTabletsTime\":\"N/A\",\"lastStreamLoadTime\":-1,\"isQueryDisabled\":false,\"isLoadDisabled\":false,\"isActive\":true,\"isShutdown\":false,\"currentFragmentNum\":0,\"lastFragmentUpdateTime\":1793474937882}\t0\t1\t6.00 GB\t2026-10-31 19:29:06\t0\tmix\n",
+      "stderr": ""
+    }
+  },
+  "clickhouse": {
+    "26.8.34.13": {
+      "engine": {
+        "version": "26.8.34.13",
+        "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+        "tag": "clickhouse/clickhouse-server:26.8.34.13",
+        "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+      },
+      "version_query": {
+        "returncode": 0,
+        "stdout": "26.8.34.13\n",
+        "stderr": ""
+      },
+      "cases": [
+        {
+          "id": "CHSEM-010-E01",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | upper,['Ab','cD']) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 52 (|): | upper,['Ab','cD']) AS v) AS probe. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(lower(x)),['Ab','cD']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"AB\",\"CD\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "AB",
+              "CD"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E02",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | CONCAT(_,'!'),['Ä','ABC']) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 52 (|): | CONCAT(_,'!'),['Ä','ABC']) AS v) AS probe. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> CONCAT(lower(x),'!'),['Ä','ABC']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"Ä!\",\"abc!\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "Ä!",
+              "abc!"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E03",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(trim(_) | upper,[' x ','']) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 54 (|): | upper,[' x ','']) AS v) AS probe. Expected one of: token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(trim(x)),[' x ','']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"X\",\"\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "X",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E04",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(multiply(_1,_2) | toString,CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 62 (|): | toString,CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v) AS probe. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap((a,b) -> toString(a*b),CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"65025\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "65025"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E05",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(multiply(_1,_2) | toString,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 62 (|): | toString,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v) AS probe. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap((a,b) -> toString(a*b),CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 190,
+              "stdout": "",
+              "stderr": "Code: 190. DB::Exception: Arrays passed to arrayMap must have equal size. Argument 3 has size 1 which differs with the size of another argument, 2. (SIZES_OF_ARRAYS_DONT_MATCH)\n"
+            }
+          }
+        },
+        {
+          "id": "CHSEM-010-E06",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | domainWithoutWWW | upper,['https://www.Example.com']) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 52 (|): | domainWithoutWWW | upper,['https://www.Example.com']) AS v) AS probe. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(domainWithoutWWW(lower(x))),['https://www.Example.com']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"EXAMPLE.COM\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "EXAMPLE.COM"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E07",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(toString(_) | upper,CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 58 (|): | upper,CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v) AS probe. Expected one of: token, OpeningRoundBracket, FILTER, RESPECT NULLS, IGNORE NULLS, OVER, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(toString(x)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"1\",null]\n",
+              "stderr": ""
+            },
+            "value": [
+              "1",
+              null
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E08",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | CONCAT(_1,_1),['Ab']) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 62,
+              "stdout": "",
+              "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 52 (|): | CONCAT(_1,_1),['Ab']) AS v) AS probe. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> CONCAT(lower(x),lower(x)),['Ab']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"abab\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "abab"
+            ]
+          }
+        }
+      ]
+    },
+    "26.10.2.103": {
+      "engine": {
+        "version": "26.10.2.103",
+        "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+        "tag": "clickhouse/clickhouse-server:26.10.2.103",
+        "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+      },
+      "version_query": {
+        "returncode": 0,
+        "stdout": "26.10.2.103\n",
+        "stderr": ""
+      },
+      "cases": [
+        {
+          "id": "CHSEM-010-E01",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | upper,['Ab','cD']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"AB\",\"CD\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "AB",
+              "CD"
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(lower(x)),['Ab','cD']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"AB\",\"CD\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "AB",
+              "CD"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E02",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | CONCAT(_,'!'),['Ä','ABC']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"Ä!\",\"abc!\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "Ä!",
+              "abc!"
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> CONCAT(lower(x),'!'),['Ä','ABC']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"Ä!\",\"abc!\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "Ä!",
+              "abc!"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E03",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(trim(_) | upper,[' x ','']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"X\",\"\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "X",
+              ""
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(trim(x)),[' x ','']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"X\",\"\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "X",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E04",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(multiply(_1,_2) | toString,CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"65025\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "65025"
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap((a,b) -> toString(a*b),CAST([255] AS Array(UInt8)),CAST([255] AS Array(UInt8))) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"65025\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "65025"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E05",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(multiply(_1,_2) | toString,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 190,
+              "stdout": "",
+              "stderr": "Code: 190. DB::Exception: Arrays passed to arrayMap must have equal size. Argument 3 has size 1 which differs with the size of another argument, 2. (SIZES_OF_ARRAYS_DONT_MATCH)\n"
+            }
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap((a,b) -> toString(a*b),CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8))) AS v) AS probe",
+            "status": "error",
+            "raw": {
+              "returncode": 190,
+              "stdout": "",
+              "stderr": "Code: 190. DB::Exception: Arrays passed to arrayMap must have equal size. Argument 3 has size 1 which differs with the size of another argument, 2. (SIZES_OF_ARRAYS_DONT_MATCH)\n"
+            }
+          }
+        },
+        {
+          "id": "CHSEM-010-E06",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | domainWithoutWWW | upper,['https://www.Example.com']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"EXAMPLE.COM\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "EXAMPLE.COM"
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(domainWithoutWWW(lower(x))),['https://www.Example.com']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"EXAMPLE.COM\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "EXAMPLE.COM"
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E07",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(toString(_) | upper,CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"1\",null]\n",
+              "stderr": ""
+            },
+            "value": [
+              "1",
+              null
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> upper(toString(x)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"1\",null]\n",
+              "stderr": ""
+            },
+            "value": [
+              "1",
+              null
+            ]
+          }
+        },
+        {
+          "id": "CHSEM-010-E08",
+          "source": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(lower | CONCAT(_1,_1),['Ab']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"abab\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "abab"
+            ]
+          },
+          "explicit": {
+            "query": "SELECT toJSONString(v) FROM (SELECT arrayMap(x -> CONCAT(lower(x),lower(x)),['Ab']) AS v) AS probe",
+            "status": "value",
+            "raw": {
+              "returncode": 0,
+              "stdout": "[\"abab\"]\n",
+              "stderr": ""
+            },
+            "value": [
+              "abab"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "CHSEM-010-E01",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E01",
+          "candidate": "SELECT list_transform(['Ab','cD'],lambda x: upper(lower(x))) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform(['Ab','cD'],lambda x: upper(lower(x))) AS v) AS probe",
+          "status": "value",
+          "raw": "[\"AB\",\"CD\"]",
+          "value": [
+            "AB",
+            "CD"
+          ]
+        },
+        "trino": {
+          "candidate": "SELECT transform(ARRAY['Ab','cD'],x -> upper(lower(x))) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY['Ab','cD'],x -> upper(lower(x))) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"AB\",\"CD\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "AB",
+            "CD"
+          ]
+        },
+        "doris": {
+          "candidate": "SELECT array_map(x -> upper(lower(x)),['Ab','cD']) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map(x -> upper(lower(x)),['Ab','cD']) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"AB\",\"CD\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "AB",
+            "CD"
+          ]
+        }
+      },
+      "comparison": {
+        "duckdb": "same-finite-value",
+        "trino": "same-finite-value",
+        "doris": "same-finite-value"
+      }
+    },
+    {
+      "id": "CHSEM-010-E02",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E02",
+          "candidate": "SELECT list_transform(['Ä','ABC'],lambda x: concat(lower(x),'!')) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform(['Ä','ABC'],lambda x: concat(lower(x),'!')) AS v) AS probe",
+          "status": "value",
+          "raw": "[\"ä!\",\"abc!\"]",
+          "value": [
+            "ä!",
+            "abc!"
+          ]
+        },
+        "trino": {
+          "candidate": "SELECT transform(ARRAY['Ä','ABC'],x -> concat(lower(x),'!')) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY['Ä','ABC'],x -> concat(lower(x),'!')) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"ä!\",\"abc!\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "ä!",
+            "abc!"
+          ]
+        },
+        "doris": {
+          "candidate": "SELECT array_map(x -> concat(lower(x),'!'),['Ä','ABC']) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map(x -> concat(lower(x),'!'),['Ä','ABC']) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"ä!\",\"abc!\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "ä!",
+            "abc!"
+          ]
+        }
+      },
+      "comparison": {
+        "duckdb": "different-value",
+        "trino": "different-value",
+        "doris": "different-value"
+      }
+    },
+    {
+      "id": "CHSEM-010-E03",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E03",
+          "candidate": "SELECT list_transform([' x ',''],lambda x: upper(trim(x))) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform([' x ',''],lambda x: upper(trim(x))) AS v) AS probe",
+          "status": "value",
+          "raw": "[\"X\",\"\"]",
+          "value": [
+            "X",
+            ""
+          ]
+        },
+        "trino": {
+          "candidate": "SELECT transform(ARRAY[' x ',''],x -> upper(trim(x))) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY[' x ',''],x -> upper(trim(x))) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"X\",\"\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "X",
+            ""
+          ]
+        },
+        "doris": {
+          "candidate": "SELECT array_map(x -> upper(trim(x)),[' x ','']) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map(x -> upper(trim(x)),[' x ','']) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"X\",\"\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "X",
+            ""
+          ]
+        }
+      },
+      "comparison": {
+        "duckdb": "same-finite-value",
+        "trino": "same-finite-value",
+        "doris": "same-finite-value"
+      }
+    },
+    {
+      "id": "CHSEM-010-E04",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E04",
+          "candidate": "SELECT list_transform(list_zip([255::UTINYINT],[255::UTINYINT]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform(list_zip([255::UTINYINT],[255::UTINYINT]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v) AS probe",
+          "status": "error",
+          "message": "Out of Range Error: Overflow in multiplication of UINT8 (255 * 255)!",
+          "sql_state": null
+        },
+        "trino": {
+          "candidate": "SELECT zip_with(ARRAY[CAST(255 AS SMALLINT)],ARRAY[CAST(255 AS SMALLINT)],(a,b) -> CAST(a*b AS VARCHAR)) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT zip_with(ARRAY[CAST(255 AS SMALLINT)],ARRAY[CAST(255 AS SMALLINT)],(a,b) -> CAST(a*b AS VARCHAR)) AS v) AS probe",
+          "status": "error",
+          "raw": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Query 20261031_192924_00007_5kmx5 failed: smallint multiplication overflow: 255 * 255\n\n"
+          }
+        },
+        "doris": {
+          "candidate": "SELECT array_map((a,b) -> CAST(a*b AS STRING),CAST([255] AS ARRAY<SMALLINT>),CAST([255] AS ARRAY<SMALLINT>)) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map((a,b) -> CAST(a*b AS STRING),CAST([255] AS ARRAY<SMALLINT>),CAST([255] AS ARRAY<SMALLINT>)) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"65025\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "65025"
+          ]
+        }
+      },
+      "comparison": {
+        "duckdb": "different-outcome",
+        "trino": "different-outcome",
+        "doris": "same-finite-value"
+      }
+    },
+    {
+      "id": "CHSEM-010-E05",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E05",
+          "candidate": "SELECT list_transform(list_zip([1,2],[3]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform(list_zip([1,2],[3]),lambda p: CAST(p[1]*p[2] AS VARCHAR)) AS v) AS probe",
+          "status": "value",
+          "raw": "[\"3\",null]",
+          "value": [
+            "3",
+            null
+          ]
+        },
+        "trino": {
+          "candidate": "SELECT zip_with(ARRAY[1,2],ARRAY[3],(a,b) -> CAST(a*b AS VARCHAR)) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT zip_with(ARRAY[1,2],ARRAY[3],(a,b) -> CAST(a*b AS VARCHAR)) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"3\",null]\n",
+            "stderr": ""
+          },
+          "value": [
+            "3",
+            null
+          ]
+        },
+        "doris": {
+          "candidate": "SELECT array_map((a,b) -> CAST(a*b AS STRING),[1,2],[3]) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map((a,b) -> CAST(a*b AS STRING),[1,2],[3]) AS v) AS probe",
+          "status": "error",
+          "raw": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "ERROR 1105 (HY000) at line 1: errCode = 2, detailMessage = (127.0.0.1)[INVALID_ARGUMENT]in array map function, the input column size are not equal completely, nested column data rows 1st size is 2, 2th size is 1.\n"
+          }
+        }
+      },
+      "comparison": {
+        "duckdb": "different-outcome",
+        "trino": "different-outcome",
+        "doris": "both-error-not-equivalence"
+      }
+    },
+    {
+      "id": "CHSEM-010-E06",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E06",
+          "candidate": "SELECT list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v) AS probe",
+          "status": "error",
+          "message": "Catalog Error: Scalar Function with name domainwithoutwww does not exist!\nDid you mean \"min\"?\n\nLINE 1: ... list_transform(['https://www.Example.com'],lambda x: upper(domainWithoutWWW(lower(x)))) AS v) AS probe\n                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^",
+          "sql_state": null
+        },
+        "trino": {
+          "candidate": "SELECT transform(ARRAY['https://www.Example.com'],x -> upper(domainWithoutWWW(lower(x)))) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY['https://www.Example.com'],x -> upper(domainWithoutWWW(lower(x)))) AS v) AS probe",
+          "status": "error",
+          "raw": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "Query 20261031_192933_00009_5kmx5 failed: line 1:104: Function 'domainwithoutwww' not registered\nLINE 1: SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY['https://www.Example.com'],x -> upper(domainWithoutWWW(lower(x)))) AS v) AS probe\n                                                                                                               ^\n\n"
+          }
+        },
+        "doris": {
+          "candidate": "SELECT array_map(x -> upper(domainWithoutWWW(lower(x))),['https://www.Example.com']) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map(x -> upper(domainWithoutWWW(lower(x))),['https://www.Example.com']) AS v) AS probe",
+          "status": "error",
+          "raw": {
+            "returncode": 1,
+            "stdout": "",
+            "stderr": "ERROR 1105 (HY000) at line 1: errCode = 2, detailMessage = Can not found function 'domainWithoutWWW'\n"
+          }
+        }
+      },
+      "comparison": {
+        "duckdb": "different-outcome",
+        "trino": "different-outcome",
+        "doris": "different-outcome"
+      }
+    },
+    {
+      "id": "CHSEM-010-E07",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E07",
+          "candidate": "SELECT list_transform([1::UTINYINT,NULL],lambda x: upper(CAST(x AS VARCHAR))) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform([1::UTINYINT,NULL],lambda x: upper(CAST(x AS VARCHAR))) AS v) AS probe",
+          "status": "value",
+          "raw": "[\"1\",null]",
+          "value": [
+            "1",
+            null
+          ]
+        },
+        "trino": {
+          "candidate": "SELECT transform(ARRAY[CAST(1 AS SMALLINT),NULL],x -> upper(CAST(x AS VARCHAR))) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY[CAST(1 AS SMALLINT),NULL],x -> upper(CAST(x AS VARCHAR))) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"1\",null]\n",
+            "stderr": ""
+          },
+          "value": [
+            "1",
+            null
+          ]
+        },
+        "doris": {
+          "candidate": "SELECT array_map(x -> upper(CAST(x AS STRING)),CAST([1,NULL] AS ARRAY<SMALLINT>)) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map(x -> upper(CAST(x AS STRING)),CAST([1,NULL] AS ARRAY<SMALLINT>)) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"1\",null]\n",
+            "stderr": ""
+          },
+          "value": [
+            "1",
+            null
+          ]
+        }
+      },
+      "comparison": {
+        "duckdb": "same-finite-value",
+        "trino": "same-finite-value",
+        "doris": "same-finite-value"
+      }
+    },
+    {
+      "id": "CHSEM-010-E08",
+      "targets": {
+        "duckdb": {
+          "id": "CHSEM-010-E08",
+          "candidate": "SELECT list_transform(['Ab'],lambda x: concat(lower(x),lower(x))) AS v",
+          "query": "SELECT to_json(v) FROM (SELECT list_transform(['Ab'],lambda x: concat(lower(x),lower(x))) AS v) AS probe",
+          "status": "value",
+          "raw": "[\"abab\"]",
+          "value": [
+            "abab"
+          ]
+        },
+        "trino": {
+          "candidate": "SELECT transform(ARRAY['Ab'],x -> concat(lower(x),lower(x))) AS v",
+          "query": "SELECT json_format(CAST(v AS JSON)) FROM (SELECT transform(ARRAY['Ab'],x -> concat(lower(x),lower(x))) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"abab\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "abab"
+          ]
+        },
+        "doris": {
+          "candidate": "SELECT array_map(x -> concat(lower(x),lower(x)),['Ab']) AS v",
+          "query": "SELECT TO_JSON(v) FROM (SELECT array_map(x -> concat(lower(x),lower(x)),['Ab']) AS v) AS probe",
+          "status": "value",
+          "raw": {
+            "returncode": 0,
+            "stdout": "[\"abab\"]\n",
+            "stderr": ""
+          },
+          "value": [
+            "abab"
+          ]
+        }
+      },
+      "comparison": {
+        "duckdb": "same-finite-value",
+        "trino": "same-finite-value",
+        "doris": "same-finite-value"
+      }
+    }
+  ],
+  "automatic_lowering_enabled": false
+}

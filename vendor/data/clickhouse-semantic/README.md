@@ -35,6 +35,10 @@ CHSEM-009 adds [bounded composite/overload typing](overload-README.md), includin
 an explicit pin-aware native literal-array typing entrypoint. Standard literal
 parity, historical evidence and corpus rules remain intact.
 
+CHSEM-010 [assesses cross-dialect lowering](lowering-README.md) independently.
+Explicit-lambda research candidates and paired outcomes do not enable production
+conversion; unproved composition/placeholder lowering still refuses.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and
