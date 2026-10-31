@@ -1,0 +1,355 @@
+{
+  "captured_at": "2026-10-31T23:42:42.883971+00:00",
+  "fixture_sha256": "1193c576f049ed348ac68194dc91097ed1351a89b383640220609eebb216e4ab",
+  "brikk_sha256": "b15c6c7bc32266f24ad63126290cd829f6e24d6be7c135cd750edbe01f596a33",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-013-E01\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST(0, 'UInt8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E02\",\"formatted\":\"SELECT CAST(1, 'UInt16') \\/ CAST(0, 'UInt16')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E03\",\"formatted\":\"SELECT CAST(1, 'UInt32') \\/ CAST(0, 'UInt32')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E04\",\"formatted\":\"SELECT CAST(1, 'UInt64') \\/ CAST(0, 'UInt64')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E05\",\"formatted\":\"SELECT CAST('1', 'UInt128') \\/ CAST('0', 'UInt128')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E06\",\"formatted\":\"SELECT CAST('1', 'UInt256') \\/ CAST('0', 'UInt256')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E07\",\"formatted\":\"SELECT CAST(-128, 'Int8') \\/ CAST(-1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E08\",\"formatted\":\"SELECT CAST(255, 'UInt8') \\/ CAST('1', 'Int256')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E09\",\"formatted\":\"SELECT divideExact(CAST(255, 'UInt8'), CAST(-1, 'Int16'))\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E10\",\"formatted\":\"SELECT CAST(-9223372036854775808, 'Int64') \\/ CAST(-1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E11\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Int8)') \\/ CAST(0, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E12\",\"formatted\":\"SELECT CAST(1, 'Int8') \\/ CAST(NULL, 'Nullable(Int8)')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E13\",\"formatted\":\"SELECT CAST(256, 'UInt8') \\/ CAST(0, 'UInt8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E14\",\"formatted\":\"SELECT CAST(1, 'Float32') \\/ CAST(0, 'UInt8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E15\",\"formatted\":\"SELECT CAST(255, 'UInt8') \\/ CAST(2, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E16\",\"formatted\":\"SELECT CAST(-128, 'Int8') \\/ CAST(1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E17\",\"formatted\":\"SELECT divideExact(CAST(1, 'Float64'), CAST(0, 'Float64'))\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E18\",\"formatted\":\"SELECT CAST(-9223372036854775808, 'Int64') \\/ CAST(1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E19\",\"formatted\":\"SELECT CAST(1, 'Nullable(Int8)') \\/ CAST(0, 'Nullable(Int8)')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-013-E01",
+      "formatted": "SELECT CAST(1, 'UInt8') / CAST(0, 'UInt8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E02",
+      "formatted": "SELECT CAST(1, 'UInt16') / CAST(0, 'UInt16')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E03",
+      "formatted": "SELECT CAST(1, 'UInt32') / CAST(0, 'UInt32')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E04",
+      "formatted": "SELECT CAST(1, 'UInt64') / CAST(0, 'UInt64')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E05",
+      "formatted": "SELECT CAST('1', 'UInt128') / CAST('0', 'UInt128')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E06",
+      "formatted": "SELECT CAST('1', 'UInt256') / CAST('0', 'UInt256')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E07",
+      "formatted": "SELECT CAST(-128, 'Int8') / CAST(-1, 'Int8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E08",
+      "formatted": "SELECT CAST(255, 'UInt8') / CAST('1', 'Int256')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E09",
+      "formatted": "SELECT divideExact(CAST(255, 'UInt8'), CAST(-1, 'Int16'))\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E10",
+      "formatted": "SELECT CAST(-9223372036854775808, 'Int64') / CAST(-1, 'Int8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E11",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Int8)') / CAST(0, 'Int8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E12",
+      "formatted": "SELECT CAST(1, 'Int8') / CAST(NULL, 'Nullable(Int8)')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E13",
+      "formatted": "SELECT CAST(256, 'UInt8') / CAST(0, 'UInt8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E14",
+      "formatted": "SELECT CAST(1, 'Float32') / CAST(0, 'UInt8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E15",
+      "formatted": "SELECT CAST(255, 'UInt8') / CAST(2, 'Int8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E16",
+      "formatted": "SELECT CAST(-128, 'Int8') / CAST(1, 'Int8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E17",
+      "formatted": "SELECT divideExact(CAST(1, 'Float64'), CAST(0, 'Float64'))\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E18",
+      "formatted": "SELECT CAST(-9223372036854775808, 'Int64') / CAST(1, 'Int8')\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-013-E19",
+      "formatted": "SELECT CAST(1, 'Nullable(Int8)') / CAST(0, 'Nullable(Int8)')\nSETTINGS sql_compatible_division_for_integers = 1"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-013-E01\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST(0, 'UInt8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E02\",\"formatted\":\"SELECT CAST(1, 'UInt16') \\/ CAST(0, 'UInt16')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E03\",\"formatted\":\"SELECT CAST(1, 'UInt32') \\/ CAST(0, 'UInt32')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E04\",\"formatted\":\"SELECT CAST(1, 'UInt64') \\/ CAST(0, 'UInt64')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E05\",\"formatted\":\"SELECT CAST('1', 'UInt128') \\/ CAST('0', 'UInt128')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E06\",\"formatted\":\"SELECT CAST('1', 'UInt256') \\/ CAST('0', 'UInt256')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E07\",\"formatted\":\"SELECT CAST(-128, 'Int8') \\/ CAST(-1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E08\",\"formatted\":\"SELECT CAST(255, 'UInt8') \\/ CAST('1', 'Int256')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E09\",\"formatted\":\"SELECT divideExact(CAST(255, 'UInt8'), CAST(-1, 'Int16'))\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E10\",\"formatted\":\"SELECT CAST(-9223372036854775808, 'Int64') \\/ CAST(-1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E11\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Int8)') \\/ CAST(0, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E12\",\"formatted\":\"SELECT CAST(1, 'Int8') \\/ CAST(NULL, 'Nullable(Int8)')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E13\",\"formatted\":\"SELECT CAST(256, 'UInt8') \\/ CAST(0, 'UInt8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E14\",\"formatted\":\"SELECT CAST(1, 'Float32') \\/ CAST(0, 'UInt8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E15\",\"formatted\":\"SELECT CAST(255, 'UInt8') \\/ CAST(2, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E16\",\"formatted\":\"SELECT CAST(-128, 'Int8') \\/ CAST(1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E17\",\"formatted\":\"SELECT divideExact(CAST(1, 'Float64'), CAST(0, 'Float64'))\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E18\",\"formatted\":\"SELECT CAST(-9223372036854775808, 'Int64') \\/ CAST(1, 'Int8')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-013-E19\",\"formatted\":\"SELECT CAST(1, 'Nullable(Int8)') \\/ CAST(0, 'Nullable(Int8)')\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-013-E01",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt8'), CAST(0, 'UInt8')) AS `divide(CAST(1, 'UInt8'), CAST(0, 'UInt8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E02",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt16'), CAST(0, 'UInt16')) AS `divide(CAST(1, 'UInt16'), CAST(0, 'UInt16'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E03",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt32'), CAST(0, 'UInt32')) AS `divide(CAST(1, 'UInt32'), CAST(0, 'UInt32'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E04",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt64'), CAST(0, 'UInt64')) AS `divide(CAST(1, 'UInt64'), CAST(0, 'UInt64'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E05",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST('1', 'UInt128'), CAST('0', 'UInt128')) AS `divide(CAST('1', 'UInt128'), CAST('0', 'UInt128'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E06",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST('1', 'UInt256'), CAST('0', 'UInt256')) AS `divide(CAST('1', 'UInt256'), CAST('0', 'UInt256'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E07",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(-128, 'Int8'), CAST(-1, 'Int8')) AS `divide(CAST(-128, 'Int8'), CAST(-1, 'Int8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E08",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(255, 'UInt8'), CAST('1', 'Int256')) AS `divide(CAST(255, 'UInt8'), CAST('1', 'Int256'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E09",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(255, 'UInt8'), CAST(-1, 'Int16')) SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E10",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(-9223372036854775808, 'Int64'), CAST(-1, 'Int8')) AS `divide(CAST(-9223372036854775808, 'Int64'), CAST(-1, 'Int8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E11",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E12",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E13",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(256, 'UInt8'), CAST(0, 'UInt8')) AS `divide(CAST(256, 'UInt8'), CAST(0, 'UInt8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E14",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E15",
+      "returncode": 0,
+      "stdout": "127\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E16",
+      "returncode": 0,
+      "stdout": "-128\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E17",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E18",
+      "returncode": 0,
+      "stdout": "-9223372036854775808\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E19",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Nullable(Int8)'), CAST(0, 'Nullable(Int8)')) AS `divide(CAST(1, 'Nullable(Int8)'), CAST(0, 'Nullable(Int8)'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-013-E01",
+      "sql": "SELECT CAST(1 AS UInt8) / CAST(0 AS UInt8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt8'), CAST(0, 'UInt8')) AS `divide(CAST(1, 'UInt8'), CAST(0, 'UInt8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E02",
+      "sql": "SELECT CAST(1 AS UInt16) / CAST(0 AS UInt16) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt16'), CAST(0, 'UInt16')) AS `divide(CAST(1, 'UInt16'), CAST(0, 'UInt16'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E03",
+      "sql": "SELECT CAST(1 AS UInt32) / CAST(0 AS UInt32) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt32'), CAST(0, 'UInt32')) AS `divide(CAST(1, 'UInt32'), CAST(0, 'UInt32'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E04",
+      "sql": "SELECT CAST(1 AS UInt64) / CAST(0 AS UInt64) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'UInt64'), CAST(0, 'UInt64')) AS `divide(CAST(1, 'UInt64'), CAST(0, 'UInt64'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E05",
+      "sql": "SELECT CAST(1 AS UInt128) / CAST(0 AS UInt128) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST('1', 'UInt128'), CAST('0', 'UInt128')) AS `divide(CAST('1', 'UInt128'), CAST('0', 'UInt128'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E06",
+      "sql": "SELECT CAST(1 AS UInt256) / CAST(0 AS UInt256) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST('1', 'UInt256'), CAST('0', 'UInt256')) AS `divide(CAST('1', 'UInt256'), CAST('0', 'UInt256'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E07",
+      "sql": "SELECT CAST(-128 AS Int8) / CAST(-1 AS Int8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(-128, 'Int8'), CAST(-1, 'Int8')) AS `divide(CAST(-128, 'Int8'), CAST(-1, 'Int8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E08",
+      "sql": "SELECT CAST(255 AS UInt8) / CAST(1 AS Int256) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(255, 'UInt8'), CAST('1', 'Int256')) AS `divide(CAST(255, 'UInt8'), CAST('1', 'Int256'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E09",
+      "sql": "SELECT divideExact(CAST(255 AS UInt8), CAST(-1 AS Int16)) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(255, 'UInt8'), CAST(-1, 'Int16')) SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E10",
+      "sql": "SELECT CAST(-9223372036854775808 AS Int64) / CAST(-1 AS Int8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Integer division result is out of range: In scope SELECT divideExact(CAST(-9223372036854775808, 'Int64'), CAST(-1, 'Int8')) AS `divide(CAST(-9223372036854775808, 'Int64'), CAST(-1, 'Int8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E11",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8)) / CAST(0 AS Int8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E12",
+      "sql": "SELECT CAST(1 AS Int8) / CAST(NULL AS Nullable(Int8)) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E13",
+      "sql": "SELECT CAST(256 AS UInt8) / CAST(0 AS UInt8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(256, 'UInt8'), CAST(0, 'UInt8')) AS `divide(CAST(256, 'UInt8'), CAST(0, 'UInt8'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-013-E14",
+      "sql": "SELECT CAST(1 AS Float32) / CAST(0 AS UInt8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E15",
+      "sql": "SELECT CAST(255 AS UInt8) / CAST(2 AS Int8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "127\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E16",
+      "sql": "SELECT CAST(-128 AS Int8) / CAST(1 AS Int8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "-128\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E17",
+      "sql": "SELECT divideExact(CAST(1 AS Float64), CAST(0 AS Float64)) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E18",
+      "sql": "SELECT CAST(-9223372036854775808 AS Int64) / CAST(1 AS Int8) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "-9223372036854775808\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-013-E19",
+      "sql": "SELECT CAST(1 AS Nullable(Int8)) / CAST(0 AS Nullable(Int8)) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Nullable(Int8)'), CAST(0, 'Nullable(Int8)')) AS `divide(CAST(1, 'Nullable(Int8)'), CAST(0, 'Nullable(Int8)'))` SETTINGS sql_compatible_division_for_integers = 1. (ILLEGAL_DIVISION)\n"
+    }
+  ]
+}

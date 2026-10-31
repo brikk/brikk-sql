@@ -1,0 +1,330 @@
+{
+  "task": "CHSEM-013",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-013-E01",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS UInt8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E02",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS UInt16)/CAST(0 AS UInt16) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E03",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS UInt32)/CAST(0 AS UInt32) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E04",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS UInt64)/CAST(0 AS UInt64) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E05",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS UInt128)/CAST(0 AS UInt128) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E06",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS UInt256)/CAST(0 AS UInt256) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E07",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(-128 AS Int8)/CAST(-1 AS Int8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "INTEGER_DIVISION_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E08",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(255 AS UInt8)/CAST(1 AS Int256) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "INTEGER_DIVISION_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E09",
+      "task": "CHSEM-013",
+      "sql": "SELECT divideExact(CAST(255 AS UInt8),CAST(-1 AS Int16)) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "INTEGER_DIVISION_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E10",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(-9223372036854775808 AS Int64)/CAST(-1 AS Int8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "INTEGER_DIVISION_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E11",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8))/CAST(0 AS Int8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E12",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS Int8)/CAST(NULL AS Nullable(Int8)) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E13",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(256 AS UInt8)/CAST(0 AS UInt8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E14",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS Float32)/CAST(0 AS UInt8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E15",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(255 AS UInt8)/CAST(2 AS Int8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "127\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E16",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(-128 AS Int8)/CAST(1 AS Int8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "-128\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E17",
+      "task": "CHSEM-013",
+      "sql": "SELECT divideExact(CAST(1 AS Float64),CAST(0 AS Float64)) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E18",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(-9223372036854775808 AS Int64)/CAST(1 AS Int8) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "-9223372036854775808\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-013-E19",
+      "task": "CHSEM-013",
+      "sql": "SELECT CAST(1 AS Nullable(Int8))/CAST(0 AS Nullable(Int8)) SETTINGS sql_compatible_division_for_integers=1",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    }
+  ]
+}

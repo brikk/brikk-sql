@@ -17,6 +17,7 @@ internal enum class ClickhouseCompositionRule(val nativeErrorCode: Int) {
     PLACEHOLDER_LIMIT(36), ANONYMOUS_MEMBER(36), ANONYMOUS_DEPTH(36),
     RIGHT_OPERAND_ARITY(42), CALL_ARGUMENT_COUNT(42), ARRAY_MAP_ARITY(43), ARRAY_INPUT_TYPE(43), INPUT_TYPE(43),
     HIGHER_ORDER_ARGUMENT_COUNT(42), HIGHER_ORDER_ARITY(43), PREDICATE_TYPE(43), MAP_INPUT_TYPE(43), MAP_RESULT_TYPE(36),
+    DIVISION_BY_ZERO(153), INTEGER_DIVISION_OVERFLOW(153),
 }
 
 internal enum class ClickhouseCompositionUnknownReason {
@@ -210,9 +211,9 @@ private class ClickhouseCompositionValidator(
             if (inferResults) {
                 rememberBinding(node, context)
                 if (context.callableScope) rememberAtomicCall(node, context)
-                clickhouseDivisionCall(node)?.let { call ->
-                    if (call.integerMode != null || nativeLiterals) value(node, context, 0)
-                }
+            }
+            clickhouseDivisionCall(node)?.let { call ->
+                if (call.integerMode != null || nativeLiterals) value(node, context, 0)
             }
             val map = arrayMap(node)
             if (map != null) {
@@ -669,6 +670,13 @@ private class ClickhouseCompositionValidator(
             unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
             if (inferResults && (call.integerMode != null || nativeLiterals)) blockedFallbacks.add(node.objectId)
             return Value()
+        }
+        if (call.integerMode == true && clickhouseIntegerShape(result) != null) {
+            val check = clickhouseConstantDivisionCheck(call.operands, types, result, checkCanceled)
+            val failure = check?.failure
+            if (failure != null) error(node, failure, if (failure == ClickhouseCompositionRule.DIVISION_BY_ZERO)
+                "Integer division by zero." else "Integer division result is outside the first operand's result bounds.")
+            else if (check == null) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
         }
         return nativeType(result)
     }

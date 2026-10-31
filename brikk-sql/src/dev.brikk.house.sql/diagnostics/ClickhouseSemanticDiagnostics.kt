@@ -9,12 +9,13 @@ import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.Tokenizer
 
-/** Stable rule names for the bounded composition/arrayMap checker, not whole-query rejection codes. */
+/** Stable names for bounded ClickHouse semantic checks, not whole-query rejection codes. */
 enum class ClickhouseSemanticRule {
     VARIADIC_LEFT_DESIGNATOR, INVALID_OPERAND, MIXED_PLACEHOLDERS, PLACEHOLDER_LIMIT,
     ANONYMOUS_MEMBER, ANONYMOUS_DEPTH, RIGHT_OPERAND_ARITY, CALL_ARGUMENT_COUNT,
     ARRAY_MAP_ARITY, ARRAY_INPUT_TYPE, INPUT_TYPE,
     HIGHER_ORDER_ARGUMENT_COUNT, HIGHER_ORDER_ARITY, PREDICATE_TYPE, MAP_INPUT_TYPE, MAP_RESULT_TYPE,
+    DIVISION_BY_ZERO, INTEGER_DIVISION_OVERFLOW,
 }
 
 /** Missing evidence is not a semantic error. These reasons are not editor error/warning diagnostics. */
@@ -44,7 +45,7 @@ data class ClickhouseSemanticUnknown(
  * Offline evidence for one statement at [start, end). Parser diagnostics are separate;
  * a parse failure prevents semantic checking. Empty lists never certify acceptance,
  * complete coverage, result types or successful execution. Only the bounded
- * higher-order/composition rules on exactly 26.10.2.103 are researched;
+ * higher-order/composition and integer division rules on exactly 26.10.2.103 are researched;
  * unrelated SQL is not validated.
  */
 data class ClickhouseSemanticDiagnostics(

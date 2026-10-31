@@ -61,3 +61,20 @@ class ClickhouseDivisionTypingEvidenceTest(unittest.TestCase):
         backlog = (DATA.parents[2] / "TODO-clickhouse-semantic.md").read_text()
         self.assertIn("CHSEM-013", backlog)
         self.assertIn("CHSEM-014", backlog)
+
+    def test_diagnostic_refinements_preserve_the_typing_only_capture(self):
+        refinements = json.loads((DATA / "division-diagnostics-rules.json").read_text())
+        rows = {r["id"]: r for r in json.loads((DATA / "division-diagnostics-refinement-brikk.json").read_text())}
+        for id, rules in refinements.items():
+            self.assertEqual(rules, rows[id]["rules"])
+
+    def test_every_reported_constant_division_error_has_a_native_153_witness(self):
+        rows = json.loads((DATA / "division-diagnostics-brikk.json").read_text())
+        native = json.loads((DATA / "division-diagnostics-native/26.10.2.103.json").read_text())["execution"]
+        for row, observed in zip(rows, native, strict=True):
+            self.assertEqual(row["id"], observed["id"])
+            if row["rules"]:
+                self.assertIn("Code: 153.", observed["stderr"])
+                self.assertNotEqual(0, observed["returncode"])
+            if observed["returncode"] == 0:
+                self.assertEqual([], row["rules"])

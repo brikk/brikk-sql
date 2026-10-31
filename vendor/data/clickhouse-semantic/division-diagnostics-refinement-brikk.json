@@ -1,0 +1,197 @@
+[
+    {
+        "id": "CHSEM-012-E01",
+        "input_sql": "SELECT CAST(7 AS UInt8)/CAST(2 AS UInt64) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS UInt8) / CAST(2 AS UInt64) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "UInt8",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E02",
+        "input_sql": "SELECT CAST(7 AS UInt8)/CAST(-2 AS Int64) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS UInt8) / CAST(-2 AS Int64) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int8",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E03",
+        "input_sql": "SELECT CAST(-7 AS Int16)/CAST(2 AS UInt256) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(-7 AS Int16) / CAST(2 AS UInt256) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int16",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E04",
+        "input_sql": "SELECT CAST(7 AS UInt256)/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS UInt256) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int256",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E05",
+        "input_sql": "SELECT divide(CAST(7 AS Int32),CAST(2 AS UInt8)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT divide(CAST(7 AS Int32), CAST(2 AS UInt8)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int32",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E06",
+        "input_sql": "SELECT divideExact(CAST(7 AS UInt16),CAST(2 AS UInt256)) AS v,toTypeName(v)",
+        "generated": "SELECT divideExact(CAST(7 AS UInt16), CAST(2 AS UInt256)) AS v, toTypeName(v)",
+        "result_type": "UInt16",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E07",
+        "input_sql": "SELECT CAST(7 AS Int64)/CAST(2 AS Int64) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+        "generated": "SELECT CAST(7 AS Int64) / CAST(2 AS Int64) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0",
+        "result_type": "Float64",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E08",
+        "input_sql": "SELECT CAST(7 AS Int32)/CAST(2 AS Float32) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS Int32) / CAST(2 AS Float32) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Float64",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E09",
+        "input_sql": "SELECT CAST(7 AS Nullable(Int32))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS Nullable(Int32)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Nullable(Int32)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E10",
+        "input_sql": "SELECT CAST(7 AS UInt8)/CAST(2 AS Nullable(Int16)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS UInt8) / CAST(2 AS Nullable(Int16)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Nullable(Int8)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E11",
+        "input_sql": "SELECT divideExact(CAST(7 AS Nullable(Int256)),CAST(2 AS Nullable(UInt8))) AS v,toTypeName(v)",
+        "generated": "SELECT divideExact(CAST(7 AS Nullable(Int256)), CAST(2 AS Nullable(UInt8))) AS v, toTypeName(v)",
+        "result_type": "Nullable(Int256)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E12",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Int8))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(NULL AS Nullable(Int8)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-012-E13",
+        "input_sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS UInt8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(1 AS UInt8) / CAST(0 AS UInt8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "UInt8",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E14",
+        "input_sql": "SELECT CAST(-128 AS Int8)/CAST(-1 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(-128 AS Int8) / CAST(-1 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int8",
+        "rules": [
+            "INTEGER_DIVISION_OVERFLOW"
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E15",
+        "input_sql": "SELECT CAST(255 AS UInt8)/CAST(1 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(255 AS UInt8) / CAST(1 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int8",
+        "rules": [
+            "INTEGER_DIVISION_OVERFLOW"
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E16",
+        "input_sql": "SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT 7 / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "UInt8",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E17",
+        "input_sql": "SELECT 7/2.0 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT 7 / 2.0 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Float64",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-012-E18",
+        "input_sql": "SELECT CAST(7 AS Int64)/CAST(2 AS Int64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Int64) / CAST(2 AS Int64) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-012-E19",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Decimal(12,3)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-012-E20",
+        "input_sql": "SELECT arrayMap((x,y) -> x/y,CAST([7,6] AS Array(UInt8)),CAST([-2,2] AS Array(Int16))) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT arrayMap((x, y) -> x / y, CAST([7, 6] AS Array(UInt8)), CAST([-2, 2] AS Array(Int16))) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Array(Int8)",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "RUNTIME_RESTRICTION"
+        ]
+    },
+    {
+        "id": "CHSEM-012-E21",
+        "input_sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT CAST(7 AS Int64)/CAST(2 AS Int64) v SETTINGS sql_compatible_division_for_integers=0) AS q SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT q.v, toTypeName(q.v) FROM (SELECT CAST(7 AS Int64) / CAST(2 AS Int64) AS v SETTINGS sql_compatible_division_for_integers = 0) AS q SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Float64",
+        "rules": [],
+        "unknowns": [
+            "UNSUPPORTED_CONTEXT"
+        ]
+    },
+    {
+        "id": "CHSEM-012-E22",
+        "input_sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT CAST(7 AS UInt16)/CAST(2 AS Int8) v) AS q SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT q.v, toTypeName(q.v) FROM (SELECT CAST(7 AS UInt16) / CAST(2 AS Int8) AS v) AS q SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Int16",
+        "rules": [],
+        "unknowns": [
+            "UNSUPPORTED_CONTEXT"
+        ]
+    }
+]

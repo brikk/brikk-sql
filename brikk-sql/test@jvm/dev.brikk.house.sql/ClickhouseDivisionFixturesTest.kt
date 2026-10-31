@@ -14,6 +14,7 @@ class ClickhouseDivisionFixturesTest {
     @Test
     fun conditionalTypesAndValueErrorsStaySeparateAcrossThePinnedFixtures() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/division-cases.json").readText()).jsonObject
+        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/division-diagnostics-rules.json").readText()).jsonObject
         val rows = fixture.getValue("execution").jsonArray.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
@@ -30,7 +31,7 @@ class ClickhouseDivisionFixturesTest {
             val report = clickhouseSemanticDiagnostics(sql, sql.indices, "26.10.2.103")
             assertTrue(report.parseDiagnostics.isEmpty(), id)
             val rules = report.errors.map { it.rule.name }.distinct().sorted()
-            assertEquals(case.getValue("rules").jsonArray.map { it.jsonPrimitive.content }.sorted(), rules, id)
+            assertEquals((refinements[id] ?: case.getValue("rules")).jsonArray.map { it.jsonPrimitive.content }.sorted(), rules, id)
             buildJsonObject {
                 put("id", id); put("input_sql", sql); put("generated", generated); put("result_type", type)
                 put("rules", JsonArray(rules.map(::JsonPrimitive)))

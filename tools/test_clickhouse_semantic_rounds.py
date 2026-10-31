@@ -12,7 +12,7 @@ DATA = ROOT / "vendor/data/clickhouse-semantic"
 
 
 class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
-    rounds = ("qualification", "higher-order", "overload", "paren-lambda", "division")
+    rounds = ("qualification", "higher-order", "overload", "paren-lambda", "division", "division-diagnostics")
 
     def test_overload_source_and_refinement_proofs_keep_historical_captures(self):
         captured = json.loads((DATA / "overload-sources.json").read_text())
@@ -104,7 +104,8 @@ class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
             self.assertEqual([c["id"] for c in cases], [r["id"] for r in rows])
             for case, row in zip(cases, rows, strict=True):
                 self.assertEqual(case["sql"], row["input_sql"])
-                self.assertEqual(case["type"], row["result_type"])
+                if "type" in case:
+                    self.assertEqual(case["type"], row["result_type"])
                 self.assertEqual(sorted(case["rules"]), row["rules"])
                 self.assertTrue(row["generated"])
             for engine in engines:

@@ -47,6 +47,9 @@ CHSEM-012 adds [exact setting-aware division result typing](division-README.md).
 CHSEM-013/014 track provable arithmetic diagnostics and script SET state separately;
 the earlier eleven completed items are not reopened.
 
+CHSEM-013 implements [positioned integer division diagnostics](division-diagnostics-README.md)
+with named refinements rather than replacing historical typing-only captures.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and
