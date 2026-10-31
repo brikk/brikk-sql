@@ -1534,7 +1534,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._negate_range
-    protected fun negateRange(this_: Expression?): Expression? {
+    protected open fun negateRange(this_: Expression?): Expression? {
         if (this_ == null) return this_
 
         val expr = if (this_ is Escape) this_.thisArg as Expression else this_

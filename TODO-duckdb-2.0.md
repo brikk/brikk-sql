@@ -1006,10 +1006,42 @@ and IDE introspection/completion are separate contracts.
   The 2.1 removal of single-arrow compatibility is future-version work, not a reason to reject
   useful old input prematurely while targeting 2.0.
 
-- [ ] `DDB20-037` Regex operators `~` and `!~` [AUDIT].
+- [x] `DDB20-037` Regex operators `~` and `!~` [DONE].
   The migration guide changes them to partial matching: `'abc' ~ 'b'` is true.
   Verify AST/function lowering, generated SQL and cross-dialect hazards, including the deprecated
   `regex_match_operator_semantics = 'full'` compatibility setting. Do not preserve old full-match semantics accidentally.
+  Native execution now uses a distinct serializable DuckdbRegexOperator for ~, !~, ~* and
+  !~*, retaining operand order, case policy and operator-local ANY/ALL negation. Generation
+  preserves the operator rather than choosing REGEXP_MATCHES or REGEXP_FULL_MATCH. Native
+  DuckDB chooses the function using its parser/session setting; no setting query or mutation
+  is inserted. Authored explicit regex functions remain functions under either mode.
+  SqlFragment uses this native AST for both previews and executable generation. Direct AST
+  users can opt in through parseDuckdbNativeOne/nativeDuckdbParser. The ordinary parseOne,
+  dialect parser, .sql() and top-level transpile retain their historical SQLGlot contract,
+  including old full-match lowering. They are explicitly not a native 2.0 operator execution
+  contract. Existing parity fixtures/ledgers remain intact, not relabeled as engine evidence.
+  Native nodes survive copy/serde, nested EXPLAIN/SHOW/PREPARE/CTE/pipe bodies, and refuse
+  executable cross-target mappings without a verified session-policy translation. Scalar
+  BOOLEAN/nullability is modeled separately from quantified empty-array/NULL behavior.
+  Star-column selector SQL is preserved, but static scopes/shapes/qualification/lineage
+  refuse rather than invent scalar BOOLEAN columns. A no-match selector is a native error.
+  CREATE VIEW captures the native resolved function when created; changing the session
+  setting later must not rewrite it. Persisted pre-2.0 view migration is not emulated.
+  Focused evidence: DuckdbRegexOperatorsTest and DuckdbRegexOperatorsResultTest, pinned to
+  DuckDB 2.0.0 d54cbbe3df regex_operators.test and regex_operators_v1_5_view.test contracts.
+  The tests cover default partial/deprecated full/reset behavior, anchors/case/Unicode/NULLs,
+  explicit functions, ANY/ALL negation and empty arrays, native errors, star selectors,
+  JDBC bind order, source-map output identity, volatile operand counts, prepared-statement
+  reuse and CREATE VIEW capture. The pre-2.0 persisted database fixture is not loaded here.
+  No JDBC driver pin, public data-class signature, experimental IntelliJ API, user session,
+  consumer pin or publication changes are part of this item.
+  Fresh-directory final gates passed 1,396 core, 125 metadata and 218 native/verifier tests,
+  zero skips, with all three signed extension fixtures enabled. Existing parser, annotation,
+  generator and transpile parity corpora and their mismatch ledgers remain unchanged.
+  The shared IntelliJ platform gate passed all 759 tests on 261.25134.95 with the verified
+  signed-window catalog capture supplied. An earlier run lacked BRIKK_DUCKDB_WINDOW_CAPTURE
+  and failed its two required fixture controls; no code or test suppression fixed that setup.
+  No Plugin Verifier run, merge, publication or consumer update was performed.
 
 - [ ] `DDB20-038` Factorial precedence [AUDIT].
   Pin AST, generation and engine results for `2 * 3!` (12 in 2.0) versus `(2 * 3)!` (720),

@@ -649,6 +649,7 @@ internal fun registerNativeDuckdbNodes(m: MutableMap<String, ExpressionRegistry.
     m["DuckdbConnectExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbConnectExternalResource() }
     m["DuckdbExplain"] = ExpressionRegistry.Entry(module) { DuckdbExplain() }
     m["DuckdbExplainOption"] = ExpressionRegistry.Entry(module) { DuckdbExplainOption() }
+    m["DuckdbRegexOperator"] = ExpressionRegistry.Entry(module) { DuckdbRegexOperator() }
 }
 
 // sqlglot: query.Subquery(Expression, DerivedTable, Query) — is_subquery

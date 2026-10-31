@@ -266,7 +266,20 @@ open class DuckdbParser(
     override val bitwise: Map<TokenType, NodeFactory> get() = DuckdbParserTables.BITWISE
 
     override val rangeParsers: Map<TokenType, (Parser, Expression?) -> Expression?>
-        get() = DuckdbParserTables.RANGE_PARSERS
+        get() = if (nativeRegexOperators) DuckdbParserTables.NATIVE_RANGE_PARSERS else DuckdbParserTables.RANGE_PARSERS
+
+    /** Opt in to session-dependent operators instead of the historical SQLGlot full-match AST.
+     * SqlFragment and nativeDuckdbParser enable this; the parity parser stays unchanged.
+     */
+    var nativeRegexOperators: Boolean = false
+
+    override fun negateRange(this_: Expression?): Expression? {
+        if (this_ is dev.brikk.house.sql.ast.DuckdbRegexOperator) {
+            this_.set("negate", true)
+            return this_
+        }
+        return super.negateRange(this_)
+    }
 
     override val exponent: Map<TokenType, NodeFactory> get() = DuckdbParserTables.EXPONENT
 
@@ -389,6 +402,7 @@ open class DuckdbParser(
             val parser = DuckdbParser(errorLevel, tokenizerConfig).apply {
                 captureSourceRanges = this@DuckdbParser.captureSourceRanges
                 checkCanceled = this@DuckdbParser.checkCanceled
+                nativeRegexOperators = this@DuckdbParser.nativeRegexOperators
             }
             val parsed = parser.parseIntoWith(body, sql) { (it as DuckdbParser).parseDuckdbExplain() }
             advance()
@@ -901,6 +915,7 @@ open class DuckdbParser(
                 val parser = DuckdbParser(errorLevel, tokenizerConfig).apply {
                     captureSourceRanges = this@DuckdbParser.captureSourceRanges
                     checkCanceled = this@DuckdbParser.checkCanceled
+                    nativeRegexOperators = this@DuckdbParser.nativeRegexOperators
                 }
                 val parsed = parser.parseIntoWith(body, sql) { (it as DuckdbParser).parseShowExternalResources() }
                 advance()
@@ -922,6 +937,7 @@ open class DuckdbParser(
                 val nested = DuckdbParser(errorLevel, tokenizerConfig).apply {
                     captureSourceRanges = this@DuckdbParser.captureSourceRanges
                     checkCanceled = this@DuckdbParser.checkCanceled
+                    nativeRegexOperators = this@DuckdbParser.nativeRegexOperators
                 }
                 val result = nested.parseIntoWith(body, sql) { (it as DuckdbParser).parseShowNameBody() }
                 advance()
@@ -1189,6 +1205,12 @@ object DuckdbParserTables {
             TokenType.DAMP to binaryRangeParser { ArrayOverlaps(it) },
             TokenType.CARET_AT to binaryRangeParser { StartsWith(it) },
             TokenType.TILDE to binaryRangeParser { RegexpFullMatch(it) },
+        )
+
+    val NATIVE_RANGE_PARSERS: Map<TokenType, (Parser, Expression?) -> Expression?> =
+        RANGE_PARSERS + mapOf(
+            TokenType.TILDE to binaryRangeParser { dev.brikk.house.sql.ast.DuckdbRegexOperator(it) },
+            TokenType.IRLIKE to binaryRangeParser { dev.brikk.house.sql.ast.DuckdbRegexOperator(it + ("insensitive" to true)) },
         )
 
     // sqlglot: DuckDBParser.EXPONENT

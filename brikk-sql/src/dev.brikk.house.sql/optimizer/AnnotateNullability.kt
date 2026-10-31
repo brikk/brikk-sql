@@ -38,6 +38,7 @@ import dev.brikk.house.sql.dialects.duckdbOverlayArguments
 import dev.brikk.house.sql.dialects.duckdbPathFunctionName
 import dev.brikk.house.sql.dialects.duckdbPathArguments
 import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.dialects.duckdbSetvalArguments
 import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexArguments
@@ -242,6 +243,13 @@ private class NullabilityAnnotator(
             is Func -> functionNullability(node)
 
             // --- generic null-propagating operators (arithmetic, comparison, unary) ---
+            is dev.brikk.house.sql.ast.DuckdbRegexOperator -> {
+                // Quantified comparisons have empty-list and element-NULL semantics,
+                // not scalar strictness. Column selectors are not scalar predicates.
+                val right = (node.expressionArg as? Expression)?.unnest()
+                if (right is dev.brikk.house.sql.ast.Any || right is dev.brikk.house.sql.ast.All || node.hasDuckdbRegexSelector()) null
+                else operatorRule(operands(node))
+            }
             is Binary -> operatorRule(operands(node))
             is Unary -> operatorRule(operands(node))
 

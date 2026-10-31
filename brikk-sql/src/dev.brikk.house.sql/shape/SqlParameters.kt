@@ -3,6 +3,7 @@ package dev.brikk.house.sql.shape
 import dev.brikk.house.sql.ast.Semicolon
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
+import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SyntacticRange
 import dev.brikk.house.sql.parser.Token
@@ -21,7 +22,7 @@ fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccur
         throw dev.brikk.house.sql.generator.UnsupportedError("Storage layout/property DDL parameter binding is not modeled")
     val source = Dialects.forName(dialect)
     val tokens = source.tokenize(sql)
-    val parser = source.parser().also { it.captureSourceRanges = true }
+    val parser = source.parser().useNativeDuckdbOperators().also { it.captureSourceRanges = true }
     val statements = parser.parse(tokens, sql).filterNotNull().filterNot { it is Semicolon }
     if (statements.size != 1) throw ShapeError("Parameter discovery requires exactly one statement")
     if (statements.single() is dev.brikk.house.sql.ast.DuckdbExplain && statements.single().thisArg is dev.brikk.house.sql.ast.Command &&

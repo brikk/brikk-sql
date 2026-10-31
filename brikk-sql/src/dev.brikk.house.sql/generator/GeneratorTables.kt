@@ -556,6 +556,15 @@ object GeneratorTables {
             DuckdbDestroyExternalResource::class, DuckdbShowExternalResources::class, DuckdbExternalResourceSource::class,
             DuckdbAttachExternalResource::class, DuckdbConnectExternalResource::class)) reg(node) { e -> duckdbExternalResourceSql(e) }
         reg(DuckdbExplain::class) { e -> duckdbExplainSql(e as DuckdbExplain) }
+        reg(DuckdbRegexOperator::class) { e ->
+            if (dialect.name != "duckdb") unexecutable("Session-dependent DuckDB regex operators have no verified cross-target translation")
+            val op = (if (e.args["negate"] == true) "!~" else "~") + (if (e.args["insensitive"] == true) "*" else "")
+            fun operand(key: String): String {
+                val node = e.args[key]
+                return if (node is DuckdbRegexOperator) "(${sql(node)})" else sql(node)
+            }
+            "${operand("this")} $op ${operand("expression")}"
+        }
         reg(DuckdbExplainOption::class) { e ->
             val name = e.thisArg as? Identifier
             val keyword = if (name?.quoted != true && name?.name?.uppercase() in setOf("ANALYZE", "ANALYSE")) "ANALYZE" else sql(e, "this")

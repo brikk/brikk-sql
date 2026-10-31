@@ -74,6 +74,7 @@ import dev.brikk.house.sql.dialects.duckdbParquetDeclaredColumns
 import dev.brikk.house.sql.dialects.duckdbGeoJsonDeclaredColumns
 import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
 import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
+import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
@@ -167,6 +168,7 @@ internal class ScopeEvaluator(
 
     /** Non-query statements normally contribute only their queries; DuckDB UPDATE/MERGE also have row scopes. */
     fun statement(node: Expression, env: Env): Boolean {
+        if(node.hasDuckdbRegexSelector())throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
         if (node.isDuckdbNameShow()) return true
         if (node is dev.brikk.house.sql.ast.DuckdbExplain) {
             (node.thisArg as? Expression)?.let { statement(it, env) }
@@ -416,6 +418,7 @@ internal class ScopeEvaluator(
     }
 
     fun query(node: Expression, env: Env, context: String = "SELECT"): Row {
+        if(node.hasDuckdbRegexSelector())throw dev.brikk.house.sql.generator.UnsupportedError("Runtime regex column-selector schemas are not modeled")
         // Recursion follows query nesting only, which the parser caps at its bracket depth.
         checkCanceled()
         val scoped = withClause(node, env)

@@ -668,6 +668,32 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Native regex operators
+
+For DuckDB 2.0 execution, use `SqlFragment(sql, "duckdb").toExecutable("duckdb")`.
+Its native parser preserves `~`, `!~`, `~*` and `!~*` as `DuckdbRegexOperator`, including
+ANY/ALL negation and column selectors. Copy and serde retain the operator node and both
+operands. Generation neither reads nor changes session settings and does not duplicate
+operands. DuckDB chooses partial matching by default or full matching under its deprecated
+`regex_match_operator_semantics='full'` setting when it parses the generated SQL.
+Authored `REGEXP_FULL_MATCH` and `REGEXP_MATCHES` stay explicit functions in either mode.
+
+For direct AST use, `parseDuckdbNativeOne(sql)` or `nativeDuckdbParser()` selects the same
+native contract. The ordinary `parseOne`/dialect parser, `.sql()` and top-level `transpile`
+APIs retain historical SQLGlot parity, including its old operator-to-full-match lowering.
+Those legacy APIs are not a native DuckDB 2.0 regex-operator execution contract. Do not
+feed that lowered output to an executor expecting the authored operator's session policy.
+The old parity corpora and ledgers remain unchanged; native behavior has separate tests.
+
+Executable cross-target translation refuses session-dependent operator nodes rather than
+guessing a setting or lowering to a fixed function. Diagnostic previews flag the refusal.
+Scalar predicates have BOOLEAN type and strict scalar nullability. Quantified nullability
+stays unknown rather than borrowing scalar rules for empty arrays or NULL elements.
+Regex star-column selectors retain native SQL but refuse static result shapes, scopes,
+qualification and lineage until their session-dependent column selection is modeled.
+Native view/prepared-statement capture timing remains the engine's policy. This library
+does not rewrite previously persisted views or emulate migration of pre-2.0 definitions.
+
 ### Core-extension syntax triage
 
 DuckLake 1.1, Iceberg REST and Delta syntax triage is not storage-engine certification.

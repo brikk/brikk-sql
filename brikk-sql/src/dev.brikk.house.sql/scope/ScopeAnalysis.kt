@@ -1,5 +1,6 @@
 package dev.brikk.house.sql.scope
 
+import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.EQ
@@ -66,7 +67,7 @@ internal class Splice(val start: Int, val end: Int, val length: Int)
 internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Unit): ParsedRegion? {
     val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(text, checkCanceled)
     if (lexed.failureOffset != null) return null
-    val parser = dialect.parser(ErrorLevel.IMMEDIATE).apply {
+    val parser = dialect.parser(ErrorLevel.IMMEDIATE).useNativeDuckdbOperators().apply {
         captureSourceRanges = true
         this.checkCanceled = checkCanceled
     }

@@ -16,6 +16,8 @@ import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
 import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
 import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
 import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
+import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
+import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
 import dev.brikk.house.sql.ast.PipeCall
@@ -92,7 +94,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     private var parsedFromFirstQuery = false
 
     private val statements: List<Expression> by lazy {
-        val parser = dialectObj.parser()
+        val parser = dialectObj.parser().useNativeDuckdbOperators()
         val parsed = parser.parse(dialectObj.tokenize(sql), sql)
         parsedFromFirstQuery = parser.hasFromFirstQuery
         // The parser represents comments on statement separators with standalone nodes.
@@ -102,6 +104,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     /**
      * The parsed statement. Throws [ShapeError] unless the fragment holds exactly one
      * statement — fragments are single composable values by design.
+     * DuckDB fragments use native regex operator nodes, unlike the legacy SQLGlot-parity
+     * dialect parser. Copy/serde retain the operator's session-dependent semantics.
      */
     val ast: Expression by lazy {
         when (statements.size) {
@@ -507,6 +511,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if(tree.hasDuckdbRegexSelector())throw ShapeError("Runtime regex column-selector result facts are not modeled")
         if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || tree.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot result facts are not modeled")
         if(dialectObj.name=="duckdb" && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType()!=null }))return declarativeCteShape(tree,inputs)
         if(dialectObj.name=="duckdb" && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)

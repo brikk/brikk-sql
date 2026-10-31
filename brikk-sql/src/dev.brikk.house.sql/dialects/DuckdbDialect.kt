@@ -12,6 +12,8 @@ import dev.brikk.house.sql.parser.TokenizerConfig
  * Port of sqlglot's DuckDB dialect umbrella (reference/sqlglot/sqlglot/dialects/duckdb.py
  * class DuckDB). Tokenizer tables are generated (DuckdbTokenizerTables); the parser and
  * generator subclasses live in DuckdbParser.kt / DuckdbGenerator.kt.
+ * The default parser keeps historical SQLGlot regex parity. Use [nativeDuckdbParser],
+ * [parseDuckdbNativeOne] or SqlFragment for native DuckDB 2.0 operator execution.
  */
 // sqlglot: dialects.duckdb.DuckDB
 open class DuckdbDialect : Dialect() {
