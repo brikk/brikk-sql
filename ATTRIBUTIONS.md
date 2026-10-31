@@ -172,6 +172,12 @@ from the same pinned Apache-2.0 builds. The internal rule checker follows the ta
 composition and callable declarations already cited in that directory; it does not
 replace historical evidence or claim native whole-query/execution equivalence.
 
+CHSEM-005's `result-native/` and `result-matrix/` captures add original return-type
+observations from the same Apache-2.0 images. Primitive multiplication result typing
+follows the tagged `NumberTraits::ResultOfAdditionMultiplication` declaration already
+cited in `callable-sources.json`; the complete pair matrix is independently observed
+from the engines rather than generated from that formula.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

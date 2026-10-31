@@ -15,6 +15,10 @@ annotation/native evidence and an explicit CHSEM-011 parser-gap control.
 CHSEM-004 adds the internal [composition rule checker](composition-README.md), with
 separate error/unknown reports and 50 original-query controls on both pins.
 
+CHSEM-005 adds [result inference](result-README.md), with 40 result/unknown witnesses,
+an engine-observed 100-pair primitive matrix, and separately recorded refinements to
+the current input-binding assertions. Historical captures are preserved.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

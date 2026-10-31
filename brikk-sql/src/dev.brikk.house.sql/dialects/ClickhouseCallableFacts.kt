@@ -10,8 +10,8 @@ import dev.brikk.house.sql.metadata.CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG
  *
  * These are facts for a name already resolved as an unqualified builtin. They must
  * not override a local lambda, alias, column or user-defined function with that name.
- * Consumed by the internal composition rule checker, not a general overload
- * resolver or a parser/editor diagnostic hook.
+ * Consumed by the composition checker and its bounded result-inference mode,
+ * not a general overload resolver or a parser/editor diagnostic hook.
  */
 internal fun clickhouseCallableFacts(name: String, engineVersion: String): ClickhouseCallableFacts? {
     val catalog = when (engineVersion) {

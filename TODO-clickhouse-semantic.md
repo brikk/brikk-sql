@@ -1,8 +1,9 @@
 # ClickHouse semantic validation
 
 Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence,
-CHSEM-002 callable facts, CHSEM-003 contextual input typing and CHSEM-004 internal
-composition validation are complete. Result annotation and editor diagnostics remain separate work.
+CHSEM-002 callable facts, CHSEM-003 contextual input typing, CHSEM-004 internal
+composition validation and CHSEM-005 conditional result annotation are complete.
+Public positioned/editor diagnostics remain CHSEM-006.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -24,7 +25,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-002: Define conservative callable-signature facts. Record proven argument-count, variadic and input/result rules for the initial functions: lower, upper, domainWithoutWWW, firstSignificantSubdomain, trim, multiply, toString and concat. Keep bare function designators distinct from explicit calls; preserve version, alias and case policy. Missing facts mean unknown, not valid or invalid.
 - [x] CHSEM-003: Implement contextual lambda argument typing. Derive `_`, `_1` and `_2` types from the corresponding array elements; cover explicit lambdas, nested higher-order scopes, captured physical columns and multiple arrays. Leave ordinary underscore-named columns unchanged.
 - [x] CHSEM-004: Implement composition argument validation. Check stage argument counts, placeholder requirements and provable input incompatibilities using native-backed rules. Diagnose bare variadic designators such as `trim | upper` without rejecting the valid `trim(_) | upper` form. Do not infer runtime array-length equality from matching argument counts.
-- [ ] CHSEM-005: Infer composition and arrayMap results. Propagate stage results through supported chains and compute array element types without inventing precision, nullability or overload facts. Track incomplete knowledge explicitly and preserve existing generic/dialect typing behavior.
+- [x] CHSEM-005: Infer composition and arrayMap results. Propagate stage results through supported chains and compute array element types without inventing precision, nullability or overload facts. Track incomplete knowledge explicitly and preserve existing generic/dialect typing behavior.
 - [ ] CHSEM-006: Expose positioned offline semantic diagnostics through the shared library. Keep semantic results separate from parser acceptance; distinguish proven errors from unavailable knowledge. Test statement/script offsets and consumer-facing integration without adding new internal or experimental IntelliJ API calls.
 - [ ] CHSEM-007: Qualify and document the bounded slice. Add self-contained positive/negative, AST serde, scope/lineage, typing and diagnostic tests; compare original/generated finite results and errors against pinned native fixtures. Run affected modules, full regression and binary-compatibility gates, record skips, and document exact coverage and remaining unknowns.
 
@@ -37,8 +38,8 @@ checks parsing only and must not be relabeled as semantic validation.
 
 ## Constraints and resumption
 
-- User authorized CHSEM-004 after completing CHSEM-003, with commit/push at the end. Stop before CHSEM-005 until further direction. CHSEM-011 remains recorded follow-up work, not authorization to expand this round.
-- Resume at CHSEM-005; do not treat the unchecked follow-ups as implemented or certified.
+- User authorized CHSEM-005 after completing CHSEM-004. Commit/push after each round, then stop before CHSEM-006 until further direction. CHSEM-011 remains recorded follow-up work, not authorization to expand this round.
+- Resume at CHSEM-006; do not treat the unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -161,6 +162,39 @@ evidence, public JVM signatures, IntelliJ API use, release versions and consumer
 dependencies are unchanged. Custom IntelliJ platform suites were not run.
 This is the internal core check; public positioned diagnostics remain CHSEM-006.
 Commit/push this round, then stop before CHSEM-005.
+
+## CHSEM-005 result
+
+The callable analysis now has a read-only exact-result mode; TypeAnnotator applies
+its proofs through the existing ClickHouse contextual walk. Details and evidence:
+`vendor/data/clickhouse-semantic/result-README.md`.
+Supported string chains feed later-stage argument types and arrayMap results;
+primitive multiplication follows the source-pinned native rule, not generic SQLGlot
+widening. Function values keep UNKNOWN in the AST and have separate callable-result
+facts. Identity copies known nullability, precision/scale, widths and containers.
+Unknown numeric widths are not invented even when a final String can be proved.
+
+Nested maps, captures/shadowing, derived-scope reuse, source/SQL/serde stability,
+caller overrides, partial policies, overwrite=false and proof-cache invalidation
+are covered. Decimal multiplication, nullable conversions, unsupported wrappers,
+missing facts/scopes, unproved arithmetic and CHSEM-011 remain unknown. Known result
+types do not erase runtime length, timezone or URL FixedString execution unknowns.
+The ordinary CHSEM-004 validation report remains byte-identical.
+
+CHSEM-005-E01 through E40 have original type-witness/error observations on both pins,
+with no execution skips. All 100 ordered pairs of the ten supported primitive
+numeric types match independently captured engine result types on both pins.
+Two improved CHSEM-003 input assertions are recorded in a separate refinement file,
+supported by their existing native argument witnesses. Historical input fixtures,
+annotation snapshots and native/source evidence are not overwritten or relabeled.
+
+Validation: full `./kotlin test` passed 1,811 tests with 61 optional integration
+assumption aborts and zero failures. The complete Python tool suite passed 83 tests
+with one opt-in Toolchain-model skip using the unchanged temporary SQLGlot pin;
+the ClickHouse-only suite passed 35 tests. Existing corpus fixtures, ledgers and
+comparison rules are unchanged. Public JVM signatures, IntelliJ API use, release
+versions, publication and consumer dependencies are unchanged. Custom IntelliJ
+platform suites were not run. Commit/push this round, then stop before CHSEM-006.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

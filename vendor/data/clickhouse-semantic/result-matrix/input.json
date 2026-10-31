@@ -1,0 +1,517 @@
+{
+  "types": [
+    "UInt8",
+    "UInt16",
+    "UInt32",
+    "UInt64",
+    "Int8",
+    "Int16",
+    "Int32",
+    "Int64",
+    "Float32",
+    "Float64"
+  ],
+  "pairs": [
+    {
+      "id": "p000",
+      "left": "UInt8",
+      "right": "UInt8"
+    },
+    {
+      "id": "p001",
+      "left": "UInt8",
+      "right": "UInt16"
+    },
+    {
+      "id": "p002",
+      "left": "UInt8",
+      "right": "UInt32"
+    },
+    {
+      "id": "p003",
+      "left": "UInt8",
+      "right": "UInt64"
+    },
+    {
+      "id": "p004",
+      "left": "UInt8",
+      "right": "Int8"
+    },
+    {
+      "id": "p005",
+      "left": "UInt8",
+      "right": "Int16"
+    },
+    {
+      "id": "p006",
+      "left": "UInt8",
+      "right": "Int32"
+    },
+    {
+      "id": "p007",
+      "left": "UInt8",
+      "right": "Int64"
+    },
+    {
+      "id": "p008",
+      "left": "UInt8",
+      "right": "Float32"
+    },
+    {
+      "id": "p009",
+      "left": "UInt8",
+      "right": "Float64"
+    },
+    {
+      "id": "p010",
+      "left": "UInt16",
+      "right": "UInt8"
+    },
+    {
+      "id": "p011",
+      "left": "UInt16",
+      "right": "UInt16"
+    },
+    {
+      "id": "p012",
+      "left": "UInt16",
+      "right": "UInt32"
+    },
+    {
+      "id": "p013",
+      "left": "UInt16",
+      "right": "UInt64"
+    },
+    {
+      "id": "p014",
+      "left": "UInt16",
+      "right": "Int8"
+    },
+    {
+      "id": "p015",
+      "left": "UInt16",
+      "right": "Int16"
+    },
+    {
+      "id": "p016",
+      "left": "UInt16",
+      "right": "Int32"
+    },
+    {
+      "id": "p017",
+      "left": "UInt16",
+      "right": "Int64"
+    },
+    {
+      "id": "p018",
+      "left": "UInt16",
+      "right": "Float32"
+    },
+    {
+      "id": "p019",
+      "left": "UInt16",
+      "right": "Float64"
+    },
+    {
+      "id": "p020",
+      "left": "UInt32",
+      "right": "UInt8"
+    },
+    {
+      "id": "p021",
+      "left": "UInt32",
+      "right": "UInt16"
+    },
+    {
+      "id": "p022",
+      "left": "UInt32",
+      "right": "UInt32"
+    },
+    {
+      "id": "p023",
+      "left": "UInt32",
+      "right": "UInt64"
+    },
+    {
+      "id": "p024",
+      "left": "UInt32",
+      "right": "Int8"
+    },
+    {
+      "id": "p025",
+      "left": "UInt32",
+      "right": "Int16"
+    },
+    {
+      "id": "p026",
+      "left": "UInt32",
+      "right": "Int32"
+    },
+    {
+      "id": "p027",
+      "left": "UInt32",
+      "right": "Int64"
+    },
+    {
+      "id": "p028",
+      "left": "UInt32",
+      "right": "Float32"
+    },
+    {
+      "id": "p029",
+      "left": "UInt32",
+      "right": "Float64"
+    },
+    {
+      "id": "p030",
+      "left": "UInt64",
+      "right": "UInt8"
+    },
+    {
+      "id": "p031",
+      "left": "UInt64",
+      "right": "UInt16"
+    },
+    {
+      "id": "p032",
+      "left": "UInt64",
+      "right": "UInt32"
+    },
+    {
+      "id": "p033",
+      "left": "UInt64",
+      "right": "UInt64"
+    },
+    {
+      "id": "p034",
+      "left": "UInt64",
+      "right": "Int8"
+    },
+    {
+      "id": "p035",
+      "left": "UInt64",
+      "right": "Int16"
+    },
+    {
+      "id": "p036",
+      "left": "UInt64",
+      "right": "Int32"
+    },
+    {
+      "id": "p037",
+      "left": "UInt64",
+      "right": "Int64"
+    },
+    {
+      "id": "p038",
+      "left": "UInt64",
+      "right": "Float32"
+    },
+    {
+      "id": "p039",
+      "left": "UInt64",
+      "right": "Float64"
+    },
+    {
+      "id": "p040",
+      "left": "Int8",
+      "right": "UInt8"
+    },
+    {
+      "id": "p041",
+      "left": "Int8",
+      "right": "UInt16"
+    },
+    {
+      "id": "p042",
+      "left": "Int8",
+      "right": "UInt32"
+    },
+    {
+      "id": "p043",
+      "left": "Int8",
+      "right": "UInt64"
+    },
+    {
+      "id": "p044",
+      "left": "Int8",
+      "right": "Int8"
+    },
+    {
+      "id": "p045",
+      "left": "Int8",
+      "right": "Int16"
+    },
+    {
+      "id": "p046",
+      "left": "Int8",
+      "right": "Int32"
+    },
+    {
+      "id": "p047",
+      "left": "Int8",
+      "right": "Int64"
+    },
+    {
+      "id": "p048",
+      "left": "Int8",
+      "right": "Float32"
+    },
+    {
+      "id": "p049",
+      "left": "Int8",
+      "right": "Float64"
+    },
+    {
+      "id": "p050",
+      "left": "Int16",
+      "right": "UInt8"
+    },
+    {
+      "id": "p051",
+      "left": "Int16",
+      "right": "UInt16"
+    },
+    {
+      "id": "p052",
+      "left": "Int16",
+      "right": "UInt32"
+    },
+    {
+      "id": "p053",
+      "left": "Int16",
+      "right": "UInt64"
+    },
+    {
+      "id": "p054",
+      "left": "Int16",
+      "right": "Int8"
+    },
+    {
+      "id": "p055",
+      "left": "Int16",
+      "right": "Int16"
+    },
+    {
+      "id": "p056",
+      "left": "Int16",
+      "right": "Int32"
+    },
+    {
+      "id": "p057",
+      "left": "Int16",
+      "right": "Int64"
+    },
+    {
+      "id": "p058",
+      "left": "Int16",
+      "right": "Float32"
+    },
+    {
+      "id": "p059",
+      "left": "Int16",
+      "right": "Float64"
+    },
+    {
+      "id": "p060",
+      "left": "Int32",
+      "right": "UInt8"
+    },
+    {
+      "id": "p061",
+      "left": "Int32",
+      "right": "UInt16"
+    },
+    {
+      "id": "p062",
+      "left": "Int32",
+      "right": "UInt32"
+    },
+    {
+      "id": "p063",
+      "left": "Int32",
+      "right": "UInt64"
+    },
+    {
+      "id": "p064",
+      "left": "Int32",
+      "right": "Int8"
+    },
+    {
+      "id": "p065",
+      "left": "Int32",
+      "right": "Int16"
+    },
+    {
+      "id": "p066",
+      "left": "Int32",
+      "right": "Int32"
+    },
+    {
+      "id": "p067",
+      "left": "Int32",
+      "right": "Int64"
+    },
+    {
+      "id": "p068",
+      "left": "Int32",
+      "right": "Float32"
+    },
+    {
+      "id": "p069",
+      "left": "Int32",
+      "right": "Float64"
+    },
+    {
+      "id": "p070",
+      "left": "Int64",
+      "right": "UInt8"
+    },
+    {
+      "id": "p071",
+      "left": "Int64",
+      "right": "UInt16"
+    },
+    {
+      "id": "p072",
+      "left": "Int64",
+      "right": "UInt32"
+    },
+    {
+      "id": "p073",
+      "left": "Int64",
+      "right": "UInt64"
+    },
+    {
+      "id": "p074",
+      "left": "Int64",
+      "right": "Int8"
+    },
+    {
+      "id": "p075",
+      "left": "Int64",
+      "right": "Int16"
+    },
+    {
+      "id": "p076",
+      "left": "Int64",
+      "right": "Int32"
+    },
+    {
+      "id": "p077",
+      "left": "Int64",
+      "right": "Int64"
+    },
+    {
+      "id": "p078",
+      "left": "Int64",
+      "right": "Float32"
+    },
+    {
+      "id": "p079",
+      "left": "Int64",
+      "right": "Float64"
+    },
+    {
+      "id": "p080",
+      "left": "Float32",
+      "right": "UInt8"
+    },
+    {
+      "id": "p081",
+      "left": "Float32",
+      "right": "UInt16"
+    },
+    {
+      "id": "p082",
+      "left": "Float32",
+      "right": "UInt32"
+    },
+    {
+      "id": "p083",
+      "left": "Float32",
+      "right": "UInt64"
+    },
+    {
+      "id": "p084",
+      "left": "Float32",
+      "right": "Int8"
+    },
+    {
+      "id": "p085",
+      "left": "Float32",
+      "right": "Int16"
+    },
+    {
+      "id": "p086",
+      "left": "Float32",
+      "right": "Int32"
+    },
+    {
+      "id": "p087",
+      "left": "Float32",
+      "right": "Int64"
+    },
+    {
+      "id": "p088",
+      "left": "Float32",
+      "right": "Float32"
+    },
+    {
+      "id": "p089",
+      "left": "Float32",
+      "right": "Float64"
+    },
+    {
+      "id": "p090",
+      "left": "Float64",
+      "right": "UInt8"
+    },
+    {
+      "id": "p091",
+      "left": "Float64",
+      "right": "UInt16"
+    },
+    {
+      "id": "p092",
+      "left": "Float64",
+      "right": "UInt32"
+    },
+    {
+      "id": "p093",
+      "left": "Float64",
+      "right": "UInt64"
+    },
+    {
+      "id": "p094",
+      "left": "Float64",
+      "right": "Int8"
+    },
+    {
+      "id": "p095",
+      "left": "Float64",
+      "right": "Int16"
+    },
+    {
+      "id": "p096",
+      "left": "Float64",
+      "right": "Int32"
+    },
+    {
+      "id": "p097",
+      "left": "Float64",
+      "right": "Int64"
+    },
+    {
+      "id": "p098",
+      "left": "Float64",
+      "right": "Float32"
+    },
+    {
+      "id": "p099",
+      "left": "Float64",
+      "right": "Float64"
+    }
+  ],
+  "sql": "SELECT toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(UInt8)))) AS p000,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(UInt16)))) AS p001,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(UInt32)))) AS p002,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(UInt64)))) AS p003,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(Int8)))) AS p004,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(Int16)))) AS p005,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(Int32)))) AS p006,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(Int64)))) AS p007,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(Float32)))) AS p008,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt8)),CAST([3] AS Array(Float64)))) AS p009,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(UInt8)))) AS p010,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(UInt16)))) AS p011,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(UInt32)))) AS p012,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(UInt64)))) AS p013,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(Int8)))) AS p014,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(Int16)))) AS p015,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(Int32)))) AS p016,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(Int64)))) AS p017,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(Float32)))) AS p018,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt16)),CAST([3] AS Array(Float64)))) AS p019,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(UInt8)))) AS p020,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(UInt16)))) AS p021,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(UInt32)))) AS p022,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(UInt64)))) AS p023,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(Int8)))) AS p024,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(Int16)))) AS p025,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(Int32)))) AS p026,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(Int64)))) AS p027,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(Float32)))) AS p028,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt32)),CAST([3] AS Array(Float64)))) AS p029,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(UInt8)))) AS p030,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(UInt16)))) AS p031,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(UInt32)))) AS p032,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(UInt64)))) AS p033,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(Int8)))) AS p034,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(Int16)))) AS p035,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(Int32)))) AS p036,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(Int64)))) AS p037,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(Float32)))) AS p038,toTypeName(arrayMap(multiply,CAST([2] AS Array(UInt64)),CAST([3] AS Array(Float64)))) AS p039,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(UInt8)))) AS p040,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(UInt16)))) AS p041,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(UInt32)))) AS p042,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(UInt64)))) AS p043,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(Int8)))) AS p044,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(Int16)))) AS p045,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(Int32)))) AS p046,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(Int64)))) AS p047,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(Float32)))) AS p048,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int8)),CAST([3] AS Array(Float64)))) AS p049,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(UInt8)))) AS p050,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(UInt16)))) AS p051,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(UInt32)))) AS p052,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(UInt64)))) AS p053,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(Int8)))) AS p054,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(Int16)))) AS p055,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(Int32)))) AS p056,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(Int64)))) AS p057,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(Float32)))) AS p058,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int16)),CAST([3] AS Array(Float64)))) AS p059,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(UInt8)))) AS p060,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(UInt16)))) AS p061,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(UInt32)))) AS p062,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(UInt64)))) AS p063,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(Int8)))) AS p064,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(Int16)))) AS p065,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(Int32)))) AS p066,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(Int64)))) AS p067,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(Float32)))) AS p068,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int32)),CAST([3] AS Array(Float64)))) AS p069,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(UInt8)))) AS p070,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(UInt16)))) AS p071,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(UInt32)))) AS p072,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(UInt64)))) AS p073,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(Int8)))) AS p074,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(Int16)))) AS p075,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(Int32)))) AS p076,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(Int64)))) AS p077,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(Float32)))) AS p078,toTypeName(arrayMap(multiply,CAST([2] AS Array(Int64)),CAST([3] AS Array(Float64)))) AS p079,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(UInt8)))) AS p080,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(UInt16)))) AS p081,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(UInt32)))) AS p082,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(UInt64)))) AS p083,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(Int8)))) AS p084,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(Int16)))) AS p085,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(Int32)))) AS p086,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(Int64)))) AS p087,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(Float32)))) AS p088,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float32)),CAST([3] AS Array(Float64)))) AS p089,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(UInt8)))) AS p090,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(UInt16)))) AS p091,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(UInt32)))) AS p092,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(UInt64)))) AS p093,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(Int8)))) AS p094,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(Int16)))) AS p095,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(Int32)))) AS p096,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(Int64)))) AS p097,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(Float32)))) AS p098,toTypeName(arrayMap(multiply,CAST([2] AS Array(Float64)),CAST([3] AS Array(Float64)))) AS p099 FORMAT JSONEachRow"
+}

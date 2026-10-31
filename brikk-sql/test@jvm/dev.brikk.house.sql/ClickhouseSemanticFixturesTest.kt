@@ -31,6 +31,8 @@ class ClickhouseSemanticFixturesTest {
     @Test
     fun lambdaParameterTypesMatchTheNativeInputFixturesWithoutCertifyingCalls() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/lambda-input-cases.json").readText()).jsonObject
+        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/lambda-input-results-refinements.json").readText())
+            .jsonObject.getValue("cases").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         fun type(node: Expression): String = if (node.isType(DType.UNKNOWN)) "UNKNOWN"
             else (node.type as? DataType)?.sql("clickhouse") ?: "MISSING"
         val observations = fixture.getValue("execution").jsonArray.map { row ->
@@ -51,8 +53,8 @@ class ClickhouseSemanticFixturesTest {
                 it.expressionsArg.filterIsInstance<Identifier>().asSequence()
             }.map(::type).toList()
             val implicit = annotated.findAll<ClickhouseLambdaArgument>(bfs = false).map(::type).toList()
-            assertEquals(case.getValue("formal_types").jsonArray.map { it.jsonPrimitive.content }, formal, id)
-            assertEquals(case.getValue("implicit_types").jsonArray.map { it.jsonPrimitive.content }, implicit, id)
+            assertEquals((refinements[id]?.get("formal_types") ?: case.getValue("formal_types")).jsonArray.map { it.jsonPrimitive.content }, formal, id)
+            assertEquals((refinements[id]?.get("implicit_types") ?: case.getValue("implicit_types")).jsonArray.map { it.jsonPrimitive.content }, implicit, id)
             assertEquals(annotated, Serde.load(Serde.dump(annotated)), id)
             assertEquals(generated, annotated.sql("clickhouse"), id)
             buildJsonObject {

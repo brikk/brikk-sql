@@ -454,6 +454,12 @@ exact native outcomes on both pins, including successful scope/NULL/runtime cont
 that must not receive false errors. Family-level checking does not annotate result
 types or expose editor diagnostics. See [the rule-checker guide](data/clickhouse-semantic/composition-README.md).
 
+CHSEM-005 adds exact conditional result inference to the ClickHouse annotator for
+supported map/composition inputs. Forty result witnesses and all 100 primitive
+multiply type pairs have original native observations on both pins. Unknown types,
+runtime checks and editor diagnostics remain distinct; older evidence is preserved.
+See [the result-inference guide](data/clickhouse-semantic/result-README.md).
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 The original embedded capture below is retained. Current official-build captures

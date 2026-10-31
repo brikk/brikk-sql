@@ -10,16 +10,17 @@ import kotlin.collections.Map
 private val clickhouseLambdaSyntaxNameKeys = setOf("alias", "table", "db", "catalog", "unit", "kind", "name", "field")
 
 /**
- * CHSEM-003: arrayMap argument binding, not function validation or result inference.
+ * CHSEM-003 argument binding and CHSEM-005's separately proved value results.
  * Visit its array inputs before entering the lambda, with independent lexical scopes
- * for explicit parameters and implicit placeholders. The ordinary annotator still
- * owns physical columns, scalar expressions and function-value/result unknowns.
+ * for explicit parameters and implicit placeholders. The ordinary annotator owns
+ * physical columns and scalar fallbacks; exact results require separate native proofs.
  */
 internal class ClickhouseLambdaTyping(
     private val alreadyAnnotated: (Expression) -> Boolean,
     private val annotateNode: (Expression) -> Unit,
     private val bindType: (Expression, DataType?) -> Unit,
     private val usesGenericArithmetic: (Expression) -> Boolean,
+    private val inferredTypes: Map<Long, DataType> = emptyMap(),
 ) {
     private class Bindings(
         val parent: Bindings?,
@@ -71,7 +72,9 @@ internal class ClickhouseLambdaTyping(
                         bindType(node, null)
                     } else annotateNode(node)
                 }
-                if (dependsOnRefinement) refined.add(node.objectId)
+                val inferred = inferredTypes[node.objectId]
+                if (inferred != null) bindType(node, inferred)
+                if (dependsOnRefinement || inferred != null) refined.add(node.objectId)
                 continue
             }
 
@@ -102,8 +105,8 @@ internal class ClickhouseLambdaTyping(
                     if (child !== lambda) stack.addLast(Frame(child, bindings = bindings))
                 }
             } else if (node is ClickhouseComposition) {
-                // Only the first stage receives array elements in this round. Later
-                // stage inputs need the preceding result, deferred to CHSEM-005.
+                // Do not reuse initial array elements at a later stage. Its argument
+                // annotations come only from CHSEM-005's proved result overrides.
                 (node.args["expression"] as? Expression)?.let { stack.addLast(Frame(it, bindings = bindings)) }
                 (node.thisArg as? Expression)?.let { stack.addLast(Frame(it, bindings = bindings, arrayInputs = frame.arrayInputs)) }
             } else {

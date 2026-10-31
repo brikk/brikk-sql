@@ -223,6 +223,18 @@ class TypeAnnotator(
     private val overwriteTypes: Boolean = true,
 ) {
     val dialect: Dialect = schema.dialect ?: Dialects.BASE
+    private val callerTypingClasses = if (expressionMetadata == null) emptySet() else buildSet {
+        for (kind in dialect.expressionMetadata.keys + expressionMetadata.keys) {
+            if (expressionMetadata[kind] != dialect.expressionMetadata[kind]) add(kind)
+        }
+        // A replacement/partial policy is caller-owned, not permission to fill its
+        // omitted rules with native map inference. The shape layer supplies a full map.
+        if (!expressionMetadata.keys.containsAll(dialect.expressionMetadata.keys)) {
+            add(dev.brikk.house.sql.ast.Transform::class)
+            add(Anonymous::class)
+        }
+    }
+    private val clickhouseNativeTypes = HashMap<Long, DataType>()
     private val expressionMetadata: Map<kotlin.reflect.KClass<out Expression>, TypingSpec> =
         expressionMetadata ?: dialect.expressionMetadata
     private val coercesTo: Map<DType, Set<DType>> =
@@ -304,6 +316,7 @@ class TypeAnnotator(
         nullExpressions.clear()
         setopColumnTypes.clear()
         scopeSourceSelects.clear()
+        clickhouseNativeTypes.clear()
     }
 
     // sqlglot: TypeAnnotator.uncache
@@ -320,6 +333,7 @@ class TypeAnnotator(
             visited.remove(nodeId)
             nullExpressions.remove(nodeId)
             setopColumnTypes.remove(nodeId)
+            clickhouseNativeTypes.remove(nodeId)
         }
     }
 
@@ -591,7 +605,16 @@ class TypeAnnotator(
 
     // sqlglot: TypeAnnotator._annotate_expression
     private fun annotateExpression(expression: Expression, scope: Scope?) {
+        if (expression.objectId in visited ||
+            (!overwriteTypes && expression.type != null && !expression.isType(DType.UNKNOWN))) return
         if (dialect.name == "clickhouse") {
+            val ignoredIds = if (overwriteTypes) emptySet() else expression.walk().filter {
+                it.typeSlot != null && !it.isType(DType.UNKNOWN) && it.objectId !in clickhouseNativeTypes
+            }.map { it.objectId }.toSet()
+            val inference = inferClickhouseCompositionResults(expression,
+                dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA.default.engineVersion, schema,
+                knownTypes = clickhouseNativeTypes, ignoredClasses = callerTypingClasses, ignoredIds = ignoredIds)
+            for ((id, type) in inference.valueTypes) clickhouseNativeTypes[id] = type.copy() as DataType
             ClickhouseLambdaTyping(
                 alreadyAnnotated = { expr -> expr.objectId in visited ||
                     (!overwriteTypes && expr.type != null && !expr.isType(DType.UNKNOWN)) },
@@ -602,6 +625,7 @@ class TypeAnnotator(
                     spec is TypingSpec.Annotate &&
                         (spec.ref is AnnotatorRef.BinaryAnn || spec.ref is AnnotatorRef.UnaryAnn || spec.ref is AnnotatorRef.DivAnn)
                 },
+                inferredTypes = inference.valueTypes,
             ).annotate(expression)
             return
         }
@@ -683,8 +707,8 @@ class TypeAnnotator(
             })
             return
         }
-        // Function values/results remain unknown. CHSEM-003 only binds their arguments;
-        // composition validation and result propagation are separate later work.
+        // Function-valued nodes retain UNKNOWN here. The contextual pass applies
+        // CHSEM-005's separately proved value results after these generic node rules.
 
         when {
             spec is TypingSpec.Annotate -> runAnnotator(spec.ref, expr)

@@ -1,0 +1,8 @@
+{
+  "task": "CHSEM-005",
+  "native_evidence": "lambda-input-native/26.10.2.103.json",
+  "cases": [
+    {"id":"CHSEM-003-E18","implicit_types":["UInt8","String"],"reason":"toString's proved String result is the next stage's input; toTypeName's own result is still unresearched."},
+    {"id":"CHSEM-003-E27","formal_types":["UInt8","UInt8"],"reason":"The inner identity map returns Array(UInt8), so its outer lambda receives UInt8."}
+  ]
+}

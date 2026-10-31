@@ -40,9 +40,9 @@ class ClickhouseLambdaTypingTest {
         val implicit = typed("SELECT arrayMap(_1, CAST([1] AS Array(UInt16)))")
         assertEquals(listOf("UInt16"), placeholders(implicit).map(::type))
         assertEquals("UInt16", type(implicit.find<ClickhouseImplicitLambda>()!!.expressionsArg.single() as Expression))
-        assertTrue(explicit.find<Transform>()!!.isType(DType.UNKNOWN))
+        assertEquals("Array(UInt8)", type(explicit.find<Transform>()!!))
         assertTrue(implicit.find<ClickhouseImplicitLambda>()!!.isType(DType.UNKNOWN))
-        assertTrue(implicit.find<Transform>()!!.isType(DType.UNKNOWN))
+        assertEquals("Array(UInt16)", type(implicit.find<Transform>()!!))
     }
 
     @Test
@@ -128,9 +128,9 @@ class ClickhouseLambdaTypingTest {
     }
 
     @Test
-    fun compositionReceivesInitialElementsOnlyAtItsFirstStage() {
+    fun compositionReceivesProvedResultsAtLaterStages() {
         val implicit = typed("SELECT arrayMap(toString(_) | toTypeName(_),CAST([1] AS Array(UInt8)))")
-        assertEquals(listOf("UInt8", "UNKNOWN"), placeholders(implicit).map(::type))
+        assertEquals(listOf("UInt8", "String"), placeholders(implicit).map(::type))
         // CHSEM-011 tracks the existing SQL parser gap for parenthesized explicit
         // lambda operands. Correct caller-supplied Lambda ASTs still bind by context.
         val explicit = parseOne("SELECT arrayMap(x -> toString(x),CAST([1] AS Array(UInt8)))", "clickhouse")
@@ -141,7 +141,7 @@ class ClickhouseLambdaTypingTest {
             "expression" to Paren(args("this" to right)),
         )))
         annotateTypes(explicit, dialect = Dialects.CLICKHOUSE)
-        assertEquals(listOf("UInt8", "UNKNOWN"), parameters(explicit).map(::type))
+        assertEquals(listOf("UInt8", "String"), parameters(explicit).map(::type))
         assertTrue(explicit.findAll<ClickhouseComposition>().all { it.isType(DType.UNKNOWN) })
         assertTrue(explicit.findAll<Lambda>().all { it.isType(DType.UNKNOWN) })
     }
@@ -209,7 +209,7 @@ class ClickhouseLambdaTypingTest {
         val ast = typed("SELECT arrayMap((x,y) -> tuple(x,y),CAST([1] AS Array(UInt8)),t.missing) FROM t")
         assertEquals(listOf("UInt8", "UNKNOWN"), parameters(ast).map(::type))
         val nestedResult = typed("SELECT arrayMap(x -> x,arrayMap(y -> y,CAST([1] AS Array(UInt8))))")
-        assertEquals(listOf("UInt8", "UNKNOWN"), parameters(nestedResult).map(::type))
+        assertEquals(listOf("UInt8", "UInt8"), parameters(nestedResult).map(::type))
         val genericLiterals = typed("SELECT arrayMap((x,y) -> x*y,[1,2],[3,4])")
         assertEquals(listOf("UNKNOWN", "UNKNOWN"), parameters(genericLiterals).map(::type))
         assertTrue(genericLiterals.find<Mul>()!!.isType(DType.UNKNOWN))
@@ -220,7 +220,7 @@ class ClickhouseLambdaTypingTest {
         val ast = typed("SELECT arrayMap(x -> tuple(x+1,x*x,-x),CAST([1] AS Array(UInt8)))")
         assertEquals(listOf("UInt8"), parameters(ast).map(::type))
         assertTrue(ast.find<Add>()!!.isType(DType.UNKNOWN))
-        assertTrue(ast.find<Mul>()!!.isType(DType.UNKNOWN))
+        assertEquals("UInt16", type(ast.find<Mul>()!!)) // Native multiplication rule, not generic widening.
         assertTrue(ast.find<Neg>()!!.isType(DType.UNKNOWN))
         val supplied = parseOne("SELECT arrayMap(x -> x*x,CAST([1] AS Array(UInt8)))", "clickhouse")
         annotateTypes(supplied, dialect = Dialects.CLICKHOUSE,

@@ -9,6 +9,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.Set
+import kotlin.reflect.KClass
 
 /** Intrinsic argument-rule failures, not a native whole-query rejection verdict. */
 internal enum class ClickhouseCompositionRule(val nativeErrorCode: Int) {
@@ -44,6 +45,25 @@ internal data class ClickhouseCompositionValidation(
     val unknowns: List<ClickhouseCompositionUnknown>,
 )
 
+/** Exact conditional types, not a native acceptance or successful-execution verdict. */
+internal data class ClickhouseCompositionInference(
+    val valueTypes: Map<Long, DataType>,
+    /** Function values retain UNKNOWN in the AST; this records their result separately. */
+    val callableResults: Map<Long, DataType>,
+    val validation: ClickhouseCompositionValidation,
+)
+
+internal fun inferClickhouseCompositionResults(
+    expression: Expression,
+    engineVersion: String,
+    schema: Schema? = null,
+    knownTypes: Map<Long, DataType> = emptyMap(),
+    ignoredClasses: Set<KClass<out Expression>> = emptySet(),
+    ignoredIds: Set<Long> = emptySet(),
+    checkCanceled: () -> Unit = {},
+): ClickhouseCompositionInference = ClickhouseCompositionValidator(engineVersion, schema, checkCanceled,
+    inferResults = true, knownTypes = knownTypes, ignoredClasses = ignoredClasses, ignoredIds = ignoredIds).infer(expression)
+
 /**
  * Read-only checks of structured arrayMap callable arguments on the exact 26.10 pin.
  * Native casts and explicit [schema] facts establish input families and a closed
@@ -61,6 +81,10 @@ private class ClickhouseCompositionValidator(
     private val version: String,
     private val schema: Schema?,
     private val checkCanceled: () -> Unit,
+    private val inferResults: Boolean = false,
+    private val knownTypes: Map<Long, DataType> = emptyMap(),
+    private val ignoredClasses: Set<KClass<out Expression>> = emptySet(),
+    private val ignoredIds: Set<Long> = emptySet(),
 ) {
     private enum class Family { STRING, FIXED_STRING, NUMBER, DATE, DATETIME, OTHER }
     private data class Value(
@@ -68,6 +92,7 @@ private class ClickhouseCompositionValidator(
         val plain: Boolean = false,
         val constant: Boolean? = null,
         val element: Value? = null,
+        val type: DataType? = null,
     )
     private data class Callable(val arity: Int? = null, val result: Value = Value())
     private enum class Position { MAP, LEFT, RIGHT }
@@ -80,6 +105,7 @@ private class ClickhouseCompositionValidator(
         val implicit: List<Value>? = null,
         val physicalValues: Map<Pair<String, String>, Value> = emptyMap(),
         val sqlBoundary: Boolean = false,
+        val callableScope: Boolean = false,
     ) {
         fun blocked(name: String): Boolean {
             var scope: Context? = this
@@ -131,6 +157,16 @@ private class ClickhouseCompositionValidator(
     private val unknowns = LinkedHashMap<Pair<Long, ClickhouseCompositionUnknownReason>, ClickhouseCompositionUnknown>()
     private val lambdaContexts = HashMap<Long, Context>()
     private val handledCompositions = HashSet<Long>()
+    private val valueTypes = LinkedHashMap<Long, DataType>()
+    private val callableResults = LinkedHashMap<Long, DataType>()
+    private val mapResults = HashMap<Long, Value>()
+    private val invalidMaps = HashSet<Long>()
+    private var quietFindings = 0
+
+    fun infer(root: Expression): ClickhouseCompositionInference {
+        val validation = validate(root)
+        return ClickhouseCompositionInference(valueTypes.toMap(), callableResults.toMap(), validation)
+    }
 
     fun validate(root: Expression): ClickhouseCompositionValidation {
         if (version != "26.10.2.103") {
@@ -160,6 +196,10 @@ private class ClickhouseCompositionValidator(
                 is Lambda, is ClickhouseImplicitLambda -> lambdaContexts[node.objectId] ?: bind(node, null, inherited)
                 else -> inherited
             }
+            if (inferResults) {
+                rememberBinding(node, context)
+                if (context.callableScope) rememberAtomicCall(node, context)
+            }
             val map = arrayMap(node)
             if (map != null) {
                 val name = node.metaOrNull?.get("clickhouse_name") as? String ?: "arrayMap"
@@ -171,13 +211,7 @@ private class ClickhouseCompositionValidator(
                     unknown(node, ClickhouseCompositionUnknownReason.UNRESEARCHED_CALLABLE)
                     continue
                 }
-                val (argument, arrays) = map
-                val inputs = arrays.map { arrayElement(it, context) }
-                val callable = callable(argument, inputs, Position.MAP, context, 0)
-                if (callable.arity != null && callable.arity != arrays.size)
-                    error(argument, ClickhouseCompositionRule.ARRAY_MAP_ARITY,
-                        "arrayMap supplies ${arrays.size} array arguments, but its callable requires ${callable.arity}.")
-                if (arrays.size > 1) unknown(node, ClickhouseCompositionUnknownReason.ARRAY_LENGTHS)
+                mapValue(node, map, context, 0)
             } else if (node is ClickhouseComposition && node.objectId !in handledCompositions) {
                 unknown(node, ClickhouseCompositionUnknownReason.UNSUPPORTED_CONTEXT)
                 continue
@@ -189,16 +223,96 @@ private class ClickhouseCompositionValidator(
 
     private fun report() = ClickhouseCompositionValidation(errors.values.toList(), unknowns.values.toList())
     private fun unknown(node: Expression, reason: ClickhouseCompositionUnknownReason) {
+        if (quietFindings > 0) return
         unknowns.putIfAbsent(node.objectId to reason, ClickhouseCompositionUnknown(node, reason))
     }
     private fun error(node: Expression, rule: ClickhouseCompositionRule, message: String) {
+        if (quietFindings > 0) return
         errors.putIfAbsent(node.objectId to rule, ClickhouseCompositionError(node, rule, message))
+    }
+
+    private fun ignored(node: Expression): Boolean = inferResults &&
+        (node.objectId in ignoredIds || node::class in ignoredClasses)
+
+    private fun remember(node: Expression, result: Value): Value {
+        if (inferResults && !ignored(node)) result.type?.let { valueTypes[node.objectId] = it.copy() as DataType }
+        return result
+    }
+
+    private fun rememberCallable(node: Expression, result: Callable): Callable {
+        if (inferResults && !ignored(node)) result.result.type?.let { callableResults[node.objectId] = it.copy() as DataType }
+        return result
+    }
+
+    /** Parameters stay typed even inside a scalar function whose result is unresearched. */
+    private fun rememberBinding(node: Expression, context: Context) {
+        if (node is ClickhouseLambdaArgument) {
+            remember(node, context.implicitValue(node.args["ordinal"] as? Int ?: 0))
+            return
+        }
+        if (node !is Identifier) return
+        val parent = node.parent
+        if (parent is ClickhouseImplicitLambda && node.argKey == "expressions") {
+            remember(node, context.implicitValue((node.index ?: -1) + 1)); return
+        }
+        if (parent is Column || parent is Table || parent is TableAlias || parent is ColumnDef ||
+            parent is ClickhouseLambdaArgument || parent is ClickhouseFunctionReference ||
+            (parent is Dot && node.argKey != "this") || (parent is Anonymous && node.argKey == "this") ||
+            node.argKey in setOf("alias", "table", "db", "catalog", "unit", "kind", "name", "field")) return
+        var ancestor = parent
+        while (ancestor != null && ancestor !is Lambda && ancestor !is ClickhouseImplicitLambda && ancestor !is Query) {
+            if (ancestor is DataType || ancestor is ColumnDef) return
+            ancestor = ancestor.parent
+        }
+        context.namedValue(node.name)?.let { remember(node, it) }
+    }
+
+    /** Conditional subexpression types do not eagerly validate an opaque parent's arguments. */
+    private fun rememberAtomicCall(node: Expression, context: Context) {
+        if (ignored(node) || node.objectId in valueTypes) return
+        val call = scalarCall(node) ?: return
+        if (context.blocked(call.name)) return
+        val facts = clickhouseCallableFacts(call.name, version) ?: return
+        fun argument(raw: Expression): Value = when (val expression = raw.unnest()) {
+            is Identifier -> context.namedValue(expression.name) ?: Value()
+            is ClickhouseLambdaArgument -> context.implicitValue(expression.args["ordinal"] as? Int ?: 0)
+            is Column -> context.columnValue(expression)
+            else -> declaredValue(expression)
+        }
+        quietFindings++
+        val result = try { checkCall(node, facts, call.arguments.map(::argument)) } finally { quietFindings-- }
+        remember(node, result)
+    }
+
+    private fun mapValue(node: Expression, map: Pair<Expression, List<Expression>>, context: Context, depth: Int): Value {
+        if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
+        if (inferResults) mapResults[node.objectId]?.let { return it }
+        if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
+        val previousErrors = errors.size
+        val (argument, arrays) = map
+        val inputs = arrays.map { arrayElement(it, context, depth + 1) }
+        val callable = callable(argument, inputs, Position.MAP, context, depth + 1)
+        if (callable.arity != null && callable.arity != arrays.size)
+            error(argument, ClickhouseCompositionRule.ARRAY_MAP_ARITY,
+                "arrayMap supplies ${arrays.size} array arguments, but its callable requires ${callable.arity}.")
+        if (arrays.size > 1) unknown(node, ClickhouseCompositionUnknownReason.ARRAY_LENGTHS)
+        if (inferResults && errors.size > previousErrors) invalidMaps.add(node.objectId)
+        val result = if (inferResults && node.objectId !in invalidMaps && callable.arity == arrays.size && arrays.isNotEmpty() && callable.result.type != null) {
+            val array = arrayType(callable.result.type)
+            if (completeType(array)) Value(Family.OTHER, true, element = callable.result, type = array)
+            else { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); Value() }
+        } else Value()
+        if (inferResults && result.type == null && node.objectId !in invalidMaps)
+            unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+        if (inferResults && result.type != null) mapResults[node.objectId] = result
+        return remember(node, result)
     }
 
     private fun callable(raw: Expression, inputs: List<Value>?, position: Position, context: Context, depth: Int): Callable {
         checkCanceled()
         val node = raw.unnest()
         if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Callable() }
+        if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Callable() }
         if (node is ClickhouseComposition) {
             handledCompositions.add(node.objectId)
             val left = node.thisArg as? Expression
@@ -208,7 +322,8 @@ private class ClickhouseCompositionValidator(
             val second = callable(right, listOf(first.result), Position.RIGHT, context, depth + 1)
             if (second.arity != null && second.arity != 1)
                 error(right, ClickhouseCompositionRule.RIGHT_OPERAND_ARITY, "A right composition operand must take one argument, not ${second.arity}.")
-            return Callable(first.arity, second.result)
+            return rememberCallable(node, Callable(first.arity,
+                if (inferResults && second.arity != 1) Value() else second.result))
         }
         if (node is ClickhouseFunctionReference) {
             val facts = facts(node.name, node, context) ?: return Callable()
@@ -225,7 +340,7 @@ private class ClickhouseCompositionValidator(
                 }
             }
             val result = if (inputs != null && inputs.size == arity) checkCall(node, facts, inputs) else Value()
-            return Callable(arity, result)
+            return rememberCallable(node, Callable(arity, result))
         }
         if (node is Lambda || node is ClickhouseImplicitLambda) {
             val arity = if (node is Lambda) {
@@ -249,7 +364,7 @@ private class ClickhouseCompositionValidator(
             val bound = bind(node, inputs?.takeIf { it.size == arity }, context)
             lambdaContexts[node.objectId] = bound
             val body = node.thisArg as? Expression
-            return Callable(arity, body?.let { value(it, bound, depth + 1) } ?: Value())
+            return rememberCallable(node, Callable(arity, body?.let { value(it, bound, depth + 1) } ?: Value()))
         }
         // CHSEM-011: parenthesized explicit lambda operands currently become JSON arrows.
         if (node is JSONExtract || node is Dot || node is Column || node is Identifier) {
@@ -302,9 +417,12 @@ private class ClickhouseCompositionValidator(
         val names = lambda.expressionsArg.filterIsInstance<Identifier>()
         val aliases = bodyAliases(lambda)
         val values = inputs?.takeIf { it.size == names.size } ?: List(names.size) { Value() }
+        if (inferResults) for ((index, name) in names.withIndex()) {
+            if (name.name !in aliases) remember(name, values[index])
+        }
         return if (lambda is Lambda) Context(context, lexical = names.map { it.name }.toSet() + aliases,
-            values = names.mapIndexed { i, name -> name.name to if (name.name in aliases) Value() else values[i] }.toMap())
-        else Context(context, lexical = aliases, implicit = values)
+            values = names.mapIndexed { i, name -> name.name to if (name.name in aliases) Value() else values[i] }.toMap(), callableScope = true)
+        else Context(context, lexical = aliases, implicit = values, callableScope = true)
     }
 
     private fun bodyAliases(lambda: Expression): Set<String> {
@@ -317,17 +435,28 @@ private class ClickhouseCompositionValidator(
         checkCanceled()
         val node = raw.unnest()
         if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
-        return when (node) {
+        if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
+        val nestedMap = if (inferResults) arrayMap(node) else null
+        if (nestedMap != null) {
+            val name = node.metaOrNull?.get("clickhouse_name") as? String ?: "arrayMap"
+            if (context.blocked(name)) { unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION); return Value() }
+            if (CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG.getAll(name).none { it.name == "arrayMap" }) {
+                unknown(node, ClickhouseCompositionUnknownReason.UNRESEARCHED_CALLABLE); return Value()
+            }
+            return mapValue(node, nestedMap, context, depth + 1)
+        }
+        return remember(node, when (node) {
             is ClickhouseLambdaArgument -> context.implicitValue(node.args["ordinal"] as? Int ?: 0)
             is Identifier -> context.namedValue(node.name) ?: Value()
             is Column -> context.columnValue(node)
-            is Literal -> Value(if (node.isString) Family.STRING else Family.NUMBER, true, true)
+            is Literal -> Value(if (node.isString) Family.STRING else Family.NUMBER, true, true,
+                type = if (inferResults && node.isString) plainType(DType.VARCHAR) else null)
             is Null -> Value(constant = true)
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
                 val source = node.thisArg as? Expression
                 val input = source?.let { value(it, context, depth + 1) } ?: Value()
-                if (source == null || !nonNullCastInput(input, source)) {
+                if (source == null || !castInputProvesTarget(input, source, node.args["to"] as? DataType)) {
                     unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value()
                 } else nativeType(node.args["to"] as? DataType).copy(constant = input.constant)
             }
@@ -346,7 +475,7 @@ private class ClickhouseCompositionValidator(
                     if (facts == null) Value() else checkCall(node, facts, call.arguments.map { value(it, context, depth + 1) })
                 }
             }
-        }
+        })
     }
 
     private fun checkCall(node: Expression, facts: ClickhouseCallableFacts, arguments: List<Value>): Value {
@@ -400,11 +529,14 @@ private class ClickhouseCompositionValidator(
         if (!supported) return Value()
         if (facts.executionRestriction == ClickhouseCallableExecutionRestriction.FIXED_STRING_UNSUPPORTED &&
             arguments.firstOrNull()?.family == Family.FIXED_STRING) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
-        // Family-only propagation for argument compatibility, never AST result annotation.
+        // Validation mode retains family-only propagation. Inference mode additionally
+        // records exact types only within the same supported inputs and count rules.
         return when (facts.resultRule) {
             ClickhouseCallableResultRule.PRESERVE_STRING_INPUT -> arguments.first().copy(constant = null)
-            ClickhouseCallableResultRule.STRING -> Value(Family.STRING, true)
-            ClickhouseCallableResultRule.PRIMITIVE_MULTIPLICATION_PROMOTION -> Value(Family.NUMBER, true)
+            ClickhouseCallableResultRule.STRING -> Value(Family.STRING, true,
+                type = if (inferResults) plainType(DType.VARCHAR) else null)
+            ClickhouseCallableResultRule.PRIMITIVE_MULTIPLICATION_PROMOTION -> Value(Family.NUMBER, true,
+                type = if (inferResults) multiplyType(arguments) else null)
         }
     }
 
@@ -421,6 +553,8 @@ private class ClickhouseCompositionValidator(
             is Anonymous -> Call(node.name, node.expressionsArg.filterIsInstance<Expression>())
             is Lower -> Call(original ?: "lower", listOfNotNull(node.thisArg as? Expression))
             is Upper -> Call(original ?: "upper", listOfNotNull(node.thisArg as? Expression))
+            is Mul -> if (inferResults) Call(original ?: "multiply", listOfNotNull(node.thisArg as? Expression,
+                node.args["expression"] as? Expression)) else null
             is Concat -> if (node::class == Concat::class) Call(original ?: "concat", node.expressionsArg.filterIsInstance<Expression>()) else null
             is Trim -> if (original?.equals("trimBoth", ignoreCase = true) == true)
                 Call(original, listOfNotNull(node.thisArg as? Expression, node.args["expression"] as? Expression,
@@ -442,14 +576,15 @@ private class ClickhouseCompositionValidator(
         else -> null
     }
 
-    private fun arrayElement(raw: Expression, context: Context): Value {
+    private fun arrayElement(raw: Expression, context: Context, depth: Int = 0): Value {
         val node = raw.unnest()
         val input = when (node) {
             is Identifier -> context.namedValue(node.name) ?: Value()
             is Column -> context.columnValue(node)
             is ClickhouseLambdaArgument -> context.implicitValue(node.args["ordinal"] as? Int ?: 0)
-            else -> declaredValue(node)
+            else -> if (inferResults && arrayMap(node) != null) value(node, context, depth + 1) else declaredValue(node)
         }
+        if (inferResults) remember(node, input)
         if (input.plain && input.element != null) return input.element.copy(constant = null)
         if (input.plain && input.element == null)
             error(node, ClickhouseCompositionRule.ARRAY_INPUT_TYPE, "arrayMap requires an Array input, not a known scalar or other non-array type.")
@@ -462,20 +597,26 @@ private class ClickhouseCompositionValidator(
         checkCanceled()
         val node = raw.unnest()
         if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
+        if (ignored(node)) return Value()
+        if (inferResults) knownTypes[node.objectId]?.let { return nativeType(it) }
         return when (node) {
             is TryCast -> Value()
             is Cast -> {
                 val source = node.thisArg as? Expression
-                if (source != null && nonNullCastInput(declaredValue(source, depth + 1), source))
+                if (source != null && castInputProvesTarget(declaredValue(source, depth + 1), source, node.args["to"] as? DataType))
                     nativeType(node.args["to"] as? DataType) else Value()
             }
-            is Literal -> Value(if (node.isString) Family.STRING else Family.NUMBER, true)
+            is Literal -> Value(if (node.isString) Family.STRING else Family.NUMBER, true,
+                type = if (inferResults && node.isString) plainType(DType.VARCHAR) else null)
             is Neg -> if (node.thisArg is Literal && !(node.thisArg as Literal).isString) Value(Family.NUMBER, true) else Value()
             is dev.brikk.house.sql.ast.Array -> {
                 val elements = node.expressionsArg.filterIsInstance<Expression>().map { declaredValue(it, depth + 1) }
-                val element = if (elements.isNotEmpty() && elements.all { it.plain } &&
-                    elements.distinct().size == 1) elements.first() else Value()
-                Value(Family.OTHER, true, element = element)
+                val sameFamily = elements.isNotEmpty() && elements.all { it.plain } &&
+                    elements.map(::familyOnly).distinct().size == 1
+                val element = if (sameFamily) elements.first().copy(type =
+                    elements.first().type?.takeIf { candidate -> elements.all { it.type == candidate } }) else Value()
+                Value(Family.OTHER, true, element = element,
+                    type = if (inferResults && element.type != null) arrayType(element.type) else null)
             }
             else -> Value()
         }
@@ -495,14 +636,26 @@ private class ClickhouseCompositionValidator(
         return false
     }
 
+    private fun castInputProvesTarget(input: Value, source: Expression, target: DataType?): Boolean {
+        if (nonNullCastInput(input, source)) return true
+        if (!inferResults || target == null || !completeType(target)) return false
+        // Explicit nullable targets already account for a source NULL wrapper. This
+        // copies the declared type; it does not infer a function's null propagation.
+        if (target.args["nullable"] == true && (source.unnest() is Null || input.type != null || input.plain)) return true
+        val element = target.expressionsArg.singleOrNull() as? DataType
+        return target.thisArg == DType.ARRAY && target.args["nullable"] == false &&
+            element?.args?.get("nullable") == true && input.plain && input.element != null
+    }
+
     private fun nativeType(type: DataType?, depth: Int = 0): Value {
         checkCanceled()
         if (depth > 128) {
             if (type != null) unknown(type, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT)
             return Value()
         }
+        val exact = if (inferResults && type != null && completeType(type)) type.copy() as DataType else null
         if (type == null || type.args["nullable"] != false || type.thisArg in setOf(DType.UNKNOWN, DType.NULL,
-                DType.LOWCARDINALITY, DType.DYNAMIC, DType.VARIANT)) return Value()
+                DType.LOWCARDINALITY, DType.DYNAMIC, DType.VARIANT)) return Value(type = exact)
         val family = when (type.thisArg) {
             DType.TEXT, DType.VARCHAR -> Family.STRING
             DType.FIXEDSTRING -> Family.FIXED_STRING
@@ -513,10 +666,50 @@ private class ClickhouseCompositionValidator(
             DType.ARRAY, DType.STRUCT, DType.MAP, DType.BOOLEAN, DType.TIME -> Family.OTHER
             // Unmapped SQL type spellings can be native aliases, not incompatible
             // types. For example CHAR is String and TIMESTAMP is DateTime.
-            else -> return Value()
+            else -> return Value(type = exact)
         }
         return Value(family, true, element = if (type.thisArg == DType.ARRAY)
-            nativeType(type.expressionsArg.singleOrNull() as? DataType, depth + 1) else null)
+            nativeType(type.expressionsArg.singleOrNull() as? DataType, depth + 1) else null, type = exact)
+    }
+
+    private fun familyOnly(value: Value): Value = value.copy(type = null, element = value.element?.let(::familyOnly))
+
+    private fun completeType(root: DataType): Boolean {
+        val supported = setOf(DType.TEXT, DType.VARCHAR, DType.FIXEDSTRING, DType.TINYINT, DType.SMALLINT,
+            DType.INT, DType.BIGINT, DType.UTINYINT, DType.USMALLINT, DType.UINT, DType.UBIGINT,
+            DType.FLOAT, DType.DOUBLE, DType.DATE, DType.DATE32, DType.DATETIME, DType.DATETIME64,
+            DType.ARRAY, DType.STRUCT, DType.MAP, DType.BOOLEAN, DType.DECIMAL, DType.DECIMAL32,
+            DType.DECIMAL64, DType.DECIMAL128, DType.DECIMAL256)
+        val stack = ArrayDeque<Pair<Expression, Int>>()
+        stack.addLast(root to 0)
+        while (stack.isNotEmpty()) {
+            checkCanceled()
+            val (node, depth) = stack.removeLast()
+            if (depth > 128 || (node is DataType && (node.thisArg !in supported || node.args["nullable"] !is Boolean))) return false
+            if (node is DataTypeParam && node.thisArg !is Literal) return false
+            for (child in node.iterExpressions()) stack.addLast(child to depth + 1)
+        }
+        return true
+    }
+
+    private fun plainType(dtype: DType) = DataType(args("this" to dtype, "nullable" to false, "nested" to false))
+    private fun arrayType(element: DataType) = DataType(args("this" to DType.ARRAY, "nullable" to false,
+        "nested" to true, "expressions" to listOf(element.copy())))
+
+    /** The source-pinned NumberTraits rule, only for the ten primitive input kinds. */
+    private fun multiplyType(arguments: List<Value>): DataType? {
+        val sizes = mapOf(DType.TINYINT to 1, DType.UTINYINT to 1, DType.SMALLINT to 2, DType.USMALLINT to 2,
+            DType.INT to 4, DType.UINT to 4, DType.BIGINT to 8, DType.UBIGINT to 8, DType.FLOAT to 4, DType.DOUBLE to 8)
+        val types = arguments.map { it.type?.thisArg as? DType ?: return null }
+        if (types.size != 2 || types.any { it !in sizes }) return null
+        if (types.any { it == DType.FLOAT || it == DType.DOUBLE }) return plainType(DType.DOUBLE)
+        val signed = types.any { it in setOf(DType.TINYINT, DType.SMALLINT, DType.INT, DType.BIGINT) }
+        val width = (types.maxOf { sizes.getValue(it) } * 2).coerceAtMost(8)
+        return plainType(when (width) {
+            2 -> if (signed) DType.SMALLINT else DType.USMALLINT
+            4 -> if (signed) DType.INT else DType.UINT
+            else -> if (signed) DType.BIGINT else DType.UBIGINT
+        })
     }
 
     private fun queryContext(select: Select, inherited: Context): Context {
@@ -531,7 +724,7 @@ private class ClickhouseCompositionValidator(
         val physicalValues = mutableMapOf<Pair<String, String>, Value>()
         val expressionValues = mutableMapOf<String, Value>()
         for (projection in select.expressionsArg.filterIsInstance<Alias>())
-            (projection.thisArg as? Expression)?.let { expressionValues[projection.alias] = declaredValue(it) }
+            (projection.thisArg as? Expression)?.let { expressionValues[projection.alias] = if (ignored(projection)) Value() else declaredValue(it) }
         for (cte in (select.args["with_"] as? With)?.expressionsArg.orEmpty().filterIsInstance<CTE>())
             (cte.thisArg as? Expression)?.let { expressionValues[cte.aliasOrName] = declaredValue(it) }
         var uncertain = false
@@ -545,7 +738,7 @@ private class ClickhouseCompositionValidator(
                     columns.addAll(found.keys.map { it.toString() })
                     for (column in found.keys.map { it.toString() })
                         (relation.aliasOrName to column).let { key ->
-                            physicalValues[key] = if (key in physicalValues) Value() else nativeType(nativeSchema?.getColumnType(relation, column))
+                            physicalValues[key] = if (key in physicalValues) Value() else nativeType(nativeSchema.getColumnType(relation, column))
                         }
                 }
             } else if (relation is Subquery && relation.thisArg is Select) {
@@ -555,6 +748,7 @@ private class ClickhouseCompositionValidator(
                 for (projection in projections.filterIsInstance<Alias>()) {
                     val key = relation.aliasOrName to projection.alias
                     physicalValues[key] = if (key in physicalValues) Value()
+                        else if (ignored(projection)) Value()
                         else (projection.thisArg as? Expression)?.let { declaredValue(it) } ?: Value()
                 }
             } else uncertain = true
