@@ -29,6 +29,7 @@ open class DuckdbDialect : Dialect() {
         mayContainDuckdbExternalResources(sql) -> REDACTED_RESOURCE_DIAGNOSTIC
         mayContainDuckdbRouting(sql) -> REDACTED_ROUTING_DIAGNOSTIC
         mayContainDuckdbExtensionManagement(sql) -> REDACTED_EXTENSION_DIAGNOSTIC
+        mayContainDuckdbS3UrlData(sql) || mayContainDuckdbS3UrlData(message) -> REDACTED_S3_DIAGNOSTIC
         else -> message
     }
 

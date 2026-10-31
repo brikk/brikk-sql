@@ -1246,10 +1246,31 @@ and IDE introspection/completion are separate contracts.
   Corpora/ledgers, public ABI, IntelliJ APIs, user settings/connections and consumer pins
   remain unchanged. No merge, publication or Plugin Verifier run.
 
-- [ ] `DDB20-046` S3 URL-parameter change [AUDIT].
+- [x] `DDB20-046` S3 URL-parameter change [DONE].
   2.0 treats `?` and following text as part of the object key unless the deprecated
   `s3_enable_deprecated_url_parameters` behavior is explicitly enabled. Review path literals,
   documentation/examples and credential handling; use secrets and never log credential-bearing URLs.
+  Original/generated/serde SQL preserves URL case, question marks, legacy-looking options
+  and signed-query text verbatim. Question marks inside literals are not JDBC bind markers.
+  No URL decoding, parameter stripping, legacy-policy inference or setting mutation is added.
+  Parser/native-verifier diagnostic paths conservatively mask S3/signed-URL context, including
+  engine messages, without redacting the authorized executable AST/source payload itself.
+  Native HTTPFS evidence uses only a private loopback endpoint and TEMPORARY config-provider
+  secret with synthetic credentials. The actual HEAD/GET object path is asserted: default
+  false encodes ?s3_region=... as key text; explicit deprecated true uses the bare key.
+  Unset mode is tested separately: its current getter is SQL NULL, while actual requests
+  still use the default literal-key policy. NULL getter is not treated as a universal false.
+  No provider, credential chain, real bucket or persistent secret is contacted/created. No
+  Authorization headers are recorded. Parse-only serialization proves zero HTTP requests.
+  HTTPFS is an explicitly supplied, matching signed fixture; no autoload/autoinstall or user
+  extension-store writes. Native version/extension version/SHA-256 are recorded, not inferred
+  from a nearby capture. The extension setting is not invented as a core static setting.
+  Verified HTTPFS reports 77392a7207, fixture SHA-256
+  77e6c429aa04f25da7962572f12b19113e0ce46080fa1365ad66017aadcdb68d.
+  Fresh-directory full gates passed 1,415 core, 128 metadata and 244 native/verifier tests,
+  zero skips, HTTPFS plus all existing signed fixtures enabled. Log /tmp/opencode/duckdb-s3-url-full.log.
+  No AST/annotation/generator corpus or ledger changes, public data-class ABI changes,
+  IntelliJ API calls, user URL/connection/secret-store changes, dependency pins, merge or publication.
 
 - [ ] `DDB20-047` Storage compatibility and database fixtures [MONITOR].
   New databases default to storage version 69; old engines cannot read them. Existing files

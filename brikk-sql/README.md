@@ -668,6 +668,24 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### S3 URL query text and diagnostic privacy
+
+DuckDB 2.0 treats the question mark and following URL text as part of an S3 object key by
+default. Only the explicitly enabled, deprecated s3_enable_deprecated_url_parameters mode
+interprets legacy options there. The library preserves authored URL bytes and never strips,
+decodes or reinterprets the query text, changes the setting or counts literal `?` as a bind.
+Prefer secrets rather than embedding credentials in URLs.
+The unset extension option reports SQL NULL in its getter; its literal-key behavior is
+proved by actual requests, not by coercing every unknown setting value to false.
+
+S3/signed-URL source or native error context is conservatively omitted from diagnostics;
+authorized AST/serde/executable payloads remain intact. Parse error locations remain usable
+without source-context snippets. Native HTTPFS tests check actual encoded object paths in
+both modes against a private loopback fixture with temporary synthetic credentials. They
+never contact a real provider or record Authorization headers, and parse-only verification
+makes no request. HTTPFS must be explicitly provided for those native controls; no extension
+installation or unrequested connection-policy change is performed.
+
 ### Settings and profiling migrations
 
 The 2.0 settings inventory drops custom_profiling_settings, enable_http_logging and
