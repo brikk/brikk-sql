@@ -668,6 +668,25 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Parquet writing options
+
+Parquet COPY writing options have a separate handwritten metadata surface,
+`DUCKDB_PARQUET_WRITE_OPTION_TYPES` and `DUCKDB_PARQUET_WRITE_OPTIONS`. It records native
+2.0 binding types and documented value sets, not read_parquet parameters or an exhaustive
+semantic validator. ANY stays ANY for FIELD_IDS/metadata/encryption/SHREDDING and other
+structured or overloaded values. No generated catalog recapture or automatic property UI
+is implied. Native COPY keeps the existing expression/STRUCT/string/numeric/Boolean bags.
+
+Native file controls cover codecs and ZSTD levels, dictionaries/bloom flags, field IDs and
+key-value metadata, row-group sizes/rotation, VARIANT and typed shredding, timestamp UTC
+annotations and INT96 physical storage. DATA_PAGE_SIZE_LIMIT is a positive byte cap at most
+100 MiB; it is best-effort at vector granularity, not a hard guarantee for every page.
+SHREDDING 'auto' is unimplemented in 2.0, and column/type/option errors remain native.
+VARIANT is not rewritten to JSON. Parse-only validation never evaluates option expressions
+or writes a file. Top-level JDBC COPY executes once even when it reports only an update
+count. Unproved cross-target translations of the new encoding options refuse. Encryption
+syntax is checked with a missing-key negative control, not by provisioning keys.
+
 ### Parquet declarations and virtual columns
 
 DuckDB 2.0 Parquet scans retain `schema := MAP {field_id_or_name: {name, type, default_value}}`

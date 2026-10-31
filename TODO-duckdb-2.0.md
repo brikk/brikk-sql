@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-032.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-033.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -895,11 +895,35 @@ and IDE introspection/completion are separate contracts.
   merge or publication changes. Core symbolic completion is verified, not consumer IDE
   connection-refresh or automatic file introspection.
 
-- [ ] `DDB20-033` Parquet writing options [AUDIT].
+- [x] `DDB20-033` Parquet writing options [DONE].
   Classify the 2.0 documented writing/encoding/compression options and COPY value shapes,
   including VARIANT output and the release-note `data_page_size_limit` option. Verify metadata
   and syntax only for engine options that exist;
   filesystem/result probes belong in isolated scratch directories, not editor analysis.
+  Handwritten writer-only metadata records native 2.0 COPY binding types/value sets in
+  DuckdbParquetWriteOptions.kt, separate from read_parquet arguments. Structured/overloaded
+  ANY types are not falsely narrowed; read-only binary_as_string/file_row_number/int96_as
+  are not advertised as write options. Existing COPY/STRUCT/VARIANT syntax and serde retain
+  values and argument order. No generated metadata/corpus refresh or property UI is claimed.
+  Native local-file controls cover all advertised writer names: codecs/levels, FIELD_IDS,
+  metadata, dictionary/bloom controls, row-group byte/count/rotation options, Parquet versions,
+  GEOPARQUET modes, VARIANT/raw/shredded output and timestamp UTC/INT96 physical metadata.
+  DATA_PAGE_SIZE_LIMIT's positive <=100 MiB limit and best-effort vector granularity remain
+  native. SHREDDING 'auto' is unimplemented; bad shapes/types/options and read-only options
+  still fail before output is written. Encryption has only a missing-key negative control,
+  with no key provisioning. Prepared writer parameters and parse-only/audit sequence controls
+  preserve once-only execution and no editor binding/writes. New engine-specific encoding
+  transformations refuse across targets. Sources: sql/statements/copy#parquet-options,
+  data/parquet/overview, ParquetCopyGetOptions and native writer/parquet_write_*.test.
+  Signed numeric COPY values now parse fully so native range errors remain native errors;
+  ordinary option ASTs stay unchanged. Keyword-valued strings such as GeoParquet 'BOTH'
+  are tested quoted, not falsely accepted as unquoted SQL. Evidence:
+  DuckdbParquetWriteOptionsTest, DuckdbParquetWriteMetadataTest and
+  DuckdbParquetWriteResultTest. Fresh full gates passed 1,386 core, 123 metadata and 206
+  native/verifier tests with all three signed fixtures, zero skips and clean exit. Log:
+  /tmp/opencode/duckdb-parquet-write-full.log. Generated catalogs/corpora and all ledgers
+  remain unchanged. No public data-class/ABI changes, IntelliJ calls, user connections,
+  consumer pins, merge or publication. Writer metadata is not an IDE property-UI claim.
 
 - [ ] `DDB20-034` GeoJSON import/export SQL [AUDIT].
   Pin COPY FORMAT GEOJSON/GEOJSONL, ID_COLUMN/GEOMETRY_COLUMN and documented read options.

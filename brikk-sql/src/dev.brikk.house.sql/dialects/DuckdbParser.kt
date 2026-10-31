@@ -1130,6 +1130,7 @@ open class DuckdbParser(
                 matchRParen()
                 expression(dev.brikk.house.sql.ast.Tuple(args("expressions" to terms)))
             } else if (name in setOf("ORDER_BY", "PARTITION_BY", "PARTITION_PATH")) parseDisjunction()
+            else if (currToken.tokenType in setOf(TokenType.DASH,TokenType.PLUS) && nextToken.tokenType==TokenType.NUMBER) parseDisjunction()
             else parseUnquotedField() ?: parseBracket(null)
             if (name == "ORDER_BY" && value == null) raiseError("Expected COPY ORDER_BY value")
             if (name == "PARTITION_PATH") {
