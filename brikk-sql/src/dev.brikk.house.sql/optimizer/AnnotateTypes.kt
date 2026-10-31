@@ -59,6 +59,7 @@ import dev.brikk.house.sql.dialects.duckdbPathArguments
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.dialects.duckdbDivisionResultType
+import dev.brikk.house.sql.dialects.duckdbNativeTimeZoneType
 import dev.brikk.house.sql.ast.Div
 import dev.brikk.house.sql.ast.IntDiv
 import dev.brikk.house.sql.ast.Mod
@@ -644,6 +645,8 @@ class TypeAnnotator(
             val spec = expressionMetadata[expr::class]
 
             when {
+                dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.AtTimeZone ->
+                    setType(expr, expr.duckdbNativeTimeZoneType())
                 dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.Try ->
                     setType(expr, (expr.thisArg as? Expression)?.type ?: DType.UNKNOWN)
                 dialect.name == "duckdb" && dialect.supportsNullType && (expr is Div || expr is IntDiv || expr is Mod) ->

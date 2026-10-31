@@ -1187,11 +1187,31 @@ and IDE introspection/completion are separate contracts.
   IntelliJ calls, user connections/URLs, driver or consumer pins, merge or publication changes.
   No Plugin Verifier run. This completes the requested DDB20-039–042 batch.
 
-- [ ] `DDB20-043` Native ICU replacement [AUDIT].
+- [x] `DDB20-043` Native ICU replacement [DONE].
   Probe timezone-aware timestamps, DST gaps/overlaps, historical zones, calendar behavior,
   locale collations and invalid names. Recheck precision/type effects including TIMESTAMPTZ_NS
   and affected cross-engine hazards rather than assuming all old ICU findings still apply.
   Include collations propagated into lists and list_contains/list_position, not just scalar text.
+  Bounded native evidence uses pinned 2.0.0 d54cbbe3df/JDBC 2.0.0.0 with external access,
+  autoload and autoinstall disabled. New York gap/overlap, Lord Howe half-hour overlap,
+  Apia's skipped date and Amsterdam historical offset are asserted as exact epochs; the
+  same instant is tested under Gregorian/Buddhist/Japanese calendars. German versus Swedish
+  ordering, NOCASE, composed NOACCENT.NOCASE, collated list elements/targets and NULL list
+  positions are checked through original/generated/copy-serde SQL. Invalid names remain
+  native errors. No host timezone/collation/calendar emulation, extension install or provider I/O.
+  Native-only AT TIME ZONE facts distinguish DATE/TIMESTAMP_NS -> named TIMESTAMPTZ_NS,
+  ordinary TIMESTAMP -> TIMESTAMPTZ, TIMESTAMPTZ -> TIMESTAMP and named TIMESTAMPTZ_NS ->
+  TIMESTAMP_NS. The named type is retained losslessly without changing the shared enum or
+  parity annotator. Full temporal precision/type syntax remains DDB20-077. Source-aware
+  executable outgoing AT TIME ZONE/COLLATE/named-nanosecond mappings refuse unproved
+  cross-engine policy/precision equivalence; ordinary generator parity remains unchanged.
+  This is measured sample coverage, not exhaustive historical tzdb/calendar equivalence.
+  Historical hazard rows are not relabeled; wider incoming/function-only and cross-engine
+  evidence remains DDB20-055/063. Tests: DuckdbNativeIcuTest/DuckdbNativeIcuResultTest.
+  Fresh-directory full gates passed 1,411 core, 127 metadata and 239 native/verifier tests,
+  zero skips, all signed fixtures enabled. Log /tmp/opencode/duckdb-native-icu-full.log.
+  No corpus/ledger weakening, public data-class signature or IntelliJ API changes, user
+  connections, consumer pins, merge or publication changes.
 
 - [x] `DDB20-044` Other observed 2.0 result changes [DONE].
   Existing result tests pin CONCAT_WS list flattening, valid UTF-8 byte escapes versus rejected

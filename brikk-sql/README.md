@@ -668,6 +668,23 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Native zone, calendar and collation contracts
+
+DuckDB 2.0 zone/calendar/collation behavior is checked against the pinned native engine,
+not a host ICU or Java timezone substitute. Controls include DST gaps/overlaps, half-hour
+changes, a skipped civil date, historical offsets, multiple calendars for one instant,
+locale ordering and collations propagated through list elements and list_contains/position.
+Invalid names remain native errors; analysis never loads an extension or contacts a provider.
+
+Native AT TIME ZONE facts distinguish microsecond TIMESTAMPTZ from named TIMESTAMPTZ_NS.
+DATE and TIMESTAMP_NS attachment yield TIMESTAMPTZ_NS; ordinary TIMESTAMP attachment yields
+TIMESTAMPTZ. Removing a zone from those types yields TIMESTAMP_NS/TIMESTAMP respectively.
+Nanosecond digits and argument order survive generation and serde. Broader type-literal and
+conversion work remains DDB20-077. Executable outgoing AT TIME ZONE/COLLATE/named-NS mappings
+refuse unproved cross-engine policy/precision equivalence. Legacy generator/typing parity
+and historical hazard evidence are unchanged; these samples do not certify every timezone,
+calendar, collation or function-only cross-engine mapping.
+
 ### Division and modulo policies
 
 DuckDB 2.0 `/` is floating division: zero can produce Infinity, negative Infinity or NaN,
