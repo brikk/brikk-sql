@@ -4,6 +4,7 @@ import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.DiagnosticSource
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
 import kotlinx.serialization.Serializable
 
 /**
@@ -217,7 +218,7 @@ data class RelationScope(
             checkCanceled: () -> Unit = {},
         ): RelationScope {
             require(range.isEmpty() || range.first >= 0 && range.last < script.length) { "Range $range is outside the script" }
-            return ScopeAnalysis(script, range, Dialects.forName(dialect), facts, checkCanceled).analyze()
+            return ScopeAnalysis(script, range, Dialects.forName(dialect).withNativeDuckdbFacts(), facts, checkCanceled).analyze()
         }
 
         /**
@@ -234,7 +235,7 @@ data class RelationScope(
         ): ScopeCompletion {
             require(range.isEmpty() || range.first >= 0 && range.last < script.length) { "Range $range is outside the script" }
             require(offset in range.first..range.last + 1) { "Offset $offset is outside $range" }
-            return CaretCompletion(script, range, offset, Dialects.forName(dialect), facts, checkCanceled).complete()
+            return CaretCompletion(script, range, offset, Dialects.forName(dialect).withNativeDuckdbFacts(), facts, checkCanceled).complete()
         }
     }
 }

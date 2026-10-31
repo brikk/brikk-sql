@@ -668,6 +668,22 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Native NULL column types
+
+DuckDB 2.0 defaults retain a NULL logical type, including `CREATE TABLE ... AS SELECT NULL`.
+`SqlFragment.outputShape` and `RelationScope` retain native NULL facts through derived
+tables, CTEs and NULL-only unions, and distinguish them from explicit INTEGER casts.
+The native catalog spelling `"NULL"` is recognized as the NULL type, not an unknown UDT.
+NULL plus a known concrete UNION type does not acquire an invented integer type.
+
+Direct type-annotation callers can use `nativeDuckdbAnalysisDialect()` with
+`parseDuckdbNativeOne` and `annotateTypes`. The ordinary DuckDB dialect's historical
+SQLGlot annotation contract remains unchanged. These native facts model the 2.0 default,
+not an inferred active session setting. Deprecated `legacy_disable_null_type=true` remains
+a native runtime policy; harvested physical column facts are authoritative for tables
+created under it. Generation does not insert casts or change settings to emulate a mode.
+Explicit `CAST(NULL AS INTEGER)` is the portable way to request an integer column.
+
 ### Binary literals
 
 DuckDB 2.0 `X'...'` and `B'...'` parse as native BLOB/BIT literal nodes, not integers or

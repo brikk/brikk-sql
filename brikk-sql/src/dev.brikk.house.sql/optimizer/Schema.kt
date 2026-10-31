@@ -530,6 +530,10 @@ fun dataTypeFromStr(dtype: String, dialect: Dialect? = null, udt: Boolean = fals
     if (dtype.uppercase() == "UNKNOWN") return DataType(args("this" to DType.UNKNOWN))
 
     val d = dialect ?: Dialects.BASE
+    // Native catalog spelling, not a user-defined type called NULL. Keep the parity
+    // parser/annotator unchanged when native NULL-type analysis was not requested.
+    if (d.name == "duckdb" && d.supportsNullType && dtype.trim() == "\"NULL\"")
+        return DataType(args("this" to DType.NULL))
     val parsed = try {
         d.parser(errorLevel = ErrorLevel.IGNORE).parseIntoDataType(d.tokenize(dtype), dtype)
     } catch (e: Exception) {

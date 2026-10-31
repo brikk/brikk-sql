@@ -1076,8 +1076,13 @@ internal class ScopeEvaluator(
             else -> Nullability.UNKNOWN
         }
         if (first.source != null && all.all { it.source == first.source }) return first.copy(nullability = nullability)
+        val types = all.map { it.sqlType?.let(::canonical) }
+        val commonType = if (dialect.name == "duckdb" && types.none { it == null }) {
+            val concrete = types.filterNot { it == "NULL" }.distinct()
+            if (concrete.isEmpty()) "NULL" else concrete.singleOrNull()
+        } else types.distinct().singleOrNull()
         return ScopeColumn(first.name, "", ColumnOrigin.COMPUTED, nullability,
-            all.map { it.sqlType?.let(::canonical) }.distinct().singleOrNull(), computedBy = label)
+            commonType, computedBy = label)
     }
 
     /** The set operator between the branches, `UNION ALL` included, and its text. */

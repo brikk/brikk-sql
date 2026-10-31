@@ -1093,10 +1093,29 @@ and IDE introspection/completion are separate contracts.
   No public data-class signature, IntelliJ API, user connection, consumer pin, merge or
   publication change. Evidence log /tmp/opencode/duckdb-binary-literals-verified.log.
 
-- [ ] `DDB20-040` Untyped NULL columns [AUDIT].
+- [x] `DDB20-040` Untyped NULL columns [DONE].
   Pin `CREATE TABLE ... AS SELECT NULL` retaining NULL type, subsequent non-NULL insert errors,
   explicit cast controls and `legacy_disable_null_type`. Check inferred schemas and nullability;
   do not automatically substitute INTEGER based on pre-2.0 engine behavior.
+  Native default facts are now separate from the historical SQLGlot annotator: SqlFragment
+  shapes and RelationScope retain NULL through aliases, derived tables, CTEs and NULL-only
+  unions; NULL plus one known concrete UNION type retains that type without an invented
+  INTEGER. The native catalog spelling "NULL" is recognized as NULL rather than an unknown
+  user-defined type. Explicit CAST(NULL AS INTEGER) remains typed and nullable.
+  Direct callers can select nativeDuckdbAnalysisDialect with parseDuckdbNativeOne and
+  annotateTypes. The default parity annotation surface and all its corpora remain unchanged.
+  These static facts model 2.0 defaults, not an inferred session's legacy setting. Physical
+  runtime catalog types remain authoritative. No mode query, mutation or cast is inserted.
+  DuckdbNullTypeResultTest verifies CTAS storage/JDBC/catalog NULL types, later NULL inserts,
+  non-NULL conversion errors without partial table mutation, typed-cast controls, NULL views
+  and BOOLEAN unions, legacy true inference and RESET. Existing physical NULL tables are not
+  retyped by enabling legacy mode. Native source d54cbbe3df binder/test_null_type_propagation
+  and legacy_null_type tests, JDBC 2.0.0.0. No cross-target NULL-storage equivalence is claimed;
+  target-specific CTAS result-type qualification remains part of DDB20-055.
+  Fresh-directory full gates passed 1,404 core, 125 metadata and 227 native/verifier tests,
+  zero skips, all signed fixtures enabled. Evidence /tmp/opencode/duckdb-null-type-full.log.
+  Parser/annotation/generator/transpile corpora and ledgers remain unchanged. No public
+  data-class signature, IntelliJ API, user connection, consumer pin, merge or publication changes.
 
 - [ ] `DDB20-041` Identifier case setting [AUDIT].
   `preserve_identifier_case` now reports preserve_case/lowercase/uppercase, not BOOLEAN;

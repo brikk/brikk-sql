@@ -17,6 +17,7 @@ import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
 import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
 import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
+import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
@@ -90,7 +91,7 @@ import kotlinx.serialization.Transient
  */
 class SqlFragment(val sql: String, val dialect: String = "") {
 
-    private val dialectObj: Dialect by lazy { Dialects.forName(dialect) }
+    private val dialectObj: Dialect by lazy { Dialects.forName(dialect).withNativeDuckdbFacts() }
     private var parsedFromFirstQuery = false
 
     private val statements: List<Expression> by lazy {
