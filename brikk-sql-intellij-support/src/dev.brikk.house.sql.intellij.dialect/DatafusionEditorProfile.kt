@@ -23,6 +23,7 @@ public open class DatafusionEditorProfile(
     final override val metadata: DialectMetadata = if (dialect == "spice") SPICE_METADATA else DATAFUSION_METADATA
     override val styles: SqlLookupStyles get() = SqlLookupStyles.DEFAULT
     public open fun serverVersion(file: PsiFile): String? = null
+    public open fun catalogProvenance(file: PsiFile): String = "bundled inventory"
     override fun snapshot(file: PsiFile): MetadataSnapshot = metadata.forServerVersion(serverVersion(file)).snapshot
     override val functionGates: SqlFunctionGates = SqlFunctionGates(qualifier = QualifierRule.Unqualified, digitPrefix = true)
     private val presentations: MutableMap<MetadataSnapshot, List<FunctionPresentation>> = Collections.synchronizedMap(WeakHashMap())
@@ -77,7 +78,8 @@ public open class DatafusionEditorProfile(
 
     internal fun decorator(file: PsiFile, snapshot: MetadataSnapshot): (LookupElement, FunctionPresentation) -> LookupElement {
         val selection = metadata.forServerVersion(serverVersion(file))
-        val version = "${metadata.dialect} ${snapshot.engineVersion}" + if (selection.exact && selection.snapshot.engineVersion == snapshot.engineVersion) "" else " bundled fallback"
+        val version = "${metadata.dialect} ${snapshot.engineVersion}" + if (selection.exact && selection.snapshot.engineVersion == snapshot.engineVersion) "" else "; bundled fallback details ${selection.snapshot.engineVersion}"
+        val provenance = catalogProvenance(file)
         return { item, entry ->
             val availability = when {
                 entry.name.startsWith("ai_") || entry.name in setOf("ai", "embed") -> "; requires model configuration"
@@ -88,7 +90,7 @@ public open class DatafusionEditorProfile(
             object : LookupElementDecorator<LookupElement>(item) {
                 override fun renderElement(presentation: LookupElementPresentation) {
                     super.renderElement(presentation)
-                    presentation.appendTailText(" [$version$signature$availability]", true)
+                    presentation.appendTailText(" [$version; $provenance$signature$availability]", true)
                 }
             }
         }

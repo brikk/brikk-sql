@@ -62,6 +62,7 @@ public open class DatafusionDocumentationProvider(private val profile: Datafusio
         val definitions = snapshot.functions.getAll(entry.name).filter { it.kind == entry.kind }
         val signatures = definitions.flatMap { it.overloads }.map { "${entry.name}(${it.argTypes.joinToString(", ")}) → ${it.returnType}" }
         val parts = mutableListOf("<pre>${esc(entry.name)} · ${esc(entry.kind.name.lowercase())}</pre>",
+            "<p>Source: ${esc(profile.catalogProvenance(item.file))}.</p>",
             "<p>Inventory: ${esc(profile.dialect)} ${esc(snapshot.engineVersion)}. Server version: ${esc(profile.serverVersion(item.file) ?: "unknown; bundled fallback")}.</p>")
         parts += if (signatures.isEmpty()) "<p>Signature unknown. Introspection examples are not exhaustive overloads.</p>" else "<pre>${esc(signatures.joinToString("\n"))}</pre>"
         if (signatures.isEmpty()) entry.returnType?.let { parts += "<p>Return type: ${esc(it)}. This does not establish the accepted argument signatures.</p>" }

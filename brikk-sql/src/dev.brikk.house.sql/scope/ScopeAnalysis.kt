@@ -301,8 +301,8 @@ internal class CaretCompletion(
     private fun relations(ctes: List<Cte>, qualifier: List<Identifier>, start: Int, end: Int, quoted: Boolean): List<CompletionItem> {
         fun relation(name: String, kind: RelationKind, fact: RelationFact?, source: String?, declaration: ScopeRange? = null) =
             ScopeRelation(name, kind, fact?.knowledge ?: Knowledge.FULL, source, fact?.provenance, declaration)
-        val tables = facts.tables.mapNotNull { (key, fact) ->
-            val parts = key.split('.')
+        val tables = facts.tables.entries.distinctBy { catalogPathParts(it.key) }.mapNotNull { (key, fact) ->
+            val parts = catalogPathParts(key)
             if (parts.size <= qualifier.size || parts.take(qualifier.size).zip(qualifier).any { (stored, written) ->
                 if (dialect.name in setOf("datafusion", "spice")) stored != dialect.normalizeIdentifier(written.copy()).name else !stored.equals(written.name, ignoreCase = true)
             }) return@mapNotNull null

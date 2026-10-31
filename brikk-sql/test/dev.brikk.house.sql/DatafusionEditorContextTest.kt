@@ -9,6 +9,24 @@ import kotlin.test.*
 
 class DatafusionEditorContextTest {
     @Test
+    fun catalogComponentsKeepDotsAndEscapedQuotes() {
+        val facts = RelationFacts(tables = mapOf(
+            "\"cat.one\".\"public\".\"a.b\"" to RelationFact(listOf(ColumnFact("dotted", "Int64"))),
+            "\"cat.one\".\"public\".\"a\"\"b\"" to RelationFact(listOf(ColumnFact("quoted", "Utf8"))),
+            "\"other\".\"public\".\"a.b\"" to RelationFact(listOf(ColumnFact("other", "Int64"))),
+        ), searchPath = listOf("\"cat.one\".\"public\""))
+        for (dialect in listOf("datafusion", "spice")) {
+            assertEquals(listOf("dotted"), RelationScope.complete("SELECT t. FROM \"a.b\" t", dialect, facts, 9).items.map { it.name })
+            assertEquals(listOf("quoted"), RelationScope.complete("SELECT t. FROM \"a\"\"b\" t", dialect, facts, 9).items.map { it.name })
+            val overlapping = RelationFacts(tables = linkedMapOf(
+                "cat.public.sample" to RelationFact(listOf(ColumnFact("model_column"))),
+                "\"cat\".\"public\".\"sample\"" to RelationFact(listOf(ColumnFact("harvest_column"))),
+            ))
+            assertEquals(listOf("model_column"), RelationScope.complete("SELECT t. FROM sample t", dialect, overlapping, 9).items.map { it.name })
+        }
+    }
+
+    @Test
     fun nestedSearchContextsAndUsedLabelsAreLocalToEachCall() {
         fun site(sql: String) = datafusionCallSite(sql, sql.length, "spice")!!
         assertEquals(DatafusionArgumentRole.SEARCH_INPUT, site("SELECT * FROM rrf(vector_search(docs,'q'), ").role)

@@ -19,6 +19,9 @@ public enum class LiveMergePolicy {
      */
     REPLACE,
 
+    /** Replace names and kinds without borrowing bundled overloads for an embedding's unknown signatures. */
+    REPLACE_NAMES,
+
     /**
      * Bundled registry functions the server does not list are dropped; listed names the bundle lacks
      * are server-only functions; platform builtin items neither the bundle nor the server knows are hidden.
@@ -55,12 +58,17 @@ public fun LiveMergePolicy.merge(selection: LiveCatalogSelection, snapshot: Meta
     val listedNames = listed.mapTo(HashSet()) { key(it.name) }
     val sessionNames = session.mapTo(HashSet()) { key(it.name) to it.kind }
     val baselineNames = baseline.mapTo(HashSet()) { key(it.name) }
-    fun registryBacked(entry: FunctionPresentation) = catalog.getAll(entry.name).any { it.overloads.isNotEmpty() }
+    fun registryBacked(entry: FunctionPresentation) = catalog.getAll(entry.name).any { it.kind == entry.kind }
     val serverOnly by lazy {
         listed.filter { key(it.name) !in baselineNames && (key(it.name) to it.kind) !in sessionNames && snapshot.tableFunction(it.name)?.queryable != false }
             .map { it.presentation() }
     }
     return when (this) {
+        LiveMergePolicy.REPLACE_NAMES -> {
+            val forms = baseline.filter { !registryBacked(it) }
+            LiveCompletion(selection, snapshot, distinct(session + listed.map { it.presentation() } + forms, ::key),
+                emptyList(), keywords, { name -> key(name) in listedNames || forms.any { key(it.name) == key(name) } })
+        }
         LiveMergePolicy.REPLACE -> {
             val forms = snapshot.grammarForms.orEmpty().associateBy { key(it.name) to it.kind }
             val live = listed.map { def ->

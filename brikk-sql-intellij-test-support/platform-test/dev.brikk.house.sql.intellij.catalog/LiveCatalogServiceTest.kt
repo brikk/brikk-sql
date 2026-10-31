@@ -131,6 +131,57 @@ class LiveCatalogServiceTest : BasePlatformTestCase() {
         assertEquals(CatalogSource.Bundled, service.completion(fileA).selection.source)
     }
 
+    fun testWholeSessionInventoriesSurviveHelperRefreshWithoutLeakingToOtherConsoles() {
+        newService(object : LiveCatalogProfile by LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT) {
+            override val sessionScopedInventory = true
+        })
+        harvester.answer = { Harvest(inventory(liveFunction("helper_only"))) }
+        connect(2, otherRequestor())
+        harvester.answer = { Harvest(inventory(liveFunction("console_a"))) }
+        connect(0, engines[0]); link(consoleA, engines[0])
+        harvester.answer = { Harvest(inventory(liveFunction("console_b"))) }
+        connect(1, engines[1]); link(consoleB, engines[1])
+        assertTrue("console_a" in offered(fileA))
+        assertFalse("console_b" in offered(fileA))
+        assertTrue("console_b" in offered(fileB))
+        assertEquals(listOf("helper_only"), service.selection(dataSource).inventory!!.functions.map { it.def.name })
+        val cached = LiveCatalogStore(dir).select(dataSource.uniqueId, service.profile.identity(dataSource))
+        assertEquals(listOf("helper_only"), cached.inventory!!.functions.map { it.def.name })
+        harvester.answer = { null }
+        changed(consoleA, engines[0])
+        assertTrue("a failed refresh keeps that console's complete inventory", "console_a" in offered(fileA))
+        connect(0, engines[0])
+        assertFalse("a failed reconnect must not reuse the previous connection's temporary functions", "console_a" in offered(fileA))
+        assertTrue("helper_only" in offered(fileA))
+    }
+
+    fun testAnOlderConnectionCannotOverwriteItsReplacementSessionInventory() {
+        newService(object : LiveCatalogProfile by LiveProfile(harvester, HarvestTrigger.EVERY_CONSOLE_CONNECT, deadline = 30.seconds) {
+            override val sessionScopedInventory = true
+        })
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val first = AtomicBoolean(true)
+        harvester.answer = {
+            if (first.getAndSet(false)) {
+                entered.countDown()
+                assertTrue(release.await(20, TimeUnit.SECONDS))
+                Harvest(inventory(liveFunction("old_connection")))
+            } else Harvest(inventory(liveFunction("replacement")))
+        }
+        runBlocking {
+            val old = async(Dispatchers.IO) { connect(0, engines[0]) }
+            try {
+                assertTrue(entered.await(10, TimeUnit.SECONDS))
+                connect(1, engines[0])
+            } finally { release.countDown() }
+            old.await()
+        }
+        link(consoleA, engines[0])
+        assertTrue("replacement" in offered(fileA))
+        assertFalse("old_connection" in offered(fileA))
+    }
+
     fun testARegistryAliasOfTheDbmsIsAccepted() {
         registerDbms(CatalogTestDbms.TRINO_BRIKK, testRootDisposable)
         newService(LiveProfile(harvester, dbms = CatalogTestDbms.TRINO_BRIKK))

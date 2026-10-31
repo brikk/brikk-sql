@@ -74,6 +74,7 @@ enum class CatalogKnowledge {
  *   Keys match the call's name exactly, case included: they are provider keys, not SQL names.
  * - [tables]: physical tables by name, dotted when qualified (`db.events`), matched by the
  *   dialect's identifier rules, the last parts of a qualified name included.
+ *   Components containing dots or double quotes can use SQL double-quote escaping (`"cat"."a.b"`).
  * - [calls]: the outputs of table functions, matched exactly like slots, called with any
  *   arguments, in `FROM` or a pipe `CALL`.
  * - [searchPath]: the namespaces a partly qualified table name is looked up in, in order, each a

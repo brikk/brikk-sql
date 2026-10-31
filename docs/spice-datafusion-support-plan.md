@@ -10,7 +10,7 @@
 - [x] DFS-006: Complete types, parameters, scope, output shapes, lineage, and semantic limits.
 - [x] DFS-007: Add IDE dialect identities, parsing, highlighting, and source-position support.
 - [x] DFS-008: Connect IDE completion, documentation, resolution, and inspections.
-- [ ] DFS-009: Add connection-aware catalog discovery and metadata refresh.
+- [x] DFS-009: Add connection-aware catalog discovery and metadata refresh.
 - [ ] DFS-010: Qualify IDE validation, execution, prepared statements, EXPLAIN, and pipes.
 - [ ] DFS-011: Implement repeatable upstream monitoring, catalog diffs, and upgrade checks.
 - [ ] DFS-012: Run compatibility gates and prepare the supported-dialect consumer handoff.

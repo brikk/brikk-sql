@@ -64,6 +64,12 @@ The Spice.ai OSS Authors, Apache License 2.0; each excerpt records its source li
 The same attribution applies to `round8/editor-source-evidence.json` and its named-argument
 and decision-result excerpts from that pinned release.
 
+`tools/datafusion-reference/src/flight.rs` adapts the Apache DataFusion Flight SQL example
+at commit `500744d5c25499055e3b2ca46b022bc425989203`,
+`datafusion-examples/examples/flight/sql_server.rs`, under Apache License 2.0.
+The fixture changes context ownership checks, schema retention, product information,
+statement planning/execution, and loopback startup. It uses no external example datasets.
+
 `GeneratedDatafusionFunctionCatalog.kt` and `GeneratedSpiceFunctionCatalog.kt` are generated
 from these runtime/registry facts. Function descriptions and examples retain the source
 engines' documentation through the metadata evidence API. Their capture hashes and pinned

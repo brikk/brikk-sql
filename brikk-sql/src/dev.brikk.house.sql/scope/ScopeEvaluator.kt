@@ -384,7 +384,7 @@ internal class ScopeEvaluator(
             }
         }
         val parts = node.parts.filterIsInstance<Identifier>()
-        val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }
+        val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }.distinctBy { catalogPathParts(it.key) }
         val match = matches.singleOrNull()
             ?: facts.searchPath.firstNotNullOfOrNull { namespace -> matches.singleOrNull { (key, _) -> inNamespace(key, parts.size, namespace) } }
         if (match == null && matches.size > 1) {
@@ -1156,7 +1156,7 @@ internal class ScopeEvaluator(
 
     /** A table's qualifying path: as written, completed by the catalog key's leading parts. */
     private fun path(parts: List<Identifier>, key: String): List<String> {
-        val keys = key.split('.')
+        val keys = catalogPathParts(key)
         return keys.take(keys.size - parts.size) + parts.map(::stored)
     }
 
@@ -1167,13 +1167,13 @@ internal class ScopeEvaluator(
      * innermost ones (`sales` for `one.sales.orders`).
      */
     private fun inNamespace(key: String, named: Int, namespace: String): Boolean {
-        val missing = key.split('.').dropLast(named)
-        val path = namespace.split('.')
+        val missing = catalogPathParts(key).dropLast(named)
+        val path = catalogPathParts(namespace)
         return if (missing.size <= path.size) missing == path.take(missing.size) else missing.takeLast(path.size) == path
     }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
-        val keys = key.split('.')
+        val keys = catalogPathParts(key)
         if (keys.size < parts.size || parts.isEmpty()) return false
         return parts.reversed().zip(keys.reversed()).all { (part, name) -> same(part, name, columns = false) }
     }

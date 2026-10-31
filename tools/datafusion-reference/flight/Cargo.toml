@@ -1,0 +1,25 @@
+[package]
+name = "brikk-datafusion-flight-reference"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "brikk-datafusion-flight"
+path = "../src/flight.rs"
+
+[dependencies]
+datafusion = { version = "=55.2.0", default-features = false, features = ["sql", "nested_expressions", "datetime_expressions", "regex_expressions", "string_expressions", "unicode_expressions", "encoding_expressions", "crypto_expressions"] }
+arrow-flight = { version = "=59.2.0", features = ["flight-sql"] }
+tokio = { version = "1", features = ["rt", "macros"] }
+futures = "0.3"
+prost = "0.14"
+tonic = "0.14"
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0

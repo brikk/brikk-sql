@@ -63,7 +63,7 @@ def port() -> int:
 
 
 @contextlib.contextmanager
-def spice_runtime(binary: Path):
+def spice_runtime(binary: Path, *, flight: bool = False):
     if sha256(binary) != SPICE_SHA256:
         raise ValueError("Spice binary does not match the pinned v2.4.0 release checksum")
     version = subprocess.check_output([str(binary.resolve()), "--version"], text=True).strip()
@@ -97,9 +97,9 @@ def spice_runtime(binary: Path):
                 else:
                     log.seek(0)
                     raise RuntimeError(f"Spice readiness timeout:\n{log.read()}")
-                yield url, {"version": version, "binary_sha256": SPICE_SHA256,
+                yield (f"jdbc:arrow-flight-sql://127.0.0.1:{flight_port}/?useEncryption=false" if flight else url), {"version": version, "binary_sha256": SPICE_SHA256,
                             "spicepod_sha256": sha256(pod), "cpu_cores": 2,
-                            "transport": "isolated loopback HTTP /v1/sql; not Flight/JDBC qualification"}
+                            "transport": "isolated loopback Arrow Flight SQL JDBC" if flight else "isolated loopback HTTP /v1/sql; not Flight/JDBC qualification"}
             finally:
                 if process.poll() is None:
                     process.terminate()

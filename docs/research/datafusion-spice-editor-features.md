@@ -82,7 +82,8 @@ can produce errors. These are local semantic checks, not a native parser/server 
 Consumers can use the core diagnostics with their existing diagnostic profile instead of
 registering a second annotator. Syntax and relation diagnostics keep their existing paths.
 
-Connection harvesting, driver/session behavior and publication remain later plan steps.
+DFS-009 adds [connection catalogs and Flight SQL qualification](datafusion-spice-live-catalogs.md).
+Publication remains a later plan step.
 The tests use copied facts and a real cached IDE catalog with a recording console; this does
 not qualify PostgreSQL wire transport for either engine.
 
