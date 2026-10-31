@@ -1,0 +1,23 @@
+{
+ "task":"CHSEM-008","parse_execution":true,"proven_versions":["26.8.34.13","26.10.2.103"],"cases":[],
+ "execution":[
+ {"id":"CHSEM-008-E01","task":"CHSEM-008","sql":"SELECT arrayFilter(x -> x>1,CAST([1,2,3] AS Array(UInt8))) AS v,toTypeName(v)","type":"Array(UInt8)","rules":[],"stdout":"[2,3]\tArray(UInt8)\n"},
+ {"id":"CHSEM-008-E02","task":"CHSEM-008","sql":"SELECT arrayFilter((x,y) -> y,CAST(['a','b'] AS Array(String)),CAST([0,1] AS Array(UInt8))) AS v,toTypeName(v)","type":"Array(String)","rules":[],"stdout":"['b']\tArray(String)\n"},
+ {"id":"CHSEM-008-E03","task":"CHSEM-008","sql":"SELECT arrayFilter(x -> x,CAST(['a'] AS Array(String))) AS v,toTypeName(v)","type":"UNKNOWN","rules":["PREDICATE_TYPE"],"error_code":43,"error_name":"ILLEGAL_TYPE_OF_ARGUMENT"},
+ {"id":"CHSEM-008-E04","task":"CHSEM-008","sql":"SELECT arrayExists(x -> x>1,CAST([1,2] AS Array(UInt8))) AS v,toTypeName(v)","type":"UInt8","rules":[],"stdout":"1\tUInt8\n"},
+ {"id":"CHSEM-008-E05","task":"CHSEM-008","sql":"SELECT arrayAll(x -> x>1,CAST([1,2] AS Array(UInt8))) AS v,toTypeName(v)","type":"UInt8","rules":[],"stdout":"0\tUInt8\n"},
+ {"id":"CHSEM-008-E06","task":"CHSEM-008","sql":"SELECT arrayExists(CAST([] AS Array(UInt8))) AS v,toTypeName(v)","type":"UInt8","rules":[],"stdout":"0\tUInt8\n"},
+ {"id":"CHSEM-008-E07","task":"CHSEM-008","sql":"SELECT arrayAll(CAST([] AS Array(UInt8))) AS v,toTypeName(v)","type":"UInt8","rules":[],"stdout":"1\tUInt8\n"},
+ {"id":"CHSEM-008-E08","task":"CHSEM-008","sql":"SELECT arraySort(x -> x,CAST([3,1] AS Array(UInt16))) AS v,toTypeName(v)","type":"Array(UInt16)","rules":[],"stdout":"[1,3]\tArray(UInt16)\n"},
+ {"id":"CHSEM-008-E09","task":"CHSEM-008","sql":"SELECT arraySort((x,y) -> y,CAST(['a','b'] AS Array(String)),CAST([2,1] AS Array(UInt8))) AS v,toTypeName(v)","type":"Array(String)","rules":[],"stdout":"['b','a']\tArray(String)\n"},
+ {"id":"CHSEM-008-E10","task":"CHSEM-008","sql":"SELECT arraySort(CAST([3,1] AS Array(UInt8))) AS v,toTypeName(v)","type":"Array(UInt8)","rules":[],"stdout":"[1,3]\tArray(UInt8)\n"},
+ {"id":"CHSEM-008-E11","task":"CHSEM-008","sql":"SELECT mapApply((k,v) -> (upper(k),v),CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)","type":"Map(String, UInt8)","rules":[],"stdout":"{'A':1}\tMap(String, UInt8)\n"},
+ {"id":"CHSEM-008-E12","task":"CHSEM-008","sql":"SELECT mapApply((k,v) -> k,CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)","type":"UNKNOWN","rules":["MAP_RESULT_TYPE"],"error_code":36,"error_name":"BAD_ARGUMENTS"},
+ {"id":"CHSEM-008-E13","task":"CHSEM-008","sql":"SELECT mapApply(k -> k,CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)","type":"Map(String, UInt8)","rules":[],"stdout":"{'a':1}\tMap(String, UInt8)\n"},
+ {"id":"CHSEM-008-E14","task":"CHSEM-008","sql":"SELECT mapApply((k,v) -> (v,k),CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)","type":"Map(UInt8, String)","rules":[],"stdout":"{1:'a'}\tMap(UInt8, String)\n"},
+ {"id":"CHSEM-008-E15","task":"CHSEM-008","sql":"SELECT mapApply((k,v) -> (k,lower(v)),CAST(map('a','B') AS Map(String,String))) AS v,toTypeName(v)","type":"Map(String, String)","rules":[],"stdout":"{'a':'b'}\tMap(String, String)\n"},
+ {"id":"CHSEM-008-E16","task":"CHSEM-008","sql":"SELECT mapApply((a,b,c) -> (a,b),CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)","type":"UNKNOWN","rules":["HIGHER_ORDER_ARITY"],"error_code":43,"error_name":"ILLEGAL_TYPE_OF_ARGUMENT"},
+ {"id":"CHSEM-008-E17","task":"CHSEM-008","sql":"SELECT mapApply((k,v) -> (k,v),[1]) AS v,toTypeName(v)","type":"UNKNOWN","rules":["MAP_INPUT_TYPE"],"error_code":43,"error_name":"ILLEGAL_TYPE_OF_ARGUMENT"},
+ {"id":"CHSEM-008-E18","task":"CHSEM-008","sql":"SELECT arrayFilter(x -> x,CAST([1] AS Array(UInt16))) AS v,toTypeName(v)","type":"UNKNOWN","rules":["PREDICATE_TYPE"],"error_code":43,"error_name":"ILLEGAL_TYPE_OF_ARGUMENT"}
+ ]
+}

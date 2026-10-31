@@ -231,6 +231,7 @@ class TypeAnnotator(
         // omitted rules with native map inference. The shape layer supplies a full map.
         if (!expressionMetadata.keys.containsAll(dialect.expressionMetadata.keys)) {
             add(dev.brikk.house.sql.ast.Transform::class)
+            add(dev.brikk.house.sql.ast.ArrayFilter::class)
             add(Anonymous::class)
         }
     }
@@ -626,6 +627,7 @@ class TypeAnnotator(
                         (spec.ref is AnnotatorRef.BinaryAnn || spec.ref is AnnotatorRef.UnaryAnn || spec.ref is AnnotatorRef.DivAnn)
                 },
                 inferredTypes = inference.valueTypes,
+                invalidValues = inference.invalidValues,
             ).annotate(expression)
             return
         }

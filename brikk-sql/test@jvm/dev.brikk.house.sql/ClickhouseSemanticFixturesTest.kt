@@ -31,8 +31,9 @@ class ClickhouseSemanticFixturesTest {
     @Test
     fun lambdaParameterTypesMatchTheNativeInputFixturesWithoutCertifyingCalls() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/lambda-input-cases.json").readText()).jsonObject
-        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/lambda-input-results-refinements.json").readText())
-            .jsonObject.getValue("cases").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
+        val refinements = listOf("lambda-input-results-refinements.json", "higher-order-refinements.json").flatMap { name ->
+            Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/$name").readText()).jsonObject.getValue("cases").jsonArray
+        }.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         fun type(node: Expression): String = if (node.isType(DType.UNKNOWN)) "UNKNOWN"
             else (node.type as? DataType)?.sql("clickhouse") ?: "MISSING"
         val observations = fixture.getValue("execution").jsonArray.map { row ->

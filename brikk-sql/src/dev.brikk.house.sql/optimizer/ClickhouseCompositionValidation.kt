@@ -16,6 +16,7 @@ internal enum class ClickhouseCompositionRule(val nativeErrorCode: Int) {
     VARIADIC_LEFT_DESIGNATOR(36), INVALID_OPERAND(36), MIXED_PLACEHOLDERS(36),
     PLACEHOLDER_LIMIT(36), ANONYMOUS_MEMBER(36), ANONYMOUS_DEPTH(36),
     RIGHT_OPERAND_ARITY(42), CALL_ARGUMENT_COUNT(42), ARRAY_MAP_ARITY(43), ARRAY_INPUT_TYPE(43), INPUT_TYPE(43),
+    HIGHER_ORDER_ARGUMENT_COUNT(42), HIGHER_ORDER_ARITY(43), PREDICATE_TYPE(43), MAP_INPUT_TYPE(43), MAP_RESULT_TYPE(36),
 }
 
 internal enum class ClickhouseCompositionUnknownReason {
@@ -52,6 +53,8 @@ internal data class ClickhouseCompositionInference(
     /** Function values retain UNKNOWN in the AST; this records their result separately. */
     val callableResults: Map<Long, DataType>,
     val validation: ClickhouseCompositionValidation,
+    /** Intrinsic errors prevent a generic container rule from filling a rejected call. */
+    val invalidValues: Set<Long>,
 )
 
 internal fun inferClickhouseCompositionResults(
@@ -94,6 +97,7 @@ private class ClickhouseCompositionValidator(
         val constant: Boolean? = null,
         val element: Value? = null,
         val type: DataType? = null,
+        val parts: List<Value>? = null,
     )
     private data class Callable(val arity: Int? = null, val result: Value = Value())
     private enum class Position { MAP, LEFT, RIGHT }
@@ -166,7 +170,7 @@ private class ClickhouseCompositionValidator(
 
     fun infer(root: Expression): ClickhouseCompositionInference {
         val validation = validate(root)
-        return ClickhouseCompositionInference(valueTypes.toMap(), callableResults.toMap(), validation)
+        return ClickhouseCompositionInference(valueTypes.toMap(), callableResults.toMap(), validation, invalidMaps.toSet())
     }
 
     fun validate(root: Expression): ClickhouseCompositionValidation {
@@ -203,12 +207,12 @@ private class ClickhouseCompositionValidator(
             }
             val map = arrayMap(node)
             if (map != null) {
-                val name = node.metaOrNull?.get("clickhouse_name") as? String ?: "arrayMap"
+                val name = map.name
                 if (context.blocked(name)) {
                     unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION)
                     continue
                 }
-                if (CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG.getAll(name).none { it.name == "arrayMap" }) {
+                if (CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG.getAll(name).none { it.name == map.kind.function }) {
                     unknown(node, ClickhouseCompositionUnknownReason.UNRESEARCHED_CALLABLE)
                     continue
                 }
@@ -285,12 +289,16 @@ private class ClickhouseCompositionValidator(
         remember(node, result)
     }
 
-    private fun mapValue(node: Expression, map: Pair<Expression, List<Expression>>, context: Context, depth: Int): Value {
+    private fun mapValue(node: Expression, map: ClickhouseHigherOrderCall, context: Context, depth: Int): Value {
+        if (map.kind != ClickhouseHigherOrderKind.MAP) return higherOrderValue(node, map, context, depth)
         if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
         if (inferResults) mapResults[node.objectId]?.let { return it }
         if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
         val previousErrors = errors.size
         val (argument, arrays) = map
+        if (argument == null || arrays.isEmpty()) {
+            unknown(node, ClickhouseCompositionUnknownReason.UNSUPPORTED_CONTEXT); return Value()
+        }
         val inputs = arrays.map { arrayElement(it, context, depth + 1) }
         val callable = callable(argument, inputs, Position.MAP, context, depth + 1)
         if (callable.arity != null && callable.arity != arrays.size)
@@ -307,6 +315,114 @@ private class ClickhouseCompositionValidator(
             unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
         if (inferResults && result.type != null) mapResults[node.objectId] = result
         return remember(node, result)
+    }
+
+    private fun declaredArity(raw: Expression?, depth: Int = 0): Int? {
+        if (depth > 128) return null
+        val node = raw?.unnest() ?: return null
+        return when (node) {
+            is Lambda, is ClickhouseImplicitLambda -> node.expressionsArg.size
+            is ClickhouseComposition -> declaredArity(node.thisArg as? Expression, depth + 1)
+            is ClickhouseFunctionReference -> (clickhouseCallableFacts(node.name, version)?.designatorArity as? ClickhouseDesignatorArity.Fixed)?.count
+            else -> null
+        }
+    }
+
+    private fun higherOrderValue(node: Expression, call: ClickhouseHigherOrderCall, context: Context, depth: Int): Value {
+        if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
+        if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
+        if (inferResults) mapResults[node.objectId]?.let { return it }
+        if (call.inputs.isEmpty() || (call.argument == null && !call.kind.optionalLambda)) {
+            error(node, ClickhouseCompositionRule.HIGHER_ORDER_ARGUMENT_COUNT, "${call.name} requires a callable and data inputs.")
+            return Value()
+        }
+        val previousErrors = errors.size
+        val sources = call.inputs.map { inputValue(it, context, depth + 1) }
+        val arity = declaredArity(call.argument)
+        val inputs: List<Value>
+        if (call.kind == ClickhouseHigherOrderKind.APPLY) {
+            if (sources.size != 1) { unknown(node, ClickhouseCompositionUnknownReason.UNSUPPORTED_CONTEXT); return Value() }
+            val source = sources.single()
+            if (source.type?.thisArg != DType.MAP || source.parts?.size != 2) {
+                if (source.plain && source.type?.thisArg != DType.MAP)
+                    error(call.inputs.single(), ClickhouseCompositionRule.MAP_INPUT_TYPE, "mapApply requires a Map input.")
+                else unknown(node, ClickhouseCompositionUnknownReason.INPUT_TYPE)
+                return Value()
+            }
+            inputs = if (arity == 1) listOf(tupleValue(source.parts)) else source.parts
+        } else {
+            inputs = call.inputs.map { arrayElement(it, context, depth + 1, call.name) }
+            // Single-array tuple unpacking is a separate CHSEM-009 proof, not an arity error.
+            if (inputs.size == 1 && arity != null && arity > 1 &&
+                (inputs.single().type?.thisArg == DType.STRUCT || inputs.single().family == null)) {
+                unknown(node, ClickhouseCompositionUnknownReason.UNSUPPORTED_CONTEXT); return Value()
+            }
+        }
+        val callable = call.argument?.let { callable(it, inputs, Position.MAP, context, depth + 1) }
+            ?: Callable(inputs.size, inputs.firstOrNull() ?: Value())
+        if (callable.arity != null && callable.arity != inputs.size)
+            error(call.argument ?: node, ClickhouseCompositionRule.HIGHER_ORDER_ARITY,
+                "${call.name} supplies ${inputs.size} arguments, but its callable requires ${callable.arity}.")
+        if (sources.size > 1) unknown(node, ClickhouseCompositionUnknownReason.ARRAY_LENGTHS)
+        val body = callable.result
+        var supported = callable.arity == inputs.size
+        if (call.kind.predicate) {
+            if (body.plain && body.type?.thisArg == DType.UTINYINT) Unit
+            else {
+                if (body.plain && (body.type != null || body.family in setOf(Family.STRING, Family.FIXED_STRING)))
+                    error(call.argument ?: node, ClickhouseCompositionRule.PREDICATE_TYPE,
+                        "${call.name} requires a UInt8 predicate result; nullable/wrapper results need separate evidence.")
+                else unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+                supported = false
+            }
+        }
+        var result = when (call.kind) {
+            ClickhouseHigherOrderKind.FILTER, ClickhouseHigherOrderKind.SORT -> {
+                if (call.kind == ClickhouseHigherOrderKind.SORT && (!body.plain || body.type == null ||
+                        body.family !in setOf(Family.NUMBER, Family.STRING, Family.FIXED_STRING))) supported = false
+                sources.first()
+            }
+            ClickhouseHigherOrderKind.EXISTS, ClickhouseHigherOrderKind.ALL -> nativeType(plainType(DType.UTINYINT))
+            ClickhouseHigherOrderKind.APPLY -> {
+                val parts = body.parts
+                if (parts?.size == 2) {
+                    val key = parts[0]
+                    val value = parts[1]
+                    if (!key.plain || key.family !in setOf(Family.STRING, Family.FIXED_STRING, Family.NUMBER) || key.type == null || value.type == null) {
+                        supported = false; Value()
+                    } else nativeType(DataType(args("this" to DType.MAP, "nullable" to false, "nested" to true,
+                        "expressions" to listOf(key.type.copy(), value.type.copy()))))
+                } else {
+                    if (body.plain || parts != null) error(call.argument ?: node, ClickhouseCompositionRule.MAP_RESULT_TYPE,
+                        "mapApply requires a two-element Tuple result containing the new key and value.")
+                    supported = false; Value()
+                }
+            }
+            else -> Value()
+        }
+        if (errors.size > previousErrors) invalidMaps.add(node.objectId)
+        if (!supported || node.objectId in invalidMaps || result.type == null || !completeType(result.type)) {
+            if (node.objectId !in invalidMaps) unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+            result = Value()
+        }
+        if (inferResults && result.type != null) mapResults[node.objectId] = result
+        return remember(node, result)
+    }
+
+    private fun tupleValue(parts: List<Value>): Value {
+        val type = if (parts.all { it.type != null }) DataType(args("this" to DType.STRUCT, "nullable" to false,
+            "nested" to true, "expressions" to parts.map { it.type!!.copy() })) else null
+        return Value(Family.OTHER, parts.all { it.plain }, type = type, parts = parts)
+    }
+
+    private fun comparisonValue(node: Expression, context: Context, depth: Int): Value {
+        val operands = listOfNotNull(node.thisArg as? Expression, node.args["expression"] as? Expression)
+            .map { value(it, context, depth + 1) }
+        if (operands.size == 2 && operands.all { it.plain } &&
+            (operands.all { it.family == Family.NUMBER } || operands.all { it.family in setOf(Family.STRING, Family.FIXED_STRING) }))
+            return nativeType(plainType(DType.UTINYINT))
+        unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+        return Value()
     }
 
     private fun callable(raw: Expression, inputs: List<Value>?, position: Position, context: Context, depth: Int): Callable {
@@ -439,9 +555,9 @@ private class ClickhouseCompositionValidator(
         if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
         val nestedMap = if (inferResults) arrayMap(node) else null
         if (nestedMap != null) {
-            val name = node.metaOrNull?.get("clickhouse_name") as? String ?: "arrayMap"
+            val name = nestedMap.name
             if (context.blocked(name)) { unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION); return Value() }
-            if (CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG.getAll(name).none { it.name == "arrayMap" }) {
+            if (CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG.getAll(name).none { it.name == nestedMap.kind.function }) {
                 unknown(node, ClickhouseCompositionUnknownReason.UNRESEARCHED_CALLABLE); return Value()
             }
             return mapValue(node, nestedMap, context, depth + 1)
@@ -453,6 +569,8 @@ private class ClickhouseCompositionValidator(
             is Literal -> Value(if (node.isString) Family.STRING else Family.NUMBER, true, true,
                 type = if (inferResults && node.isString) plainType(DType.VARCHAR) else null)
             is Null -> Value(constant = true)
+            is Tuple -> tupleValue(node.expressionsArg.filterIsInstance<Expression>().map { value(it, context, depth + 1) })
+            is EQ, is NEQ, is GT, is GTE, is LT, is LTE -> comparisonValue(node, context, depth)
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
                 val source = node.thisArg as? Expression
@@ -566,18 +684,16 @@ private class ClickhouseCompositionValidator(
         }
     }
 
-    private fun arrayMap(node: Expression): Pair<Expression, List<Expression>>? = when (node) {
-        is Transform -> (node.args["expression"] as? Expression)?.let { lambda ->
-            (node.thisArg as? Expression)?.let { lambda to listOf(it) }
-        }
-        is Anonymous -> if (node.name == "arrayMap") {
-            val arguments = node.expressionsArg.filterIsInstance<Expression>()
-            if (arguments.size >= 2) arguments.first() to arguments.drop(1) else null
-        } else null
-        else -> null
+    private fun arrayMap(node: Expression): ClickhouseHigherOrderCall? = clickhouseHigherOrderCall(node)
+
+    private fun inputValue(raw: Expression, context: Context, depth: Int): Value = when (val node = raw.unnest()) {
+        is Identifier -> context.namedValue(node.name) ?: Value()
+        is Column -> context.columnValue(node)
+        is ClickhouseLambdaArgument -> context.implicitValue(node.args["ordinal"] as? Int ?: 0)
+        else -> if (arrayMap(node) != null) value(node, context, depth + 1) else declaredValue(node)
     }
 
-    private fun arrayElement(raw: Expression, context: Context, depth: Int = 0): Value {
+    private fun arrayElement(raw: Expression, context: Context, depth: Int = 0, function: String = "arrayMap"): Value {
         val node = raw.unnest()
         val input = when (node) {
             is Identifier -> context.namedValue(node.name) ?: Value()
@@ -588,7 +704,7 @@ private class ClickhouseCompositionValidator(
         if (inferResults) remember(node, input)
         if (input.plain && input.element != null) return input.element.copy(constant = null)
         if (input.plain && input.element == null)
-            error(node, ClickhouseCompositionRule.ARRAY_INPUT_TYPE, "arrayMap requires an Array input, not a known scalar or other non-array type.")
+            error(node, ClickhouseCompositionRule.ARRAY_INPUT_TYPE, "$function requires an Array input, not a known scalar or other non-array type.")
         unknown(node, ClickhouseCompositionUnknownReason.INPUT_TYPE)
         return Value()
     }
@@ -639,6 +755,13 @@ private class ClickhouseCompositionValidator(
 
     private fun castInputProvesTarget(input: Value, source: Expression, target: DataType?): Boolean {
         if (nonNullCastInput(input, source)) return true
+        if (target?.thisArg == DType.MAP && source.unnest() is VarMap) {
+            val map = source.unnest()
+            val values = listOf("keys", "values").map { map.args[it] as? dev.brikk.house.sql.ast.Array }
+            if (values.all { it != null } && values.all { array -> array!!.expressionsArg.all {
+                    it is Expression && declaredValue(it).let { value -> value.plain && value.family != Family.OTHER }
+                } }) return true
+        }
         if (!inferResults || target == null || !completeType(target)) return false
         // Explicit nullable targets already account for a source NULL wrapper. This
         // copies the declared type; it does not infer a function's null propagation.
@@ -654,7 +777,7 @@ private class ClickhouseCompositionValidator(
             if (type != null) unknown(type, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT)
             return Value()
         }
-        val exact = if (inferResults && type != null && completeType(type)) type.copy() as DataType else null
+        val exact = if (type != null && completeType(type)) type.copy() as DataType else null
         if (type == null || type.args["nullable"] != false || type.thisArg in setOf(DType.UNKNOWN, DType.NULL,
                 DType.LOWCARDINALITY, DType.DYNAMIC, DType.VARIANT)) return Value(type = exact)
         val family = when (type.thisArg) {
@@ -670,10 +793,13 @@ private class ClickhouseCompositionValidator(
             else -> return Value(type = exact)
         }
         return Value(family, true, element = if (type.thisArg == DType.ARRAY)
-            nativeType(type.expressionsArg.singleOrNull() as? DataType, depth + 1) else null, type = exact)
+            nativeType(type.expressionsArg.singleOrNull() as? DataType, depth + 1) else null, type = exact,
+            parts = if (type.thisArg in setOf(DType.STRUCT, DType.MAP)) type.expressionsArg.map {
+                nativeType(it as? DataType ?: (it as? ColumnDef)?.args?.get("kind") as? DataType, depth + 1)
+            } else null)
     }
 
-    private fun familyOnly(value: Value): Value = value.copy(type = null, element = value.element?.let(::familyOnly))
+    private fun familyOnly(value: Value): Value = value.copy(type = null, element = value.element?.let(::familyOnly), parts = value.parts?.map(::familyOnly))
 
     private fun completeType(root: DataType): Boolean {
         val supported = setOf(DType.TEXT, DType.VARCHAR, DType.FIXEDSTRING, DType.TINYINT, DType.SMALLINT,

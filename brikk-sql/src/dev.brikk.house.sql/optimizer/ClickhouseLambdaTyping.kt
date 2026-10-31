@@ -6,6 +6,7 @@ import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
+import kotlin.collections.Set
 
 private val clickhouseLambdaSyntaxNameKeys = setOf("alias", "table", "db", "catalog", "unit", "kind", "name", "field")
 
@@ -21,6 +22,7 @@ internal class ClickhouseLambdaTyping(
     private val bindType: (Expression, DataType?) -> Unit,
     private val usesGenericArithmetic: (Expression) -> Boolean,
     private val inferredTypes: Map<Long, DataType> = emptyMap(),
+    private val invalidValues: Set<Long> = emptySet(),
 ) {
     private class Bindings(
         val parent: Bindings?,
@@ -73,7 +75,8 @@ internal class ClickhouseLambdaTyping(
                     } else annotateNode(node)
                 }
                 val inferred = inferredTypes[node.objectId]
-                if (inferred != null) bindType(node, inferred)
+                if (node.objectId in invalidValues) bindType(node, null)
+                else if (inferred != null) bindType(node, inferred)
                 if (dependsOnRefinement || inferred != null) refined.add(node.objectId)
                 continue
             }
@@ -118,21 +121,8 @@ internal class ClickhouseLambdaTyping(
         }
     }
 
-    private fun arrayMapArguments(node: Expression): Pair<Expression, List<Expression>>? = when (node) {
-        is Transform -> {
-            val lambda = node.args["expression"] as? Expression
-            val array = node.thisArg as? Expression
-            if (lambda != null && array != null) lambda to listOf(array) else null
-        }
-        is Anonymous -> {
-            if (node.name != "arrayMap") null else {
-                val values = node.expressionsArg.filterIsInstance<Expression>()
-                if (values.size >= 2 && values.size == node.expressionsArg.size)
-                    values.first() to values.drop(1) else null
-            }
-        }
-        else -> null
-    }
+    private fun arrayMapArguments(node: Expression): Pair<Expression, List<Expression>>? =
+        clickhouseHigherOrderCall(node)?.let { call -> call.argument?.let { it to call.inputs } }
 
     private fun arrayElementType(expression: Expression): DataType? {
         val array = expression.type as? DataType ?: return null

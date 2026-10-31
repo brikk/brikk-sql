@@ -120,8 +120,8 @@ class ClickhouseLambdaTypingTest {
             "SELECT arrayMap(_129,CAST([1] AS Array(UInt8)))",
         )) assertTrue(placeholders(typed(sql)).all { type(it) == "UNKNOWN" }, sql)
         val boundary = typed("SELECT arrayMap(x -> arrayFilter(x -> x,CAST(['a'] AS Array(String))),CAST([1] AS Array(UInt8)))")
-        assertEquals(listOf("UInt8", "UNKNOWN"), parameters(boundary).map(::type))
-        assertEquals(listOf("UNKNOWN"), values(boundary, "x").map(::type))
+        assertEquals(listOf("UInt8", "String"), parameters(boundary).map(::type)) // CHSEM-008 binds arrayFilter independently.
+        assertEquals(listOf("String"), values(boundary, "x").map(::type))
         val query = typed("SELECT arrayMap(x -> (SELECT x),CAST([1] AS Array(UInt8)))")
         assertEquals(listOf("UInt8"), parameters(query).map(::type))
         assertTrue(values(query, "x").all { type(it) == "UNKNOWN" })

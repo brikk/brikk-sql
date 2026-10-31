@@ -31,7 +31,7 @@ checks parsing only and must not be relabeled as semantic validation.
 
 ## Follow-up scope, not part of the first slice
 
-- [ ] CHSEM-008: Extend proven contracts to common array/map higher-order functions. Prioritize arrayFilter, arrayExists, arrayAll, arraySort and mapApply; account for their different argument binding and result rules. Establish separate native fixtures for each added family.
+- [x] CHSEM-008: Extend proven contracts to common array/map higher-order functions. Prioritize arrayFilter, arrayExists, arrayAll, arraySort and mapApply; account for their different argument binding and result rules. Establish separate native fixtures for each added family.
 - [ ] CHSEM-009: Expand composite and overload typing. Research Nullable, LowCardinality, tuples, numeric promotion, decimal precision/scale, constant-dependent rules and settings/version boundaries. Add only measured rules; retain explicit unknowns for UDFs and unsupported overloads. Establish exact native literal-array element types before using generic integer hints in contextual lambda validation.
 - [ ] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
 - [ ] CHSEM-011: Fix the existing ClickHouse parser gap for parenthesized explicit lambda operands inside composition. Native 26.10 accepts `(x -> toString(x)) | (y -> toTypeName(y))`, but Brikk currently creates JSONExtract nodes. CHSEM-003-E26 records the native boundary. Add correct structured parsing, source/serde/scope tests and native original/generated result checks without changing other dialects' JSON arrow operators. Until then, do not claim this SQL form has contextual typing or certified lowering.
@@ -39,7 +39,7 @@ checks parsing only and must not be relabeled as semantic validation.
 ## Constraints and resumption
 
 - User authorized CHSEM-007, CHSEM-008 and CHSEM-009 in order, with a separate commit/push after each. Stop before CHSEM-010. CHSEM-011 remains recorded follow-up work, not authorization to expand these rounds.
-- Resume at CHSEM-008, then CHSEM-009, both authorized; do not treat unchecked follow-ups as implemented or certified.
+- Resume at authorized CHSEM-009; stop before CHSEM-010. Do not treat unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -246,6 +246,32 @@ suite passed 87 tests with one opt-in Toolchain-model skip using the unchanged
 temporary SQLGlot pin; ClickHouse-only discovery passed 39. Historical evidence,
 corpus rules, public signatures, IntelliJ API usage, releases and consumer pins are
 unchanged. Commit/push CHSEM-007 separately, then continue authorized CHSEM-008.
+
+## CHSEM-008 result
+
+Source-pinned contracts now distinguish arrayFilter, arrayExists, arrayAll,
+arraySort and mapApply from arrayMap. The contextual walk and checker share call
+shapes; predicate, callable-count, map-input and map-result errors have public rule
+codes. Filtering/sorting preserve the first array, exists/all return UInt8, and
+single-map mapApply binds key/value or tuple parameters and rebuilds its result.
+Plain numeric/string comparisons have native UInt8 results. Missing evidence,
+nullable predicates, tuple-array unpacking, wrappers and unresearched families stay
+unknown. Caller policies, caches and function-valued UNKNOWN slots are preserved.
+Details: `vendor/data/clickhouse-semantic/higher-order-README.md`.
+
+Eighteen family-specific original/generated finite queries pass on both digest
+pins, with no execution skips. Tagged source excerpts/hashes back binding, predicate
+and return rules. CHSEM-003-E23's nested parameter improvement is separately recorded;
+old snapshots are not overwritten. CHSEM-004 rule and CHSEM-005 result reports remain
+byte-identical. Existing corpus fixtures and comparison rules are unchanged.
+
+Validation: full JVM regression passed 1,831 tests with 61 optional integration
+aborts and zero failures, including binary compatibility. Affected IntelliJ native
+and relation diagnostic suites passed 42 tests on 261.25134.95; full IDE regression
+was run in CHSEM-007, not repeated here. Complete Python suite passed 88 tests with
+one opt-in Toolchain-model skip using the unchanged SQLGlot pin. No new IntelliJ
+APIs, old public constructor changes, release versions, publication or consumer
+dependency edits. Commit/push separately, then continue authorized CHSEM-009.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

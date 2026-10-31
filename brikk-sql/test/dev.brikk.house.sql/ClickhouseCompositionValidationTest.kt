@@ -176,8 +176,8 @@ class ClickhouseCompositionValidationTest {
 
     @Test
     fun unsupportedFunctionContextsAndUnusedWithDefinitionsDoNotGetFalseErrors() {
-        for (query in listOf("SELECT lower | upper", "SELECT arrayFilter(trim | upper,['x'])",
-            "SELECT arrayFilter(x -> arrayMap(trim | upper,['x']),['x'])",
+        for (query in listOf("SELECT lower | upper", "SELECT arrayCount(trim | upper,['x'])",
+            "SELECT arrayCount(x -> arrayMap(trim | upper,['x']),['x'])",
             "WITH (x -> upper(x)) AS trim SELECT arrayMap(trim | upper,['x']) UNION ALL SELECT ['ok']",
             "WITH arrayMap(trim | upper,['x']) AS unused SELECT 1")) {
             val report = validate(query)

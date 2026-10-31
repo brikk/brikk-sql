@@ -182,6 +182,11 @@ CHSEM-007's `qualification-native/` captures add finite original/generated
 execution and parser observations from the same exact Apache-2.0 ClickHouse images.
 Earlier raw captures are preserved separately.
 
+CHSEM-008's `higher-order-sources.json` includes Apache-2.0 implementation excerpts
+for array predicate/sort contracts, tuple binding, mapApply adapters and comparison
+return types. `higher-order-native/` records original/generated witnesses from the
+same exact Apache-2.0 ClickHouse images, separately from older evidence.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

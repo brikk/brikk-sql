@@ -27,6 +27,10 @@ CHSEM-007 [qualifies the bounded slice](qualification-README.md) with integrated
 scope/lineage, serde, typing and diagnostic controls plus twelve original/generated
 finite execution pairs on each pin. This is not whole-analyzer or cross-dialect certification.
 
+CHSEM-008 adds [distinct higher-order contracts](higher-order-README.md) for
+arrayFilter, arrayExists, arrayAll, arraySort and mapApply, with their own source
+guards and original/generated witnesses.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

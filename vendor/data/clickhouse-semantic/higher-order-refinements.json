@@ -1,0 +1,4 @@
+{
+  "task":"CHSEM-008",
+  "cases":[{"id":"CHSEM-003-E23","formal_types":["UInt8","String"],"reason":"The nested arrayFilter lambda now receives its own String array element, independently of its invalid String predicate result. FunctionArrayMapped's binding rule is the evidence, not successful execution."}]
+}

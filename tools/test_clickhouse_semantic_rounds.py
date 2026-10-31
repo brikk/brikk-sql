@@ -4,13 +4,37 @@ import pathlib
 import unittest
 
 import probe_clickhouse_2026 as probe
+import capture_clickhouse_semantic_contract_sources as sources
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "vendor/data/clickhouse-semantic"
 
 
 class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
-    rounds = ("qualification",)
+    rounds = ("qualification", "higher-order")
+
+    def test_higher_order_source_guards_are_pinned_and_distinct(self):
+        captured = json.loads((DATA / "higher-order-sources.json").read_text())
+        self.assertEqual("Apache-2.0", captured["license"])
+        self.assertEqual(set(sources.VERSIONS), {s["version"] for s in captured["snapshots"]})
+        for snapshot in captured["snapshots"]:
+            self.assertEqual(sources.VERSIONS[snapshot["version"]], snapshot["tag"])
+            self.assertEqual(len(sources.HIGHER_ORDER), len(snapshot["sources"]))
+            for spec, record in zip(sources.HIGHER_ORDER, snapshot["sources"], strict=True):
+                path, begin, end = spec
+                self.assertEqual(path, record["path"])
+                self.assertEqual(f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{snapshot['tag']}/{path}", record["url"])
+                self.assertRegex(record["sha256"], r"^[0-9a-f]{64}$")
+                excerpt = record["excerpts"][0]
+                self.assertEqual(excerpt["end_line"] - excerpt["start_line"] + 1, len(excerpt["text"].split("\n")))
+                if begin:
+                    self.assertIn(begin, excerpt["text"])
+            text = "\n".join(r["excerpts"][0]["text"] for r in snapshot["sources"])
+            for guard in ("needBoolean()", "DataTypeUInt8", "Nullable(UInt8)", "tuple_argument_size", "type_tuple->getElements().size() != 2"):
+                self.assertIn(guard, text)
+        refined = json.loads((DATA / "higher-order-refinements.json").read_text())
+        self.assertEqual(["CHSEM-003-E23"], [r["id"] for r in refined["cases"]])
+        self.assertEqual(["UInt8", "String"], refined["cases"][0]["formal_types"])
 
     def test_rounds_have_complete_hash_pinned_original_and_generated_evidence(self):
         engines = json.loads((ROOT / "vendor/data/clickhouse-2026-audit/engines.json").read_text())["engines"]
