@@ -624,7 +624,8 @@ class TypeAnnotator(
             for ((id, type) in inference.valueTypes) clickhouseNativeTypes[id] = type.copy() as DataType
             val blockedGenericValues = if (clickhouseNativeLiterals) inference.blockedGenericValues + expression.walk()
                 .onEach { clickhouseCheckCanceled() }
-                .filter { clickhouseHigherOrderCall(it) != null && it.objectId !in inference.valueTypes && it::class !in callerTypingClasses }
+                .filter { (clickhouseHigherOrderCall(it) != null || clickhouseDivisionCall(it) != null) &&
+                    it.objectId !in inference.valueTypes && it::class !in callerTypingClasses }
                 .map { it.objectId }.toSet() else inference.blockedGenericValues
             ClickhouseLambdaTyping(
                 alreadyAnnotated = { expr -> expr.objectId in visited ||
@@ -703,11 +704,10 @@ class TypeAnnotator(
         val spec = expressionMetadata[expr::class]
 
         if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.Div &&
+            expr::class !in callerTypingClasses &&
             dev.brikk.house.sql.dialects.clickhouseBooleanSetting(expr, "sql_compatible_division_for_integers") == true) {
-            // divideExact's integer width depends on actual operand types. Do not report Float64
-            // just because the dialect's historical default uses fractional division.
-            val real = listOf(expr.left, expr.right).any { it.isType(DType.FLOAT, DType.DOUBLE) }
-            setType(expr, if (real) DType.DOUBLE else DType.UNKNOWN)
+            // The contextual proof pass applies an exact result after this fallback.
+            setType(expr, DType.UNKNOWN)
             return
         }
 

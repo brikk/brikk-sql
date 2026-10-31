@@ -200,6 +200,11 @@ CHSEM-011's `paren-lambda-native/` captures contain original/generated finite
 execution and formatting observations from the same exact Apache-2.0 ClickHouse
 images. Historical parser-gap captures are preserved separately.
 
+CHSEM-012's `division-sources.json` adds Apache-2.0 implementation excerpts for
+division delegates and NumberTraits. `division-native/` and `division-types/`
+record independent value/error and result-type observations from the exact
+ClickHouse images, without replacing historical evidence.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

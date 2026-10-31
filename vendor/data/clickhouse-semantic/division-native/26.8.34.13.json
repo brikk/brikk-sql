@@ -1,0 +1,406 @@
+{
+  "captured_at": "2026-10-31T22:49:30.026256+00:00",
+  "fixture_sha256": "cc8c19c0f47f431739b6250d7b831ac45e33ac0f35cf5775dbc56cf4fa303cea",
+  "brikk_sha256": "94e713deebd9d75373501a7f2cf226e6c00363080aa9306840146d950d16d801",
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-012-E01\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST(2, 'UInt64') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E02\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST(-2, 'Int64') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E03\",\"formatted\":\"SELECT\\n    CAST(-7, 'Int16') \\/ CAST(2, 'UInt256') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E04\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt256') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E05\",\"formatted\":\"SELECT\\n    divide(CAST(7, 'Int32'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E06\",\"formatted\":\"SELECT\\n    divideExact(CAST(7, 'UInt16'), CAST(2, 'UInt256')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-012-E07\",\"formatted\":\"SELECT\\n    CAST(7, 'Int64') \\/ CAST(2, 'Int64') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-012-E08\",\"formatted\":\"SELECT\\n    CAST(7, 'Int32') \\/ CAST(2, 'Float32') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E09\",\"formatted\":\"SELECT\\n    CAST(7, 'Nullable(Int32)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E10\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST(2, 'Nullable(Int16)') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E11\",\"formatted\":\"SELECT\\n    divideExact(CAST(7, 'Nullable(Int256)'), CAST(2, 'Nullable(UInt8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-012-E12\",\"formatted\":\"SELECT\\n    CAST(NULL, 'Nullable(Int8)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E13\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt8') \\/ CAST(0, 'UInt8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E14\",\"formatted\":\"SELECT\\n    CAST(-128, 'Int8') \\/ CAST(-1, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E15\",\"formatted\":\"SELECT\\n    CAST(255, 'UInt8') \\/ CAST(1, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E16\",\"formatted\":\"SELECT\\n    7 \\/ 2 AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E17\",\"formatted\":\"SELECT\\n    7 \\/ 2. AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E18\",\"formatted\":\"SELECT\\n    CAST(7, 'Int64') \\/ CAST(2, 'Int64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-012-E19\",\"formatted\":\"SELECT\\n    CAST(7, 'Decimal(12, 3)') \\/ CAST(2, 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E20\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> (x \\/ y), CAST([7, 6], 'Array(UInt8)'), CAST([-2, 2], 'Array(Int16)')) AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E21\",\"formatted\":\"SELECT\\n    q.v,\\n    toTypeName(q.v)\\nFROM\\n(\\n    SELECT CAST(7, 'Int64') \\/ CAST(2, 'Int64') AS v\\n    SETTINGS sql_compatible_division_for_integers = 0\\n) AS q\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E22\",\"formatted\":\"SELECT\\n    q.v,\\n    toTypeName(q.v)\\nFROM\\n(\\n    SELECT CAST(7, 'UInt16') \\/ CAST(2, 'Int8') AS v\\n) AS q\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-012-E01",
+      "formatted": "SELECT\n    CAST(7, 'UInt8') / CAST(2, 'UInt64') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E02",
+      "formatted": "SELECT\n    CAST(7, 'UInt8') / CAST(-2, 'Int64') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E03",
+      "formatted": "SELECT\n    CAST(-7, 'Int16') / CAST(2, 'UInt256') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E04",
+      "formatted": "SELECT\n    CAST(7, 'UInt256') / CAST(2, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E05",
+      "formatted": "SELECT\n    divide(CAST(7, 'Int32'), CAST(2, 'UInt8')) AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E06",
+      "formatted": "SELECT\n    divideExact(CAST(7, 'UInt16'), CAST(2, 'UInt256')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-012-E07",
+      "formatted": "SELECT\n    CAST(7, 'Int64') / CAST(2, 'Int64') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+      "id": "CHSEM-012-E08",
+      "formatted": "SELECT\n    CAST(7, 'Int32') / CAST(2, 'Float32') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E09",
+      "formatted": "SELECT\n    CAST(7, 'Nullable(Int32)') / CAST(2, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E10",
+      "formatted": "SELECT\n    CAST(7, 'UInt8') / CAST(2, 'Nullable(Int16)') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E11",
+      "formatted": "SELECT\n    divideExact(CAST(7, 'Nullable(Int256)'), CAST(2, 'Nullable(UInt8)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-012-E12",
+      "formatted": "SELECT\n    CAST(NULL, 'Nullable(Int8)') / CAST(2, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E13",
+      "formatted": "SELECT\n    CAST(1, 'UInt8') / CAST(0, 'UInt8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E14",
+      "formatted": "SELECT\n    CAST(-128, 'Int8') / CAST(-1, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E15",
+      "formatted": "SELECT\n    CAST(255, 'UInt8') / CAST(1, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E16",
+      "formatted": "SELECT\n    7 / 2 AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E17",
+      "formatted": "SELECT\n    7 / 2. AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E18",
+      "formatted": "SELECT\n    CAST(7, 'Int64') / CAST(2, 'Int64') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-012-E19",
+      "formatted": "SELECT\n    CAST(7, 'Decimal(12, 3)') / CAST(2, 'Decimal(12, 3)') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E20",
+      "formatted": "SELECT\n    arrayMap((x, y) -> (x / y), CAST([7, 6], 'Array(UInt8)'), CAST([-2, 2], 'Array(Int16)')) AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E21",
+      "formatted": "SELECT\n    q.v,\n    toTypeName(q.v)\nFROM\n(\n    SELECT CAST(7, 'Int64') / CAST(2, 'Int64') AS v\n    SETTINGS sql_compatible_division_for_integers = 0\n) AS q\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-012-E22",
+      "formatted": "SELECT\n    q.v,\n    toTypeName(q.v)\nFROM\n(\n    SELECT CAST(7, 'UInt16') / CAST(2, 'Int8') AS v\n) AS q\nSETTINGS sql_compatible_division_for_integers = 1"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-012-E01\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST(2, 'UInt64') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E02\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST(-2, 'Int64') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E03\",\"formatted\":\"SELECT\\n    CAST(-7, 'Int16') \\/ CAST(2, 'UInt256') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E04\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt256') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E05\",\"formatted\":\"SELECT\\n    divide(CAST(7, 'Int32'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E06\",\"formatted\":\"SELECT\\n    divideExact(CAST(7, 'UInt16'), CAST(2, 'UInt256')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-012-E07\",\"formatted\":\"SELECT\\n    CAST(7, 'Int64') \\/ CAST(2, 'Int64') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-012-E08\",\"formatted\":\"SELECT\\n    CAST(7, 'Int32') \\/ CAST(2, 'Float32') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E09\",\"formatted\":\"SELECT\\n    CAST(7, 'Nullable(Int32)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E10\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST(2, 'Nullable(Int16)') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E11\",\"formatted\":\"SELECT\\n    divideExact(CAST(7, 'Nullable(Int256)'), CAST(2, 'Nullable(UInt8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-012-E12\",\"formatted\":\"SELECT\\n    CAST(NULL, 'Nullable(Int8)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E13\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt8') \\/ CAST(0, 'UInt8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E14\",\"formatted\":\"SELECT\\n    CAST(-128, 'Int8') \\/ CAST(-1, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E15\",\"formatted\":\"SELECT\\n    CAST(255, 'UInt8') \\/ CAST(1, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E16\",\"formatted\":\"SELECT\\n    7 \\/ 2 AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E17\",\"formatted\":\"SELECT\\n    7 \\/ 2. AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E18\",\"formatted\":\"SELECT\\n    CAST(7, 'Int64') \\/ CAST(2, 'Int64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-012-E19\",\"formatted\":\"SELECT\\n    CAST(7, 'Decimal(12, 3)') \\/ CAST(2, 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E20\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> (x \\/ y), CAST([7, 6], 'Array(UInt8)'), CAST([-2, 2], 'Array(Int16)')) AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E21\",\"formatted\":\"SELECT\\n    q.v,\\n    toTypeName(q.v)\\nFROM\\n(\\n    SELECT CAST(7, 'Int64') \\/ CAST(2, 'Int64') AS v\\n    SETTINGS sql_compatible_division_for_integers = 0\\n) AS q\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-012-E22\",\"formatted\":\"SELECT\\n    q.v,\\n    toTypeName(q.v)\\nFROM\\n(\\n    SELECT CAST(7, 'UInt16') \\/ CAST(2, 'Int8') AS v\\n) AS q\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-012-E01",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E03",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E04",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E05",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E06",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `divideExact` does not exist. In scope SELECT divideExact(CAST(7, 'UInt16'), CAST(2, 'UInt256')) AS v, toTypeName(v). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-012-E07",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E08",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E09",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E10",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E11",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `divideExact` does not exist. In scope SELECT divideExact(CAST(7, 'Nullable(Int256)'), CAST(2, 'Nullable(UInt8)')) AS v, toTypeName(v). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-012-E12",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E13",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E14",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E15",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E16",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E17",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E18",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-012-E19",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E20",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E21",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E22",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-012-E01",
+      "sql": "SELECT CAST(7 AS UInt8) / CAST(2 AS UInt64) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E02",
+      "sql": "SELECT CAST(7 AS UInt8) / CAST(-2 AS Int64) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E03",
+      "sql": "SELECT CAST(-7 AS Int16) / CAST(2 AS UInt256) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E04",
+      "sql": "SELECT CAST(7 AS UInt256) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E05",
+      "sql": "SELECT divide(CAST(7 AS Int32), CAST(2 AS UInt8)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E06",
+      "sql": "SELECT divideExact(CAST(7 AS UInt16), CAST(2 AS UInt256)) AS v, toTypeName(v)",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `divideExact` does not exist. In scope SELECT divideExact(CAST(7, 'UInt16'), CAST(2, 'UInt256')) AS v, toTypeName(v). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-012-E07",
+      "sql": "SELECT CAST(7 AS Int64) / CAST(2 AS Int64) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E08",
+      "sql": "SELECT CAST(7 AS Int32) / CAST(2 AS Float32) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E09",
+      "sql": "SELECT CAST(7 AS Nullable(Int32)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E10",
+      "sql": "SELECT CAST(7 AS UInt8) / CAST(2 AS Nullable(Int16)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E11",
+      "sql": "SELECT divideExact(CAST(7 AS Nullable(Int256)), CAST(2 AS Nullable(UInt8))) AS v, toTypeName(v)",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `divideExact` does not exist. In scope SELECT divideExact(CAST(7, 'Nullable(Int256)'), CAST(2, 'Nullable(UInt8)')) AS v, toTypeName(v). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-012-E12",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E13",
+      "sql": "SELECT CAST(1 AS UInt8) / CAST(0 AS UInt8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E14",
+      "sql": "SELECT CAST(-128 AS Int8) / CAST(-1 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E15",
+      "sql": "SELECT CAST(255 AS UInt8) / CAST(1 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E16",
+      "sql": "SELECT 7 / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E17",
+      "sql": "SELECT 7 / 2.0 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E18",
+      "sql": "SELECT CAST(7 AS Int64) / CAST(2 AS Int64) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-012-E19",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E20",
+      "sql": "SELECT arrayMap((x, y) -> x / y, CAST([7, 6] AS Array(UInt8)), CAST([-2, 2] AS Array(Int16))) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E21",
+      "sql": "SELECT q.v, toTypeName(q.v) FROM (SELECT CAST(7 AS Int64) / CAST(2 AS Int64) AS v SETTINGS sql_compatible_division_for_integers = 0) AS q SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-012-E22",
+      "sql": "SELECT q.v, toTypeName(q.v) FROM (SELECT CAST(7 AS UInt16) / CAST(2 AS Int8) AS v) AS q SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    }
+  ]
+}

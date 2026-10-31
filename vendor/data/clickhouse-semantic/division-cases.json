@@ -1,0 +1,365 @@
+{
+  "task": "CHSEM-012",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-012-E01",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS UInt8)/CAST(2 AS UInt64) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E02",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS UInt8)/CAST(-2 AS Int64) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "-3\tInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E03",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(-7 AS Int16)/CAST(2 AS UInt256) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "-3\tInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E04",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS UInt256)/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int256",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tInt256\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E05",
+      "task": "CHSEM-012",
+      "sql": "SELECT divide(CAST(7 AS Int32),CAST(2 AS UInt8)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int32",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E06",
+      "task": "CHSEM-012",
+      "sql": "SELECT divideExact(CAST(7 AS UInt16),CAST(2 AS UInt256)) AS v,toTypeName(v)",
+      "type": "UInt16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E07",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS Int64)/CAST(2 AS Int64) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E08",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS Int32)/CAST(2 AS Float32) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E09",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS Nullable(Int32))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Nullable(Int32)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Int32)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E10",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS UInt8)/CAST(2 AS Nullable(Int16)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Nullable(Int8)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Int8)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E11",
+      "task": "CHSEM-012",
+      "sql": "SELECT divideExact(CAST(7 AS Nullable(Int256)),CAST(2 AS Nullable(UInt8))) AS v,toTypeName(v)",
+      "type": "Nullable(Int256)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Int256)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E12",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Int8)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E13",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS UInt8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E14",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(-128 AS Int8)/CAST(-1 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E15",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(255 AS UInt8)/CAST(1 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E16",
+      "task": "CHSEM-012",
+      "sql": "SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E17",
+      "task": "CHSEM-012",
+      "sql": "SELECT 7/2.0 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E18",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS Int64)/CAST(2 AS Int64) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E19",
+      "task": "CHSEM-012",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Decimal(12,3)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(18, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E20",
+      "task": "CHSEM-012",
+      "sql": "SELECT arrayMap((x,y) -> x/y,CAST([7,6] AS Array(UInt8)),CAST([-2,2] AS Array(Int16))) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Array(Int8)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "[-3,3]\tArray(Int8)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E21",
+      "task": "CHSEM-012",
+      "sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT CAST(7 AS Int64)/CAST(2 AS Int64) v SETTINGS sql_compatible_division_for_integers=0) AS q SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-012-E22",
+      "task": "CHSEM-012",
+      "sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT CAST(7 AS UInt16)/CAST(2 AS Int8) v) AS q SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Int16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tInt16\n"
+        }
+      }
+    }
+  ]
+}

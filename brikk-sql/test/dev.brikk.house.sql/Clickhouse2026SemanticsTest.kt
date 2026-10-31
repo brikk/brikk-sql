@@ -49,14 +49,15 @@ class Clickhouse2026SemanticsTest {
     }
 
     @Test
-    fun settingEnabledDivisionDoesNotClaimTheHistoricalFloatType() {
+    fun settingEnabledDivisionUsesTheProvenIntegerResultType() {
         val sql = "SELECT CAST(-7 AS Int64) / CAST(2 AS Int64) SETTINGS sql_compatible_division_for_integers=1"
         val enabled = annotateTypes(roundTrip(sql), dialect = Dialects.CLICKHOUSE).find<Div>()!!
-        assertEquals(DType.UNKNOWN, enabled.type?.thisArg)
+        assertEquals(DType.BIGINT, enabled.type?.thisArg) // CHSEM-012, native CH26-B4-E07 already witnesses Int64.
         val disabled = annotateTypes(roundTrip(sql.replace("integers=1", "integers=0")), dialect = Dialects.CLICKHOUSE).find<Div>()!!
         assertEquals(DType.DOUBLE, disabled.type?.thisArg)
         val nested = "SELECT v FROM (SELECT 7 / 2 v SETTINGS sql_compatible_division_for_integers=0) SETTINGS sql_compatible_division_for_integers=1"
-        assertEquals(DType.DOUBLE, annotateTypes(roundTrip(nested), dialect = Dialects.CLICKHOUSE).find<Div>()?.type?.thisArg)
+        val typedNested = annotateTypes(roundTrip(nested), dialect = Dialects.CLICKHOUSE)
+        assertEquals(DType.DOUBLE, typedNested.find<Div>()?.type?.thisArg, typedNested.findAll<Div>().map { "${it.type}/${dev.brikk.house.sql.dialects.clickhouseBooleanSetting(it, "sql_compatible_division_for_integers")}" }.toList().toString())
     }
 
     @Test

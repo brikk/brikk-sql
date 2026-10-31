@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture tagged implementation guards for the higher-order and overload rounds."""
+"""Capture tagged implementation guards for the bounded semantic rounds."""
 import argparse
 import hashlib
 import json
@@ -27,6 +27,14 @@ OVERLOAD = [
     ("src/Functions/IFunction.cpp", "if (!arguments.empty() && useDefaultImplementationForNulls())", "return getReturnTypeImpl(arguments);"),
     ("src/Functions/array/FunctionArrayMapped.h", "void getLambdaArgumentTypes", "ColumnPtr executeImplDryRun"),
 ]
+DIVISION = [
+    ("src/Functions/divide.cpp", "struct DivideFloatingImpl", "class FunctionDivideExactBase"),
+    ("src/Functions/divide.cpp", "class FunctionDivideExact final", "REGISTER_FUNCTION(Divide)"),
+    ("src/Functions/FunctionExactDivide.cpp", "using IntegerTypes", "ColumnPtr executeDivision"),
+    ("src/Functions/FunctionExactDivide.cpp", "DataTypePtr getReturnTypeImpl", "ColumnPtr executeImpl"),
+    ("src/DataTypes/NumberTraits.h", "struct ResultOfFloatingPointDivision", "struct ResultOfModulo"),
+    ("src/Functions/IFunction.cpp", "if (!arguments.empty() && useDefaultImplementationForNulls())", "return getReturnTypeImpl(arguments);"),
+]
 
 
 def selection(data, begin, end):
@@ -43,14 +51,16 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--round", choices=("higher-order", "overload"), default="higher-order")
+    parser.add_argument("--round", choices=("higher-order", "overload", "division"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
+        if args.round == "division" and version != "26.10.2.103":
+            continue
         records = []
         cache = {}
-        selections = HIGHER_ORDER if args.round == "higher-order" else OVERLOAD
-        task = "CHSEM-008" if args.round == "higher-order" else "CHSEM-009"
+        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION}[args.round]
+        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012"}[args.round]
         for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:

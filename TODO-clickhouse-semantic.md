@@ -6,6 +6,7 @@ composition validation, CHSEM-005 conditional result annotation and CHSEM-006
 public positioned diagnostics, CHSEM-007 qualification, CHSEM-008 higher-order
 contracts, CHSEM-009 bounded composite/overload typing, CHSEM-010 lowering
 assessment and CHSEM-011 parenthesized lambda parsing are complete.
+CHSEM-012 adds exact division result typing; CHSEM-013/014 remain the arithmetic backlog.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -38,10 +39,20 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
 - [x] CHSEM-011: Fix the ClickHouse parser gap for parenthesized explicit lambda operands inside composition. Native 26.10 accepts `(x -> toString(x)) | (y -> toTypeName(y))`; Brikk previously created JSONExtract nodes. CHSEM-003-E26 retains that historical boundary. Structured parsing, source/serde/scope tests and native original/generated checks now cover the named form without changing other dialects' JSON arrows. Unresearched bodies remain unknown and cross-dialect lowering remains refused.
 
+## Arithmetic follow-ups
+
+- [x] CHSEM-012: Infer exact setting-aware integer division results. Use pinned source/native rules for `/`, `divide` and explicit `divideExact`, including width, signedness and supported nullability. Preserve query-local setting inheritance, caller typing policies and generic literal parity; use the explicit native typing entrypoint for native literal widths.
+- [ ] CHSEM-013: Add offline diagnostics for provable division-by-zero and integer quotient overflow. Keep value-dependent/runtime cases unknown; reuse the exact type/mode facts from CHSEM-012 without claiming whole-query acceptance.
+- [ ] CHSEM-014: Track explicit preceding `SET` statements in script analysis with clear scope/reset rules. Do not infer external connection state. Record unknown or parameterized assignments explicitly and preserve query-local overrides.
+
+The earlier eleven items remain complete. These are fixes to pursue, not merely
+documentation caveats. Keep settled boundaries in their guides and these TODOs;
+do not repeatedly surface them as new warnings or block unrelated work.
+
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-011 are complete. Commit/push CHSEM-011 after its gates, then stop. Unresearched overloads, global analyzer parity, production cross-dialect lowering, publication and consumer adoption remain outside these completed items.
+- CHSEM-001 through CHSEM-012 are complete. CHSEM-013 is the next arithmetic round; CHSEM-014 remains future script-state work. Test and commit/push each authorized round. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -361,6 +372,34 @@ using the unchanged SQLGlot pin; ClickHouse-only discovery passed 48. No new IDE
 calls, old public signature removals, toolchain floor, release, publication or
 consumer dependency changes. Commit/push separately, then stop; all eleven IDs are
 complete within their documented bounds.
+
+## CHSEM-012 result
+
+The exact 26.10.2.103 type pass now covers `/`, resolved `divide` and explicit
+`divideExact`: first-operand integer width, signedness from either integer operand,
+Int/UInt8 through 256 bits, supported nullable propagation and the floating delegate.
+It applies to declared/schema expressions, nested setting scopes and lambda bodies.
+The standard literal policy, caller overrides, overwrite=false, caches, SQL/serde
+and old public signatures remain intact. The explicit native entrypoint supplies
+native literal widths. Division uses its own type rules, without widening other
+scalar contracts. Guide: `vendor/data/clickhouse-semantic/division-README.md`.
+
+Independent native observations match all 1,372 matrix types. Twenty-two original/
+generated value/error cases pass on each digest pin, including availability controls
+on 26.8, negative/mixed-width values, nullability, nested settings, zero and overflow.
+Conditional types do not become execution verdicts or unimplemented diagnostics.
+Tagged source excerpts/hashes establish the rule; older captures and corpus/ledger
+files remain unchanged. The earlier cast-Int64 regression is strengthened from
+UNKNOWN to Int64 using its existing native witness.
+
+Validation: full JVM suite passed 1,852 tests with 61 optional integration assumption
+aborts and zero failures, including binary compatibility. Full IntelliJ suite passed
+757 tests on 261.25134.95; other IDE versions were not run. Complete Python discovery
+passed 99 tests with one opt-in Toolchain-model skip using the unchanged SQLGlot pin;
+ClickHouse-only discovery passed 51. Reports regenerate byte-identically. No new
+IntelliJ API calls, toolchain/release/publishing or consumer dependency changes.
+Commit/push this round. CHSEM-013/014 retain the remaining work without reopening
+the earlier eleven items or repeatedly surfacing their settled boundaries.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

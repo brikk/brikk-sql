@@ -210,6 +210,9 @@ private class ClickhouseCompositionValidator(
             if (inferResults) {
                 rememberBinding(node, context)
                 if (context.callableScope) rememberAtomicCall(node, context)
+                clickhouseDivisionCall(node)?.let { call ->
+                    if (call.integerMode != null || nativeLiterals) value(node, context, 0)
+                }
             }
             val map = arrayMap(node)
             if (map != null) {
@@ -610,6 +613,7 @@ private class ClickhouseCompositionValidator(
             is Null -> Value(constant = true, nullLiteral = true)
             is Tuple -> tupleValue(node.expressionsArg.filterIsInstance<Expression>().map { value(it, context, depth + 1) })
             is EQ, is NEQ, is GT, is GTE, is LT, is LTE -> comparisonValue(node, context, depth)
+            is Div -> divisionValue(node, context, depth)
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
                 val source = node.thisArg as? Expression
@@ -625,6 +629,7 @@ private class ClickhouseCompositionValidator(
                 unknown(node, ClickhouseCompositionUnknownReason.UNSUPPORTED_CONTEXT); Value()
             }
             else -> {
+                if (clickhouseDivisionCall(node) != null) return remember(node, divisionValue(node, context, depth))
                 val call = scalarCall(node)
                 if (call == null) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
                 else if (call.name == "arrayMap") { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
@@ -634,6 +639,38 @@ private class ClickhouseCompositionValidator(
                 }
             }
         })
+    }
+
+    private fun divisionValue(node: Expression, context: Context, depth: Int): Value {
+        val call = clickhouseDivisionCall(node) ?: return Value()
+        if (call.name != null && context.blocked(call.name)) {
+            unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION)
+            if (inferResults) blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        val inputs = call.operands.map { value(it, context, depth + 1) }
+        if (inputs.any { it.nullLiteral }) {
+            unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER)
+            if (inferResults) blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        var types = inputs.map { it.type }
+        // Floating literal spelling is sufficient for the unchanged Float64 delegate.
+        // Integer widths still need explicit declarations or the native-literal policy.
+        val literalTypes = call.operands.map(::clickhouseLiteralType)
+        if (types.any { it?.thisArg in setOf(DType.FLOAT, DType.DOUBLE) } ||
+            literalTypes.any { it?.thisArg in setOf(DType.FLOAT, DType.DOUBLE) }) {
+            types = types.mapIndexed { index, type -> type ?: literalTypes[index] }
+        }
+        val result = clickhouseDivisionResult(types[0], types[1], call.integerMode)
+            ?: if (call.integerMode == false && inputs.all { it.plain && it.family == Family.NUMBER })
+                plainType(DType.DOUBLE) else null
+        if (result == null) {
+            unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+            if (inferResults && (call.integerMode != null || nativeLiterals)) blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        return nativeType(result)
     }
 
     private fun checkCall(node: Expression, facts: ClickhouseCallableFacts, arguments: List<Value>): Value {
@@ -903,7 +940,8 @@ private class ClickhouseCompositionValidator(
             DType.INT, DType.BIGINT, DType.UTINYINT, DType.USMALLINT, DType.UINT, DType.UBIGINT,
             DType.FLOAT, DType.DOUBLE, DType.DATE, DType.DATE32, DType.DATETIME, DType.DATETIME64,
             DType.ARRAY, DType.STRUCT, DType.MAP, DType.BOOLEAN, DType.DECIMAL, DType.DECIMAL32,
-            DType.DECIMAL64, DType.DECIMAL128, DType.DECIMAL256, DType.LOWCARDINALITY)
+            DType.DECIMAL64, DType.DECIMAL128, DType.DECIMAL256, DType.LOWCARDINALITY,
+            DType.INT128, DType.UINT128, DType.INT256, DType.UINT256)
         val stack = ArrayDeque<Pair<Expression, Int>>()
         stack.addLast(root to 0)
         while (stack.isNotEmpty()) {
