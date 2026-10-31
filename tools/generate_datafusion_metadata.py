@@ -171,7 +171,7 @@ def generate(path, product, version):
               f"internal fun {product}Snapshot(): MetadataSnapshot = MetadataSnapshot(",
               f"    {kstr(version)}, {upper}_FUNCTION_CATALOG, KeywordCatalog({keyword_expr}),",
               f"    settings = {setting_expr if capture['queries']['settings']['status'] == 'accepted' else 'null'},",
-              f"    tableFunctions = {klist(table_names)}.map {{ TableFunctionInfo(it) }},",
+              f"    tableFunctions = " + (f"spiceTableFunctions({klist(table_names)})" if product == "spice" else f"{klist(table_names)}.map {{ TableFunctionInfo(it) }}") + ",",
               f"    grammarForms = DATAFUSION_GRAMMAR_FORMS, types = {types_expr},", ")", ""]
     return title, "\n".join(lines)
 

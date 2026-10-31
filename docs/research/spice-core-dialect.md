@@ -38,9 +38,9 @@ PostgreSQL parser rejects bare question placeholders; Flight SQL/JDBC parameter 
 is a later transport qualification task. Dollar parameters have their own nodes.
 
 Function registration does not establish configured model availability. Search/AI cases are
-parser-only in the fixtures, with no external model calls. Dynamic search output schemas,
-full Arrow type inference, source-role resolution inside table-function arguments, and
-connection-aware facts remain DFS-006 onward. Provider-specific DDL/DML and external file
+parser-only in the fixtures, with no external model calls. DFS-006 adds
+[Arrow types, call-specific search schemas, argument roles, parameters and lineage](datafusion-spice-analysis.md).
+Connection harvesting remains later work. Provider-specific DDL/DML and external file
 I/O have parser evidence only. PREPARE/EXECUTE session lifetime has not been driver-qualified.
 
 This is development-branch core/metadata support. The user-facing IDE language, DBMS mapping,

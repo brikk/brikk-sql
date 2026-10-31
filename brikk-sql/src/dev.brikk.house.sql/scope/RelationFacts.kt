@@ -89,7 +89,19 @@ data class RelationFacts(
     val calls: Map<String, RelationFact> = emptyMap(),
     val catalog: CatalogKnowledge = CatalogKnowledge.OPEN,
     val searchPath: List<String> = emptyList(),
+    /** Exact output facts for one table call, keyed by its function-name UTF-16 start in the script. */
+    val callSites: Map<Int, RelationFact> = emptyMap(),
 ) {
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(slots: Map<String, RelationFact> = emptyMap(), tables: Map<String, RelationFact> = emptyMap(),
+        calls: Map<String, RelationFact> = emptyMap(), catalog: CatalogKnowledge = CatalogKnowledge.OPEN,
+        searchPath: List<String> = emptyList()) : this(slots, tables, calls, catalog, searchPath, emptyMap())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(slots: Map<String, RelationFact> = this.slots, tables: Map<String, RelationFact> = this.tables,
+        calls: Map<String, RelationFact> = this.calls, catalog: CatalogKnowledge = this.catalog,
+        searchPath: List<String> = this.searchPath): RelationFacts = copy(slots, tables, calls, catalog, searchPath, callSites)
+
     // Binary compatibility (AGENTS.md): the constructor and copy from before searchPath.
     @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
     constructor(
@@ -105,5 +117,5 @@ data class RelationFacts(
         tables: Map<String, RelationFact> = this.tables,
         calls: Map<String, RelationFact> = this.calls,
         catalog: CatalogKnowledge = this.catalog,
-    ): RelationFacts = copy(slots, tables, calls, catalog, searchPath)
+    ): RelationFacts = copy(slots, tables, calls, catalog, searchPath, callSites)
 }

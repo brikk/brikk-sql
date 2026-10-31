@@ -40,6 +40,9 @@ open class DatafusionDialect : Dialect() {
     override val name: String get() = "datafusion"
 
     override val functionCatalog get() = dev.brikk.house.sql.metadata.DATAFUSION_FUNCTION_CATALOG
+    override val usingColumnOrder get() = UsingColumnOrder.IN_PLACE
+    override val qualifiedStarUsing get() = QualifiedStarUsing.RAW
+    override val supportsNullType: Boolean get() = true
 
     // brikk: DataFusion folds unquoted identifiers to lowercase (== BASE default).
     override val normalizationStrategy get() = NormalizationStrategy.LOWERCASE

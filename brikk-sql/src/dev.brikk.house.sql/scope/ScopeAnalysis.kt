@@ -199,6 +199,21 @@ internal class CaretCompletion(
         fun none(kind: PositionKind) = ScopeCompletion(kind, null, start, end, edit.prefix, emptyList())
         val (parsed, splices) = recover(edit.marked) ?: return none(PositionKind.OTHER)
         val edits = listOf(edit.inserted) + splices
+        val completionFacts = if (facts.callSites.isEmpty()) facts else facts.copy(callSites = buildMap {
+            for ((absolute, fact) in facts.callSites) {
+                if (absolute !in range) continue
+                var position: Int? = absolute - range.first
+                for (splice in edits) {
+                    val before = position ?: break
+                    position = when {
+                        before < splice.start -> before
+                        before >= splice.end -> before + splice.length - (splice.end - splice.start)
+                        else -> null // Recovery replaced this call; its old facts cannot identify a new one.
+                    }
+                }
+                position?.let { put(range.first + it, fact) }
+            }
+        })
         val names = SourceNames(range.first, parsed.tokens)
         for (statement in parsed.statements) {
             val (lowered, origins) = try {
@@ -215,7 +230,7 @@ internal class CaretCompletion(
                 else -> PositionKind.OTHER
             }
             if (kind != PositionKind.COLUMN && kind != PositionKind.RELATION) return none(kind)
-            val evaluator = ScopeEvaluator(dialect, facts, names, origins, checkCanceled, MARKER)
+            val evaluator = ScopeEvaluator(dialect, completionFacts, names, origins, checkCanceled, MARKER)
             val queries = if (lowered.isQuery()) listOf(lowered) else lowered.outermostQueries()
             // Outside any query the marker is a word being typed, not a column.
             if (queries.isEmpty()) return none(PositionKind.OTHER)

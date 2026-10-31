@@ -61,6 +61,13 @@ open class DatafusionParser(
     override val nullOrdering: String get() = "nulls_are_large"
     override val indexOffset: Int get() = 1
 
+    override fun parseParameter(): Expression {
+        val dollar = prevToken.text == "$"
+        return super.parseParameter().also {
+            if (dollar && it.name.matches(Regex("[1-9][0-9]*"))) it.meta["numbered_dollar_parameter"] = true
+        }
+    }
+
     override val preserveOperatorSpelling: Boolean get() = true
 
     override val preserveSelectAll: Boolean get() = true

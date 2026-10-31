@@ -58,6 +58,10 @@ versioned registry/settings facts and parser/execution results from Apache-2.0-l
 Spice/DataFusion software. The released Spice binary is downloaded for local checks and
 is not redistributed here. Source revisions and checksums are in the provenance manifests.
 
+`vendor/data/datafusion-spice/round5/source-evidence.json` includes excerpts from the
+same Spice release's search, JSON and decision implementations. Copyright 2024-2026
+The Spice.ai OSS Authors, Apache License 2.0; each excerpt records its source lines and URL.
+
 `GeneratedDatafusionFunctionCatalog.kt` and `GeneratedSpiceFunctionCatalog.kt` are generated
 from these runtime/registry facts. Function descriptions and examples retain the source
 engines' documentation through the metadata evidence API. Their capture hashes and pinned

@@ -1,0 +1,1568 @@
+{
+  "arrow-0": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int8"
+      }
+    ],
+    "id": "arrow-0",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-1": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int16"
+      }
+    ],
+    "id": "arrow-1",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-2": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int32"
+      }
+    ],
+    "id": "arrow-2",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-3": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int64"
+      }
+    ],
+    "id": "arrow-3",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-4": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "UInt8"
+      }
+    ],
+    "id": "arrow-4",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-5": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "UInt16"
+      }
+    ],
+    "id": "arrow-5",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-6": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "UInt32"
+      }
+    ],
+    "id": "arrow-6",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-7": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "UInt64"
+      }
+    ],
+    "id": "arrow-7",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-8": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float32"
+      }
+    ],
+    "id": "arrow-8",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-9": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "arrow-9",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-10": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Utf8"
+      }
+    ],
+    "id": "arrow-10",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-11": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "LargeUtf8"
+      }
+    ],
+    "id": "arrow-11",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-12": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Utf8View"
+      }
+    ],
+    "id": "arrow-12",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-13": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Binary"
+      }
+    ],
+    "id": "arrow-13",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-14": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "LargeBinary"
+      }
+    ],
+    "id": "arrow-14",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-15": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Decimal128(18, 3)"
+      }
+    ],
+    "id": "arrow-15",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-16": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Decimal256(40, 6)"
+      }
+    ],
+    "id": "arrow-16",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-17": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Timestamp(ns)"
+      }
+    ],
+    "id": "arrow-17",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-18": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Timestamp(\u00b5s, \"UTC\")"
+      }
+    ],
+    "id": "arrow-18",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-19": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Date32"
+      }
+    ],
+    "id": "arrow-19",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-20": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Date64"
+      }
+    ],
+    "id": "arrow-20",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-21": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Time64(ns)"
+      }
+    ],
+    "id": "arrow-21",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-22": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Duration(ms)"
+      }
+    ],
+    "id": "arrow-22",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-23": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Interval(MonthDayNano)"
+      }
+    ],
+    "id": "arrow-23",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-24": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "List(Int64)"
+      }
+    ],
+    "id": "arrow-24",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-25": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "LargeList(Utf8)"
+      }
+    ],
+    "id": "arrow-25",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-26": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "FixedSizeList(3 x Float32)"
+      }
+    ],
+    "id": "arrow-26",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        null
+      ]
+    ],
+    "status": "accepted"
+  },
+  "arrow-27": {
+    "evidence": "planning",
+    "id": "arrow-27",
+    "message": "Execution error: Unsupported type 'Struct(a Int64, b Utf8)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error unknown token: a",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "status": "rejected"
+  },
+  "arrow-28": {
+    "evidence": "planning",
+    "id": "arrow-28",
+    "message": "Execution error: Unsupported type 'Map(Utf8, Int64)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error expected double quoted string for Field, got 'Utf8'",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "status": "rejected"
+  },
+  "arrow-29": {
+    "evidence": "planning",
+    "id": "arrow-29",
+    "message": "Execution error: Unsupported type 'Union(Int64, Utf8)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error finding UnionMode for Union, got Int64",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "status": "rejected"
+  },
+  "integer": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Int64"
+      }
+    ],
+    "id": "integer",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "float": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Float64"
+      }
+    ],
+    "id": "float",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1.5"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "sum": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int64"
+      }
+    ],
+    "id": "sum",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "avg": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "avg",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "count": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Int64"
+      }
+    ],
+    "id": "count",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "sqrt": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "sqrt",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "decimal-add": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Decimal128(13, 3)"
+      }
+    ],
+    "id": "decimal-add",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "3.000"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "decimal-div": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Decimal128(17, 6)"
+      }
+    ],
+    "id": "decimal-div",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "0.500000"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "int-div": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Int64"
+      }
+    ],
+    "id": "int-div",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "array": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "List(Int64)"
+      }
+    ],
+    "id": "array",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "[1, 2]"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "struct": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Struct(\"a\": Int64, \"b\": Utf8)"
+      }
+    ],
+    "id": "struct",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "{a: 1, b: x}"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "map": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Map(\"entries\": non-null Struct(\"key\": non-null Utf8, \"value\": Int64), unsorted)"
+      }
+    ],
+    "id": "map",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "{a: 1}"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "null": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Null"
+      }
+    ],
+    "id": "null",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        ""
+      ]
+    ],
+    "status": "accepted"
+  },
+  "timestamp": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Timestamp(ns)"
+      }
+    ],
+    "id": "timestamp",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2024-01-02T03:04:05"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "interval": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": false,
+        "type": "Interval(MonthDayNano)"
+      }
+    ],
+    "id": "interval",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2 days"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "using-order": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "a",
+        "nullable": false,
+        "type": "Int64"
+      },
+      {
+        "name": "id",
+        "nullable": false,
+        "type": "Int64"
+      },
+      {
+        "name": "b",
+        "nullable": false,
+        "type": "Int64"
+      }
+    ],
+    "id": "using-order",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1",
+        "2",
+        "3"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "qualified-using": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "a",
+        "nullable": false,
+        "type": "Int64"
+      },
+      {
+        "name": "id",
+        "nullable": false,
+        "type": "Int64"
+      },
+      {
+        "name": "id",
+        "nullable": false,
+        "type": "Int64"
+      },
+      {
+        "name": "b",
+        "nullable": false,
+        "type": "Int64"
+      }
+    ],
+    "id": "qualified-using",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1",
+        "2",
+        "2",
+        "3"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "where-alias": {
+    "evidence": "planning",
+    "id": "where-alias",
+    "message": "Schema error: No field named v.\nValid fields are t.a.",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "status": "rejected"
+  },
+  "lateral-alias": {
+    "evidence": "planning",
+    "id": "lateral-alias",
+    "message": "Schema error: No field named v.\nValid fields are t.a.",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "status": "rejected"
+  },
+  "unnest": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int64"
+      }
+    ],
+    "id": "unnest",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ],
+      [
+        "2"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "sqrt-f32": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float32"
+      }
+    ],
+    "id": "sqrt-f32",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "power-f32": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "power-f32",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "8.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "avg-f32": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "avg-f32",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "sum-f32": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "sum-f32",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "floor-int": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float64"
+      }
+    ],
+    "id": "floor-int",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "floor-f32": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Float32"
+      }
+    ],
+    "id": "floor-f32",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "2.0"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "length": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int32"
+      }
+    ],
+    "id": "length",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "length-large": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int64"
+      }
+    ],
+    "id": "length-large",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "length-view": {
+    "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+    "evidence": "execution",
+    "fields": [
+      {
+        "name": "v",
+        "nullable": true,
+        "type": "Int32"
+      }
+    ],
+    "id": "length-view",
+    "profile": {
+      "datafusion": "55.2.0",
+      "dialect": "Generic",
+      "id": "datafusion-55.2.0",
+      "identifier_normalization": true,
+      "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+      "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+    },
+    "protocol_version": 1,
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  }
+}

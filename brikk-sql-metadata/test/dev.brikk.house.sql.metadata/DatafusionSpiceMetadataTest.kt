@@ -36,6 +36,19 @@ class DatafusionSpiceMetadataTest {
     }
 
     @Test
+    fun jsonShreddersHaveFixedSchemasWhileSearchRemainsArgumentDependent() {
+        val tree = SPICE_METADATA.default.tableFunction("json_tree")!!.schema as OutputSchema.Fixed
+        assertEquals(listOf("key", "value", "type", "atom", "id", "parent", "fullkey", "path"), tree.columns.map { it.name })
+        assertEquals(listOf("BIGINT", "BIGINT"), tree.columns.filter { it.name in setOf("id", "parent") }.map { it.type })
+        for (name in listOf("flatten_json", "flatten_json_properties")) {
+            val fixed = SPICE_METADATA.default.tableFunction(name)!!.schema as OutputSchema.Fixed
+            assertEquals(listOf("path", "parent_path", "key", "value", "type"), fixed.columns.map { it.name })
+        }
+        for (name in listOf("vector_search", "text_search", "rrf", "rerank"))
+            assertEquals(OutputSchema.Open, SPICE_METADATA.default.tableFunction(name)!!.schema)
+    }
+
+    @Test
     fun representativeSamplesNeverBecomeExhaustiveOverloads() {
         val sqrt = DATAFUSION_FUNCTION_CATALOG["sqrt"]!!
         assertEquals(setOf(listOf("Float32"), listOf("Float64")), sqrt.overloads.map { it.argTypes }.toSet())

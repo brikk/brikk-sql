@@ -618,6 +618,16 @@ fun toNode(
             // the end of the line. At this point, if a source is not found it means this
             // column's lineage is unknown. This can happen if the definition of a source
             // used in a query is not passed into the `sources` map.
+            val sourceTable = colSource as? Table
+            val spiceCall = sourceTable?.thisArg as? dev.brikk.house.sql.ast.Anonymous
+            if (dialect.name == "spice" && spiceCall != null && sourceTable.db.isEmpty() && sourceTable.catalog.isEmpty()) {
+                val native = SpiceCalls.lineage(spiceCall, c.name, scope, schema, dialect)
+                if (native != null) {
+                    node.downstream.add(native)
+                    onNode?.invoke(native)
+                } else node.downstream.add(Node(c.name, Placeholder(), Placeholder()))
+                continue
+            }
             val colExpr = (colSource as? Expression) ?: Placeholder()
             val leaf = Node(name = sqlWithoutComments(c, dialect), source = colExpr, expression = colExpr)
             node.downstream.add(leaf)

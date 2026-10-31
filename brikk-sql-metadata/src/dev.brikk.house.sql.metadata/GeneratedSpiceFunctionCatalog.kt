@@ -2544,6 +2544,6 @@ val SPICE_PROFILE_EVIDENCE: DatafusionProfileEvidence = DatafusionProfileEvidenc
 internal fun spiceSnapshot(): MetadataSnapshot = MetadataSnapshot(
     "2.4.0", SPICE_FUNCTION_CATALOG, KeywordCatalog(spiceKeywords0() + spiceKeywords1() + spiceKeywords2() + spiceKeywords3() + spiceKeywords4() + spiceKeywords5() + spiceKeywords6() + spiceKeywords7() + spiceKeywords8() + spiceKeywords9() + spiceKeywords10()),
     settings = spiceSettings0() + spiceSettings1() + spiceSettings2() + spiceSettings3() + spiceSettings4(),
-    tableFunctions = listOf("executor_table", "flatten_json", "flatten_json_properties", "generate_series", "json_tree", "list_udfs", "range", "rerank", "rrf", "text_search", "vector_search").map { TableFunctionInfo(it) },
+    tableFunctions = spiceTableFunctions(listOf("executor_table", "flatten_json", "flatten_json_properties", "generate_series", "json_tree", "list_udfs", "range", "rerank", "rrf", "text_search", "vector_search")),
     grammarForms = DATAFUSION_GRAMMAR_FORMS, types = spiceTypes0(),
 )

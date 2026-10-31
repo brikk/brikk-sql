@@ -196,7 +196,13 @@ class Resolver(
 
             var columns: List<String>
             if (source is Table) {
-                columns = schema.columnNames(source, onlyVisible)
+                val function = source.thisArg as? dev.brikk.house.sql.ast.Anonymous
+                val native = if (dialect.name == "spice" && source.db.isEmpty() && source.catalog.isEmpty() && function != null)
+                    SpiceCalls.columns(function) { table ->
+                        val cte = if (table.db.isEmpty()) scope.cteSources[table.name] as? Scope else null
+                        cte?.expression?.namedSelects ?: schema.columnNames(table, onlyVisible)
+                    } else null
+                columns = native ?: schema.columnNames(source, onlyVisible)
             } else if (source is Scope && source.expression is dev.brikk.house.sql.ast.TrinoNearest) {
                 // NEAREST returns its input relation's columns, not a new projection.
                 val input = Resolver(source, schema, inferSchema)

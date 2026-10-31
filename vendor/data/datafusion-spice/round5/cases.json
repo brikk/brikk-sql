@@ -1,0 +1,322 @@
+[
+  {
+    "id": "arrow-0",
+    "sql": "SELECT arrow_cast(NULL, 'Int8') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-1",
+    "sql": "SELECT arrow_cast(NULL, 'Int16') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-2",
+    "sql": "SELECT arrow_cast(NULL, 'Int32') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-3",
+    "sql": "SELECT arrow_cast(NULL, 'Int64') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-4",
+    "sql": "SELECT arrow_cast(NULL, 'UInt8') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-5",
+    "sql": "SELECT arrow_cast(NULL, 'UInt16') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-6",
+    "sql": "SELECT arrow_cast(NULL, 'UInt32') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-7",
+    "sql": "SELECT arrow_cast(NULL, 'UInt64') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-8",
+    "sql": "SELECT arrow_cast(NULL, 'Float32') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-9",
+    "sql": "SELECT arrow_cast(NULL, 'Float64') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-10",
+    "sql": "SELECT arrow_cast(NULL, 'Utf8') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-11",
+    "sql": "SELECT arrow_cast(NULL, 'LargeUtf8') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-12",
+    "sql": "SELECT arrow_cast(NULL, 'Utf8View') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-13",
+    "sql": "SELECT arrow_cast(NULL, 'Binary') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-14",
+    "sql": "SELECT arrow_cast(NULL, 'LargeBinary') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-15",
+    "sql": "SELECT arrow_cast(NULL, 'Decimal128(18, 3)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-16",
+    "sql": "SELECT arrow_cast(NULL, 'Decimal256(40, 6)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-17",
+    "sql": "SELECT arrow_cast(NULL, 'Timestamp(Nanosecond, None)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-18",
+    "sql": "SELECT arrow_cast(NULL, 'Timestamp(Microsecond, Some(\"UTC\"))') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-19",
+    "sql": "SELECT arrow_cast(NULL, 'Date32') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-20",
+    "sql": "SELECT arrow_cast(NULL, 'Date64') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-21",
+    "sql": "SELECT arrow_cast(NULL, 'Time64(Nanosecond)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-22",
+    "sql": "SELECT arrow_cast(NULL, 'Duration(Millisecond)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-23",
+    "sql": "SELECT arrow_cast(NULL, 'Interval(MonthDayNano)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-24",
+    "sql": "SELECT arrow_cast(NULL, 'List(Int64)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-25",
+    "sql": "SELECT arrow_cast(NULL, 'LargeList(Utf8)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-26",
+    "sql": "SELECT arrow_cast(NULL, 'FixedSizeList(3, Float32)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-27",
+    "sql": "SELECT arrow_cast(NULL, 'Struct(a Int64, b Utf8)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-28",
+    "sql": "SELECT arrow_cast(NULL, 'Map(Utf8, Int64)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "arrow-29",
+    "sql": "SELECT arrow_cast(NULL, 'Union(Int64, Utf8)') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "integer",
+    "sql": "SELECT 1 AS v",
+    "spice_only": false
+  },
+  {
+    "id": "float",
+    "sql": "SELECT 1.5 AS v",
+    "spice_only": false
+  },
+  {
+    "id": "sum",
+    "sql": "SELECT sum(CAST(1 AS INT)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "avg",
+    "sql": "SELECT avg(CAST(1 AS INT)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "count",
+    "sql": "SELECT count(*) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "sqrt",
+    "sql": "SELECT sqrt(4) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "decimal-add",
+    "sql": "SELECT CAST(1 AS DECIMAL(10,2)) + CAST(2 AS DECIMAL(12,3)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "decimal-div",
+    "sql": "SELECT CAST(1 AS DECIMAL(10,2)) / CAST(2 AS DECIMAL(12,3)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "int-div",
+    "sql": "SELECT 3 / 2 AS v",
+    "spice_only": false
+  },
+  {
+    "id": "array",
+    "sql": "SELECT [1,2] AS v",
+    "spice_only": false
+  },
+  {
+    "id": "struct",
+    "sql": "SELECT named_struct('a', 1, 'b', 'x') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "map",
+    "sql": "SELECT map('a', 1) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "null",
+    "sql": "SELECT NULL AS v",
+    "spice_only": false
+  },
+  {
+    "id": "timestamp",
+    "sql": "SELECT TIMESTAMP '2024-01-02 03:04:05' AS v",
+    "spice_only": false
+  },
+  {
+    "id": "interval",
+    "sql": "SELECT INTERVAL '2 days' AS v",
+    "spice_only": false
+  },
+  {
+    "id": "using-order",
+    "sql": "SELECT * FROM (SELECT 1 AS a, 2 AS id) l JOIN (SELECT 2 AS id, 3 AS b) r USING(id)",
+    "spice_only": false
+  },
+  {
+    "id": "qualified-using",
+    "sql": "SELECT l.*, r.* FROM (SELECT 1 AS a, 2 AS id) l JOIN (SELECT 2 AS id, 3 AS b) r USING(id)",
+    "spice_only": false
+  },
+  {
+    "id": "where-alias",
+    "sql": "SELECT a + 1 AS v FROM (SELECT 1 AS a) t WHERE v > 1",
+    "spice_only": false
+  },
+  {
+    "id": "lateral-alias",
+    "sql": "SELECT a + 1 AS v, v + 1 AS w FROM (SELECT 1 AS a) t",
+    "spice_only": false
+  },
+  {
+    "id": "unnest",
+    "sql": "SELECT * FROM unnest([1,2]) AS u(v)",
+    "spice_only": false
+  },
+  {
+    "id": "json-get",
+    "sql": "SELECT json_get('{\"a\":1}', 'a') AS v",
+    "spice_only": true
+  },
+  {
+    "id": "json-int",
+    "sql": "SELECT json_get_int('{\"a\":1}', 'a') AS v",
+    "spice_only": true
+  },
+  {
+    "id": "json-text",
+    "sql": "SELECT '{\"a\":1}' ->> 'a' AS v",
+    "spice_only": true
+  },
+  {
+    "id": "flatten",
+    "sql": "SELECT * FROM flatten_json('{\"a\":1}')",
+    "spice_only": true
+  },
+  {
+    "id": "tree",
+    "sql": "SELECT * FROM json_tree('{\"a\":1}') ORDER BY id",
+    "spice_only": true
+  },
+  {
+    "id": "sqrt-f32",
+    "sql": "SELECT sqrt(CAST(4 AS REAL)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "power-f32",
+    "sql": "SELECT power(CAST(2 AS REAL), CAST(3 AS REAL)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "avg-f32",
+    "sql": "SELECT avg(CAST(2 AS REAL)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "sum-f32",
+    "sql": "SELECT sum(CAST(2 AS REAL)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "floor-int",
+    "sql": "SELECT floor(CAST(2 AS INT)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "floor-f32",
+    "sql": "SELECT floor(CAST(2 AS REAL)) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "length",
+    "sql": "SELECT length('a') AS v",
+    "spice_only": false
+  },
+  {
+    "id": "length-large",
+    "sql": "SELECT length(arrow_cast('a', 'LargeUtf8')) AS v",
+    "spice_only": false
+  },
+  {
+    "id": "length-view",
+    "sql": "SELECT length(arrow_cast('a', 'Utf8View')) AS v",
+    "spice_only": false
+  }
+]

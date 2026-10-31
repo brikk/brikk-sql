@@ -37,6 +37,9 @@ class SpiceParser(errorLevel: ErrorLevel? = null, tokenizerConfig: TokenizerConf
         // their existing translation paths.
         result.walk().filter { it is Anonymous || it is AnonymousAggFunc }.forEach {
             it.meta["native_only_dialect"] = "spice"
+            if (it.name.lowercase() in setOf("vector_search", "text_search", "rrf", "rerank")) {
+                it.expressionsArg.filterIsInstance<Expression>().forEach { arg -> arg.meta["spice_relation_call_argument"] = true }
+            }
         }
     }
 

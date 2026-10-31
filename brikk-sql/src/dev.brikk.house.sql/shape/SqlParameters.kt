@@ -111,7 +111,7 @@ data class SqlScriptParameters(
             val lexed = Tokenizer(TokenizerConfigs.forName(dialect)).tokenizeForEditor(text, checkCanceled)
             val source = Dialects.forName(dialect)
             val typeTokens = if (source.typedQueryParameters) source.parser().typeTokens else null
-            val found = binds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, source.questionMarkTernary, positional, checkCanceled)
+            val found = binds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, source.questionMarkTernary, positional, source.name, checkCanceled)
             return SqlScriptParameters(text, dialect, found.first, lexed.failureOffset, lexed.error, if (positional) found.second else emptyList())
         }
 
@@ -185,6 +185,7 @@ data class SqlScriptParameters(
             halfOpenRanges: Boolean,
             ternary: Boolean,
             positional: Boolean,
+            dialect: String,
             checkCanceled: () -> Unit,
         ): Pair<List<ParameterOccurrence>, List<SyntacticRange>> {
             val open = OpenBrackets()
@@ -211,13 +212,24 @@ data class SqlScriptParameters(
                 if (index == castTypeAt) castTypeEnd = token.end
                 val previous = tokens.getOrNull(index - 1)
                 when (token.tokenType) {
+                    TokenType.PARAMETER -> if (dialect in setOf("datafusion", "spice") && token.text == "$") {
+                        val next = tokens.getOrNull(index + 1)
+                        if (next != null && next.start == token.end + 1 && next.text.matches(Regex("[1-9][0-9]*"))) {
+                            binds += ParameterOccurrence(next.text, ParamStyle.NUMBERED_DOLLAR,
+                                SyntacticRange(token.start, next.end + 1), SyntacticRange(next.start, next.end + 1))
+                            bindNameEnd = next.end
+                            skipThrough = index + 1
+                        }
+                    }
                     TokenType.SEMICOLON -> {
                         leaveTernaries(-1)
                         open.clear()
                     }
                     // `?::` (QDCOLON) is a `?` followed by a cast; its `?` follows the same rules.
                     TokenType.PLACEHOLDER, TokenType.QDCOLON -> if (token.text == "?" || token.tokenType == TokenType.QDCOLON) {
-                        if (ternary && endsOperand(previous)) {
+                        if (dialect == "spice" && endsOperand(previous)) {
+                            // PostgreSQL JSON containment consumes a right operand; it is never a bind.
+                        } else if (ternary && endsOperand(previous)) {
                             ternaries += token to open.depth
                         } else {
                             if (positional) binds += ParameterOccurrence(null, ParamStyle.POSITIONAL, SyntacticRange(token.start, token.start + 1), null)
