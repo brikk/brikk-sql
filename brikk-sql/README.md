@@ -668,6 +668,37 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### GeoJSON import and export
+
+DuckDB 2.0 COPY GEOJSON/GEOJSONL keeps the authored format and option bags. GEOJSON defaults
+to a FeatureCollection and GEOJSONL to newline-delimited Features. Native ARRAY true selects
+a collection and false selects lines; the writer docs' contrary parenthetical is not used
+to invert the SQL. ID_COLUMN/GEOMETRY_COLUMN select output columns; explicit NULL unsets
+selection rather than omitting the option. BBOX remains a GeoJSON writer option, not a
+generic JSON option. Native errors for wrong/missing columns, wrong geometry types and
+using one column as both id and geometry are preserved.
+
+The JSON extension and core GEOMETRY support provide the tested feature; Spatial is not
+loaded and automatic installation/loading stays disabled. Local-file tests inspect actual
+Features, collections, ids, properties, geometry objects and bounding boxes, then round-trip
+through read_json and COPY FROM. Extension inference, geojson true/false, explicit columns,
+pseudo-column name collisions, malformed coordinates and ignore_errors are native behaviors,
+not host-side JSON/geometry emulation. Converter scopes distinguish GEOMETRY and JSON from
+text/BLOB, including strict SQL NULL contracts.
+COPY FROM's FORMAT GEOJSON alone does not force GeoJSON detection for an arbitrary .json/.tmp
+suffix in the pinned engine: a collection can become one ordinary JSON record with NULL
+target fields. Recognized .geojson/.geojsonl names or an authored GEOJSON true read option
+enable the tested Feature handling. The library does not insert that option or retry imports.
+
+Static read schemas require explicit literal columns with non-Hive mode and no unmodeled
+augmentation; otherwise file-dependent geometry/property fields stay unknown. Those are
+declaration facts only: no path is opened or JSON schema inferred to service the editor.
+Known converter return facts stay separate from the SQLGlot annotation corpus. File/Feature
+lineage, automatic qualification and unproved cross-target GeoJSON transformations refuse.
+Prepared selectors preserve bind order, and native parse-only validation never executes
+editor imports, exports, converters or binding expressions. Writer metadata is separate
+from read_json named parameters; no automatic IDE property UI is claimed.
+
 ### Parquet writing options
 
 Parquet COPY writing options have a separate handwritten metadata surface,

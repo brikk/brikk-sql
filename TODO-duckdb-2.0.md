@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-033.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-034.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -925,10 +925,41 @@ and IDE introspection/completion are separate contracts.
   remain unchanged. No public data-class/ABI changes, IntelliJ calls, user connections,
   consumer pins, merge or publication. Writer metadata is not an IDE property-UI claim.
 
-- [ ] `DDB20-034` GeoJSON import/export SQL [AUDIT].
+- [x] `DDB20-034` GeoJSON import/export SQL [DONE].
   Pin COPY FORMAT GEOJSON/GEOJSONL, ID_COLUMN/GEOMETRY_COLUMN and documented read options.
   Check GEOMETRY typing and extension availability; do not execute files/network reads to bind
   an editor fragment. Generic COPY/function support may already cover syntax.
+  Existing COPY and anonymous/named-call ASTs preserve formats, selectors, explicit NULL
+  unsets, ARRAY and BBOX. Separate writer metadata does not advertise these as read_json
+  arguments. Native controls pin GEOJSON collection/GEOJSONL line defaults, ARRAY true
+  collection versus false lines, ids/properties, geometry selection/unlocated Features,
+  bounding boxes, COPY FROM/read_json round trips, extension-based detection and geojson
+  true/false. The writing_json docs' ARRAY-true-for-lines parenthetical contradicts the
+  pinned native tests; no inversion/emulation is added. JSON/core GEOMETRY is verified
+  with Spatial absent and autoload/autoinstall disabled; no installation is performed.
+  Native converter facts keep GEOMETRY and JSON distinct from text/BLOB, including NULLs,
+  without changing faithful annotation ledgers. Explicit literal columns/non-Hive mode
+  can declare output fields; dynamic/file-dependent schemas and qualified UDFs stay unknown.
+  File/Feature lineage, automatic qualification and unproved cross-target transformations
+  refuse. Native tests also cover pseudo-id/property deduplication, malformed coordinates,
+  ignore_errors, case-sensitive geometry recognition, invalid selectors/options, prepared
+  column selectors and read-free/write-free parse-only verification with audit sequences.
+  Evidence sources: data/json/loading_json, data/json/writing_json, copy_geojson.test,
+  read_geojson_*.test and scalar/test_st_geomfromgeojson.test. No host JSON/geometry mapper.
+  A pinned native import limitation is preserved: COPY FROM FORMAT GEOJSON alone does not
+  enable FeatureCollection handling for an arbitrary .json/.tmp suffix, and can insert one
+  row of NULL target fields. Recognized GeoJSON suffixes or explicit GEOJSON true reader
+  options enable the tested behavior. No silent format/option repair or import retry.
+  Evidence: DuckdbGeoJsonTest, DuckdbGeoJsonMetadataTest and DuckdbGeoJsonResultTest.
+  Fresh full gates passed 1,389 core, 124 metadata and 212 native/verifier tests with all
+  three signed fixtures enabled, zero skips and clean exit. Final ten focused controls
+  passed again. Logs /tmp/opencode/duckdb-geojson-full.log and
+  /tmp/opencode/duckdb-geojson-final-controls.log. The cumulative shared IDE regression
+  suite passed all 759 tests on 261.25134.95:
+  /tmp/opencode/duckdb-parquet-geojson-ide-full.log. Generated catalogs/corpora and all
+  ledgers remain unchanged. No public data-class fields/ABI changes, new internal or
+  experimental IntelliJ calls, user connections/installations, consumer pins, merge or
+  publication. No automatic file introspection or consumer connection-refresh claim.
 
 - [ ] `DDB20-035` Other core-extension SQL additions [MONITOR].
   Triage the final DuckLake 1.1, Iceberg REST ATTACH options and Delta CREATE TABLE,

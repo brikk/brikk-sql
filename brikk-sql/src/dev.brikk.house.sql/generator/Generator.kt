@@ -18,6 +18,7 @@ import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbRegexOverload
 import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
 import dev.brikk.house.sql.dialects.hasDuckdbParquetWriteContract
+import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -417,6 +418,8 @@ open class Generator(
             (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet schema/virtual columns have no verified cross-target translation")
         if(expr.hasDuckdbParquetWriteContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
             (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet writer encoding options have no verified cross-target translation")
+        if(expr.hasDuckdbGeoJsonContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB GeoJSON Feature/geometry semantics have no verified cross-target translation")
         if (expr.walk().any { it.hasDuckdbRegexOverload() } && sourceDialect != null && !sourceDialect.equals(dialect.name,true) &&
             (dialect.name == "duckdb" || sourceDialect.equals("duckdb",true)))
             unexecutable("DuckDB regex options/name-list overload has no verified cross-target translation")

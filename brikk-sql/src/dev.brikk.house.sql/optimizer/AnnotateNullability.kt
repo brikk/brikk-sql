@@ -42,6 +42,7 @@ import dev.brikk.house.sql.dialects.duckdbSetvalArguments
 import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexArguments
 import dev.brikk.house.sql.dialects.duckdbRegexReturnType
+import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarArguments
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
@@ -425,6 +426,7 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if(dialect.name=="duckdb") (node as Expression).duckdbGeoJsonScalarArguments()?.let { return operatorRule(it) }
         if (dialect.name == "duckdb" && (node as Expression).duckdbRegexName() != null) {
             if(node.duckdbRegexReturnType()==null)return null
             val arguments=node.duckdbRegexArguments() ?: return null

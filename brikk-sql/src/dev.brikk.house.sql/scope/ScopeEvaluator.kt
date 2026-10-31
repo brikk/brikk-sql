@@ -71,6 +71,8 @@ import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexReturnType
 import dev.brikk.house.sql.dialects.isDuckdbParquetCall
 import dev.brikk.house.sql.dialects.duckdbParquetDeclaredColumns
+import dev.brikk.house.sql.dialects.duckdbGeoJsonDeclaredColumns
+import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
@@ -790,10 +792,13 @@ internal class ScopeEvaluator(
             else -> Triple(RelationKind.FUNCTION, null, null)
         }
         val parquet = dialect.name=="duckdb" && !qualified && function.isDuckdbParquetCall()
-        val nativeDeclared = if(parquet && fact==null)function.duckdbParquetDeclaredColumns()?.map { (column,type) ->
+        val nativePairs=if(dialect.name=="duckdb" && !qualified && fact==null) {
+            if(parquet)function.duckdbParquetDeclaredColumns() else function.duckdbGeoJsonDeclaredColumns()
+        }else null
+        val nativeDeclared = nativePairs?.map { (column,type) ->
             val parsed=try { dataTypeFromStr(type,dialect) } catch(_:ParseError) { return@map null }
             ColumnFact(column,Dialects.BASE.generate(parsed),origin=ColumnOrigin.RELATION_CONTRACT)
-        }?.takeIf { it.all { column -> column!=null } }?.filterNotNull()?.map { it.visible(name,stored(name,false),RelationKind.FUNCTION) } else null
+        }?.takeIf { it.all { column -> column!=null } }?.filterNotNull()?.map { it.visible(name,stored(name,false),RelationKind.FUNCTION) }
         val declared = nativeDeclared ?: if (fact == null && dialect.tableFunctionArgumentsDeclareColumns) declaredColumns(name, arguments, rows) else null
         val relation = ScopeRelation(name, kind, fact?.knowledge ?: if (declared != null) Knowledge.FULL else Knowledge.UNKNOWN, key, fact?.provenance)
         names.range(function)?.let { span ->
@@ -996,6 +1001,7 @@ internal class ScopeEvaluator(
     /** The type from the expression and its columns' exact SQL types, never from display types. */
     private fun sqlTypeOf(value: Expression): String? {
         val copy = value.copy()
+        if (dialect.name == "duckdb") for (node in copy.walk()) node.duckdbGeoJsonScalarType()?.let { node.typeSlot=it }
         // Native shape evidence stays outside the SQLGlot-faithful annotation corpus.
         if (dialect.name == "duckdb") for (node in copy.walk()) if (node.duckdbRegexName() != null)
             node.typeSlot = node.duckdbRegexReturnType() ?: DataType(args("this" to DType.UNKNOWN))
