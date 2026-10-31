@@ -13,6 +13,7 @@ import dev.brikk.house.sql.ast.DerivedTable
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
 import dev.brikk.house.sql.ast.Pivot
@@ -204,6 +205,7 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw SqlglotError("Parquet file/field-ID/default lineage is not modeled")
     if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })
         throw SqlglotError("SETVAL sequence-state lineage is not modeled")
     if (expression.isDuckdbNameShow()) throw SqlglotError("SHOW metadata/setting output is not target query-result lineage")

@@ -69,6 +69,8 @@ import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexReturnType
+import dev.brikk.house.sql.dialects.isDuckdbParquetCall
+import dev.brikk.house.sql.dialects.duckdbParquetDeclaredColumns
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
@@ -93,6 +95,9 @@ internal class Binding(
     /** The stored names a qualifier may spell it with, last part last: `db.t` for an unaliased table. */
     val path: List<String> = listOf(name),
 ) {
+    /** Selectable/completable but not included in a star. Kept internal, never a public fact field. */
+    var virtualColumns: List<ScopeColumn> = emptyList()
+    val allColumns: List<ScopeColumn> get() = columns + virtualColumns.filter { virtual -> columns.none { it.name.equals(virtual.name,true) } }
     val knowledge: Knowledge get() = relation.knowledge
 }
 
@@ -716,7 +721,7 @@ internal class ScopeEvaluator(
         if (function != null) return tableFunction(node, function, function.name, function.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.
         val call = (node.thisArg as? Expression)?.takeIf { it is Func }
-        if (call != null) return tableFunction(node, call, call.key, listOfNotNull(call.thisArg as? Expression) + call.expressionsArg.filterIsInstance<Expression>(), env, lateral)
+        if (call != null) return tableFunction(node, call, if(call.isDuckdbParquetCall()) "read_parquet" else call.key, listOfNotNull(call.thisArg as? Expression) + call.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         val pathParts = node.parts
         if (pathParts.any { it !is Identifier }) return unknownRelation(node.name, RelationKind.OTHER)
         val parts = pathParts.filterIsInstance<Identifier>()
@@ -784,7 +789,12 @@ internal class ScopeEvaluator(
             !qualified && name in facts.calls -> Triple(RelationKind.CALL, name, facts.calls.getValue(name))
             else -> Triple(RelationKind.FUNCTION, null, null)
         }
-        val declared = if (fact == null && dialect.tableFunctionArgumentsDeclareColumns) declaredColumns(name, arguments, rows) else null
+        val parquet = dialect.name=="duckdb" && !qualified && function.isDuckdbParquetCall()
+        val nativeDeclared = if(parquet && fact==null)function.duckdbParquetDeclaredColumns()?.map { (column,type) ->
+            val parsed=try { dataTypeFromStr(type,dialect) } catch(_:ParseError) { return@map null }
+            ColumnFact(column,Dialects.BASE.generate(parsed),origin=ColumnOrigin.RELATION_CONTRACT)
+        }?.takeIf { it.all { column -> column!=null } }?.filterNotNull()?.map { it.visible(name,stored(name,false),RelationKind.FUNCTION) } else null
+        val declared = nativeDeclared ?: if (fact == null && dialect.tableFunctionArgumentsDeclareColumns) declaredColumns(name, arguments, rows) else null
         val relation = ScopeRelation(name, kind, fact?.knowledge ?: if (declared != null) Knowledge.FULL else Knowledge.UNKNOWN, key, fact?.provenance)
         names.range(function)?.let { span ->
             references += ScopeReference(ReferenceKind.TABLE, name, span.first, span.last + 1,
@@ -792,7 +802,13 @@ internal class ScopeEvaluator(
         }
         val label = stored(name, quoted = false)
         val columns = declared ?: fact?.columns.orEmpty().map { it.visible(name, label, kind) }
-        return Binding(label, true, relation.copy(name = label), columns)
+        return Binding(label, true, relation.copy(name = label), columns).also { binding ->
+            // Unknown file schemas can shadow these names. Require a full physical contract.
+            if(parquet && binding.knowledge==Knowledge.FULL)binding.virtualColumns=listOf("file_row_group_number" to "UBIGINT","file_row_number" to "BIGINT","filename" to "VARCHAR")
+                .map { (column,type) ->
+                    computed(column,Nullability.UNKNOWN,"PARQUET virtual column",type).through(label,kind)
+                }
+        }
     }
 
     /**
@@ -838,7 +854,9 @@ internal class ScopeEvaluator(
         val qualifiable = if (label != null) names.positioned(label) else binding.qualifiable
         val columns = renamedColumns(binding.columns, alias).map { it.through(if (qualifiable) name else "", binding.relation.kind) }
         val declaration = label?.let(::declared) ?: binding.relation.declaration
-        return Binding(name, qualifiable, binding.relation.copy(name = name, declaration = declaration), columns)
+        return Binding(name, qualifiable, binding.relation.copy(name = name, declaration = declaration), columns).also {
+            it.virtualColumns=binding.virtualColumns.map { column -> column.through(if(qualifiable)name else "",binding.relation.kind) }
+        }
     }
 
     private fun renamedColumns(columns: List<ScopeColumn>, alias: TableAlias): List<ScopeColumn> {
@@ -852,7 +870,9 @@ internal class ScopeEvaluator(
         Binding(name, name.isNotEmpty(), ScopeRelation(name, kind, Knowledge.UNKNOWN), emptyList())
 
     private fun nullable(binding: Binding) =
-        Binding(binding.name, binding.qualifiable, binding.relation, binding.columns.map { it.copy(nullability = Nullability.NULLABLE) }, binding.path)
+        Binding(binding.name, binding.qualifiable, binding.relation, binding.columns.map { it.copy(nullability = Nullability.NULLABLE) }, binding.path).also {
+            it.virtualColumns=binding.virtualColumns.map { column -> column.copy(nullability=Nullability.NULLABLE) }
+        }
 
     /** DuckDB renames repeated output names of a derived table: the second `id` becomes `id_1`. */
     private fun deduplicated(columns: List<ScopeColumn>): List<ScopeColumn> {
@@ -1156,7 +1176,7 @@ internal class ScopeEvaluator(
                         val identifier = parts.last()
                         if (atCaret(identifier, frame, qualifier)) continue
                         qualify(qualifier, bindings)
-                        record(identifier, current, Lookup(bindings.flatMap { binding -> binding.columns.filter { same(identifier, it.name) } },
+                        record(identifier, current, Lookup(bindings.flatMap { binding -> binding.allColumns.filter { same(identifier, it.name) } },
                             bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }))
                     } else current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
                 }
@@ -1196,7 +1216,7 @@ internal class ScopeEvaluator(
         val bindings = frame?.let { findBindings(it, qualifier) }.orEmpty()
         if (bindings.isNotEmpty()) {
             qualify(qualifier, bindings)
-            val candidates = bindings.flatMap { binding -> binding.columns.filter { same(identifier, it.name, columns = true) } }
+            val candidates = bindings.flatMap { binding -> binding.allColumns.filter { same(identifier, it.name, columns = true) } }
             record(identifier, node, Lookup(candidates, bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }))
             return
         }
@@ -1269,6 +1289,7 @@ internal class ScopeEvaluator(
         if (frame.aliasesFirst) frame.aliases.matching().takeIf { it.isNotEmpty() }?.let { return it }
         frame.merged.matching().takeIf { it.isNotEmpty() }?.let { return it }
         frame.bindings.flatMap { it.columns.matching() }.takeIf { it.isNotEmpty() }?.let { return it }
+        frame.bindings.flatMap { it.virtualColumns.matching() }.takeIf { it.isNotEmpty() }?.let { return it }
         return if (frame.aliasesFirst) emptyList() else frame.aliases.matching()
     }
 
@@ -1290,7 +1311,7 @@ internal class ScopeEvaluator(
         val out = ArrayList<ScopeColumn>()
         var current = frame
         while (current != null) {
-            out += current.bindings.flatMap { it.columns }
+            out += current.bindings.flatMap { it.allColumns }
             out += current.merged
             out += current.aliases.filter { alias ->
                 alias.name.isNotEmpty() && out.none { it == alias || same(it.name, alias.name) && it.passedOnAs(alias) }

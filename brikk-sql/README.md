@@ -668,6 +668,27 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Parquet declarations and virtual columns
+
+DuckDB 2.0 Parquet scans retain `schema := MAP {field_id_or_name: {name, type, default_value}}`
+and the separate `bound_schema := {name: type}` declaration. A constant schema map declares
+the selected output names/types without opening a file or evaluating defaults. A literal
+bound_schema is modeled only with explicit `hive_partitioning=false`; it requires physical
+columns on demand and does not acquire the map schema's missing-column defaults. Dynamic,
+invalid/unmodeled declarations and qualified same-name UDFs stay unknown. Native binding
+still validates paths, field IDs, casts, defaults, collisions and incompatible options.
+
+`file_row_group_number` is a UBIGINT virtual column, not a named option. Native tests pin
+zero-based file-relative numbering, multiple row groups/files, filtering and physical-column
+shadowing. Internal scope bindings keep virtual columns separate from star-visible columns.
+They are selectable/completable only with a complete physical contract from a declaration or
+provider facts, so unknown files cannot invent a type when a physical column might shadow
+the virtual name. Explicit filename/file_row_number options can make those columns star-visible.
+Aliases and outer joins preserve virtual-column scope; derived stars do not leak hidden names.
+Static shapes use declaration evidence only, leave nullability/provenance conservative, and
+refuse unmodeled optimizer, file/field-ID lineage and cross-target schema transformations.
+Editor analysis and native parse-only validation never read a Parquet path or bind defaults.
+
 ### Window catalog verification
 
 DuckDB 2.0 window catalog verification covers the native `window` rows separately from

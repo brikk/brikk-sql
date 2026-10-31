@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-031.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-032.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -864,10 +864,36 @@ and IDE introspection/completion are separate contracts.
   no new internal/experimental IntelliJ calls, user connections/preferences/installations,
   consumer pins, merge, publication or routine Plugin Verifier runs.
 
-- [ ] `DDB20-032` Parquet schema parameter and virtual columns [AUDIT].
+- [x] `DDB20-032` Parquet schema parameter and virtual columns [DONE].
   Pin the documented `schema` argument, field-ID/name/default/type shape, named parameters,
   and `file_row_group_number` metadata/typing. Generic function-call parsing is not proof that
   catalog completion or inferred output columns are correct.
+  Existing ReadParquet/anonymous call, named argument, MAP/STRUCT and serde syntax is retained.
+  Native metadata already captures schema/bound_schema as named ANY arguments; the row-group
+  number is not an option and must not be advertised as one. Literal schema maps declare
+  names/types in authored order, including renames, missing defaults and casts. Literal
+  bound_schema with explicit non-Hive mode has its distinct required-column/on-demand behavior;
+  it is never converted into a default map. Defaults and file paths are not evaluated statically.
+  Internal scope bindings distinguish hidden virtual columns from star-visible columns, without
+  adding public data-class fields/JVM signatures. Native UBIGINT file_row_group_number is
+  zero-based per file, selectable and filterable but absent from *. A physical same-name
+  column takes precedence. Precise virtual facts require a full physical declaration/provider
+  contract; unknown files, dynamic declarations and qualified UDFs stay unknown. Alias/outer
+  join scope preserves hidden fields; derived stars do not leak them. Native tests cover actual
+  row-group counts, multi-file restart/filtering, field-ID/name maps, existing NULL versus
+  missing defaults, invalid combinations, prepared bind order and read-free parse-only checks.
+  Shape/column completion uses declarations, not native binding. Automatic qualification,
+  file/field-ID/default lineage and unproved cross-target schema transformations explicitly
+  refuse. Source/doc evidence: data/parquet/overview, test_parquet_schema.test,
+  parquet_bound_schema.test and parquet_virtual_file_row_group_number.test. No catalog refresh.
+  Evidence: DuckdbParquetSchemaTest, DuckdbParquetMetadataTest and
+  DuckdbParquetSchemaResultTest. Fresh full gates passed 1,384 core, 122 metadata and 200
+  native/verifier tests with all three signed fixtures enabled, zero skips and clean exit.
+  Log /tmp/opencode/duckdb-parquet-schema-final-full.log. All AST/serde/annotation/generator
+  ledgers and generated catalogs/corpora remain unchanged. No public data-class fields,
+  constructor/copy signatures, IntelliJ APIs, user connections/installations, consumer pins,
+  merge or publication changes. Core symbolic completion is verified, not consumer IDE
+  connection-refresh or automatic file introspection.
 
 - [ ] `DDB20-033` Parquet writing options [AUDIT].
   Classify the 2.0 documented writing/encoding/compression options and COPY value shapes,

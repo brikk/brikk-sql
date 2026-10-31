@@ -13,6 +13,7 @@ import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
 import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
 
 // Import aliases: the rule functions share names with qualify()'s Boolean options
 // (which mirror Python's keyword arguments).
@@ -85,6 +86,7 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw OptimizeError("Parquet schema/virtual-column rewriting is not modeled; preserve the native scan")
     if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })
         throw OptimizeError("Automatic rewriting across SETVAL sequence mutation is not modeled")
     if (expression.isDuckdbNameShow()) throw OptimizeError("SHOW resolution requires runtime catalog/show_behavior, not SELECT qualification")

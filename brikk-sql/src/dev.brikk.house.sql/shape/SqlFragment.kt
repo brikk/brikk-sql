@@ -11,6 +11,7 @@ import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.duckdbRegexName
+import dev.brikk.house.sql.dialects.hasDuckdbParquetCall
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
 import dev.brikk.house.sql.ast.PipeCall
@@ -496,6 +497,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if(dialectObj.name=="duckdb" && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)
         if (dialectObj.name == "duckdb" && tree.walk().any { it.duckdbRegexName() != null }) return declarativeCteShape(tree, inputs)
         if (dialectObj.name == "duckdb" && tree.walk().any { it.isDuckdbSetval() }) return declarativeCteShape(tree, inputs)
         if (tree.isDuckdbNameShow()) throw ShapeError("SHOW output depends on runtime show_behavior/catalog; it is not the target query shape")

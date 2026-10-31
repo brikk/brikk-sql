@@ -299,7 +299,7 @@ internal class CaretCompletion(
             return evaluator.visible(frame) to absence
         }
         val bindings = evaluator.findBindings(frame, qualifier)
-        if (bindings.isNotEmpty()) return bindings.flatMap { it.columns } to bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }
+        if (bindings.isNotEmpty()) return bindings.flatMap { it.allColumns } to bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }
         // A struct's fields are beyond the facts; an unknown qualifier names nothing, unless an open relation may hold the struct.
         val field = evaluator.unqualified(frame, qualifier.first())
         return emptyList<ScopeColumn>() to if (field.candidates.isNotEmpty()) Knowledge.UNKNOWN else field.knowledge
