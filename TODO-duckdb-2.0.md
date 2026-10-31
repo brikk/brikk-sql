@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-030.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-031.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -812,21 +812,57 @@ and IDE introspection/completion are separate contracts.
   passed 1,378 core, 119 metadata and 193 native/verifier tests with both signed fixtures
   enabled, zero skips. Log /tmp/opencode/duckdb-regex-additions-final-full.log. No new AST
   nodes/public data-class fields, generated catalogs/corpora or ledger changes, IntelliJ
-  calls, user connections, consumer pins, merge or publication. DDB20-037 operators and
-  DDB20-031 live extension-window/IDE evidence remain separate and incomplete.
+  calls, user connections, consumer pins, merge or publication. DDB20-037 operators remain
+  separate. DDB20-031 live extension-window/IDE evidence was left to its own verification batch.
   Final nine focused controls passed again: /tmp/opencode/duckdb-regex-additions-final-controls.log.
 
-- [ ] `DDB20-031` Window functions as catalog entries [AUDIT].
+- [x] `DDB20-031` Window functions as catalog entries [DONE].
   DuckdbDump already maps native `window` to FunctionKind.WINDOW. Verify captured built-ins,
   live extension-defined windows, OVER-context completion and scalar/aggregate/window name
   distinctions. Do not lose window rows or assume every window function is an aggregate.
-  Follow-on audit after DDB20-030: DuckdbDump groups by (name, kind), maps native window
-  rows distinctly, and FunctionCatalog.getAll retains coexisting kinds. Shared completion
-  styling maps WINDOW separately from AGGREGATE. These are not proofs of live extension
-  registration or actual OVER-context IDE behavior. The pinned native source has the
-  loadable-extension-demo duckweed window, but no built/signed window fixture is available
-  in this checkout. Leave this item open for a qualified fixture and IDE controls; do not
-  relabel scalar/aggregate mocks or synthetic catalog rows as live window evidence.
+  Verification now uses a real test-only C++ WindowFunction, built against exact source
+  d54cbbe3df17e8e5ce68312f483b4155836112aa and official SHA256-pinned 2.0.0 static libraries.
+  The standard static-linked extension recipe loads through the pinned JDBC driver even
+  though that driver exports no C++ symbols. Native tests sign a scratch copy with ephemeral
+  RSA keys and private trust/install directories; signature checks remain enabled, with
+  autoload/autoinstall disabled. Unsigned/tampered controls reject without loading bad code.
+  The tamper control corrupts only a separate never-loaded served copy, not a mapped library.
+  Real execution pins partitioned/ordered results, BIGINT native result metadata and a
+  10,000-row/chunk-boundary control. Calls without OVER and nested window calls reject.
+  Before/after DUCKDB_FUNCTIONS rows pass through the production capture decoder and
+  DuckdbDump mapping, including extension rows. Window kinds stay distinct; SUM OVER is
+  still an aggregate catalog entry. A real same-name scalar is in a different system schema
+  and called with full system.brikk_scalar qualification: these entry kinds share one
+  schema namespace, so no same-schema coexistence or flattening is claimed. getAll and
+  completion identities retain both kinds. The synthetic three-kind case remains a unit
+  test, not a substitute for the real registration/execution controls.
+  Actual IDE completion tests consume the successful native capture, not fabricated kind
+  tags. They cover builtin/extension functions before OVER, scalar completion inside an
+  OVER ordering, distinct same-name lookups and icons, and insertion preserving existing
+  arguments, partitions, order and frame. Unknown extension-window syntax round-trips with
+  copy/serde and retains unknown static result type instead of assuming row-number semantics.
+  This verifies the shared contributor, not consumer connection-refresh lifecycle, automatic
+  extension loading, every suggestion's semantic eligibility or unqualified schema lookup.
+  Final docs sql/functions/window_functions; pinned duckdb_functions_window.test,
+  extension/window_extension.test, window_function.hpp and extension_build_tools.cmake.
+  Reproduction: tools/build_duckdb_window_fixture.py; opt-in BRIKK_DUCKDB_WINDOW_EXTENSION
+  and test-owned BRIKK_DUCKDB_WINDOW_CAPTURE. Build provenance in
+  /tmp/opencode/duckdb-window-fixture/build/build.json; successful live capture in
+  /tmp/opencode/duckdb-window-fixture/catalog.json. No generated catalog/corpus refresh,
+  production IntelliJ source/API calls, data-class fields or ABI shape changes are needed.
+  Evidence: DuckdbWindowCatalogTest, DuckdbWindowCatalogSyntaxTest,
+  DuckdbWindowCatalogResultTest and DuckdbWindowCompletionTest. Fresh-production-build
+  full gates passed 1,380 core, 121 metadata and 196 native/verifier tests, zero skips with
+  Quack, repository and window fixtures enabled, and a clean process exit. Log:
+  /tmp/opencode/duckdb-window-verified-full.log. Final seven focused core/metadata/native
+  controls passed again with clean exit: /tmp/opencode/duckdb-window-final-controls.log.
+  Full shared IDE suite passed 759 tests on 261.25134.95; all five focused window tests
+  passed on 261.25134.95, 262.10968.63 and 263.5701.42. Logs:
+  /tmp/opencode/duckdb-window-ide-261-full.log,
+  /tmp/opencode/duckdb-window-ide-262-focused.log,
+  /tmp/opencode/duckdb-window-ide-263-focused.log. Production source trees remain unchanged;
+  no new internal/experimental IntelliJ calls, user connections/preferences/installations,
+  consumer pins, merge, publication or routine Plugin Verifier runs.
 
 - [ ] `DDB20-032` Parquet schema parameter and virtual columns [AUDIT].
   Pin the documented `schema` argument, field-ID/name/default/type shape, named parameters,

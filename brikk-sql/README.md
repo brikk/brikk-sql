@@ -668,6 +668,47 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Window catalog verification
+
+DuckDB 2.0 window catalog verification covers the native `window` rows separately from
+scalar and aggregate rows. `SUM(...) OVER (...)` remains an aggregate catalog entry.
+`FunctionCatalog.getAll` and completion identities retain coexisting captured kinds; a
+single-name lookup is not a substitute for that list. No new window implementation or
+result type is inferred from an unknown extension function's name.
+
+The opt-in test fixture is a real C++ `WindowFunction`, not an aggregate or SQL macro.
+It computes partitioned row numbers and registers a same-name scalar in a separate system
+schema, called with its full catalog/schema qualifier. DuckDB shares the scalar/aggregate/
+window namespace within one schema, so this is not a same-schema overload claim. A 10,000-row
+execution, native result metadata, signed private-repository loading, unsigned/tampered
+rejection and independent-connection controls verify the fixture. The build follows DuckDB's
+standard static-linked extension recipe so it also loads through JDBC's non-exported C++ ABI.
+
+Build the Linux amd64 fixture with an exact, clean DuckDB 2.0 source checkout:
+
+```bash
+python3 tools/build_duckdb_window_fixture.py \
+  --source /path/to/duckdb-v2.0.0 --output /tmp/opencode/duckdb-window-fixture/build
+```
+
+The tool verifies source revision `d54cbbe3df17e8e5ce68312f483b4155836112aa` and the official
+static-library archive SHA256, and writes a build manifest. It neither installs nor loads
+the unsigned template. Native tests sign only a scratch copy using ephemeral keys and private
+trust/install directories, with `allow_unsigned_extensions=false` and automatic loading and
+installation disabled. Set `BRIKK_DUCKDB_WINDOW_EXTENSION` to the resulting
+`brikk_window.duckdb_extension` when running `DuckdbWindowCatalogResultTest`. Set
+`BRIKK_DUCKDB_WINDOW_CAPTURE` to a test-owned JSON output path to export the actual before/after
+`DUCKDB_FUNCTIONS` capture, template digest and engine provenance after successful execution.
+
+`DuckdbWindowCompletionTest` consumes that capture in actual IDE completion tests. It checks
+built-in and extension windows before OVER, scalar completion inside an OVER ordering,
+kind-specific icons, distinct same-name lookups and insertion without changing arguments,
+partitioning, ordering or the frame. Run with the same capture/template environment and
+`BRIKK_INTELLIJ_TESTS=DuckdbWindowCompletionTest` through the `intellijPlatform` check.
+The test profile is the shared contributor fed by the live capture; it is not a claim about
+the consumer plugin's connection-refresh lifecycle, automatic extension loading, semantic
+eligibility of every suggestion, or unqualified resolution of every schema-owned name.
+
 ### Certified transpilation
 
 `transpileTo()` is best-effort by design. `SqlFragment.certify(target)` rolls every
