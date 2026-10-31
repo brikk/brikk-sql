@@ -1069,9 +1069,29 @@ and IDE introspection/completion are separate contracts.
   No public data-class signature, IntelliJ API, user connection, dependency pin, merge or
   publication changes. Per user direction, stop here before DDB20-039; 039–042 remain open.
 
-- [ ] `DDB20-039` X/B literal types [AUDIT].
+- [x] `DDB20-039` X/B literal types [DONE].
   Verify `X'...'` is BLOB and `B'...'` is BITSTRING, not old VARCHAR text with an x/b prefix.
   Cover tokenizer, AST/serde, value/type preservation, casts, escapes and cross-target output.
+  DuckDB-only prefixed literal tokens now produce a lossless DuckdbBinaryLiteral with
+  X/B kind and digit payload, never a host integer or x/b-prefixed VARCHAR. The handwritten
+  tokenizer overlay leaves generated tables and other dialects unchanged; TokenizerConfig's
+  constructor/default ABI is retained. Copy/serde/generation preserve leading zeros and
+  empty literal spelling; native B'' evaluates to the one-bit zero rather than an empty BIT.
+  Native result facts distinguish BINARY/BLOB and BIT with non-null literal values. Plain
+  newline-separated continuation segments join before odd-hex validation; invalid digits,
+  Unicode digits, escapes, same-line segments and repeated prefixes refuse. Continuation
+  through comments is not claimed by the static parser. Casts, source-map output identity,
+  parameter ordering, binary JDBC bindings and stored view definitions have focused controls.
+  Executable cross-target literal translation refuses unproved value/type mappings.
+  Evidence: DuckdbBinaryLiteralTest and DuckdbBinaryLiteralResultTest, pinned source
+  d54cbbe3df hex_string_literal/literal_round_trip/adjacent_string_literal tests and JDBC
+  2.0.0.0. No implicit stringification or host-integer decoding of binary payloads.
+  Fresh-directory full gates passed 1,402 core, 125 metadata and 224 native/verifier tests,
+  zero skips, all signed fixtures enabled. Private build/temp directories in the ignored
+  workspace build tree avoid the prior /tmp quota limit; source/tests were not relaxed.
+  Existing parser/annotation/generator/transpile corpora and ledgers remain unchanged.
+  No public data-class signature, IntelliJ API, user connection, consumer pin, merge or
+  publication change. Evidence log /tmp/opencode/duckdb-binary-literals-verified.log.
 
 - [ ] `DDB20-040` Untyped NULL columns [AUDIT].
   Pin `CREATE TABLE ... AS SELECT NULL` retaining NULL type, subsequent non-NULL insert errors,

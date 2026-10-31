@@ -286,7 +286,8 @@ open class DuckdbParser(
     override fun parseType(parseInterval: Boolean, fallbackToIdentifier: Boolean): Expression? {
         val parsed = super.parseType(parseInterval, fallbackToIdentifier)
         // Literal atoms can bypass parseColumnOps in the base parser's fast path.
-        return if (!fallbackToIdentifier && currToken.tokenType == TokenType.NOT && currToken.text == "!")
+        return if (!fallbackToIdentifier && (parsed is dev.brikk.house.sql.ast.DuckdbBinaryLiteral ||
+                currToken.tokenType == TokenType.NOT && currToken.text == "!"))
             parseColumnOps(parsed) else parsed
     }
 
@@ -311,6 +312,9 @@ open class DuckdbParser(
 
     override val functions: Map<String, (List<Expression?>) -> Expression>
         get() = DuckdbParserTables.FUNCTIONS
+
+    override val primaryParsers: Map<TokenType, (Parser, Token) -> Expression?>
+        get() = DuckdbParserTables.PRIMARY_PARSERS
 
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = DuckdbParserTables.FUNCTION_PARSERS
@@ -1209,6 +1213,36 @@ object DuckdbParserTables {
             // Existing non-command token, dedicated parser above. Keeping the tail
             // tokenized is necessary for exact body/option parameter intervals.
             .withKeywords(mapOf("EXPLAIN" to TokenType.DESCRIBE))
+            .withFormatStrings(mapOf(
+                "x'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.HEX_STRING),
+                "X'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.HEX_STRING),
+                "b'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.BIT_STRING),
+                "B'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.BIT_STRING),
+            ))
+
+    val PRIMARY_PARSERS: Map<TokenType, (Parser, Token) -> Expression?> = BaseParserTables.PRIMARY_PARSERS +
+        listOf(TokenType.HEX_STRING, TokenType.BIT_STRING).associateWith { kind ->
+            { parser: Parser, token: Token ->
+                var text = token.text
+                var last = token
+                while (parser.currToken.tokenType == TokenType.STRING) {
+                    val gap = parser.sql.substring(last.end + 1, parser.currToken.start)
+                    if (!gap.all { it.isWhitespace() } || '\n' !in gap)
+                        parser.raiseError("Binary literal continuation requires a newline")
+                    text += parser.currToken.text
+                    parser.match(TokenType.STRING)
+                    last = parser.prevToken
+                }
+                if (kind == TokenType.HEX_STRING && (text.length % 2 != 0 || text.any { it !in "0123456789abcdefABCDEF" }))
+                    parser.raiseError("X literal requires an even number of ASCII hexadecimal digits")
+                if (kind == TokenType.BIT_STRING && text.any { it != '0' && it != '1' })
+                    parser.raiseError("B literal requires binary digits")
+                val span = Token(kind, text, last.line, last.col, token.start, last.end,
+                    (token.comments + last.comments).distinct().toMutableList(), token.lineStart, token.colStart)
+                parser.expression(dev.brikk.house.sql.ast.DuckdbBinaryLiteral(args("this" to text,
+                    "kind" to if (kind == TokenType.HEX_STRING) "X" else "B")), span)
+            }
+        }
 
     // sqlglot: DuckDBParser.NO_PAREN_FUNCTIONS
     val NO_PAREN_FUNCTIONS: Map<TokenType, () -> Expression> =

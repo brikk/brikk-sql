@@ -668,6 +668,17 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Binary literals
+
+DuckDB 2.0 `X'...'` and `B'...'` parse as native BLOB/BIT literal nodes, not integers or
+VARCHAR with an x/b prefix. Hex digits and leading zero bits survive copy/serde/generation;
+empty literals retain their native spelling and behavior. Typed result facts distinguish
+BINARY, DuckDB BLOB, from BIT, and both literals are non-null. Newline-separated unprefixed
+continuation segments are joined before validating payload length/digits. Odd hex, invalid
+digits, escapes and illegal same-line continuation refuse. Casts and JDBC parameters keep
+their authored order. No cross-target binary-literal mapping is executable without verified
+value/type evidence; ordinary literals in other dialects retain their existing contracts.
+
 ### Factorial precedence
 
 DuckDB 2.0 postfix factorial binds as a cast/subscript-level indirection, before prefix

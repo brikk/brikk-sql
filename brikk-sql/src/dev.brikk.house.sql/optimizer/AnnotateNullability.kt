@@ -209,6 +209,7 @@ private class NullabilityAnnotator(
             // --- literals ---
             is Null -> true
             is Literal -> false
+            is dev.brikk.house.sql.ast.DuckdbBinaryLiteral -> false
 
             // --- alias / paren are pass-through wrappers ---
             is Alias -> get(node.thisArg as? Expression)

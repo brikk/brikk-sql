@@ -154,11 +154,16 @@ class TokenizerConfig(
     fun withIdentifiers(extra: Map<Char, String>): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences, identifiers = identifiers + extra)
 
+    /** Additional prefixed literal spellings, without changing constructor/default ABI. */
+    fun withFormatStrings(extra: Map<String, StringFormat>): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences, formatStrings = formatStrings + extra)
+
     private fun copyWith(
         extra: Map<String, TokenType>,
         sequences: Map<String, String>,
         comments: Map<String, String?> = this.comments,
         identifiers: Map<Char, String> = this.identifiers,
+        formatStrings: Map<String, StringFormat> = this.formatStrings,
     ): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
         keywords = keywords + extra,

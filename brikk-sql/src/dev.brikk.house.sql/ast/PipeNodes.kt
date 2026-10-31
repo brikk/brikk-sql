@@ -285,6 +285,7 @@ val NATIVE_EXPRESSION_CLASSES: kotlin.collections.Set<String> = setOf(
     "DuckdbShowExternalResources", "DuckdbExternalResourceSource", "DuckdbAttachExternalResource", "DuckdbConnectExternalResource",
     "DuckdbExplain", "DuckdbExplainOption",
     "DuckdbRegexOperator",
+    "DuckdbBinaryLiteral",
     "AggregateKeyProperty", "AggregateTypeColumnConstraint", "AutoPartitionProperty",
     "IndexPropertiesOption", "DorisRollupIndex", "DorisVariantField", "DorisTemporaryPartition", "DorisRefresh", "DorisOutfile",
     "DorisIndexParameters", "DorisAddPartition", "DorisDropPartition", "DorisReplacePartition",

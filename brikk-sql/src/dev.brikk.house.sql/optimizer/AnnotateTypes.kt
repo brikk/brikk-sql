@@ -639,6 +639,8 @@ class TypeAnnotator(
             val spec = expressionMetadata[expr::class]
 
             when {
+                expr is dev.brikk.house.sql.ast.DuckdbBinaryLiteral ->
+                    setType(expr, if (expr.text("kind") == "X") DType.BINARY else DType.BIT)
                 expr is dev.brikk.house.sql.ast.DuckdbRegexOperator ->
                     setType(expr, if (expr.hasDuckdbRegexSelector()) DType.UNKNOWN else DType.BOOLEAN)
                 dialect.name == "duckdb" && expr.isDuckdbSetval() ->
