@@ -1851,6 +1851,9 @@ open class Parser(
         return Command(args("this" to text.take(size), "expression" to text.drop(size)))
     }
 
+    /** Compatibility default; engines whose pipes apply to the enclosing FROM query opt out. */
+    protected open val tableSubqueryConsumesPipe: kotlin.Boolean get() = true
+
     // sqlglot: Parser._parse_select
     fun parseSelect(
         nested: kotlin.Boolean = false,
@@ -1867,7 +1870,9 @@ open class Parser(
             parseSetOperation = parseSetOperation,
         )
 
-        if (consumePipe && match(TokenType.PIPE_GT, advance = false)) {
+        // A pipe after a closed FROM subquery belongs to the enclosing query, not its table factor.
+        // Pipes inside the parentheses were already consumed by that subquery's own parseSelect.
+        if (consumePipe && (tableSubqueryConsumesPipe || !table || query !is Subquery) && match(TokenType.PIPE_GT, advance = false)) {
             if (query == null && from != null) {
                 query = expression(
                     Select(

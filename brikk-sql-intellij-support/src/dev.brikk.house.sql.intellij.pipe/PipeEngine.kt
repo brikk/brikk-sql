@@ -48,6 +48,7 @@ public fun PipeDialect.lower(
     }
     val hasPipe = statements.any { it.hasPipe }
     if (!hasPipe && !firstStage) return PipeTranslation.NotPipe
+    loweringRefusal(file)?.let { return PipeTranslation.Refused(null, it) }
     if (statements.count { it.hasSql } != 1) return PipeTranslation.Refused(null, "Select exactly one statement to execute.")
     if (!hasPipe && this.firstStage == FirstStageRule.FromOnly && !startsWithFrom(text))
         return PipeTranslation.Refused(null, "Only a FROM stage can run as the first stage.")

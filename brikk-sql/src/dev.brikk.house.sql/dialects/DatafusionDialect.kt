@@ -40,6 +40,7 @@ open class DatafusionDialect : Dialect() {
     override val name: String get() = "datafusion"
 
     override val functionCatalog get() = dev.brikk.house.sql.metadata.DATAFUSION_FUNCTION_CATALOG
+    override val pipeRunnableStages: Set<String> get() = dev.brikk.house.sql.shape.DATAFUSION_PIPE_STAGES
     override val usingColumnOrder get() = UsingColumnOrder.IN_PLACE
     override val qualifiedStarUsing get() = QualifiedStarUsing.RAW
     override val supportsNullType: Boolean get() = true

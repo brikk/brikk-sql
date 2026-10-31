@@ -114,7 +114,10 @@ public class TranslatingScriptModel<E>(
         val plan = plans[Key(range, rangeOffset)] ?: return null
         val rendered = plan.rendered ?: return null
         if (!plan.finalized || rendered.input != plan.original || editor.document.modificationStamp != snapshot.revision) return null
-        return rendered.mapToInput
+        val mapper = rendered.mapToInput ?: return null
+        return { line, column ->
+            if (editor.isDisposed || editor.document.modificationStamp != snapshot.revision) null else mapper(line, column)
+        }
     }
 
     override fun isActual(): Boolean = delegate.isActual && editor.document.modificationStamp == snapshot.revision

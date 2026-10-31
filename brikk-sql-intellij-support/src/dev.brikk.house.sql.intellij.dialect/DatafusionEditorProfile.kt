@@ -23,6 +23,8 @@ public open class DatafusionEditorProfile(
     final override val metadata: DialectMetadata = if (dialect == "spice") SPICE_METADATA else DATAFUSION_METADATA
     override val styles: SqlLookupStyles get() = SqlLookupStyles.DEFAULT
     public open fun serverVersion(file: PsiFile): String? = null
+    /** Copied parser settings from the connection catalog, when available. */
+    public open fun parserSettings(file: PsiFile): Map<String, String?> = emptyMap()
     public open fun catalogProvenance(file: PsiFile): String = "bundled inventory"
     override fun snapshot(file: PsiFile): MetadataSnapshot = metadata.forServerVersion(serverVersion(file)).snapshot
     override val functionGates: SqlFunctionGates = SqlFunctionGates(qualifier = QualifierRule.Unqualified, digitPrefix = true)

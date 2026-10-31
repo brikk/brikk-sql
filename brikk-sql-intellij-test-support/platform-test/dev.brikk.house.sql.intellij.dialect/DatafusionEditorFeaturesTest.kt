@@ -43,8 +43,10 @@ import java.util.UUID
 class DatafusionTestEditorProfile(language: DatafusionFamilyDialect) : DatafusionEditorProfile(language) {
     val fake = FakeFacts(RelationFacts())
     var version: String? = null
+    var parserSettings: Map<String, String?> = emptyMap()
     override val providers = listOf(fake)
     override fun serverVersion(file: PsiFile) = version
+    override fun parserSettings(file: PsiFile) = parserSettings
 }
 
 class DfFunctions : SqlCompletionContributor(DatafusionFixtureDialect.editorProfile)

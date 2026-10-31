@@ -5,6 +5,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.sql.dialects.postgres.PgParser
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlElementTypes
+import com.intellij.sql.psi.SqlTokens
 import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.intellij.dialect.DatafusionIdeProfile
@@ -13,6 +14,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.shape.SqlScriptParameters
+import dev.brikk.house.sql.shape.ParamStyle
 import dev.brikk.house.sql.shape.datafusionCallSite
 import dev.brikk.house.sql.shape.DatafusionArgumentRole
 import kotlin.Boolean
@@ -38,17 +40,20 @@ public class DatafusionFamilyParser(private val profile: DatafusionIdeProfile) :
         if (start >= end) return super.parseSqlStatement(builder, level)
         val sql = source.subSequence(start, end).toString()
         val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(sql, ProgressManager::checkCanceled)
+        val head = lexed.tokens.firstOrNull()?.takeUnless { it.tokenType == dev.brikk.house.sql.parser.TokenType.IDENTIFIER }?.text?.uppercase()
         if (lexed.failureOffset != null) return nativeStatement(builder, start, end, sql,
-            start + lexed.failureOffset!!, "${profile.coreDialect}: ${lexed.error ?: "Invalid token"}")
+            start + lexed.failureOffset!!, "${profile.coreDialect}: ${lexed.error ?: "Invalid token"}", serverParameters = head == "PREPARE")
         val ast = try {
             dialect.parser(ErrorLevel.IMMEDIATE).parse(lexed.tokens, sql, ProgressManager::checkCanceled)
                 .filterNotNull().filterNot { it is Semicolon }.singleOrNull()
         } catch (error: ParseError) {
             val info = error.errors.firstOrNull()
             return nativeStatement(builder, start, end, sql, start + (info?.start ?: 0),
-                "${profile.coreDialect}: ${info?.description ?: "Invalid or incomplete SQL"}")
+                "${profile.coreDialect}: ${info?.description ?: "Invalid or incomplete SQL"}", serverParameters = head == "PREPARE")
         }
-        if (ast != null && ast !is Command && needsNativeStatement(ast)) return nativeStatement(builder, start, end, sql)
+        if (head == "PREPARE" || head == "EXPLAIN") return nativeStatement(builder, start, end, sql, serverParameters = head == "PREPARE")
+        if (ast != null && ast !is Command && needsNativeStatement(ast)) return nativeStatement(builder, start, end, sql,
+            pipeQuery = (ast is Query || ast is PipeQuery) && ast.walk().any { it is PipeQuery })
         nested = true
         return try { boundaries.parse(builder) { super.parseSqlStatement(builder, level) } } finally { nested = false }
     }
@@ -106,8 +111,9 @@ public class DatafusionFamilyParser(private val profile: DatafusionIdeProfile) :
     }
 
     /** Retain every token and bind; native extensions do not become opaque comment/string masks. */
-    private fun nativeStatement(builder: PsiBuilder, start: Int, end: Int, sql: String, errorAt: Int? = null, message: String? = null): Boolean {
+    private fun nativeStatement(builder: PsiBuilder, start: Int, end: Int, sql: String, errorAt: Int? = null, message: String? = null, pipeQuery: Boolean = false, serverParameters: Boolean = false): Boolean {
         val statement = builder.mark()
+        val query = if (pipeQuery) builder.mark() else null
         val parameters = SqlScriptParameters.parse(sql, profile.coreDialect, positional = true, ProgressManager::checkCanceled)
             .occurrences.associateBy { start + it.range.start }
         var reported = false
@@ -120,16 +126,34 @@ public class DatafusionFamilyParser(private val profile: DatafusionIdeProfile) :
                 reported = true
                 continue
             }
+            if (serverParameters && builder.tokenType == SqlTokens.SQL_EXTERNAL_PARAM && builder.tokenText?.matches(NUMBERED) == true) {
+                builder.remapCurrentToken(SqlTokens.SQL_IDENT)
+                builder.advanceLexer()
+                continue
+            }
             val parameter = parameters[builder.currentOffset]
             if (parameter != null) {
+                if (serverParameters && parameter.style == ParamStyle.NUMBERED_DOLLAR) {
+                    while (!builder.eof() && builder.currentOffset < start + parameter.range.end) {
+                        builder.remapCurrentToken(SqlTokens.SQL_IDENT)
+                        builder.advanceLexer()
+                    }
+                    continue
+                }
+                if (parameter.style == ParamStyle.NAMED_COLON && builder.parseColonParameter(named = true)) continue
                 val marker = builder.mark()
                 while (!builder.eof() && builder.currentOffset < start + parameter.range.end) builder.advanceLexer()
                 marker.done(SqlElementTypes.SQL_PARAMETER_REFERENCE)
             } else builder.advanceLenient()
         }
         if (!reported && errorAt != null) builder.error(message ?: "Incomplete SQL")
-        statement.done(SqlCompositeElementTypes.SQL_STATEMENT)
+        query?.done(SqlCompositeElementTypes.SQL_QUERY_EXPRESSION)
+        statement.done(if (pipeQuery) SqlCompositeElementTypes.SQL_SELECT_STATEMENT else SqlCompositeElementTypes.SQL_STATEMENT)
         return true
+    }
+
+    private companion object {
+        val NUMBERED = Regex("\\$[1-9][0-9]*")
     }
 
 }

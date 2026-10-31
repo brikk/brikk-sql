@@ -29,6 +29,7 @@ public open class ConnectedDatafusionEditorProfile(
     }
     override val providers: List<ExternalRelationFacts> = additionalProviders + facts
     override fun serverVersion(file: PsiFile): String? = service().completion(file).selection.inventory?.serverVersion
+    override fun parserSettings(file: PsiFile): Map<String, String?> = service().completion(file).selection.inventory?.nativeCatalog?.settings.orEmpty()
     private var lastInventory: LiveInventory? = null
     private var liveSnapshot: MetadataSnapshot? = null
     @Synchronized override fun snapshot(file: PsiFile): MetadataSnapshot {

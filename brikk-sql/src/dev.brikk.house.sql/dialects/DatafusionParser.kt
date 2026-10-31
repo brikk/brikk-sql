@@ -60,6 +60,7 @@ open class DatafusionParser(
 
     override val nullOrdering: String get() = "nulls_are_large"
     override val indexOffset: Int get() = 1
+    override val tableSubqueryConsumesPipe: Boolean get() = false
 
     override fun parseParameter(): Expression {
         val dollar = prevToken.text == "$"

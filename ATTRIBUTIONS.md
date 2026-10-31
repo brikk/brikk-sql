@@ -69,6 +69,9 @@ at commit `500744d5c25499055e3b2ca46b022bc425989203`,
 `datafusion-examples/examples/flight/sql_server.rs`, under Apache License 2.0.
 The fixture changes context ownership checks, schema retention, product information,
 statement planning/execution, and loopback startup. It uses no external example datasets.
+The same Apache attribution applies to the separate DFS-010 execution variant,
+`tools/datafusion-reference/src/flight_execution.rs`, which adds parameter batches,
+utility/query schema separation and lazy result streams.
 
 `GeneratedDatafusionFunctionCatalog.kt` and `GeneratedSpiceFunctionCatalog.kt` are generated
 from these runtime/registry facts. Function descriptions and examples retain the source

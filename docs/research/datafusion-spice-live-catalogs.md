@@ -89,7 +89,8 @@ introspection alone is therefore insufficient for the qualified native catalog.
 The DataFusion session probe creates a view visible only to its connection. A SET command
 changes that connection's setting while another keeps its default, but the JDBC update
 reports failure after retries. This failure is retained in the capture. DFS-009 qualifies
-catalog reads; statement execution and its result protocol remain DFS-010 work.
+catalog reads; [DFS-010](datafusion-spice-execution.md) records the execution fixture's
+result-schema correction and the remaining product/driver limitations.
 
 ## Cache and refresh contract
 

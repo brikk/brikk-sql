@@ -10,10 +10,14 @@ publish = false
 name = "brikk-datafusion-flight"
 path = "../src/flight.rs"
 
+[[bin]]
+name = "brikk-datafusion-flight-execution"
+path = "../src/flight_execution.rs"
+
 [dependencies]
 datafusion = { version = "=55.2.0", default-features = false, features = ["sql", "nested_expressions", "datetime_expressions", "regex_expressions", "string_expressions", "unicode_expressions", "encoding_expressions", "crypto_expressions"] }
 arrow-flight = { version = "=59.2.0", features = ["flight-sql"] }
-tokio = { version = "1", features = ["rt", "macros"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
 futures = "0.3"
 prost = "0.14"
 tonic = "0.14"

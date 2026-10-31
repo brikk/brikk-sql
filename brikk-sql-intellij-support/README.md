@@ -20,6 +20,8 @@ See [the DFS-007 wiring and parsing contract](../docs/research/datafusion-spice-
 relation features. See [the DFS-008 registration and inspection contract](../docs/research/datafusion-spice-editor-features.md).
 `ConnectedDatafusionEditorProfile` and the DataFusion/Spice catalog profiles connect those
 features to Flight SQL inventories. See [the DFS-009 transport and cache contract](../docs/research/datafusion-spice-live-catalogs.md).
+`DatafusionNativeErrorProfile` and `DatafusionPipeDialect` add offline diagnostics and opt-in
+Brikk PIPE execution. See [the DFS-010 execution contract and measured driver limits](../docs/research/datafusion-spice-execution.md).
 
 `queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries
 or trusted session initialization over an existing `DatabaseConnectionCore`, without owning

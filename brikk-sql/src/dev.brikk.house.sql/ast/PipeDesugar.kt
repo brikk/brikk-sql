@@ -634,7 +634,9 @@ private fun needsWholeRows(query: Expression, stage: Expression): kotlin.Boolean
         // EXTEND is per row, unless a window function reads the rows a slice or grouping left.
         is PipeExtend -> !query.isPlainStar() || query.args["distinct"] != null ||
             shaped && stage.expressionsArg.any { it is Expression && it.find<Window>() != null }
-        is PipeWindow, is PipeAggregate -> !query.isPlainStar() || shaped
+        is PipeWindow -> !query.isPlainStar() || shaped
+        // The input ordering must not become an ORDER BY on the aggregate's output columns.
+        is PipeAggregate -> !query.isPlainStar() || shaped || query.args["order"] != null
         is PipeJoin -> !query.isPlainStar() || shaped || query.args["where"] != null
         is PipePivot, is PipeUnpivot -> !query.isPlainStar() || shaped || query.args["where"] != null ||
             !(query.args["joins"] as? List<*>).isNullOrEmpty() || !(query.args["laterals"] as? List<*>).isNullOrEmpty()
