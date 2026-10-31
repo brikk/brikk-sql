@@ -668,6 +668,22 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Settings and profiling migrations
+
+The 2.0 settings inventory drops custom_profiling_settings, enable_http_logging and
+http_logging_output. Use native tracked_metrics globs and enable_logging('HTTP') rather
+than treating old JSON/HTTP settings as automatic aliases. Historical metadata stays
+versioned. profiling_mode is a deprecated compatibility setter, absent from the ordinary
+inventory: its standard/detailed/all choices behave alike, but SET still enables profiling
+and rejects unknown names. It is not a harmless no-op.
+
+No-output profiling and memory-only HTTP logging controls pin the CALL forms without
+provider/file I/O. Async/read-ahead setting boundaries and native PRAGMA/EXPLAIN renderer
+forms are audited without implementing those engines. Input metadata does not promise the
+type of a live current_setting getter; enable_logging, for example, accepts BOOLEAN while
+its current getter is INTEGER. No current connection values become universal defaults.
+These syntax/result controls do not authorize editor EXPLAIN or prepare/bind validation.
+
 ### Native zone, calendar and collation contracts
 
 DuckDB 2.0 zone/calendar/collation behavior is checked against the pinned native engine,

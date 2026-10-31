@@ -1218,11 +1218,33 @@ and IDE introspection/completion are separate contracts.
   NUL escapes, and changed comprehension/nested-lambda binding behavior. TargetTypingResultTest
   also pins the observed timezone attachment result type. This is limited evidence, not full DDB20-043 coverage.
 
-- [ ] `DDB20-045` Removed/deprecated configuration and profiling SQL [AUDIT].
+- [x] `DDB20-045` Removed/deprecated configuration and profiling SQL [DONE].
   Reconcile settings metadata and SQL forms for removed custom_profiling_settings,
   enable_http_logging/http_logging_output, replacement tracked_metrics/enable_logging('HTTP'),
   and profiling_mode having no effect. Check new async/read-ahead settings and relevant
   PRAGMA/EXPLAIN rendering options without implementing the I/O/profiler engines.
+  Versioned metadata already correctly omits the removed old names and profiling_mode
+  from 2.0's ordinary settings inventory while retaining the 1.5.6 snapshot. Live capture
+  pins tracked_metrics VARCHAR[]/LOCAL, async_threads BIGINT/GLOBAL and read_ahead_depth
+  BIGINT/GLOBAL plus the native enable_logging/enable_profiling table-function entries.
+  No mechanical old-JSON -> metric-glob conversion or renamed-setting emulation is added.
+  Native correction to the shorthand above: profiling_mode's standard/detailed/all choices
+  are equivalent, but SET still enables profiling, current_setting reports standard and
+  unknown mode names error. CALL enable_profiling(format='no_output') and disable_profiling
+  prove that state transition without files; HTTP logging uses memory storage and sends no
+  HTTP request. enable_logging has BOOLEAN input metadata but an INTEGER current getter;
+  live value types are not inferred from setting input types or baked into bundled defaults.
+  Async 0/1 and read-ahead -1/0/positive controls, invalid values, renderer syntax and a known
+  SELECT-only EXPLAIN JSON plan are pinned with external access/autoload/autoinstall disabled.
+  This does not introduce EXPLAIN/prepare fallback in editor verification. SET/PRAGMA/CALL
+  spelling, payloads, raw command boundaries and binding order remain authored. Tests:
+  DuckdbSettingsMigrationTest in core/metadata and DuckdbSettingsMigrationResultTest.
+  Fresh-directory full gates passed 1,413 core, 128 metadata and 242 native/verifier tests,
+  zero skips, all signed fixtures enabled. Log /tmp/opencode/duckdb-settings-migration-full.log.
+  Existing production metadata/syntax needed no correction; this batch adds verification
+  and migration boundaries, not an I/O/profiler implementation or catalog snapshot rewrite.
+  Corpora/ledgers, public ABI, IntelliJ APIs, user settings/connections and consumer pins
+  remain unchanged. No merge, publication or Plugin Verifier run.
 
 - [ ] `DDB20-046` S3 URL-parameter change [AUDIT].
   2.0 treats `?` and following text as part of the object key unless the deprecated
