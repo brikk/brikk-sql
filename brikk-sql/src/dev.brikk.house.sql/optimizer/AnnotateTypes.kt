@@ -58,6 +58,11 @@ import dev.brikk.house.sql.dialects.duckdbPathFunctionName
 import dev.brikk.house.sql.dialects.duckdbPathArguments
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
+import dev.brikk.house.sql.dialects.duckdbDivisionResultType
+import dev.brikk.house.sql.ast.Div
+import dev.brikk.house.sql.ast.IntDiv
+import dev.brikk.house.sql.ast.Mod
+import dev.brikk.house.sql.ast.Binary
 import dev.brikk.house.sql.dialects.duckdbSetvalArguments
 import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbVariantReturnType
@@ -639,6 +644,10 @@ class TypeAnnotator(
             val spec = expressionMetadata[expr::class]
 
             when {
+                dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.Try ->
+                    setType(expr, (expr.thisArg as? Expression)?.type ?: DType.UNKNOWN)
+                dialect.name == "duckdb" && dialect.supportsNullType && (expr is Div || expr is IntDiv || expr is Mod) ->
+                    setType(expr, (expr as Binary).duckdbDivisionResultType())
                 expr is dev.brikk.house.sql.ast.DuckdbBinaryLiteral ->
                     setType(expr, if (expr.text("kind") == "X") DType.BINARY else DType.BIT)
                 expr is dev.brikk.house.sql.ast.DuckdbRegexOperator ->

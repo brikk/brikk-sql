@@ -21,6 +21,7 @@ import dev.brikk.house.sql.dialects.hasDuckdbParquetWriteContract
 import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
 import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.dialects.isDuckdbStorageAttach
+import dev.brikk.house.sql.dialects.duckdbDivisionTranslationIssue
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -302,6 +303,8 @@ open class Generator(
     // target rejects (#55). Additive state, not a constructor parameter: existing
     // generator JVM signatures stay intact.
     internal var forExecution: Boolean = false
+    /** SqlFragment previews opt in too; plain generators retain faithful syntax parity. */
+    internal var duckdbNativeSemantics: Boolean = false
     /** Authored-sigil evidence, null when a caller supplies only a legacy ambiguous AST. */
     internal var duckdbSessionDefaults: Boolean? = null
 
@@ -405,6 +408,8 @@ open class Generator(
             spanStack.clear()
             spanStack.addLast(mutableListOf())
         }
+        if(duckdbNativeSemantics || forExecution)
+            expr.duckdbDivisionTranslationIssue(sourceDialect, dialect.name)?.let(::unexecutable)
         if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
             unexecutable("$targetName has no verified recursive USING KEY translation")
         }
@@ -5195,6 +5200,11 @@ open class Generator(
 
     // sqlglot: Generator.div_sql (base: SAFE_DIVISION=false, TYPED_DIVISION=false)
     open fun divSql(expression: Div): String {
+        // Executable preflight proved the incoming typed operands integral and the
+        // divisor nonzero/NULL. Bare integer atoms need this too: parity does not
+        // annotate their type slots, and falling through would emit fractional /.
+        if(forExecution && dialect.name=="duckdb" && sourceDialect!=null && !sourceDialect.equals("duckdb",true) && expression.args["typed"]==true)
+            return sql(IntDiv(args("this" to expression.left.copy(),"expression" to expression.right.copy())))
         val l = expression.left
         if (!dialectSafeDivision && expression.args["safe"] == true) {
             val r = expression.right

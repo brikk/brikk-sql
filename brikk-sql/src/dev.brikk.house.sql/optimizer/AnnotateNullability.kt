@@ -39,6 +39,7 @@ import dev.brikk.house.sql.dialects.duckdbPathFunctionName
 import dev.brikk.house.sql.dialects.duckdbPathArguments
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
+import dev.brikk.house.sql.dialects.duckdbKnownNonZeroDivisor
 import dev.brikk.house.sql.dialects.duckdbSetvalArguments
 import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.duckdbRegexArguments
@@ -251,6 +252,10 @@ private class NullabilityAnnotator(
                 if (right is dev.brikk.house.sql.ast.Any || right is dev.brikk.house.sql.ast.All || node.hasDuckdbRegexSelector()) null
                 else operatorRule(operands(node))
             }
+            is dev.brikk.house.sql.ast.IntDiv, is dev.brikk.house.sql.ast.Mod -> {
+                val strict = operatorRule(operands(node))
+                if(dialect.name != "duckdb" || strict == true || (node as Binary).right.duckdbKnownNonZeroDivisor()) strict else null
+            }
             is Binary -> operatorRule(operands(node))
             is Unary -> operatorRule(operands(node))
 
@@ -435,6 +440,7 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Try)return true
         if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Factorial)return operatorRule(operands(node))
         if(dialect.name=="duckdb") (node as Expression).duckdbGeoJsonScalarArguments()?.let { return operatorRule(it) }
         if (dialect.name == "duckdb" && (node as Expression).duckdbRegexName() != null) {

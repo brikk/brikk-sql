@@ -185,6 +185,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
         generator.forExecution = forExecution
+        generator.duckdbNativeSemantics = true
         if (dialectObj.name == "duckdb") generator.duckdbSessionDefaults = duckdbSessionDefaultCandidates(sql).isNotEmpty()
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap

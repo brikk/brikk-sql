@@ -668,6 +668,32 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Division and modulo policies
+
+DuckDB 2.0 `/` is floating division: zero can produce Infinity, negative Infinity or NaN,
+even inside TRY and regardless of `error_on_division_by_zero`. `//`, including floating
+operands, and integer/DECIMAL `%` raise on zero by default; the deprecated false setting
+returns NULL instead. FLOAT/DOUBLE `%` retains NaN on zero in either mode. An authored
+TRY catches those errors without converting floating exceptional values to NULL. Generation
+preserves these operators and settings, operand order and evaluation count. FLOAT `//`
+remains fractional FLOAT division; explicit DECIMAL `/` and `//` return DOUBLE, while
+same-declaration DECIMAL modulo keeps its declaration. Native facts preserve those bounded
+types and signed integer widths. Unproved mixed decimal/signedness cases and bare wide
+integer literal widths stay UNKNOWN until the broader numeric-typing audit.
+Integer/modulo nullability stays unknown for potentially zero denominators rather than
+promising non-null output under an unknown session policy.
+
+Executable translation refuses unproved outgoing DuckDB integer/modulo mappings and
+ordinary division with potentially zero divisors. Incoming typed division requires proved
+integral operands and a nonzero/NULL divisor. Other typed cases and SAFE_DIVIDE rewrites
+refuse; the latter can change overflow/NULL behavior
+and duplicate denominator evaluation/binds. DuckDB has no native SAFE_DIVIDE contract.
+Known nonzero constant controls retain their established syntax mappings. Native executable
+typed-integer lowering uses exact `//`, not a DOUBLE/TRUNC/cast detour that loses wide integers.
+The ordinary generator's SQLGlot `safeIntDivision` policy and syntax output remain historical
+parity behavior, not a native 2.0 capability claim. Diagnostic previews retain findings.
+These controls do not certify every cross-engine numeric domain; DDB20-055 remains open.
+
 ### Identifier case policy
 
 DuckDB's `preserve_identifier_case` is a VARCHAR policy in 2.0: preserve_case, lowercase

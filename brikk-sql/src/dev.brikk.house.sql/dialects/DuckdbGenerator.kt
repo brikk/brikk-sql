@@ -114,7 +114,9 @@ open class DuckdbGenerator(
     override val renameTableWithDb: Boolean get() = false
     override val semiAntiJoinWithSide: Boolean get() = false
     override val castToIntRounds: Boolean get() = true
-    override val safeIntDivision: Boolean get() = true
+    // The default generator retains SQLGlot's historical lowering policy. Native 2.0
+    // executable generation must not classify // as NULL-on-zero.
+    override val safeIntDivision: Boolean get() = !forExecution
     override val tablesampleKeywords: String get() = "USING SAMPLE"
     override val tablesampleSeedKeyword: String get() = "REPEATABLE"
     override val jsonKeyValuePairSep: String get() = ","

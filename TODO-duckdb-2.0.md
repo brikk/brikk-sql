@@ -1141,10 +1141,51 @@ and IDE introspection/completion are separate contracts.
   Existing corpora/ledgers, public data-class signatures, IntelliJ APIs, user sessions/URLs,
   consumer pins and release policy remain unchanged. No merge or publication.
 
-- [ ] `DDB20-042` Division/modulo by zero [AUDIT].
+- [x] `DDB20-042` Division/modulo by zero [DONE].
   Existing native tests pin integer // and % errors, TRY-to-NULL and NULL operands.
   Extend to `error_on_division_by_zero=false`, ordinary division returning infinity and typed
   cross-dialect/safe-division lowering. Do not mechanically change expected rows to hide a semantic mismatch.
+  Native 2.0 d54cbbe3df/JDBC 2.0.0.0 probes distinguish ordinary floating / from integer //
+  and %: / retains Infinity/-Infinity/NaN under either setting and under TRY, while // with
+  integer or floating operands and integer/DECIMAL modulo zero change from errors to NULL
+  only under explicit deprecated false policy. FLOAT/DOUBLE modulo zero stays NaN in both modes.
+  NULL operands short-circuit without an invented zero result. Generation never reads or
+  changes the session setting, retries SQL, duplicates native operands or inserts NULLIF.
+  Native-only facts retain bounded integer/FLOAT/DOUBLE/explicit DECIMAL result types;
+  FLOAT // is fractional, DECIMAL / and // return DOUBLE, same-declaration DECIMAL modulo
+  retains precision. NULL-only division binding and typed nullable controls are pinned.
+  Unproved mixed decimal/signedness, wide bare-integer literal widths and decimal-text
+  modulo/float-mix precision remain UNKNOWN, with broader numeric modeling still assigned
+  to DDB20-073. Potentially zero integer/
+  modulo denominators do not yield a false static non-null guarantee under unknown modes.
+  Source-aware executable guards refuse outgoing unproved integer/modulo/zero-risk division,
+  incoming typed unproved operand types or unknown/zero divisors and SAFE_DIVIDE rewrites
+  with unproved overflow/NULL/evaluation-count behavior. A small constant proof retains
+  established nonzero controls;
+  arbitrary expressions, parameters and lossy casts are not evaluated to invent facts.
+  Executable typed-integer lowering uses exact native //; legacy SQLGlot syntax generation
+  and its safeIntDivision policy remain separate, unchanged parity behavior. Incoming
+  bare small integer atoms use the exact path too, rather than falling through to fractional
+  division because the parity parser did not populate type slots. Plain generator parity
+  remains unchanged; SqlFragment diagnostic previews opt in to native semantic findings.
+  Incoming wide-BIGINT controls prove no DOUBLE/TRUNC precision detour, not arbitrary source-engine
+  qualification. No new Trino/Doris/MySQL/BigQuery result oracle is claimed here; broader
+  cross-target domain/overflow qualification remains DDB20-055. Native SAFE_DIVIDE-named
+  unknown calls are not silently turned into a synthetic successful expression.
+  Evidence: DuckdbDivisionPolicyTest and DuckdbDivisionPolicyResultTest cover AST/copy/serde,
+  native type/nullability, both settings, TRY/NULL/Infinity/NaN, signs, exact wide integers,
+  incoming typed integer atoms/casts, strict cross-target refusals, bind/source-map identity,
+  one-time volatile operands and cleared source maps after an executable refusal.
+  Frozen-source fresh-directory gates passed 1,409 core, 127 metadata and 235 native/verifier
+  tests, zero skips, all signed fixtures enabled. The unchanged IntegerDivisionResultTest
+  also passed all four target-result/grammar controls. Logs:
+  /tmp/opencode/duckdb-division-complete.log and duckdb-division-legacy-complete.log.
+  The frozen-source shared IntelliJ platform gate passed all 759 tests on 261.25134.95,
+  including signed-window capture controls; log /tmp/opencode/duckdb-semantics-ide-complete.log.
+  Existing AST/annotation/generator/transpile corpora, mismatch ledgers and legacy syntax
+  controls remain unchanged. No public data-class signatures, new internal/experimental
+  IntelliJ calls, user connections/URLs, driver or consumer pins, merge or publication changes.
+  No Plugin Verifier run. This completes the requested DDB20-039–042 batch.
 
 - [ ] `DDB20-043` Native ICU replacement [AUDIT].
   Probe timezone-aware timestamps, DST gaps/overlaps, historical zones, calendar behavior,
