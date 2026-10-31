@@ -43,9 +43,10 @@ parser-only in the fixtures, with no external model calls. DFS-006 adds
 Connection harvesting remains later work. Provider-specific DDL/DML and external file
 I/O have parser evidence only. PREPARE/EXECUTE session lifetime has not been driver-qualified.
 
-This is development-branch core/metadata support. The user-facing IDE language, DBMS mapping,
-completion/inspection integration, Flight SQL JDBC qualification, and publication have their
-own remaining plan steps.
+This is development-branch core/metadata support with
+[shared IDE identities and parser profiles](datafusion-spice-ide-parsing.md).
+Consumer plugin registration, completion/inspection integration, Flight SQL JDBC qualification,
+and publication have their own remaining plan steps.
 
 ## Reproduce the native checks
 

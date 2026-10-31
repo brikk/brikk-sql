@@ -1243,6 +1243,18 @@ open class Parser(
     fun parse(rawTokens: List<Token>, sql: String): List<Expression?> =
         parseInternal({ it.parseStatement() }, rawTokens, sql)
 
+    /** Cancellable parsing for editor adapters; cancellation propagates and the prior callback is restored. */
+    fun parse(rawTokens: List<Token>, sql: String, checkCanceled: () -> Unit): List<Expression?> {
+        val previous = this.checkCanceled
+        this.checkCanceled = checkCanceled
+        return try {
+            checkCanceled()
+            parse(rawTokens, sql)
+        } finally {
+            this.checkCanceled = previous
+        }
+    }
+
     // sqlglot: Parser.parse_into — subset limited to the EXPRESSION_PARSERS entries the
     // schema layer needs (exp.DataType, exp.Table, exp.Identifier).
 

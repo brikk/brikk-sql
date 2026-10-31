@@ -12,6 +12,11 @@ no internal-API annotation.
 
 ## API
 
+DataFusion and Spice consumers use `DatafusionFamilyDialect` with separate
+`DatafusionIdeProfile` identities and `DatafusionFamilyParserDefinition`. The shared jar
+registers nothing and maps no generic Flight SQL or PostgreSQL source to these products.
+See [the DFS-007 wiring and parsing contract](../docs/research/datafusion-spice-ide-parsing.md).
+
 `queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries
 or trusted session initialization over an existing `DatabaseConnectionCore`, without owning
 or closing that connection. Use them from the connection/execution hooks, off the EDT and

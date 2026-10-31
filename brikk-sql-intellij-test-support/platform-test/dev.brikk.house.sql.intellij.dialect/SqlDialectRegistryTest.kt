@@ -53,7 +53,7 @@ class SqlDialectRegistryTest : BasePlatformTestCase() {
         assertEquals("clickhouse", Language.findLanguageByID("ClickHouse")?.let(SqlDialectRegistry::forLanguage)?.coreDialect)
         assertNull(SqlDialectRegistry.forLanguageId("GenericSQL"))
         assertNull(Language.findLanguageByID("GenericSQL")?.let(SqlDialectRegistry::forLanguage))
-        assertTrue(SqlDialectRegistry.forCoreDialect("datafusion")?.dbmsIds.orEmpty().isEmpty())
+        assertEquals(setOf("DATAFUSION_BRIKK"), SqlDialectRegistry.forCoreDialect("datafusion")?.dbmsIds)
     }
 
     /** The ClickHouse plugin's identities sit beside the stock ones. */

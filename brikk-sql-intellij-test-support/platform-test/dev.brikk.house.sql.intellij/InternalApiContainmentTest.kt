@@ -32,6 +32,13 @@ class InternalApiContainmentTest : TestCase() {
         assertFalse(supportClasses().containsKey(GenericJdbcIntrospectorGate::class.java.name))
     }
 
+    fun testDatafusionComponentsAddNoExperimentalApiReferences() {
+        val classes = supportClasses().filterKeys { it.substringAfterLast('.').startsWith("Datafusion") }
+        assertTrue("DataFusion/Spice support classes were inspected", classes.size >= 5)
+        val uses = classes.mapValues { internalReferences(it.value, experimental = true) }.filterValues { it.isNotEmpty() }
+        assertTrue(uses.entries.joinToString("\n") { "${it.key} -> ${it.value}" }, uses.isEmpty())
+    }
+
     fun testOnlyTheOptionalGateCarriesItsDocumentedInternalApi() {
         val anchor = GenericJdbcIntrospectorGate::class.java
         val bytes = checkNotNull(anchor.getResourceAsStream("${anchor.simpleName}.class")).use { it.readBytes() }
@@ -144,7 +151,7 @@ class InternalApiContainmentTest : TestCase() {
             .also { assertTrue("support classes at $location", it.size > 20) }
     }
 
-    private fun internalReferences(bytes: ByteArray): Set<String> {
+    private fun internalReferences(bytes: ByteArray, experimental: Boolean = false): Set<String> {
         val types = HashSet<String>()
         val members = HashSet<Triple<String, String, String>>()
         val recorder = object : Remapper() {
@@ -154,13 +161,13 @@ class InternalApiContainmentTest : TestCase() {
         }
         // A writer as the sink makes the remapper visit method bodies and annotation values too.
         ClassReader(bytes).accept(ClassRemapper(ClassWriter(0), recorder), 0)
-        val internalTypes = types.filter { it.isPlatform() && it.isInternalType() }
+        val internalTypes = types.filter { it.isPlatform() && it.isInternalType(experimental) }
         val internalMembers = members.mapNotNull { (owner, name, descriptor) ->
             if (owner.startsWith("[")) return@mapNotNull null
             val declaring = (declaringClass(owner, name, descriptor) ?: owner).takeIf { it.isPlatform() } ?: return@mapNotNull null
             when {
-                declaring.isInternalType() -> declaring
-                classInfo(declaring)?.isInternalMember(name, descriptor) == true -> "$declaring.$name"
+                declaring.isInternalType(experimental) -> declaring
+                classInfo(declaring)?.isInternalMember(name, descriptor, experimental) == true -> "$declaring.$name"
                 else -> null
             }
         }
@@ -169,9 +176,9 @@ class InternalApiContainmentTest : TestCase() {
 
     private fun String.isPlatform() = !startsWith("dev/brikk/") && listOf("java/", "javax/", "kotlin/", "kotlinx/", "[").none(::startsWith)
 
-    private fun String.isInternalType(): Boolean =
-        generateSequence(this) { name -> name.substringBeforeLast('$', "").ifEmpty { null } }.any { classInfo(it)?.internal == true } ||
-            classInfo(substringBeforeLast('/') + "/package-info")?.internal == true
+    private fun String.isInternalType(experimental: Boolean = false): Boolean =
+        generateSequence(this) { name -> name.substringBeforeLast('$', "").ifEmpty { null } }.any { classInfo(it)?.let { c -> if (experimental) c.experimental else c.internal } == true } ||
+            classInfo(substringBeforeLast('/') + "/package-info")?.let { if (experimental) it.experimental else it.internal } == true
 
     /** The first of [owner] and its supertypes, breadth first, that declares the member. */
     private fun declaringClass(owner: String, name: String, descriptor: String): String? {
@@ -187,11 +194,13 @@ class InternalApiContainmentTest : TestCase() {
         return null
     }
 
-    private class ClassInfo(val internal: Boolean, val members: Set<String>, val internalMembers: Set<String>, val supertypes: List<String>) {
-        fun isInternalMember(name: String, descriptor: String): Boolean {
+    private class ClassInfo(val internal: Boolean, val members: Set<String>, val internalMembers: Set<String>, val supertypes: List<String>,
+        val experimental: Boolean, val experimentalMembers: Set<String>) {
+        fun isInternalMember(name: String, descriptor: String, experimental: Boolean = false): Boolean {
+            val affected = if (experimental) experimentalMembers else internalMembers
             val property = name.removePrefix("get").removePrefix("set").removePrefix("is")
-            return "$name$descriptor" in internalMembers || listOf("$name\$annotations", "get$property\$annotations").any { synthetic ->
-                internalMembers.any { it.startsWith("$synthetic(") }
+            return "$name$descriptor" in affected || listOf("$name\$annotations", "get$property\$annotations").any { synthetic ->
+                affected.any { it.startsWith("$synthetic(") }
             }
         }
     }
@@ -201,11 +210,14 @@ class InternalApiContainmentTest : TestCase() {
     private fun classInfo(internalName: String): ClassInfo? = parsed.getOrPut(internalName) {
         val bytes = ClassLoader.getSystemResourceAsStream("$internalName.class")?.use { it.readBytes() } ?: return@getOrPut null
         var internal = false
+        var experimental = false
         val members = HashSet<String>()
         val internalMembers = HashSet<String>()
+        val experimentalMembers = HashSet<String>()
         val supertypes = ArrayList<String>()
         fun memberAnnotation(member: String, annotation: String): AnnotationVisitor? {
             if (annotation in INTERNAL) internalMembers += member
+            if (annotation == EXPERIMENTAL) experimentalMembers += member
             return null
         }
         ClassReader(bytes).accept(object : ClassVisitor(Opcodes.ASM9) {
@@ -215,6 +227,7 @@ class InternalApiContainmentTest : TestCase() {
 
             override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor? {
                 if (descriptor in INTERNAL) internal = true
+                if (descriptor == EXPERIMENTAL) experimental = true
                 return null
             }
 
@@ -232,12 +245,13 @@ class InternalApiContainmentTest : TestCase() {
                 }
             }
         }, ClassReader.SKIP_CODE)
-        ClassInfo(internal, members, internalMembers, supertypes)
+        ClassInfo(internal, members, internalMembers, supertypes, experimental, experimentalMembers)
     }
 
     private companion object {
         const val KOTLIN_PLUGIN = "org/jetbrains/kotlin/"
         val INTERNAL = setOf("Lorg/jetbrains/annotations/ApiStatus\$Internal;", "Lcom/intellij/openapi/util/IntellijInternalApi;")
+        const val EXPERIMENTAL = "Lorg/jetbrains/annotations/ApiStatus\$Experimental;"
         val DOCUMENTED = setOf("com.intellij.database.introspection.DBIntrospector\$Factory")
     }
 }
