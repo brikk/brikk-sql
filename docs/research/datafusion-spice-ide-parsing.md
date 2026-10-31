@@ -40,13 +40,18 @@ token, and joins complete dollar-quoted strings into single literal tokens so th
 cannot insert spaces inside their values. `StatementBoundedSqlLexer` keeps tokens inside the core dialect's script boundaries,
 including strings or comments containing semicolons. Literal and comment text stays intact.
 
-`DatafusionFamilyParser` uses PostgreSQL PSI for ordinary queries. Native array constructors,
+`DatafusionFamilyParser` uses PostgreSQL PSI for ordinary queries. DFS-008 adds real PSI for
+bracket arrays and numbered parameters, so ordinary array-query aliases remain renameable.
 TRY_CAST, native call-word collisions, wildcard modifiers, QUALIFY, GROUP/ORDER BY ALL,
 USE, COPY/file formats, CLUSTER BY, Spice utilities and
 Brikk pipes use an explicit statement fallback only after the core parser accepts their
 structured AST. The fallback keeps the original tokens and parameter occurrences rather
 than masking a statement as a comment or string. This is editor structure, not an engine
 execution verdict or permission to execute pipes.
+
+DFS-008's [editor profile](datafusion-spice-editor-features.md) connects completion, docs,
+references and local semantic diagnostics, and retains only grammar special forms from the
+PostgreSQL builtin definition map.
 
 Core parse failures remain PSI errors at their authored token positions. There is no new
 error filter, inspection suppressor or background native query. Unknown command text is

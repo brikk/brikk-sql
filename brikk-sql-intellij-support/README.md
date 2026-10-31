@@ -16,6 +16,8 @@ DataFusion and Spice consumers use `DatafusionFamilyDialect` with separate
 `DatafusionIdeProfile` identities and `DatafusionFamilyParserDefinition`. The shared jar
 registers nothing and maps no generic Flight SQL or PostgreSQL source to these products.
 See [the DFS-007 wiring and parsing contract](../docs/research/datafusion-spice-ide-parsing.md).
+`DatafusionEditorProfile` adds versioned completion, function evidence documentation and
+relation features. See [the DFS-008 registration and inspection contract](../docs/research/datafusion-spice-editor-features.md).
 
 `queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries
 or trusted session initialization over an existing `DatabaseConnectionCore`, without owning

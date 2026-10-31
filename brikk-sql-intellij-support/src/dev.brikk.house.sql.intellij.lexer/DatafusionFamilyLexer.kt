@@ -10,6 +10,7 @@ public class DatafusionFamilyLexer(private val profile: DatafusionIdeProfile) : 
     override fun rule(base: Lexer, upper: String): Boolean {
         when {
             dollarString(base) -> return true
+            NUMBERED_PARAMETER.matches(base.tokenText) -> emitAs(base, SqlTokens.SQL_EXTERNAL_PARAM)
             profile == DatafusionIdeProfile.DATAFUSION && upper == "^" -> emitAs(base, SqlTokens.PG_OP_BITWISE_XOR)
             lastMeaningful in setOf("(", ",") && upper.firstOrNull()?.isLetter() == true && followedByNamedArrow(base) ->
                 emitAs(base, SqlTokens.SQL_IDENT)
@@ -45,5 +46,6 @@ public class DatafusionFamilyLexer(private val profile: DatafusionIdeProfile) : 
 
     private companion object {
         val DOLLAR_TAG = Regex("\\$(?:[A-Za-z_][A-Za-z_0-9]*)?\\$")
+        val NUMBERED_PARAMETER = Regex("\\$[1-9][0-9]*")
     }
 }

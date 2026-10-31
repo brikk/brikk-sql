@@ -911,6 +911,12 @@ internal class ScopeEvaluator(
                     (current.thisArg as? Expression)?.let { pending.addLast(it to hidden + parameters) }
                 }
                 is Kwarg -> (current.expressionArg as? Expression)?.let { pending.addLast(it to hidden) }
+                is Anonymous -> {
+                    val native = if (dialect.name == "spice" && current.parent !is dev.brikk.house.sql.ast.Dot &&
+                        (current.thisArg !is Identifier || current.name == current.name.lowercase()))
+                        spiceFunction(current, current.name.lowercase(), current.expressionsArg.filterIsInstance<Expression>(), env, frame ?: Frame(emptyList(), env.outer)) else null
+                    if (native == null) current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
+                }
                 is Select, is SetOperation, is Subquery -> query(current, env.withOuter(frame))
                 else -> current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
             }
@@ -989,6 +995,29 @@ internal class ScopeEvaluator(
             return true
         }
         return false
+    }
+
+    internal fun nestedFields(frame: Frame, qualifier: List<Identifier>): Pair<List<ScopeColumn>, Knowledge>? {
+        if (dialect.name !in setOf("datafusion", "spice")) return null
+        for (prefix in qualifier.size - 1 downTo 0) {
+            val base = qualifier[prefix]
+            val candidates = if (prefix == 0) unqualified(frame, base).candidates else findBindings(frame, qualifier.take(prefix))
+                .flatMap { binding -> binding.columns.filter { same(base, it.name, columns = true) } }
+            val source = candidates.singleOrNull() ?: continue
+            var type = source.sqlType?.let { runCatching { dataTypeFromStr(it, dialect) }.getOrNull() } ?: continue
+            for (part in qualifier.drop(prefix + 1)) {
+                type = type.expressionsArg.filterIsInstance<ColumnDef>().singleOrNull { it.name == part.name }?.args?.get("kind") as? DataType
+                    ?: return emptyList<ScopeColumn>() to Knowledge.UNKNOWN
+            }
+            if (type.thisArg != DType.STRUCT) return emptyList<ScopeColumn>() to Knowledge.UNKNOWN
+            return type.expressionsArg.filterIsInstance<ColumnDef>().map { field ->
+                val fieldType = field.args["kind"] as? DataType
+                source.copy(name = field.name, relation = qualifier.joinToString(".") { it.name },
+                    sqlType = fieldType?.let { renderType(it, dialect) },
+                    nullability = if (source.nullability == Nullability.NULLABLE || fieldType?.args?.get("nullable") == true) Nullability.NULLABLE else Nullability.UNKNOWN)
+            } to Knowledge.FULL
+        }
+        return null
     }
 
     /** A column's qualifier parts, outermost first: `catalog.db.t`. */

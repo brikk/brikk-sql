@@ -6,7 +6,6 @@ import com.intellij.sql.dialects.postgres.PgParser
 import com.intellij.sql.psi.SqlCompositeElementTypes
 import com.intellij.sql.psi.SqlElementTypes
 import dev.brikk.house.sql.ast.*
-import dev.brikk.house.sql.ast.Array as SqlArray
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.intellij.dialect.DatafusionIdeProfile
 import dev.brikk.house.sql.intellij.lexer.CoreStatements
@@ -14,6 +13,8 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Tokenizer
 import dev.brikk.house.sql.shape.SqlScriptParameters
+import dev.brikk.house.sql.shape.datafusionCallSite
+import dev.brikk.house.sql.shape.DatafusionArgumentRole
 import kotlin.Boolean
 import kotlin.String
 
@@ -55,10 +56,42 @@ public class DatafusionFamilyParser(private val profile: DatafusionIdeProfile) :
     override fun parseParameterOrVariableReference(builder: PsiBuilder, allowVariable: Boolean): Boolean =
         builder.parseColonParameter(named = true) || super.parseParameterOrVariableReference(builder, allowVariable)
 
+    /** Native bracket arrays keep ordinary query/alias PSI, including references inside their elements. */
+    override fun parseEvaluableExpression(builder: PsiBuilder, level: Int): Boolean {
+        if (builder.tokenText != "[") return super.parseEvaluableExpression(builder, level)
+        val array = builder.mark()
+        builder.advanceLexer()
+        val values = builder.mark()
+        if (builder.tokenText != "]") {
+            while (!builder.eof()) {
+                ProgressManager.checkCanceled()
+                if (!parseValueExpression(builder, level + 1, true, false)) { builder.error("Expected array element"); break }
+                if (builder.tokenText != ",") break
+                builder.advanceLexer()
+            }
+        }
+        values.done(SqlCompositeElementTypes.SQL_EXPRESSION_LIST)
+        if (builder.tokenText == "]") builder.advanceLexer() else builder.error("Expected ]")
+        array.done(SqlCompositeElementTypes.SQL_ARRAY_LITERAL)
+        return true
+    }
+
+    override fun parseFunctionArgument(builder: PsiBuilder, level: Int, allowAlias: Boolean, allowOrdering: Boolean): Boolean {
+        if (profile != DatafusionIdeProfile.SPICE) return super.parseFunctionArgument(builder, level, allowAlias, allowOrdering)
+        val source = builder.originalText
+        val from = CoreStatements.of(source, source.length, profile.coreDialect).rangeAt(builder.currentOffset)?.start ?: 0
+        val prefix = source.subSequence(from, builder.currentOffset).toString()
+        val site = datafusionCallSite(prefix, prefix.length, profile.coreDialect, ProgressManager::checkCanceled)
+        if (site?.role == DatafusionArgumentRole.DATASET) {
+            return parseReferenceExpression(builder, SqlElementTypes.SQL_TABLE_REFERENCE)
+        }
+        return super.parseFunctionArgument(builder, level, allowAlias, allowOrdering)
+    }
+
     private fun needsNativeStatement(ast: Expression): Boolean = ast.walk().any {
         it is SpiceExplain || it is SpicePrepare || it is SpiceExecute || it is SpiceShow || it is SpiceReset ||
             it is ClusterProperty || it is FileFormatProperty || it is Copy || it is PipeQuery || it is Qualify ||
-            it is SqlArray || it is TryCast ||
+            it is TryCast ||
             it is Use || it is Group && it.args["all"] == true ||
             it is Order && it.expressionsArg.filterIsInstance<Ordered>().any { ordered ->
                 val column = ordered.thisArg as? Column
@@ -98,4 +131,5 @@ public class DatafusionFamilyParser(private val profile: DatafusionIdeProfile) :
         statement.done(SqlCompositeElementTypes.SQL_STATEMENT)
         return true
     }
+
 }

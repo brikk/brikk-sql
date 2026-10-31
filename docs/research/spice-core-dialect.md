@@ -45,8 +45,9 @@ I/O have parser evidence only. PREPARE/EXECUTE session lifetime has not been dri
 
 This is development-branch core/metadata support with
 [shared IDE identities and parser profiles](datafusion-spice-ide-parsing.md).
-Consumer plugin registration, completion/inspection integration, Flight SQL JDBC qualification,
-and publication have their own remaining plan steps.
+[Completion, documentation, references and inspections](datafusion-spice-editor-features.md)
+are available through the shared editor profile. Consumer plugin registration, connection
+harvesting, Flight SQL JDBC qualification and publication remain later work.
 
 ## Reproduce the native checks
 

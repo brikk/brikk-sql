@@ -43,9 +43,11 @@ private object SpiceTestDbms {
 }
 object DatafusionFixtureDialect : DatafusionFamilyDialect(DatafusionIdeProfile.DATAFUSION) {
     override fun getDbms(): Dbms = DatafusionTestDbms.dbms
+    override val editorProfile by lazy { DatafusionTestEditorProfile(this) }
 }
 object SpiceFixtureDialect : DatafusionFamilyDialect(DatafusionIdeProfile.SPICE) {
     override fun getDbms(): Dbms = SpiceTestDbms.dbms
+    override val editorProfile by lazy { DatafusionTestEditorProfile(this) }
 }
 
 /** Real consumer-shaped languages, without registering any production extension in the shared jar. */
@@ -158,7 +160,7 @@ class DatafusionIdeTest : BasePlatformTestCase() {
         assertEmpty(errors(file).toString(), errors(file))
         val expected = parseParameterOccurrences(sql, "spice").map { TextRange(it.range.start, it.range.end) }
         val actual = binds(file).map { it.textRange }
-        assertEquals(expected, actual)
+        assertEquals(PsiTreeUtil.collectElements(file) { it.text.startsWith("$") }.joinToString { "${it.node.elementType}:${it.textRange}:${it.text}" }, expected, actual)
     }
 
     fun testFormattingPreservesNativeMeaningAndBoundaries() {
