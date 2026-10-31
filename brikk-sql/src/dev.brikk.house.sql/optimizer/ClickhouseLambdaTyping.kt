@@ -22,7 +22,8 @@ internal class ClickhouseLambdaTyping(
     private val bindType: (Expression, DataType?) -> Unit,
     private val usesGenericArithmetic: (Expression) -> Boolean,
     private val inferredTypes: Map<Long, DataType> = emptyMap(),
-    private val invalidValues: Set<Long> = emptySet(),
+    private val blockedGenericValues: Set<Long> = emptySet(),
+    private val strictBindings: Boolean = false,
 ) {
     private class Bindings(
         val parent: Bindings?,
@@ -75,7 +76,7 @@ internal class ClickhouseLambdaTyping(
                     } else annotateNode(node)
                 }
                 val inferred = inferredTypes[node.objectId]
-                if (node.objectId in invalidValues) bindType(node, null)
+                if (node.objectId in blockedGenericValues) bindType(node, null)
                 else if (inferred != null) bindType(node, inferred)
                 if (dependsOnRefinement || inferred != null) refined.add(node.objectId)
                 continue
@@ -89,7 +90,7 @@ internal class ClickhouseLambdaTyping(
             if (node is Lambda || node is ClickhouseImplicitLambda) {
                 val parameters = node.expressionsArg.filterIsInstance<Identifier>()
                 val inputs = frame.arrayInputs
-                val types = if (inputs != null && inputs.size == parameters.size && parameters.size == node.expressionsArg.size &&
+                val types = if (!strictBindings && inputs != null && inputs.size == parameters.size && parameters.size == node.expressionsArg.size &&
                     parameters.map { it.name }.distinct().size == parameters.size &&
                     (node !is ClickhouseImplicitLambda || (parameters.size <= 128 && unambiguousPlaceholders(node)))) {
                     inputs.map(::arrayElementType)

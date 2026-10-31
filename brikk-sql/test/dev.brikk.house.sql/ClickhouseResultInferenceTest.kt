@@ -97,8 +97,8 @@ class ClickhouseResultInferenceTest {
             "SELECT arrayMap(lower | upper,[1])", "SELECT arrayMap(my_udf | upper,['x'])",
             "SELECT arrayMap(_2,[1])", "SELECT arrayMap(upper(trim(_)),['x'])",
             "SELECT arrayMap(x -> 'constant',1)",
-            "SELECT arrayMap(toString(_),CAST([NULL] AS Array(Nullable(UInt8))))",
-            "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(12,3))),CAST([2] AS Array(Decimal(12,3))))",
+            "SELECT arrayMap(trim(_),CAST([NULL] AS Array(Nullable(UInt8))))",
+            "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(12,3))),CAST([2] AS Array(Float32)))",
             "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)),[1])")) {
             assertEquals("UNKNOWN", type(map(typed(sql))), sql)
         }

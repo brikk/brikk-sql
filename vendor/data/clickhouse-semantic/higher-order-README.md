@@ -58,8 +58,9 @@ and generated query has an explicit finite output or native error expectation.
 
 `higher-order-refinements.json` records the intentional CHSEM-003-E23 improvement.
 Its nested arrayFilter parameter now receives String independently of the outer
-UInt8 parameter. That query still has an invalid String predicate; a known lambda
-parameter never means successful validation. Historical input snapshots are not
+UInt8 parameter. Its length(x)>0 predicate succeeds natively, but length's result
+is outside the bounded callable catalog. A separate unit control uses an invalid
+String identity predicate with the same input binding. Historical snapshots are not
 overwritten. The old unsupported-context regression now uses arrayCount, which is
 still outside the researched families.
 

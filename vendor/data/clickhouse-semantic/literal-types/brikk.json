@@ -1,0 +1,18 @@
+{
+    "l01": "Array(UInt8)",
+    "l02": "Array(UInt8)",
+    "l03": "Array(UInt16)",
+    "l04": "Array(UInt16)",
+    "l05": "Array(UInt32)",
+    "l06": "Array(UInt32)",
+    "l07": "Array(UInt64)",
+    "l08": "Array(UInt64)",
+    "l09": "Array(Int8)",
+    "l10": "Array(Int8)",
+    "l11": "Array(Int16)",
+    "l12": "Array(Int16)",
+    "l13": "Array(Int32)",
+    "l14": "Array(Int32)",
+    "l15": "Array(Int64)",
+    "l16": "Array(Int64)"
+}

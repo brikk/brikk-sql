@@ -36,6 +36,8 @@ class ClickhouseSemanticDiagnosticFixturesTest {
     fun everyPinnedRuleAndUnknownIsExposedWithStatementAndScriptPositions() {
         val input = File(projectRoot(), "vendor/data/clickhouse-semantic/composition-cases.json")
         val fixture = Json.parseToJsonElement(input.readText()).jsonObject
+        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/overload-refinements.json").readText()).jsonObject
+            .getValue("rules").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val historical = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/composition-brikk.json").readText())
             .jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val prefix = "SELECT '𝄞;';\r\n/* trim | upper */\r\n"
@@ -49,8 +51,8 @@ class ClickhouseSemanticDiagnosticFixturesTest {
             assertTrue(inScript.parseDiagnostics.isEmpty(), id)
             val rules = report.errors.map { it.rule.name }.distinct().sorted()
             val reasons = report.unknowns.map { it.reason.name }.distinct().sorted()
-            assertEquals(case.getValue("rules").jsonArray.map { it.jsonPrimitive.content }.sorted(), rules, id)
-            assertEquals(historical.getValue(id).getValue("unknown_reasons").jsonArray.map { it.jsonPrimitive.content }, reasons, id)
+            assertEquals((refinements[id]?.get("rules") ?: case.getValue("rules")).jsonArray.map { it.jsonPrimitive.content }.sorted(), rules, id)
+            assertEquals((refinements[id]?.get("unknown_reasons") ?: historical.getValue(id).getValue("unknown_reasons")).jsonArray.map { it.jsonPrimitive.content }, reasons, id)
             assertEquals(report.errors.map { it.rule to it.nativeErrorCode }, inScript.errors.map { it.rule to it.nativeErrorCode }, id)
             for ((original, shifted) in report.errors.zip(inScript.errors)) {
                 assertEquals(original.diagnostic.start + prefix.length, shifted.diagnostic.start, id)

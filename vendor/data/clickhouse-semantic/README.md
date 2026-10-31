@@ -31,6 +31,10 @@ CHSEM-008 adds [distinct higher-order contracts](higher-order-README.md) for
 arrayFilter, arrayExists, arrayAll, arraySort and mapApply, with their own source
 guards and original/generated witnesses.
 
+CHSEM-009 adds [bounded composite/overload typing](overload-README.md), including
+an explicit pin-aware native literal-array typing entrypoint. Standard literal
+parity, historical evidence and corpus rules remain intact.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

@@ -1,0 +1,593 @@
+{
+  "captured_at": "2026-10-31T06:29:05.568890+00:00",
+  "fixture_sha256": "5318e3c9864c2da01645627e22b6da1d3a1c5e2b84966de0074e44f6e0f7a56c",
+  "brikk_sha256": "19a948a64849f3f524ad750b69a91d5f88a96edcbc986b5c262d80035c0bd6d4",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-009-E01\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [255, 256]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E02\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [-128, -129]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E03\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [1, -1]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E04\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [1, NULL]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E05\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [1.5, 2.5]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E06\",\"formatted\":\"SELECT\\n    arrayMap(x -> (x * x), [1, 2]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E07\",\"formatted\":\"SELECT\\n    arrayMap(x -> toString(x), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E08\",\"formatted\":\"SELECT\\n    arrayMap(x -> lower(x), CAST(['A', NULL], 'Array(Nullable(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E09\",\"formatted\":\"SELECT\\n    arrayFilter(x -> x, CAST([NULL, 1], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E10\",\"formatted\":\"SELECT\\n    arrayExists(x -> x, CAST([NULL, 0], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E11\",\"formatted\":\"SELECT\\n    arrayAll(x -> x, CAST([NULL, 1], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E12\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E13\",\"formatted\":\"SELECT\\n    arrayFilter(x -> CAST(1, 'UInt8'), CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E14\",\"formatted\":\"SELECT\\n    arraySort(CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E15\",\"formatted\":\"SELECT\\n    arrayMap((s, n) -> toString(n), CAST([('a', 1)], 'Array(Tuple(String, UInt16))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E16\",\"formatted\":\"SELECT\\n    arraySort((s, n) -> n, CAST([('a', 2), ('b', 1)], 'Array(Tuple(String, UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E17\",\"formatted\":\"SELECT\\n    mapApply(kv -> kv, CAST(map('a', 1), 'Map(String, UInt8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E18\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST('[2]', 'Array(Decimal(5, 2))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E19\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(12, 3))'), CAST('[2]', 'Array(Decimal(12, 3))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E20\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal64(2))'), CAST('[2]', 'Array(Decimal128(3))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E21\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST([2], 'Array(Int8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E22\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal32(7))'), CAST('[2]', 'Array(Decimal32(7))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E23\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [18446744073709551615, -1]) AS v,\\n    toTypeName(v)\\nSETTINGS use_variant_as_common_type = 0\"}\n{\"id\":\"CHSEM-009-E24\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [18446744073709551615, -1]) AS v,\\n    toTypeName(v)\\nSETTINGS use_variant_as_common_type = 1\"}\n{\"id\":\"CHSEM-009-E25\",\"formatted\":\"SELECT\\n    arrayMap(x -> toString(CAST(x, 'UInt8')), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\\nSETTINGS cast_keep_nullable = 1\"}\n{\"id\":\"CHSEM-009-E26\",\"formatted\":\"SELECT\\n    arrayMap(x -> toString(CAST(x, 'UInt8')), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\\nSETTINGS cast_keep_nullable = 0\"}\n{\"id\":\"CHSEM-009-E27\",\"formatted\":\"SELECT\\n    arrayMap(x -> trimBoth(x, 'x'), CAST(['xxabx'], 'Array(String)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E28\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> trimBoth(x, y), CAST(['xxabx'], 'Array(String)'), CAST(['x'], 'Array(String)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E29\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST([2], 'Array(Float32)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E30\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [[1], [256]]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E31\",\"formatted\":\"SELECT\\n    arrayExists(x -> CAST(1, 'UInt8'), NULL) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E32\",\"formatted\":\"SELECT\\n    arrayFilter(NULL, CAST(['a'], 'Array(String)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E33\",\"formatted\":\"SELECT\\n    arrayMap(x -> 'constant', CAST(NULL, 'Nullable(String)')) AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-009-E01",
+      "formatted": "SELECT\n    arrayMap(x -> x, [255, 256]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E02",
+      "formatted": "SELECT\n    arrayMap(x -> x, [-128, -129]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E03",
+      "formatted": "SELECT\n    arrayMap(x -> x, [1, -1]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E04",
+      "formatted": "SELECT\n    arrayMap(x -> x, [1, NULL]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E05",
+      "formatted": "SELECT\n    arrayMap(x -> x, [1.5, 2.5]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E06",
+      "formatted": "SELECT\n    arrayMap(x -> (x * x), [1, 2]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E07",
+      "formatted": "SELECT\n    arrayMap(x -> toString(x), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E08",
+      "formatted": "SELECT\n    arrayMap(x -> lower(x), CAST(['A', NULL], 'Array(Nullable(String))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E09",
+      "formatted": "SELECT\n    arrayFilter(x -> x, CAST([NULL, 1], 'Array(Nullable(UInt8))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E10",
+      "formatted": "SELECT\n    arrayExists(x -> x, CAST([NULL, 0], 'Array(Nullable(UInt8))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E11",
+      "formatted": "SELECT\n    arrayAll(x -> x, CAST([NULL, 1], 'Array(Nullable(UInt8))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E12",
+      "formatted": "SELECT\n    arrayMap(x -> x, CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E13",
+      "formatted": "SELECT\n    arrayFilter(x -> CAST(1, 'UInt8'), CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E14",
+      "formatted": "SELECT\n    arraySort(CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E15",
+      "formatted": "SELECT\n    arrayMap((s, n) -> toString(n), CAST([('a', 1)], 'Array(Tuple(String, UInt16))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E16",
+      "formatted": "SELECT\n    arraySort((s, n) -> n, CAST([('a', 2), ('b', 1)], 'Array(Tuple(String, UInt8))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E17",
+      "formatted": "SELECT\n    mapApply(kv -> kv, CAST(map('a', 1), 'Map(String, UInt8)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E18",
+      "formatted": "SELECT\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST('[2]', 'Array(Decimal(5, 2))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E19",
+      "formatted": "SELECT\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(12, 3))'), CAST('[2]', 'Array(Decimal(12, 3))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E20",
+      "formatted": "SELECT\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal64(2))'), CAST('[2]', 'Array(Decimal128(3))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E21",
+      "formatted": "SELECT\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST([2], 'Array(Int8)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E22",
+      "formatted": "SELECT\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal32(7))'), CAST('[2]', 'Array(Decimal32(7))')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E23",
+      "formatted": "SELECT\n    arrayMap(x -> x, [18446744073709551615, -1]) AS v,\n    toTypeName(v)\nSETTINGS use_variant_as_common_type = 0"
+    },
+    {
+      "id": "CHSEM-009-E24",
+      "formatted": "SELECT\n    arrayMap(x -> x, [18446744073709551615, -1]) AS v,\n    toTypeName(v)\nSETTINGS use_variant_as_common_type = 1"
+    },
+    {
+      "id": "CHSEM-009-E25",
+      "formatted": "SELECT\n    arrayMap(x -> toString(CAST(x, 'UInt8')), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\n    toTypeName(v)\nSETTINGS cast_keep_nullable = 1"
+    },
+    {
+      "id": "CHSEM-009-E26",
+      "formatted": "SELECT\n    arrayMap(x -> toString(CAST(x, 'UInt8')), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\n    toTypeName(v)\nSETTINGS cast_keep_nullable = 0"
+    },
+    {
+      "id": "CHSEM-009-E27",
+      "formatted": "SELECT\n    arrayMap(x -> trimBoth(x, 'x'), CAST(['xxabx'], 'Array(String)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E28",
+      "formatted": "SELECT\n    arrayMap((x, y) -> trimBoth(x, y), CAST(['xxabx'], 'Array(String)'), CAST(['x'], 'Array(String)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E29",
+      "formatted": "SELECT\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST([2], 'Array(Float32)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E30",
+      "formatted": "SELECT\n    arrayMap(x -> x, [[1], [256]]) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E31",
+      "formatted": "SELECT\n    arrayExists(x -> CAST(1, 'UInt8'), NULL) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E32",
+      "formatted": "SELECT\n    arrayFilter(NULL, CAST(['a'], 'Array(String)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-009-E33",
+      "formatted": "SELECT\n    arrayMap(x -> 'constant', CAST(NULL, 'Nullable(String)')) AS v,\n    toTypeName(v)"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-009-E01\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [255, 256]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E02\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [-128, -129]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E03\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [1, -1]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E04\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [1, NULL]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E05\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [1.5, 2.5]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E06\",\"formatted\":\"SELECT\\n    arrayMap(x -> (x * x), [1, 2]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E07\",\"formatted\":\"SELECT\\n    arrayMap(x -> toString(x), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E08\",\"formatted\":\"SELECT\\n    arrayMap(x -> lower(x), CAST(['A', NULL], 'Array(Nullable(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E09\",\"formatted\":\"SELECT\\n    arrayFilter(x -> x, CAST([NULL, 1], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E10\",\"formatted\":\"SELECT\\n    arrayExists(x -> x, CAST([NULL, 0], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E11\",\"formatted\":\"SELECT\\n    arrayAll(x -> x, CAST([NULL, 1], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E12\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E13\",\"formatted\":\"SELECT\\n    arrayFilter(x -> CAST(1, 'UInt8'), CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E14\",\"formatted\":\"SELECT\\n    arraySort(CAST(['b', 'a'], 'Array(LowCardinality(String))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E15\",\"formatted\":\"SELECT\\n    arrayMap((s, n) -> toString(n), CAST([('a', 1)], 'Array(Tuple(String, UInt16))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E16\",\"formatted\":\"SELECT\\n    arraySort((s, n) -> n, CAST([('a', 2), ('b', 1)], 'Array(Tuple(String, UInt8))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E17\",\"formatted\":\"SELECT\\n    mapApply(kv -> kv, CAST(map('a', 1), 'Map(String, UInt8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E18\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST('[2]', 'Array(Decimal(5, 2))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E19\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(12, 3))'), CAST('[2]', 'Array(Decimal(12, 3))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E20\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal64(2))'), CAST('[2]', 'Array(Decimal128(3))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E21\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST([2], 'Array(Int8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E22\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal32(7))'), CAST('[2]', 'Array(Decimal32(7))')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E23\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [18446744073709551615, -1]) AS v,\\n    toTypeName(v)\\nSETTINGS use_variant_as_common_type = 0\"}\n{\"id\":\"CHSEM-009-E24\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [18446744073709551615, -1]) AS v,\\n    toTypeName(v)\\nSETTINGS use_variant_as_common_type = 1\"}\n{\"id\":\"CHSEM-009-E25\",\"formatted\":\"SELECT\\n    arrayMap(x -> toString(CAST(x, 'UInt8')), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\\nSETTINGS cast_keep_nullable = 1\"}\n{\"id\":\"CHSEM-009-E26\",\"formatted\":\"SELECT\\n    arrayMap(x -> toString(CAST(x, 'UInt8')), CAST([1, NULL], 'Array(Nullable(UInt8))')) AS v,\\n    toTypeName(v)\\nSETTINGS cast_keep_nullable = 0\"}\n{\"id\":\"CHSEM-009-E27\",\"formatted\":\"SELECT\\n    arrayMap(x -> trimBoth(x, 'x'), CAST(['xxabx'], 'Array(String)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E28\",\"formatted\":\"SELECT\\n    arrayMap((x, y) -> trimBoth(x, y), CAST(['xxabx'], 'Array(String)'), CAST(['x'], 'Array(String)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E29\",\"formatted\":\"SELECT\\n    arrayMap(multiply, CAST('[1]', 'Array(Decimal(5, 2))'), CAST([2], 'Array(Float32)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E30\",\"formatted\":\"SELECT\\n    arrayMap(x -> x, [[1], [256]]) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E31\",\"formatted\":\"SELECT\\n    arrayExists(x -> CAST(1, 'UInt8'), NULL) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E32\",\"formatted\":\"SELECT\\n    arrayFilter(NULL, CAST(['a'], 'Array(String)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-009-E33\",\"formatted\":\"SELECT\\n    arrayMap(x -> 'constant', CAST(NULL, 'Nullable(String)')) AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-009-E01",
+      "returncode": 0,
+      "stdout": "[255,256]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E02",
+      "returncode": 0,
+      "stdout": "[-128,-129]\tArray(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E03",
+      "returncode": 0,
+      "stdout": "[1,-1]\tArray(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E04",
+      "returncode": 0,
+      "stdout": "[1,NULL]\tArray(Nullable(UInt8))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E05",
+      "returncode": 0,
+      "stdout": "[1.5,2.5]\tArray(Float64)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E06",
+      "returncode": 0,
+      "stdout": "[1,4]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E07",
+      "returncode": 0,
+      "stdout": "['1',NULL]\tArray(Nullable(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E08",
+      "returncode": 0,
+      "stdout": "['a',NULL]\tArray(Nullable(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E09",
+      "returncode": 0,
+      "stdout": "[1]\tArray(Nullable(UInt8))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E10",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E11",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E12",
+      "returncode": 0,
+      "stdout": "['b','a']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E13",
+      "returncode": 0,
+      "stdout": "['b','a']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E14",
+      "returncode": 0,
+      "stdout": "['a','b']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E15",
+      "returncode": 0,
+      "stdout": "['1']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E16",
+      "returncode": 0,
+      "stdout": "[('b',1),('a',2)]\tArray(Tuple(String, UInt8))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E17",
+      "returncode": 0,
+      "stdout": "{'a':1}\tMap(String, UInt8)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E18",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(9, 4))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E19",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(18, 6))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E20",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(38, 5))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E21",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(5, 2))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E22",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Scale 14 is out of bounds (max scale: 9): In scope lambda((__function_ref_arg_0, __function_ref_arg_1), multiply(__function_ref_arg_0, __function_ref_arg_1)). (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-009-E23",
+      "returncode": 130,
+      "stdout": "",
+      "stderr": "Code: 386. DB::Exception: There is no supertype for types Int8, UInt64 because some of them are signed integers and some are unsigned integers, but there is no signed integer type, that can exactly represent all required unsigned integer values. (NO_COMMON_TYPE)\n"
+    },
+    {
+      "id": "CHSEM-009-E24",
+      "returncode": 130,
+      "stdout": "",
+      "stderr": "Code: 386. DB::Exception: There is no supertype for types Int8, UInt64 because some of them are signed integers and some are unsigned integers, but there is no signed integer type, that can exactly represent all required unsigned integer values. (NO_COMMON_TYPE)\n"
+    },
+    {
+      "id": "CHSEM-009-E25",
+      "returncode": 0,
+      "stdout": "['1',NULL]\tArray(Nullable(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E26",
+      "returncode": 93,
+      "stdout": "",
+      "stderr": "Code: 349. DB::Exception: Cannot convert NULL value to non-Nullable type: while executing 'FUNCTION CAST(x :: 0, 'UInt8'_String :: 1) -> CAST(x, 'UInt8'_String) UInt8 : 2'. (CANNOT_INSERT_NULL_IN_ORDINARY_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-009-E27",
+      "returncode": 0,
+      "stdout": "['ab']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E28",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: A value of illegal type was provided as 2nd argument 'trim_character' to function 'trimBoth'. Expected: const String, got: String: In scope (x, y) -> trimBoth(x, y). (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-009-E29",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Float64)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E30",
+      "returncode": 0,
+      "stdout": "[[1],[256]]\tArray(Array(UInt16))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E31",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Argument 2 of function arrayExists must be Array. Found Nullable(Nothing) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-009-E32",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E33",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Argument 2 of function arrayMap must be Array. Found Nullable(String) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-009-E01",
+      "sql": "SELECT arrayMap(x -> x, [255, 256]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[255,256]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E02",
+      "sql": "SELECT arrayMap(x -> x, [-128, -129]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[-128,-129]\tArray(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E03",
+      "sql": "SELECT arrayMap(x -> x, [1, -1]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[1,-1]\tArray(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E04",
+      "sql": "SELECT arrayMap(x -> x, [1, NULL]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[1,NULL]\tArray(Nullable(UInt8))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E05",
+      "sql": "SELECT arrayMap(x -> x, [1.5, 2.5]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[1.5,2.5]\tArray(Float64)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E06",
+      "sql": "SELECT arrayMap(x -> x * x, [1, 2]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[1,4]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E07",
+      "sql": "SELECT arrayMap(x -> toString(x), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['1',NULL]\tArray(Nullable(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E08",
+      "sql": "SELECT arrayMap(x -> lower(x), CAST(['A', NULL] AS Array(Nullable(String)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['a',NULL]\tArray(Nullable(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E09",
+      "sql": "SELECT arrayFilter(x -> x, CAST([NULL, 1] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[1]\tArray(Nullable(UInt8))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E10",
+      "sql": "SELECT arrayExists(x -> x, CAST([NULL, 0] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E11",
+      "sql": "SELECT arrayAll(x -> x, CAST([NULL, 1] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E12",
+      "sql": "SELECT arrayMap(x -> x, CAST(['b', 'a'] AS Array(LowCardinality(String)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['b','a']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E13",
+      "sql": "SELECT arrayFilter(x -> CAST(1 AS UInt8), CAST(['b', 'a'] AS Array(LowCardinality(String)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['b','a']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E14",
+      "sql": "SELECT arraySort(CAST(['b', 'a'] AS Array(LowCardinality(String)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['a','b']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E15",
+      "sql": "SELECT arrayMap((s, n) -> toString(n), CAST([('a', 1)] AS Array(Tuple(String, UInt16)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['1']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E16",
+      "sql": "SELECT arraySort((s, n) -> n, CAST([('a', 2), ('b', 1)] AS Array(Tuple(String, UInt8)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[('b',1),('a',2)]\tArray(Tuple(String, UInt8))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E17",
+      "sql": "SELECT mapApply(kv -> kv, CAST(map('a', 1) AS Map(String, UInt8))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "{'a':1}\tMap(String, UInt8)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E18",
+      "sql": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(5, 2))), CAST([2] AS Array(Decimal(5, 2)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(9, 4))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E19",
+      "sql": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(12, 3))), CAST([2] AS Array(Decimal(12, 3)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(18, 6))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E20",
+      "sql": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal64(2))), CAST([2] AS Array(Decimal128(3)))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(38, 5))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E21",
+      "sql": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(5, 2))), CAST([2] AS Array(Int8))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Decimal(5, 2))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E22",
+      "sql": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal32(7))), CAST([2] AS Array(Decimal32(7)))) AS v, toTypeName(v)",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Scale 14 is out of bounds (max scale: 9): In scope lambda((__function_ref_arg_0, __function_ref_arg_1), multiply(__function_ref_arg_0, __function_ref_arg_1)). (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-009-E23",
+      "sql": "SELECT arrayMap(x -> x, [18446744073709551615, -1]) AS v, toTypeName(v) SETTINGS use_variant_as_common_type = 0",
+      "returncode": 130,
+      "stdout": "",
+      "stderr": "Code: 386. DB::Exception: There is no supertype for types Int8, UInt64 because some of them are signed integers and some are unsigned integers, but there is no signed integer type, that can exactly represent all required unsigned integer values. (NO_COMMON_TYPE)\n"
+    },
+    {
+      "id": "CHSEM-009-E24",
+      "sql": "SELECT arrayMap(x -> x, [18446744073709551615, -1]) AS v, toTypeName(v) SETTINGS use_variant_as_common_type = 1",
+      "returncode": 130,
+      "stdout": "",
+      "stderr": "Code: 386. DB::Exception: There is no supertype for types Int8, UInt64 because some of them are signed integers and some are unsigned integers, but there is no signed integer type, that can exactly represent all required unsigned integer values. (NO_COMMON_TYPE)\n"
+    },
+    {
+      "id": "CHSEM-009-E25",
+      "sql": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v, toTypeName(v) SETTINGS cast_keep_nullable = 1",
+      "returncode": 0,
+      "stdout": "['1',NULL]\tArray(Nullable(String))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E26",
+      "sql": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v, toTypeName(v) SETTINGS cast_keep_nullable = 0",
+      "returncode": 93,
+      "stdout": "",
+      "stderr": "Code: 349. DB::Exception: Cannot convert NULL value to non-Nullable type: while executing 'FUNCTION CAST(x :: 0, 'UInt8'_String :: 1) -> CAST(x, 'UInt8'_String) UInt8 : 2'. (CANNOT_INSERT_NULL_IN_ORDINARY_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-009-E27",
+      "sql": "SELECT arrayMap(x -> TRIM(BOTH 'x' FROM x), CAST(['xxabx'] AS Array(String))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "['ab']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E28",
+      "sql": "SELECT arrayMap((x, y) -> TRIM(BOTH y FROM x), CAST(['xxabx'] AS Array(String)), CAST(['x'] AS Array(String))) AS v, toTypeName(v)",
+      "returncode": 44,
+      "stdout": "",
+      "stderr": "Code: 44. DB::Exception: A value of illegal type was provided as 2nd argument 'trim_character' to function 'trimBoth'. Expected: const String, got: String: In scope (x, y) -> trimBoth(x, y). (ILLEGAL_COLUMN)\n"
+    },
+    {
+      "id": "CHSEM-009-E29",
+      "sql": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(5, 2))), CAST([2] AS Array(Float32))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[2]\tArray(Float64)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E30",
+      "sql": "SELECT arrayMap(x -> x, [[1], [256]]) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[[1],[256]]\tArray(Array(UInt16))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E31",
+      "sql": "SELECT arrayExists(x -> CAST(1 AS UInt8), NULL) AS v, toTypeName(v)",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Argument 2 of function arrayExists must be Array. Found Nullable(Nothing) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-009-E32",
+      "sql": "SELECT arrayFilter(NULL, CAST(['a'] AS Array(String))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-009-E33",
+      "sql": "SELECT arrayMap(x -> 'constant', CAST(NULL AS Nullable(String))) AS v, toTypeName(v)",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Argument 2 of function arrayMap must be Array. Found Nullable(String) instead. (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    }
+  ]
+}

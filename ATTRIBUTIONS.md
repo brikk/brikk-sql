@@ -187,6 +187,11 @@ for array predicate/sort contracts, tuple binding, mapApply adapters and compari
 return types. `higher-order-native/` records original/generated witnesses from the
 same exact Apache-2.0 ClickHouse images, separately from older evidence.
 
+CHSEM-009's `overload-sources.json` adds Apache-2.0 excerpts for FieldToDataType,
+getLeastSupertype, DecimalUtils and default NULL return typing. `overload-native/`
+and `literal-types/` retain independent original/generated and integer-boundary
+observations from the same exact Apache-2.0 images. Earlier captures remain intact.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

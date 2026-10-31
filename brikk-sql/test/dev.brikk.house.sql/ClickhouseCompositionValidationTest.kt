@@ -89,7 +89,7 @@ class ClickhouseCompositionValidationTest {
         assertTrue(validate("SELECT arrayMap(x -> toString(TRY_CAST('bad' AS UInt8),'UTC'),['x'])").errors.isEmpty())
         assertTrue(validate("SELECT arrayMap(x -> toString(CAST(NULL AS UInt8),'UTC'),['x']) SETTINGS cast_keep_nullable=1").errors.isEmpty())
         val nullable = validate("SELECT arrayMap(lower | upper,CAST([NULL] AS Array(Nullable(UInt8))))")
-        assertTrue(nullable.errors.isEmpty())
+        assertTrue(ClickhouseCompositionRule.INPUT_TYPE in rules(nullable)) // CHSEM-009 unwraps the proved Nullable(UInt8).
         assertTrue(ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER in reasons(nullable))
         val timezone = validate("SELECT arrayMap(toString(_1,'UTC') | upper,CAST([] AS Array(DateTime)))")
         assertTrue(timezone.errors.isEmpty())

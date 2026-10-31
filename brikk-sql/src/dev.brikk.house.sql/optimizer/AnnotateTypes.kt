@@ -236,6 +236,11 @@ class TypeAnnotator(
         }
     }
     private val clickhouseNativeTypes = HashMap<Long, DataType>()
+    // The explicit pin-aware entrypoint enables literal FieldToDataType rules.
+    // Generic annotateTypes retains its published literal/parity policy.
+    internal var clickhouseNativeLiterals: Boolean = false
+    internal var clickhouseEngineVersion: String? = null
+    internal var clickhouseCheckCanceled: () -> Unit = {}
     private val expressionMetadata: Map<kotlin.reflect.KClass<out Expression>, TypingSpec> =
         expressionMetadata ?: dialect.expressionMetadata
     private val coercesTo: Map<DType, Set<DType>> =
@@ -613,9 +618,14 @@ class TypeAnnotator(
                 it.typeSlot != null && !it.isType(DType.UNKNOWN) && it.objectId !in clickhouseNativeTypes
             }.map { it.objectId }.toSet()
             val inference = inferClickhouseCompositionResults(expression,
-                dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA.default.engineVersion, schema,
-                knownTypes = clickhouseNativeTypes, ignoredClasses = callerTypingClasses, ignoredIds = ignoredIds)
+                clickhouseEngineVersion ?: dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA.default.engineVersion, schema,
+                knownTypes = clickhouseNativeTypes, ignoredClasses = callerTypingClasses, ignoredIds = ignoredIds,
+                checkCanceled = clickhouseCheckCanceled, nativeLiterals = clickhouseNativeLiterals)
             for ((id, type) in inference.valueTypes) clickhouseNativeTypes[id] = type.copy() as DataType
+            val blockedGenericValues = if (clickhouseNativeLiterals) inference.blockedGenericValues + expression.walk()
+                .onEach { clickhouseCheckCanceled() }
+                .filter { clickhouseHigherOrderCall(it) != null && it.objectId !in inference.valueTypes && it::class !in callerTypingClasses }
+                .map { it.objectId }.toSet() else inference.blockedGenericValues
             ClickhouseLambdaTyping(
                 alreadyAnnotated = { expr -> expr.objectId in visited ||
                     (!overwriteTypes && expr.type != null && !expr.isType(DType.UNKNOWN)) },
@@ -627,7 +637,8 @@ class TypeAnnotator(
                         (spec.ref is AnnotatorRef.BinaryAnn || spec.ref is AnnotatorRef.UnaryAnn || spec.ref is AnnotatorRef.DivAnn)
                 },
                 inferredTypes = inference.valueTypes,
-                invalidValues = inference.invalidValues,
+                blockedGenericValues = blockedGenericValues,
+                strictBindings = clickhouseNativeLiterals,
             ).annotate(expression)
             return
         }
@@ -658,6 +669,7 @@ class TypeAnnotator(
 
     /** Shared node rules; ClickHouse's contextual walk changes binding/order, not these rules. */
     private fun annotateExpressionNode(expr: Expression, scope: Scope?) {
+        clickhouseCheckCanceled()
         if (scope != null && expr is Column && expr.text("table").isNotEmpty()) {
             annotateColumn(expr, scope)
             return

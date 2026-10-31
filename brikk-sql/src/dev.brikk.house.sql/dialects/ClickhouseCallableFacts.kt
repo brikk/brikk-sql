@@ -49,7 +49,9 @@ internal data class ClickhouseExplicitCallArity(
  * Base-type rules. Only [exhaustiveForPlainTypes] rules can reject a known plain
  * type by exclusion. The other rules describe positive subsets whose complements
  * stay unknown. NULL, Nullable, LowCardinality, Dynamic, Variant and unknown types
- * are outside this slice. Constness and values are separate from a parameter's type.
+ * are outside these base facts. CHSEM-009 handles its proved wrappers and two-Decimal
+ * multiplication separately; it does not make these subset rules exhaustive.
+ * Constness and values are separate from a parameter's type.
  */
 internal enum class ClickhouseCallableInputRule(val exhaustiveForPlainTypes: Boolean) {
     /** One String or FixedString(N); lower/upper preserve its exact base type. */

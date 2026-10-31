@@ -1,0 +1,8 @@
+{
+ "task":"CHSEM-009",
+ "rules":[{"id":"CHSEM-004-E41","rules":["INPUT_TYPE"],"unknown_reasons":["NULL_OR_WRAPPER"],"reason":"The explicitly declared Nullable(UInt8) can now be unwrapped under lower's source-proved default NULL implementation. UInt8 is incompatible with lower. Both existing engine captures already reject this exact case with code 43. The first input is no longer unavailable knowledge; the subsequent stage remains unknown."}],
+ "results":[
+  {"id":"CHSEM-005-E15","type":"Array(Decimal(18, 6))","reason":"DecimalUtils' source-pinned multiplication storage/scale rule matches the existing exact-pin toTypeName witnesses."},
+  {"id":"CHSEM-005-E16","type":"Array(Nullable(String))","reason":"Unary toString on a declared Nullable(UInt8) uses the default NULL implementation. Both the wrapper source and existing native witness establish the result."}
+ ]
+}

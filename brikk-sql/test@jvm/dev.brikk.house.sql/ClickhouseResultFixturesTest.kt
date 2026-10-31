@@ -21,6 +21,8 @@ class ClickhouseResultFixturesTest {
     @Test
     fun supportedResultsAndExplicitUnknownsMatchThePinnedWitnesses() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/result-cases.json").readText()).jsonObject
+        val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/overload-refinements.json").readText()).jsonObject
+            .getValue("results").jsonArray.associate { it.jsonObject.getValue("id").jsonPrimitive.content to it.jsonObject }
         val rows = fixture.getValue("execution").jsonArray.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
@@ -29,7 +31,7 @@ class ClickhouseResultFixturesTest {
             val before = ast.sql("clickhouse")
             annotateTypes(ast,dialect=Dialects.CLICKHOUSE)
             val result = type(map(ast))
-            assertEquals(case.getValue("expected_type").jsonPrimitive.content,result,id)
+            assertEquals((refinements[id]?.get("type") ?: case.getValue("expected_type")).jsonPrimitive.content,result,id)
             assertEquals(before,ast.sql("clickhouse"),id)
             val restored = Serde.load(Serde.dump(ast)) as Expression
             assertEquals(result,type(map(restored)),id)

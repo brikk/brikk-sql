@@ -81,7 +81,7 @@ class ClickhouseSemanticDiagnosticsTest {
         for ((sql, reason) in listOf(
             "SELECT arrayMap(my_udf | upper,['x'])" to ClickhouseSemanticUnknownReason.UNRESEARCHED_CALLABLE,
             "SELECT arrayMap(lower | upper,t.a) FROM t" to ClickhouseSemanticUnknownReason.NAME_RESOLUTION,
-            "SELECT arrayMap(toString(_),CAST([NULL] AS Array(Nullable(UInt8))))" to ClickhouseSemanticUnknownReason.NULL_OR_WRAPPER,
+            "SELECT arrayMap(trim(_),CAST([NULL] AS Array(Nullable(UInt8))))" to ClickhouseSemanticUnknownReason.NULL_OR_WRAPPER,
             "SELECT arrayMap(multiply,CAST([1,2] AS Array(UInt8)),CAST([3] AS Array(UInt8)))" to ClickhouseSemanticUnknownReason.ARRAY_LENGTHS,
             "SELECT arrayMap(domainWithoutWWW(_) | upper,CAST([] AS Array(FixedString(3))))" to ClickhouseSemanticUnknownReason.RUNTIME_RESTRICTION,
             "SELECT arrayMap((x -> toString(x)) | (y -> upper(y)),[1])" to ClickhouseSemanticUnknownReason.PARSER_GAP,

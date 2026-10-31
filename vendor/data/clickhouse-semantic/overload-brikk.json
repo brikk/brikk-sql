@@ -1,0 +1,303 @@
+[
+    {
+        "id": "CHSEM-009-E01",
+        "input_sql": "SELECT arrayMap(x -> x,[255,256]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, [255, 256]) AS v, toTypeName(v)",
+        "result_type": "Array(UInt16)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E02",
+        "input_sql": "SELECT arrayMap(x -> x,[-128,-129]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, [-128, -129]) AS v, toTypeName(v)",
+        "result_type": "Array(Int16)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E03",
+        "input_sql": "SELECT arrayMap(x -> x,[1,-1]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, [1, -1]) AS v, toTypeName(v)",
+        "result_type": "Array(Int16)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E04",
+        "input_sql": "SELECT arrayMap(x -> x,[1,NULL]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, [1, NULL]) AS v, toTypeName(v)",
+        "result_type": "Array(Nullable(UInt8))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E05",
+        "input_sql": "SELECT arrayMap(x -> x,[1.5,2.5]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, [1.5, 2.5]) AS v, toTypeName(v)",
+        "result_type": "Array(Float64)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E06",
+        "input_sql": "SELECT arrayMap(x -> x*x,[1,2]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x * x, [1, 2]) AS v, toTypeName(v)",
+        "result_type": "Array(UInt16)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E07",
+        "input_sql": "SELECT arrayMap(x -> toString(x),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> toString(x), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+        "result_type": "Array(Nullable(String))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E08",
+        "input_sql": "SELECT arrayMap(x -> lower(x),CAST(['A',NULL] AS Array(Nullable(String)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> lower(x), CAST(['A', NULL] AS Array(Nullable(String)))) AS v, toTypeName(v)",
+        "result_type": "Array(Nullable(String))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E09",
+        "input_sql": "SELECT arrayFilter(x -> x,CAST([NULL,1] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayFilter(x -> x, CAST([NULL, 1] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+        "result_type": "Array(Nullable(UInt8))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E10",
+        "input_sql": "SELECT arrayExists(x -> x,CAST([NULL,0] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayExists(x -> x, CAST([NULL, 0] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E11",
+        "input_sql": "SELECT arrayAll(x -> x,CAST([NULL,1] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayAll(x -> x, CAST([NULL, 1] AS Array(Nullable(UInt8)))) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E12",
+        "input_sql": "SELECT arrayMap(x -> x,CAST(['b','a'] AS Array(LowCardinality(String)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, CAST(['b', 'a'] AS Array(LowCardinality(String)))) AS v, toTypeName(v)",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E13",
+        "input_sql": "SELECT arrayFilter(x -> CAST(1 AS UInt8),CAST(['b','a'] AS Array(LowCardinality(String)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayFilter(x -> CAST(1 AS UInt8), CAST(['b', 'a'] AS Array(LowCardinality(String)))) AS v, toTypeName(v)",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E14",
+        "input_sql": "SELECT arraySort(CAST(['b','a'] AS Array(LowCardinality(String)))) AS v,toTypeName(v)",
+        "generated": "SELECT arraySort(CAST(['b', 'a'] AS Array(LowCardinality(String)))) AS v, toTypeName(v)",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E15",
+        "input_sql": "SELECT arrayMap((s,n) -> toString(n),CAST([('a',1)] AS Array(Tuple(String,UInt16)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap((s, n) -> toString(n), CAST([('a', 1)] AS Array(Tuple(String, UInt16)))) AS v, toTypeName(v)",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E16",
+        "input_sql": "SELECT arraySort((s,n) -> n,CAST([('a',2),('b',1)] AS Array(Tuple(String,UInt8)))) AS v,toTypeName(v)",
+        "generated": "SELECT arraySort((s, n) -> n, CAST([('a', 2), ('b', 1)] AS Array(Tuple(String, UInt8)))) AS v, toTypeName(v)",
+        "result_type": "Array(Tuple(String, UInt8))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E17",
+        "input_sql": "SELECT mapApply(kv -> kv,CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)",
+        "generated": "SELECT mapApply(kv -> kv, CAST(map('a', 1) AS Map(String, UInt8))) AS v, toTypeName(v)",
+        "result_type": "Map(String, UInt8)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E18",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(5,2))),CAST([2] AS Array(Decimal(5,2)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(5, 2))), CAST([2] AS Array(Decimal(5, 2)))) AS v, toTypeName(v)",
+        "result_type": "Array(Decimal(9, 4))",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "RUNTIME_RESTRICTION"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E19",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(12,3))),CAST([2] AS Array(Decimal(12,3)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(12, 3))), CAST([2] AS Array(Decimal(12, 3)))) AS v, toTypeName(v)",
+        "result_type": "Array(Decimal(18, 6))",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "RUNTIME_RESTRICTION"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E20",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal64(2))),CAST([2] AS Array(Decimal128(3)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal64(2))), CAST([2] AS Array(Decimal128(3)))) AS v, toTypeName(v)",
+        "result_type": "Array(Decimal(38, 5))",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "RUNTIME_RESTRICTION"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E21",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(5,2))),CAST([2] AS Array(Int8))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(5, 2))), CAST([2] AS Array(Int8))) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "INPUT_TYPE"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E22",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal32(7))),CAST([2] AS Array(Decimal32(7)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal32(7))), CAST([2] AS Array(Decimal32(7)))) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "INPUT_TYPE"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E23",
+        "input_sql": "SELECT arrayMap(x -> x,[18446744073709551615,-1]) AS v,toTypeName(v) SETTINGS use_variant_as_common_type=0",
+        "generated": "SELECT arrayMap(x -> x, [18446744073709551615, -1]) AS v, toTypeName(v) SETTINGS use_variant_as_common_type = 0",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E24",
+        "input_sql": "SELECT arrayMap(x -> x,[18446744073709551615,-1]) AS v,toTypeName(v) SETTINGS use_variant_as_common_type=1",
+        "generated": "SELECT arrayMap(x -> x, [18446744073709551615, -1]) AS v, toTypeName(v) SETTINGS use_variant_as_common_type = 1",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "RESULT_FAMILY"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E25",
+        "input_sql": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v,toTypeName(v) SETTINGS cast_keep_nullable=1",
+        "generated": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v, toTypeName(v) SETTINGS cast_keep_nullable = 1",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E26",
+        "input_sql": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v,toTypeName(v) SETTINGS cast_keep_nullable=0",
+        "generated": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)), CAST([1, NULL] AS Array(Nullable(UInt8)))) AS v, toTypeName(v) SETTINGS cast_keep_nullable = 0",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E27",
+        "input_sql": "SELECT arrayMap(x -> TRIM(BOTH 'x' FROM x),CAST(['xxabx'] AS Array(String))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> TRIM(BOTH 'x' FROM x), CAST(['xxabx'] AS Array(String))) AS v, toTypeName(v)",
+        "result_type": "Array(String)",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E28",
+        "input_sql": "SELECT arrayMap((x,y) -> TRIM(BOTH y FROM x),CAST(['xxabx'] AS Array(String)),CAST(['x'] AS Array(String))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap((x, y) -> TRIM(BOTH y FROM x), CAST(['xxabx'] AS Array(String)), CAST(['x'] AS Array(String))) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "CONSTANT_ARGUMENT"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E29",
+        "input_sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(5,2))),CAST([2] AS Array(Float32))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(multiply, CAST([1] AS Array(Decimal(5, 2))), CAST([2] AS Array(Float32))) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "ARRAY_LENGTHS",
+            "INPUT_TYPE"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E30",
+        "input_sql": "SELECT arrayMap(x -> x,[[1],[256]]) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x, [[1], [256]]) AS v, toTypeName(v)",
+        "result_type": "Array(Array(UInt16))",
+        "rules": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-009-E31",
+        "input_sql": "SELECT arrayExists(x -> CAST(1 AS UInt8),NULL) AS v,toTypeName(v)",
+        "generated": "SELECT arrayExists(x -> CAST(1 AS UInt8), NULL) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER",
+            "UNSUPPORTED_CONTEXT"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E32",
+        "input_sql": "SELECT arrayFilter(NULL,CAST(['a'] AS Array(String))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayFilter(NULL, CAST(['a'] AS Array(String))) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER"
+        ]
+    },
+    {
+        "id": "CHSEM-009-E33",
+        "input_sql": "SELECT arrayMap(x -> 'constant',CAST(NULL AS Nullable(String))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> 'constant', CAST(NULL AS Nullable(String))) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [],
+        "unknowns": [
+            "NULL_OR_WRAPPER",
+            "UNSUPPORTED_CONTEXT"
+        ]
+    }
+]

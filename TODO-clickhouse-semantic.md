@@ -3,7 +3,8 @@
 Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence,
 CHSEM-002 callable facts, CHSEM-003 contextual input typing, CHSEM-004 internal
 composition validation, CHSEM-005 conditional result annotation and CHSEM-006
-public positioned diagnostics and CHSEM-007 qualification are complete.
+public positioned diagnostics, CHSEM-007 qualification, CHSEM-008 higher-order
+contracts and CHSEM-009 bounded composite/overload typing are complete.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -32,14 +33,14 @@ checks parsing only and must not be relabeled as semantic validation.
 ## Follow-up scope, not part of the first slice
 
 - [x] CHSEM-008: Extend proven contracts to common array/map higher-order functions. Prioritize arrayFilter, arrayExists, arrayAll, arraySort and mapApply; account for their different argument binding and result rules. Establish separate native fixtures for each added family.
-- [ ] CHSEM-009: Expand composite and overload typing. Research Nullable, LowCardinality, tuples, numeric promotion, decimal precision/scale, constant-dependent rules and settings/version boundaries. Add only measured rules; retain explicit unknowns for UDFs and unsupported overloads. Establish exact native literal-array element types before using generic integer hints in contextual lambda validation.
+- [x] CHSEM-009: Expand composite and overload typing. Research Nullable, LowCardinality, tuples, numeric promotion, decimal precision/scale, constant-dependent rules and settings/version boundaries. Add only measured rules; retain explicit unknowns for UDFs and unsupported overloads. Establish exact native literal-array element types before using generic integer hints in contextual lambda validation.
 - [ ] CHSEM-010: Assess cross-dialect lowering separately. Identify which supported compositions can be rewritten as explicit lambdas on each target, gather paired result/error evidence and retain refusal for unproved conversions. No conversion is authorized merely by completing local validation.
 - [ ] CHSEM-011: Fix the existing ClickHouse parser gap for parenthesized explicit lambda operands inside composition. Native 26.10 accepts `(x -> toString(x)) | (y -> toTypeName(y))`, but Brikk currently creates JSONExtract nodes. CHSEM-003-E26 records the native boundary. Add correct structured parsing, source/serde/scope tests and native original/generated result checks without changing other dialects' JSON arrow operators. Until then, do not claim this SQL form has contextual typing or certified lowering.
 
 ## Constraints and resumption
 
 - User authorized CHSEM-007, CHSEM-008 and CHSEM-009 in order, with a separate commit/push after each. Stop before CHSEM-010. CHSEM-011 remains recorded follow-up work, not authorization to expand these rounds.
-- Resume at authorized CHSEM-009; stop before CHSEM-010. Do not treat unchecked follow-ups as implemented or certified.
+- CHSEM-007 through CHSEM-009 are complete. Stop before CHSEM-010 pending further direction; do not treat unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -272,6 +273,40 @@ was run in CHSEM-007, not repeated here. Complete Python suite passed 88 tests w
 one opt-in Toolchain-model skip using the unchanged SQLGlot pin. No new IntelliJ
 APIs, old public constructor changes, release versions, publication or consumer
 dependency edits. Commit/push separately, then continue authorized CHSEM-009.
+
+## CHSEM-009 result
+
+Added the explicit pin-aware `annotateClickhouseSemanticTypes` entrypoint. Native
+integer literal widths, bounded common types, nullable scalar results, String/
+FixedString LowCardinality input removal, typed tuple unpacking and two-Decimal
+multiplication use tagged implementation guards. Standard annotateTypes literal
+policy and all corpus fixtures, ledgers and comparison rules stay unchanged.
+Missing native call/binding proofs stay UNKNOWN in the new entrypoint, not generic
+container guesses. Details: `vendor/data/clickhouse-semantic/overload-README.md`.
+
+Mixed Decimal/integer and Decimal/Float overloads, excessive decimal scales, numeric
+dictionary settings, unsafe joins/casts, constructor NULL dispatch and unsupported
+return wrappers remain unknown. Known predicates alone cannot prove an ordinary
+Boolean result without Array input evidence. Whole-call NULL handling is distinct
+from nullable lambda results and composition operand rules. Overflow, lengths,
+timezone values and unresearched constant rules are not execution certification.
+
+Thirty-three original/generated finite witnesses pass on each exact pin, with no
+execution/version skips. Sixteen integer boundary observations per pin independently
+match Kotlin. Historical current assertions change only for CHSEM-004-E41 and
+CHSEM-005-E15/E16, explicitly recorded in overload-refinements.json and supported by
+their unchanged native captures. The E23 explanation is corrected to distinguish
+the native-valid length predicate from an invalid identity-predicate unit control.
+Historical snapshots and native evidence remain intact.
+
+Validation: full JVM regression passed 1,836 tests with 61 optional integration
+assumption aborts and zero failures, including binary compatibility. Full IntelliJ
+regression passed 757 tests on 261.25134.95, followed by final affected native/relation
+diagnostic controls passing 42 tests. Other IDE versions were not run. Complete
+Python discovery passed 91 tests with one opt-in Toolchain-model skip using the
+unchanged temporary SQLGlot pin. No new IntelliJ API calls, old public signatures,
+toolchain floors, release versions, publication or consumer dependencies changed.
+Commit/push CHSEM-009 separately, then stop before CHSEM-010.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

@@ -1,0 +1,271 @@
+{
+  "task": "CHSEM-009",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-009-E01",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[255,256]) AS v,toTypeName(v)",
+      "type": "Array(UInt16)",
+      "rules": [],
+      "stdout": "[255,256]\tArray(UInt16)\n"
+    },
+    {
+      "id": "CHSEM-009-E02",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[-128,-129]) AS v,toTypeName(v)",
+      "type": "Array(Int16)",
+      "rules": [],
+      "stdout": "[-128,-129]\tArray(Int16)\n"
+    },
+    {
+      "id": "CHSEM-009-E03",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[1,-1]) AS v,toTypeName(v)",
+      "type": "Array(Int16)",
+      "rules": [],
+      "stdout": "[1,-1]\tArray(Int16)\n"
+    },
+    {
+      "id": "CHSEM-009-E04",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[1,NULL]) AS v,toTypeName(v)",
+      "type": "Array(Nullable(UInt8))",
+      "rules": [],
+      "stdout": "[1,NULL]\tArray(Nullable(UInt8))\n"
+    },
+    {
+      "id": "CHSEM-009-E05",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[1.5,2.5]) AS v,toTypeName(v)",
+      "type": "Array(Float64)",
+      "rules": [],
+      "stdout": "[1.5,2.5]\tArray(Float64)\n"
+    },
+    {
+      "id": "CHSEM-009-E06",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x*x,[1,2]) AS v,toTypeName(v)",
+      "type": "Array(UInt16)",
+      "rules": [],
+      "stdout": "[1,4]\tArray(UInt16)\n"
+    },
+    {
+      "id": "CHSEM-009-E07",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> toString(x),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+      "type": "Array(Nullable(String))",
+      "rules": [],
+      "stdout": "['1',NULL]\tArray(Nullable(String))\n"
+    },
+    {
+      "id": "CHSEM-009-E08",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> lower(x),CAST(['A',NULL] AS Array(Nullable(String)))) AS v,toTypeName(v)",
+      "type": "Array(Nullable(String))",
+      "rules": [],
+      "stdout": "['a',NULL]\tArray(Nullable(String))\n"
+    },
+    {
+      "id": "CHSEM-009-E09",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayFilter(x -> x,CAST([NULL,1] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+      "type": "Array(Nullable(UInt8))",
+      "rules": [],
+      "stdout": "[1]\tArray(Nullable(UInt8))\n"
+    },
+    {
+      "id": "CHSEM-009-E10",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayExists(x -> x,CAST([NULL,0] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "stdout": "0\tUInt8\n"
+    },
+    {
+      "id": "CHSEM-009-E11",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayAll(x -> x,CAST([NULL,1] AS Array(Nullable(UInt8)))) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "stdout": "0\tUInt8\n"
+    },
+    {
+      "id": "CHSEM-009-E12",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,CAST(['b','a'] AS Array(LowCardinality(String)))) AS v,toTypeName(v)",
+      "type": "Array(String)",
+      "rules": [],
+      "stdout": "['b','a']\tArray(String)\n"
+    },
+    {
+      "id": "CHSEM-009-E13",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayFilter(x -> CAST(1 AS UInt8),CAST(['b','a'] AS Array(LowCardinality(String)))) AS v,toTypeName(v)",
+      "type": "Array(String)",
+      "rules": [],
+      "stdout": "['b','a']\tArray(String)\n"
+    },
+    {
+      "id": "CHSEM-009-E14",
+      "task": "CHSEM-009",
+      "sql": "SELECT arraySort(CAST(['b','a'] AS Array(LowCardinality(String)))) AS v,toTypeName(v)",
+      "type": "Array(String)",
+      "rules": [],
+      "stdout": "['a','b']\tArray(String)\n"
+    },
+    {
+      "id": "CHSEM-009-E15",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap((s,n) -> toString(n),CAST([('a',1)] AS Array(Tuple(String,UInt16)))) AS v,toTypeName(v)",
+      "type": "Array(String)",
+      "rules": [],
+      "stdout": "['1']\tArray(String)\n"
+    },
+    {
+      "id": "CHSEM-009-E16",
+      "task": "CHSEM-009",
+      "sql": "SELECT arraySort((s,n) -> n,CAST([('a',2),('b',1)] AS Array(Tuple(String,UInt8)))) AS v,toTypeName(v)",
+      "type": "Array(Tuple(String, UInt8))",
+      "rules": [],
+      "stdout": "[('b',1),('a',2)]\tArray(Tuple(String, UInt8))\n"
+    },
+    {
+      "id": "CHSEM-009-E17",
+      "task": "CHSEM-009",
+      "sql": "SELECT mapApply(kv -> kv,CAST(map('a',1) AS Map(String,UInt8))) AS v,toTypeName(v)",
+      "type": "Map(String, UInt8)",
+      "rules": [],
+      "stdout": "{'a':1}\tMap(String, UInt8)\n"
+    },
+    {
+      "id": "CHSEM-009-E18",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(5,2))),CAST([2] AS Array(Decimal(5,2)))) AS v,toTypeName(v)",
+      "type": "Array(Decimal(9, 4))",
+      "rules": [],
+      "stdout": "[2]\tArray(Decimal(9, 4))\n"
+    },
+    {
+      "id": "CHSEM-009-E19",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(12,3))),CAST([2] AS Array(Decimal(12,3)))) AS v,toTypeName(v)",
+      "type": "Array(Decimal(18, 6))",
+      "rules": [],
+      "stdout": "[2]\tArray(Decimal(18, 6))\n"
+    },
+    {
+      "id": "CHSEM-009-E20",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal64(2))),CAST([2] AS Array(Decimal128(3)))) AS v,toTypeName(v)",
+      "type": "Array(Decimal(38, 5))",
+      "rules": [],
+      "stdout": "[2]\tArray(Decimal(38, 5))\n"
+    },
+    {
+      "id": "CHSEM-009-E21",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(5,2))),CAST([2] AS Array(Int8))) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "stdout": "[2]\tArray(Decimal(5, 2))\n"
+    },
+    {
+      "id": "CHSEM-009-E22",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal32(7))),CAST([2] AS Array(Decimal32(7)))) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "error_code": 69,
+      "error_name": "ARGUMENT_OUT_OF_BOUND"
+    },
+    {
+      "id": "CHSEM-009-E23",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[18446744073709551615,-1]) AS v,toTypeName(v) SETTINGS use_variant_as_common_type=0",
+      "type": "UNKNOWN",
+      "rules": [],
+      "error_code": 386,
+      "error_name": "NO_COMMON_TYPE"
+    },
+    {
+      "id": "CHSEM-009-E24",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[18446744073709551615,-1]) AS v,toTypeName(v) SETTINGS use_variant_as_common_type=1",
+      "type": "UNKNOWN",
+      "rules": [],
+      "error_code": 386,
+      "error_name": "NO_COMMON_TYPE"
+    },
+    {
+      "id": "CHSEM-009-E25",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v,toTypeName(v) SETTINGS cast_keep_nullable=1",
+      "type": "UNKNOWN",
+      "rules": [],
+      "stdout": "['1',NULL]\tArray(Nullable(String))\n"
+    },
+    {
+      "id": "CHSEM-009-E26",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> toString(CAST(x AS UInt8)),CAST([1,NULL] AS Array(Nullable(UInt8)))) AS v,toTypeName(v) SETTINGS cast_keep_nullable=0",
+      "type": "UNKNOWN",
+      "rules": [],
+      "error_code": 349,
+      "error_name": "CANNOT_INSERT_NULL_IN_ORDINARY_COLUMN"
+    },
+    {
+      "id": "CHSEM-009-E27",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> TRIM(BOTH 'x' FROM x),CAST(['xxabx'] AS Array(String))) AS v,toTypeName(v)",
+      "type": "Array(String)",
+      "rules": [],
+      "stdout": "['ab']\tArray(String)\n"
+    },
+    {
+      "id": "CHSEM-009-E28",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap((x,y) -> TRIM(BOTH y FROM x),CAST(['xxabx'] AS Array(String)),CAST(['x'] AS Array(String))) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "error_code": 44,
+      "error_name": "ILLEGAL_COLUMN"
+    },
+    {
+      "id": "CHSEM-009-E29",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(multiply,CAST([1] AS Array(Decimal(5,2))),CAST([2] AS Array(Float32))) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "stdout": "[2]\tArray(Float64)\n"
+    },
+    {
+      "id": "CHSEM-009-E30",
+      "task": "CHSEM-009",
+      "sql": "SELECT arrayMap(x -> x,[[1],[256]]) AS v,toTypeName(v)",
+      "type": "Array(Array(UInt16))",
+      "rules": [],
+      "stdout": "[[1],[256]]\tArray(Array(UInt16))\n"
+    },
+    {
+      "id":"CHSEM-009-E31","task":"CHSEM-009",
+      "sql":"SELECT arrayExists(x -> CAST(1 AS UInt8),NULL) AS v,toTypeName(v)",
+      "type":"UNKNOWN","rules":[],"error_code":43,"error_name":"ILLEGAL_TYPE_OF_ARGUMENT"
+    },
+    {
+      "id":"CHSEM-009-E32","task":"CHSEM-009",
+      "sql":"SELECT arrayFilter(NULL,CAST(['a'] AS Array(String))) AS v,toTypeName(v)",
+      "type":"UNKNOWN","rules":[],"stdout":"\\N\tNullable(Nothing)\n"
+    },
+    {
+      "id":"CHSEM-009-E33","task":"CHSEM-009",
+      "sql":"SELECT arrayMap(x -> 'constant',CAST(NULL AS Nullable(String))) AS v,toTypeName(v)",
+      "type":"UNKNOWN","rules":[],"error_code":43,"error_name":"ILLEGAL_TYPE_OF_ARGUMENT"
+    }
+  ]
+}

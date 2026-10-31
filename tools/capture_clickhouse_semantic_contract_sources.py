@@ -17,6 +17,16 @@ HIGHER_ORDER = [
     ("src/Functions/array/FunctionsMapMiscellaneous.cpp", "struct MapAdapterBase", "/// Adapter that extracts array with keys or values"),
     ("src/Functions/FunctionsComparison.h", "DataTypePtr getReturnTypeImpl(const DataTypes & arguments)", "DataTypePtr getReturnTypeForDefaultImplementationForDynamic"),
 ]
+OVERLOAD = [
+    ("src/DataTypes/FieldToDataType.cpp", "operator() (const UInt64 & x)", "operator() (const UInt128 &)"),
+    ("src/DataTypes/getLeastSupertype.cpp", "DataTypePtr getNumericType", "DataTypePtr findSmallestIntervalSuperType"),
+    ("src/DataTypes/getLeastSupertype.cpp", "DataTypePtr getLeastSuperTypeForTuple", "DataTypePtr getLeastSupertype(const DataTypes & types)"),
+    ("src/DataTypes/getLeastSupertype.cpp", "/// For Arrays", "/// For JSON (Object) types."),
+    ("src/Core/DecimalFunctions.h", "template <> inline constexpr size_t max_precision<Decimal32>", "struct DataTypeDecimalTrait"),
+    ("src/Core/DecimalFunctions.h", "inline auto binaryOpResult", "/// Returns the current time."),
+    ("src/Functions/IFunction.cpp", "if (!arguments.empty() && useDefaultImplementationForNulls())", "return getReturnTypeImpl(arguments);"),
+    ("src/Functions/array/FunctionArrayMapped.h", "void getLambdaArgumentTypes", "ColumnPtr executeImplDryRun"),
+]
 
 
 def selection(data, begin, end):
@@ -33,17 +43,20 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
+    parser.add_argument("--round", choices=("higher-order", "overload"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
         records = []
         cache = {}
-        for index, (path, begin, end) in enumerate(HIGHER_ORDER, 1):
+        selections = HIGHER_ORDER if args.round == "higher-order" else OVERLOAD
+        task = "CHSEM-008" if args.round == "higher-order" else "CHSEM-009"
+        for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:
                 cache[path] = urllib.request.urlopen(url, timeout=30).read()
             data = cache[path]
-            records.append({"id": f"CHSEM-008-S{index:02}", "path": path, "url": url,
+            records.append({"id": f"{task}-S{index:02}", "path": path, "url": url,
                             "sha256": hashlib.sha256(data).hexdigest(), "excerpts": [selection(data, begin, end)]})
         snapshots.append({"version": version, "tag": tag, "sources": records})
     args.output.parent.mkdir(parents=True, exist_ok=True)

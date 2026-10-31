@@ -1,0 +1,37 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "input_sha256": "d3f060a60dec8e4c280c6ce4bc59baab68b00f889b9f28e490816216d5cbe3d4",
+  "query": {
+    "returncode": 0,
+    "stdout": "{\"l01\":\"Array(UInt8)\",\"l02\":\"Array(UInt8)\",\"l03\":\"Array(UInt16)\",\"l04\":\"Array(UInt16)\",\"l05\":\"Array(UInt32)\",\"l06\":\"Array(UInt32)\",\"l07\":\"Array(UInt64)\",\"l08\":\"Array(UInt64)\",\"l09\":\"Array(Int8)\",\"l10\":\"Array(Int8)\",\"l11\":\"Array(Int16)\",\"l12\":\"Array(Int16)\",\"l13\":\"Array(Int32)\",\"l14\":\"Array(Int32)\",\"l15\":\"Array(Int64)\",\"l16\":\"Array(Int64)\"}\n",
+    "stderr": ""
+  },
+  "types": {
+    "l01": "Array(UInt8)",
+    "l02": "Array(UInt8)",
+    "l03": "Array(UInt16)",
+    "l04": "Array(UInt16)",
+    "l05": "Array(UInt32)",
+    "l06": "Array(UInt32)",
+    "l07": "Array(UInt64)",
+    "l08": "Array(UInt64)",
+    "l09": "Array(Int8)",
+    "l10": "Array(Int8)",
+    "l11": "Array(Int16)",
+    "l12": "Array(Int16)",
+    "l13": "Array(Int32)",
+    "l14": "Array(Int32)",
+    "l15": "Array(Int64)",
+    "l16": "Array(Int64)"
+  }
+}
