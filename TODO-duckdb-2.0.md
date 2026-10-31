@@ -1117,10 +1117,29 @@ and IDE introspection/completion are separate contracts.
   Parser/annotation/generator/transpile corpora and ledgers remain unchanged. No public
   data-class signature, IntelliJ API, user connection, consumer pin, merge or publication changes.
 
-- [ ] `DDB20-041` Identifier case setting [AUDIT].
+- [x] `DDB20-041` Identifier case setting [DONE].
   `preserve_identifier_case` now reports preserve_case/lowercase/uppercase, not BOOLEAN;
   true/false remain compatibility inputs. Test all modes through catalog harvesting,
   normalization, quoting, alias/reference resolution and relevant local-binding behavior.
+  The versioned catalog already correctly distinguishes old BOOLEAN from 2.0 VARCHAR;
+  repeatable metadata/native capture controls now pin that distinction without rewriting
+  historical snapshots. DuckdbIdentifierCase decodes all native modes and legacy boolean
+  aliases; missing/unknown input remains unknown. ASCII-only spelling folding is separate
+  from lookup: all modes retain ASCII case-insensitive lookup even for quoted identifiers,
+  while Unicode letter distinctions, quoted spelling and string/path data are preserved.
+  Explicit withDuckdbIdentifierCase applies a known policy to modeled Identifier nodes on
+  a copy; it never reads a connection, infers prior SET state, rewrites opaque command text
+  or claims to rewrite every free-form name representation. No mode is silently applied
+  to ordinary fragments. Actual harvested names remain authoritative.
+  DuckdbIdentifierCaseResultTest executes original/generated SQL in all modes and verifies
+  native column catalogs, real JDBC getColumns names, result labels, aliases/reference
+  resolution, DUCKDB_SETTINGS capture and DUCKDB_FUNCTIONS -> DuckdbDump user macro/argument
+  names, lambda-local binding, non-ASCII identifiers, legacy inputs/errors and RESET. Native
+  source d54cbbe3df setting_preserve_identifier_case.test, JDBC 2.0.0.0.
+  Fresh-directory full gates passed 1,406 core, 127 metadata and 230 native/verifier tests,
+  zero skips, all signed fixtures enabled. Log /tmp/opencode/duckdb-identifier-case-full.log.
+  Existing corpora/ledgers, public data-class signatures, IntelliJ APIs, user sessions/URLs,
+  consumer pins and release policy remain unchanged. No merge or publication.
 
 - [ ] `DDB20-042` Division/modulo by zero [AUDIT].
   Existing native tests pin integer // and % errors, TRY-to-NULL and NULL operands.

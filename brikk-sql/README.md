@@ -668,6 +668,23 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Identifier case policy
+
+DuckDB's `preserve_identifier_case` is a VARCHAR policy in 2.0: preserve_case, lowercase
+or uppercase. Legacy true/false spellings remain aliases for preserve_case/lowercase.
+`DuckdbIdentifierCase.fromSetting(value)` decodes known values and returns null for missing
+or unknown facts, never treating an unknown string as false. Lookup remains ASCII
+case-insensitive even for quoted identifiers; non-ASCII letter distinctions are retained.
+
+When a caller explicitly knows the native mode, it can use
+`parseDuckdbNativeOne(sql).withDuckdbIdentifierCase(policy)` before generating/analyzing
+the modeled AST. Only unquoted Identifier nodes are folded, on a copy by default. Quoted
+names, string/path literals, opaque command text and the source tree are not rewritten.
+This is not a connection-setting reader, script SET-state inference or a universal rewrite
+of every free-form name representation. Ordinary fragments preserve authored identifier
+spelling when no mode was supplied. Live catalog names/parameter names stay as harvested;
+do not force them through a boolean or a global lowercase conversion.
+
 ### Native NULL column types
 
 DuckDB 2.0 defaults retain a NULL logical type, including `CREATE TABLE ... AS SELECT NULL`.
