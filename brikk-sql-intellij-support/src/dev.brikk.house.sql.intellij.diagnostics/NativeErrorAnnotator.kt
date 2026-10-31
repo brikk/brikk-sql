@@ -141,6 +141,7 @@ public interface NativeErrorProfile {
     public fun message(diagnostic: SqlDiagnostic): String = when (diagnostic.source) {
         DiagnosticSource.NATIVE -> "$label: ${diagnostic.message}"
         DiagnosticSource.LOCAL_PARSER -> "$label (brikk-sql): ${diagnostic.message}"
+        DiagnosticSource.OFFLINE_SEMANTIC -> "$label (offline semantics): ${diagnostic.message}"
         DiagnosticSource.EDITOR_PARSER, DiagnosticSource.SCOPE, DiagnosticSource.OTHER -> diagnostic.message
     }
 }

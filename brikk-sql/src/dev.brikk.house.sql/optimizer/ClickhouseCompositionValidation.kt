@@ -38,7 +38,8 @@ internal data class ClickhouseCompositionUnknown(
 /**
  * CHSEM-004's internal rule report, deliberately without an accepted/isValid flag.
  * Empty errors are not acceptance: resolution, values, execution, array lengths and
- * unsupported forms can remain unchecked. CHSEM-006 will expose positioned diagnostics.
+ * unsupported forms can remain unchecked. CHSEM-006's diagnostics adapter exposes
+ * these errors and unknowns separately with script positions.
  */
 internal data class ClickhouseCompositionValidation(
     val errors: List<ClickhouseCompositionError>,

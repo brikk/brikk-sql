@@ -2,8 +2,8 @@
 
 Prepared on branch `clickhouse-semantic` from `main`. CHSEM-001 evidence,
 CHSEM-002 callable facts, CHSEM-003 contextual input typing, CHSEM-004 internal
-composition validation and CHSEM-005 conditional result annotation are complete.
-Public positioned/editor diagnostics remain CHSEM-006.
+composition validation, CHSEM-005 conditional result annotation and CHSEM-006
+public positioned diagnostics are complete. Qualification remains CHSEM-007.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -26,7 +26,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-003: Implement contextual lambda argument typing. Derive `_`, `_1` and `_2` types from the corresponding array elements; cover explicit lambdas, nested higher-order scopes, captured physical columns and multiple arrays. Leave ordinary underscore-named columns unchanged.
 - [x] CHSEM-004: Implement composition argument validation. Check stage argument counts, placeholder requirements and provable input incompatibilities using native-backed rules. Diagnose bare variadic designators such as `trim | upper` without rejecting the valid `trim(_) | upper` form. Do not infer runtime array-length equality from matching argument counts.
 - [x] CHSEM-005: Infer composition and arrayMap results. Propagate stage results through supported chains and compute array element types without inventing precision, nullability or overload facts. Track incomplete knowledge explicitly and preserve existing generic/dialect typing behavior.
-- [ ] CHSEM-006: Expose positioned offline semantic diagnostics through the shared library. Keep semantic results separate from parser acceptance; distinguish proven errors from unavailable knowledge. Test statement/script offsets and consumer-facing integration without adding new internal or experimental IntelliJ API calls.
+- [x] CHSEM-006: Expose positioned offline semantic diagnostics through the shared library. Keep semantic results separate from parser acceptance; distinguish proven errors from unavailable knowledge. Test statement/script offsets and consumer-facing integration without adding new internal or experimental IntelliJ API calls.
 - [ ] CHSEM-007: Qualify and document the bounded slice. Add self-contained positive/negative, AST serde, scope/lineage, typing and diagnostic tests; compare original/generated finite results and errors against pinned native fixtures. Run affected modules, full regression and binary-compatibility gates, record skips, and document exact coverage and remaining unknowns.
 
 ## Follow-up scope, not part of the first slice
@@ -38,8 +38,8 @@ checks parsing only and must not be relabeled as semantic validation.
 
 ## Constraints and resumption
 
-- User authorized CHSEM-005 after completing CHSEM-004. Commit/push after each round, then stop before CHSEM-006 until further direction. CHSEM-011 remains recorded follow-up work, not authorization to expand this round.
-- Resume at CHSEM-006; do not treat the unchecked follow-ups as implemented or certified.
+- User authorized CHSEM-006 after completing CHSEM-005. Commit/push after each round, then stop before CHSEM-007 until further direction. CHSEM-011 remains recorded follow-up work, not authorization to expand this round.
+- Resume at CHSEM-007; do not treat the unchecked follow-ups as implemented or certified.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -195,6 +195,39 @@ the ClickHouse-only suite passed 35 tests. Existing corpus fixtures, ledgers and
 comparison rules are unchanged. Public JVM signatures, IntelliJ API use, release
 versions, publication and consumer dependencies are unchanged. Custom IntelliJ
 platform suites were not run. Commit/push this round, then stop before CHSEM-006.
+
+## CHSEM-006 result
+
+The shared diagnostics package now exposes `clickhouseSemanticDiagnostics` and
+`clickhouseScriptSemanticDiagnostics`. Reports separate parser failures, proven
+errors with stable rule/native-category codes, and positioned unknown reasons.
+All offsets are UTF-16 in the authored script. Exact engine versions are required;
+missing knowledge is not an error and empty findings never certify validity.
+Details and consumer example: `vendor/data/clickhouse-semantic/diagnostics-README.md`.
+
+Native parser acceptance/rejection now suppresses only parser findings, preserving
+semantic, scope and consumer checks. Existing IntelliJ diagnostic hooks can render
+the appended OFFLINE_SEMANTIC source with a distinct message. The platform contract
+uses the public API through an existing hook; no automatic plugin activation or
+unproved server-version inference was added. No new internal/experimental IntelliJ
+API calls, profile methods, consumer pins or sibling-repository changes were added.
+Old diagnostic constructors/copy signatures and source ordinals are retained.
+
+The public 50-case report matches CHSEM-004's historical rules and unknown reasons.
+Tests cover statement/script offsets with CRLF, surrogate pairs, repeated names,
+inline INSERT data, lexical/parser failures, unsafe boundaries, schema facts,
+version gating, cancellation and consumer-native outcome combinations. CHSEM-004
+and CHSEM-005 rule/result/matrix captures remain byte-identical; no historical
+native/source evidence, corpus fixture, ledger or comparison rule changed.
+
+Validation: full `./kotlin test` passed 1,826 tests with 61 optional integration
+assumption aborts and zero failures. The affected IntelliJ NativeErrorAnnotatorTest
+suite passed all 33 tests on 261.25134.95; other IDE suites/versions were not run.
+The complete Python tool suite passed 86 tests with one opt-in Toolchain-model
+skip using the unchanged temporary SQLGlot pin; ClickHouse-only discovery passed
+38 tests. Existing native captures back the same rules, with no new native execution
+or qualification claim this round. No release version, publication or toolchain
+floor changed. Commit/push this round, then stop before CHSEM-007.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

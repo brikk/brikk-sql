@@ -26,6 +26,26 @@ class BinaryCompatibilityTest {
     private val marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
 
     @Test
+    fun positionedSemanticsKeepExistingDiagnosticDataClassSignatures() {
+        val severity = dev.brikk.house.sql.diagnostics.DiagnosticSeverity::class.java
+        val source = dev.brikk.house.sql.diagnostics.DiagnosticSource::class.java
+        val string = String::class.java
+        val int = Int::class.javaPrimitiveType!!
+        val diagnostic = dev.brikk.house.sql.diagnostics.SqlDiagnostic::class.java
+        val shape = arrayOf(severity, string, int, int, source)
+        diagnostic.getConstructor(*shape)
+        diagnostic.getMethod("copy", *shape)
+        diagnostic.getMethod("copy\$default", diagnostic, *shape, int, Any::class.java)
+        val statement = dev.brikk.house.sql.diagnostics.StatementDiagnostics::class.java
+        val statementShape = arrayOf(int, int, List::class.java, Boolean::class.javaPrimitiveType!!)
+        statement.getConstructor(*statementShape)
+        statement.getMethod("copy", *statementShape)
+        // Existing source ordinals stay fixed; the new semantic source is appended.
+        assertEquals(listOf("LOCAL_PARSER", "EDITOR_PARSER", "NATIVE", "SCOPE", "OTHER"),
+            dev.brikk.house.sql.diagnostics.DiagnosticSource.entries.take(5).map { it.name })
+    }
+
+    @Test
     fun clickhouseCasePoliciesKeepPublishedConstructorsAndDefaults() {
         val list = List::class.java
         val set = Set::class.java

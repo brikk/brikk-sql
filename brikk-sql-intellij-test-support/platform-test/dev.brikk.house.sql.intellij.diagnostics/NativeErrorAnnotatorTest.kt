@@ -27,6 +27,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.DiagnosticSource
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
+import dev.brikk.house.sql.diagnostics.clickhouseSemanticDiagnostics
 import dev.brikk.house.sql.intellij.host.HostSqlChannel
 import dev.brikk.house.sql.intellij.completion.configureDialect
 import dev.brikk.house.sql.intellij.pipe.NativeSqlValidator
@@ -135,6 +136,19 @@ class NativeErrorAnnotatorTest : BasePlatformTestCase() {
     private fun marks(prefix: String = "Engine"): List<Pair<String, String>> = highlight()
         .filter { it.description?.startsWith(prefix) == true }
         .map { myFixture.editor.document.getText(TextRange(it.startOffset, it.endOffset)) to it.description }
+
+    /** Opt-in core findings use the existing consumer hook and annotation mapping, no engine inference. */
+    fun testPositionedOfflineSemanticsUseExistingConsumerAnnotations() {
+        val sql = "SELECT arrayMap(trim | upper,['x'])"
+        val report = clickhouseSemanticDiagnostics(sql, sql.indices, "26.10.2.103")
+        postgresProfile.extra = report.errors.map { it.diagnostic }
+        postgresProfile.validator = ScriptedValidator { VerifyResult.Accepted }
+        open(sql)
+        assertEquals(listOf("trim" to "Engine (offline semantics): ${report.errors.single().diagnostic.message}"), marks())
+        postgresProfile.extra = emptyList()
+        open("SELECT 1")
+        assertEquals(emptyList<Pair<String, String>>(), marks())
+    }
 
     fun testARejectionIsMarkedWhereTheEngineSaid() {
         open("SELECT 1;\nSELECT bad FROM t;\nSELECT 2;")

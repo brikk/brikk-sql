@@ -460,6 +460,10 @@ multiply type pairs have original native observations on both pins. Unknown type
 runtime checks and editor diagnostics remain distinct; older evidence is preserved.
 See [the result-inference guide](data/clickhouse-semantic/result-README.md).
 
+CHSEM-006 exposes those bounded composition rules as positioned offline findings
+in the shared diagnostics package. Proven errors, unavailable knowledge and parser
+acceptance remain separate. See [the diagnostics guide](data/clickhouse-semantic/diagnostics-README.md).
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
 
 The original embedded capture below is retained. Current official-build captures

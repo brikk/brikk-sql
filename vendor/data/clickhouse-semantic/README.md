@@ -19,6 +19,10 @@ CHSEM-005 adds [result inference](result-README.md), with 40 result/unknown witn
 an engine-observed 100-pair primitive matrix, and separately recorded refinements to
 the current input-binding assertions. Historical captures are preserved.
 
+CHSEM-006 exposes [positioned offline diagnostics](diagnostics-README.md) through
+the shared library. Public errors and unknowns retain the existing 50-case rules;
+parser acceptance cannot suppress semantic findings.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

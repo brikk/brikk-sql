@@ -125,6 +125,21 @@ class SqlDiagnosticsTest {
     }
 
     @Test
+    fun parserVerdictsPreserveNonParserChecksAndUseOnlyParserFallbackPositions() {
+        val findings = listOf(DiagnosticSource.OFFLINE_SEMANTIC, DiagnosticSource.SCOPE, DiagnosticSource.OTHER).map {
+            SqlDiagnostic(DiagnosticSeverity.ERROR, it.name, script.indexOf("foo"), script.indexOf("foo") + 3, it)
+        }
+        assertEquals(findings, combineStatementDiagnostics(script, unit, findings, NativeOutcome.Accepted).diagnostics)
+        assertTrue(combineStatementDiagnostics(script, unit, findings, rejectedAt(script.indexOf("qux") - 3)).diagnostics.containsAll(findings))
+        val parser = local(script.indexOf("baz"), script.indexOf("baz") + 3)
+        val result = combineStatementDiagnostics(script, unit, findings + parser, rejectedAt(null))
+        assertEquals("baz", text(script, result.diagnostics.first()))
+        assertTrue(result.diagnostics.containsAll(findings))
+        val noParser = combineStatementDiagnostics(script, unit, findings, rejectedAt(null))
+        assertEquals("SELECT", text(script, noParser.diagnostics.first()))
+    }
+
+    @Test
     fun noNativeVerdictKeepsTheLocalErrorsAndIsNeverClean() {
         val errors = listOf(local(script.indexOf("foo")))
         val outcome = combineStatementDiagnostics(script, unit, errors, NativeOutcome.NoVerdict("engine unavailable"))

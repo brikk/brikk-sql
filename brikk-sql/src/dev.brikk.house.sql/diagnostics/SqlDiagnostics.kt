@@ -14,7 +14,7 @@ import dev.brikk.house.sql.parser.sourceOffset
  */
 enum class DiagnosticSeverity { ERROR, WARNING }
 
-/** Which parser a diagnostic comes from. */
+/** Which check a diagnostic comes from. */
 enum class DiagnosticSource {
     /** brikk-sql's parser for the dialect: offline and immediate, but it may reject what the engine accepts. */
     LOCAL_PARSER,
@@ -30,6 +30,9 @@ enum class DiagnosticSource {
 
     /** A consumer's own check, such as a PIPE lowering refusal. */
     OTHER,
+
+    /** Proven offline argument-rule failures, independent of parser acceptance. */
+    OFFLINE_SEMANTIC,
 }
 
 /**
@@ -75,7 +78,11 @@ data class NativeError(
     val column: Int? = null,
 )
 
-/** A verified unit's diagnostics, and whether an authoritative engine accepted the SQL at `[start, end)`. */
+/**
+ * A verified unit's diagnostics and whether an authoritative engine accepted the SQL
+ * at `[start, end)`. A parser-only engine's acceptance is not semantic validity and
+ * can coexist with [DiagnosticSource.OFFLINE_SEMANTIC] errors.
+ */
 data class StatementDiagnostics(
     val start: Int,
     val end: Int,
@@ -124,13 +131,15 @@ fun localParseDiagnostics(script: String, range: IntRange, dialect: String, chec
 /**
  * Combines [local] parser diagnostics ([DiagnosticSource.LOCAL_PARSER] or
  * [DiagnosticSource.EDITOR_PARSER]) of the unit verified at [range] of [script] with the engine's
- * [native] outcome. An [advisory] engine (a re-implemented grammar) only adds warnings. An
+ * [native] outcome. Non-parser diagnostics, including offline semantic errors, are
+ * preserved regardless of parser acceptance or rejection. An [advisory] engine
+ * (a re-implemented grammar) only adds warnings. An
  * authoritative engine:
  * - rejecting at a position drops the local errors that start before its first error, a prefix
  *   it proved parses, and keeps the later ones next to its own errors;
  * - rejecting without a position keeps the local errors and adds its message, marked at the first
  *   local error, else the first non-blank character;
- * - accepting clears the local errors that lie wholly inside [range];
+ * - accepting clears the local parser errors that lie wholly inside [range];
  * - giving no verdict keeps the local errors.
  */
 fun combineStatementDiagnostics(
@@ -146,7 +155,9 @@ fun combineStatementDiagnostics(
     val errors = (native as? NativeOutcome.Rejected)?.errors.orEmpty()
         .map { it.copy(offset = it.offset ?: it.line?.let { line -> sourceOffset(sql, line, it.column ?: 1) }) }
     val severity = if (advisory) DiagnosticSeverity.WARNING else DiagnosticSeverity.ERROR
-    val firstLocal = local.minByOrNull { it.start }
+    fun isParser(diagnostic: SqlDiagnostic) = diagnostic.source == DiagnosticSource.LOCAL_PARSER ||
+        diagnostic.source == DiagnosticSource.EDITOR_PARSER
+    val firstLocal = local.filter(::isParser).minByOrNull { it.start }
     fun positioned(error: NativeError) = diagnostic(script, range, DiagnosticSource.NATIVE, severity, error.message, error.offset, error.endOffset)
     val kept: List<SqlDiagnostic>
     val added: List<SqlDiagnostic>
@@ -156,12 +167,12 @@ fun combineStatementDiagnostics(
             added = errors.map(::positioned)
         }
         native == NativeOutcome.Accepted -> {
-            kept = local.filterNot { it.start >= start && it.end <= end }
+            kept = local.filterNot { isParser(it) && it.start >= start && it.end <= end }
             added = emptyList()
         }
         errors.any { it.offset != null } -> {
             val first = start + errors.mapNotNull { it.offset }.min()
-            kept = local.filter { it.start >= first }
+            kept = local.filter { !isParser(it) || it.start >= first }
             added = errors.map(::positioned)
         }
         else -> {

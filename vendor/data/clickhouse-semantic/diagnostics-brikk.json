@@ -1,0 +1,998 @@
+[
+    {
+        "id": "CHSEM-004-E01",
+        "input_sql": "SELECT arrayMap(trim | upper, [' x '])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "VARIADIC_LEFT_DESIGNATOR",
+                "native_error_code": 36,
+                "message": "trim has variadic native arity; use an explicit placeholder call on the left of composition.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 20,
+                "text": "trim"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 23,
+                "end": 28,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E02",
+        "input_sql": "SELECT arrayMap(trim(_) | upper, [' x '])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E03",
+        "input_sql": "SELECT arrayMap(lower | trim, [' X '])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E04",
+        "input_sql": "SELECT arrayMap(concat | upper, ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "VARIADIC_LEFT_DESIGNATOR",
+                "native_error_code": 36,
+                "message": "concat has variadic native arity; use an explicit placeholder call on the left of composition.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 22,
+                "text": "concat"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 25,
+                "end": 30,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E05",
+        "input_sql": "SELECT arrayMap(concat('x', _) | upper, ['y'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E06",
+        "input_sql": "SELECT arrayMap(toString | upper, [1])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "VARIADIC_LEFT_DESIGNATOR",
+                "native_error_code": 36,
+                "message": "toString has variadic native arity; use an explicit placeholder call on the left of composition.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 24,
+                "text": "toString"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 27,
+                "end": 32,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E07",
+        "input_sql": "SELECT arrayMap(toString(_) | upper, [1])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E08",
+        "input_sql": "SELECT arrayMap(lower | concat, ['X'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E09",
+        "input_sql": "SELECT arrayMap(upper | multiply, ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "RIGHT_OPERAND_ARITY",
+                "native_error_code": 42,
+                "message": "A right composition operand must take one argument, not 2.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 24,
+                "end": 32,
+                "text": "multiply"
+            }
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E10",
+        "input_sql": "SELECT arrayMap(lower | concat(_1, _2), ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "RIGHT_OPERAND_ARITY",
+                "native_error_code": 42,
+                "message": "A right composition operand must take one argument, not 2.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 24,
+                "end": 37,
+                "text": "concat(_1, _2"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 24,
+                "end": 30,
+                "text": "concat"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E11",
+        "input_sql": "SELECT arrayMap(multiply | toString, [2])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "ARRAY_MAP_ARITY",
+                "native_error_code": 43,
+                "message": "arrayMap supplies 1 array arguments, but its callable requires 2.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 35,
+                "text": "multiply | toString"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 27,
+                "end": 35,
+                "text": "toString"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E12",
+        "input_sql": "SELECT arrayMap(multiply | toString, [2], [3])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E13",
+        "input_sql": "SELECT arrayMap(multiply(_1, _) | toString, [2], [3])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "MIXED_PLACEHOLDERS",
+                "native_error_code": 36,
+                "message": "Anonymous and numbered placeholders cannot be mixed in one operand.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 30,
+                "text": "multiply(_1, _"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            },
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 16,
+                "end": 30,
+                "text": "multiply(_1, _"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 34,
+                "end": 42,
+                "text": "toString"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E14",
+        "input_sql": "SELECT arrayMap(upper(trim(_)) | lower, [' x '])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "ANONYMOUS_DEPTH",
+                "native_error_code": 36,
+                "message": "An anonymous placeholder must be a direct call argument; use numbered placeholders at deeper levels.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 27,
+                "end": 28,
+                "text": "_"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 16,
+                "end": 29,
+                "text": "upper(trim(_)"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 33,
+                "end": 38,
+                "text": "lower"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E15",
+        "input_sql": "SELECT arrayMap(upper(trim(_1)) | lower, [' x '])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E16",
+        "input_sql": "SELECT arrayMap(_129, [1])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "PLACEHOLDER_LIMIT",
+                "native_error_code": 36,
+                "message": "Numbered placeholders must be between _1 and _128.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 20,
+                "text": "_129"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 16,
+                "end": 20,
+                "text": "_129"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E17",
+        "input_sql": "SELECT arrayMap(_2, [1])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "ARRAY_MAP_ARITY",
+                "native_error_code": 43,
+                "message": "arrayMap supplies 1 array arguments, but its callable requires 2.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 18,
+                "text": "_2"
+            }
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E18",
+        "input_sql": "SELECT arrayMap(tuple(_, _), [1], ['a'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            },
+            {
+                "reason": "RESULT_FAMILY",
+                "start": 16,
+                "end": 27,
+                "text": "tuple(_, _)"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E19",
+        "input_sql": "SELECT arrayMap(lower | upper, [1, 2])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "INPUT_TYPE",
+                "native_error_code": 43,
+                "message": "Argument 1 of lower requires String or FixedString.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 21,
+                "text": "lower"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 24,
+                "end": 29,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E20",
+        "input_sql": "SELECT arrayMap(multiply(_1, _2) | lower, [2], [3])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "INPUT_TYPE",
+                "native_error_code": 43,
+                "message": "Argument 1 of lower requires String or FixedString.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 35,
+                "end": 40,
+                "text": "lower"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E21",
+        "input_sql": "SELECT arrayMap(multiply(_1, _2) | toString | upper, [2], [3])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E22",
+        "input_sql": "SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([1] AS Array(UInt8)))",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "CALL_ARGUMENT_COUNT",
+                "native_error_code": 42,
+                "message": "toString does not accept 2 arguments for these input types.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 24,
+                "text": "toString"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 38,
+                "end": 43,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E23",
+        "input_sql": "SELECT arrayMap(trimBoth(_1, 'x', 'y') | upper, ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "CALL_ARGUMENT_COUNT",
+                "native_error_code": 42,
+                "message": "trimBoth does not accept 3 arguments for these input types.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 24,
+                "text": "trimBoth"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 41,
+                "end": 46,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E24",
+        "input_sql": "SELECT arrayMap(x -> toString(NULL, 1, 2), ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 21,
+                "end": 29,
+                "text": "toString"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E25",
+        "input_sql": "SELECT arrayMap(x -> toString(TRY_CAST('bad' AS UInt8), 'UTC'), ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 21,
+                "end": 29,
+                "text": "toString"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 30,
+                "end": 54,
+                "text": "TRY_CAST('bad' AS UInt8)"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E26",
+        "input_sql": "SELECT arrayMap(multiply(_1, _2) | toString, [1, 2], [3])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E27",
+        "input_sql": "SELECT arrayMap(domainWithoutWWW(_) | upper, CAST(['abc'] AS Array(FixedString(3))))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "RUNTIME_RESTRICTION",
+                "start": 16,
+                "end": 32,
+                "text": "domainWithoutWWW"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E28",
+        "input_sql": "SELECT arrayMap(domainWithoutWWW(_) | upper, CAST([] AS Array(FixedString(3))))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "RUNTIME_RESTRICTION",
+                "start": 16,
+                "end": 32,
+                "text": "domainWithoutWWW"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E29",
+        "input_sql": "WITH (x -> upper(x)) AS trim SELECT arrayMap(trim | upper, ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NAME_RESOLUTION",
+                "start": 45,
+                "end": 49,
+                "text": "trim"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 52,
+                "end": 57,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E30",
+        "input_sql": "SELECT arrayMap(trim | upper, ['x']) FROM (SELECT 1 AS trim) t",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NAME_RESOLUTION",
+                "start": 16,
+                "end": 20,
+                "text": "trim"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 23,
+                "end": 28,
+                "text": "upper"
+            },
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 42,
+                "end": 62,
+                "text": "(SELECT 1 AS trim) t"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E31",
+        "input_sql": "WITH arrayMap(trim | upper, ['x']) AS unused SELECT 1",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 5,
+                "end": 44,
+                "text": "arrayMap(trim | upper, ['x']) AS unused"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E32",
+        "input_sql": "SELECT arrayMap((x -> toString(x)) | (y -> toTypeName(y)), CAST([1] AS Array(UInt8)))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "PARSER_GAP",
+                "start": 17,
+                "end": 33,
+                "text": "x -> toString(x)"
+            },
+            {
+                "reason": "PARSER_GAP",
+                "start": 38,
+                "end": 56,
+                "text": "y -> toTypeName(y)"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E33",
+        "input_sql": "SELECT arrayMap(brikkMissingSemanticFunction | upper, ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "UNRESEARCHED_CALLABLE",
+                "start": 16,
+                "end": 44,
+                "text": "brikkMissingSemanticFunction"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 47,
+                "end": 52,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E34",
+        "input_sql": "SELECT arrayMap(LCASE | UCASE, ['X'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E35",
+        "input_sql": "SELECT arrayMap(TOSTRING | upper, [1])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "UNRESEARCHED_CALLABLE",
+                "start": 16,
+                "end": 24,
+                "text": "TOSTRING"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 27,
+                "end": 32,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E36",
+        "input_sql": "SELECT arrayMap(TRIMBOTH(_) | upper, ['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "UNRESEARCHED_CALLABLE",
+                "start": 16,
+                "end": 24,
+                "text": "TRIMBOTH"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 30,
+                "end": 35,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E37",
+        "input_sql": "SELECT arrayMap(lower('a') | upper, ['B'])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "INVALID_OPERAND",
+                "native_error_code": 36,
+                "message": "A composition operand must be a function, explicit lambda or expression with placeholders.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 21,
+                "text": "lower"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 29,
+                "end": 34,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E38",
+        "input_sql": "SELECT arrayMap(lower | upper, 1)",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "ARRAY_INPUT_TYPE",
+                "native_error_code": 43,
+                "message": "arrayMap requires an Array input, not a known scalar or other non-array type.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 31,
+                "end": 32,
+                "text": "1"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 16,
+                "end": 21,
+                "text": "lower"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 24,
+                "end": 29,
+                "text": "upper"
+            },
+            {
+                "reason": "INPUT_TYPE",
+                "start": 31,
+                "end": 32,
+                "text": "1"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E39",
+        "input_sql": "SELECT arrayMap(_.x | upper, CAST([tuple('a')] AS Array(Tuple(x String))))",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "ANONYMOUS_MEMBER",
+                "native_error_code": 36,
+                "message": "Anonymous placeholder member access requires a numbered placeholder.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 16,
+                "end": 17,
+                "text": "_"
+            }
+        ],
+        "unknowns": [
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 16,
+                "end": 19,
+                "text": "_.x"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 22,
+                "end": 27,
+                "text": "upper"
+            },
+            {
+                "reason": "INPUT_TYPE",
+                "start": 29,
+                "end": 73,
+                "text": "CAST([tuple('a')] AS Array(Tuple(x String)))"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E40",
+        "input_sql": "SELECT arrayMap(_1.x | upper, CAST([tuple('a')] AS Array(Tuple(x String))))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "RESULT_FAMILY",
+                "start": 16,
+                "end": 20,
+                "text": "_1.x"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 23,
+                "end": 28,
+                "text": "upper"
+            },
+            {
+                "reason": "INPUT_TYPE",
+                "start": 30,
+                "end": 74,
+                "text": "CAST([tuple('a')] AS Array(Tuple(x String)))"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E41",
+        "input_sql": "SELECT arrayMap(lower | upper, CAST([NULL] AS Array(Nullable(UInt8))))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 16,
+                "end": 21,
+                "text": "lower"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 24,
+                "end": 29,
+                "text": "upper"
+            },
+            {
+                "reason": "INPUT_TYPE",
+                "start": 31,
+                "end": 69,
+                "text": "CAST([NULL] AS Array(Nullable(UInt8)))"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E42",
+        "input_sql": "SELECT arrayMap(toString(_1, 'UTC') | upper, CAST([0] AS Array(DateTime)))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "TIMEZONE_VALUE",
+                "start": 16,
+                "end": 24,
+                "text": "toString"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E43",
+        "input_sql": "SELECT arrayMap(concat(_1, _2) | lower, CAST([[1]] AS Array(Array(UInt8))), CAST([[2]] AS Array(Array(UInt8))))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "ARRAY_LENGTHS",
+                "start": 7,
+                "end": 15,
+                "text": "arrayMap"
+            },
+            {
+                "reason": "INPUT_TYPE",
+                "start": 16,
+                "end": 22,
+                "text": "concat"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 33,
+                "end": 38,
+                "text": "lower"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E44",
+        "input_sql": "SELECT arrayMap(x -> lower(t.n), t.a) FROM (SELECT TRY_CAST('bad' AS UInt8) n, CAST(['x'] AS Array(String)) a) t",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 21,
+                "end": 26,
+                "text": "lower"
+            },
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 43,
+                "end": 112,
+                "text": "(SELECT TRY_CAST('bad' AS UInt8) n, CAST(['x'] AS Array(String)) a) t"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E45",
+        "input_sql": "SELECT CAST([1] AS Array(UInt8)) AS a, arrayMap(lower | upper,a) FROM (SELECT CAST(['x'] AS Array(String)) a) t SETTINGS prefer_column_name_to_alias = 1",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 48,
+                "end": 53,
+                "text": "lower"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 56,
+                "end": 61,
+                "text": "upper"
+            },
+            {
+                "reason": "INPUT_TYPE",
+                "start": 62,
+                "end": 63,
+                "text": "a"
+            },
+            {
+                "reason": "UNSUPPORTED_CONTEXT",
+                "start": 70,
+                "end": 112,
+                "text": "(SELECT CAST(['x'] AS Array(String)) a) t "
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E46",
+        "input_sql": "WITH ((f,a) -> ['ok']) AS arrayMap SELECT arrayMap(trim | upper,['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NAME_RESOLUTION",
+                "start": 42,
+                "end": 50,
+                "text": "arrayMap"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E47",
+        "input_sql": "SELECT arrayMap(lower | upper,CAST(['x'] AS Array(CHAR)))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 16,
+                "end": 21,
+                "text": "lower"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 24,
+                "end": 29,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E48",
+        "input_sql": "SELECT arrayMap(toString(_1,'UTC') | upper,CAST([0] AS Array(TIMESTAMP)))",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 16,
+                "end": 24,
+                "text": "toString"
+            },
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 37,
+                "end": 42,
+                "text": "upper"
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-004-E49",
+        "input_sql": "SELECT arrayMap(x -> multiply(NULL,1,2),['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [
+            {
+                "rule": "CALL_ARGUMENT_COUNT",
+                "native_error_code": 42,
+                "message": "multiply requires 2 arguments, not 3.",
+                "source": "OFFLINE_SEMANTIC",
+                "severity": "ERROR",
+                "start": 21,
+                "end": 29,
+                "text": "multiply"
+            }
+        ],
+        "unknowns": []
+    },
+    {
+        "id": "CHSEM-004-E50",
+        "input_sql": "SELECT arrayMap(x -> trimBoth(NULL,'x','y'),['x'])",
+        "engine_version": "26.10.2.103",
+        "errors": [],
+        "unknowns": [
+            {
+                "reason": "NULL_OR_WRAPPER",
+                "start": 21,
+                "end": 29,
+                "text": "trimBoth"
+            }
+        ]
+    }
+]
