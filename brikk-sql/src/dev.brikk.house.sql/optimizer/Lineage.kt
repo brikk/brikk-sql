@@ -15,6 +15,7 @@ import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
 import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
 import dev.brikk.house.sql.ast.Pivot
@@ -206,6 +207,7 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbSnapshot())throw SqlglotError("Snapshot/state lineage is not modeled")
     if(resolvedDialect.name=="duckdb" && expression.hasDuckdbGeoJsonContract())throw SqlglotError("GeoJSON Feature/geometry/file lineage is not modeled")
     if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw SqlglotError("Parquet file/field-ID/default lineage is not modeled")
     if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })

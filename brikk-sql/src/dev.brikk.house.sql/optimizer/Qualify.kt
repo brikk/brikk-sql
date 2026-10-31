@@ -15,6 +15,7 @@ import dev.brikk.house.sql.dialects.isDuckdbNameShow
 import dev.brikk.house.sql.dialects.isDuckdbSetval
 import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
 import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 
 // Import aliases: the rule functions share names with qualify()'s Boolean options
 // (which mirror Python's keyword arguments).
@@ -87,6 +88,7 @@ fun <E : Expression> qualify(
     sql: String? = null,
 ): E {
     val resolvedDialect = dialect ?: Dialects.BASE
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbSnapshot())throw OptimizeError("Snapshot qualification is not modeled")
     if(resolvedDialect.name=="duckdb" && expression.hasDuckdbGeoJsonContract())throw OptimizeError("GeoJSON file/Feature rewriting is not modeled")
     if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw OptimizeError("Parquet schema/virtual-column rewriting is not modeled; preserve the native scan")
     if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })

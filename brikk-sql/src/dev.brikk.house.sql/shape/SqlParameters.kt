@@ -2,6 +2,7 @@ package dev.brikk.house.sql.shape
 
 import dev.brikk.house.sql.ast.Semicolon
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SyntacticRange
 import dev.brikk.house.sql.parser.Token
@@ -16,6 +17,8 @@ import dev.brikk.house.sql.parser.TokenizerConfigs
  * IDE-configured textual substitutions remain a separate platform concern.
  */
 fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccurrence> {
+    if(dialect.equals("duckdb",true) && duckdbStorageDdlIssue(sql)!=null)
+        throw dev.brikk.house.sql.generator.UnsupportedError("Storage layout/property DDL parameter binding is not modeled")
     val source = Dialects.forName(dialect)
     val tokens = source.tokenize(sql)
     val parser = source.parser().also { it.captureSourceRanges = true }

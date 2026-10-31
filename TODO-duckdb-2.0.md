@@ -961,10 +961,42 @@ and IDE introspection/completion are separate contracts.
   experimental IntelliJ calls, user connections/installations, consumer pins, merge or
   publication. No automatic file introspection or consumer connection-refresh claim.
 
-- [ ] `DDB20-035` Other core-extension SQL additions [MONITOR].
+- [x] `DDB20-035` Other core-extension SQL additions [DONE].
   Triage the final DuckLake 1.1, Iceberg REST ATTACH options and Delta CREATE TABLE,
   partition/property/time-travel/VARIANT syntax for effects on generic ATTACH/DDL/type models.
   Register concrete gaps rather than porting those execution engines or reserving their keywords globally.
+  Final-doc triage covers DuckLake 1.1 attachment/version/migration/MAP metadata options,
+  partition/epoch/bucket/sort evolution; Iceberg REST URI/ENDPOINT, MAP headers, interval
+  staleness, lazy/eager resolution and nested namespaces; Delta CREATE partition/properties,
+  schema/AT/scan time travel and distinct VARIANT. Typed INTERVAL and timestamp ATTACH values
+  are now preserved. Handwritten option vocabulary is advisory, not a runtime validator.
+  Concrete shared-model gaps are registered rather than hidden: CREATE storage partition/
+  property clauses can disappear in the parity generator; ALTER SET PARTITIONED/SORTED BY,
+  RESET variants and SET(properties) are incomplete or opaque. Lossless shared DDL nodes
+  and generation remain follow-up work. Source-aware SqlFragment previews preserve the
+  whole authored statement with an unsupported finding, while executable transformation,
+  strict bind discovery, result facts and dependencies refuse these DDL forms. No ledger
+  weakening or claim that a partial AST's plain .sql() is safe executable storage DDL.
+  Snapshot clauses/scan arguments round-trip, but scope/shape/qualification/lineage cannot
+  borrow current catalog facts. Cross-target extension ATTACH/snapshot mappings refuse.
+  These are parser/type-model boundaries, not a port of catalog transaction/storage engines.
+  Runtime-only constraints remain native: DuckLake migration/epoch transforms require the
+  requested format version; Iceberg URI/ENDPOINT/ENDPOINT_TYPE combinations and lazy UNKNOWN
+  schema placeholders; Delta CREATE/CTAS/property/protocol/nested-VARIANT restrictions.
+  No recursive IDE schema model or flat fallback is implied by SUPPORT_NESTED_NAMESPACES.
+  No extension ATTACH/DDL is executed: native grammar controls run only json_serialize_sql,
+  with external access/autoload/autoinstall disabled and a private uncreated install path.
+  No real resources, secrets, catalog migrations, endpoint requests or SQL retries occur.
+  Docs pinned for the audit: ducklake-web a3fad4a18799327cc938ad7435f59686451d69a3
+  (stable 1.1 connecting/partitioning/sorted_tables/time_travel), duckdb-web
+  17c0a8806a70d47539b61ff01c28a9a34f54829d (2.0 Iceberg options/writing and Delta).
+  Quack JDBC 0.12.0 is not adopted here: this checkout uses org.duckdb JDBC 2.0.0.0,
+  and the user is handling the plugin notification/adoption separately.
+  Evidence: DuckdbCoreExtensionTriageTest, DuckdbCoreExtensionOptionsTest and
+  DuckdbCoreExtensionTriageResultTest. Fresh-directory full gates passed 1,392 core,
+  125 metadata and 213 native/verifier tests, zero skips, with all three signed extension
+  fixtures enabled. The existing AST/annotation/generator corpora and ledgers are unchanged.
+  This completes the requested triage, not the registered lossless-DDL follow-up work.
 
 ## Migration and changed SQL semantics
 

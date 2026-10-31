@@ -19,6 +19,8 @@ import dev.brikk.house.sql.dialects.hasDuckdbRegexOverload
 import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
 import dev.brikk.house.sql.dialects.hasDuckdbParquetWriteContract
 import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
+import dev.brikk.house.sql.dialects.isDuckdbStorageAttach
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -414,6 +416,8 @@ open class Generator(
             unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
         if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbNameShow() })
             unexecutable("DuckDB SHOW name/query resolution has no verified cross-target translation")
+        if(sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && (expr.hasDuckdbSnapshot() || expr.walk().any { it.isDuckdbStorageAttach() }))
+            unexecutable("DuckDB extension attachment/snapshot semantics have no verified cross-target translation")
         if(expr.hasDuckdbParquetContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
             (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet schema/virtual columns have no verified cross-target translation")
         if(expr.hasDuckdbParquetWriteContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&

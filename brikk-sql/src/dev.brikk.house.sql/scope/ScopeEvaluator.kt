@@ -73,6 +73,7 @@ import dev.brikk.house.sql.dialects.isDuckdbParquetCall
 import dev.brikk.house.sql.dialects.duckdbParquetDeclaredColumns
 import dev.brikk.house.sql.dialects.duckdbGeoJsonDeclaredColumns
 import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.dialects.NormalizationStrategy
 import dev.brikk.house.sql.dialects.UsingColumnOrder
 import dev.brikk.house.sql.generator.SourceMap
@@ -719,6 +720,7 @@ internal class ScopeEvaluator(
     }
 
     private fun table(node: Table, env: Env, lateral: Frame): Binding {
+        if(dialect.name=="duckdb" && node.hasDuckdbSnapshot())throw dev.brikk.house.sql.generator.UnsupportedError("Snapshot table schemas are not current-table scope facts")
         val function = node.thisArg as? Anonymous
         if (function != null) return tableFunction(node, function, function.name, function.expressionsArg.filterIsInstance<Expression>(), env, lateral)
         // A function core parses as its own node (ClickHouse's format(...)): its arguments in order.

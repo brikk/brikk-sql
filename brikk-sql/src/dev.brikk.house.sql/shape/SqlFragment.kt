@@ -14,6 +14,8 @@ import dev.brikk.house.sql.dialects.duckdbRegexName
 import dev.brikk.house.sql.dialects.hasDuckdbParquetCall
 import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
 import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
+import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
 import dev.brikk.house.sql.ast.PipeCall
@@ -170,6 +172,11 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         desugarPipes: Boolean,
         forExecution: Boolean,
     ): TranspileResult {
+        val storageIssue=if(dialectObj.name=="duckdb")duckdbStorageDdlIssue(sql)else null
+        if(storageIssue!=null) {
+            if(forExecution)throw dev.brikk.house.sql.generator.UnsupportedError(storageIssue)
+            return TranspileResult(sql.trim(),listOf(storageIssue),rootKind,isRawPassthroughStatement=true)
+        }
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
         generator.forExecution = forExecution
@@ -376,6 +383,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * use dialect normalization, including its quoted-name rules, as lineage does.
      */
     val sourceTables: List<String> by lazy {
+        if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || ast.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot dependencies are not modeled")
         if (ast.isDuckdbNameShow()) throw ShapeError("SHOW target dependencies depend on runtime name resolution")
         var tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
         if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
@@ -499,6 +507,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || tree.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot result facts are not modeled")
         if(dialectObj.name=="duckdb" && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType()!=null }))return declarativeCteShape(tree,inputs)
         if(dialectObj.name=="duckdb" && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)
         if (dialectObj.name == "duckdb" && tree.walk().any { it.duckdbRegexName() != null }) return declarativeCteShape(tree, inputs)

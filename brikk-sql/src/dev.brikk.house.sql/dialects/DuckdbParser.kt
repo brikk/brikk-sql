@@ -853,7 +853,9 @@ open class DuckdbParser(
             AttachOption(
                 args(
                     "this" to parseVar(anyToken = true),
-                    "expression" to parseField(anyToken = true),
+                    "expression" to if(currToken.tokenType==TokenType.INTERVAL ||
+                        currToken.text.uppercase() in setOf("TIMESTAMP","TIMESTAMPTZ","DATE","TIME") && nextToken.tokenType==TokenType.STRING)
+                        parseDisjunction() else parseField(anyToken = true),
                 )
             )
         )

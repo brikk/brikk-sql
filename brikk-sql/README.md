@@ -668,6 +668,33 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Core-extension syntax triage
+
+DuckLake 1.1, Iceberg REST and Delta syntax triage is not storage-engine certification.
+ATTACH preserves authored backend options and typed INTERVAL/date/timestamp literals,
+including MAP parameters/headers. The handwritten `DUCKDB_CORE_EXTENSION_ATTACH_OPTIONS`
+vocabulary distinguishes canonical Iceberg URI from deprecated ENDPOINT and keeps backend
+options separate. It is not a runtime validator, installed-extension claim or a request to
+provision/migrate a catalog, enumerate schemas or contact endpoints. Quack JDBC is not a
+dependency of this checkout; its driver releases belong to the consumer plugin.
+
+Known model gaps remain explicit: the upstream-shaped CREATE serializer can omit storage
+partition/properties clauses, and ALTER storage partition/sort/property actions can be
+opaque or incomplete. `SqlFragment.transpileTo` keeps the original source for those forms
+as a flagged, diagnostic-only preview; `toExecutable`, strict bind discovery, shapes and
+source dependencies refuse. Do not treat the partial parity AST's ordinary `.sql()` output
+as executable storage DDL. Future lossless DDL nodes/round trips are still needed. No
+extension words are newly reserved, and generic DDL remains independent of a guessed
+backend inferred from a catalog name.
+
+AT VERSION/TIMESTAMP and scan snapshot parameters retain their authored syntax, but current
+table facts are not snapshot schema facts. Snapshot qualification, scopes, output facts,
+lineage and unproved cross-target attachment/snapshot transformations refuse. Final-doc
+forms are checked with native parser-only serialization while external access, installation
+and autoload are disabled. No test executes extension ATTACH or storage DDL. Catalog state,
+lazy namespace placeholders, Delta feature/property restrictions and catalog migrations
+remain native callback decisions, not behavior the library emulates.
+
 ### GeoJSON import and export
 
 DuckDB 2.0 COPY GEOJSON/GEOJSONL keeps the authored format and option bags. GEOJSON defaults
