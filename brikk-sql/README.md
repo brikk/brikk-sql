@@ -670,6 +670,13 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+`DUCKDB_FUNCTION_PROPERTIES` exposes exact built-in registry observations separately from
+the published function-row schema. Alias/stability/side-effect fields do not prove NULL
+handling, argument defaults, named roles or a table output schema. Arbitrary `colN` names
+and same-named UDFs no longer establish reader argument roles. Only the reviewed internal
+reader set retains its verified one-positional boundary. Live settings `typed_value` is
+connection data and is deliberately absent from static snapshots.
+
 Future metadata captures use private extension, secret and temp directories. Core captures
 disable external access; extension captures require `BRIKK_DUCKDB_CAPTURE_EXTENSIONS` to
 name a reviewed TSV with `extension`, absolute local `path` and `sha256` columns. They only

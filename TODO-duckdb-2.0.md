@@ -1607,12 +1607,31 @@ and IDE introspection/completion are separate contracts.
   passed with zero skips; log /tmp/opencode/duckdb-hermetic-capture-verified.log. No historical
   dump, generated snapshot, library ABI, driver pin or user resource was changed. No publication.
 
-- [ ] `DDB20-060` Richer function registry metadata [AUDIT].
+- [x] `DDB20-060` Richer function registry metadata [DONE].
   Inspect final schema/defaults/named arguments/null handling/stability/side effects/table results.
   Extend FunctionDef only where engine evidence supports it, preserving binary compatibility.
   Do not infer null semantics or positional/named splits from misleading parameter names.
   Also classify the new duckdb_settings() `typed_value` column: current connection values
   must not be baked into the static settings catalog as universal defaults.
+  Added the separate DUCKDB_FUNCTION_PROPERTIES capture and exact overload observations:
+  database/schema/native kind, argument/return types and names, varargs, alias, stability,
+  nullable has_side_effects, extension, descriptions and examples. Future hermetic captures
+  write this sidecar without changing DUCKDB_FUNCTIONS' published 13-column schema or old
+  TSVs/FunctionDef/FunctionOverload/DuckdbFunctionRow constructors and copy methods.
+  User comments/tags/macro bodies are not static capture inputs. The final registry exposes
+  no argument-default, null-handling, positional-split or table-result-column metadata.
+  Those facts remain unknown; VOLATILE/has_side_effects are observations, not NULL propagation
+  or a guarantee about an invoked lambda. No fabricated SemanticProfile is populated.
+  Removed arbitrary colN-based positional/named inference. Only the reviewed one-positional
+  system.main internal reader set gets that boundary; unknown functions and same-named UDFs
+  retain raw argument names without borrowing builtin roles. This preserves the verified
+  readers while refusing false optional-named/default facts from generic labels.
+  Native tests prove typed_value is a VARIANT wrapper over a changing connection getter,
+  not a static default or the input_type. Static settings capture still excludes both value
+  columns. All 133 metadata, two focused native and 13 full hermetic capture tests pass,
+  zero skips. Logs /tmp/opencode/duckdb-registry-properties-{metadata,focused}.log and
+  /tmp/opencode/duckdb-capture-properties-verified.log. No generated/historical dump rewrite,
+  public old-shape ABI, dependency/consumer pin, production IntelliJ API or publication change.
 
 - [x] `DDB20-061` Basic catalog shape assertions [DONE].
   FunctionCatalogTest pins lambda signatures, new JSON/VARIANT names/kinds, setval and native

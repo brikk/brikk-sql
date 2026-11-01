@@ -40,9 +40,9 @@ class DuckdbDump(
  *    overload; its [FunctionOverload.argNames] are the first such row's parameter names (null
  *    when it lists none), in the capture's sorted row order. No vendored dump has rows that
  *    disagree on them.
- *  - a `table` function lists its positional arguments as `col0`, `col1`, ... and then its
- *    named parameters, so [FunctionOverload.positionalCount] counts the leading `colN` names
- *    when named parameters follow.
+ *  - the registry does not expose a positional/named boundary. Only the reviewed internal
+ *    one-positional reader set gets [FunctionOverload.positionalCount]; arbitrary `colN`
+ *    names and same-named UDFs do not prove argument roles.
  *
  * Fails on a function type it does not know, so a new engine kind is mapped deliberately.
  *
@@ -147,10 +147,7 @@ private fun DuckdbFunctionRow.overload() = FunctionOverload(
     returnType = returnType ?: ANY,
     variadic = varargs != null,
     argNames = parameters.ifEmpty { null },
-    positionalCount = if (type != "table") null else {
-        parameters.takeWhile(POSITIONAL_NAME::matches).size.takeIf { it in 1 until parameters.size }
-            ?: 1.takeIf { name in ONE_POSITIONAL_TABLE_FUNCTIONS }
-    },
+    positionalCount = 1.takeIf { type=="table" && internal && database=="system" && schema=="main" && name in ONE_POSITIONAL_TABLE_FUNCTIONS },
 )
 
 private val OVERLOAD_ORDER: Comparator<FunctionOverload> =
@@ -163,7 +160,6 @@ private fun compareLists(a: List<String>, b: List<String>): Int =
 
 private const val PRAGMA = "pragma"
 private const val ANY = "ANY"
-private val POSITIONAL_NAME = Regex("col[0-9]+")
 // DuckDB 2.0 replaced the earlier col0 positional marker with descriptive names. The system
 // table still has no positional/named split, so retain the verified one-positional reader set.
 private val ONE_POSITIONAL_TABLE_FUNCTIONS = setOf(

@@ -1,5 +1,6 @@
 import dev.brikk.house.sql.metadata.DUCKDB_EXTENSIONS
 import dev.brikk.house.sql.metadata.DUCKDB_FUNCTIONS
+import dev.brikk.house.sql.metadata.DUCKDB_FUNCTION_PROPERTIES
 import dev.brikk.house.sql.metadata.DUCKDB_KEYWORDS
 import dev.brikk.house.sql.metadata.DUCKDB_SETTINGS
 import dev.brikk.house.sql.metadata.DUCKDB_TYPES
@@ -19,7 +20,7 @@ fun captureDuckdb(vendorData: Path) {
     withDuckdbCaptureEngine { connection ->
         val version = connection.engineVersion()
         println("DuckDB $version (${connection.sourceId()})")
-        val captures=listOf(DUCKDB_FUNCTIONS, DUCKDB_KEYWORDS, DUCKDB_SETTINGS, DUCKDB_EXTENSIONS, DUCKDB_TYPES)
+        val captures=listOf(DUCKDB_FUNCTIONS, DUCKDB_FUNCTION_PROPERTIES, DUCKDB_KEYWORDS, DUCKDB_SETTINGS, DUCKDB_EXTENSIONS, DUCKDB_TYPES)
             .map { it.name to it.dump(connection) }
         for((name,dump)in captures)writeDump(vendorData.resolve("duckdb-$name-$version.tsv"),dump)
         writeDump(vendorData.resolve("duckdb-capture-provenance-$version.tsv"), captureProvenance(connection))
