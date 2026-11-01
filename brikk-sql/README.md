@@ -670,6 +670,12 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+`vendor/data/duckdb-2.0-release-triage.json` records every one of the final release body's
+837 PR-title entries, its source body/hash and explicit disposition/owner. Reproduce it
+offline with `tools/duckdb_release_audit.py`. The artifact distinguishes title triage from
+implemented syntax, native result evidence and remaining metadata/type/client work. A
+changed release body requires review, not automatic new ledger entries or release approval.
+
 Executable safety checks cover 43 reviewed native feature families against every other
 registered target profile. New refusals include unqualified MERGE/session/storage behavior,
 bare-NULL CTAS storage types, deep names, regex option flags and temporal boundary/result

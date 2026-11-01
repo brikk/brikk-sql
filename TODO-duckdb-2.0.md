@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-052.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-056.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -1531,11 +1531,41 @@ and IDE introspection/completion are separate contracts.
   shapes, source parity corpora/ledgers, production IntelliJ APIs and dependency pins are
   unchanged. No merge/publication, consumer update or real-resource provisioning.
 
-- [ ] `DDB20-056` Final release-note and acceptance closure [AUDIT].
+- [x] `DDB20-056` Final release-note and acceptance closure [DONE].
   Triage the full v2.0.0 release-note PR list for additional user-visible SQL/type changes not
   covered by the docs index. Engine bugfix/optimizer PRs are not automatically new parser tasks.
   Record exact covered/deferred items, run final applicable gates, review actual ledger diffs
   and preserve reasons. Never make a blanket parity claim from a green subset or preview post.
+  The final GitHub v2.0.0 release body was fetched read-only and its full list of 837 unique
+  PR entries triaged, not only a keyword-selected subset. The tag resolves to
+  d54cbbe3df17e8e5ce68312f483b4155836112aa; body SHA-256 is
+  1921a5b29657a1231fe1505c67e5b50fa8db6eab19ed9e377b8953f30ad985b2, published/updated
+  2026-10-21. The complete source body and per-PR title/link/disposition/reason/owner are in
+  vendor/data/duckdb-2.0-release-triage.json. This is title-level release-list triage, not an
+  exhaustive review of each PR body or engine implementation, and owner IDs are not DONE claims.
+  Dispositions: 227 existing-checklist owners, 260 engine implementation, 125 client/build/
+  test/extension changes, 86 storage/I/O implementation, 126 independent result/type follow-ups
+  and 13 opaque-title follow-ups. The last two groups remain unqualified with explicit open
+  ownership, rather than being recast as implemented parser features. Existing 059/060/062/
+  063/067-078 retain metadata, type/semantic, client and remaining SQL-edge work; 002 stays
+  deliberately deferred. TRANSACTION secret persistence joins connection storage under 075.
+  Reproduce offline with tools/duckdb_release_audit.py using the committed snapshot as
+  --release and --check, and a separate --output. Changed tag/body or overlapping explicit
+  dispositions fail rather than reuse positional review decisions. Five Python tests prove
+  exact source-PR coverage, stable owner IDs, replay, rejection of changed sources and the
+  distinction between triaged and implemented. No source or mismatch ledger is rewritten.
+  The frozen-source SQL/native gates remain 1,423 core + 130 metadata + 267 native/verifier,
+  zero skips, from /tmp/opencode/duckdb-executable-boundaries-full-v3.log. Both 049 and 050
+  fingerprints and the original Trino global-regex preview test remain unchanged. Actual
+  historical parity fixture/ledger diffs are empty, including all earlier reason strings.
+  This closes the release-list audit, not release authorization or the remaining work items.
+  The final frozen-source shared IntelliJ gate passed all 760 tests on 261.25134.95;
+  log /tmp/opencode/duckdb-acceptance-closure-ide-v2.log. The five Python audit tests and
+  both offline source/release replays pass. No Plugin Verifier run, new internal/experimental
+  IntelliJ calls, public data-class shape changes, dependency pins or user resources changed.
+  DDB20-053 through 056 are complete with a verified commit/push per milestone; 61/78 stable
+  checklist items are done. No merge/publication or consumer adoption. Trino remains queued,
+  recursive IDE schemas remain deferred, and main/Java-17 reconciliation remains a release gate.
 
 ## Metadata, reproducibility and published evidence
 
@@ -1670,6 +1700,8 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   Classify the final SQL surface for the new `connection` secret storage, ordinary/persistent
   secret creation, scope/visibility and session cleanup. Preserve options without exposing
   credentials in capture files, diagnostics, completions or test logs.
+  The full-release triage also names TRANSACTION persist-type for SECRET. Audit its lifetime
+  separately from connection storage; the 056 title inventory is not an implementation claim.
 
 - [ ] `DDB20-076` Colon aliases for subqueries [AUDIT].
   The release notes add TableAliasColon for subqueries. Verify exact final spelling, FROM-first
@@ -1791,8 +1823,9 @@ source-URL changes for grammar preferences. Dogfood and release authorization ar
 Completeness here means every feature in the reviewed final SQL documentation/index, migration
 guide and Gems post has an item or explicit client/engine scope classification, with additional
 SQL-facing candidates from the final release titles recorded separately. It does **not**
-claim that every PR in the 96 KB full release body has been exhaustively audited; DDB20-056 owns
-that remaining triage. In particular, basic round-trip tests do not close nested-name or DML semantics.
+claim that every PR body or engine change has been exhaustively audited. DDB20-056 now records
+all 837 release-note PR-title dispositions with explicit remaining/unqualified ownership.
+In particular, basic round-trip tests do not close nested-name or DML semantics.
 
 ## Source coverage for the user's examples
 
