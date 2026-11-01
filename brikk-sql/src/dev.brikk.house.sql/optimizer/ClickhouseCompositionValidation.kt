@@ -19,6 +19,7 @@ internal enum class ClickhouseCompositionRule(val nativeErrorCode: Int) {
     HIGHER_ORDER_ARGUMENT_COUNT(42), HIGHER_ORDER_ARITY(43), PREDICATE_TYPE(43), MAP_INPUT_TYPE(43), MAP_RESULT_TYPE(36),
     DIVISION_BY_ZERO(153), INTEGER_DIVISION_OVERFLOW(153),
     DECIMAL_DIVISION_SCALE(69), DECIMAL_DIVISION_SCALE_OVERFLOW(407),
+    DECIMAL_DIVISION_NARROWING_OVERFLOW(407), DECIMAL_DIVISION_MULTIPLIER_OVERFLOW(407), DECIMAL_DIVISION_NUMERATOR_OVERFLOW(407),
 }
 
 internal enum class ClickhouseCompositionUnknownReason {
@@ -704,8 +705,16 @@ private class ClickhouseCompositionValidator(
             else if (check == null) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
         }
         if (decimalInput) {
-            if (clickhouseDecimalDivisionZero(call.operands, types, result, checkOverflow, checkCanceled))
-                error(node, ClickhouseCompositionRule.DIVISION_BY_ZERO, "Decimal division by zero.")
+            val failure = clickhouseDecimalDivisionRuntimeFailure(call.operands, types, result, checkOverflow, checkCanceled)
+            if (failure != null) error(node, failure, when (failure) {
+                ClickhouseCompositionRule.DECIMAL_DIVISION_NARROWING_OVERFLOW ->
+                    "Decimal division operand does not fit the result storage width with decimal_check_overflow enabled."
+                ClickhouseCompositionRule.DECIMAL_DIVISION_MULTIPLIER_OVERFLOW ->
+                    "Decimal division's squared scale multiplier overflows the result storage width."
+                ClickhouseCompositionRule.DECIMAL_DIVISION_NUMERATOR_OVERFLOW ->
+                    "Scaling the Decimal division numerator overflows the result storage width."
+                else -> "Decimal division by zero."
+            })
             else unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
         }
         return nativeType(result)

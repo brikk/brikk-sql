@@ -1,0 +1,394 @@
+[
+    {
+        "id": "CHSEM-017-E01",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E02",
+        "input_sql": "SELECT CAST(1 AS Decimal32(0))/CAST(2147483648 AS UInt64) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS Decimal32(0)) / CAST(2147483648 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E03",
+        "input_sql": "SELECT CAST(-2147483649 AS Int64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(-2147483649 AS Int64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E04",
+        "input_sql": "SELECT CAST(1 AS Decimal32(0))/CAST(-2147483649 AS Int64) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS Decimal32(0)) / CAST(-2147483649 AS Int64) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E05",
+        "input_sql": "SELECT CAST(9223372036854775808 AS UInt64)/CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(9223372036854775808 AS UInt64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E06",
+        "input_sql": "SELECT CAST(1 AS Decimal64(0))/CAST(9223372036854775808 AS UInt64) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS Decimal64(0)) / CAST(9223372036854775808 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E07",
+        "input_sql": "SELECT CAST(18446744073709551615 AS UInt64)/CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(18446744073709551615 AS UInt64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E08",
+        "input_sql": "SELECT CAST(1 AS Decimal64(0))/CAST(18446744073709551615 AS UInt64) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS Decimal64(0)) / CAST(18446744073709551615 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E09",
+        "input_sql": "SELECT CAST(2147483647 AS Int64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483647 AS Int64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E10",
+        "input_sql": "SELECT CAST(-2147483648 AS Int64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(-2147483648 AS Int64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E11",
+        "input_sql": "SELECT CAST(9223372036854775807 AS Int64)/CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(9223372036854775807 AS Int64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E12",
+        "input_sql": "SELECT CAST(-9223372036854775808 AS Int64)/CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(-9223372036854775808 AS Int64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E13",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E14",
+        "input_sql": "SELECT CAST(1 AS UInt8)/CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS UInt8) / CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E15",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E16",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E17",
+        "input_sql": "SELECT CAST(1 AS UInt8)/CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E18",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal64(9)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(9)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E19",
+        "input_sql": "SELECT CAST('21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E20",
+        "input_sql": "SELECT CAST('21474836.4' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('21474836.4' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E21",
+        "input_sql": "SELECT CAST('-21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('-21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E22",
+        "input_sql": "SELECT CAST('-21474836.4' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('-21474836.4' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E23",
+        "input_sql": "SELECT CAST('92233720368547758.1' AS Decimal64(1))/CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('92233720368547758.1' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E24",
+        "input_sql": "SELECT CAST('92233720368547758.0' AS Decimal64(1))/CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('92233720368547758.0' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E25",
+        "input_sql": "SELECT CAST('-92233720368547758.1' AS Decimal64(1))/CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('-92233720368547758.1' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E26",
+        "input_sql": "SELECT CAST('-92233720368547758.0' AS Decimal64(1))/CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('-92233720368547758.0' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E27",
+        "input_sql": "SELECT CAST(21474837 AS Int64)/CAST(1 AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(21474837 AS Int64) / CAST(1 AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E28",
+        "input_sql": "SELECT CAST(21474836 AS Int64)/CAST(1 AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(21474836 AS Int64) / CAST(1 AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E29",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(0 AS Decimal32(5)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(0 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E30",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E31",
+        "input_sql": "SELECT CAST(7 AS Decimal32(6))/CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(7 AS Decimal32(6)) / CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E32",
+        "input_sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E33",
+        "input_sql": "SELECT CAST(1 AS Decimal32(2))/CAST(1 AS Decimal64(3)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS Decimal32(2)) / CAST(1 AS Decimal64(3)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E34",
+        "input_sql": "SELECT CAST('9999999999999999999999999999999999999.0' AS Decimal128(1))/CAST('0.1' AS Decimal128(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('9999999999999999999999999999999999999.0' AS Decimal128(1)) / CAST('0.1' AS Decimal128(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E35",
+        "input_sql": "SELECT CAST('999999999999999999999999999999999999999999999999999999999999999999999999999.0' AS Decimal256(1))/CAST('0.1' AS Decimal256(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('999999999999999999999999999999999999999999999999999999999999999999999999999.0' AS Decimal256(1)) / CAST('0.1' AS Decimal256(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E36",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal32(0)))/CAST(2147483648 AS UInt64) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal32(0))) / CAST(2147483648 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E37",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(NULL AS Nullable(Decimal32(0))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(NULL AS Nullable(Decimal32(0))) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E38",
+        "input_sql": "SELECT CAST(2147483648 AS Nullable(UInt64))/CAST(1 AS Nullable(Decimal32(0))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483648 AS Nullable(UInt64)) / CAST(1 AS Nullable(Decimal32(0))) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E39",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 0;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E40",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0))",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E41",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow={enabled:UInt8}",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = {enabled:UInt8};",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E42",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 0;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E43",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal64(10))",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E44",
+        "input_sql": "SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow={enabled:UInt8}",
+        "generated": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = {enabled:UInt8};",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E45",
+        "input_sql": "SELECT CAST('21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 0;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E46",
+        "input_sql": "SELECT CAST('21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1))",
+        "generated": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E47",
+        "input_sql": "SELECT CAST('21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow={enabled:UInt8}",
+        "generated": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = {enabled:UInt8};",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E48",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow = 0;",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E49",
+        "input_sql": "SELECT divideExact(CAST(2147483648 AS UInt64),CAST(1 AS Decimal32(0))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT divideExact(CAST(2147483648 AS UInt64), CAST(1 AS Decimal32(0))) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E50",
+        "input_sql": "SELECT divide(CAST('21474836.5' AS Decimal32(1)),CAST('0.1' AS Decimal32(1))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT divide(CAST('21474836.5' AS Decimal32(1)), CAST('0.1' AS Decimal32(1))) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E51",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1, sql_compatible_division_for_integers=0",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E52",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1, sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-017-E53",
+        "input_sql": "SELECT CAST('bad' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('bad' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E54",
+        "input_sql": "SELECT CAST(256 AS UInt8)/CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(256 AS UInt8) / CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E55",
+        "input_sql": "SELECT CAST(2147483648.0 AS UInt64)/CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483648.0 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-017-E56",
+        "input_sql": "SELECT CAST(1 AS Float64)/CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS Float64) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+        "rules": []
+    }
+]

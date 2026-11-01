@@ -53,26 +53,43 @@ internal fun clickhouseDecimalDivisionTypeFailure(types: List<DataType?>, checkO
     return null
 }
 
-/** Prove zero only after exact non-NULL casts and all possibly preceding narrowing/scaling guards. */
-internal fun clickhouseDecimalDivisionZero(operands: List<Expression>, types: List<DataType?>,
-    result: DataType, checkOverflow: Boolean?, checkCanceled: () -> Unit): Boolean {
-    val resultShape = clickhouseDecimalShape(result) ?: return false
+/** Follow the constant delegate's narrowing, multiplier, numerator and divisor guard order. */
+internal fun clickhouseDecimalDivisionRuntimeFailure(operands: List<Expression>, types: List<DataType?>,
+    result: DataType, checkOverflow: Boolean?, checkCanceled: () -> Unit): ClickhouseCompositionRule? {
+    val resultShape = clickhouseDecimalShape(result) ?: return null
     val values = operands.mapIndexed { index, node ->
         checkCanceled()
-        decimalConstant(node, types[index] ?: return false) ?: return false
+        decimalConstant(node, types[index] ?: return null) ?: return null
     }
-    if (values[1].magnitude != "0") return false
-    if (checkOverflow == false) return true
+    val overflow = decimalRuntimeOverflow(values, types, resultShape)
+    // Tagged mulOverflow<Int128/Int256> wraps and returns false. Mathematical overflow
+    // there is not evidence of a native exception, even with the setting enabled.
+    if (overflow != null && checkOverflow == true &&
+        (overflow == ClickhouseCompositionRule.DECIMAL_DIVISION_NARROWING_OVERFLOW || resultShape.storage <= 18)) return overflow
+    if (overflow != null && checkOverflow != false) return null
+    return if (values[1].magnitude == "0") ClickhouseCompositionRule.DIVISION_BY_ZERO else null
+}
+
+private fun decimalRuntimeOverflow(values: List<DecimalConstant>, types: List<DataType?>,
+    resultShape: ClickhouseDecimalShape): ClickhouseCompositionRule? {
     val bits = when (resultShape.storage) { 9 -> 32; 18 -> 64; 38 -> 128; else -> 256 }
+    if (values.any { !clickhouseFitsSignedMagnitude(it.magnitude, it.negative, bits) })
+        return ClickhouseCompositionRule.DECIMAL_DIVISION_NARROWING_OVERFLOW
     val left = values[0]
-    if (!clickhouseFitsSignedMagnitude(left.magnitude, left.negative, bits)) return false
     val right = types[1]?.let(::clickhouseDecimalShape)
     if (right != null) {
         val leftIsDecimal = types[0]?.let(::clickhouseDecimalShape) != null
         val exponent = right.scale * if (leftIsDecimal) 1 else 2
         // Integer/Decimal squares the multiplier before using the numerator, even when it is zero.
-        if (!leftIsDecimal && !clickhouseFitsSignedMagnitude(scaled("1", exponent), false, bits)) return false
-        if (!clickhouseFitsSignedMagnitude(scaled(left.magnitude, exponent), left.negative, bits)) return false
+        if (!leftIsDecimal && !clickhouseFitsSignedMagnitude(scaled("1", exponent), false, bits))
+            return ClickhouseCompositionRule.DECIMAL_DIVISION_MULTIPLIER_OVERFLOW
+        if (!clickhouseFitsSignedMagnitude(scaled(left.magnitude, exponent), left.negative, bits))
+            return ClickhouseCompositionRule.DECIMAL_DIVISION_NUMERATOR_OVERFLOW
     }
-    return true
+    return null
 }
+
+/** Kept for earlier internal callers; runtime overflows must never be mislabeled as zero. */
+internal fun clickhouseDecimalDivisionZero(operands: List<Expression>, types: List<DataType?>,
+    result: DataType, checkOverflow: Boolean?, checkCanceled: () -> Unit): Boolean =
+    clickhouseDecimalDivisionRuntimeFailure(operands, types, result, checkOverflow, checkCanceled) == ClickhouseCompositionRule.DIVISION_BY_ZERO

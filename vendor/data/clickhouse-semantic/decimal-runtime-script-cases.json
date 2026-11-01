@@ -1,0 +1,123 @@
+{
+  "task": "CHSEM-017",
+  "execution": [
+    {
+      "id": "CHSEM-017-SCRIPT01",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0))",
+      "rules": [
+        "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483648\n"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT02",
+      "sql": "SET decimal_check_overflow=0; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483648\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-2147483648\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT03",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST('21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-214748364.6\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-214748364.6\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT04",
+      "sql": "SET decimal_check_overflow=0; SELECT CAST(0 AS UInt8)/CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT05",
+      "sql": "SET decimal_check_overflow=1; SET decimal_check_overflow=DEFAULT; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483648\n"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT06",
+      "sql": "SET decimal_check_overflow=1; SET decimal_check_overflow={enabled:UInt8}; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 456,
+          "error_name": "UNKNOWN_QUERY_PARAMETER"
+        },
+        "26.10.2.103": {
+          "error_code": 456,
+          "error_name": "UNKNOWN_QUERY_PARAMETER"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT07",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST(NULL AS Nullable(Decimal32(0)))/CAST(2147483648 AS UInt64)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-017-SCRIPT08",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST('21474836.5' AS Decimal32(1))/CAST('0.1' AS Decimal32(1))",
+      "rules": [
+        "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    }
+  ]
+}

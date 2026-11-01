@@ -28,8 +28,6 @@ class ClickhouseDecimalDivisionDiagnosticsTest {
         for (expression in listOf("CAST(NULL AS Nullable(Decimal(12,3)))/CAST(0 AS Int8)",
             "CAST(7 AS Decimal(12,3))/CAST(NULL AS Nullable(Int8))",
             "CAST(NULL AS Nullable(Decimal(5,2)))/CAST(2 AS Decimal(12,3))",
-            "CAST(2147483648 AS UInt64)/CAST(0 AS Decimal32(0))",
-            "CAST(7 AS Decimal32(6))/CAST(0 AS Decimal32(3))",
             "CAST('bad' AS Decimal(5,2))/CAST(2 AS Decimal(12,3))",
             "CAST('0.0001' AS Decimal32(3))/CAST(0 AS Int8)",
             "CAST(256 AS UInt8)/CAST(0 AS Decimal32(0))")) {
@@ -70,13 +68,14 @@ class ClickhouseDecimalDivisionDiagnosticsTest {
     @Test fun nativeValueAndErrorWitnesses() {
         val folder = File(projectRoot(), "vendor/data/clickhouse-semantic")
         val cases = Json.parseToJsonElement(File(folder, "decimal-diagnostics-cases.json").readText()).jsonObject.getValue("execution").jsonArray
+        val refinements = Json.parseToJsonElement(File(folder, "decimal-runtime-refinements.json").readText()).jsonObject
         val rows = cases.map { element ->
             val case = element.jsonObject
             val sql = case.getValue("sql").jsonPrimitive.content
             val result = report(sql)
             assertTrue(result.parseDiagnostics.isEmpty(), sql)
             val rules = result.errors.map { it.rule.name }.distinct().sorted()
-            assertEquals(case.getValue("rules").jsonArray.map { it.jsonPrimitive.content }, rules, case.getValue("id").toString())
+            assertEquals((refinements[case.getValue("id").jsonPrimitive.content] ?: case.getValue("rules")).jsonArray.map { it.jsonPrimitive.content }, rules, case.getValue("id").toString())
             val generated = parseOne(sql, "clickhouse").sql("clickhouse")
             assertEquals(rules, report(generated).errors.map { it.rule.name }.distinct().sorted())
             buildJsonObject {

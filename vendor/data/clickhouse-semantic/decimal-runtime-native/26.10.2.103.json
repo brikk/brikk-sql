@@ -1,0 +1,984 @@
+{
+  "captured_at": "2026-11-01T08:25:17.910330+00:00",
+  "fixture_sha256": "c2a413076974c167798ef08711acb02f44682dc2f7a2d82dc1a2db9fec3d5fef",
+  "brikk_sha256": "92df126d7d51d78ff60ebe88c36311ecd6bf0d316edae27ebf2e7c45c9d41126",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-017-E01\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E02\",\"formatted\":\"SELECT CAST('1', 'Decimal32(0)') \\/ CAST(2147483648, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E03\",\"formatted\":\"SELECT CAST(-2147483649, 'Int64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E04\",\"formatted\":\"SELECT CAST('1', 'Decimal32(0)') \\/ CAST(-2147483649, 'Int64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E05\",\"formatted\":\"SELECT CAST(9223372036854775808, 'UInt64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E06\",\"formatted\":\"SELECT CAST('1', 'Decimal64(0)') \\/ CAST(9223372036854775808, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E07\",\"formatted\":\"SELECT CAST(18446744073709551615, 'UInt64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E08\",\"formatted\":\"SELECT CAST('1', 'Decimal64(0)') \\/ CAST(18446744073709551615, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E09\",\"formatted\":\"SELECT CAST(2147483647, 'Int64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E10\",\"formatted\":\"SELECT CAST(-2147483648, 'Int64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E11\",\"formatted\":\"SELECT CAST(9223372036854775807, 'Int64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E12\",\"formatted\":\"SELECT CAST(-9223372036854775808, 'Int64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E13\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E14\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST('1', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E15\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E16\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E17\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E18\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(9)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E19\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E20\",\"formatted\":\"SELECT CAST('21474836.4', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E21\",\"formatted\":\"SELECT CAST('-21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E22\",\"formatted\":\"SELECT CAST('-21474836.4', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E23\",\"formatted\":\"SELECT CAST('92233720368547758.1', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E24\",\"formatted\":\"SELECT CAST('92233720368547758.0', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E25\",\"formatted\":\"SELECT CAST('-92233720368547758.1', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E26\",\"formatted\":\"SELECT CAST('-92233720368547758.0', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E27\",\"formatted\":\"SELECT CAST(21474837, 'Int64') \\/ CAST('1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E28\",\"formatted\":\"SELECT CAST(21474836, 'Int64') \\/ CAST('1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E29\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('0', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E30\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('0', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E31\",\"formatted\":\"SELECT CAST('7', 'Decimal32(6)') \\/ CAST('0', 'Decimal32(3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E32\",\"formatted\":\"SELECT CAST('0', 'Decimal32(6)') \\/ CAST('0', 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E33\",\"formatted\":\"SELECT CAST('1', 'Decimal32(2)') \\/ CAST('1', 'Decimal64(3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E34\",\"formatted\":\"SELECT CAST('9999999999999999999999999999999999999.0', 'Decimal128(1)') \\/ CAST('0.1', 'Decimal128(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E35\",\"formatted\":\"SELECT CAST('999999999999999999999999999999999999999999999999999999999999999999999999999.0', 'Decimal256(1)') \\/ CAST('0.1', 'Decimal256(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E36\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal32(0))') \\/ CAST(2147483648, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E37\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST(NULL, 'Nullable(Decimal32(0))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E38\",\"formatted\":\"SELECT CAST(2147483648, 'Nullable(UInt64)') \\/ CAST('1', 'Nullable(Decimal32(0))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E39\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E40\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\"}\n{\"id\":\"CHSEM-017-E41\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = {enabled:UInt8}\"}\n{\"id\":\"CHSEM-017-E42\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E43\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\"}\n{\"id\":\"CHSEM-017-E44\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = {enabled:UInt8}\"}\n{\"id\":\"CHSEM-017-E45\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E46\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\"}\n{\"id\":\"CHSEM-017-E47\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = {enabled:UInt8}\"}\n{\"id\":\"CHSEM-017-E48\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('0', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E49\",\"formatted\":\"SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)'))\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E50\",\"formatted\":\"SELECT divide(CAST('21474836.5', 'Decimal32(1)'), CAST('0.1', 'Decimal32(1)'))\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E51\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-017-E52\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-017-E53\",\"formatted\":\"SELECT CAST('bad', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E54\",\"formatted\":\"SELECT CAST(256, 'UInt8') \\/ CAST('1', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E55\",\"formatted\":\"SELECT CAST(2147483648., 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E56\",\"formatted\":\"SELECT CAST(1, 'Float64') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-017-E01",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E02",
+      "formatted": "SELECT CAST('1', 'Decimal32(0)') / CAST(2147483648, 'UInt64')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E03",
+      "formatted": "SELECT CAST(-2147483649, 'Int64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E04",
+      "formatted": "SELECT CAST('1', 'Decimal32(0)') / CAST(-2147483649, 'Int64')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E05",
+      "formatted": "SELECT CAST(9223372036854775808, 'UInt64') / CAST('1', 'Decimal64(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E06",
+      "formatted": "SELECT CAST('1', 'Decimal64(0)') / CAST(9223372036854775808, 'UInt64')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E07",
+      "formatted": "SELECT CAST(18446744073709551615, 'UInt64') / CAST('1', 'Decimal64(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E08",
+      "formatted": "SELECT CAST('1', 'Decimal64(0)') / CAST(18446744073709551615, 'UInt64')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E09",
+      "formatted": "SELECT CAST(2147483647, 'Int64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E10",
+      "formatted": "SELECT CAST(-2147483648, 'Int64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E11",
+      "formatted": "SELECT CAST(9223372036854775807, 'Int64') / CAST('1', 'Decimal64(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E12",
+      "formatted": "SELECT CAST(-9223372036854775808, 'Int64') / CAST('1', 'Decimal64(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E13",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal32(5)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E14",
+      "formatted": "SELECT CAST(1, 'UInt8') / CAST('1', 'Decimal32(5)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E15",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal32(4)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E16",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E17",
+      "formatted": "SELECT CAST(1, 'UInt8') / CAST('1', 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E18",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(9)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E19",
+      "formatted": "SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E20",
+      "formatted": "SELECT CAST('21474836.4', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E21",
+      "formatted": "SELECT CAST('-21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E22",
+      "formatted": "SELECT CAST('-21474836.4', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E23",
+      "formatted": "SELECT CAST('92233720368547758.1', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E24",
+      "formatted": "SELECT CAST('92233720368547758.0', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E25",
+      "formatted": "SELECT CAST('-92233720368547758.1', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E26",
+      "formatted": "SELECT CAST('-92233720368547758.0', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E27",
+      "formatted": "SELECT CAST(21474837, 'Int64') / CAST('1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E28",
+      "formatted": "SELECT CAST(21474836, 'Int64') / CAST('1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E29",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('0', 'Decimal32(5)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E30",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('0', 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E31",
+      "formatted": "SELECT CAST('7', 'Decimal32(6)') / CAST('0', 'Decimal32(3)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E32",
+      "formatted": "SELECT CAST('0', 'Decimal32(6)') / CAST('0', 'Decimal32(4)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E33",
+      "formatted": "SELECT CAST('1', 'Decimal32(2)') / CAST('1', 'Decimal64(3)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E34",
+      "formatted": "SELECT CAST('9999999999999999999999999999999999999.0', 'Decimal128(1)') / CAST('0.1', 'Decimal128(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E35",
+      "formatted": "SELECT CAST('999999999999999999999999999999999999999999999999999999999999999999999999999.0', 'Decimal256(1)') / CAST('0.1', 'Decimal256(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E36",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal32(0))') / CAST(2147483648, 'UInt64')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E37",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST(NULL, 'Nullable(Decimal32(0))')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E38",
+      "formatted": "SELECT CAST(2147483648, 'Nullable(UInt64)') / CAST('1', 'Nullable(Decimal32(0))')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E39",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-017-E40",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)')"
+    },
+    {
+      "id": "CHSEM-017-E41",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = {enabled:UInt8}"
+    },
+    {
+      "id": "CHSEM-017-E42",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-017-E43",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)')"
+    },
+    {
+      "id": "CHSEM-017-E44",
+      "formatted": "SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)')\nSETTINGS decimal_check_overflow = {enabled:UInt8}"
+    },
+    {
+      "id": "CHSEM-017-E45",
+      "formatted": "SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-017-E46",
+      "formatted": "SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')"
+    },
+    {
+      "id": "CHSEM-017-E47",
+      "formatted": "SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = {enabled:UInt8}"
+    },
+    {
+      "id": "CHSEM-017-E48",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('0', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-017-E49",
+      "formatted": "SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)'))\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E50",
+      "formatted": "SELECT divide(CAST('21474836.5', 'Decimal32(1)'), CAST('0.1', 'Decimal32(1)'))\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E51",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0"
+    },
+    {
+      "id": "CHSEM-017-E52",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-017-E53",
+      "formatted": "SELECT CAST('bad', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E54",
+      "formatted": "SELECT CAST(256, 'UInt8') / CAST('1', 'Decimal32(5)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E55",
+      "formatted": "SELECT CAST(2147483648., 'UInt64') / CAST('1', 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-017-E56",
+      "formatted": "SELECT CAST(1, 'Float64') / CAST('1', 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 1"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-017-E01\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E02\",\"formatted\":\"SELECT CAST('1', 'Decimal32(0)') \\/ CAST(2147483648, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E03\",\"formatted\":\"SELECT CAST(-2147483649, 'Int64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E04\",\"formatted\":\"SELECT CAST('1', 'Decimal32(0)') \\/ CAST(-2147483649, 'Int64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E05\",\"formatted\":\"SELECT CAST(9223372036854775808, 'UInt64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E06\",\"formatted\":\"SELECT CAST('1', 'Decimal64(0)') \\/ CAST(9223372036854775808, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E07\",\"formatted\":\"SELECT CAST(18446744073709551615, 'UInt64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E08\",\"formatted\":\"SELECT CAST('1', 'Decimal64(0)') \\/ CAST(18446744073709551615, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E09\",\"formatted\":\"SELECT CAST(2147483647, 'Int64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E10\",\"formatted\":\"SELECT CAST(-2147483648, 'Int64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E11\",\"formatted\":\"SELECT CAST(9223372036854775807, 'Int64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E12\",\"formatted\":\"SELECT CAST(-9223372036854775808, 'Int64') \\/ CAST('1', 'Decimal64(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E13\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E14\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST('1', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E15\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E16\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E17\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E18\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(9)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E19\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E20\",\"formatted\":\"SELECT CAST('21474836.4', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E21\",\"formatted\":\"SELECT CAST('-21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E22\",\"formatted\":\"SELECT CAST('-21474836.4', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E23\",\"formatted\":\"SELECT CAST('92233720368547758.1', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E24\",\"formatted\":\"SELECT CAST('92233720368547758.0', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E25\",\"formatted\":\"SELECT CAST('-92233720368547758.1', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E26\",\"formatted\":\"SELECT CAST('-92233720368547758.0', 'Decimal64(1)') \\/ CAST('0.1', 'Decimal64(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E27\",\"formatted\":\"SELECT CAST(21474837, 'Int64') \\/ CAST('1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E28\",\"formatted\":\"SELECT CAST(21474836, 'Int64') \\/ CAST('1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E29\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('0', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E30\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('0', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E31\",\"formatted\":\"SELECT CAST('7', 'Decimal32(6)') \\/ CAST('0', 'Decimal32(3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E32\",\"formatted\":\"SELECT CAST('0', 'Decimal32(6)') \\/ CAST('0', 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E33\",\"formatted\":\"SELECT CAST('1', 'Decimal32(2)') \\/ CAST('1', 'Decimal64(3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E34\",\"formatted\":\"SELECT CAST('9999999999999999999999999999999999999.0', 'Decimal128(1)') \\/ CAST('0.1', 'Decimal128(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E35\",\"formatted\":\"SELECT CAST('999999999999999999999999999999999999999999999999999999999999999999999999999.0', 'Decimal256(1)') \\/ CAST('0.1', 'Decimal256(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E36\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal32(0))') \\/ CAST(2147483648, 'UInt64')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E37\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST(NULL, 'Nullable(Decimal32(0))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E38\",\"formatted\":\"SELECT CAST(2147483648, 'Nullable(UInt64)') \\/ CAST('1', 'Nullable(Decimal32(0))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E39\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E40\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\"}\n{\"id\":\"CHSEM-017-E41\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = {enabled:UInt8}\"}\n{\"id\":\"CHSEM-017-E42\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E43\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\"}\n{\"id\":\"CHSEM-017-E44\",\"formatted\":\"SELECT CAST(0, 'UInt8') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = {enabled:UInt8}\"}\n{\"id\":\"CHSEM-017-E45\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E46\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\"}\n{\"id\":\"CHSEM-017-E47\",\"formatted\":\"SELECT CAST('21474836.5', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = {enabled:UInt8}\"}\n{\"id\":\"CHSEM-017-E48\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('0', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-017-E49\",\"formatted\":\"SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)'))\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E50\",\"formatted\":\"SELECT divide(CAST('21474836.5', 'Decimal32(1)'), CAST('0.1', 'Decimal32(1)'))\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E51\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-017-E52\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-017-E53\",\"formatted\":\"SELECT CAST('bad', 'Decimal32(1)') \\/ CAST('0.1', 'Decimal32(1)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E54\",\"formatted\":\"SELECT CAST(256, 'UInt8') \\/ CAST('1', 'Decimal32(5)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E55\",\"formatted\":\"SELECT CAST(2147483648., 'UInt64') \\/ CAST('1', 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-017-E56\",\"formatted\":\"SELECT CAST(1, 'Float64') \\/ CAST('1', 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-017-E01",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E02",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST('1', 'Decimal32(0)') / CAST(2147483648, 'UInt64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E03",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(-2147483649, 'Int64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E04",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST('1', 'Decimal32(0)') / CAST(-2147483649, 'Int64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E05",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST(9223372036854775808, 'UInt64') / CAST('1', 'Decimal64(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E06",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST('1', 'Decimal64(0)') / CAST(9223372036854775808, 'UInt64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E07",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST(18446744073709551615, 'UInt64') / CAST('1', 'Decimal64(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E08",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST('1', 'Decimal64(0)') / CAST(18446744073709551615, 'UInt64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E09",
+      "returncode": 0,
+      "stdout": "2147483647\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E10",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E11",
+      "returncode": 0,
+      "stdout": "9223372036854775807\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E12",
+      "returncode": 0,
+      "stdout": "-9223372036854775808\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E13",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E14",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(1, 'UInt8') / CAST('1', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E15",
+      "returncode": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E16",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E17",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(1, 'UInt8') / CAST('1', 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E18",
+      "returncode": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E19",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E20",
+      "returncode": 0,
+      "stdout": "214748364\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E21",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('-21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E22",
+      "returncode": 0,
+      "stdout": "-214748364\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E23",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('92233720368547758.1', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E24",
+      "returncode": 0,
+      "stdout": "922337203685477580\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E25",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('-92233720368547758.1', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E26",
+      "returncode": 0,
+      "stdout": "-922337203685477580\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E27",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(21474837, 'Int64') / CAST('1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E28",
+      "returncode": 0,
+      "stdout": "21474836\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E29",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('0', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E30",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('0', 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E31",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('7', 'Decimal32(6)') / CAST('0', 'Decimal32(3)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E32",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0', 'Decimal32(6)') / CAST('0', 'Decimal32(4)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E33",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST('1', 'Decimal32(2)') / CAST('1', 'Decimal64(3)') SETTINGS decimal_check_overflow = 1. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-017-E34",
+      "returncode": 0,
+      "stdout": "-2084710076281539039012382229530463446.8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E35",
+      "returncode": 0,
+      "stdout": "-1579208923731619542357098500868790785326998466564056403945758400791312964003.6\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E36",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E37",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E38",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'Nullable(UInt64)') / CAST('1', 'Nullable(Decimal32(0))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E39",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E40",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E41",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-E42",
+      "returncode": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E43",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E44",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-E45",
+      "returncode": 0,
+      "stdout": "-214748364.6\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E46",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E47",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-E48",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(2147483648, 'UInt64') / CAST('0', 'Decimal32(0)') SETTINGS decimal_check_overflow = 0. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-017-E49",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)')) SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E50",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT divide(CAST('21474836.5', 'Decimal32(1)'), CAST('0.1', 'Decimal32(1)')) SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E51",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E52",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)')) AS `divide(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)'))` SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E53",
+      "returncode": 6,
+      "stdout": "",
+      "stderr": "Code: 6. DB::Exception: Cannot parse string 'bad' as Decimal(9, 1): syntax error at begin of string: In scope SELECT CAST('bad', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (CANNOT_PARSE_TEXT)\n"
+    },
+    {
+      "id": "CHSEM-017-E54",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(256, 'UInt8') / CAST('1', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E55",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648., 'UInt64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E56",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-017-E01",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E02",
+      "sql": "SELECT CAST(1 AS Decimal32(0)) / CAST(2147483648 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST('1', 'Decimal32(0)') / CAST(2147483648, 'UInt64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E03",
+      "sql": "SELECT CAST(-2147483649 AS Int64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(-2147483649, 'Int64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E04",
+      "sql": "SELECT CAST(1 AS Decimal32(0)) / CAST(-2147483649 AS Int64) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST('1', 'Decimal32(0)') / CAST(-2147483649, 'Int64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E05",
+      "sql": "SELECT CAST(9223372036854775808 AS UInt64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST(9223372036854775808, 'UInt64') / CAST('1', 'Decimal64(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E06",
+      "sql": "SELECT CAST(1 AS Decimal64(0)) / CAST(9223372036854775808 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST('1', 'Decimal64(0)') / CAST(9223372036854775808, 'UInt64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E07",
+      "sql": "SELECT CAST(18446744073709551615 AS UInt64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST(18446744073709551615, 'UInt64') / CAST('1', 'Decimal64(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E08",
+      "sql": "SELECT CAST(1 AS Decimal64(0)) / CAST(18446744073709551615 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 64 bits of the result: In scope SELECT CAST('1', 'Decimal64(0)') / CAST(18446744073709551615, 'UInt64') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E09",
+      "sql": "SELECT CAST(2147483647 AS Int64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "2147483647\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E10",
+      "sql": "SELECT CAST(-2147483648 AS Int64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E11",
+      "sql": "SELECT CAST(9223372036854775807 AS Int64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "9223372036854775807\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E12",
+      "sql": "SELECT CAST(-9223372036854775808 AS Int64) / CAST(1 AS Decimal64(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "-9223372036854775808\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E13",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E14",
+      "sql": "SELECT CAST(1 AS UInt8) / CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(1, 'UInt8') / CAST('1', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E15",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E16",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E17",
+      "sql": "SELECT CAST(1 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(1, 'UInt8') / CAST('1', 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E18",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(9)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E19",
+      "sql": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E20",
+      "sql": "SELECT CAST('21474836.4' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "214748364\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E21",
+      "sql": "SELECT CAST('-21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('-21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E22",
+      "sql": "SELECT CAST('-21474836.4' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "-214748364\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E23",
+      "sql": "SELECT CAST('92233720368547758.1' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('92233720368547758.1', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E24",
+      "sql": "SELECT CAST('92233720368547758.0' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "922337203685477580\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E25",
+      "sql": "SELECT CAST('-92233720368547758.1' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('-92233720368547758.1', 'Decimal64(1)') / CAST('0.1', 'Decimal64(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E26",
+      "sql": "SELECT CAST('-92233720368547758.0' AS Decimal64(1)) / CAST('0.1' AS Decimal64(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "-922337203685477580\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E27",
+      "sql": "SELECT CAST(21474837 AS Int64) / CAST(1 AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(21474837, 'Int64') / CAST('1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E28",
+      "sql": "SELECT CAST(21474836 AS Int64) / CAST(1 AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "21474836\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E29",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(0 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('0', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E30",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('0', 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E31",
+      "sql": "SELECT CAST(7 AS Decimal32(6)) / CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('7', 'Decimal32(6)') / CAST('0', 'Decimal32(3)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E32",
+      "sql": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0', 'Decimal32(6)') / CAST('0', 'Decimal32(4)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E33",
+      "sql": "SELECT CAST(1 AS Decimal32(2)) / CAST(1 AS Decimal64(3)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST('1', 'Decimal32(2)') / CAST('1', 'Decimal64(3)') SETTINGS decimal_check_overflow = 1. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-017-E34",
+      "sql": "SELECT CAST('9999999999999999999999999999999999999.0' AS Decimal128(1)) / CAST('0.1' AS Decimal128(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "-2084710076281539039012382229530463446.8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E35",
+      "sql": "SELECT CAST('999999999999999999999999999999999999999999999999999999999999999999999999999.0' AS Decimal256(1)) / CAST('0.1' AS Decimal256(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "-1579208923731619542357098500868790785326998466564056403945758400791312964003.6\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E36",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal32(0))) / CAST(2147483648 AS UInt64) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E37",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(NULL AS Nullable(Decimal32(0))) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E38",
+      "sql": "SELECT CAST(2147483648 AS Nullable(UInt64)) / CAST(1 AS Nullable(Decimal32(0))) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'Nullable(UInt64)') / CAST('1', 'Nullable(Decimal32(0))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E39",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 0;",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E40",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0));",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E41",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = {enabled:UInt8};",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-E42",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 0;",
+      "returncode": 0,
+      "stdout": "0\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E43",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10));",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST('1', 'Decimal64(10)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E44",
+      "sql": "SELECT CAST(0 AS UInt8) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = {enabled:UInt8};",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-E45",
+      "sql": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 0;",
+      "returncode": 0,
+      "stdout": "-214748364.6\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-E46",
+      "sql": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1));",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E47",
+      "sql": "SELECT CAST('21474836.5' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = {enabled:UInt8};",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-E48",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow = 0;",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(2147483648, 'UInt64') / CAST('0', 'Decimal32(0)') SETTINGS decimal_check_overflow = 0. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-017-E49",
+      "sql": "SELECT divideExact(CAST(2147483648 AS UInt64), CAST(1 AS Decimal32(0))) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)')) SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E50",
+      "sql": "SELECT divide(CAST('21474836.5' AS Decimal32(1)), CAST('0.1' AS Decimal32(1))) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT divide(CAST('21474836.5', 'Decimal32(1)'), CAST('0.1', 'Decimal32(1)')) SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E51",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 0. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E52",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT divideExact(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)')) AS `divide(CAST(2147483648, 'UInt64'), CAST('1', 'Decimal32(0)'))` SETTINGS decimal_check_overflow = 1, sql_compatible_division_for_integers = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E53",
+      "sql": "SELECT CAST('bad' AS Decimal32(1)) / CAST('0.1' AS Decimal32(1)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 6,
+      "stdout": "",
+      "stderr": "Code: 6. DB::Exception: Cannot parse string 'bad' as Decimal(9, 1): syntax error at begin of string: In scope SELECT CAST('bad', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)') SETTINGS decimal_check_overflow = 1. (CANNOT_PARSE_TEXT)\n"
+    },
+    {
+      "id": "CHSEM-017-E54",
+      "sql": "SELECT CAST(256 AS UInt8) / CAST(1 AS Decimal32(5)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(256, 'UInt8') / CAST('1', 'Decimal32(5)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E55",
+      "sql": "SELECT CAST(2147483648.0 AS UInt64) / CAST(1 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648., 'UInt64') / CAST('1', 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-E56",
+      "sql": "SELECT CAST(1 AS Float64) / CAST(1 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1;",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -60,6 +60,9 @@ CHSEM-016 adds [positioned Decimal division diagnostics](decimal-diagnostics-REA
 with explicit-setting guards, NULL/overflow ordering controls and named refinements
 to CHSEM-015's typing-only captures.
 
+CHSEM-017 adds [proved Decimal runtime-overflow diagnostics](decimal-runtime-README.md),
+with narrowing/scaling guard order, signed boundaries and native big-Decimal wrapping controls.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

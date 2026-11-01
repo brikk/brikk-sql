@@ -1,0 +1,348 @@
+[
+    {
+        "id": "CHSEM-016-E01",
+        "input_sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) SETTINGS decimal_check_overflow = 0",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E02",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal(5,2)))/CAST(2 AS Decimal(12,3)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal(5, 2))) / CAST(2 AS Decimal(12, 3)) SETTINGS decimal_check_overflow = 0",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E03",
+        "input_sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(NULL AS Nullable(Decimal(12,3))) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(NULL AS Nullable(Decimal(12, 3))) SETTINGS decimal_check_overflow = 0",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E04",
+        "input_sql": "SELECT CAST(7 AS Decimal128(2))/CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal128(2)) / CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow = 0",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E05",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal128(2)))/CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal128(2))) / CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow = 0",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E06",
+        "input_sql": "SELECT CAST(7 AS Decimal128(2))/CAST(NULL AS Nullable(Decimal128(3))) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal128(2)) / CAST(NULL AS Nullable(Decimal128(3))) SETTINGS decimal_check_overflow = 0",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E07",
+        "input_sql": "SELECT CAST(7 AS Decimal256(2))/CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal256(2)) / CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow = 0",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E08",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal256(2)))/CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal256(2))) / CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow = 0",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E09",
+        "input_sql": "SELECT CAST(7 AS Decimal256(2))/CAST(NULL AS Nullable(Decimal256(3))) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal256(2)) / CAST(NULL AS Nullable(Decimal256(3))) SETTINGS decimal_check_overflow = 0",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E10",
+        "input_sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E11",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal32(6)))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal32(6))) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E12",
+        "input_sql": "SELECT CAST(0 AS Decimal32(6))/CAST(NULL AS Nullable(Decimal32(4))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal32(6)) / CAST(NULL AS Nullable(Decimal32(4))) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E13",
+        "input_sql": "SELECT CAST(0 AS Decimal64(10))/CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal64(10)) / CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E14",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal64(10)))/CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal64(10))) / CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E15",
+        "input_sql": "SELECT CAST(0 AS Decimal64(10))/CAST(NULL AS Nullable(Decimal64(9))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal64(10)) / CAST(NULL AS Nullable(Decimal64(9))) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E16",
+        "input_sql": "SELECT CAST(0 AS Decimal128(20))/CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal128(20)) / CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E17",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal128(20)))/CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal128(20))) / CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E18",
+        "input_sql": "SELECT CAST(0 AS Decimal128(20))/CAST(NULL AS Nullable(Decimal128(19))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal128(20)) / CAST(NULL AS Nullable(Decimal128(19))) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E19",
+        "input_sql": "SELECT CAST(0 AS Decimal256(39))/CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal256(39)) / CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E20",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal256(39)))/CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal256(39))) / CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E21",
+        "input_sql": "SELECT CAST(0 AS Decimal256(39))/CAST(NULL AS Nullable(Decimal256(38))) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal256(39)) / CAST(NULL AS Nullable(Decimal256(38))) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E22",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal(12,3)))/CAST(0 AS Int8)",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal(12, 3))) / CAST(0 AS Int8)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E23",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(NULL AS Nullable(Int8))",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(NULL AS Nullable(Int8))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E24",
+        "input_sql": "SELECT CAST(2147483648 AS UInt64)/CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(2147483648 AS UInt64) / CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E25",
+        "input_sql": "SELECT CAST(7 AS Decimal32(6))/CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(7 AS Decimal32(6)) / CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_NUMERATOR_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E26",
+        "input_sql": "SELECT CAST(7 AS Decimal32(2))/CAST(0 AS Decimal32(2))",
+        "generated": "SELECT CAST(7 AS Decimal32(2)) / CAST(0 AS Decimal32(2))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E27",
+        "input_sql": "SELECT CAST(7 AS Decimal64(2))/CAST(0 AS Decimal64(2))",
+        "generated": "SELECT CAST(7 AS Decimal64(2)) / CAST(0 AS Decimal64(2))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E28",
+        "input_sql": "SELECT CAST(7 AS Decimal128(2))/CAST(0 AS Decimal128(2))",
+        "generated": "SELECT CAST(7 AS Decimal128(2)) / CAST(0 AS Decimal128(2))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E29",
+        "input_sql": "SELECT CAST(7 AS Decimal256(2))/CAST(0 AS Decimal256(2))",
+        "generated": "SELECT CAST(7 AS Decimal256(2)) / CAST(0 AS Decimal256(2))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E30",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Int8)",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Int8)",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E31",
+        "input_sql": "SELECT CAST(7 AS UInt8)/CAST(0 AS Decimal(12,3))",
+        "generated": "SELECT CAST(7 AS UInt8) / CAST(0 AS Decimal(12, 3))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E32",
+        "input_sql": "SELECT CAST('7.25' AS Decimal(12,3))/CAST('-0.000' AS Decimal(12,3))",
+        "generated": "SELECT CAST('7.25' AS Decimal(12, 3)) / CAST('-0.000' AS Decimal(12, 3))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E33",
+        "input_sql": "SELECT CAST(7 AS Nullable(Decimal(12,3)))/CAST(0 AS Nullable(Int8))",
+        "generated": "SELECT CAST(7 AS Nullable(Decimal(12, 3))) / CAST(0 AS Nullable(Int8))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E34",
+        "input_sql": "SELECT divideExact(CAST(7 AS Decimal(12,3)),CAST(0 AS Int8))",
+        "generated": "SELECT divideExact(CAST(7 AS Decimal(12, 3)), CAST(0 AS Int8))",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E35",
+        "input_sql": "SELECT divide(CAST(7 AS Decimal(12,3)),CAST(0 AS Int8)) SETTINGS sql_compatible_division_for_integers=0",
+        "generated": "SELECT divide(CAST(7 AS Decimal(12, 3)), CAST(0 AS Int8)) SETTINGS sql_compatible_division_for_integers = 0",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E36",
+        "input_sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 0",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E37",
+        "input_sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4))",
+        "generated": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E38",
+        "input_sql": "SELECT CAST(0 AS Decimal32(4))/CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(0 AS Decimal32(4)) / CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E39",
+        "input_sql": "SELECT CAST(0 AS Decimal32(4))/CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(0 AS Decimal32(4)) / CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow = 0",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E40",
+        "input_sql": "SELECT CAST(0 AS Decimal32(4))/CAST(0 AS Decimal32(6))",
+        "generated": "SELECT CAST(0 AS Decimal32(4)) / CAST(0 AS Decimal32(6))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E41",
+        "input_sql": "SELECT CAST('bad' AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('bad' AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) SETTINGS decimal_check_overflow = 1",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E42",
+        "input_sql": "SELECT CAST('0.0001' AS Decimal32(3))/CAST(0 AS Int8)",
+        "generated": "SELECT CAST('0.0001' AS Decimal32(3)) / CAST(0 AS Int8)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E43",
+        "input_sql": "SELECT CAST(256 AS UInt8)/CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(256 AS UInt8) / CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E44",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Float64)",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Float64)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E45",
+        "input_sql": "SELECT CAST(1 AS Float64)/CAST(0 AS Decimal(12,3))",
+        "generated": "SELECT CAST(1 AS Float64) / CAST(0 AS Decimal(12, 3))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-E46",
+        "input_sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST(1 AS UInt8) / CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1",
+        "rules": [
+            "DECIMAL_DIVISION_MULTIPLIER_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-E47",
+        "input_sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(1 AS UInt8) / CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow = 0",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    }
+]

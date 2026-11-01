@@ -1,0 +1,115 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "ade6f63ff91c5548566f22dced8e5059e4baf74745bcad3759487b7af2859a15",
+  "brikk_sha256": "79dbc0d833ba7164bdd2a2287d4fc715d3ec72e68f189dd80afdda17c0a2ea25",
+  "execution": [
+    {
+      "id": "CHSEM-017-SCRIPT01",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT02",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT03",
+      "returncode": 0,
+      "stdout": "-214748364.6\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT04",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST(1, 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-SCRIPT05",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT06",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-SCRIPT07",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT08",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)'). (DECIMAL_OVERFLOW)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-017-SCRIPT01",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT02",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT03",
+      "returncode": 0,
+      "stdout": "-214748364.6\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT04",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(0, 'UInt8') / CAST(1, 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-017-SCRIPT05",
+      "returncode": 0,
+      "stdout": "-2147483648\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT06",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Substitution `enabled` is not set. (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-017-SCRIPT07",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-017-SCRIPT08",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST('21474836.5', 'Decimal32(1)') / CAST('0.1', 'Decimal32(1)'). (DECIMAL_OVERFLOW)\n"
+    }
+  ]
+}

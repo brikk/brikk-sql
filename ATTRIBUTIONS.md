@@ -217,6 +217,10 @@ CHSEM-016's `decimal-diagnostics-sources.json` adds Apache-2.0 Decimal execution
 NULL-map, narrowing/scaling and division exception excerpts. Its finite and session
 observations are in `decimal-diagnostics-native/` and `decimal-diagnostics-script-native/`.
 
+CHSEM-017's `decimal-runtime-sources.json` adds Apache-2.0 arithmetic overflow
+specializations and retains the tagged Decimal guard excerpts. Its finite/session
+observations are in `decimal-runtime-native/` and `decimal-runtime-script-native/`.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by
