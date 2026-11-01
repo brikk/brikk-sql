@@ -1,0 +1,91 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "193e70e71a87ba42ddb6f8748cfd63aee4dea23ecdd65112380e0504d08981d2",
+  "brikk_sha256": "7e09cbb8b20721f783cf86fc24b0862433db3f2237e25a9f91bf8a7a3854ca8a",
+  "execution": [
+    {
+      "id": "CHSEM-019-SCRIPT01",
+      "returncode": 0,
+      "stdout": "x\tString\n\\N\tNullable(Nothing)\ntrue\tBool\n7\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-SCRIPT02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-019-SCRIPT03",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-019-SCRIPT04",
+      "returncode": 0,
+      "stdout": "256\tUInt16\n-9223372036854776000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-SCRIPT05",
+      "returncode": 0,
+      "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-SCRIPT06",
+      "returncode": 115,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-019-SCRIPT01",
+      "returncode": 0,
+      "stdout": "x\tString\n\\N\tNullable(Nothing)\ntrue\tBool\n7\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-SCRIPT02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-019-SCRIPT03",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-019-SCRIPT04",
+      "returncode": 0,
+      "stdout": "256\tUInt16\n-9223372036854776000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-SCRIPT05",
+      "returncode": 0,
+      "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-SCRIPT06",
+      "returncode": 115,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    }
+  ]
+}

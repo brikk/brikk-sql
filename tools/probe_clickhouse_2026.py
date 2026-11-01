@@ -155,7 +155,7 @@ def main():
 
 def expected_execution(case, result):
     if "error_code" in case:
-        return (result["returncode"] == case["error_code"] % 256 and result["stdout"] == ""
+        return (result["returncode"] == case["error_code"] % 256 and result["stdout"] == case.get("stdout", "")
                 and case["error_name"] in result["stderr"]
                 and all(text in result["stderr"] for text in case.get("error_contains", [])))
     return result["returncode"] == 0 and result["stdout"] == case["stdout"]

@@ -1,0 +1,310 @@
+[
+    {
+        "id": "CHSEM-019-E01",
+        "input_sql": "SELECT (0) AS v,toTypeName(v)",
+        "generated": "SELECT (0) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E02",
+        "input_sql": "SELECT (255) AS v,toTypeName(v)",
+        "generated": "SELECT (255) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E03",
+        "input_sql": "SELECT (256) AS v,toTypeName(v)",
+        "generated": "SELECT (256) AS v, toTypeName(v)",
+        "result_type": "UInt16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E04",
+        "input_sql": "SELECT (65535) AS v,toTypeName(v)",
+        "generated": "SELECT (65535) AS v, toTypeName(v)",
+        "result_type": "UInt16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E05",
+        "input_sql": "SELECT (65536) AS v,toTypeName(v)",
+        "generated": "SELECT (65536) AS v, toTypeName(v)",
+        "result_type": "UInt32",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E06",
+        "input_sql": "SELECT (4294967295) AS v,toTypeName(v)",
+        "generated": "SELECT (4294967295) AS v, toTypeName(v)",
+        "result_type": "UInt32",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E07",
+        "input_sql": "SELECT (4294967296) AS v,toTypeName(v)",
+        "generated": "SELECT (4294967296) AS v, toTypeName(v)",
+        "result_type": "UInt64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E08",
+        "input_sql": "SELECT (18446744073709551615) AS v,toTypeName(v)",
+        "generated": "SELECT (18446744073709551615) AS v, toTypeName(v)",
+        "result_type": "UInt64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E09",
+        "input_sql": "SELECT (-1) AS v,toTypeName(v)",
+        "generated": "SELECT (-1) AS v, toTypeName(v)",
+        "result_type": "Int8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E10",
+        "input_sql": "SELECT (-128) AS v,toTypeName(v)",
+        "generated": "SELECT (-128) AS v, toTypeName(v)",
+        "result_type": "Int8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E11",
+        "input_sql": "SELECT (-129) AS v,toTypeName(v)",
+        "generated": "SELECT (-129) AS v, toTypeName(v)",
+        "result_type": "Int16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E12",
+        "input_sql": "SELECT (-32768) AS v,toTypeName(v)",
+        "generated": "SELECT (-32768) AS v, toTypeName(v)",
+        "result_type": "Int16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E13",
+        "input_sql": "SELECT (-32769) AS v,toTypeName(v)",
+        "generated": "SELECT (-32769) AS v, toTypeName(v)",
+        "result_type": "Int32",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E14",
+        "input_sql": "SELECT (-2147483648) AS v,toTypeName(v)",
+        "generated": "SELECT (-2147483648) AS v, toTypeName(v)",
+        "result_type": "Int32",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E15",
+        "input_sql": "SELECT (-2147483649) AS v,toTypeName(v)",
+        "generated": "SELECT (-2147483649) AS v, toTypeName(v)",
+        "result_type": "Int64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E16",
+        "input_sql": "SELECT (-9223372036854775808) AS v,toTypeName(v)",
+        "generated": "SELECT (-9223372036854775808) AS v, toTypeName(v)",
+        "result_type": "Int64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E17",
+        "input_sql": "SELECT (+0) AS v,toTypeName(v)",
+        "generated": "SELECT (0) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E18",
+        "input_sql": "SELECT (-0) AS v,toTypeName(v)",
+        "generated": "SELECT (-0) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E19",
+        "input_sql": "SELECT (00) AS v,toTypeName(v)",
+        "generated": "SELECT (00) AS v, toTypeName(v)",
+        "result_type": "UInt8",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E20",
+        "input_sql": "SELECT (0.0) AS v,toTypeName(v)",
+        "generated": "SELECT (0.0) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E21",
+        "input_sql": "SELECT (-0.0) AS v,toTypeName(v)",
+        "generated": "SELECT (-0.0) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E22",
+        "input_sql": "SELECT (.5) AS v,toTypeName(v)",
+        "generated": "SELECT (0.5) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E23",
+        "input_sql": "SELECT (-.5) AS v,toTypeName(v)",
+        "generated": "SELECT (-0.5) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E24",
+        "input_sql": "SELECT (1.) AS v,toTypeName(v)",
+        "generated": "SELECT (1.) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E25",
+        "input_sql": "SELECT (1e0) AS v,toTypeName(v)",
+        "generated": "SELECT (1e0) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E26",
+        "input_sql": "SELECT (1E+3) AS v,toTypeName(v)",
+        "generated": "SELECT (1E+3) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E27",
+        "input_sql": "SELECT (-1e-3) AS v,toTypeName(v)",
+        "generated": "SELECT (-1e-3) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E28",
+        "input_sql": "SELECT (1e-400) AS v,toTypeName(v)",
+        "generated": "SELECT (1e-400) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E29",
+        "input_sql": "SELECT (1.7976931348623157e308) AS v,toTypeName(v)",
+        "generated": "SELECT (1.7976931348623157e308) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E30",
+        "input_sql": "SELECT (-1.7976931348623157e308) AS v,toTypeName(v)",
+        "generated": "SELECT (-1.7976931348623157e308) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E31",
+        "input_sql": "SELECT (18446744073709551616) AS v,toTypeName(v)",
+        "generated": "SELECT (18446744073709551616) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E32",
+        "input_sql": "SELECT (-9223372036854775809) AS v,toTypeName(v)",
+        "generated": "SELECT (-9223372036854775809) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E33",
+        "input_sql": "SELECT (10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000) AS v,toTypeName(v)",
+        "generated": "SELECT (10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E34",
+        "input_sql": "SELECT ('') AS v,toTypeName(v)",
+        "generated": "SELECT ('') AS v, toTypeName(v)",
+        "result_type": "String",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E35",
+        "input_sql": "SELECT ('hello') AS v,toTypeName(v)",
+        "generated": "SELECT ('hello') AS v, toTypeName(v)",
+        "result_type": "String",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E36",
+        "input_sql": "SELECT ('a''b') AS v,toTypeName(v)",
+        "generated": "SELECT ('a''b') AS v, toTypeName(v)",
+        "result_type": "String",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E37",
+        "input_sql": "SELECT ('😀') AS v,toTypeName(v)",
+        "generated": "SELECT ('😀') AS v, toTypeName(v)",
+        "result_type": "String",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E38",
+        "input_sql": "SELECT ('NULL') AS v,toTypeName(v)",
+        "generated": "SELECT ('NULL') AS v, toTypeName(v)",
+        "result_type": "String",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E39",
+        "input_sql": "SELECT ('\\0') AS v,toTypeName(v)",
+        "generated": "SELECT ('\\0') AS v, toTypeName(v)",
+        "result_type": "String",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E40",
+        "input_sql": "SELECT (TRUE) AS v,toTypeName(v)",
+        "generated": "SELECT (TRUE) AS v, toTypeName(v)",
+        "result_type": "Bool",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E41",
+        "input_sql": "SELECT (FALSE) AS v,toTypeName(v)",
+        "generated": "SELECT (FALSE) AS v, toTypeName(v)",
+        "result_type": "Bool",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E42",
+        "input_sql": "SELECT (NULL) AS v,toTypeName(v)",
+        "generated": "SELECT (NULL) AS v, toTypeName(v)",
+        "result_type": "Nullable(Nothing)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E43",
+        "input_sql": "SELECT 1e309 AS v,toTypeName(v)",
+        "generated": "SELECT 1e309 AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-E44",
+        "input_sql": "SELECT 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 AS v,toTypeName(v)",
+        "generated": "SELECT 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": []
+    }
+]

@@ -67,6 +67,10 @@ CHSEM-018 adds [explicit script-aware native typing](script-typing-README.md), r
 owned per-statement ASTs and the shared diagnostic reports. Statement APIs never
 infer script/session mode from editor text or semicolons.
 
+CHSEM-019 adds [exact native scalar literal projection typing](projection-literal-README.md),
+including numeric widths, non-null String/Bool and Nullable(Nothing), without
+changing generic annotateTypes or unrelated arithmetic/NULL-dispatch contracts.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

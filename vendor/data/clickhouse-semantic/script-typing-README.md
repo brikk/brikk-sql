@@ -109,3 +109,7 @@ dependency change is introduced.
 ClickHouse-only Python discovery passes 70 tests. The isolated IntelliJ gate passes
 757 tests on 261.25134.95; other IDE versions were not run. No new IntelliJ API calls
 or automatic changes to an IDE's statement/script execution mode were introduced.
+
+CHSEM-019 subsequently closes the standalone scalar-literal type/nullability fallback
+boundary described above. See `projection-literal-README.md`; the CHSEM-018 captures
+remain unchanged, and generic annotateTypes retains its earlier policy.

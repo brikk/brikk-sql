@@ -1,0 +1,683 @@
+{
+  "task": "CHSEM-019",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-019-E01",
+      "task": "CHSEM-019",
+      "sql": "SELECT (0) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tUInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E02",
+      "task": "CHSEM-019",
+      "sql": "SELECT (255) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "255\tUInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "255\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E03",
+      "task": "CHSEM-019",
+      "sql": "SELECT (256) AS v,toTypeName(v)",
+      "type": "UInt16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "256\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "256\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E04",
+      "task": "CHSEM-019",
+      "sql": "SELECT (65535) AS v,toTypeName(v)",
+      "type": "UInt16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "65535\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "65535\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E05",
+      "task": "CHSEM-019",
+      "sql": "SELECT (65536) AS v,toTypeName(v)",
+      "type": "UInt32",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "65536\tUInt32\n"
+        },
+        "26.10.2.103": {
+          "stdout": "65536\tUInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E06",
+      "task": "CHSEM-019",
+      "sql": "SELECT (4294967295) AS v,toTypeName(v)",
+      "type": "UInt32",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "4294967295\tUInt32\n"
+        },
+        "26.10.2.103": {
+          "stdout": "4294967295\tUInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E07",
+      "task": "CHSEM-019",
+      "sql": "SELECT (4294967296) AS v,toTypeName(v)",
+      "type": "UInt64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "4294967296\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "4294967296\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E08",
+      "task": "CHSEM-019",
+      "sql": "SELECT (18446744073709551615) AS v,toTypeName(v)",
+      "type": "UInt64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "18446744073709551615\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "18446744073709551615\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E09",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-1) AS v,toTypeName(v)",
+      "type": "Int8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E10",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-128) AS v,toTypeName(v)",
+      "type": "Int8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-128\tInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-128\tInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E11",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-129) AS v,toTypeName(v)",
+      "type": "Int16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-129\tInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-129\tInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E12",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-32768) AS v,toTypeName(v)",
+      "type": "Int16",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-32768\tInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-32768\tInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E13",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-32769) AS v,toTypeName(v)",
+      "type": "Int32",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-32769\tInt32\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-32769\tInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E14",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-2147483648) AS v,toTypeName(v)",
+      "type": "Int32",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483648\tInt32\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-2147483648\tInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E15",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-2147483649) AS v,toTypeName(v)",
+      "type": "Int64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483649\tInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-2147483649\tInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E16",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-9223372036854775808) AS v,toTypeName(v)",
+      "type": "Int64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-9223372036854775808\tInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-9223372036854775808\tInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E17",
+      "task": "CHSEM-019",
+      "sql": "SELECT (+0) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tUInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E18",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-0) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tUInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E19",
+      "task": "CHSEM-019",
+      "sql": "SELECT (00) AS v,toTypeName(v)",
+      "type": "UInt8",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tUInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E20",
+      "task": "CHSEM-019",
+      "sql": "SELECT (0.0) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E21",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-0.0) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-0\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-0\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E22",
+      "task": "CHSEM-019",
+      "sql": "SELECT (.5) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E23",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-.5) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-0.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-0.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E24",
+      "task": "CHSEM-019",
+      "sql": "SELECT (1.) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E25",
+      "task": "CHSEM-019",
+      "sql": "SELECT (1e0) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E26",
+      "task": "CHSEM-019",
+      "sql": "SELECT (1E+3) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1000\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1000\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E27",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-1e-3) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-0.001\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-0.001\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E28",
+      "task": "CHSEM-019",
+      "sql": "SELECT (1e-400) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E29",
+      "task": "CHSEM-019",
+      "sql": "SELECT (1.7976931348623157e308) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1.7976931348623157e308\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1.7976931348623157e308\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E30",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-1.7976931348623157e308) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1.7976931348623157e308\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1.7976931348623157e308\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E31",
+      "task": "CHSEM-019",
+      "sql": "SELECT (18446744073709551616) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "18446744073709552000\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "18446744073709552000\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E32",
+      "task": "CHSEM-019",
+      "sql": "SELECT (-9223372036854775809) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-9223372036854776000\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-9223372036854776000\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E33",
+      "task": "CHSEM-019",
+      "sql": "SELECT (10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1e100\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1e100\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E34",
+      "task": "CHSEM-019",
+      "sql": "SELECT ('') AS v,toTypeName(v)",
+      "type": "String",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\tString\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E35",
+      "task": "CHSEM-019",
+      "sql": "SELECT ('hello') AS v,toTypeName(v)",
+      "type": "String",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "hello\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "hello\tString\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E36",
+      "task": "CHSEM-019",
+      "sql": "SELECT ('a''b') AS v,toTypeName(v)",
+      "type": "String",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "a\\'b\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "a\\'b\tString\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E37",
+      "task": "CHSEM-019",
+      "sql": "SELECT ('\ud83d\ude00') AS v,toTypeName(v)",
+      "type": "String",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\ud83d\ude00\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\ud83d\ude00\tString\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E38",
+      "task": "CHSEM-019",
+      "sql": "SELECT ('NULL') AS v,toTypeName(v)",
+      "type": "String",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "NULL\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "NULL\tString\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E39",
+      "task": "CHSEM-019",
+      "sql": "SELECT ('\\0') AS v,toTypeName(v)",
+      "type": "String",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\0\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\0\tString\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E40",
+      "task": "CHSEM-019",
+      "sql": "SELECT (TRUE) AS v,toTypeName(v)",
+      "type": "Bool",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "true\tBool\n"
+        },
+        "26.10.2.103": {
+          "stdout": "true\tBool\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E41",
+      "task": "CHSEM-019",
+      "sql": "SELECT (FALSE) AS v,toTypeName(v)",
+      "type": "Bool",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "false\tBool\n"
+        },
+        "26.10.2.103": {
+          "stdout": "false\tBool\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E42",
+      "task": "CHSEM-019",
+      "sql": "SELECT (NULL) AS v,toTypeName(v)",
+      "type": "Nullable(Nothing)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\tNullable(Nothing)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Nothing)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E43",
+      "task": "CHSEM-019",
+      "sql": "SELECT 1e309 AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "parse_expectations": {
+        "26.8.34.13": false,
+        "26.10.2.103": false
+      },
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 62,
+          "error_name": "SYNTAX_ERROR"
+        },
+        "26.10.2.103": {
+          "error_code": 62,
+          "error_name": "SYNTAX_ERROR"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-019-E44",
+      "task": "CHSEM-019",
+      "sql": "SELECT 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "parse_expectations": {
+        "26.8.34.13": false,
+        "26.10.2.103": false
+      },
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 62,
+          "error_name": "SYNTAX_ERROR"
+        },
+        "26.10.2.103": {
+          "error_code": 62,
+          "error_name": "SYNTAX_ERROR"
+        }
+      }
+    }
+  ]
+}

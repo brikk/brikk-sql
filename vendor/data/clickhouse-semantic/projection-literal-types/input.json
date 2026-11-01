@@ -1,0 +1,352 @@
+{
+  "batches": [
+    {
+      "id": "aliased",
+      "cases": [
+        {
+          "id": "p000",
+          "literal": "0"
+        },
+        {
+          "id": "p001",
+          "literal": "255"
+        },
+        {
+          "id": "p002",
+          "literal": "256"
+        },
+        {
+          "id": "p003",
+          "literal": "65535"
+        },
+        {
+          "id": "p004",
+          "literal": "65536"
+        },
+        {
+          "id": "p005",
+          "literal": "4294967295"
+        },
+        {
+          "id": "p006",
+          "literal": "4294967296"
+        },
+        {
+          "id": "p007",
+          "literal": "18446744073709551615"
+        },
+        {
+          "id": "p008",
+          "literal": "-1"
+        },
+        {
+          "id": "p009",
+          "literal": "-128"
+        },
+        {
+          "id": "p010",
+          "literal": "-129"
+        },
+        {
+          "id": "p011",
+          "literal": "-32768"
+        },
+        {
+          "id": "p012",
+          "literal": "-32769"
+        },
+        {
+          "id": "p013",
+          "literal": "-2147483648"
+        },
+        {
+          "id": "p014",
+          "literal": "-2147483649"
+        },
+        {
+          "id": "p015",
+          "literal": "-9223372036854775808"
+        },
+        {
+          "id": "p016",
+          "literal": "+0"
+        },
+        {
+          "id": "p017",
+          "literal": "-0"
+        },
+        {
+          "id": "p018",
+          "literal": "00"
+        },
+        {
+          "id": "p019",
+          "literal": "0.0"
+        },
+        {
+          "id": "p020",
+          "literal": "-0.0"
+        },
+        {
+          "id": "p021",
+          "literal": ".5"
+        },
+        {
+          "id": "p022",
+          "literal": "-.5"
+        },
+        {
+          "id": "p023",
+          "literal": "1."
+        },
+        {
+          "id": "p024",
+          "literal": "1e0"
+        },
+        {
+          "id": "p025",
+          "literal": "1E+3"
+        },
+        {
+          "id": "p026",
+          "literal": "-1e-3"
+        },
+        {
+          "id": "p027",
+          "literal": "1e-400"
+        },
+        {
+          "id": "p028",
+          "literal": "1.7976931348623157e308"
+        },
+        {
+          "id": "p029",
+          "literal": "-1.7976931348623157e308"
+        },
+        {
+          "id": "p030",
+          "literal": "18446744073709551616"
+        },
+        {
+          "id": "p031",
+          "literal": "-9223372036854775809"
+        },
+        {
+          "id": "p032",
+          "literal": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "id": "p033",
+          "literal": "''"
+        },
+        {
+          "id": "p034",
+          "literal": "'hello'"
+        },
+        {
+          "id": "p035",
+          "literal": "'a''b'"
+        },
+        {
+          "id": "p036",
+          "literal": "'\ud83d\ude00'"
+        },
+        {
+          "id": "p037",
+          "literal": "'NULL'"
+        },
+        {
+          "id": "p038",
+          "literal": "'\\0'"
+        },
+        {
+          "id": "p039",
+          "literal": "TRUE"
+        },
+        {
+          "id": "p040",
+          "literal": "FALSE"
+        },
+        {
+          "id": "p041",
+          "literal": "NULL"
+        }
+      ],
+      "sql": "SELECT 0 AS p000,toTypeName(p000) AS t000,255 AS p001,toTypeName(p001) AS t001,256 AS p002,toTypeName(p002) AS t002,65535 AS p003,toTypeName(p003) AS t003,65536 AS p004,toTypeName(p004) AS t004,4294967295 AS p005,toTypeName(p005) AS t005,4294967296 AS p006,toTypeName(p006) AS t006,18446744073709551615 AS p007,toTypeName(p007) AS t007,-1 AS p008,toTypeName(p008) AS t008,-128 AS p009,toTypeName(p009) AS t009,-129 AS p010,toTypeName(p010) AS t010,-32768 AS p011,toTypeName(p011) AS t011,-32769 AS p012,toTypeName(p012) AS t012,-2147483648 AS p013,toTypeName(p013) AS t013,-2147483649 AS p014,toTypeName(p014) AS t014,-9223372036854775808 AS p015,toTypeName(p015) AS t015,+0 AS p016,toTypeName(p016) AS t016,-0 AS p017,toTypeName(p017) AS t017,00 AS p018,toTypeName(p018) AS t018,0.0 AS p019,toTypeName(p019) AS t019,-0.0 AS p020,toTypeName(p020) AS t020,.5 AS p021,toTypeName(p021) AS t021,-.5 AS p022,toTypeName(p022) AS t022,1. AS p023,toTypeName(p023) AS t023,1e0 AS p024,toTypeName(p024) AS t024,1E+3 AS p025,toTypeName(p025) AS t025,-1e-3 AS p026,toTypeName(p026) AS t026,1e-400 AS p027,toTypeName(p027) AS t027,1.7976931348623157e308 AS p028,toTypeName(p028) AS t028,-1.7976931348623157e308 AS p029,toTypeName(p029) AS t029,18446744073709551616 AS p030,toTypeName(p030) AS t030,-9223372036854775809 AS p031,toTypeName(p031) AS t031,10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 AS p032,toTypeName(p032) AS t032,'' AS p033,toTypeName(p033) AS t033,'hello' AS p034,toTypeName(p034) AS t034,'a''b' AS p035,toTypeName(p035) AS t035,'\ud83d\ude00' AS p036,toTypeName(p036) AS t036,'NULL' AS p037,toTypeName(p037) AS t037,'\\0' AS p038,toTypeName(p038) AS t038,TRUE AS p039,toTypeName(p039) AS t039,FALSE AS p040,toTypeName(p040) AS t040,NULL AS p041,toTypeName(p041) AS t041 FORMAT JSONEachRow"
+    },
+    {
+      "id": "parenthesized",
+      "cases": [
+        {
+          "id": "p000",
+          "literal": "0"
+        },
+        {
+          "id": "p001",
+          "literal": "255"
+        },
+        {
+          "id": "p002",
+          "literal": "256"
+        },
+        {
+          "id": "p003",
+          "literal": "65535"
+        },
+        {
+          "id": "p004",
+          "literal": "65536"
+        },
+        {
+          "id": "p005",
+          "literal": "4294967295"
+        },
+        {
+          "id": "p006",
+          "literal": "4294967296"
+        },
+        {
+          "id": "p007",
+          "literal": "18446744073709551615"
+        },
+        {
+          "id": "p008",
+          "literal": "-1"
+        },
+        {
+          "id": "p009",
+          "literal": "-128"
+        },
+        {
+          "id": "p010",
+          "literal": "-129"
+        },
+        {
+          "id": "p011",
+          "literal": "-32768"
+        },
+        {
+          "id": "p012",
+          "literal": "-32769"
+        },
+        {
+          "id": "p013",
+          "literal": "-2147483648"
+        },
+        {
+          "id": "p014",
+          "literal": "-2147483649"
+        },
+        {
+          "id": "p015",
+          "literal": "-9223372036854775808"
+        },
+        {
+          "id": "p016",
+          "literal": "+0"
+        },
+        {
+          "id": "p017",
+          "literal": "-0"
+        },
+        {
+          "id": "p018",
+          "literal": "00"
+        },
+        {
+          "id": "p019",
+          "literal": "0.0"
+        },
+        {
+          "id": "p020",
+          "literal": "-0.0"
+        },
+        {
+          "id": "p021",
+          "literal": ".5"
+        },
+        {
+          "id": "p022",
+          "literal": "-.5"
+        },
+        {
+          "id": "p023",
+          "literal": "1."
+        },
+        {
+          "id": "p024",
+          "literal": "1e0"
+        },
+        {
+          "id": "p025",
+          "literal": "1E+3"
+        },
+        {
+          "id": "p026",
+          "literal": "-1e-3"
+        },
+        {
+          "id": "p027",
+          "literal": "1e-400"
+        },
+        {
+          "id": "p028",
+          "literal": "1.7976931348623157e308"
+        },
+        {
+          "id": "p029",
+          "literal": "-1.7976931348623157e308"
+        },
+        {
+          "id": "p030",
+          "literal": "18446744073709551616"
+        },
+        {
+          "id": "p031",
+          "literal": "-9223372036854775809"
+        },
+        {
+          "id": "p032",
+          "literal": "10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "id": "p033",
+          "literal": "''"
+        },
+        {
+          "id": "p034",
+          "literal": "'hello'"
+        },
+        {
+          "id": "p035",
+          "literal": "'a''b'"
+        },
+        {
+          "id": "p036",
+          "literal": "'\ud83d\ude00'"
+        },
+        {
+          "id": "p037",
+          "literal": "'NULL'"
+        },
+        {
+          "id": "p038",
+          "literal": "'\\0'"
+        },
+        {
+          "id": "p039",
+          "literal": "TRUE"
+        },
+        {
+          "id": "p040",
+          "literal": "FALSE"
+        },
+        {
+          "id": "p041",
+          "literal": "NULL"
+        }
+      ],
+      "sql": "SELECT ((0)) AS p000,toTypeName(p000) AS t000,((255)) AS p001,toTypeName(p001) AS t001,((256)) AS p002,toTypeName(p002) AS t002,((65535)) AS p003,toTypeName(p003) AS t003,((65536)) AS p004,toTypeName(p004) AS t004,((4294967295)) AS p005,toTypeName(p005) AS t005,((4294967296)) AS p006,toTypeName(p006) AS t006,((18446744073709551615)) AS p007,toTypeName(p007) AS t007,((-1)) AS p008,toTypeName(p008) AS t008,((-128)) AS p009,toTypeName(p009) AS t009,((-129)) AS p010,toTypeName(p010) AS t010,((-32768)) AS p011,toTypeName(p011) AS t011,((-32769)) AS p012,toTypeName(p012) AS t012,((-2147483648)) AS p013,toTypeName(p013) AS t013,((-2147483649)) AS p014,toTypeName(p014) AS t014,((-9223372036854775808)) AS p015,toTypeName(p015) AS t015,((+0)) AS p016,toTypeName(p016) AS t016,((-0)) AS p017,toTypeName(p017) AS t017,((00)) AS p018,toTypeName(p018) AS t018,((0.0)) AS p019,toTypeName(p019) AS t019,((-0.0)) AS p020,toTypeName(p020) AS t020,((.5)) AS p021,toTypeName(p021) AS t021,((-.5)) AS p022,toTypeName(p022) AS t022,((1.)) AS p023,toTypeName(p023) AS t023,((1e0)) AS p024,toTypeName(p024) AS t024,((1E+3)) AS p025,toTypeName(p025) AS t025,((-1e-3)) AS p026,toTypeName(p026) AS t026,((1e-400)) AS p027,toTypeName(p027) AS t027,((1.7976931348623157e308)) AS p028,toTypeName(p028) AS t028,((-1.7976931348623157e308)) AS p029,toTypeName(p029) AS t029,((18446744073709551616)) AS p030,toTypeName(p030) AS t030,((-9223372036854775809)) AS p031,toTypeName(p031) AS t031,((10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000)) AS p032,toTypeName(p032) AS t032,(('')) AS p033,toTypeName(p033) AS t033,(('hello')) AS p034,toTypeName(p034) AS t034,(('a''b')) AS p035,toTypeName(p035) AS t035,(('\ud83d\ude00')) AS p036,toTypeName(p036) AS t036,(('NULL')) AS p037,toTypeName(p037) AS t037,(('\\0')) AS p038,toTypeName(p038) AS t038,((TRUE)) AS p039,toTypeName(p039) AS t039,((FALSE)) AS p040,toTypeName(p040) AS t040,((NULL)) AS p041,toTypeName(p041) AS t041 FORMAT JSONEachRow"
+    }
+  ]
+}

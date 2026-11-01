@@ -1,0 +1,63 @@
+{
+  "license": "Apache-2.0",
+  "snapshots": [
+    {
+      "version": "26.10.2.103",
+      "tag": "v26.10.2.103-stable",
+      "sources": [
+        {
+          "id": "CHSEM-019-S01",
+          "path": "src/DataTypes/FieldToDataType.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/DataTypes/FieldToDataType.cpp",
+          "sha256": "23c9210e95b15a7850035560e48eebe35ca59743295788f02cf0fe2d9602e829",
+          "excerpts": [
+            {
+              "start_line": 28,
+              "end_line": 82,
+              "text": "DataTypePtr FieldToDataType<on_error>::operator() (const Null &) const\n{\n    return std::make_shared<DataTypeNullable>(std::make_shared<DataTypeNothing>());\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const UInt64 & x) const\n{\n    if (x <= std::numeric_limits<UInt8>::max()) return std::make_shared<DataTypeUInt8>();\n    if (x <= std::numeric_limits<UInt16>::max()) return std::make_shared<DataTypeUInt16>();\n    if (x <= std::numeric_limits<UInt32>::max()) return std::make_shared<DataTypeUInt32>();\n    if (x <= std::numeric_limits<Int64>::max()) return std::make_shared<DataTypeUInt64>(/*unsigned_can_be_signed=*/true);\n    return std::make_shared<DataTypeUInt64>();\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const Int64 & x) const\n{\n    if (x <= std::numeric_limits<Int8>::max() && x >= std::numeric_limits<Int8>::min()) return std::make_shared<DataTypeInt8>();\n    if (x <= std::numeric_limits<Int16>::max() && x >= std::numeric_limits<Int16>::min()) return std::make_shared<DataTypeInt16>();\n    if (x <= std::numeric_limits<Int32>::max() && x >= std::numeric_limits<Int32>::min()) return std::make_shared<DataTypeInt32>();\n    return std::make_shared<DataTypeInt64>();\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const Float64 &) const\n{\n    return std::make_shared<DataTypeFloat64>();\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const UInt128 &) const\n{\n    return std::make_shared<DataTypeUInt128>();\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const Int128 &) const\n{\n    return std::make_shared<DataTypeInt128>();\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const UInt256 &) const\n{\n    return std::make_shared<DataTypeUInt256>();\n}\n\ntemplate <LeastSupertypeOnError on_error>\nDataTypePtr FieldToDataType<on_error>::operator() (const Int256 &) const\n{\n    return std::make_shared<DataTypeInt256>();\n}\n\ntemplate <LeastSupertypeOnError on_error>"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-019-S02",
+          "path": "src/DataTypes/FieldToDataType.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/DataTypes/FieldToDataType.cpp",
+          "sha256": "23c9210e95b15a7850035560e48eebe35ca59743295788f02cf0fe2d9602e829",
+          "excerpts": [
+            {
+              "start_line": 101,
+              "end_line": 106,
+              "text": "DataTypePtr FieldToDataType<on_error>::operator() (const String &) const\n{\n    return std::make_shared<DataTypeString>();\n}\n\ntemplate <LeastSupertypeOnError on_error>"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-019-S03",
+          "path": "src/DataTypes/FieldToDataType.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/DataTypes/FieldToDataType.cpp",
+          "sha256": "23c9210e95b15a7850035560e48eebe35ca59743295788f02cf0fe2d9602e829",
+          "excerpts": [
+            {
+              "start_line": 240,
+              "end_line": 244,
+              "text": "DataTypePtr FieldToDataType<on_error>::operator()(const bool &) const\n{\n    return DataTypeFactory::instance().get(\"Bool\");\n}\n"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-019-S04",
+          "path": "src/Parsers/ExpressionElementParsers.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Parsers/ExpressionElementParsers.cpp",
+          "sha256": "f1d07b5fe76fe4141237ee68f51fb31e69eb6ca9ee43fe2362fb58ed5fd347b1",
+          "excerpts": [
+            {
+              "start_line": 1480,
+              "end_line": 1694,
+              "text": "bool ParserNull::parseImpl(Pos & pos, ASTPtr & node, Expected & expected)\n{\n    ParserKeyword nested_parser(Keyword::NULL_KEYWORD);\n    if (nested_parser.parse(pos, node, expected))\n    {\n        node = make_intrusive<ASTLiteral>(Null());\n        return true;\n    }\n    return false;\n}\n\n\nbool ParserBool::parseImpl(Pos & pos, ASTPtr & node, Expected & expected)\n{\n    if (ParserKeyword(Keyword::TRUE_KEYWORD).parse(pos, node, expected))\n    {\n        node = make_intrusive<ASTLiteral>(true);\n        return true;\n    }\n    if (ParserKeyword(Keyword::FALSE_KEYWORD).parse(pos, node, expected))\n    {\n        node = make_intrusive<ASTLiteral>(false);\n        return true;\n    }\n    return false;\n}\n\nstatic bool parseNumber(char * buffer, size_t size, bool negative, int base, Field & res)\n{\n    errno = 0;    /// Functions strto* don't clear errno.\n\n    char * pos_integer = buffer;\n    UInt64 uint_value = std::strtoull(buffer, &pos_integer, base);\n\n    if (pos_integer == buffer + size && errno != ERANGE && (!negative || uint_value <= (1ULL << 63)))\n    {\n        /// -0 should be still parsed as UInt instead of Int,\n        /// because otherwise it is not preserved during formatting-parsing roundtrip\n        /// (the signedness is lost during formatting)\n\n        if (negative && uint_value != 0)\n            res = static_cast<Int64>(-uint_value);\n        else\n            res = uint_value;\n\n        return true;\n    }\n\n    return false;\n}\n\nbool ParserNumber::parseImpl(Pos & pos, ASTPtr & node, Expected & expected)\n{\n    Pos literal_begin = pos;\n    bool negative = false;\n\n    if (pos->type == TokenType::Minus)\n    {\n        ++pos;\n        negative = true;\n    }\n    else if (pos->type == TokenType::Plus)  /// Leading plus is simply ignored.\n        ++pos;\n\n    Field res;\n\n    if (!pos.isValid())\n        return false;\n\n    auto try_read_float = [&](const char * it, const char * end)\n    {\n        std::string buf(it, end); /// Copying is needed to ensure the string is 0-terminated.\n        char * str_end = nullptr;\n        errno = 0;    /// Functions strto* don't clear errno.\n        /// The usage of strtod is needed, because we parse hex floating point literals as well.\n        Float64 float_value = std::strtod(buf.c_str(), &str_end);\n        bool overflow = (errno == ERANGE && !std::isfinite(float_value));\n        if (str_end == buf.c_str() + buf.size() && !overflow)\n        {\n            if (float_value < 0)\n                throw Exception(ErrorCodes::LOGICAL_ERROR,\n                                \"Token number cannot begin with minus, \"\n                                \"but parsed float number is less than zero.\");\n\n            if (negative)\n                float_value = -float_value;\n\n            /// Canonicalize NaN to a single representation, because negative NaN has\n            /// a different bit pattern but formats identically to positive NaN (\"nan\"),\n            /// breaking the AST formatting roundtrip consistency check.\n            if (std::isnan(float_value))\n                float_value = std::numeric_limits<Float64>::quiet_NaN();\n\n            res = float_value;\n\n            auto literal = make_intrusive<ASTLiteral>(res);\n            ++pos;\n            recordLiteralTokens(literal.get(), literal_begin, pos, expected);\n            node = literal;\n\n            return true;\n        }\n\n        expected.add(pos, \"number\");\n        return false;\n    };\n\n    /// NaN and Inf\n    if (pos->type == TokenType::BareWord)\n    {\n        return try_read_float(pos->begin, pos->end);\n    }\n\n    if (pos->type != TokenType::Number)\n    {\n        expected.add(pos, \"number\");\n        return false;\n    }\n\n    /** Maximum length of number. 319 symbols is enough to write maximum double in decimal form.\n      * Copy is needed to use strto* functions, which require 0-terminated string.\n      */\n    static constexpr size_t MAX_LENGTH_OF_NUMBER = 319;\n\n    char buf[MAX_LENGTH_OF_NUMBER + 1];\n\n    size_t buf_size = 0;\n    for (const auto * it = pos->begin; it != pos->end; ++it)\n    {\n        if (*it != '_')\n        {\n            buf[buf_size] = *it;\n            ++buf_size;\n        }\n        if (unlikely(buf_size > MAX_LENGTH_OF_NUMBER))\n        {\n            expected.add(pos, \"number\");\n            return false;\n        }\n    }\n\n    size_t size = buf_size;\n    buf[size] = 0;\n    char * start_pos = buf;\n\n    if (*start_pos == '0')\n    {\n        ++start_pos;\n        --size;\n\n        /// binary\n        if (*start_pos == 'b')\n        {\n            ++start_pos;\n            --size;\n            if (parseNumber(start_pos, size, negative, 2, res))\n            {\n                auto literal = make_intrusive<ASTLiteral>(res);\n                ++pos;\n                recordLiteralTokens(literal.get(), literal_begin, pos, expected);\n                node = literal;\n\n                return true;\n            }\n            return false;\n        }\n\n        /// hexadecimal\n        if (*start_pos == 'x' || *start_pos == 'X')\n        {\n            ++start_pos;\n            --size;\n            if (parseNumber(start_pos, size, negative, 16, res))\n            {\n                auto literal = make_intrusive<ASTLiteral>(res);\n                ++pos;\n                recordLiteralTokens(literal.get(), literal_begin, pos, expected);\n                node = literal;\n\n                return true;\n            }\n        }\n        else\n        {\n            /// possible leading zeroes in integer\n            while (*start_pos == '0')\n            {\n                ++start_pos;\n                --size;\n            }\n            if (parseNumber(start_pos, size, negative, 10, res))\n            {\n                auto literal = make_intrusive<ASTLiteral>(res);\n                ++pos;\n                recordLiteralTokens(literal.get(), literal_begin, pos, expected);\n                node = literal;\n\n                return true;\n            }\n        }\n    }\n    else if (parseNumber(start_pos, size, negative, 10, res))\n    {\n        auto literal = make_intrusive<ASTLiteral>(res);\n        ++pos;\n        recordLiteralTokens(literal.get(), literal_begin, pos, expected);\n        node = literal;\n\n        return true;\n    }\n\n    return try_read_float(buf, buf + buf_size);\n}\n\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

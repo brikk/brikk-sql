@@ -56,6 +56,12 @@ DECIMAL_DIAGNOSTICS = DECIMAL_DIVISION + [
 DECIMAL_RUNTIME = DECIMAL_DIAGNOSTICS + [
     ("base/base/arithmeticOverflow.h", "inline bool mulOverflow(T x, T y, T & res)", "// NOLINTEND"),
 ]
+PROJECTION_LITERALS = [
+    ("src/DataTypes/FieldToDataType.cpp", "operator() (const Null &)", "operator() (const UUID &)"),
+    ("src/DataTypes/FieldToDataType.cpp", "operator() (const String &)", "operator() (const DecimalField<Decimal32>"),
+    ("src/DataTypes/FieldToDataType.cpp", "operator()(const bool &)", "template class FieldToDataType"),
+    ("src/Parsers/ExpressionElementParsers.cpp", "bool ParserNull::parseImpl", "bool ParserUnsignedInteger::parseImpl"),
+]
 
 
 def selection(data, begin, end):
@@ -72,16 +78,16 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime"), default="higher-order")
+    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
-        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime") and version != "26.10.2.103":
+        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals") and version != "26.10.2.103":
             continue
         records = []
         cache = {}
-        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS, "decimal-runtime": DECIMAL_RUNTIME}[args.round]
-        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016", "decimal-runtime": "CHSEM-017"}[args.round]
+        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS, "decimal-runtime": DECIMAL_RUNTIME, "projection-literals": PROJECTION_LITERALS}[args.round]
+        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016", "decimal-runtime": "CHSEM-017", "projection-literals": "CHSEM-019"}[args.round]
         for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:

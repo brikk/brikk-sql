@@ -28,6 +28,8 @@ data class ClickhouseScriptTypeAnnotation(
  * parses shared safe statement units; parser/framing failures have no AST and keep their
  * positioned reports. No authored settings, SQL text or source metadata are rewritten.
  * Use exactly the researched engine pin and a ClickHouse-specific [schema].
+ * Scalar literal projections use the native-only width/nullability rules; generic typing
+ * and opaque arguments/compound arithmetic retain their existing policies.
  */
 fun annotateClickhouseScriptSemanticTypes(
     script: String,

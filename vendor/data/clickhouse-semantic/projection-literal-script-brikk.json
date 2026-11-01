@@ -1,0 +1,67 @@
+[
+    {
+        "id": "CHSEM-019-SCRIPT01",
+        "input_sql": "SELECT ('x') AS v,toTypeName(v); SELECT (NULL) AS v,toTypeName(v); SELECT (TRUE) AS v,toTypeName(v); SELECT (7) AS v,toTypeName(v)",
+        "generated": "SELECT ('x') AS v, toTypeName(v); SELECT (NULL) AS v, toTypeName(v); SELECT (TRUE) AS v, toTypeName(v); SELECT (7) AS v, toTypeName(v);",
+        "types": [
+            "String",
+            "Nullable(Nothing)",
+            "Bool",
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-SCRIPT02",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT (-0) AS v,toTypeName(v); SELECT (7/2) AS v,toTypeName(v); SELECT ('x') AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT (-0) AS v, toTypeName(v); SELECT (7 / 2) AS v, toTypeName(v); SELECT ('x') AS v, toTypeName(v);",
+        "types": [
+            "UInt8",
+            "UInt8",
+            "String"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-SCRIPT03",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT (7) AS v,toTypeName(v); SELECT (7/2) AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT (7) AS v, toTypeName(v); SELECT (7 / 2) AS v, toTypeName(v);",
+        "types": [
+            "UInt8",
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-SCRIPT04",
+        "input_sql": "SELECT (((256))) AS v,toTypeName(v); SELECT (-9223372036854775809) AS v,toTypeName(v)",
+        "generated": "SELECT (((256))) AS v, toTypeName(v); SELECT (-9223372036854775809) AS v, toTypeName(v);",
+        "types": [
+            "UInt16",
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-SCRIPT05",
+        "input_sql": "SELECT ('SET sql_compatible_division_for_integers=1;') AS v,toTypeName(v); SELECT (7/2) AS v,toTypeName(v)",
+        "generated": "SELECT ('SET sql_compatible_division_for_integers=1;') AS v, toTypeName(v); SELECT (7 / 2) AS v, toTypeName(v);",
+        "types": [
+            "String",
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-019-SCRIPT06",
+        "input_sql": "SELECT (NULL) AS v,toTypeName(v); SELECT (1/0) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT (NULL) AS v, toTypeName(v); SELECT (1 / 0) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1;",
+        "types": [
+            "Nullable(Nothing)",
+            "UInt8"
+        ],
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    }
+]

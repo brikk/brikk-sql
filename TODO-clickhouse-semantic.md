@@ -11,6 +11,7 @@ CHSEM-014 adds preceding script SET state; CHSEM-015 adds bounded Decimal divisi
 CHSEM-016 adds positioned Decimal division failures with guard-order and NULL controls.
 CHSEM-017 adds proved constant narrowing and scaling-overflow diagnostics.
 CHSEM-018 adds an explicit script-aware native typing entrypoint; statement APIs stay local.
+CHSEM-019 adds exact native scalar literal projection types and nullability.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -52,6 +53,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-016: Add positioned Decimal-division diagnostics for proved zero divisors, invalid scale dispatch and scale overflow under explicit decimal_check_overflow settings. Reuse CHSEM-015 facts, account for NULL masking and guard order, preserve conditional types and unknowns, capture exact-pin native witnesses, then test/commit/push separately.
 - [x] CHSEM-017: Diagnose proved Decimal runtime overflow from operand narrowing, multiplier squaring and numerator scaling. Require exact constant/dispatch facts and explicit decimal_check_overflow=true, preserve NULL masking, error order and conditional result types, capture native controls, then test/commit/push separately.
 - [x] CHSEM-018: Add an explicit script-aware native typing entrypoint. Reuse shared script framing, parsing, diagnostics and preceding SET state; return independently owned typed ASTs with positioned per-statement reports. Do not infer script/session execution from semicolons or editor files, change existing statement API behavior, rewrite authored settings or guess external state. Preserve signatures, add native witnesses, then test/commit/push separately.
+- [x] CHSEM-019: Add exact native scalar-literal projection types and nullability to native-only statement/script APIs. Research integer/sign/float boundaries, strings, Boolean and NULL constants; preserve generic annotateTypes policy, arithmetic/NULL-dispatch boundaries, source/serde/caller ownership and signatures. Capture pinned native comparisons, run gates, then commit/push separately and present the next option.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
 documentation caveats. Keep settled boundaries in their guides and these TODOs;
@@ -60,7 +62,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-018 are complete. Commit/push CHSEM-018 separately, then stop after this requested round. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-019 are complete. Commit/push CHSEM-019 separately, then present the next recommended option without starting it. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -549,6 +551,32 @@ ClickHouse-only Python discovery passes 70 tests. The isolated IntelliJ gate pas
 757 tests on 261.25134.95; other IDE versions were not run. Final log verification
 was briefly blocked by a tool-location shutdown; access was restored and the saved
 passing log verified before committing. Commit/push this round, then stop.
+
+## CHSEM-019 result
+
+Native-only statement/script APIs now type scalar literal projections with exact
+integer sign/width, finite Float64 fallback, String/Bool non-nullability and
+Nullable(Nothing), including alias/parenthesis wrappers and direct literal AST roots.
+Tagged parser rules establish integer -0 normalization and large-number fallback.
+Unsupported non-finite/overlong numeric tokens remain UNKNOWN. Arbitrary argument,
+arithmetic, compound-unary, container and NULL-dispatch proofs are not expanded.
+Generic annotateTypes, other dialects, caller overrides, overwrite/cache policy,
+SQL/source/serde and public signatures remain intact. Guide:
+`vendor/data/clickhouse-semantic/projection-literal-README.md`.
+
+All 84 independent matrix types match on both pins. Forty-four original/generated
+finite value/type/error cases and six original/generated whole-session scripts
+pass without execution/version skips, including native syntax rejections and
+exact partial stdout before an error. The probe extension requires an authored
+stdout expectation; existing error fixtures still require empty stdout by default.
+New matrix/finite/script reports and historical CHSEM-018 script typing output
+regenerate byte-identically. Source excerpts are tagged/hashed. Full JVM regression
+passes 1,891 tests with 61 optional integration assumption aborts and zero failures.
+Python passes 123 tests with one opt-in skip using the unchanged SQLGlot pin. No
+corpus/ledger, toolchain, release, publication, dependency or IntelliJ API changes.
+ClickHouse-only Python discovery passes 75 tests; the isolated IntelliJ gate passes
+757 tests on 261.25134.95. Other IDE versions were not run. Commit/push this round,
+then present the next option for approval rather than starting it automatically.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

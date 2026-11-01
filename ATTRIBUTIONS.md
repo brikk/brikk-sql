@@ -225,6 +225,10 @@ CHSEM-018's isolated original/generated session type/value/error observations li
 in `script-typing-native/`. It reuses the existing tagged ClickHouse setting/type
 source captures without replacing historical evidence.
 
+CHSEM-019's `projection-literal-sources.json` adds Apache-2.0 scalar parser and
+FieldToDataType excerpts. Its isolated observations live in `projection-literal-types/`,
+`projection-literal-native/` and `projection-literal-script-native/`.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

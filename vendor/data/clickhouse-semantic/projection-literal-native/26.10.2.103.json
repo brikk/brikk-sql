@@ -1,0 +1,780 @@
+{
+  "captured_at": "2026-11-01T20:55:34.055027+00:00",
+  "fixture_sha256": "f1736bce545ff832174d84295c808ee66ac75548edade97a9e83251dc8a86257",
+  "brikk_sha256": "1f1163012d0da83c605a72904133f1932919919b0d8719c8bb0e4ef25607dbb6",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-019-E01\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E02\",\"formatted\":\"SELECT\\n    (255) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E03\",\"formatted\":\"SELECT\\n    (256) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E04\",\"formatted\":\"SELECT\\n    (65535) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E05\",\"formatted\":\"SELECT\\n    (65536) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E06\",\"formatted\":\"SELECT\\n    (4294967295) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E07\",\"formatted\":\"SELECT\\n    (4294967296) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E08\",\"formatted\":\"SELECT\\n    (18446744073709551615) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E09\",\"formatted\":\"SELECT\\n    (-1) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E10\",\"formatted\":\"SELECT\\n    (-128) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E11\",\"formatted\":\"SELECT\\n    (-129) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E12\",\"formatted\":\"SELECT\\n    (-32768) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E13\",\"formatted\":\"SELECT\\n    (-32769) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E14\",\"formatted\":\"SELECT\\n    (-2147483648) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E15\",\"formatted\":\"SELECT\\n    (-2147483649) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E16\",\"formatted\":\"SELECT\\n    (-9223372036854775808) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E17\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E18\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E19\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E20\",\"formatted\":\"SELECT\\n    (0.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E21\",\"formatted\":\"SELECT\\n    (-0.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E22\",\"formatted\":\"SELECT\\n    (0.5) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E23\",\"formatted\":\"SELECT\\n    (-0.5) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E24\",\"formatted\":\"SELECT\\n    (1.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E25\",\"formatted\":\"SELECT\\n    (1.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E26\",\"formatted\":\"SELECT\\n    (1000.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E27\",\"formatted\":\"SELECT\\n    (-0.001) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E28\",\"formatted\":\"SELECT\\n    (0.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E29\",\"formatted\":\"SELECT\\n    (1.7976931348623157e308) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E30\",\"formatted\":\"SELECT\\n    (-1.7976931348623157e308) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E31\",\"formatted\":\"SELECT\\n    (18446744073709552000.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E32\",\"formatted\":\"SELECT\\n    (-9223372036854776000.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E33\",\"formatted\":\"SELECT\\n    (1e100) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E34\",\"formatted\":\"SELECT\\n    ('') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E35\",\"formatted\":\"SELECT\\n    ('hello') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E36\",\"formatted\":\"SELECT\\n    ('a\\\\'b') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E37\",\"formatted\":\"SELECT\\n    ('\ud83d\ude00') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E38\",\"formatted\":\"SELECT\\n    ('NULL') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E39\",\"formatted\":\"SELECT\\n    ('\\\\0') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E40\",\"formatted\":\"SELECT\\n    (true) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E41\",\"formatted\":\"SELECT\\n    (false) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E42\",\"formatted\":\"SELECT\\n    (NULL) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E43\",\"formatted\":null}\n{\"id\":\"CHSEM-019-E44\",\"formatted\":null}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-019-E01",
+      "formatted": "SELECT\n    (0) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E02",
+      "formatted": "SELECT\n    (255) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E03",
+      "formatted": "SELECT\n    (256) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E04",
+      "formatted": "SELECT\n    (65535) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E05",
+      "formatted": "SELECT\n    (65536) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E06",
+      "formatted": "SELECT\n    (4294967295) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E07",
+      "formatted": "SELECT\n    (4294967296) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E08",
+      "formatted": "SELECT\n    (18446744073709551615) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E09",
+      "formatted": "SELECT\n    (-1) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E10",
+      "formatted": "SELECT\n    (-128) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E11",
+      "formatted": "SELECT\n    (-129) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E12",
+      "formatted": "SELECT\n    (-32768) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E13",
+      "formatted": "SELECT\n    (-32769) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E14",
+      "formatted": "SELECT\n    (-2147483648) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E15",
+      "formatted": "SELECT\n    (-2147483649) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E16",
+      "formatted": "SELECT\n    (-9223372036854775808) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E17",
+      "formatted": "SELECT\n    (0) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E18",
+      "formatted": "SELECT\n    (0) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E19",
+      "formatted": "SELECT\n    (0) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E20",
+      "formatted": "SELECT\n    (0.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E21",
+      "formatted": "SELECT\n    (-0.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E22",
+      "formatted": "SELECT\n    (0.5) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E23",
+      "formatted": "SELECT\n    (-0.5) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E24",
+      "formatted": "SELECT\n    (1.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E25",
+      "formatted": "SELECT\n    (1.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E26",
+      "formatted": "SELECT\n    (1000.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E27",
+      "formatted": "SELECT\n    (-0.001) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E28",
+      "formatted": "SELECT\n    (0.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E29",
+      "formatted": "SELECT\n    (1.7976931348623157e308) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E30",
+      "formatted": "SELECT\n    (-1.7976931348623157e308) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E31",
+      "formatted": "SELECT\n    (18446744073709552000.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E32",
+      "formatted": "SELECT\n    (-9223372036854776000.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E33",
+      "formatted": "SELECT\n    (1e100) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E34",
+      "formatted": "SELECT\n    ('') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E35",
+      "formatted": "SELECT\n    ('hello') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E36",
+      "formatted": "SELECT\n    ('a\\'b') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E37",
+      "formatted": "SELECT\n    ('\ud83d\ude00') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E38",
+      "formatted": "SELECT\n    ('NULL') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E39",
+      "formatted": "SELECT\n    ('\\0') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E40",
+      "formatted": "SELECT\n    (true) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E41",
+      "formatted": "SELECT\n    (false) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E42",
+      "formatted": "SELECT\n    (NULL) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-019-E43",
+      "formatted": null
+    },
+    {
+      "id": "CHSEM-019-E44",
+      "formatted": null
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-019-E01\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E02\",\"formatted\":\"SELECT\\n    (255) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E03\",\"formatted\":\"SELECT\\n    (256) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E04\",\"formatted\":\"SELECT\\n    (65535) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E05\",\"formatted\":\"SELECT\\n    (65536) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E06\",\"formatted\":\"SELECT\\n    (4294967295) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E07\",\"formatted\":\"SELECT\\n    (4294967296) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E08\",\"formatted\":\"SELECT\\n    (18446744073709551615) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E09\",\"formatted\":\"SELECT\\n    (-1) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E10\",\"formatted\":\"SELECT\\n    (-128) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E11\",\"formatted\":\"SELECT\\n    (-129) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E12\",\"formatted\":\"SELECT\\n    (-32768) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E13\",\"formatted\":\"SELECT\\n    (-32769) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E14\",\"formatted\":\"SELECT\\n    (-2147483648) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E15\",\"formatted\":\"SELECT\\n    (-2147483649) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E16\",\"formatted\":\"SELECT\\n    (-9223372036854775808) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E17\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E18\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E19\",\"formatted\":\"SELECT\\n    (0) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E20\",\"formatted\":\"SELECT\\n    (0.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E21\",\"formatted\":\"SELECT\\n    (-0.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E22\",\"formatted\":\"SELECT\\n    (0.5) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E23\",\"formatted\":\"SELECT\\n    (-0.5) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E24\",\"formatted\":\"SELECT\\n    (1.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E25\",\"formatted\":\"SELECT\\n    (1.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E26\",\"formatted\":\"SELECT\\n    (1000.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E27\",\"formatted\":\"SELECT\\n    (-0.001) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E28\",\"formatted\":\"SELECT\\n    (0.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E29\",\"formatted\":\"SELECT\\n    (1.7976931348623157e308) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E30\",\"formatted\":\"SELECT\\n    (-1.7976931348623157e308) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E31\",\"formatted\":\"SELECT\\n    (18446744073709552000.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E32\",\"formatted\":\"SELECT\\n    (-9223372036854776000.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E33\",\"formatted\":\"SELECT\\n    (1e100) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E34\",\"formatted\":\"SELECT\\n    ('') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E35\",\"formatted\":\"SELECT\\n    ('hello') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E36\",\"formatted\":\"SELECT\\n    ('a\\\\'b') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E37\",\"formatted\":\"SELECT\\n    ('\ud83d\ude00') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E38\",\"formatted\":\"SELECT\\n    ('NULL') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E39\",\"formatted\":\"SELECT\\n    ('\\\\0') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E40\",\"formatted\":\"SELECT\\n    (true) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E41\",\"formatted\":\"SELECT\\n    (false) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-019-E42\",\"formatted\":\"SELECT\\n    (NULL) AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-019-E01",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E02",
+      "returncode": 0,
+      "stdout": "255\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E03",
+      "returncode": 0,
+      "stdout": "256\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E04",
+      "returncode": 0,
+      "stdout": "65535\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E05",
+      "returncode": 0,
+      "stdout": "65536\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E06",
+      "returncode": 0,
+      "stdout": "4294967295\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E07",
+      "returncode": 0,
+      "stdout": "4294967296\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E08",
+      "returncode": 0,
+      "stdout": "18446744073709551615\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E09",
+      "returncode": 0,
+      "stdout": "-1\tInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E10",
+      "returncode": 0,
+      "stdout": "-128\tInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E11",
+      "returncode": 0,
+      "stdout": "-129\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E12",
+      "returncode": 0,
+      "stdout": "-32768\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E13",
+      "returncode": 0,
+      "stdout": "-32769\tInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E14",
+      "returncode": 0,
+      "stdout": "-2147483648\tInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E15",
+      "returncode": 0,
+      "stdout": "-2147483649\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E16",
+      "returncode": 0,
+      "stdout": "-9223372036854775808\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E17",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E18",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E19",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E20",
+      "returncode": 0,
+      "stdout": "0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E21",
+      "returncode": 0,
+      "stdout": "-0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E22",
+      "returncode": 0,
+      "stdout": "0.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E23",
+      "returncode": 0,
+      "stdout": "-0.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E24",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E25",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E26",
+      "returncode": 0,
+      "stdout": "1000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E27",
+      "returncode": 0,
+      "stdout": "-0.001\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E28",
+      "returncode": 0,
+      "stdout": "0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E29",
+      "returncode": 0,
+      "stdout": "1.7976931348623157e308\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E30",
+      "returncode": 0,
+      "stdout": "-1.7976931348623157e308\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E31",
+      "returncode": 0,
+      "stdout": "18446744073709552000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E32",
+      "returncode": 0,
+      "stdout": "-9223372036854776000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E33",
+      "returncode": 0,
+      "stdout": "1e100\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E34",
+      "returncode": 0,
+      "stdout": "\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E35",
+      "returncode": 0,
+      "stdout": "hello\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E36",
+      "returncode": 0,
+      "stdout": "a\\'b\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E37",
+      "returncode": 0,
+      "stdout": "\ud83d\ude00\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E38",
+      "returncode": 0,
+      "stdout": "NULL\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E39",
+      "returncode": 0,
+      "stdout": "\\0\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E40",
+      "returncode": 0,
+      "stdout": "true\tBool\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E41",
+      "returncode": 0,
+      "stdout": "false\tBool\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E42",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E43",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 14 (AS): AS v,toTypeName(v). Expected one of: token, DoubleColon. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-019-E44",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 329 (AS): AS v,toTypeName(v). Expected one of: token, DoubleColon. (SYNTAX_ERROR)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-019-E01",
+      "sql": "SELECT (0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E02",
+      "sql": "SELECT (255) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "255\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E03",
+      "sql": "SELECT (256) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "256\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E04",
+      "sql": "SELECT (65535) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "65535\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E05",
+      "sql": "SELECT (65536) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "65536\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E06",
+      "sql": "SELECT (4294967295) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "4294967295\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E07",
+      "sql": "SELECT (4294967296) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "4294967296\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E08",
+      "sql": "SELECT (18446744073709551615) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "18446744073709551615\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E09",
+      "sql": "SELECT (-1) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-1\tInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E10",
+      "sql": "SELECT (-128) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-128\tInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E11",
+      "sql": "SELECT (-129) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-129\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E12",
+      "sql": "SELECT (-32768) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-32768\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E13",
+      "sql": "SELECT (-32769) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-32769\tInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E14",
+      "sql": "SELECT (-2147483648) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-2147483648\tInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E15",
+      "sql": "SELECT (-2147483649) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-2147483649\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E16",
+      "sql": "SELECT (-9223372036854775808) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-9223372036854775808\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E17",
+      "sql": "SELECT (0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E18",
+      "sql": "SELECT (-0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E19",
+      "sql": "SELECT (00) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E20",
+      "sql": "SELECT (0.0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E21",
+      "sql": "SELECT (-0.0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E22",
+      "sql": "SELECT (0.5) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E23",
+      "sql": "SELECT (-0.5) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-0.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E24",
+      "sql": "SELECT (1.) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E25",
+      "sql": "SELECT (1e0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E26",
+      "sql": "SELECT (1E+3) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E27",
+      "sql": "SELECT (-1e-3) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-0.001\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E28",
+      "sql": "SELECT (1e-400) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E29",
+      "sql": "SELECT (1.7976931348623157e308) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1.7976931348623157e308\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E30",
+      "sql": "SELECT (-1.7976931348623157e308) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-1.7976931348623157e308\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E31",
+      "sql": "SELECT (18446744073709551616) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "18446744073709552000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E32",
+      "sql": "SELECT (-9223372036854775809) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-9223372036854776000\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E33",
+      "sql": "SELECT (10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1e100\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E34",
+      "sql": "SELECT ('') AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E35",
+      "sql": "SELECT ('hello') AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "hello\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E36",
+      "sql": "SELECT ('a''b') AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "a\\'b\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E37",
+      "sql": "SELECT ('\ud83d\ude00') AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "\ud83d\ude00\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E38",
+      "sql": "SELECT ('NULL') AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "NULL\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E39",
+      "sql": "SELECT ('\\0') AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "\\0\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E40",
+      "sql": "SELECT (TRUE) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "true\tBool\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E41",
+      "sql": "SELECT (FALSE) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "false\tBool\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E42",
+      "sql": "SELECT (NULL) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Nothing)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-019-E43",
+      "sql": "SELECT 1e309 AS v, toTypeName(v)",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 14 (AS): AS v, toTypeName(v). Expected one of: token, DoubleColon. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-019-E44",
+      "sql": "SELECT 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 AS v, toTypeName(v)",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 329 (AS): AS v, toTypeName(v). Expected one of: token, DoubleColon. (SYNTAX_ERROR)\n"
+    }
+  ]
+}

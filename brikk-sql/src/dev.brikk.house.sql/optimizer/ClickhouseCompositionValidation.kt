@@ -229,6 +229,10 @@ private class ClickhouseCompositionValidator(
             if (inferResults) {
                 rememberBinding(node, context)
                 if (context.callableScope) rememberAtomicCall(node, context)
+                if (nativeLiterals) {
+                    if (node is Select) for (projection in node.selects.filterIsInstance<Expression>()) rememberProjectionLiteral(projection)
+                    else if (node === root) rememberProjectionLiteral(node)
+                }
             }
             if (clickhouseDivisionCall(node, sessionSettings) != null) value(node, context, 0)
             val map = arrayMap(node)
@@ -268,6 +272,19 @@ private class ClickhouseCompositionValidator(
     private fun remember(node: Expression, result: Value): Value {
         if (inferResults && !ignored(node)) result.type?.let { valueTypes[node.objectId] = it.copy() as DataType }
         return result
+    }
+
+    /** Do not broaden arithmetic, function argument or constant-NULL dispatch proofs. */
+    private fun rememberProjectionLiteral(projection: Expression) {
+        checkCanceled()
+        val literal = clickhouseProjectionLiteral(projection) ?: return
+        if (ignored(literal)) return
+        val type = clickhouseProjectionLiteralType(literal)
+        if (type != null) remember(literal, Value(type = type))
+        else {
+            unknown(literal, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+            blockedFallbacks.add(literal.objectId)
+        }
     }
 
     private fun rememberCallable(node: Expression, result: Callable): Callable {
