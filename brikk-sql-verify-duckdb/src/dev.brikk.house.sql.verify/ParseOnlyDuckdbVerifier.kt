@@ -23,6 +23,9 @@ import org.duckdb.DuckDBDriver
  * DuckDB's UTF-8 bytes in 2.0, or code points in earlier versions.
  *
  * Calls are synchronized over one lazily opened connection; [close] releases it.
+ * Input budgets match [ConnectionDuckdbVerifier], but this embedded API is not process-
+ * isolated and does not provide its helper deadline/cancellation contract. IDE consumers
+ * must use an out-of-process helper through [ConnectionDuckdbVerifier] for crash containment.
  */
 public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()) : SqlVerifier, AutoCloseable {
     override val engine: String = "duckdb"
@@ -32,9 +35,9 @@ public class ParseOnlyDuckdbVerifier(private val driver: Driver = DuckDBDriver()
 
     @Synchronized
     override fun verify(sql: String): VerifyResult {
+        unavailableReason?.let { return VerifyResult.Unavailable(it) }
+        duckdbParseInputIssue(sql)?.let { return VerifyResult.Unverified(it) }
         val open = connection ?: connect() ?: return VerifyResult.Unavailable(unavailableReason ?: CLOSED)
-        // The SQL travels as a string literal, which ends at a NUL.
-        if ('\u0000' in sql) return VerifyResult.Unverified("DuckDB cannot parse-check SQL that contains a NUL character.")
         val serialized = try {
             open.serializeSql(sql)
         } catch (e: SQLException) {

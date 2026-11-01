@@ -45,7 +45,9 @@ internal sealed interface SerializedSql {
 /** Same result mapping for the restricted parser and an already configured helper connection. */
 internal fun SerializedSql.toParseOnlyResult(sql: String): VerifyResult = when (this) {
     SerializedSql.Parsed -> VerifyResult.Accepted
-    is SerializedSql.Failed -> if (type == "parser") {
+    is SerializedSql.Failed -> if (isResourceLimit()) {
+        VerifyResult.Unverified("DuckDB parse-only verification exceeded an engine resource limit.")
+    } else if (type == "parser") {
         VerifyResult.Rejected(errorIn(sql, "Parser Error: ${message.orEmpty()}"))
     } else {
         VerifyResult.Unverified(
@@ -57,7 +59,7 @@ internal fun SerializedSql.toParseOnlyResult(sql: String): VerifyResult = when (
 
 /** Null for a missing or malformed response, which is never a parser verdict. */
 internal fun serializedSqlDocument(document: String?): SerializedSql? {
-    if (document == null) return null
+    if (document == null || !duckdbParserResponseWithinBudget(document)) return null
     val root = try {
         Json.parseToJsonElement(document) as? JsonObject ?: return null
     } catch (_: IllegalArgumentException) {

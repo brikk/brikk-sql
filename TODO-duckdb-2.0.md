@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-034.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-052.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -1400,10 +1400,48 @@ and IDE introspection/completion are separate contracts.
   changes, public signature changes, new IntelliJ APIs, user connection/settings changes,
   merge or publication. No general JSON/lambda cross-target equivalence is claimed.
 
-- [ ] `DDB20-052` Malformed-input robustness [AUDIT].
+- [x] `DDB20-052` Malformed-input robustness [DONE].
   Pin invalid/backtracking-heavy queries, long unmatched parentheses, depth/size/time limits,
   Unicode and prompt cancellation. Confirm the native process cannot hang/crash the IDE;
   a limit/transport failure is unavailable/unverified, not a syntax acceptance.
+  Editor entry points now refuse inputs above 1,048,576 UTF-16 units or 256 structural/
+  nested-comment levels before opening/submitting a helper. The lexical budget skips quoted
+  strings/identifiers, E-string escapes, comments and dollar strings; it is not grammar
+  validation. NUL and malformed UTF-16 are unverified rather than silently truncated or
+  replacement-encoded. Connection response decoding refuses documents above 8,388,608 units
+  or 256 JSON nesting levels before recursive JSON decoding; quoted brackets do not count.
+  Native expression-depth/OOM/interruption limits are unverified even when DuckDB labels
+  the depth failure parser. Ordinary malformed syntax remains rejected. No setting increase,
+  prepare/EXPLAIN fallback, user-connection retry/reconnect or rollback emulation is added.
+  ConnectionDuckdbVerifier now bounds both helper and cancellation pools at two workers per
+  classloader, without a queued backlog. Deadline/cancellation returns without waiting for a
+  driver that ignores interruption or whose cancel blocks. Exhausted capacity is unavailable,
+  never an acceptance/rejection or implicit retry. Late helpers are still closed, and only
+  owned helper connections can be canceled/closed. Driver linkage failure is unavailable.
+  DuckdbMalformedInputRobustnessTest pins invalid/backtracking-heavy SQL, 8,192 unmatched
+  parentheses, native depth exhaustion, Unicode byte ranges, input/response budgets, malformed
+  transport and blocked query+cancel behavior. Native adversarial inputs run in a restricted
+  child process with an external deadline; a following SELECT still serves. The valid deep
+  expression is unverified; unmatched parentheses are a genuine parser rejection. Existing
+  cancellation/late-open/no-side-effect controls remain required. The shared IDE test submits
+  malformed text only inside the remote parse wrapper, then proves the user connection and
+  untouched sequence still serve. No new IntelliJ internal/experimental calls are introduced.
+  Crash boundary is explicit: the IDE adapter uses remote statements; an embedded JNI
+  ParseOnlyDuckdbVerifier is synchronous and is not crash-isolated or deadline-qualified.
+  These library/remote-adapter controls do not certify a consumer's unpublished wiring or
+  solve DDB20-067 matching-session helpers. Reports build/duckdb-parser-audit/robustness.json.
+  Frozen-source fresh-directory full gates passed 1,418 core, 129 metadata and 260 native/
+  verifier tests, zero skips, with isolated 1.5.6, HTTPFS and all signed fixtures enabled.
+  Log /tmp/opencode/duckdb-parser-audit-final-v2.log. All earlier parity resources/ledgers and
+  both new acceptance/coverage fingerprints remain unchanged. Supported public verifier JVM
+  constructors/default bridges and methods match pre-052; only private implementation
+  synthetic field accessors reflect the bounded executor change. No public data-class shape,
+  production IntelliJ source or dependency/consumer pin change, merge or publication.
+  The frozen-source shared IntelliJ gate passed all 760 tests on 261.25134.95, including
+  the new malformed-remote-parser control. Log /tmp/opencode/duckdb-parser-audit-ide-final.log.
+  No Plugin Verifier run or consumer adoption is implied. This finishes DDB20-049 through
+  DDB20-052, separately verified and committed/pushed; 57/78 stable checklist items are done.
+  Trino REGEXP_COUNT remains queued and recursive IDE schemas remain deliberately deferred.
 
 - [ ] `DDB20-053` Grammar built-ins and special forms [AUDIT].
   DuckdbGrammarBuiltins already claims 2.0 probing, but retains a stale Postgres-derived-parser

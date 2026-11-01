@@ -670,6 +670,20 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Editor parse-only input has a budget of 1,048,576 UTF-16 units and 256 levels of structural
+or nested-comment depth. Quotes, comments and dollar strings do not consume structural
+depth. NUL and malformed UTF-16 refuse before native submission. Budget or engine resource
+limits are unverified. Malformed parser responses, responses over 8,388,608 units or 256
+JSON nesting levels, helper failure, deadline and exhausted capacity are unavailable.
+None is acceptance or a reason to prepare, reconnect or retry user SQL.
+
+Connection-backed verification polls cancellation and shares at most two helper workers
+and two cancellation workers per classloader. A driver that ignores interruption/cancel
+can occupy those workers, but cannot cause an unbounded thread backlog. The caller still
+returns at its deadline. Crash containment requires an out-of-process helper, as used by
+the IntelliJ remote-statement adapter. The embedded `ParseOnlyDuckdbVerifier` remains
+synchronous JNI; input limits do not make it crash-isolated or give it a deadline.
+
 PEG differential controls check aliases, FROM-first, pivot, ALL grouping/ordering, stars,
 arrows/lambdas, join forms, parentheses and each bind-marker family through copy/serde and
 executable generation. Native parse acceptance is kept separate from binding and results.

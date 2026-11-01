@@ -43,7 +43,11 @@ class NativeParserProbe {
                     try (ResultSet r = s.executeQuery(query)) {
                         if (!r.next()) throw new SQLException("missing parser response");
                         String error = r.getString(1), type = r.getString(2), message = r.getString(3);
-                        String status = "false".equals(error) ? "accepted" : "parser".equals(type) ? "rejected" : "unverified";
+                        String detail = message == null ? "" : message.toLowerCase(Locale.ROOT);
+                        boolean limited = "out of memory".equals(type) || "interrupt".equals(type) ||
+                            detail.contains("expression depth") || detail.contains("parser depth") ||
+                            detail.contains("stack limit") || detail.contains("memory limit");
+                        String status = "false".equals(error) ? "accepted" : !limited && "parser".equals(type) ? "rejected" : "unverified";
                         out.write(fields[0] + "\t" + status + "\t" + encode(type) + "\t" + encode(message) + "\n");
                     }
                 } catch (SQLException e) {

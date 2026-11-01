@@ -55,6 +55,7 @@ public class DuckdbVerifier internal constructor(
         }
         // Transformer option errors are not parser errors. EXPLAIN gets exactly
         // the editor's parse-only verdict mapping, never a bind-based verdict.
+        if (serialized is SerializedSql.Failed && serialized.isResourceLimit()) return serialized.toParseOnlyResult(sql)
         if (dev.brikk.house.sql.dialects.mayContainDuckdbExplain(sql)) return serialized.toParseOnlyResult(sql)
         return when (serialized) {
             SerializedSql.Parsed -> VerifyResult.Accepted
