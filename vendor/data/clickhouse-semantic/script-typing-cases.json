@@ -1,0 +1,424 @@
+{
+  "task": "CHSEM-018",
+  "execution": [
+    {
+      "id": "CHSEM-018-E01",
+      "sql": "SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E02",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E03",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E04",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64",
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E05",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UInt8",
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E06",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT q.v,toTypeName(q.v) FROM (SELECT 7/2 AS v SETTINGS sql_compatible_division_for_integers=0) q; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64",
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E07",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT arrayMap(x -> x/2,CAST([7] AS Array(Int16))) AS v,toTypeName(v)",
+      "types": [
+        "Array(Int16)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "[3]\tArray(Int16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E08",
+      "sql": "SET sql_compatible_division_for_integers='true'; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E09",
+      "sql": "SET sql_compatible_division_for_integers=false; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E10",
+      "sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers=DEFAULT; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E11",
+      "sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers={mode:UInt8}; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 456,
+          "error_name": "UNKNOWN_QUERY_PARAMETER"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E12",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers={mode:UInt8}",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 456,
+          "error_name": "UNKNOWN_QUERY_PARAMETER"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E13",
+      "sql": "SET sql_compatible_division_for_integers=1,sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E14",
+      "sql": "SET sql_compatible_division_for_integers=DEFAULT,sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E15",
+      "sql": "SET sql_compatible_division_for_integers=1; SET max_threads=2; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E16",
+      "sql": "SET sql_compatible_division_for_integers=1; SET compatibility='26.8'; SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E17",
+      "sql": "SET decimal_check_overflow=0; SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v)",
+      "types": [
+        "Decimal(9, 6)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0.01\tDecimal(9, 6)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0.01\tDecimal(9, 6)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E18",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E19",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) AS v,toTypeName(v)",
+      "types": [
+        "Decimal(9, 0)"
+      ],
+      "rules": [
+        "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483648\tDecimal(9, 0)\n"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E20",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT 1/0 AS v,toTypeName(v)",
+      "types": [
+        "UInt8"
+      ],
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E21",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT CAST(7 AS Nullable(Int128))/CAST(2 AS UInt256) AS v,toTypeName(v)",
+      "types": [
+        "Nullable(Int128)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Int128)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E22",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT divideExact(CAST(7 AS UInt16),CAST(2 AS UInt256)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E23",
+      "sql": "SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "types": [
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-018-E24",
+      "sql": "SELECT CAST('SET sql_compatible_division_for_integers=1;' AS String) AS v,toTypeName(v); SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "String",
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n"
+        }
+      }
+    }
+  ]
+}

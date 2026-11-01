@@ -74,6 +74,14 @@ internal fun inferClickhouseCompositionResults(
     inferResults = true, knownTypes = knownTypes, ignoredClasses = ignoredClasses, ignoredIds = ignoredIds,
     nativeLiterals = nativeLiterals).infer(expression)
 
+internal fun inferClickhouseCompositionResultsWithSettings(
+    expression: Expression, engineVersion: String, schema: Schema?, knownTypes: Map<Long, DataType>,
+    ignoredClasses: Set<KClass<out Expression>>, ignoredIds: Set<Long>, checkCanceled: () -> Unit,
+    nativeLiterals: Boolean, sessionSettings: Map<String, Boolean?>,
+): ClickhouseCompositionInference = ClickhouseCompositionValidator(engineVersion, schema, checkCanceled,
+    inferResults = true, knownTypes = knownTypes, ignoredClasses = ignoredClasses, ignoredIds = ignoredIds,
+    nativeLiterals = nativeLiterals, sessionSettings = sessionSettings).infer(expression)
+
 /**
  * Read-only checks of structured arrayMap callable arguments on the exact 26.10 pin.
  * Native casts and explicit [schema] facts establish input families and a closed

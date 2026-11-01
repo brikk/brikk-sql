@@ -141,14 +141,25 @@ fun clickhouseScriptSemanticDiagnostics(
     schema: Schema? = null,
     checkCanceled: () -> Unit = {},
 ): List<ClickhouseSemanticDiagnostics> {
+    return clickhouseScriptSemanticStatements(script, engineVersion, schema, checkCanceled) { _, _, report -> report }
+}
+
+/** One shared framing/parse/state policy for explicit script diagnostics and native typing. */
+internal fun <T : Any> clickhouseScriptSemanticStatements(
+    script: String, engineVersion: String, schema: Schema?, checkCanceled: () -> Unit,
+    result: (Expression?, Map<String, Boolean?>, ClickhouseSemanticDiagnostics) -> T,
+): List<T> {
     val settings = ClickhouseScriptSettings()
     return SqlScriptSnapshot.parse(script, "clickhouse", checkCanceled).statements.mapNotNull {
         val range = verificationRange(script, it) ?: return@mapNotNull null
         var statement: Expression? = null
-        val report = clickhouseSemanticStatement(script, range, engineVersion, schema, checkCanceled, settings.snapshot()) { parsed -> statement = parsed }
-        if (engineVersion != "26.10.2.103" || !settings.advance(statement)) report
+        val inherited = settings.snapshot()
+        val report = clickhouseSemanticStatement(script, range, engineVersion, schema, checkCanceled, inherited) { parsed -> statement = parsed }
+        val finalReport = if (engineVersion != "26.10.2.103" || !settings.advance(statement)) report
         else report.copy(unknowns = (report.unknowns + ClickhouseSemanticUnknown(
             ClickhouseSemanticUnknownReason.SETTING_STATE, range.first, range.last + 1)).distinct())
+        checkCanceled()
+        result(statement, inherited, finalReport)
     }
 }
 

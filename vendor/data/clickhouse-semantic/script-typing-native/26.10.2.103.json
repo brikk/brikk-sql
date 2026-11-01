@@ -1,0 +1,307 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "34ce18b3ded2a86b96afe8bcfa24b6ee02b94cc3b27fb1f46f099a381ea6dd91",
+  "brikk_sha256": "38be38bc58b83a65aacaea3256e45db3a25acca0fda021d7936ba9ef663a1b3d",
+  "execution": [
+    {
+      "id": "CHSEM-018-E01",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E02",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E03",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E04",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E05",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E06",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E07",
+      "returncode": 0,
+      "stdout": "[3]\tArray(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E08",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E09",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E10",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E11",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Substitution `mode` is not set. (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-018-E12",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `mode` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-018-E13",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E14",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E15",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E16",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E17",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E18",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-018-E19",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-018-E20",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(1, 0) AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-018-E21",
+      "returncode": 0,
+      "stdout": "3\tNullable(Int128)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E22",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E23",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E24",
+      "returncode": 0,
+      "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-018-E01",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E02",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E03",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E04",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E05",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E06",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E07",
+      "returncode": 0,
+      "stdout": "[3]\tArray(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E08",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E09",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E10",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E11",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Substitution `mode` is not set. (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-018-E12",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Code: 456. DB::Exception: Substitution `mode` is not set. (UNKNOWN_QUERY_PARAMETER) (version 26.10.2.103 (official build)). (UNKNOWN_QUERY_PARAMETER)\n"
+    },
+    {
+      "id": "CHSEM-018-E13",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E14",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E15",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E16",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E17",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E18",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-018-E19",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-018-E20",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(1, 0) AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-018-E21",
+      "returncode": 0,
+      "stdout": "3\tNullable(Int128)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E22",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E23",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E24",
+      "returncode": 0,
+      "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n",
+      "stderr": ""
+    }
+  ]
+}

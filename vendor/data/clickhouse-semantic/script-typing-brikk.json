@@ -1,0 +1,228 @@
+[
+    {
+        "id": "CHSEM-018-E01",
+        "input_sql": "SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E02",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E03",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E04",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT 7 / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64",
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E05",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT 7 / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt8",
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E06",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT q.v,toTypeName(q.v) FROM (SELECT 7/2 AS v SETTINGS sql_compatible_division_for_integers=0) q; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT q.v, toTypeName(q.v) FROM (SELECT 7 / 2 AS v SETTINGS sql_compatible_division_for_integers = 0) AS q; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64",
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E07",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT arrayMap(x -> x/2,CAST([7] AS Array(Int16))) AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT arrayMap(x -> x / 2, CAST([7] AS Array(Int16))) AS v, toTypeName(v);",
+        "types": [
+            "Array(Int16)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E08",
+        "input_sql": "SET sql_compatible_division_for_integers='true'; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 'true'; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E09",
+        "input_sql": "SET sql_compatible_division_for_integers=false; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = FALSE; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E10",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers=DEFAULT; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET sql_compatible_division_for_integers = DEFAULT; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E11",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers={mode:UInt8}; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET sql_compatible_division_for_integers = {mode:UInt8}; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E12",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers={mode:UInt8}",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT 7 / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = {mode:UInt8};",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E13",
+        "input_sql": "SET sql_compatible_division_for_integers=1,sql_compatible_division_for_integers=0; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1, sql_compatible_division_for_integers = 0; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E14",
+        "input_sql": "SET sql_compatible_division_for_integers=DEFAULT,sql_compatible_division_for_integers=1; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = DEFAULT, sql_compatible_division_for_integers = 1; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E15",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET max_threads=2; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET max_threads = 2; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E16",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET compatibility='26.8'; SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET compatibility = '26.8'; SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E17",
+        "input_sql": "SET decimal_check_overflow=0; SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v)",
+        "generated": "SET decimal_check_overflow = 0; SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.0001' AS Decimal32(4)) AS v, toTypeName(v);",
+        "types": [
+            "Decimal(9, 6)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E18",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v)",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.0001' AS Decimal32(4)) AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-018-E19",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) AS v,toTypeName(v)",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST(2147483648 AS UInt64) / CAST(1 AS Decimal32(0)) AS v, toTypeName(v);",
+        "types": [
+            "Decimal(9, 0)"
+        ],
+        "rules": [
+            "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-018-E20",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT 1/0 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT 1 / 0 AS v, toTypeName(v);",
+        "types": [
+            "UInt8"
+        ],
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-018-E21",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT CAST(7 AS Nullable(Int128))/CAST(2 AS UInt256) AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT CAST(7 AS Nullable(Int128)) / CAST(2 AS UInt256) AS v, toTypeName(v);",
+        "types": [
+            "Nullable(Int128)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E22",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT divideExact(CAST(7 AS UInt16),CAST(2 AS UInt256)) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT divideExact(CAST(7 AS UInt16), CAST(2 AS UInt256)) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E23",
+        "input_sql": "SELECT 7/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT 7 / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1;",
+        "types": [
+            "UInt8"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-018-E24",
+        "input_sql": "SELECT CAST('SET sql_compatible_division_for_integers=1;' AS String) AS v,toTypeName(v); SELECT 7/2 AS v,toTypeName(v)",
+        "generated": "SELECT CAST('SET sql_compatible_division_for_integers=1;' AS String) AS v, toTypeName(v); SELECT 7 / 2 AS v, toTypeName(v);",
+        "types": [
+            "String",
+            "UNKNOWN"
+        ],
+        "rules": []
+    }
+]

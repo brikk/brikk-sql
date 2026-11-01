@@ -63,6 +63,10 @@ to CHSEM-015's typing-only captures.
 CHSEM-017 adds [proved Decimal runtime-overflow diagnostics](decimal-runtime-README.md),
 with narrowing/scaling guard order, signed boundaries and native big-Decimal wrapping controls.
 
+CHSEM-018 adds [explicit script-aware native typing](script-typing-README.md), returning
+owned per-statement ASTs and the shared diagnostic reports. Statement APIs never
+infer script/session mode from editor text or semicolons.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

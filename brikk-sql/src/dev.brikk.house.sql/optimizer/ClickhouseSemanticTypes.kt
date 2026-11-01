@@ -18,6 +18,13 @@ fun annotateClickhouseSemanticTypes(
     schema: Schema? = null,
     checkCanceled: () -> Unit = {},
 ): Expression {
+    return annotateClickhouseSemanticTypesWithSettings(expression, engineVersion, schema, emptyMap(), checkCanceled)
+}
+
+internal fun annotateClickhouseSemanticTypesWithSettings(
+    expression: Expression, engineVersion: String, schema: Schema?, sessionSettings: Map<String, Boolean?>,
+    checkCanceled: () -> Unit,
+): Expression {
     require(engineVersion == "26.10.2.103") { "Native semantic typing requires the researched ClickHouse pin 26.10.2.103" }
     require(schema == null || schema.dialect?.name == "clickhouse") { "Expected a ClickHouse schema" }
     checkCanceled()
@@ -25,5 +32,6 @@ fun annotateClickhouseSemanticTypes(
         it.clickhouseNativeLiterals = true
         it.clickhouseEngineVersion = engineVersion
         it.clickhouseCheckCanceled = checkCanceled
+        it.clickhouseSessionSettings = sessionSettings
     }.annotate(expression)
 }

@@ -1,0 +1,307 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "34ce18b3ded2a86b96afe8bcfa24b6ee02b94cc3b27fb1f46f099a381ea6dd91",
+  "brikk_sha256": "38be38bc58b83a65aacaea3256e45db3a25acca0fda021d7936ba9ef663a1b3d",
+  "execution": [
+    {
+      "id": "CHSEM-018-E01",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E03",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E04",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E05",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E06",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E07",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E08",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E09",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E10",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E11",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E12",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E13",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E14",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E15",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E16",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E17",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E18",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-018-E19",
+      "returncode": 0,
+      "stdout": "-2147483648\tDecimal(9, 0)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E20",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E21",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E22",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E23",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E24",
+      "returncode": 0,
+      "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-018-E01",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E03",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E04",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E05",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E06",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E07",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E08",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E09",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E10",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E11",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E12",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E13",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E14",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E15",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E16",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E17",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E18",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-018-E19",
+      "returncode": 0,
+      "stdout": "-2147483648\tDecimal(9, 0)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-018-E20",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E21",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E22",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E23",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-018-E24",
+      "returncode": 0,
+      "stdout": "SET sql_compatible_division_for_integers=1;\tString\n3.5\tFloat64\n",
+      "stderr": ""
+    }
+  ]
+}

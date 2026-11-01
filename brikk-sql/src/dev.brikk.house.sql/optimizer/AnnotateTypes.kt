@@ -241,6 +241,7 @@ class TypeAnnotator(
     internal var clickhouseNativeLiterals: Boolean = false
     internal var clickhouseEngineVersion: String? = null
     internal var clickhouseCheckCanceled: () -> Unit = {}
+    internal var clickhouseSessionSettings: Map<String, Boolean?> = emptyMap()
     private val expressionMetadata: Map<kotlin.reflect.KClass<out Expression>, TypingSpec> =
         expressionMetadata ?: dialect.expressionMetadata
     private val coercesTo: Map<DType, Set<DType>> =
@@ -617,10 +618,11 @@ class TypeAnnotator(
             val ignoredIds = if (overwriteTypes) emptySet() else expression.walk().filter {
                 it.typeSlot != null && !it.isType(DType.UNKNOWN) && it.objectId !in clickhouseNativeTypes
             }.map { it.objectId }.toSet()
-            val inference = inferClickhouseCompositionResults(expression,
+            val inference = inferClickhouseCompositionResultsWithSettings(expression,
                 clickhouseEngineVersion ?: dev.brikk.house.sql.metadata.CLICKHOUSE_METADATA.default.engineVersion, schema,
                 knownTypes = clickhouseNativeTypes, ignoredClasses = callerTypingClasses, ignoredIds = ignoredIds,
-                checkCanceled = clickhouseCheckCanceled, nativeLiterals = clickhouseNativeLiterals)
+                checkCanceled = clickhouseCheckCanceled, nativeLiterals = clickhouseNativeLiterals,
+                sessionSettings = clickhouseSessionSettings)
             for ((id, type) in inference.valueTypes) clickhouseNativeTypes[id] = type.copy() as DataType
             val blockedGenericValues = if (clickhouseNativeLiterals) inference.blockedGenericValues + expression.walk()
                 .onEach { clickhouseCheckCanceled() }

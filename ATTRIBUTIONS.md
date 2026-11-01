@@ -221,6 +221,10 @@ CHSEM-017's `decimal-runtime-sources.json` adds Apache-2.0 arithmetic overflow
 specializations and retains the tagged Decimal guard excerpts. Its finite/session
 observations are in `decimal-runtime-native/` and `decimal-runtime-script-native/`.
 
+CHSEM-018's isolated original/generated session type/value/error observations live
+in `script-typing-native/`. It reuses the existing tagged ClickHouse setting/type
+source captures without replacing historical evidence.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

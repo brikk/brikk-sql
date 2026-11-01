@@ -26,6 +26,24 @@ class BinaryCompatibilityTest {
     private val marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
 
     @Test
+    fun explicitClickhouseScriptTypingKeepsStatementEntryPointsAndFreezesItsOwnShape() {
+        val expression = dev.brikk.house.sql.ast.Expression::class.java
+        val string = String::class.java
+        val schema = dev.brikk.house.sql.optimizer.Schema::class.java
+        val callback = Class.forName("kotlin.jvm.functions.Function0")
+        val statement = Class.forName("dev.brikk.house.sql.optimizer.ClickhouseSemanticTypesKt")
+        assertEquals(expression, statement.getMethod("annotateClickhouseSemanticTypes", expression, string, schema, callback).returnType)
+        statement.getMethod("annotateClickhouseSemanticTypes\$default", expression, string, schema, callback, Int::class.javaPrimitiveType, Any::class.java)
+        val scripts = Class.forName("dev.brikk.house.sql.optimizer.ClickhouseScriptSemanticTypesKt")
+        assertEquals(List::class.java, scripts.getMethod("annotateClickhouseScriptSemanticTypes", string, string, schema, callback).returnType)
+        val result = dev.brikk.house.sql.optimizer.ClickhouseScriptTypeAnnotation::class.java
+        val report = dev.brikk.house.sql.diagnostics.ClickhouseSemanticDiagnostics::class.java
+        result.getConstructor(expression, report)
+        result.getMethod("copy", expression, report)
+        result.getMethod("copy\$default", result, expression, report, Int::class.javaPrimitiveType, Any::class.java)
+    }
+
+    @Test
     fun lambdaHeaderFactoringPreservesTheExistingParserEntryPoints() {
         val parser = dev.brikk.house.sql.parser.Parser::class.java
         val expression = dev.brikk.house.sql.ast.Expression::class.java

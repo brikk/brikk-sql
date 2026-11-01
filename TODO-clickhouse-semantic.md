@@ -10,6 +10,7 @@ CHSEM-012 adds exact division result typing; CHSEM-013 adds constant-error diagn
 CHSEM-014 adds preceding script SET state; CHSEM-015 adds bounded Decimal division typing.
 CHSEM-016 adds positioned Decimal division failures with guard-order and NULL controls.
 CHSEM-017 adds proved constant narrowing and scaling-overflow diagnostics.
+CHSEM-018 adds an explicit script-aware native typing entrypoint; statement APIs stay local.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -50,6 +51,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-015: Infer exact Decimal/Decimal and Decimal/integer division precision and scale from pinned source/native evidence. Cover supported nullable dispatch and mode differences; preserve unknowns outside the proved overloads. User authorized CHSEM-013–015 in order, with tests and a separate commit/push for each.
 - [x] CHSEM-016: Add positioned Decimal-division diagnostics for proved zero divisors, invalid scale dispatch and scale overflow under explicit decimal_check_overflow settings. Reuse CHSEM-015 facts, account for NULL masking and guard order, preserve conditional types and unknowns, capture exact-pin native witnesses, then test/commit/push separately.
 - [x] CHSEM-017: Diagnose proved Decimal runtime overflow from operand narrowing, multiplier squaring and numerator scaling. Require exact constant/dispatch facts and explicit decimal_check_overflow=true, preserve NULL masking, error order and conditional result types, capture native controls, then test/commit/push separately.
+- [x] CHSEM-018: Add an explicit script-aware native typing entrypoint. Reuse shared script framing, parsing, diagnostics and preceding SET state; return independently owned typed ASTs with positioned per-statement reports. Do not infer script/session execution from semicolons or editor files, change existing statement API behavior, rewrite authored settings or guess external state. Preserve signatures, add native witnesses, then test/commit/push separately.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
 documentation caveats. Keep settled boundaries in their guides and these TODOs;
@@ -58,7 +60,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-017 are complete. Commit/push CHSEM-017 separately, then stop after this requested round. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-018 are complete. Commit/push CHSEM-018 separately, then stop after this requested round. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -519,6 +521,34 @@ directory under build/ passed without dropping tests or changing gates. No relea
 toolchain, dependency, consumer or IntelliJ API changes. ClickHouse-only Python
 discovery passes 67 tests; the isolated IntelliJ gate passes 757 on 261.25134.95.
 Other IDE versions were not run. Commit/push this round, then stop.
+
+## CHSEM-018 result
+
+Added explicit `annotateClickhouseScriptSemanticTypes` and the two-field
+`ClickhouseScriptTypeAnnotation` result. Callers choose script processing; no mode
+is inferred from semicolons, editor files or prior API calls. A shared traversal
+frames/parses statements, advances CHSEM-014 SET facts and produces the existing
+positioned diagnostics. Fresh annotators receive the same immutable incoming facts
+and return owned ASTs without injecting settings or rewriting SQL/source metadata.
+Statement APIs, generic literal policy, schema/connection state and old JVM
+signatures stay unchanged. The new result shape is frozen in BinaryCompatibilityTest.
+Guide: `vendor/data/clickhouse-semantic/script-typing-README.md`.
+
+Twenty-four original/generated whole-session type/value/error vectors pass on each
+exact pin, with no execution/version skips. Successful known types agree with
+native toTypeName; runtime failures retain conditional types independently of
+their diagnostics. New typing output and historical CHSEM-014/016/017 script
+captures regenerate byte-identically. Unit gates cover caller mode selection,
+fresh state, overrides, reset/parameter unknowns, schema/lambda/derived queries,
+parse/framing failures, inline data, UTF-16 positions, ownership, serde and cancellation.
+Full JVM regression passes 1,884 tests with 61 optional integration assumption
+aborts and zero failures. Python passes 118 tests with one opt-in skip using the
+unchanged SQLGlot pin. No corpus/ledger, release, toolchain, consumer or IntelliJ
+API changes; no IDE callsite is silently switched to script processing.
+ClickHouse-only Python discovery passes 70 tests. The isolated IntelliJ gate passes
+757 tests on 261.25134.95; other IDE versions were not run. Final log verification
+was briefly blocked by a tool-location shutdown; access was restored and the saved
+passing log verified before committing. Commit/push this round, then stop.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,
