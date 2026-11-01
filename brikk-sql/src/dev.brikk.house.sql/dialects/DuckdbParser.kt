@@ -644,6 +644,22 @@ open class DuckdbParser(
         )
     }
 
+    // The 2.0 single arrow is the low-precedence lambda/JSON operator. The
+    // historical SQLGlot column-operator precedence remains the parity default.
+    override val columnOperators get() = if (nativeRegexOperators)
+        super.columnOperators - TokenType.ARROW else super.columnOperators
+
+    override fun parseAssignment(): Expression? {
+        var result = super.parseAssignment()
+        if (nativeRegexOperators) while (match(TokenType.ARROW)) {
+            val path = parseDisjunction() ?: run { raiseError("Expected expression after ->"); return result }
+            result = expression(dev.brikk.house.sql.ast.JSONExtract(args(
+                "this" to result, "expression" to toJsonPath(path), "only_json_types" to jsonArrowsRequireJsonType,
+            )))
+        }
+        return result
+    }
+
     // sqlglot: DuckDBParser._parse_expression (prefix aliases, e.g. foo: 1)
     override fun parseExpression(): Expression? {
         // brikk extension (docs/brikk-extensions.md #33, DDB-001): the alias must

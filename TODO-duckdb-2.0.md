@@ -1371,10 +1371,34 @@ and IDE introspection/completion are separate contracts.
   gap. No historical corpus/ledger rewrite, new production API, consumer pin or user-resource
   change. The final batch gates will rerun this inventory alongside the existing suites.
 
-- [ ] `DDB20-051` PEG ambiguity/precedence differential cases [AUDIT].
+- [x] `DDB20-051` PEG ambiguity/precedence differential cases [DONE].
   Cover prefix aliases, FROM-first, simplified PIVOT, GROUP/ORDER BY ALL, star EXCLUDE/REPLACE,
   JSON arrows versus lambdas, parameter markers, explicit/internal join types and nested parentheses.
   Include backtick identifier and star EXCEPT-to-EXCLUDE regression controls already implemented.
+  DuckdbPegDifferentialTest exercises original/native parse, copy, serde and SqlFragment
+  execution output over prefix select/table aliases, FROM-first, simplified PIVOT, GROUP/
+  ORDER BY ALL, EXCLUDE/REPLACE, backticks, EXCEPT-to-EXCLUDE, JSON arrows versus lambdas,
+  SEMI/ANTI/INNER joins, nested parentheses and positional/numbered/named markers. Native
+  result controls use only scratch in-memory values and explicit prepared execution for
+  trusted bind-order fixtures, never as editor validation. Simplified PIVOT serialization
+  remains explicitly unverified even though its separate result control executes correctly.
+  JSON-arrow low precedence is inspected in the engine's own serialized tree: unparenthesized
+  arrow/equality has LAMBDA at the root, parenthesized extraction/equality has COMPARISON.
+  Default deprecated-lambda rejection is distinct from parse acceptance; an isolated explicit
+  ENABLE_SINGLE_ARROW compatibility setting qualifies legacy-arrow result comparisons.
+  The differential caught a real native-mode JSON-arrow grouping bug: the library had
+  interpreted unparenthesized arrow/equality as comparison of the extracted value. Native
+  mode now gives single-arrow its low precedence and left association, including a boolean
+  RHS, while ->> and the historical parser/corpora remain unchanged. MARK/SINGLE bare-join
+  words are checked as left-table aliases plus INNER, not invented internal join kinds.
+  JDBC 2.0.0.0's positional setters reject named $a/$b/$c identifiers; that limitation is
+  asserted separately from native named-marker parse acceptance. Numbered/positional
+  result and prefix-alias label/order controls remain distinct from named-marker syntax.
+  Focused native/core controls and unchanged 050 coverage fingerprint passed. All 85
+  historical corpus/identity tests plus two core precedence and five native/coverage tests
+  passed, zero skips. Log /tmp/opencode/duckdb-peg-parity.log. No parity ledger/fixture
+  changes, public signature changes, new IntelliJ APIs, user connection/settings changes,
+  merge or publication. No general JSON/lambda cross-target equivalence is claimed.
 
 - [ ] `DDB20-052` Malformed-input robustness [AUDIT].
   Pin invalid/backtracking-heavy queries, long unmatched parentheses, depth/size/time limits,

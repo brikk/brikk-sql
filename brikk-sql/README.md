@@ -670,6 +670,13 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+PEG differential controls check aliases, FROM-first, pivot, ALL grouping/ordering, stars,
+arrows/lambdas, join forms, parentheses and each bind-marker family through copy/serde and
+executable generation. Native parse acceptance is kept separate from binding and results.
+In particular, `json -> 'x' = 2` and `(json -> 'x') = 2` have different native trees. Old
+lambda arrows parse but fail binding under the default 2.0 policy; compatibility-mode
+result tests explicitly opt in on their own scratch connection. No user's policy changes.
+
 The parse-only acceptance comparison runs 1.5.6 and 2.0 in separate restricted child JVMs.
 It records runtime/source/JDBC IDs, JDBC hashes, effective settings and each input's origin.
 Parser, expected generator text, tokenizer and serde fixture SQL are checked as authored
