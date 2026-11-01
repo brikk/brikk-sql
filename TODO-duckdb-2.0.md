@@ -1340,10 +1340,36 @@ and IDE introspection/completion are separate contracts.
   /tmp/opencode/duckdb-acceptance-reviewed.log. No parity fixture/ledger changes, production
   API or dependency changes, user connections/settings/files, merge or publication.
 
-- [ ] `DDB20-050` Every applicable corpus through native 2.0 [AUDIT].
+- [x] `DDB20-050` Every applicable corpus through native 2.0 [DONE].
   The normal suites and focused release examples ran on 2.0, but that does not prove every
   identity/transpile/annotated-serde case has a native oracle gate. Inventory actual coverage,
   run missing native checks and retain explicit unsupported/opaque classifications.
+  DuckdbNativeCorpusCoverageTest inventories all 181 JSON resources, with exact file hashes
+  and explicit roles/exclusions. It runs 24,615 raw/emitted SQL occurrences, 5,419 unique,
+  through an isolated restricted 2.0 parse-only JVM. This includes every registered-source
+  named identity emitted to DuckDB, every DuckDB-target transpile direction plus SQL
+  expectation, all ordinary/annotated/handbuilt serde emissions and current parser emissions,
+  base/DuckDB tokenizer/parser SQL, and base/DuckDB top-level scope/qualify/lineage SQL.
+  SELECT wrapping is labeled and limited to expression-shaped roots. Foreign-only token/
+  scanner, excluded dialects, schema manifests, historical hazard results and existing
+  mismatch ledgers are explicitly inventoried, never silently executed/reinterpreted.
+  Native occurrence outcomes: 13,603 accepted, 7,763 rejected, 3,249 non-SELECT/transformer
+  unverified. These are coverage counts, not all-pass or executable-equivalence claims.
+  Local classifications independently retain 226 unsupported emissions, 1,558 warnings,
+  407 opaque commands, 65 excluded/non-SQL read expectations, nine expected-unsupported
+  writes and 121 foreign-analysis inputs. No unexpected local exception or stack overflow.
+  Reviewed rejects include foreign CLONE/time-travel/wildcard syntax and legacy raw expression
+  fragments; warned foreign emissions are never counted as verified executable mappings.
+  Stronger native-source control: no accepted DuckDB serde input may become parser-rejected
+  after dump loading or current parsing/emission. That control passes without a waiver.
+  Report build/duckdb-parser-audit/native-coverage.json retains every origin/SQL/outcome and
+  reason. Independent reviewed fingerprints detect additions/drops/status changes; they do
+  not weaken historical parity expectations. Remaining cross-target semantic qualification
+  stays DDB20-055, static typing/lineage and historical hazard work retain their own IDs.
+  Reviewed coverage gate passed with zero skips. Log /tmp/opencode/duckdb-native-coverage-focused.log.
+  This closes the missing native syntax coverage, not every foreign-to-DuckDB translation
+  gap. No historical corpus/ledger rewrite, new production API, consumer pin or user-resource
+  change. The final batch gates will rerun this inventory alongside the existing suites.
 
 - [ ] `DDB20-051` PEG ambiguity/precedence differential cases [AUDIT].
   Cover prefix aliases, FROM-first, simplified PIVOT, GROUP/ORDER BY ALL, star EXCLUDE/REPLACE,

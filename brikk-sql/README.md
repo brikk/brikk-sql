@@ -682,6 +682,18 @@ Its report is `build/duckdb-parser-audit/acceptance-comparison.json`. Changes fa
 reviewed acceptance fingerprint, independent of the historical SQLGlot parity ledgers.
 The report is syntax evidence, not result, typing, scope or plugin integration evidence.
 
+`DuckdbNativeCorpusCoverageTest` inventories every JSON corpus resource. It checks actual
+DuckDB emissions from registered-source identities, serde and annotated dumps, every
+DuckDB-target transpile direction and its SQL expectations, plus base/DuckDB lexical and
+analysis SQL. Expression-shaped roots use a separately labeled SELECT wrapper. Unsupported
+generation, warnings, opaque commands, native rejection and non-SELECT serialization each
+keep their own classification. Foreign-only scanner/token and historical result evidence
+are inventoried without being relabeled as DuckDB syntax tests.
+
+The full report is `build/duckdb-parser-audit/native-coverage.json`. Its reviewed inventory
+and outcome fingerprints detect dropped or changed cases. They do not waive a parity
+mismatch or certify that a syntax-accepted transpilation preserves behavior.
+
 ### Storage compatibility and private fixtures
 
 New DuckDB 2.0 files use format 69, with symbolic default storage compatibility `latest`.
