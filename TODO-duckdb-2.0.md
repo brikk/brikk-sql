@@ -1443,10 +1443,31 @@ and IDE introspection/completion are separate contracts.
   DDB20-052, separately verified and committed/pushed; 57/78 stable checklist items are done.
   Trino REGEXP_COUNT remains queued and recursive IDE schemas remain deliberately deferred.
 
-- [ ] `DDB20-053` Grammar built-ins and special forms [AUDIT].
+- [x] `DDB20-053` Grammar built-ins and special forms [DONE].
   DuckdbGrammarBuiltins already claims 2.0 probing, but retains a stale Postgres-derived-parser
   comment. Reconcile that provenance and add repeatable proof of registered versus grammar-only
   calls, bare-only spellings and binder-restricted GROUPING forms. Do not claim no work was done.
+  Reconciled the handwritten grammar overlay with final PEG expression.gram at d54cbbe3df,
+  not the historical Postgres-derived parser. Existing COALESCE/GROUPING/GROUPING_ID minimal
+  registry-absent set remains correct. IF is a registered macro; completion's generic CALL
+  form remains supported without falsely describing IF as registry-absent. Native 2.0.0/
+  d54cbbe3df controls compare live registration and execution, not just catalog counts.
+  Corrected POSITION presentation to SPECIAL_FORM only: unqualified comma syntax is a native
+  parser rejection despite the scalar registration. POSITION(needle IN haystack) works;
+  qualified main.position(haystack,needle) is a different call path/order and is tested
+  separately, not advertised as the unqualified form. TRIM/SUBSTRING retain both call forms.
+  Bare CURRENT_TIMESTAMP/CURRENT_TIME/LOCALTIME/LOCALTIMESTAMP work; their parenthesized
+  generic calls parse but fail catalog resolution. The prior blanket parser-rejection
+  wording was wrong. All seven declared bare+call current-user/catalog/date forms execute.
+  GROUPING/GROUPING_ID parse outside grouped queries but fail binding there; ROLLUP bits
+  are tested through original/generated SQL. GrammarForm documentation now distinguishes
+  supported built-in invocation from arbitrary generic-call parse acceptance. No public
+  signature/field change or generated registry rewrite. Tests: DuckdbGrammarFormsTest and
+  DuckdbGrammarBuiltinsResultTest; external access/autoload/autoinstall disabled.
+  All 130 metadata and three focused native tests passed, zero skips. Logs
+  /tmp/opencode/duckdb-grammar-builtins-{metadata,focused}.log. Historical parity resources,
+  public data-class JVM shapes, production IntelliJ APIs, consumer pins and user sessions
+  are unchanged. No merge/publication or Plugin Verifier run.
 
 - [ ] `DDB20-054` Upstream SQLGlot reconciliation [AUDIT].
   Compare the current pinned reference with upstream 2.0 support before implementing local

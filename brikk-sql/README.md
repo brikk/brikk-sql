@@ -670,6 +670,13 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+DuckDB grammar metadata distinguishes registry membership, supported invocation and parse
+acceptance. IF is registered as a macro; COALESCE/GROUPING/GROUPING_ID remain grammar-only.
+POSITION uses its unqualified IN form, not comma arguments. Bare timestamp/time names are
+supported built-ins even though their parenthesized generic calls parse and fail catalog
+resolution. GROUPING calls require grouped binding. These distinctions are native-tested
+and do not turn editor parse checks into bind/execute validation.
+
 Editor parse-only input has a budget of 1,048,576 UTF-16 units and 256 levels of structural
 or nested-comment depth. Quotes, comments and dollar strings do not consume structural
 depth. NUL and malformed UTF-16 refuse before native submission. Budget or engine resource
