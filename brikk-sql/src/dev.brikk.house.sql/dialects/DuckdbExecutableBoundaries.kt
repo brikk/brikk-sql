@@ -7,6 +7,8 @@ internal fun Expression.duckdbExecutableBoundaryIssue(source: String?, target: S
     val from=source?.lowercase() ?: return null
     if(from!="duckdb" && target!="duckdb")return null
     val nodes=walk().toList()
+    if(from!=target && nodes.any { it.reviewedDuckdbFunctionName()!=null })
+        return "Reviewed DuckDB function result typing is not a verified cross-target execution mapping"
     if(from!=target && nodes.any { it is DateDiff || it is TimestampDiff || it is TsOrDsDiff || it is DateTrunc || it is TimestampTrunc })
         return "Temporal boundary-counting and truncation result types have no verified executable DuckDB cross-target mapping"
     if(from!=target && nodes.any {

@@ -1638,13 +1638,36 @@ and IDE introspection/completion are separate contracts.
   collations; DuckdbDump maps window rows. DuckdbCaptureTest compares bundled/vendor/native
   rows. These assertions do not substitute for the feature result probes above.
 
-- [ ] `DDB20-062` Precise new function typing [AUDIT].
+- [x] `DDB20-062` Precise new function typing [DONE].
   Review JSON/VARIANT family additions and actual overload/default/variadic/result shapes,
   including BOOLEAN results, key lists and extracted values. Keep function catalogs, type
   inference, docs and live completion consistent; do not claim full end-to-end typing from names alone.
   The full-release title audit also names decimal_average, binom, lttb, invoke, assert_true,
   vertex_extract and aggregate-state export additions. Check their actual captured signatures,
   kinds and required semantic models; ordinary function calls do not automatically need new AST nodes.
+  Added native-only proved-signature facts for binom -> INT128/native HUGEINT, decimal_average
+  -> its exact input DECIMAL(p,s), vertex_extract -> DOUBLE and all sixteen LTTB FLOAT/DOUBLE/
+  temporal x/y result combinations -> an array of structs retaining field names and exact
+  input types. INTEGER-to-BIGINT count widening is bounded; bare decimal-text annotations,
+  unknown/wrong arities, named roles and qualified same-named UDFs do not invent overloads.
+  These facts flow through native shape, relation scopes, derived CTE completion and serde;
+  the historical annotator and AST/annotation corpora remain unchanged. No new AST class or
+  public old-shape signature is needed. Reviewed function cross-target execution still refuses.
+  Existing JSON/VARIANT scalar/list/nested key-list/BOOLEAN/UBIGINT facts are retained, while
+  integer/missing-type path arrays no longer borrow VARCHAR path-list facts. Embedded VARIANT
+  types are not guessed. INVOKE/assert_true, engine-bound variant_to_parquet_variant and
+  aggregate-state export remain explicitly unmodeled where fixed registry types cannot prove
+  their result. A native INTEGER/NULL sample is not promoted into a generic polymorphic type.
+  Review bounds and type inventory: vendor/data/duckdb-reviewed-function-typing-2.0.0.json.
+  Native tests compare actual JDBC result types across 24 original/copy/serde/executable cases,
+  covering all sixteen LTTB combinations and DECIMAL boundaries. This qualifies the bounded
+  facts, not all implicit casts, macro/lambda binding, nullability, precision syntax or UDF
+  overlay ownership; 069/073/077 remain separate. No name-only semantic equivalence claim.
+  All 1,426 core and 133 metadata tests passed, zero skips; log
+  /tmp/opencode/duckdb-reviewed-typing-core-final.log. Expanded native typing and real signed
+  window controls passed five tests, zero skips, including all 24 typed SELECT cases;
+  log /tmp/opencode/duckdb-reviewed-typing-expanded.log. Existing corpora/ledgers, public
+  data-class shapes, dependency pins and production IntelliJ APIs are unchanged. No release.
 
 - [ ] `DDB20-063` Function gap reports and semantic hazard refresh [AUDIT].
   Update affected DuckDB/Trino/Doris/ClickHouse findings using live evidence at recorded versions.

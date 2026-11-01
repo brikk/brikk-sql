@@ -670,6 +670,12 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Native typing now preserves binom's HUGEINT result, decimal_average's exact DECIMAL(p,s),
+vertex_extract's DOUBLE and LTTB's typed struct-array fields for proved signatures. The same
+facts reach derived-column completion. Unknown inputs, qualified UDF names, lambda/macro
+ANY results and engine-bound aggregate states stay unknown; type facts do not certify value
+validity, NULL behavior or foreign execution. Historical annotation parity is unchanged.
+
 `DUCKDB_FUNCTION_PROPERTIES` exposes exact built-in registry observations separately from
 the published function-row schema. Alias/stability/side-effect fields do not prove NULL
 handling, argument defaults, named roles or a table output schema. Arbitrary `colN` names

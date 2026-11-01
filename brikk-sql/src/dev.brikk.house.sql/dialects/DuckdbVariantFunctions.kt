@@ -33,7 +33,9 @@ internal fun Expression.duckdbVariantReturnType(): DataType? {
         val path = arguments[1]
         val type = path.type as? DataType
         when {
-            path is ArrayNode || type?.isType(DType.ARRAY) == true -> result = DataType(args("this" to DType.ARRAY, "expressions" to listOf(result), "nested" to true))
+            path is ArrayNode && path.expressionsArg.all { it is Null || it is Literal && it.isString } ||
+                type?.isType(DType.ARRAY)==true && (type.expressionsArg.singleOrNull() as? DataType)?.thisArg in DataType.TEXT_TYPES ->
+                result = DataType(args("this" to DType.ARRAY, "expressions" to listOf(result), "nested" to true))
             path is Literal && path.isString || type?.thisArg in DataType.TEXT_TYPES -> Unit
             else -> return null
         }

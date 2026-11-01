@@ -67,6 +67,8 @@ import dev.brikk.house.sql.ast.Binary
 import dev.brikk.house.sql.dialects.duckdbSetvalArguments
 import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbVariantReturnType
+import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionName
+import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionType
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 
 /**
@@ -645,6 +647,8 @@ class TypeAnnotator(
             val spec = expressionMetadata[expr::class]
 
             when {
+                dialect.name == "duckdb" && dialect.supportsNullType && expr.reviewedDuckdbFunctionName()!=null ->
+                    setType(expr,expr.reviewedDuckdbFunctionType() ?: DType.UNKNOWN)
                 dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.AtTimeZone ->
                     setType(expr, expr.duckdbNativeTimeZoneType())
                 dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.Try ->
