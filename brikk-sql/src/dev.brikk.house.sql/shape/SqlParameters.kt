@@ -4,6 +4,7 @@ import dev.brikk.house.sql.ast.Semicolon
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
 import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
+import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
 import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SyntacticRange
@@ -21,7 +22,7 @@ import dev.brikk.house.sql.parser.TokenizerConfigs
 fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccurrence> {
     if(dialect.equals("duckdb",true) && duckdbStorageDdlIssue(sql)!=null)
         throw dev.brikk.house.sql.generator.UnsupportedError("Storage layout/property DDL parameter binding is not modeled")
-    val source = Dialects.forName(dialect)
+    val source = Dialects.forName(dialect).withNativeDuckdbFacts()
     val tokens = source.tokenize(sql)
     val parser = source.parser().useNativeDuckdbOperators().also { it.captureSourceRanges = true }
     val statements = parser.parse(tokens, sql).filterNotNull().filterNot { it is Semicolon }

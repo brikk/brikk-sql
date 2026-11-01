@@ -670,6 +670,13 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+The upstream reconciliation is pinned in `vendor/data/duckdb-sqlglot-2.0-audit.json` and
+reproduced by `tools/duckdb_sqlglot_audit.py` using two explicit clean reference checkouts.
+It does not refresh the historical SQLGlot corpus. The SORT BY lexical fix is ported only
+to native mode, so `INSERT INTO s.sort BY NAME ...` works without changing parity tokens.
+Other upstream semantics keep explicit qualification/refusal or follow-up dispositions;
+upstream parsing alone does not replace Brikk's richer native execution contracts.
+
 DuckDB grammar metadata distinguishes registry membership, supported invocation and parse
 acceptance. IF is registered as a macro; COALESCE/GROUPING/GROUPING_ID remain grammar-only.
 POSITION uses its unqualified IN form, not comma arguments. Bare timestamp/time names are

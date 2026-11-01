@@ -1469,10 +1469,31 @@ and IDE introspection/completion are separate contracts.
   public data-class JVM shapes, production IntelliJ APIs, consumer pins and user sessions
   are unchanged. No merge/publication or Plugin Verifier run.
 
-- [ ] `DDB20-054` Upstream SQLGlot reconciliation [AUDIT].
+- [x] `DDB20-054` Upstream SQLGlot reconciliation [DONE].
   Compare the current pinned reference with upstream 2.0 support before implementing local
   equivalents. Port upstream where available, retain provenance and record only still-needed
   Brikk-specific behavior. Do not refresh unrelated dialects opportunistically.
+  Compared parity pin a00dc2e5c489214bea53bacbbeba8713f21ebce1 with upstream HEAD observed
+  2026-11-01, 6de2df31b0ae8b21155828f575a14dc8903c1b9b. Four DuckDB source/test files,
+  all 37 touching commits and 18 isolated Python probes have reviewed dispositions in
+  vendor/data/duckdb-sqlglot-2.0-audit.json. Reproduce with tools/duckdb_sqlglot_audit.py;
+  --check pins source hashes, outcomes and complete commit-review coverage without network,
+  package installation, reference mutation or a corpus refresh. Full raw report is
+  build/duckdb-parser-audit/sqlglot-upstream-054.json.
+  Ported upstream f31f109daef0ca99347d36295534a0d59956059c SORT BY removal into native
+  token configuration only. INSERT INTO s.sort BY NAME now preserves the table name,
+  parameter ranges, copy/serde and exactly-once native write results. Native analysis,
+  parameter discovery and direct native parser use that config; historical tokens remain
+  unchanged. No constructor/field ABI change. Existing richer native routing, regex-session,
+  triggers and NEAREST models stay; upstream still rejects option-bearing CONNECT, factorial
+  and native binary probes or drops SECURE, so copying its name rendering is not qualification.
+  Global ArraySort AST migration/typing and unrelated dialect changes are not adopted here.
+  Reviewed semantic gaps are explicitly carried into 055 and existing 062/063/073/077;
+  this is a source reconciliation, not a claim every upstream hunk is implemented locally.
+  All 85 corpus/identity tests plus the new core control, native sort/049 comparison/050
+  inventory passed, zero skips. Both acceptance/coverage fingerprints stayed unchanged.
+  Log /tmp/opencode/duckdb-upstream-reconciled.log. No parity ledger changes, publication,
+  consumer pins, user connections/URLs or new IntelliJ API calls.
 
 - [ ] `DDB20-055` Cross-dialect executable behavior [AUDIT].
   For new semantic nodes/options, verify a faithful mapping or an explicit unsupported result
