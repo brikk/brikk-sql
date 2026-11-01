@@ -1,0 +1,406 @@
+{
+  "captured_at": "2026-11-01T00:09:33.526208+00:00",
+  "fixture_sha256": "bff43696fe9726990a00a67316cfc8102d4061b1c17854e8ed2029729ff5bd3a",
+  "brikk_sha256": "99a35aed1d45ddac3d9101f869b9fbfd1ee91cb066ff8ee6e61e6f259abaa984",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-015-E01\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST('2', 'Decimal(5, 2)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E02\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(5, 2)') \\/ CAST('2', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E03\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(5, 2)') \\/ CAST('2', 'Int256') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E04\",\"formatted\":\"SELECT\\n    CAST('7', 'UInt256') \\/ CAST('2', 'Decimal(5, 2)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E05\",\"formatted\":\"SELECT\\n    divideExact(CAST('7', 'Decimal(65, 8)'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E06\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal32(2)') \\/ CAST('2', 'Decimal64(1)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E07\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal128(4)') \\/ CAST('2', 'Decimal256(3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E08\",\"formatted\":\"SELECT\\n    CAST('7', 'Nullable(Decimal(12, 3))') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E09\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST('2', 'Nullable(Decimal(12, 3))') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E10\",\"formatted\":\"SELECT\\n    CAST('7', 'Nullable(Decimal(12, 3))') \\/ CAST('2', 'Nullable(Decimal(5, 2))') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E11\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(0, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E12\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST('0', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E13\",\"formatted\":\"SELECT\\n    CAST(NULL, 'Nullable(Decimal(12, 3))') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E14\",\"formatted\":\"SELECT\\n    CAST('0.000001', 'Decimal32(6)') \\/ CAST('0.0001', 'Decimal32(4)') AS v,\\n    toTypeName(v)\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-015-E15\",\"formatted\":\"SELECT\\n    CAST('0.000001', 'Decimal32(6)') \\/ CAST('0.0001', 'Decimal32(4)') AS v,\\n    toTypeName(v)\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-015-E16\",\"formatted\":\"SELECT\\n    CAST('0.000001', 'Decimal32(6)') \\/ CAST('0.001', 'Decimal32(3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E17\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(5, 2)') \\/ CAST('2', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-015-E18\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-015-E19\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-015-E20\",\"formatted\":\"SELECT\\n    arrayMap((a, b) -> (a \\/ b), CAST('[7]', 'Array(Decimal(12, 3))'), CAST([2], 'Array(Int8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E21\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(0, 0)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E22\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(2, 'Float64') AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-015-E01",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(12, 3)') / CAST('2', 'Decimal(5, 2)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E02",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(5, 2)') / CAST('2', 'Decimal(12, 3)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E03",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(5, 2)') / CAST('2', 'Int256') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E04",
+      "formatted": "SELECT\n    CAST('7', 'UInt256') / CAST('2', 'Decimal(5, 2)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E05",
+      "formatted": "SELECT\n    divideExact(CAST('7', 'Decimal(65, 8)'), CAST(2, 'UInt8')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E06",
+      "formatted": "SELECT\n    CAST('7', 'Decimal32(2)') / CAST('2', 'Decimal64(1)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E07",
+      "formatted": "SELECT\n    CAST('7', 'Decimal128(4)') / CAST('2', 'Decimal256(3)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E08",
+      "formatted": "SELECT\n    CAST('7', 'Nullable(Decimal(12, 3))') / CAST(2, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E09",
+      "formatted": "SELECT\n    CAST(7, 'UInt8') / CAST('2', 'Nullable(Decimal(12, 3))') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E10",
+      "formatted": "SELECT\n    CAST('7', 'Nullable(Decimal(12, 3))') / CAST('2', 'Nullable(Decimal(5, 2))') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E11",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(12, 3)') / CAST(0, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E12",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(12, 3)') / CAST('0', 'Decimal(12, 3)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E13",
+      "formatted": "SELECT\n    CAST(NULL, 'Nullable(Decimal(12, 3))') / CAST(2, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E14",
+      "formatted": "SELECT\n    CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v,\n    toTypeName(v)\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-015-E15",
+      "formatted": "SELECT\n    CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v,\n    toTypeName(v)\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-015-E16",
+      "formatted": "SELECT\n    CAST('0.000001', 'Decimal32(6)') / CAST('0.001', 'Decimal32(3)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E17",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(5, 2)') / CAST('2', 'Decimal(12, 3)') AS v,\n    toTypeName(v)\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-015-E18",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(12, 3)') / CAST(2, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 1"
+    },
+    {
+      "id": "CHSEM-015-E19",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(12, 3)') / CAST(2, 'Int8') AS v,\n    toTypeName(v)\nSETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+      "id": "CHSEM-015-E20",
+      "formatted": "SELECT\n    arrayMap((a, b) -> (a / b), CAST('[7]', 'Array(Decimal(12, 3))'), CAST([2], 'Array(Int8)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E21",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(0, 0)') / CAST(2, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-015-E22",
+      "formatted": "SELECT\n    CAST('7', 'Decimal(12, 3)') / CAST(2, 'Float64') AS v,\n    toTypeName(v)"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-015-E01\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST('2', 'Decimal(5, 2)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E02\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(5, 2)') \\/ CAST('2', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E03\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(5, 2)') \\/ CAST('2', 'Int256') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E04\",\"formatted\":\"SELECT\\n    CAST('7', 'UInt256') \\/ CAST('2', 'Decimal(5, 2)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E05\",\"formatted\":\"SELECT\\n    divideExact(CAST('7', 'Decimal(65, 8)'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E06\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal32(2)') \\/ CAST('2', 'Decimal64(1)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E07\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal128(4)') \\/ CAST('2', 'Decimal256(3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E08\",\"formatted\":\"SELECT\\n    CAST('7', 'Nullable(Decimal(12, 3))') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E09\",\"formatted\":\"SELECT\\n    CAST(7, 'UInt8') \\/ CAST('2', 'Nullable(Decimal(12, 3))') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E10\",\"formatted\":\"SELECT\\n    CAST('7', 'Nullable(Decimal(12, 3))') \\/ CAST('2', 'Nullable(Decimal(5, 2))') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E11\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(0, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E12\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST('0', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E13\",\"formatted\":\"SELECT\\n    CAST(NULL, 'Nullable(Decimal(12, 3))') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E14\",\"formatted\":\"SELECT\\n    CAST('0.000001', 'Decimal32(6)') \\/ CAST('0.0001', 'Decimal32(4)') AS v,\\n    toTypeName(v)\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-015-E15\",\"formatted\":\"SELECT\\n    CAST('0.000001', 'Decimal32(6)') \\/ CAST('0.0001', 'Decimal32(4)') AS v,\\n    toTypeName(v)\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-015-E16\",\"formatted\":\"SELECT\\n    CAST('0.000001', 'Decimal32(6)') \\/ CAST('0.001', 'Decimal32(3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E17\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(5, 2)') \\/ CAST('2', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-015-E18\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 1\"}\n{\"id\":\"CHSEM-015-E19\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-015-E20\",\"formatted\":\"SELECT\\n    arrayMap((a, b) -> (a \\/ b), CAST('[7]', 'Array(Decimal(12, 3))'), CAST([2], 'Array(Int8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E21\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(0, 0)') \\/ CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-015-E22\",\"formatted\":\"SELECT\\n    CAST('7', 'Decimal(12, 3)') \\/ CAST(2, 'Float64') AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-015-E01",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E02",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST('7', 'Decimal(5, 2)') / CAST('2', 'Decimal(12, 3)') AS v, toTypeName(v). (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-015-E03",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(5, 2)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E04",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(5, 2)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E05",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(65, 8)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E06",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(18, 2)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E07",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(76, 4)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E08",
+      "returncode": 0,
+      "stdout": "3.5\tNullable(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E09",
+      "returncode": 0,
+      "stdout": "3.5\tNullable(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E10",
+      "returncode": 0,
+      "stdout": "3.5\tNullable(Decimal(18, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E11",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('7', 'Decimal(12, 3)') / CAST(0, 'Int8') AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-015-E12",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('7', 'Decimal(12, 3)') / CAST('0', 'Decimal(12, 3)') AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-015-E13",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E14",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v) SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-015-E15",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E16",
+      "returncode": 0,
+      "stdout": "0.001\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E17",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST('7', 'Decimal(5, 2)') / CAST('2', 'Decimal(12, 3)') AS v, toTypeName(v) SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-015-E18",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E19",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E20",
+      "returncode": 0,
+      "stdout": "[3.5]\tArray(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E21",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Wrong precision: it must be between 1 and 76, got 0: In scope SELECT CAST('7', 'Decimal(0, 0)') / CAST(2, 'Int8') AS v, toTypeName(v). (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-015-E22",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-015-E01",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Decimal(5, 2)) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E02",
+      "sql": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v)",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST('7', 'Decimal(5, 2)') / CAST('2', 'Decimal(12, 3)') AS v, toTypeName(v). (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-015-E03",
+      "sql": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Int256) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(5, 2)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E04",
+      "sql": "SELECT CAST(7 AS UInt256) / CAST(2 AS Decimal(5, 2)) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(5, 2)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E05",
+      "sql": "SELECT divideExact(CAST(7 AS Decimal(65, 8)), CAST(2 AS UInt8)) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(65, 8)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E06",
+      "sql": "SELECT CAST(7 AS Decimal32(2)) / CAST(2 AS Decimal64(1)) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(18, 2)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E07",
+      "sql": "SELECT CAST(7 AS Decimal128(4)) / CAST(2 AS Decimal256(3)) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(76, 4)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E08",
+      "sql": "SELECT CAST(7 AS Nullable(Decimal(12, 3))) / CAST(2 AS Int8) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tNullable(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E09",
+      "sql": "SELECT CAST(7 AS UInt8) / CAST(2 AS Nullable(Decimal(12, 3))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tNullable(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E10",
+      "sql": "SELECT CAST(7 AS Nullable(Decimal(12, 3))) / CAST(2 AS Nullable(Decimal(5, 2))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tNullable(Decimal(18, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E11",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Int8) AS v, toTypeName(v)",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('7', 'Decimal(12, 3)') / CAST(0, 'Int8') AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-015-E12",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Decimal(12, 3)) AS v, toTypeName(v)",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('7', 'Decimal(12, 3)') / CAST('0', 'Decimal(12, 3)') AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-015-E13",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal(12, 3))) / CAST(2 AS Int8) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E14",
+      "sql": "SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.0001' AS Decimal32(4)) AS v, toTypeName(v) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v) SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-015-E15",
+      "sql": "SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.0001' AS Decimal32(4)) AS v, toTypeName(v) SETTINGS decimal_check_overflow = 0",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E16",
+      "sql": "SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.001' AS Decimal32(3)) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0.001\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E17",
+      "sql": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST('7', 'Decimal(5, 2)') / CAST('2', 'Decimal(12, 3)') AS v, toTypeName(v) SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-015-E18",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E19",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E20",
+      "sql": "SELECT arrayMap((a, b) -> a / b, CAST([7] AS Array(Decimal(12, 3))), CAST([2] AS Array(Int8))) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "[3.5]\tArray(Decimal(12, 3))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-015-E21",
+      "sql": "SELECT CAST(7 AS Decimal(0, 0)) / CAST(2 AS Int8) AS v, toTypeName(v)",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Wrong precision: it must be between 1 and 76, got 0: In scope SELECT CAST('7', 'Decimal(0, 0)') / CAST(2, 'Int8') AS v, toTypeName(v). (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-015-E22",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Float64) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    }
+  ]
+}

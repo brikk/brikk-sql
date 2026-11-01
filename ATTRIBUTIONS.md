@@ -209,6 +209,10 @@ CHSEM-014's `script-settings-sources.json` adds Apache-2.0 excerpts for SET
 interpretation, parameter/default parsing and compatibility-sensitive resets.
 Its isolated session observations live in `script-settings-native/`.
 
+CHSEM-015's `decimal-division-sources.json` adds Apache-2.0 Decimal result-trait,
+precision/scale, overflow/delegate and nullable-dispatch excerpts. Its isolated
+observations are in `decimal-division-native/` and `decimal-division-types/`.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

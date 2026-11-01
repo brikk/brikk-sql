@@ -12,7 +12,7 @@ DATA = ROOT / "vendor/data/clickhouse-semantic"
 
 
 class ClickhouseSemanticRoundsEvidenceTest(unittest.TestCase):
-    rounds = ("qualification", "higher-order", "overload", "paren-lambda", "division", "division-diagnostics")
+    rounds = ("qualification", "higher-order", "overload", "paren-lambda", "division", "division-diagnostics", "decimal-division")
 
     def test_overload_source_and_refinement_proofs_keep_historical_captures(self):
         captured = json.loads((DATA / "overload-sources.json").read_text())

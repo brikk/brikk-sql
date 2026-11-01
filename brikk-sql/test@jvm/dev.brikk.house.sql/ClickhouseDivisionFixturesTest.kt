@@ -15,6 +15,7 @@ class ClickhouseDivisionFixturesTest {
     fun conditionalTypesAndValueErrorsStaySeparateAcrossThePinnedFixtures() {
         val fixture = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/division-cases.json").readText()).jsonObject
         val refinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/division-diagnostics-rules.json").readText()).jsonObject
+        val typeRefinements = Json.parseToJsonElement(File(projectRoot(), "vendor/data/clickhouse-semantic/decimal-division-refinements.json").readText()).jsonObject
         val rows = fixture.getValue("execution").jsonArray.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
@@ -25,7 +26,7 @@ class ClickhouseDivisionFixturesTest {
             annotateClickhouseSemanticTypes(ast, "26.10.2.103")
             val projection = (ast as Select).selects.first() as Expression
             val type = if (projection.isType(DType.UNKNOWN)) "UNKNOWN" else projection.type?.sql("clickhouse") ?: "MISSING"
-            assertEquals(case.getValue("type").jsonPrimitive.content, type, id)
+            assertEquals((typeRefinements[id] ?: case.getValue("type")).jsonPrimitive.content, type, id)
             assertEquals(generated, ast.sql("clickhouse"), id)
             assertEquals(Serde.dump(ast), Serde.dump(Serde.load(Serde.dump(ast)) as Expression), id)
             val report = clickhouseSemanticDiagnostics(sql, sql.indices, "26.10.2.103")

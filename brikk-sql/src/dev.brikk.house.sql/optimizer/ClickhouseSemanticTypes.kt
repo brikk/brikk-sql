@@ -5,7 +5,7 @@ import dev.brikk.house.sql.dialects.Dialects
 
 /**
  * Annotate the bounded native ClickHouse semantic slice, including higher-order
- * results, setting-aware division and exact numeric literal widths.
+ * results, setting-aware integer/Decimal division and exact numeric literal widths.
  * Mutates [expression] like [annotateTypes]; types are conditional,
  * never acceptance/execution verdicts. An exact researched pin is mandatory.
  * Generic annotateTypes retains its existing literal policy for parity consumers.

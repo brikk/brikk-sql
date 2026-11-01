@@ -7,7 +7,7 @@ public positioned diagnostics, CHSEM-007 qualification, CHSEM-008 higher-order
 contracts, CHSEM-009 bounded composite/overload typing, CHSEM-010 lowering
 assessment and CHSEM-011 parenthesized lambda parsing are complete.
 CHSEM-012 adds exact division result typing; CHSEM-013 adds constant-error diagnostics.
-CHSEM-014 adds preceding script SET state; CHSEM-015 is the remaining authorized round.
+CHSEM-014 adds preceding script SET state; CHSEM-015 adds bounded Decimal division typing.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -45,7 +45,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-012: Infer exact setting-aware integer division results. Use pinned source/native rules for `/`, `divide` and explicit `divideExact`, including width, signedness and supported nullability. Preserve query-local setting inheritance, caller typing policies and generic literal parity; use the explicit native typing entrypoint for native literal widths.
 - [x] CHSEM-013: Add offline diagnostics for provable division-by-zero and integer quotient overflow. Keep value-dependent/runtime cases unknown; reuse the exact type/mode facts from CHSEM-012 without claiming whole-query acceptance.
 - [x] CHSEM-014: Track explicit preceding `SET` statements in script analysis with clear scope/reset rules. Do not infer external connection state. Record unknown or parameterized assignments explicitly and preserve query-local overrides.
-- [ ] CHSEM-015: Infer exact Decimal/Decimal and Decimal/integer division precision and scale from pinned source/native evidence. Cover supported nullable dispatch and mode differences; preserve unknowns outside the proved overloads. User authorized CHSEM-013–015 in order, with tests and a separate commit/push for each.
+- [x] CHSEM-015: Infer exact Decimal/Decimal and Decimal/integer division precision and scale from pinned source/native evidence. Cover supported nullable dispatch and mode differences; preserve unknowns outside the proved overloads. User authorized CHSEM-013–015 in order, with tests and a separate commit/push for each.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
 documentation caveats. Keep settled boundaries in their guides and these TODOs;
@@ -54,7 +54,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-014 are complete. CHSEM-015 is authorized next. Test and commit/push each round separately. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-015 are complete. Commit/push each round separately; stop after this requested batch. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -441,6 +441,28 @@ and zero failures; Python passes 103 tests with one opt-in skip. The isolated In
 gate passes 757 tests on 261.25134.95. No new IntelliJ API calls or signature changes.
 Historical evidence
 and corpus gates are unchanged. CHSEM-015 remains the authorized next round.
+
+## CHSEM-015 result
+
+Added exact bounded Decimal/Decimal and both Decimal/integer result typing for /,
+resolved divide and divideExact. Two Decimals use wider storage precision and first
+scale; mixed integer/Decimal preserves the Decimal's declared precision and scale.
+Supported nullable propagation, schema/derived/lambda contexts and integer-mode
+independence are covered. Setting-dependent scale-overflow guards reuse local/script
+facts without guessing defaults. Unsupported dry-run scale dispatch, uncertain casts,
+constant NULL and wrappers remain unknown. Existing public signatures, literal
+policy, caller overrides, SQL/source/serde and corpus gates stay intact.
+Guide: `vendor/data/clickhouse-semantic/decimal-division-README.md`.
+
+All 1,368 independent native matrix types match; 22 original/generated finite cases
+per exact pin match values/errors without execution skips. A named refinement
+strengthens CHSEM-012-E19 to Decimal(18,3) without replacing old captures. Matrix,
+fixture and refinement reports regenerate byte-identically. Full JVM regression
+passes 1,864 tests, with 61 optional integration assumption aborts and zero failures.
+Python passes 106 tests with one opt-in skip; ClickHouse-only discovery passes 58.
+The isolated IntelliJ gate passes 757 tests on 261.25134.95. No new IntelliJ API
+calls or public signature changes. No toolchain, release, dependency or
+consumer changes. This completes the requested three-item batch.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

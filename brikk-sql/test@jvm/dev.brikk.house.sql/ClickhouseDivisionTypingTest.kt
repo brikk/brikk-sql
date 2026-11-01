@@ -75,7 +75,7 @@ class ClickhouseDivisionTypingTest {
         for (expression in listOf("CAST(NULL AS Nullable(Int8))/CAST(2 AS Int8)",
             "TRY_CAST('bad' AS Int8)/CAST(2 AS Int8)",
             "(CAST(1 AS UInt8)+CAST(1 AS UInt8))/CAST(2 AS UInt8)",
-            "CAST(7 AS Decimal(12,3))/CAST(2 AS Decimal(12,3))", "DIVIDEEXACT(CAST(7 AS Int8),CAST(2 AS Int8))")) {
+            "DIVIDEEXACT(CAST(7 AS Int8),CAST(2 AS Int8))")) {
             assertEquals("UNKNOWN", type(typed("SELECT $expression SETTINGS sql_compatible_division_for_integers=1")), expression)
         }
         val shadowed = "WITH ((a,b) -> 'x') AS divide SELECT divide(CAST(7 AS Int8),CAST(2 AS Int8)) SETTINGS sql_compatible_division_for_integers=1"

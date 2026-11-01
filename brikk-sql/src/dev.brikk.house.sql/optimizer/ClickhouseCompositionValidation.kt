@@ -220,9 +220,7 @@ private class ClickhouseCompositionValidator(
                 rememberBinding(node, context)
                 if (context.callableScope) rememberAtomicCall(node, context)
             }
-            clickhouseDivisionCall(node, sessionSettings)?.let { call ->
-                if (call.integerMode != null || nativeLiterals) value(node, context, 0)
-            }
+            if (clickhouseDivisionCall(node, sessionSettings) != null) value(node, context, 0)
             val map = arrayMap(node)
             if (map != null) {
                 val name = map.name
@@ -671,12 +669,15 @@ private class ClickhouseCompositionValidator(
             literalTypes.any { it?.thisArg in setOf(DType.FLOAT, DType.DOUBLE) }) {
             types = types.mapIndexed { index, type -> type ?: literalTypes[index] }
         }
-        val result = clickhouseDivisionResult(types[0], types[1], call.integerMode)
+        val decimalInput = types.any { it?.thisArg in setOf(DType.DECIMAL, DType.DECIMAL32, DType.DECIMAL64, DType.DECIMAL128, DType.DECIMAL256) }
+        val result = clickhouseDecimalDivisionResult(types[0], types[1],
+            clickhouseBooleanSetting(node, "decimal_check_overflow", sessionSettings))
+            ?: clickhouseDivisionResult(types[0], types[1], call.integerMode)
             ?: if (call.integerMode == false && inputs.all { it.plain && it.family == Family.NUMBER })
                 plainType(DType.DOUBLE) else null
         if (result == null) {
             unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
-            if (inferResults && (call.integerMode != null || nativeLiterals)) blockedFallbacks.add(node.objectId)
+            if (inferResults && (call.integerMode != null || nativeLiterals || decimalInput)) blockedFallbacks.add(node.objectId)
             return Value()
         }
         if (call.integerMode == true && clickhouseIntegerShape(result) != null) {
@@ -686,6 +687,7 @@ private class ClickhouseCompositionValidator(
                 "Integer division by zero." else "Integer division result is outside the first operand's result bounds.")
             else if (check == null) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
         }
+        if (decimalInput) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
         return nativeType(result)
     }
 

@@ -1,0 +1,356 @@
+{
+  "task": "CHSEM-015",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-015-E01",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Decimal(5,2)) AS v,toTypeName(v)",
+      "type": "Decimal(18, 3)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tDecimal(18, 3)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(18, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E02",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E03",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Int256) AS v,toTypeName(v)",
+      "type": "Decimal(5, 2)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tDecimal(5, 2)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(5, 2)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E04",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS UInt256)/CAST(2 AS Decimal(5,2)) AS v,toTypeName(v)",
+      "type": "Decimal(5, 2)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tDecimal(5, 2)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(5, 2)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E05",
+      "task": "CHSEM-015",
+      "sql": "SELECT divideExact(CAST(7 AS Decimal(65,8)),CAST(2 AS UInt8)) AS v,toTypeName(v)",
+      "type": "Decimal(65, 8)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(65, 8)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E06",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal32(2))/CAST(2 AS Decimal64(1)) AS v,toTypeName(v)",
+      "type": "Decimal(18, 2)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tDecimal(18, 2)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(18, 2)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E07",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal128(4))/CAST(2 AS Decimal256(3)) AS v,toTypeName(v)",
+      "type": "Decimal(76, 4)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tDecimal(76, 4)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(76, 4)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E08",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Nullable(Decimal(12,3)))/CAST(2 AS Int8) AS v,toTypeName(v)",
+      "type": "Nullable(Decimal(12, 3))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tNullable(Decimal(12, 3))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tNullable(Decimal(12, 3))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E09",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS UInt8)/CAST(2 AS Nullable(Decimal(12,3))) AS v,toTypeName(v)",
+      "type": "Nullable(Decimal(12, 3))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tNullable(Decimal(12, 3))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tNullable(Decimal(12, 3))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E10",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Nullable(Decimal(12,3)))/CAST(2 AS Nullable(Decimal(5,2))) AS v,toTypeName(v)",
+      "type": "Nullable(Decimal(18, 3))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tNullable(Decimal(18, 3))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tNullable(Decimal(18, 3))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E11",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Int8) AS v,toTypeName(v)",
+      "type": "Decimal(12, 3)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E12",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Decimal(12,3)) AS v,toTypeName(v)",
+      "type": "Decimal(18, 3)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E13",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal(12,3)))/CAST(2 AS Int8) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\tNullable(Decimal(12, 3))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Decimal(12, 3))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E14",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v) SETTINGS decimal_check_overflow=1",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E15",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v) SETTINGS decimal_check_overflow=0",
+      "type": "Decimal(9, 6)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0.01\tDecimal(9, 6)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0.01\tDecimal(9, 6)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E16",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.001' AS Decimal32(3)) AS v,toTypeName(v)",
+      "type": "Decimal(9, 6)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0.001\tDecimal(9, 6)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0.001\tDecimal(9, 6)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E17",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) AS v,toTypeName(v) SETTINGS decimal_check_overflow=0",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E18",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "type": "Decimal(12, 3)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(12, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E19",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+      "type": "Decimal(12, 3)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(12, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E20",
+      "task": "CHSEM-015",
+      "sql": "SELECT arrayMap((a,b) -> a/b,CAST([7] AS Array(Decimal(12,3))),CAST([2] AS Array(Int8))) AS v,toTypeName(v)",
+      "type": "Array(Decimal(12, 3))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[3.5]\tArray(Decimal(12, 3))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[3.5]\tArray(Decimal(12, 3))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E21",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(0,0))/CAST(2 AS Int8) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-015-E22",
+      "task": "CHSEM-015",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Float64) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    }
+  ]
+}

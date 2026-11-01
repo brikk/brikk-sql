@@ -53,6 +53,9 @@ with named refinements rather than replacing historical typing-only captures.
 CHSEM-014 adds [preceding script SET state](script-settings-README.md), scoped to
 one script analysis call with query-local overrides and explicit unknown resets.
 
+CHSEM-015 adds [exact bounded Decimal division typing](decimal-division-README.md),
+with independent native type matrices and named refinements to CHSEM-012.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and
