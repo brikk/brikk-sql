@@ -670,6 +670,14 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Future metadata captures use private extension, secret and temp directories. Core captures
+disable external access; extension captures require `BRIKK_DUCKDB_CAPTURE_EXTENSIONS` to
+name a reviewed TSV with `extension`, absolute local `path` and `sha256` columns. They only
+LOAD signed matching local fixtures, never INSTALL/download or merge old rows. Runtime
+engine/JAR/extension provenance is written separately, including static and zero-row cases.
+No provider is queried. Historical captures keep their actual evidence and are not relabeled
+as fresh merely because an extension version string changed.
+
 `vendor/data/duckdb-2.0-release-triage.json` records every one of the final release body's
 837 PR-title entries, its source body/hash and explicit disposition/owner. Reproduce it
 offline with `tools/duckdb_release_audit.py`. The artifact distinguishes title triage from

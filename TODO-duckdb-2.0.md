@@ -1579,11 +1579,33 @@ and IDE introspection/completion are separate contracts.
   GeneratedDuckdb_2_0_0.kt / GeneratedDuckdbDumps.kt. Earlier captures remain available.
   This replaces the obsolete unchecked instruction to generate from an installed Python engine.
 
-- [ ] `DDB20-059` Hermetic future captures and extension policy [AUDIT].
+- [x] `DDB20-059` Hermetic future captures and extension policy [DONE].
   DuckdbCaptureTest now isolates its extension directory so user-installed psql does not alter
   the baseline. The capture command still opens ordinary engines and explicitly INSTALL/LOADs
   CAPTURED_EXTENSIONS. Make future refreshes hermetic too, record exact extension versions and
   review whether any old extension-function rows were reused instead of freshly captured.
+  The capture command now owns private extension/secret/temp directories with autoload,
+  autoinstall, unsigned extensions and persistent secrets disabled. Core capture disables
+  external access, allowlists only its private inventory directory and locks configuration.
+  No ordinary user extension or secret directory is read. All core queries finish before
+  output is written. Extension capture requires an explicit local extension/path/SHA-256
+  manifest; no INSTALL, download, repository fallback or old-row reuse is possible.
+  Each requested extension gets a fresh isolated engine, exact runtime version and JAR/
+  binary hashes, with added rows measured against that engine's own baseline. Static/zero-row
+  cases are explicit, not guessed absent or assigned fabricated versions. Only local LOAD
+  is enabled for those reviewed fixtures; no provider/resource query or provisioning occurs.
+  Historical 1.5.6/2.0 extension-file hashes, version changes and row deltas are recorded in
+  vendor/data/duckdb-extension-capture-audit-2.0.0.json. The original 3111faa capture has no
+  binary-hash attestation, so version differences alone are not called freshness proof.
+  Historical TSVs and generated snapshots are preserved. Tests cover private-directory
+  cleanup, restricted capture, malformed/empty/duplicate/checksum-mismatched manifests,
+  runtime provenance and explicit signed local fixtures without installation.
+  Fresh signed local captures revalidate all five matching-version historical 2.0 extension
+  row sets exactly, not just their counts. HTTPFS reports 77392a7207 with zero added rows;
+  ICU is statically linked and correctly reports no independent version/binary. All seven
+  fixture dispositions and hashes are retained in the audit JSON. All 13 capture-tool tests
+  passed with zero skips; log /tmp/opencode/duckdb-hermetic-capture-verified.log. No historical
+  dump, generated snapshot, library ABI, driver pin or user resource was changed. No publication.
 
 - [ ] `DDB20-060` Richer function registry metadata [AUDIT].
   Inspect final schema/defaults/named arguments/null handling/stability/side effects/table results.
