@@ -46,8 +46,8 @@ remain unchanged. The RESET follow-up supersedes the historical round11 RESET ga
 | DDL/DML, external tables, COPY and views | Selected inventory | Selected inventory | Partial statement/relations | Provider-dependent | Primarily parser evidence | Structured PSI or core-backed fallback |
 | RESET configuration names | Yes, `DatafusionReset` | Quoted components retained | Modifies state | Setting names from live inventory | `reset`: 12 accepted round trips, 13 rejections; no RESET execution | Syntax diagnostics, whole-statement handling |
 | SET | Selected structured forms | Selected forms | Setting/state support is partial | Session-specific | `round10` and `round12` bounded embedding only | Stock selection and explicit execution |
-| SHOW, PREPARE/EXECUTE and EXPLAIN | Opaque preserved commands; structured core support excluded | Preserved command text, not structured regeneration | Token-based server-owned `$n`; no utility AST semantics | Session-specific | Native acceptance and selected bounded execution only | Stock prompting/selection and explicit execution |
-| Tested CREATE TABLE CLUSTER BY form | Opaque command; structured core support excluded | Preserved command text | No structured cluster-key analysis | Not qualified | Pinned parser accepts the control | No advertised structured support |
+| SHOW, PREPARE/EXECUTE and EXPLAIN | Dedicated `Datafusion*` nodes for qualified forms | Ordered options, typed bodies, names and arguments retained | Traversable statements; last-wins ANALYZE classification; server-owned `$n` | Session-specific | `utilities` parser/AST round trips; bounded execution remains separate | Core-backed diagnostics, stock prompting/selection and explicit execution |
+| CREATE TABLE CLUSTER BY | `Create` with `ClusterProperty` | Tuple keys, separate keys and expressions stay distinct | Structured key expressions; state modification | Provider-dependent | `utilities` parser/AST controls, not storage execution | Whole-statement diagnostics; GenericDialect backticks accepted |
 | JDBC parameters | `$n`; client forms tracked separately | No automatic `?` transport conversion | Exact source spans | Typed CAST fixture only | Typed `$n`, rebinding and nullable values in the bounded fixture | Stock console contracts; see T3 |
 | Live catalogs | Native metadata queries | Not applicable | Arrow/namespace facts; open partial schemas | information_schema and SHOW FUNCTIONS | Real Flight reads and production Kotlin harvester | Separate session/shared-cache fallback and refresh |
 | Brikk pipes | First-class AST | Ten qualified lowered stages | Stage input/output facts | Copied catalog inputs | All ten generated SQL controls execute | Explicit opt-in, preview, run-to-stage, freshness guards |
@@ -73,12 +73,11 @@ This does not certify every native pipe grammar form or another embedding's enab
 
 ## Explicit exclusions and known limits
 
-- **DFS-012-S1:** Structured core support for the ten DataFusion utility/CLUSTER BY controls
-  listed in `round12/qualification.json` is excluded. They still use `Command` nodes even
-  though native original/regenerated SQL parses. In particular, preserving SHOW, EXPLAIN,
-  PREPARE and EXECUTE text is not structured parsing, rewriting or utility-statement analysis.
-  The separate bounded transport evidence and token-based console handling remain valid.
-  Spice's dedicated utility nodes do not confer those core AST capabilities on DataFusion.
+- DataFusion utility support covers the [qualified forms](../vendor/data/datafusion-spice/utilities/README.md),
+  not every syntax variant accepted by GenericDialect. Other SHOW variants such as SHOW CREATE,
+  dynamic EXECUTE IMMEDIATE and EXECUTE USING/INTO/OUTPUT/DEFAULT remain unqualified and are
+  refused rather than misrepresented as settings or arguments. Parser support is not a promise
+  that an embedding executes a utility statement or implements cluster-key storage behavior.
 - **DFS-010-T1:** Reliable Spice SQL PREPARE/EXECUTE session execution and SQL SET are excluded
   on this transport. Generic `Statement.execute` returns a misleading zero update count for
   EXECUTE and a missing-column SELECT; SQL SET rejects with `SetVariable`. Do not treat these
@@ -120,6 +119,9 @@ Earlier evidence remains useful for specific contracts:
 - `round10`: execution, result rows, binding, cancellation and Brikk-stage evidence.
 - `round11`: immutable refresh and controlled-delta tracking; historical RESET gap retained.
 - `reset`: the subsequent DataFusion RESET correction and native round trips.
+- `utilities`: structured DataFusion SHOW, EXPLAIN, PREPARE/EXECUTE and CLUSTER BY. This resolves
+  `DFS-012-S1`; the round12 exclusion remains historical evidence. All ten former opaque controls
+  now have structured nodes. DataFusion and Spice retain separate utility classes and quote profiles.
 
 Core and metadata remain Java 17 compatible. Shared IDE support targets Java 21 and compiles
 against IDE 261; runtime contracts also run on 262 and 263. ABI bridges preserve earlier public

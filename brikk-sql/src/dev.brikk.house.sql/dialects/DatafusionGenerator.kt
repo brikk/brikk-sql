@@ -79,6 +79,33 @@ open class DatafusionGenerator(
         return "RESET " + reset.expressionsArg.joinToString(".") { sql(it as Expression) }
     }
 
+    private fun utilitySql(e: Expression): String {
+        if (dialect.name != "datafusion") throw UnsupportedError("DataFusion utility statements require the DataFusion dialect")
+        return when (e) {
+            is DatafusionPrepare -> {
+                if (e.args["typed"] == true && e.expressionsArg.isEmpty()) throw UnsupportedError("PREPARE requires at least one declared parameter type")
+                "PREPARE ${sql(e, "this")}" +
+                    (if (e.expressionsArg.isNotEmpty()) "(${expressions(e)})" else "") + " AS ${sql(e, "expression") }"
+            }
+            is DatafusionExecute -> "EXECUTE ${sql(e, "this")}" +
+                (if (e.args["parenthesized"] == true) "(${expressions(e)})" else if (e.expressionsArg.isNotEmpty()) " ${expressions(e)}" else "")
+            is DatafusionShow -> "SHOW" + (if (e.args["extended"] == true) " EXTENDED" else "") +
+                (if (e.args["full"] == true) " FULL" else "") +
+                (if (e.text("this") == "SETTING") e.expressionsArg.joinToString("") { " ${sql(it as Expression)}" } else " ${e.text("this")}") +
+                (if (e.args["scope"] != null) " ${e.text("scope")} ${sql(e, "target")}" else "") +
+                (if (e.args["filter"] != null) " ${e.text("filter")} ${sql(e, "expression")}" else "")
+            is DatafusionExplain -> {
+                val options = e.expressionsArg.joinToString(if (e.args["list"] == true) ", " else " ") {
+                    val option = it as? PropertyEQ ?: throw UnsupportedError("Invalid DataFusion EXPLAIN option")
+                    sql(option, "this") + if (option.metaOrNull?.get("datafusion_implicit_option") == true &&
+                        (option.expressionArg as? Expression)?.name.equals("TRUE", true)) "" else " ${sql(option, "expression") }"
+                }
+                "EXPLAIN" + (if (options.isEmpty()) "" else if (e.args["list"] == true) " ($options)" else " $options") + " ${sql(e, "this") }"
+            }
+            else -> throw UnsupportedError("Unknown DataFusion utility statement")
+        }
+    }
+
     // ------------------------------------------------------------------
     // Flags (brikk: per polyglot datafusion.rs GeneratorConfig; BASE-matching knobs
     // are documented in the class KDoc rather than re-declared)
@@ -89,6 +116,10 @@ open class DatafusionGenerator(
     override val copyParamsAreWrapped: Boolean get() = false
     override val dialectCopyParamsAreCsv: Boolean get() = false
     override val propertiesLocation get() = PROPERTY_LOCATIONS
+
+    override fun clusterpropertySql(expression: ClusterProperty): String =
+        if (expression.metaOrNull?.get("datafusion_cluster_expressions") == true) "CLUSTER BY ${expressions(expression, flat = true)}"
+        else super.clusterpropertySql(expression)
 
     private fun nativeFileFormat(value: kotlin.Any?): String {
         val name = (value as? Expression)?.name.orEmpty()
@@ -246,6 +277,9 @@ open class DatafusionGenerator(
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
             reg(DatafusionReset::class) { e -> (this as DatafusionGenerator).resetSql(e as DatafusionReset) }
+            for (type in listOf(DatafusionExplain::class, DatafusionPrepare::class, DatafusionExecute::class, DatafusionShow::class)) {
+                reg(type) { e -> (this as DatafusionGenerator).utilitySql(e) }
+            }
 
             fun Generator.flattenArgs(e: Expression): kotlin.Array<kotlin.Any?> =
                 e.args.values.flatMap { v -> if (v is List<*>) v else listOf(v) }.toTypedArray()

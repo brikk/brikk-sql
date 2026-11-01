@@ -9,8 +9,9 @@ enum class StatementEffect { PLANS_OR_INSPECTS, EXECUTES_QUERY, MODIFIES_STATE, 
 val SqlFragment.statementEffect: StatementEffect get() = when (val node = ast) {
     is ClickhouseExplain -> if (node.executesQuery) StatementEffect.EXECUTES_QUERY else StatementEffect.PLANS_OR_INSPECTS
     is SpiceExplain -> if (node.executesQuery) StatementEffect.EXECUTES_QUERY else StatementEffect.PLANS_OR_INSPECTS
-    is SpicePrepare, is SpiceReset, is DatafusionReset -> StatementEffect.MODIFIES_STATE
-    is SpiceShow -> StatementEffect.PLANS_OR_INSPECTS
+    is DatafusionExplain -> if (node.executesQuery) StatementEffect.EXECUTES_QUERY else StatementEffect.PLANS_OR_INSPECTS
+    is SpicePrepare, is SpiceReset, is DatafusionReset, is DatafusionPrepare -> StatementEffect.MODIFIES_STATE
+    is SpiceShow, is DatafusionShow -> StatementEffect.PLANS_OR_INSPECTS
     is ClickhouseCreateToken, is ClickhouseUserAuthentication, is ClickhouseHandler,
     is ClickhouseHypotheticalIndex, is ClickhouseSystem, is Create, is Alter, is Drop,
     is Insert, is Update, is Delete, is Merge -> StatementEffect.MODIFIES_STATE

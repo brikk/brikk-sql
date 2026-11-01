@@ -55,6 +55,9 @@ Execution pins the console/session, data source, namespace, document revision an
 fingerprint across prompting. The fingerprint also covers user and connection settings.
 Server-owned `$n` parameters inside SQL PREPARE remain intact instead of becoming client
 prompts. Named colon parameters in native EXPLAIN statements use stock parameter storage.
+The later [structured DataFusion utility correction](../../vendor/data/datafusion-spice/utilities/README.md)
+adds dedicated core utility nodes and strict malformed-input checks while retaining this
+parameter-ownership contract. Its parser evidence does not expand transport execution claims.
 Claimed failures never delegate raw pipe text to another Execute action. A smart selection
 that stock preparation returns as a bare clause is rebuilt through stock model preparation
 for the pinned whole-statement range. Injected fragments that cannot be expanded safely are

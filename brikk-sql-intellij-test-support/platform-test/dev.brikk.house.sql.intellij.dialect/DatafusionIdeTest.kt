@@ -84,6 +84,27 @@ class DatafusionIdeTest : BasePlatformTestCase() {
         assertEmpty(errors(open("RESET datafusion.execution.batch_size", SpiceFixtureDialect)))
     }
 
+    fun testStructuredUtilitiesUseNativeGrammarAndRetainStatementBoundaries() {
+        val root = generateSequence(Path.of(System.getProperty("user.dir")).toAbsolutePath()) { it.parent }
+            .first { Files.isRegularFile(it.resolve("vendor/data/datafusion-spice/utilities/cases.json")) }
+        val cases = Json.parseToJsonElement(Files.readString(root.resolve("vendor/data/datafusion-spice/utilities/cases.json"))).jsonObject
+            .getValue("cases").jsonArray
+        for (value in cases) {
+            val row = value.jsonObject
+            val sql = row.getValue("sql").jsonPrimitive.content
+            val file = open(sql, DatafusionFixtureDialect)
+            if (row.getValue("area").jsonPrimitive.content == "negative")
+                assertFalse(row.getValue("id").toString(), errors(file).isEmpty())
+            else assertEmpty("$sql: ${errors(file)}", errors(file))
+            // The IDE document loader normalizes CRLF to LF before PSI parsing.
+            assertEquals(sql.replace("\r\n", "\n"), file.text)
+        }
+        val file = open("PREPARE p(INT) AS SELECT $1; EXECUTE p(:value); SHOW TABLES; EXPLAIN SELECT :other", DatafusionFixtureDialect)
+        assertEmpty(errors(file))
+        assertEquals(listOf(":value", ":other"), binds(file).map { it.text })
+        assertEquals(4, PsiTreeUtil.findChildrenOfType(file, SqlStatement::class.java).count { it.parent !is SqlStatement })
+    }
+
     fun testIndependentIdentitiesDoNotClaimPostgresGenericOrFlight() {
         assertEquals(4, SqlDialectRegistry.VERSION)
         for (dialect in dialects) {

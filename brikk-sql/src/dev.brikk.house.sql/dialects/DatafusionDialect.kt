@@ -61,10 +61,13 @@ open class DatafusionDialect : Dialect() {
 
     companion object {
         // brikk: BASE tables with `~` remapped to RLIKE (see [tokenizerConfig] KDoc).
-        val TOKENIZER_CONFIG: TokenizerConfig = TokenizerConfig(
+        internal val FAMILY_TOKENIZER_CONFIG: TokenizerConfig = TokenizerConfig(
             singleTokens = BaseTokenizerTables.SINGLE_TOKENS + ('$' to TokenType.HEREDOC_STRING),
             keywords = BaseTokenizerTables.KEYWORDS + mapOf(
                 "~" to TokenType.RLIKE, "@>" to TokenType.AT_GT, "<@" to TokenType.LT_AT,
+                // Parse utility tails as tokens, rather than the base tokenizer's command string.
+                "EXPLAIN" to TokenType.VAR, "PREPARE" to TokenType.VAR,
+                "EXECUTE" to TokenType.VAR, "SHOW" to TokenType.VAR,
             ),
             formatStrings = BaseTokenizerTables.FORMAT_STRINGS + mapOf(
                 "$" to StringFormat("$", TokenType.HEREDOC_STRING),
@@ -82,5 +85,6 @@ open class DatafusionDialect : Dialect() {
             numericEscapes = PostgresTokenizerTables.NUMERIC_ESCAPES,
             dropUnknownEscapes = true,
         ).withStrictEncodedStrings()
+        val TOKENIZER_CONFIG: TokenizerConfig = FAMILY_TOKENIZER_CONFIG.withIdentifiers(mapOf('`' to "`"))
     }
 }

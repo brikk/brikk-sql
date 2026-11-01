@@ -10,6 +10,9 @@ class SpiceParser(errorLevel: ErrorLevel? = null, tokenizerConfig: TokenizerConf
     DatafusionParser(errorLevel, tokenizerConfig) {
 
     override val nativeCatalog get() = SPICE_FUNCTION_CATALOG
+    // Keep the existing Spice wrapper's cluster-key grammar separate from GenericDialect.
+    override fun parseClusterProperty(): Expression =
+        expression(ClusterProperty(args("expressions" to parseWrappedCsv({ parseColumn() }))))
     override val bitwise: Map<TokenType, NodeFactory> =
         (BaseParserTables.BITWISE - TokenType.CARET) + (TokenType.HASH to { a: Args -> BitwiseXor(a) })
     override val exponent: Map<TokenType, NodeFactory> = mapOf(TokenType.CARET to { a: Args ->

@@ -95,6 +95,7 @@ public class DatafusionFamilyParser(private val profile: DatafusionIdeProfile) :
 
     private fun needsNativeStatement(ast: Expression): Boolean = ast.walk().any {
         it is SpiceExplain || it is SpicePrepare || it is SpiceExecute || it is SpiceShow || it is SpiceReset || it is DatafusionReset ||
+            it is DatafusionExplain || it is DatafusionPrepare || it is DatafusionExecute || it is DatafusionShow ||
             it is ClusterProperty || it is FileFormatProperty || it is Copy || it is PipeQuery || it is Qualify ||
             it is TryCast ||
             it is Use || it is Group && it.args["all"] == true ||

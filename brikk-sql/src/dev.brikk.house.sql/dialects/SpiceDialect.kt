@@ -18,7 +18,7 @@ class SpiceDialect : DatafusionDialect() {
         SpiceGenerator(pretty = pretty, sourceDialect = sourceDialect)
 
     companion object {
-        val TOKENIZER_CONFIG = DatafusionDialect.TOKENIZER_CONFIG.withKeywords(mapOf(
+        val TOKENIZER_CONFIG = DatafusionDialect.FAMILY_TOKENIZER_CONFIG.withKeywords(mapOf(
             "#" to TokenType.HASH,
             // Keep utility-statement tails tokenized instead of becoming opaque Command strings.
             "EXPLAIN" to TokenType.VAR, "PREPARE" to TokenType.VAR,
