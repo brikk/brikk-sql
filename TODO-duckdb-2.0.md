@@ -1314,10 +1314,31 @@ and IDE introspection/completion are separate contracts.
 
 ## Parser/oracle and cross-dialect acceptance work
 
-- [ ] `DDB20-049` Full 1.5.6-versus-2.0 acceptance comparison [AUDIT].
+- [x] `DDB20-049` Full 1.5.6-versus-2.0 acceptance comparison [DONE].
   Compare parser, generator, tokenizer and AST corpora in isolated engine processes, recording
   actual engine/JDBC/source IDs and settings. Investigate acceptance changes; never automatically
   add ledger entries or mix two incompatible native engine versions in one test environment.
+  DuckdbAcceptanceComparisonTest now checks all 4,367 raw SQL occurrences, 1,528 unique
+  texts, in parser/base, identity+DuckDB serde/generator, DuckDB token and named identity
+  fixtures. Separate restricted child JVMs prove v1.5.6/069cc9f9b5 and v2.0.0/d54cbbe3df;
+  reports retain JDBC hashes, actual driver metadata and effective settings. JDBC metadata
+  reports driver version 1.0 in both jars, so it is not mistaken for the Maven version.
+  External access/autoload/autoinstall are disabled and configuration locked. No input is
+  prepared, bound or run. Raw expression fragments remain raw; SELECT wrapping is separate.
+  Reviewed 21 unique status changes: five newly accepted parenthesized relations, five star
+  EXCEPT forms, @ OFFSET/FETCH, four-part names and string COLLATE; three newly unverified
+  forms for FK arity, national-string COMMENT and DETACH IF EXISTS; five old transformer
+  limitations now parser rejections for two IDENTITY forms, two DEFERRABLE forms and index
+  opclass syntax. Unverified is not acceptance, including the FK arity change. No execution,
+  constraint implementation or cross-engine semantic claim follows from these parse results.
+  Both engines also retain explicit non-SELECT/transformer-unverified rows. The independent
+  reviewed fingerprint covers source origin, SQL hash, status and error type, not message
+  wording. It cannot be refreshed automatically and does not modify parity mismatch ledgers.
+  Report: build/duckdb-parser-audit/acceptance-comparison.json. Current emitted/transpile/
+  annotated-serde checks are DDB20-050, not implied by this raw-input version comparison.
+  Reviewed comparison and all 85 corpus/identity tests passed, zero skips. Log
+  /tmp/opencode/duckdb-acceptance-reviewed.log. No parity fixture/ledger changes, production
+  API or dependency changes, user connections/settings/files, merge or publication.
 
 - [ ] `DDB20-050` Every applicable corpus through native 2.0 [AUDIT].
   The normal suites and focused release examples ran on 2.0, but that does not prove every

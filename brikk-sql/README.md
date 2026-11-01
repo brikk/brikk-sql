@@ -668,6 +668,20 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Native corpus acceptance audits
+
+The parse-only acceptance comparison runs 1.5.6 and 2.0 in separate restricted child JVMs.
+It records runtime/source/JDBC IDs, JDBC hashes, effective settings and each input's origin.
+Parser, expected generator text, tokenizer and serde fixture SQL are checked as authored
+statements. Standalone expression SQL is not silently wrapped and counted as statement
+acceptance. Non-SELECT serialization, transformer errors and transport failures remain
+unverified/unavailable. The comparison never prepares or executes corpus input.
+
+`DuckdbAcceptanceComparisonTest` requires the trusted `BRIKK_DUCKDB_OLD_JDBC` fixture.
+Its report is `build/duckdb-parser-audit/acceptance-comparison.json`. Changes fail against a
+reviewed acceptance fingerprint, independent of the historical SQLGlot parity ledgers.
+The report is syntax evidence, not result, typing, scope or plugin integration evidence.
+
 ### Storage compatibility and private fixtures
 
 New DuckDB 2.0 files use format 69, with symbolic default storage compatibility `latest`.
