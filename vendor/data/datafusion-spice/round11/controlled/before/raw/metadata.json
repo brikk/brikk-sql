@@ -1,0 +1,100 @@
+{
+  "keywords": [
+    "SELECT"
+  ],
+  "queries": {
+    "routines": {
+      "rows": [
+        {
+          "description": "kept",
+          "function_type": "SCALAR",
+          "routine_name": "kept",
+          "syntax_example": "kept(x)"
+        },
+        {
+          "description": "removed",
+          "function_type": "SCALAR",
+          "routine_name": "removed",
+          "syntax_example": "removed(x)"
+        },
+        {
+          "description": "table_fn",
+          "function_type": "TABLE",
+          "routine_name": "table_fn",
+          "syntax_example": "table_fn(x)"
+        }
+      ],
+      "status": "accepted"
+    },
+    "settings": {
+      "rows": [
+        {
+          "name": "default",
+          "value": "old"
+        }
+      ],
+      "status": "accepted"
+    },
+    "show_functions": {
+      "rows": [
+        {
+          "function_name": "kept",
+          "function_type": "SCALAR",
+          "parameter_types": [
+            "Int64"
+          ],
+          "return_type": "Int64"
+        },
+        {
+          "function_name": "removed",
+          "function_type": "SCALAR",
+          "parameter_types": [
+            "Int64"
+          ],
+          "return_type": "Int64"
+        }
+      ],
+      "status": "accepted"
+    }
+  },
+  "registry": [
+    {
+      "canonical_name": "kept",
+      "kind": "SCALAR",
+      "name": "kept",
+      "signature": {
+        "kind": "Exact",
+        "native": "Exact([Int64])",
+        "types": [
+          "Int64"
+        ]
+      },
+      "volatility": "Immutable"
+    },
+    {
+      "canonical_name": "removed",
+      "kind": "SCALAR",
+      "name": "removed",
+      "signature": {
+        "kind": "Exact",
+        "native": "Exact([Int64])",
+        "types": [
+          "Int64"
+        ]
+      },
+      "volatility": "Immutable"
+    }
+  ],
+  "table_function_schemas": {
+    "TABLE_VALUED:table_fn": {
+      "columns": [
+        [
+          "v",
+          "Int64"
+        ]
+      ],
+      "knowledge": "full"
+    }
+  },
+  "type_probes": {}
+}

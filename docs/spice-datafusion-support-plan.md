@@ -12,7 +12,7 @@
 - [x] DFS-008: Connect IDE completion, documentation, resolution, and inspections.
 - [x] DFS-009: Add connection-aware catalog discovery and metadata refresh.
 - [x] DFS-010: Qualify IDE validation, execution, prepared statements, EXPLAIN, and pipes.
-- [ ] DFS-011: Implement repeatable upstream monitoring, catalog diffs, and upgrade checks.
+- [x] DFS-011: Implement repeatable upstream monitoring, catalog diffs, and upgrade checks.
 - [ ] DFS-012: Run compatibility gates and prepare the supported-dialect consumer handoff.
 
 ## Purpose and working agreement
@@ -385,9 +385,9 @@ of editor SQL or model/search calls.
 ## DFS-011: Tracking upstream changes over time
 
 Provide one documented refresh command per product and a deterministic compare command. Add
-on-demand CI first; propose a weekly upstream-check CI job for approval when implementing this
-step. No scheduler is created by this plan. Scheduled checks should produce reviewable changes,
-not silently promote a new runtime or rewrite historical captures.
+functional and on-demand qualification CI. Weekly upstream checks are deferred at the user's
+request; no scheduler is created. Checks should produce reviewable changes, not silently
+promote a new runtime or rewrite historical captures.
 
 Monitor these sources as a dependency graph:
 

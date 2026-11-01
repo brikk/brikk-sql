@@ -1,0 +1,17 @@
+{
+  "cases": [
+    {
+      "execute": true,
+      "generated": "SELECT kept(1)",
+      "id": "positive",
+      "sql": "SELECT kept(1)"
+    },
+    {
+      "area": "negative",
+      "execute": false,
+      "generated": "SELECT (",
+      "id": "negative",
+      "sql": "SELECT ("
+    }
+  ]
+}

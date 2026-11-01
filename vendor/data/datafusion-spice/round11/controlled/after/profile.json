@@ -1,0 +1,10 @@
+{
+  "embedding": "controlled fixture",
+  "features": [],
+  "id": "controlled-after",
+  "parser_profile": {
+    "dialect": "Generic"
+  },
+  "product": "datafusion",
+  "version": "fixture"
+}

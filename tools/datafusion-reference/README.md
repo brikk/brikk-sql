@@ -141,3 +141,12 @@ Introspection samples are not complete overloads. The generator keeps them as se
 evidence, preserves same-named kinds, and leaves unsupported constraints unknown. Source
 overrides have pinned provenance and must name functions in the actual runtime inventory.
 See `docs/research/datafusion-spice-round2.md` for metadata policy and current regressions.
+
+## Candidate upgrades
+
+Use `tools/datafusion_upstream.py refresh datafusion` or `refresh spice` for new immutable
+candidate captures, and `compare` for deterministic upgrade reports. These commands also
+track source/dependency graphs and generate metadata previews without changing supported
+defaults. See [the DFS-011 workflow](../../docs/research/datafusion-spice-upgrades.md) for
+complete commands, candidate profiles and the functional/manual CI gates. Weekly checks
+are deferred.
