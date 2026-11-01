@@ -84,23 +84,8 @@ class DatafusionEditorFeaturesTest : BasePlatformTestCase() {
             profile.fake.targets = { _, _ -> null }
             profile.fake.refusesWriteAccess = true
             profile.version = null
-            LanguageParserDefinitions.INSTANCE.addExplicitExtension(dialect, DatafusionFamilyParserDefinition(dialect), testRootDisposable)
-            SyntaxHighlighterFactory.LANGUAGE_FACTORY.addExplicitExtension(dialect, object : SqlSyntaxHighlighterFactory.Base(dialect) {}, testRootDisposable)
-            LanguageDocumentation.INSTANCE.addExplicitExtension(dialect, DatafusionDocumentationProvider(profile), testRootDisposable)
-            val classes = if (dialect === SpiceFixtureDialect) listOf(SpArguments::class.java, SpFilter::class.java, SpColumns::class.java, SpFunctions::class.java)
-                else listOf(DfArguments::class.java, DfFilter::class.java, DfColumns::class.java, DfFunctions::class.java)
-            val descriptor = DefaultPluginDescriptor(PluginId.getId("brikk.datafusion.editor.test"), javaClass.classLoader)
-            for (type in classes) CompletionContributor.EP.point.registerExtension(CompletionContributorEP(dialect.id, type.name, descriptor), LoadingOrder.FIRST, testRootDisposable)
         }
-        SqlResolveExtension.EP_NAME.point.registerExtension(PgFamilyResolveExtension(), testRootDisposable)
-        SqlResolveExtension.EP_NAME.point.registerExtension(DfResolve(), testRootDisposable)
-        SqlResolveExtension.EP_NAME.point.registerExtension(SpResolve(), testRootDisposable)
-        for (suppressor in listOf(DfRelationSuppressor(), SpRelationSuppressor()))
-            SqlInspectionSuppressorDelegate.EP_NAME.point.registerExtension(suppressor, testRootDisposable)
-        LanguageAnnotators.INSTANCE.addExplicitExtension(DatafusionFixtureDialect, DfRelations(), testRootDisposable)
-        LanguageAnnotators.INSTANCE.addExplicitExtension(SpiceFixtureDialect, SpRelations(), testRootDisposable)
-        LanguageAnnotators.INSTANCE.addExplicitExtension(DatafusionFixtureDialect, DfFunctionsCheck(), testRootDisposable)
-        LanguageAnnotators.INSTANCE.addExplicitExtension(SpiceFixtureDialect, SpFunctionsCheck(), testRootDisposable)
+        DualDialectConsumerFixture.installEditors(project, testRootDisposable)
     }
 
     private fun open(sql: String, dialect: DatafusionFamilyDialect = SpiceFixtureDialect) {

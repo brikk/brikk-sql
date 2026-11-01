@@ -16,7 +16,12 @@ if __name__ == '__main__':
     parser.add_argument('--classpath-file', type=Path, required=True)
     parser.add_argument('--datafusion-flight', type=Path)
     parser.add_argument('--spiced', type=Path, default=Path('/tmp/opencode/spice-2.4.0-runtime/spiced'))
+    parser.add_argument('--output', type=Path, help='New capture path; refuses to replace existing evidence')
     args = parser.parse_args()
+    product = 'datafusion' if args.datafusion_flight else 'spice'
+    out = args.output or ROOT / f'vendor/data/datafusion-spice/round10/{product}-execution.json'
+    if out.exists():
+        parser.error(f'Capture already exists: {out}; pass --output with a new path')
     directory = Path('/tmp/opencode/dfs010'); directory.mkdir(exist_ok=True)
     jar = driver(directory)
     paths = shlex.split(args.classpath_file.read_text())[1].split(':')
@@ -26,7 +31,6 @@ if __name__ == '__main__':
         str(ROOT / 'tools/datafusion-reference/FlightExecutionProbe.java')],capture_output=True,text=True)
     if compile.returncode: raise RuntimeError(compile.stderr)
     fixture = datafusion_runtime(args.datafusion_flight,directory) if args.datafusion_flight else spice_runtime(args.spiced,flight=True)
-    product = 'datafusion' if args.datafusion_flight else 'spice'
     options = ['--add-opens=java.base/java.nio=ALL-UNNAMED', *args.java_option]
     checkpoint = directory / f'{product}-checkpoint.json'
     checkpoint.unlink(missing_ok=True)
@@ -45,9 +49,9 @@ if __name__ == '__main__':
             observations['probe_timeout'] = 'Probe JVM killed at 60 seconds; fixture terminated. Last captured operation: ' + next(reversed(observations), 'none')
     runtime['java'] = subprocess.run([args.java,'-version'],capture_output=True,text=True,check=True).stderr.strip()
     runtime['java_options'] = options
-    out = ROOT / f'vendor/data/datafusion-spice/round10/{product}-execution.json'
     out.parent.mkdir(parents=True,exist_ok=True)
-    out.write_text(json.dumps(dict(runtime=runtime,driver=dict(url=DRIVER_URL,sha256=DRIVER_SHA256),observations=observations),indent=2)+'\n')
+    with out.open('x') as stream:
+        stream.write(json.dumps(dict(runtime=runtime,driver=dict(url=DRIVER_URL,sha256=DRIVER_SHA256),observations=observations),indent=2)+'\n')
     for key,value in observations.items():
         if key=='pipes':
             for row in value: print(row['stage'], 'native:', row['native']['status'], 'lowered:', row['lowered']['status'])

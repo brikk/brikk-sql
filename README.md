@@ -64,6 +64,10 @@ oracle. DataFusion and Spice are Brikk-native: their gates use pinned native ref
 fixtures, and hand assertions. Spice's development support targets v2.4.0's PostgreSQL
 parser profile, case-preserving identifiers, native functions/operators, and structured
 utility statements. See [Spice core support and limits](docs/research/spice-core-dialect.md).
+The shared-library qualification targets DataFusion 55.2.0 and Spice v2.4.0 with explicit
+[feature and transport boundaries](docs/datafusion-spice-support.md). A tested
+[dual-dialect consumer fixture and wiring guide](docs/datafusion-spice-consumer.md) prepares
+one IntelliJ plugin for both products; packaged plugin qualification remains downstream work.
 StarRocks is pinned
 to 4.1.4 with a versioned catalog and a deliberately partial evidence-backed
 semantic matrix; unprobed functions do not receive inferred certification.

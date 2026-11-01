@@ -39,6 +39,24 @@ class InternalApiContainmentTest : TestCase() {
         assertTrue(uses.entries.joinToString("\n") { "${it.key} -> ${it.value}" }, uses.isEmpty())
     }
 
+    fun testDualDialectConsumerFixtureAddsNoInternalOrExperimentalApi() {
+        val anchor = dev.brikk.house.sql.intellij.dialect.DualDialectConsumerFixture::class.java
+        // Newer IDE classloaders may omit CodeSource.location. The platform task compiles
+        // fixtures into a directory; locate it through the actual class resource.
+        val directory = Path.of(checkNotNull(anchor.getResource("${anchor.simpleName}.class")).toURI()).parent
+        val names = setOf("DualDialectConsumerFixture", "DfCatalogService", "SpCatalogService", "DfHarvest", "SpHarvest",
+            "DfCleanup", "SpCleanup", "DfRefresh", "SpRefresh", "DfObserver", "SpObserver", "DfObserverStartup", "SpObserverStartup")
+        val files = Files.list(directory).use { paths -> paths.filter {
+            it.fileName.toString().endsWith(".class") && it.fileName.toString().removeSuffix(".class").substringBefore('$').removeSuffix("Kt") in names
+        }.toList() }
+        assertTrue("Inspect the compiled fixture and lifecycle adapters", files.size >= names.size)
+        for (file in files) {
+            val bytes = Files.readAllBytes(file)
+            assertEquals(file.toString(), emptySet<String>(), internalReferences(bytes))
+            assertEquals(file.toString(), emptySet<String>(), internalReferences(bytes, experimental = true))
+        }
+    }
+
     fun testOnlyTheOptionalGateCarriesItsDocumentedInternalApi() {
         val anchor = GenericJdbcIntrospectorGate::class.java
         val bytes = checkNotNull(anchor.getResourceAsStream("${anchor.simpleName}.class")).use { it.readBytes() }

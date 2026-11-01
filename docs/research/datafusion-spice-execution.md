@@ -140,10 +140,12 @@ can show the original driver message when no exact authored range exists.
 cargo build --locked --manifest-path tools/datafusion-reference/flight/Cargo.toml \
   --bin brikk-datafusion-flight-execution --target-dir build/datafusion-reference -j 2
 python3 tools/probe_flight_execution.py --java /path/to/java21 \
-  --classpath-file build/tasks/_brikk-sql-intellij-support_testIntellijPlatform@brikk-sql-intellij-tooling/run-BUILD/test.log.classpath
+  --classpath-file build/tasks/_brikk-sql-intellij-support_testIntellijPlatform@brikk-sql-intellij-tooling/run-BUILD/test.log.classpath \
+  --output build/review/spice-execution.json
 python3 tools/probe_flight_execution.py --java /path/to/java21 \
   --classpath-file build/tasks/_brikk-sql-intellij-support_testIntellijPlatform@brikk-sql-intellij-tooling/run-BUILD/test.log.classpath \
-  --datafusion-flight build/datafusion-reference/debug/brikk-datafusion-flight-execution
+  --datafusion-flight build/datafusion-reference/debug/brikk-datafusion-flight-execution \
+  --output build/review/datafusion-execution.json
 ```
 
 The probe opens `java.nio`; Java 25 additionally needs

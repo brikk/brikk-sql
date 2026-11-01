@@ -1,5 +1,8 @@
 product: jvm/app
 
+apply:
+  - ../../publish-targets.module-template.yaml
+
 dependencies:
   - ../../brikk-sql
 
