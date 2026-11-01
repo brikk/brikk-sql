@@ -190,9 +190,10 @@ manual CI uploads the complete snapshot directories for review. Archive approved
 with the versioned evidence before those temporary files or CI artifacts expire.
 
 The real DataFusion self-comparison also exposed a pre-existing coverage gap:
-`DFS-GAP-612e0f186332398a`, `DFS-reset/generated/parse`. Its native parser accepts RESET but
-the current Brikk exporter supplies no generated statement. This remains an explicit DFS-012
-resolve-or-exclude item, rather than a skipped check counted as support. Spice's self-comparison
+`DFS-GAP-612e0f186332398a`, `DFS-reset/generated/parse`. Its native parser accepted RESET but
+the exporter then supplied no generated statement. The subsequent
+[RESET parser/render correction](../../vendor/data/datafusion-spice/reset/README.md) resolves
+that gap with native round-trip evidence; the round11 summary remains unchanged. Spice's self-comparison
 has no missing-verdict gaps. Dynamic function-output schemas remain labeled unknown for both.
 
 No supported catalog, Kotlin/IDE API, driver pin or default version changed in this round.

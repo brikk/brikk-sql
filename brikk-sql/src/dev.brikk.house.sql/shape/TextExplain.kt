@@ -129,6 +129,7 @@ private val STATEMENTS = setOf(
     dev.brikk.house.sql.ast.SpiceExplain::class, dev.brikk.house.sql.ast.SpicePrepare::class,
     dev.brikk.house.sql.ast.SpiceExecute::class, dev.brikk.house.sql.ast.SpiceShow::class,
     dev.brikk.house.sql.ast.SpiceReset::class,
+    dev.brikk.house.sql.ast.DatafusionReset::class,
 )
 
 private const val PARAMETERS = "The query has parameters: resolve them with Execute before EXPLAIN."

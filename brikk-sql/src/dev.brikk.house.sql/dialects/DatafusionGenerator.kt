@@ -73,6 +73,12 @@ open class DatafusionGenerator(
     // brikk: dialect back-reference for annotate_types-driven paths (falls back to BASE)
     override val dialect: Dialect get() = Dialects.DATAFUSION
 
+    private fun resetSql(reset: DatafusionReset): String {
+        if (dialect.name != "datafusion" || reset.expressionsArg.isEmpty() || reset.expressionsArg.any { it !is Identifier })
+            throw UnsupportedError("Expected a DataFusion RESET configuration name")
+        return "RESET " + reset.expressionsArg.joinToString(".") { sql(it as Expression) }
+    }
+
     // ------------------------------------------------------------------
     // Flags (brikk: per polyglot datafusion.rs GeneratorConfig; BASE-matching knobs
     // are documented in the class KDoc rather than re-declared)
@@ -239,6 +245,7 @@ open class DatafusionGenerator(
         // that parse to Anonymous are handled in [anonymousSql] instead.
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
+            reg(DatafusionReset::class) { e -> (this as DatafusionGenerator).resetSql(e as DatafusionReset) }
 
             fun Generator.flattenArgs(e: Expression): kotlin.Array<kotlin.Any?> =
                 e.args.values.flatMap { v -> if (v is List<*>) v else listOf(v) }.toTypedArray()

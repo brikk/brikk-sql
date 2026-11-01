@@ -72,6 +72,18 @@ class DatafusionIdeTest : BasePlatformTestCase() {
     private fun errors(file: PsiFile) = PsiTreeUtil.findChildrenOfType(file, PsiErrorElement::class.java)
         .map { "${it.textRange}: ${it.errorDescription}" }
 
+    fun testResetNamesUseTheNativeCoreGrammar() {
+        for (sql in listOf("RESET datafusion.execution.batch_size", "RESET \"MiXeD\".\"a.b\"",
+            "RESET 'datafusion.execution.batch_size'", "RESET E'a\\tb'", "RESET time zone")) {
+            val file = open(sql, DatafusionFixtureDialect)
+            assertEmpty(errors(file))
+            assertEmpty(binds(file).toList())
+        }
+        for (sql in listOf("RESET", "RESET a.", "RESET a..b", "RESET 1", "RESET a = 1"))
+            assertFalse(errors(open(sql, DatafusionFixtureDialect)).isEmpty())
+        assertEmpty(errors(open("RESET datafusion.execution.batch_size", SpiceFixtureDialect)))
+    }
+
     fun testIndependentIdentitiesDoNotClaimPostgresGenericOrFlight() {
         assertEquals(4, SqlDialectRegistry.VERSION)
         for (dialect in dialects) {

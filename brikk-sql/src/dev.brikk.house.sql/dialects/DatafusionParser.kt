@@ -11,6 +11,7 @@ import dev.brikk.house.sql.ast.Order
 import dev.brikk.house.sql.ast.Cast
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DateBin
+import dev.brikk.house.sql.ast.DatafusionReset
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GenerateSeries
 import dev.brikk.house.sql.ast.Literal
@@ -18,6 +19,7 @@ import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.parser.BaseParserTables
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.Parser
+import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.fromArgList
@@ -61,6 +63,49 @@ open class DatafusionParser(
     override val nullOrdering: String get() = "nulls_are_large"
     override val indexOffset: Int get() = 1
     override val tableSubqueryConsumesPipe: Boolean get() = false
+
+    override fun parseStatement(): Expression? {
+        val head = currToken
+        if (!matchTextSeq("RESET")) return super.parseStatement()
+        val parts = mutableListOf<Expression>()
+        var needsPart = true
+        fun invalid(): Nothing {
+            raiseError("Expected configuration parameter")
+            throw ParseError("Expected configuration parameter")
+        }
+        while (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) {
+            val token = currToken
+            if (token.tokenType == TokenType.DOT) {
+                if (needsPart || parts.isEmpty()) invalid()
+                advance()
+                needsPart = true
+                continue
+            }
+            if (token.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING, TokenType.BYTE_STRING)) {
+                // The base tokenizer can collapse a command tail into a synthetic STRING.
+                // It is not a quoted configuration-name component.
+                if (token.tokenType == TokenType.STRING &&
+                    (sql.getOrNull(token.start) != '\'' || token.end - token.start + 1 <= token.text.length)) invalid()
+                advance()
+                parts += expression(Identifier(args("this" to token.text, "quoted" to true)), token)
+            } else {
+                // DFParser accepts keywords and adjacent words as name components. Core may fuse
+                // multiword keywords, so split those without treating them as one quoted name.
+                val words = token.text.split(Regex("\\s+"))
+                if (token.tokenType == TokenType.NUMBER || token.tokenType.name.endsWith("STRING") || words.any { word ->
+                        word.isEmpty() || !(word.first().isLetter() || word.first() == '_') ||
+                            word.any { !it.isLetterOrDigit() && it !in "_$" }
+                    }) invalid()
+                advance()
+                parts += words.map { expression(Identifier(args("this" to it, "quoted" to false)), token) }
+            }
+            needsPart = false
+        }
+        if (parts.isEmpty() || needsPart) invalid()
+        return expression(DatafusionReset(args("expressions" to parts)), head).also {
+            it.meta["native_only_dialect"] = "datafusion"
+        }
+    }
 
     override fun parseParameter(): Expression {
         val dollar = prevToken.text == "$"
