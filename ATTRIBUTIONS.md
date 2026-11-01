@@ -205,6 +205,10 @@ division delegates and NumberTraits. `division-native/` and `division-types/`
 record independent value/error and result-type observations from the exact
 ClickHouse images, without replacing historical evidence.
 
+CHSEM-014's `script-settings-sources.json` adds Apache-2.0 excerpts for SET
+interpretation, parameter/default parsing and compatibility-sensitive resets.
+Its isolated session observations live in `script-settings-native/`.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

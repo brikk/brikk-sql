@@ -1,0 +1,63 @@
+{
+  "license": "Apache-2.0",
+  "snapshots": [
+    {
+      "version": "26.10.2.103",
+      "tag": "v26.10.2.103-stable",
+      "sources": [
+        {
+          "id": "CHSEM-014-S01",
+          "path": "src/Interpreters/InterpreterSetQuery.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Interpreters/InterpreterSetQuery.cpp",
+          "sha256": "b03ceba5f1371ed83e0899c8cdb4bc69b412bbf369d7d049d5c57e0c715e1d45",
+          "excerpts": [
+            {
+              "start_line": 75,
+              "end_line": 102,
+              "text": "BlockIO InterpreterSetQuery::execute()\n{\n    const auto & ast = query_ptr->as<ASTSetQuery &>();\n    /// Resolve query parameters used as setting values, e.g. `SET max_threads = {threads:UInt64}`.\n    /// Work on a copy so the original AST keeps the placeholders: they are still needed by the\n    /// old-server compatibility rewrite in ClientBase::processOrdinaryQuery.\n    SettingsChanges changes = ast.changes;\n    replaceQueryParametersInSettingsChanges(changes, getContext()->getQueryParameters());\n    /// A session-wide value would also detach the `SET` that turns it back off,\n    /// which is likely to cause confusion.\n    if (changes.tryGet(\"run_query_in_background\"))\n        throw Exception(ErrorCodes::BAD_ARGUMENTS,\n            \"run_query_in_background cannot be changed with SET, because it must be requested per query. \"\n            \"Pass it as a query setting, or set it at the user or profile level\");\n    /// Pass as const on purpose: the non-const checkSettingsConstraints overload rewrites the\n    /// changes (dropping no-op changes), which would lose the \"changed\" flag for a setting\n    /// explicitly set to its current value. The original code applies const `ast.changes`.\n    getContext()->checkSettingsConstraints(std::as_const(changes), SettingSource::QUERY);\n    /// Checked before anything is applied, so that a violation leaves the whole statement without effect.\n    getContext()->checkSettingsConstraintsForSettingsReset(ast.default_settings, changes, SettingSource::QUERY);\n    auto session_context = getContext()->getSessionContext();\n    session_context->applySettingsChanges(changes);\n    session_context->addQueryParameters(NameToNameMap{ast.query_parameters.begin(), ast.query_parameters.end()});\n    session_context->resetSettingsToDefaultValue(ast.default_settings);\n    return {};\n}\n\n"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-014-S02",
+          "path": "src/Interpreters/InterpreterSetQuery.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Interpreters/InterpreterSetQuery.cpp",
+          "sha256": "b03ceba5f1371ed83e0899c8cdb4bc69b412bbf369d7d049d5c57e0c715e1d45",
+          "excerpts": [
+            {
+              "start_line": 103,
+              "end_line": 120,
+              "text": "void InterpreterSetQuery::executeForCurrentContext(bool ignore_setting_constraints)\n{\n    const auto & ast = query_ptr->as<ASTSetQuery &>();\n    /// Resolve query parameters used as setting values, e.g. `SELECT ... SETTINGS max_threads = {threads:UInt64}`.\n    /// Work on a copy so the original AST keeps the placeholders (see the note in execute()).\n    SettingsChanges changes = ast.changes;\n    replaceQueryParametersInSettingsChanges(changes, getContext()->getQueryParameters());\n    /// const on purpose - see the note in execute().\n    if (!ignore_setting_constraints)\n    {\n        getContext()->checkSettingsConstraints(std::as_const(changes), SettingSource::QUERY);\n        getContext()->checkSettingsConstraintsForSettingsReset(ast.default_settings, changes, SettingSource::QUERY);\n        rejectHTTPOnlyConstructionSettings(ast);\n    }\n    getContext()->applySettingsChanges(changes);\n    getContext()->resetSettingsToDefaultValue(ast.default_settings);\n}\n"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-014-S03",
+          "path": "src/Parsers/ParserSetQuery.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Parsers/ParserSetQuery.cpp",
+          "sha256": "465fe93ec5c01f06e7476a6c0f0ac0bc072d1bdbb205267055cc57cdffc4a2db",
+          "excerpts": [
+            {
+              "start_line": 239,
+              "end_line": 338,
+              "text": "bool ParserSetQuery::parseNameValuePairWithParameterOrDefault(\n    SettingChange & change, String & default_settings, ParserSetQuery::Parameter & parameter, IParser::Pos & pos, Expected & expected, bool enable_shorthand_syntax)\n{\n    ParserCompoundIdentifier name_p;\n    ParserLiteralOrMap value_p;\n    ParserToken s_eq(TokenType::Equals);\n    ParserFunction function_p;\n\n    ASTPtr node;\n    String name;\n    ASTPtr function_ast;\n    bool have_eq = false;\n\n    if (!name_p.parse(pos, node, expected))\n        return false;\n\n    have_eq = s_eq.ignore(pos, expected);\n\n    if (!enable_shorthand_syntax && !have_eq)\n        return false;\n\n    tryGetIdentifierNameInto(node, name);\n\n    /// Parameter\n    if (name.starts_with(QUERY_PARAMETER_NAME_PREFIX))\n    {\n        if (!have_eq)\n            return false;\n\n        name = name.substr(strlen(QUERY_PARAMETER_NAME_PREFIX));\n\n        if (name.empty())\n            throw Exception(ErrorCodes::BAD_ARGUMENTS, \"Parameter name cannot be empty\");\n\n        String value;\n\n        if (!parseParameterValueIntoString(pos, value, expected))\n            return false;\n\n        parameter = {std::move(name), std::move(value)};\n        return true;\n    }\n\n    if (have_eq)\n    {\n        /// Default\n        if (ParserKeyword(Keyword::DEFAULT).ignore(pos, expected))\n        {\n            default_settings = name;\n            return true;\n        }\n\n        /// Setting\n        {\n            auto pos_before_func = pos;\n            if (function_p.parse(pos, function_ast, expected) && function_ast->as<ASTFunction>()->name == \"disk\")\n            {\n                change.name = name;\n                change.value = createFieldFromAST(function_ast);\n\n                return true;\n            }\n            pos = pos_before_func;\n        }\n\n        /// Query parameter as a setting value, e.g. `SET max_threads = {threads:UInt64}`\n        /// or `SELECT ... SETTINGS max_threads = {threads:UInt64}`.\n        /// Keep it as an ASTQueryParameter wrapped into a Field (same mechanism as disk(...) above);\n        /// it is resolved later by ReplaceQueryParameterVisitor once parameter values are known.\n        {\n            ParserSubstitution substitution_p;\n            ASTPtr substitution;\n            if (substitution_p.parse(pos, substitution, expected))\n            {\n                change.name = name;\n                change.value = createFieldFromAST(substitution);\n\n                return true;\n            }\n        }\n\n        if (!value_p.parse(pos, node, expected))\n            return false;\n    }\n    else\n    {\n        /// A setting name with no value is shorthand for `= true`. Only a Bool setting can be\n        /// written this way, but the parser does not know the settings schema, so it records that\n        /// the value was omitted and leaves the check to `BaseSettings::applyChange`.\n        node = make_intrusive<ASTLiteral>(Field(true));\n    }\n\n    change.name = name;\n    change.value = node->as<ASTLiteral &>().value;\n    change.shorthand = !have_eq;\n\n    return true;\n}\n\n"
+            }
+          ]
+        },
+        {
+          "id": "CHSEM-014-S04",
+          "path": "src/Interpreters/Context.cpp",
+          "url": "https://raw.githubusercontent.com/ClickHouse/ClickHouse/v26.10.2.103-stable/src/Interpreters/Context.cpp",
+          "sha256": "8f3ead7e9c79f77f2491986a52694ee25d5f307617a983ec9b6dd17567327005",
+          "excerpts": [
+            {
+              "start_line": 4073,
+              "end_line": 4097,
+              "text": "void Context::resetSettingsToDefaultValue(const std::vector<String> & names)\n{\n    if (names.empty())\n        return;\n    std::lock_guard lock(mutex);\n    for (const String & name : names)\n    {\n        settings->setDefaultValue(name);\n        /// `Settings` stores a `merge_tree_`-prefixed name as a custom setting, under the exact name that\n        /// wrote it. Resetting one name of a setting therefore has to clear what its other names wrote.\n        for (const auto & equivalent_name : settingEquivalentNames(name))\n            settings->setDefaultValue(equivalent_name);\n    }\n    /// A setting nothing assigned holds what the active `compatibility` gives it.\n    if ((*settings)[Setting::compatibility].value.empty())\n        settings->resetSettingsChangedByCompatibility();\n    else\n    {\n        settings->set(COMPATIBILITY_SETTING_NAME, (*settings)[Setting::compatibility].value);\n        restrictSettingsChangedByCompatibilityWithLock(lock);\n    }\n    applySettingsQuirks(*settings);\n    adjustSettingsForMakeDistributedPlan(*settings);\n}\n"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

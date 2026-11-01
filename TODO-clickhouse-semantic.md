@@ -7,7 +7,7 @@ public positioned diagnostics, CHSEM-007 qualification, CHSEM-008 higher-order
 contracts, CHSEM-009 bounded composite/overload typing, CHSEM-010 lowering
 assessment and CHSEM-011 parenthesized lambda parsing are complete.
 CHSEM-012 adds exact division result typing; CHSEM-013 adds constant-error diagnostics.
-CHSEM-014/015 remain the authorized script-state and Decimal arithmetic backlog.
+CHSEM-014 adds preceding script SET state; CHSEM-015 is the remaining authorized round.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -44,7 +44,7 @@ checks parsing only and must not be relabeled as semantic validation.
 
 - [x] CHSEM-012: Infer exact setting-aware integer division results. Use pinned source/native rules for `/`, `divide` and explicit `divideExact`, including width, signedness and supported nullability. Preserve query-local setting inheritance, caller typing policies and generic literal parity; use the explicit native typing entrypoint for native literal widths.
 - [x] CHSEM-013: Add offline diagnostics for provable division-by-zero and integer quotient overflow. Keep value-dependent/runtime cases unknown; reuse the exact type/mode facts from CHSEM-012 without claiming whole-query acceptance.
-- [ ] CHSEM-014: Track explicit preceding `SET` statements in script analysis with clear scope/reset rules. Do not infer external connection state. Record unknown or parameterized assignments explicitly and preserve query-local overrides.
+- [x] CHSEM-014: Track explicit preceding `SET` statements in script analysis with clear scope/reset rules. Do not infer external connection state. Record unknown or parameterized assignments explicitly and preserve query-local overrides.
 - [ ] CHSEM-015: Infer exact Decimal/Decimal and Decimal/integer division precision and scale from pinned source/native evidence. Cover supported nullable dispatch and mode differences; preserve unknowns outside the proved overloads. User authorized CHSEM-013–015 in order, with tests and a separate commit/push for each.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
@@ -54,7 +54,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-013 are complete. CHSEM-014 then CHSEM-015 are authorized next. Test and commit/push each round separately. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-014 are complete. CHSEM-015 is authorized next. Test and commit/push each round separately. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -422,6 +422,25 @@ one opt-in skip. The isolated IntelliJ gate passes 757 tests on 261.25134.95.
 The first concurrent build attempt failed on a missing SqlScriptSnapshot class;
 the isolated retry passed without production changes. Run build gates sequentially.
 No release, dependency, IntelliJ API or consumer changes.
+
+## CHSEM-014 result
+
+The script diagnostics API carries bounded preceding SET facts within one analysis
+call, conditionally on successful sequential execution. New calls and the standalone
+statement API never inherit external state. Query-local SETTINGS and nested overrides
+shadow the script facts without leaking into later statements. Unknown/parameterized
+assignments, DEFAULT resets, profile/compatibility changes and unsupported mutations
+remain explicitly unknown. Native reset ordering is preserved for duplicate entries.
+No AST, source/type metadata, connection or old public signature changes.
+Guide: `vendor/data/clickhouse-semantic/script-settings-README.md`.
+
+Eighteen original/generated whole-session scripts match on both exact pins. Source
+captures establish parameter handling, session vs query contexts and reset order.
+Full JVM regression passes 1,860 tests, with 61 optional integration assumption aborts
+and zero failures; Python passes 103 tests with one opt-in skip. The isolated IntelliJ
+gate passes 757 tests on 261.25134.95. No new IntelliJ API calls or signature changes.
+Historical evidence
+and corpus gates are unchanged. CHSEM-015 remains the authorized next round.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

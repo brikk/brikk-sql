@@ -50,6 +50,9 @@ the earlier eleven completed items are not reopened.
 CHSEM-013 implements [positioned integer division diagnostics](division-diagnostics-README.md)
 with named refinements rather than replacing historical typing-only captures.
 
+CHSEM-014 adds [preceding script SET state](script-settings-README.md), scoped to
+one script analysis call with query-local overrides and explicit unknown resets.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

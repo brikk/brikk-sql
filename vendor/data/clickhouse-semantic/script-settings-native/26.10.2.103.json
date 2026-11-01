@@ -1,0 +1,235 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "09cffa29286ca910769aba91cb9247e4b8622fffb3e7b382d4a5d903b7cb704a",
+  "brikk_sha256": "a5e97da15f2812b835f0cebfbe121acb25b3243cebd1d74b7d830c8d1b792983",
+  "execution": [
+    {
+      "id": "CHSEM-014-E01",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E02",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E03",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E04",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E05",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E06",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E07",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E08",
+      "returncode": 0,
+      "stdout": "Int8\nInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E09",
+      "returncode": 0,
+      "stdout": "Float64\nInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E10",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E11",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E12",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E13",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Int8'), CAST(0, 'Int8')) AS `divide(CAST(1, 'Int8'), CAST(0, 'Int8'))`. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-014-E14",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E15",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E16",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E17",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Int8'), CAST(0, 'Int8')). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-014-E18",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Substitution `mode` is not set. (UNKNOWN_QUERY_PARAMETER)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-014-E01",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E02",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E03",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E04",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E05",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E06",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E07",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E08",
+      "returncode": 0,
+      "stdout": "Int8\nInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E09",
+      "returncode": 0,
+      "stdout": "Float64\nInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E10",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E11",
+      "returncode": 0,
+      "stdout": "Float64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E12",
+      "returncode": 0,
+      "stdout": "Int8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E13",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Int8'), CAST(0, 'Int8')) AS `divide(CAST(1, 'Int8'), CAST(0, 'Int8'))`. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-014-E14",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E15",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E16",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-014-E17",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(CAST(1, 'Int8'), CAST(0, 'Int8')). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-014-E18",
+      "returncode": 200,
+      "stdout": "",
+      "stderr": "Code: 456. DB::Exception: Substitution `mode` is not set. (UNKNOWN_QUERY_PARAMETER)\n"
+    }
+  ]
+}

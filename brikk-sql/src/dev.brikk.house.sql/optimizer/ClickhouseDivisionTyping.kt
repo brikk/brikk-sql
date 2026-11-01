@@ -6,20 +6,25 @@ import dev.brikk.house.sql.metadata.CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG
 import kotlin.Boolean
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 
 internal data class ClickhouseDivisionCall(val operands: List<Expression>, val integerMode: Boolean?, val name: String? = null)
 
 /** `/` is an operator; named functions must first resolve through the exact builtin catalog. */
 internal fun clickhouseDivisionCall(node: Expression): ClickhouseDivisionCall? {
+    return clickhouseDivisionCall(node, emptyMap())
+}
+
+internal fun clickhouseDivisionCall(node: Expression, sessionSettings: Map<String, Boolean?>): ClickhouseDivisionCall? {
     if (node is Div) return ClickhouseDivisionCall(listOf(node.left, node.right),
-        clickhouseBooleanSetting(node, "sql_compatible_division_for_integers"))
+        clickhouseBooleanSetting(node, "sql_compatible_division_for_integers", sessionSettings))
     if (node !is Anonymous) return null
     val name = node.metaOrNull?.get("clickhouse_name") as? String ?: node.name
     val builtin = CLICKHOUSE_26_10_2_103_FUNCTION_CATALOG.getAll(name).firstOrNull { it.name in setOf("divide", "divideExact") } ?: return null
     val operands = node.expressionsArg.filterIsInstance<Expression>()
     if (operands.size != 2 || operands.size != node.expressionsArg.size) return null
     return ClickhouseDivisionCall(operands,
-        if (builtin.name == "divideExact") true else clickhouseBooleanSetting(node, "sql_compatible_division_for_integers"), name)
+        if (builtin.name == "divideExact") true else clickhouseBooleanSetting(node, "sql_compatible_division_for_integers", sessionSettings), name)
 }
 
 /** NumberTraits::ResultOfIntegerDivision, plus the legacy floating delegate. */

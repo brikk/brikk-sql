@@ -5,9 +5,15 @@ import dev.brikk.house.sql.generator.Generator
 import kotlin.Boolean
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 
 /** Query-local evidence only. Missing, parameterized and non-boolean values leave session state unknown. */
 internal fun clickhouseBooleanSetting(node: Expression, name: String): Boolean? {
+    return clickhouseBooleanSetting(node, name, emptyMap())
+}
+
+/** A query-local unknown value shadows even a known preceding script assignment. */
+internal fun clickhouseBooleanSetting(node: Expression, name: String, sessionSettings: Map<String, Boolean?>): Boolean? {
     var current: Expression? = node
     while (current != null) {
         val settings = current.args["settings"]
@@ -21,16 +27,18 @@ internal fun clickhouseBooleanSetting(node: Expression, name: String): Boolean? 
         }
         if (entry != null) {
             val value = entry.expressionArg as? Expression
-            return when {
-                value is dev.brikk.house.sql.ast.Boolean -> value.thisArg as? Boolean
-                value is Literal && value.name.lowercase() in setOf("1", "true") -> true
-                value is Literal && value.name.lowercase() in setOf("0", "false") -> false
-                else -> null
-            }
+            return clickhouseBooleanSettingValue(value)
         }
         current = current.parent
     }
-    return null
+    return sessionSettings[name.lowercase()]
+}
+
+internal fun clickhouseBooleanSettingValue(value: Expression?): Boolean? = when {
+    value is dev.brikk.house.sql.ast.Boolean -> value.thisArg as? Boolean
+    value is Literal && value.name.lowercase() in setOf("1", "true") -> true
+    value is Literal && value.name.lowercase() in setOf("0", "false") -> false
+    else -> null
 }
 
 /** Diagnostic only: do not invent a session setting or rewrite a potentially erroring integer division. */

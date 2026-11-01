@@ -1,0 +1,114 @@
+[
+    {
+        "id": "CHSEM-014-E01",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E02",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E03",
+        "input_sql": "SET sql_compatible_division_for_integers='true'; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 'true'; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E04",
+        "input_sql": "SET sql_compatible_division_for_integers='false'; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 'false'; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E05",
+        "input_sql": "SET sql_compatible_division_for_integers=true; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = TRUE; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E06",
+        "input_sql": "SET sql_compatible_division_for_integers=false; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = FALSE; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E07",
+        "input_sql": "SET sql_compatible_division_for_integers=DEFAULT; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = DEFAULT; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E08",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8)); SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E09",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8)) SETTINGS sql_compatible_division_for_integers=0; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8)) SETTINGS sql_compatible_division_for_integers = 0; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E10",
+        "input_sql": "SET sql_compatible_division_for_integers=1,sql_compatible_division_for_integers=0; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 1, sql_compatible_division_for_integers = 0; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E11",
+        "input_sql": "SET sql_compatible_division_for_integers=DEFAULT,sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = DEFAULT, sql_compatible_division_for_integers = 1; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E12",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET max_threads=2; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET max_threads = 2; SELECT toTypeName(CAST(7 AS Int8) / CAST(2 AS Int8));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E13",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT CAST(1 AS Int8) / CAST(0 AS Int8);",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-014-E14",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT CAST(1 AS Int8) / CAST(0 AS Int8);",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E15",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers=DEFAULT; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET sql_compatible_division_for_integers = DEFAULT; SELECT CAST(1 AS Int8) / CAST(0 AS Int8);",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E16",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT CAST(1 AS Int8)/CAST(0 AS Int8) SETTINGS sql_compatible_division_for_integers=0;",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT CAST(1 AS Int8) / CAST(0 AS Int8) SETTINGS sql_compatible_division_for_integers = 0;",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-014-E17",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT divideExact(CAST(1 AS Int8),CAST(0 AS Int8));",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT divideExact(CAST(1 AS Int8), CAST(0 AS Int8));",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-014-E18",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers={mode:UInt8}; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+        "generated": "SET sql_compatible_division_for_integers = 1; SET sql_compatible_division_for_integers = {mode:UInt8}; SELECT CAST(1 AS Int8) / CAST(0 AS Int8);",
+        "rules": []
+    }
+]

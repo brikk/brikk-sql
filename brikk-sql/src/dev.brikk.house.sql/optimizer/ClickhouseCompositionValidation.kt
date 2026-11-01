@@ -24,6 +24,7 @@ internal enum class ClickhouseCompositionUnknownReason {
     ENGINE_VERSION, NAME_RESOLUTION, UNRESEARCHED_CALLABLE, INPUT_TYPE, RESULT_FAMILY,
     NULL_OR_WRAPPER, CONSTANT_ARGUMENT, TIMEZONE_VALUE, RUNTIME_RESTRICTION,
     ARRAY_LENGTHS, UNSUPPORTED_CONTEXT, PARSER_GAP, ANALYSIS_LIMIT,
+    SETTING_STATE,
 }
 
 internal data class ClickhouseCompositionError(
@@ -84,6 +85,12 @@ internal fun validateClickhouseCompositions(
     checkCanceled: () -> Unit = {},
 ): ClickhouseCompositionValidation = ClickhouseCompositionValidator(engineVersion, schema, checkCanceled).validate(expression)
 
+internal fun validateClickhouseCompositionsWithSettings(
+    expression: Expression, engineVersion: String, schema: Schema?, sessionSettings: Map<String, Boolean?>,
+    checkCanceled: () -> Unit,
+): ClickhouseCompositionValidation = ClickhouseCompositionValidator(engineVersion, schema, checkCanceled,
+    sessionSettings = sessionSettings).validate(expression)
+
 private class ClickhouseCompositionValidator(
     private val version: String,
     private val schema: Schema?,
@@ -93,6 +100,7 @@ private class ClickhouseCompositionValidator(
     private val ignoredClasses: Set<KClass<out Expression>> = emptySet(),
     private val ignoredIds: Set<Long> = emptySet(),
     private val nativeLiterals: Boolean = true,
+    private val sessionSettings: Map<String, Boolean?> = emptyMap(),
 ) {
     private enum class Family { STRING, FIXED_STRING, NUMBER, DECIMAL, DATE, DATETIME, OTHER }
     private data class Value(
@@ -212,7 +220,7 @@ private class ClickhouseCompositionValidator(
                 rememberBinding(node, context)
                 if (context.callableScope) rememberAtomicCall(node, context)
             }
-            clickhouseDivisionCall(node)?.let { call ->
+            clickhouseDivisionCall(node, sessionSettings)?.let { call ->
                 if (call.integerMode != null || nativeLiterals) value(node, context, 0)
             }
             val map = arrayMap(node)
@@ -643,7 +651,7 @@ private class ClickhouseCompositionValidator(
     }
 
     private fun divisionValue(node: Expression, context: Context, depth: Int): Value {
-        val call = clickhouseDivisionCall(node) ?: return Value()
+        val call = clickhouseDivisionCall(node, sessionSettings) ?: return Value()
         if (call.name != null && context.blocked(call.name)) {
             unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION)
             if (inferResults) blockedFallbacks.add(node.objectId)

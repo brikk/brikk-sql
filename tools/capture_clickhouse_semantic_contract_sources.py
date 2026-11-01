@@ -35,6 +35,12 @@ DIVISION = [
     ("src/DataTypes/NumberTraits.h", "struct ResultOfFloatingPointDivision", "struct ResultOfModulo"),
     ("src/Functions/IFunction.cpp", "if (!arguments.empty() && useDefaultImplementationForNulls())", "return getReturnTypeImpl(arguments);"),
 ]
+SCRIPT_SETTINGS = [
+    ("src/Interpreters/InterpreterSetQuery.cpp", "BlockIO InterpreterSetQuery::execute()", "void InterpreterSetQuery::executeForCurrentContext"),
+    ("src/Interpreters/InterpreterSetQuery.cpp", "void InterpreterSetQuery::executeForCurrentContext", "static void applySettingsFromSelectWithUnion"),
+    ("src/Parsers/ParserSetQuery.cpp", "bool ParserSetQuery::parseNameValuePairWithParameterOrDefault", "bool ParserSetQuery::parseImpl"),
+    ("src/Interpreters/Context.cpp", "void Context::resetSettingsToDefaultValue", "std::shared_ptr<const SettingsConstraintsAndProfileIDs> Context::getSettingsConstraintsAndCurrentProfilesWithLock"),
+]
 
 
 def selection(data, begin, end):
@@ -51,16 +57,16 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--round", choices=("higher-order", "overload", "division"), default="higher-order")
+    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
-        if args.round == "division" and version != "26.10.2.103":
+        if args.round in ("division", "script-settings") and version != "26.10.2.103":
             continue
         records = []
         cache = {}
-        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION}[args.round]
-        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012"}[args.round]
+        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS}[args.round]
+        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014"}[args.round]
         for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:

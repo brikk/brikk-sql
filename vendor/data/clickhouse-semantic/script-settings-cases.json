@@ -1,0 +1,263 @@
+{
+  "task": "CHSEM-014",
+  "execution": [
+    {
+      "id": "CHSEM-014-E01",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Int8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E02",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E03",
+      "sql": "SET sql_compatible_division_for_integers='true'; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Int8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E04",
+      "sql": "SET sql_compatible_division_for_integers='false'; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E05",
+      "sql": "SET sql_compatible_division_for_integers=true; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Int8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E06",
+      "sql": "SET sql_compatible_division_for_integers=false; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E07",
+      "sql": "SET sql_compatible_division_for_integers=DEFAULT; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "Float64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E08",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Int8\nInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E09",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8)) SETTINGS sql_compatible_division_for_integers=0; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\nInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E10",
+      "sql": "SET sql_compatible_division_for_integers=1,sql_compatible_division_for_integers=0; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E11",
+      "sql": "SET sql_compatible_division_for_integers=DEFAULT,sql_compatible_division_for_integers=1; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Float64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E12",
+      "sql": "SET sql_compatible_division_for_integers=1; SET max_threads=2; SELECT toTypeName(CAST(7 AS Int8)/CAST(2 AS Int8));",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "Int8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E13",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E14",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E15",
+      "sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers=DEFAULT; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E16",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT CAST(1 AS Int8)/CAST(0 AS Int8) SETTINGS sql_compatible_division_for_integers=0;",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E17",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT divideExact(CAST(1 AS Int8),CAST(0 AS Int8));",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-014-E18",
+      "sql": "SET sql_compatible_division_for_integers=1; SET sql_compatible_division_for_integers={mode:UInt8}; SELECT CAST(1 AS Int8)/CAST(0 AS Int8);",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 456,
+          "error_name": "UNKNOWN_QUERY_PARAMETER"
+        }
+      }
+    }
+  ]
+}

@@ -2,8 +2,9 @@ package dev.brikk.house.sql.diagnostics
 
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.ClickhouseScriptSettings
 import dev.brikk.house.sql.optimizer.Schema
-import dev.brikk.house.sql.optimizer.validateClickhouseCompositions
+import dev.brikk.house.sql.optimizer.validateClickhouseCompositionsWithSettings
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
@@ -25,6 +26,7 @@ enum class ClickhouseSemanticUnknownReason {
     ARRAY_LENGTHS, UNSUPPORTED_CONTEXT, PARSER_GAP, ANALYSIS_LIMIT,
     /** The requested range does not contain exactly one safely framed SQL statement. */
     STATEMENT_BOUNDARY,
+    SETTING_STATE,
 }
 
 /** [nativeErrorCode] identifies the researched rule's native category, not a server response. */
@@ -72,6 +74,13 @@ fun clickhouseSemanticDiagnostics(
     schema: Schema? = null,
     checkCanceled: () -> Unit = {},
 ): ClickhouseSemanticDiagnostics {
+    return clickhouseSemanticStatement(script, range, engineVersion, schema, checkCanceled, emptyMap()) {}
+}
+
+private fun clickhouseSemanticStatement(
+    script: String, range: IntRange, engineVersion: String, schema: Schema?, checkCanceled: () -> Unit,
+    sessionSettings: Map<String, Boolean?>, parsed: (Expression) -> Unit,
+): ClickhouseSemanticDiagnostics {
     require(!range.isEmpty() && range.first >= 0 && range.last < script.length) { "Expected a non-empty range within the script" }
     checkCanceled()
     val sql = script.substring(range.first, range.last + 1)
@@ -104,7 +113,8 @@ fun clickhouseSemanticDiagnostics(
     if (expressions.size != 1) return ClickhouseSemanticDiagnostics(range.first, range.last + 1,
         emptyList(), emptyList(), listOf(ClickhouseSemanticUnknown(
             ClickhouseSemanticUnknownReason.STATEMENT_BOUNDARY, range.first, range.last + 1)))
-    val report = validateClickhouseCompositions(expressions.single(), engineVersion, schema, checkCanceled)
+    parsed(expressions.single())
+    val report = validateClickhouseCompositionsWithSettings(expressions.single(), engineVersion, schema, sessionSettings, checkCanceled)
     val positions = SemanticPositions(sql, range.first, checkCanceled)
     val errors = report.errors.map { error ->
         val (start, end) = positions.at(error.expression)
@@ -118,15 +128,26 @@ fun clickhouseSemanticDiagnostics(
     return ClickhouseSemanticDiagnostics(range.first, range.last + 1, emptyList(), errors, unknowns)
 }
 
-/** Shared script framing skips trivia-only spans and never interprets inline INSERT payload as SQL. */
+/**
+ * Shared framing skips trivia and inline INSERT payload. Tracks bounded explicit SET assignments
+ * conditionally on preceding statements executing successfully. Every call starts with unknown
+ * external state; query-local SETTINGS shadow it and never persist to later statements.
+ */
 fun clickhouseScriptSemanticDiagnostics(
     script: String,
     engineVersion: String,
     schema: Schema? = null,
     checkCanceled: () -> Unit = {},
-): List<ClickhouseSemanticDiagnostics> = SqlScriptSnapshot.parse(script, "clickhouse", checkCanceled).statements.mapNotNull {
-    val range = verificationRange(script, it) ?: return@mapNotNull null
-    clickhouseSemanticDiagnostics(script, range, engineVersion, schema, checkCanceled)
+): List<ClickhouseSemanticDiagnostics> {
+    val settings = ClickhouseScriptSettings()
+    return SqlScriptSnapshot.parse(script, "clickhouse", checkCanceled).statements.mapNotNull {
+        val range = verificationRange(script, it) ?: return@mapNotNull null
+        var statement: Expression? = null
+        val report = clickhouseSemanticStatement(script, range, engineVersion, schema, checkCanceled, settings.snapshot()) { parsed -> statement = parsed }
+        if (engineVersion != "26.10.2.103" || !settings.advance(statement)) report
+        else report.copy(unknowns = (report.unknowns + ClickhouseSemanticUnknown(
+            ClickhouseSemanticUnknownReason.SETTING_STATE, range.first, range.last + 1)).distinct())
+    }
 }
 
 /** Prefer the offending token, then syntax/descendant evidence, then a containing syntax span. */
