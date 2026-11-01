@@ -4,6 +4,7 @@ import dev.brikk.house.sql.ast.Semicolon
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
 import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
+import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SyntacticRange
 import dev.brikk.house.sql.parser.Token
@@ -25,6 +26,8 @@ fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccur
     val parser = source.parser().useNativeDuckdbOperators().also { it.captureSourceRanges = true }
     val statements = parser.parse(tokens, sql).filterNotNull().filterNot { it is Semicolon }
     if (statements.size != 1) throw ShapeError("Parameter discovery requires exactly one statement")
+    if(source.name=="duckdb" && statements.single().isDuckdbCheckpointCommand() && tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER,TokenType.PARAMETER,TokenType.COLON) })
+        throw dev.brikk.house.sql.generator.UnsupportedError("Parameter binding in native CHECKPOINT commands is not modeled")
     if (statements.single() is dev.brikk.house.sql.ast.DuckdbExplain && statements.single().thisArg is dev.brikk.house.sql.ast.Command &&
         tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER, TokenType.PARAMETER, TokenType.COLON) })
         throw dev.brikk.house.sql.generator.UnsupportedError("Parameter binding in a raw EXPLAIN child is not modeled")

@@ -668,6 +668,26 @@ yields an empty string, while extract_all NULL group yields NULL. Options can fa
 rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
 binding checks; no host regex engine or invented capture schema is used.
 
+### Storage compatibility and private fixtures
+
+New DuckDB 2.0 files use format 69, with symbolic default storage compatibility `latest`.
+DuckDB 1.5.6 cannot read that format. Existing files retain their compatibility unless
+explicitly changed; selecting a newer write target does not prove a forced physical-format
+rewrite of old-readable contents. The library preserves ATTACH STORAGE_VERSION and
+storage_compatibility_version settings; it never opens, migrates, repairs or downgrades a
+database as part of parsing/generation.
+
+Native storage controls create only private scratch databases. The 2.0 JDBC engine runs in
+the normal test JVM; 1.5.6 runs in separate child JVMs with its exact runtime/source pin.
+Readonly compatibility failures must leave file hashes unchanged. Explicit v1.5.0-compatible
+INTEGER fixtures remain old-readable, and an old-created file retains its version after a
+2.0 write/checkpoint. A latest write target is tested only on a scratch copy; INTEGER-only
+contents can stay old-readable, and the original stays untouched. Those selected types do
+not certify every newer feature for older files. Native qualified CHECKPOINT is retained
+as opaque command text, not rewritten as a query alias; its raw status and unmodeled bind/
+cross-target boundaries remain explicit.
+No checked-in/user database or consumer dependency pin is modified by these tests.
+
 ### S3 URL query text and diagnostic privacy
 
 DuckDB 2.0 treats the question mark and following URL text as part of an S3 object key by

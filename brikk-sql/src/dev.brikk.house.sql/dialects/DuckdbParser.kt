@@ -344,6 +344,13 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        // Qualified CHECKPOINT is storage control, never Column("CHECKPOINT") AS db.
+        // Keep the parity parser unchanged; native callers retain this opaque command.
+        if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER && currToken.text.equals("CHECKPOINT",true)) {
+            val start = currToken
+            matchTextSeq("CHECKPOINT")
+            return parseAsCommand(start)
+        }
         if (currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) && currToken.text.equals("EXPLAIN", true)) {
             advance()
             return parseDuckdbExplain()

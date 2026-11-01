@@ -23,6 +23,7 @@ import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.dialects.isDuckdbStorageAttach
 import dev.brikk.house.sql.dialects.duckdbDivisionTranslationIssue
 import dev.brikk.house.sql.dialects.hasDuckdbZoneOrCollation
+import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -413,6 +414,8 @@ open class Generator(
             expr.duckdbDivisionTranslationIssue(sourceDialect, dialect.name)?.let(::unexecutable)
         if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.hasDuckdbZoneOrCollation())
             unexecutable("DuckDB zone/calendar/collation and nanosecond semantics have no verified cross-target translation")
+        if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.walk().any { it.isDuckdbCheckpointCommand() })
+            unexecutable("DuckDB CHECKPOINT storage control has no verified cross-target translation")
         if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
             unexecutable("$targetName has no verified recursive USING KEY translation")
         }

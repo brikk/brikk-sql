@@ -1272,11 +1272,39 @@ and IDE introspection/completion are separate contracts.
   No AST/annotation/generator corpus or ledger changes, public data-class ABI changes,
   IntelliJ API calls, user URL/connection/secret-store changes, dependency pins, merge or publication.
 
-- [ ] `DDB20-047` Storage compatibility and database fixtures [MONITOR].
+- [x] `DDB20-047` Storage compatibility and database fixtures [DONE].
   New databases default to storage version 69; old engines cannot read them. Existing files
   keep their version. Pin relevant ATTACH STORAGE_VERSION / storage_compatibility_version
   syntax if exposed. Never migrate a checked-in or user database implicitly; compare engine
   versions with separate scratch files/processes and document compatibility expectations.
+  The tests build only fresh scratch files, never mutate checked-in/user databases and never
+  load old/new native libraries in one JVM. A trusted opt-in 1.5.6.0 JDBC fixture runs in child
+  JVMs and must report v1.5.6/069cc9f9b5. The parent uses pinned 2.0.0.0/d54cbbe3df. The 2.0
+  symbolic default is latest, actual new-file tag v2.0.0+; the old reader rejects format 69
+  versus its supported range 64–68. Failed readonly opens leave file hashes unchanged.
+  Explicit ATTACH STORAGE_VERSION 'v1.5.0' and global storage_compatibility_version='v1.5.0'
+  create selected INTEGER fixtures the old reader can read. This is not compatibility
+  certification for every 2.0 type/feature. Old-created v1.0.0+ files retain that tag after
+  a 2.0 data write/checkpoint and remain readable by 1.5.6. Explicit latest write target is
+  tested only on a chosen scratch copy; the INTEGER-only copy still remains old-readable.
+  A runtime write-target tag is not proof of a forced physical-format rewrite. The original's
+  hash/readability stays intact. No automatic
+  migrations, downgrade workaround, user retries or version-option rewriting is implemented.
+  Current/versioned metadata, AST/copy/serde and SET/RESET/ATTACH spelling are separately
+  pinned. Old fixture JAR SHA-256 04ae3375d7c40dc88dc9bf0014b82ba5e66715564584af4e3abea39c7ba144d3.
+  Native-mode qualified CHECKPOINT now retains opaque command text instead of being
+  misgenerated as CHECKPOINT AS db. Raw-passthrough classification stays explicit, strict
+  parameter binding and cross-target execution refuse, and legacy parser corpora are unchanged.
+  Frozen-source fresh-directory full gates passed 1,416 core, 129 metadata and 247 native/
+  verifier tests, zero skips, with the old JDBC, HTTPFS and all signed extension fixtures
+  enabled. Log /tmp/opencode/duckdb-storage-compat-full.log. Focused storage controls also
+  passed separately; no storage engine, compatibility emulation, retry or dependency change.
+  The frozen-source shared IntelliJ platform gate passed all 759 tests on 261.25134.95;
+  log /tmp/opencode/duckdb-compatibility-ide-full.log. Existing corpora/ledgers and public
+  data-class signatures are unchanged. No new internal/experimental IntelliJ API calls,
+  user database/connection/URL changes, consumer pins, merge, publication or Plugin Verifier
+  run. This completes the requested 043/045–047 batch; broader acceptance/precision and
+  consumer integration work remain separate.
 
 - [x] `DDB20-048` Calculator/preview expression-statement scope [DONE].
   Correct the former blanket "not shipped" conclusion: the 2.0 Gems post documents a CLI
