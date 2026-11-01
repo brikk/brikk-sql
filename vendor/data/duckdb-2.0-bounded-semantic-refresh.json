@@ -1,0 +1,1317 @@
+{
+  "captured_at": "2026-11-01T21:14:51.546733+00:00",
+  "scope": "Eleven hand-owned literal candidates: top-level native types, SQL-NULL flags and explicit native string projections. Projection equality is not embedded VARIANT/JSON equality, general equivalence, generator/pushdown or Trino 483 qualification.",
+  "duckdb": {
+    "version": "2.0.0",
+    "source": "d54cbbe3df",
+    "jdbc_sha256": "5170daa90a43296705127ef3c80834ba1cd275ec9d765a9f7eee346ab0087186",
+    "external_access": false,
+    "autoload": false,
+    "autoinstall": false
+  },
+  "native_settings": {
+    "timezone": "America/Costa_Rica",
+    "error_on_division_by_zero": "true",
+    "regex_match_operator_semantics": "partial"
+  },
+  "profiles": {
+    "trino": {
+      "version": "484",
+      "timezone": "UTC"
+    },
+    "doris": {
+      "version": "doris version doris-4.1.5-release-917b20be838",
+      "mysql_compatibility_version": "5.7.99",
+      "timezone": "Etc/UTC",
+      "sql_mode": "ONLY_FULL_GROUP_BY"
+    },
+    "clickhouse": {
+      "version": "26.10.2.103",
+      "timezone": "UTC",
+      "short_circuit": "enable"
+    }
+  },
+  "function_gap_scope": "Selected candidate-call observations only; no general name/semantic equivalence or global gap-registry rewrite.",
+  "capture_tool_sha256": "f9fd569d5786417fd7b14b8497c93406247af54bc5e49de0dd773358493d4cda",
+  "java_probe_sha256": "006783d8785b172ce563d3ee00575a632bd981a6fd51516d4cb4287cc67711c3",
+  "oracles": {
+    "trino": {
+      "name": "brikk-ddb063-7e053244-trino",
+      "id": "edbc3efd3fd310e6765ede6da5ec4affc8d71302ad864833e60b2738ee99e3ed",
+      "image": "sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f",
+      "ready": true,
+      "version_output": "{\"_col0\":\"484\"}"
+    },
+    "clickhouse": {
+      "name": "brikk-ddb063-7e053244-clickhouse",
+      "id": "07bea4950ef436cf822d3e2efc9b60165cff481dae48ebc1a24a110ceceb0bd5",
+      "image": "sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e",
+      "ready": true,
+      "version_output": "{\"version()\":\"26.10.2.103\"}"
+    },
+    "doris": {
+      "name": "brikk-ddb063-7e053244-doris-fe",
+      "backend_name": "brikk-ddb063-7e053244-doris-be",
+      "image": "sha256:e67f66e621d2d77be7d210b8cab4b1e62e89ff4a0bdaf894bf155fdb1fe441dc",
+      "backend_image": "sha256:3f7ff231e3a8b586b0556391f020089b666f786525ad90736bccea31761759bb",
+      "ready": true,
+      "id": "1397ce25526fbbab4c13c8ebb300f433d317476f3fefa3470960700c92d71b14",
+      "backend_id": "1110a2bbea35bf4c1d24c08eff9df150412bf2e36ec1391991ea533d0504f15d",
+      "jvm_options": "-XX:-UseContainerSupport -XX:ActiveProcessorCount=2",
+      "backend_config_overrides": {
+        "enable_file_cache": false
+      },
+      "version_output": "5.7.99",
+      "backend_output": [
+        "1793566740684\t172.18.0.3\t9050\t9060\t8040\t8060\t8050\t2026-11-01 21:05:10\t2026-11-01 21:05:14\ttrue\tfalse\t0\t0.000 \t0.000 \t1.002 TB\t1.817 TB\t44.85 %\t44.85 %\t0.000 \t{\"location\" : \"default\"}\t\tdoris-4.1.5-release-917b20be838\t{\"lastSuccessReportTabletsTime\":\"N/A\",\"lastStreamLoadTime\":-1,\"isQueryDisabled\":false,\"isLoadDisabled\":false,\"isActive\":true,\"isShutdown\":false,\"currentFragmentNum\":0,\"lastFragmentUpdateTime\":1793567109336}\t0\t32\t6.00 GB\t2026-11-01 21:05:14\t0\tmix"
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "json-duplicate-key",
+      "family": "json",
+      "sql": {
+        "duckdb": "json_extract('{\"a\":1,\"a\":2}','$.a')",
+        "trino": "json_extract('{\"a\":1,\"a\":2}','$.a')",
+        "doris": "json_extract('{\"a\":1,\"a\":2}','$.a')",
+        "clickhouse": "JSONExtractRaw('{\"a\":1,\"a\":2}','a')"
+      }
+    },
+    {
+      "id": "json-null",
+      "family": "json",
+      "sql": {
+        "duckdb": "json_extract('{\"a\":null}','$.a')",
+        "trino": "json_extract('{\"a\":null}','$.a')",
+        "doris": "json_extract('{\"a\":null}','$.a')",
+        "clickhouse": "JSONExtractRaw('{\"a\":null}','a')"
+      }
+    },
+    {
+      "id": "json-scalar-unicode",
+      "family": "json",
+      "sql": {
+        "duckdb": "json_extract_string('{\"a\":\"é\"}','$.a')",
+        "trino": "json_extract_scalar('{\"a\":\"é\"}','$.a')",
+        "doris": "get_json_string('{\"a\":\"é\"}','$.a')",
+        "clickhouse": "JSONExtractString('{\"a\":\"é\"}','a')"
+      }
+    },
+    {
+      "id": "variant-type-boundary",
+      "family": "variant",
+      "sql": {
+        "duckdb": "CAST('{\"a\":2}' AS VARIANT)",
+        "trino": "CAST('{\"a\":2}' AS VARIANT)",
+        "doris": "CAST('{\"a\":2}' AS VARIANT)",
+        "clickhouse": "CAST('{\"a\":2}' AS VARIANT)"
+      }
+    },
+    {
+      "id": "month-boundaries",
+      "family": "temporal",
+      "sql": {
+        "duckdb": "date_diff('month',DATE '2026-01-31',DATE '2026-02-01')",
+        "trino": "date_diff('month',DATE '2026-01-31',DATE '2026-02-01')",
+        "doris": "months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))",
+        "clickhouse": "dateDiff('month',toDate('2026-01-31'),toDate('2026-02-01'))"
+      }
+    },
+    {
+      "id": "submicrosecond-text",
+      "family": "temporal",
+      "sql": {
+        "duckdb": "TIMESTAMP_NS '2024-01-01 00:00:00.123456789'",
+        "trino": "TIMESTAMP '2024-01-01 00:00:00.123456789'",
+        "doris": "CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))",
+        "clickhouse": "toDateTime64('2024-01-01 00:00:00.123456789',9,'UTC')"
+      }
+    },
+    {
+      "id": "regex-partial",
+      "family": "regex",
+      "sql": {
+        "duckdb": "'abc' ~ 'b'",
+        "trino": "regexp_like('abc','b')",
+        "doris": "'abc' REGEXP 'b'",
+        "clickhouse": "CAST(match('abc','b') AS Bool)"
+      }
+    },
+    {
+      "id": "regex-lookbehind",
+      "family": "regex",
+      "sql": {
+        "duckdb": "regexp_matches('ab','(?<=a)b')",
+        "trino": "regexp_like('ab','(?<=a)b')",
+        "doris": "'ab' REGEXP '(?<=a)b'",
+        "clickhouse": "CAST(match('ab','(?<=a)b') AS Bool)"
+      }
+    },
+    {
+      "id": "regex-replace-default",
+      "family": "regex",
+      "sql": {
+        "duckdb": "regexp_replace('aba','a','x')",
+        "trino": "regexp_replace('aba','a','x')",
+        "doris": "regexp_replace('aba','a','x')",
+        "clickhouse": "replaceRegexpAll('aba','a','x')"
+      }
+    },
+    {
+      "id": "integer-zero",
+      "family": "numeric",
+      "sql": {
+        "duckdb": "CAST(1 AS BIGINT)//CAST(0 AS BIGINT)",
+        "trino": "BIGINT '1'/BIGINT '0'",
+        "doris": "CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)",
+        "clickhouse": "intDiv(toInt64(1),toInt64(0))"
+      }
+    },
+    {
+      "id": "floating-modulo-zero",
+      "family": "numeric",
+      "sql": {
+        "duckdb": "CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)",
+        "trino": "mod(DOUBLE '1',DOUBLE '0')",
+        "doris": "CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)",
+        "clickhouse": "modulo(toFloat64(1),toFloat64(0))"
+      }
+    }
+  ],
+  "rows": {
+    "duckdb": {
+      "json-duplicate-key": {
+        "status": "ok",
+        "sql_type": "JSON",
+        "value": "1",
+        "sql_null": false
+      },
+      "json-null": {
+        "status": "ok",
+        "sql_type": "JSON",
+        "value": "null",
+        "sql_null": false
+      },
+      "json-scalar-unicode": {
+        "status": "ok",
+        "sql_type": "VARCHAR",
+        "value": "é",
+        "sql_null": false
+      },
+      "variant-type-boundary": {
+        "status": "ok",
+        "sql_type": "VARIANT",
+        "value": "{\"a\":2}",
+        "sql_null": false
+      },
+      "month-boundaries": {
+        "status": "ok",
+        "sql_type": "BIGINT",
+        "value": "1",
+        "sql_null": false
+      },
+      "submicrosecond-text": {
+        "status": "ok",
+        "sql_type": "TIMESTAMP_NS",
+        "value": "2024-01-01 00:00:00.123456789",
+        "sql_null": false
+      },
+      "regex-partial": {
+        "status": "ok",
+        "sql_type": "BOOLEAN",
+        "value": "true",
+        "sql_null": false
+      },
+      "regex-lookbehind": {
+        "status": "engine_error",
+        "error": "Invalid Input Error: invalid perl operator: (?<",
+        "sql_state": null
+      },
+      "regex-replace-default": {
+        "status": "ok",
+        "sql_type": "VARCHAR",
+        "value": "xba",
+        "sql_null": false
+      },
+      "integer-zero": {
+        "status": "engine_error",
+        "error": "Invalid Input Error: Division by zero in expression (1 // 0). Use TRY(...) to return NULL for this expression, or SET error_on_division_by_zero=false to return NULL for all divisions by zero.",
+        "sql_state": null
+      },
+      "floating-modulo-zero": {
+        "status": "ok",
+        "sql_type": "DOUBLE",
+        "value": "-nan",
+        "sql_null": false
+      }
+    },
+    "trino": {
+      "json-duplicate-key": {
+        "sql": "SELECT typeof((json_extract('{\"a\":1,\"a\":2}','$.a'))) AS sql_type,CAST((json_extract('{\"a\":1,\"a\":2}','$.a')) AS VARCHAR) AS value,((json_extract('{\"a\":1,\"a\":2}','$.a')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"json\",\"value\":\"1\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "json",
+        "value": "1",
+        "sql_null": false
+      },
+      "json-null": {
+        "sql": "SELECT typeof((json_extract('{\"a\":null}','$.a'))) AS sql_type,CAST((json_extract('{\"a\":null}','$.a')) AS VARCHAR) AS value,((json_extract('{\"a\":null}','$.a')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"json\",\"value\":null,\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "json",
+        "value": null,
+        "sql_null": false
+      },
+      "json-scalar-unicode": {
+        "sql": "SELECT typeof((json_extract_scalar('{\"a\":\"é\"}','$.a'))) AS sql_type,CAST((json_extract_scalar('{\"a\":\"é\"}','$.a')) AS VARCHAR) AS value,((json_extract_scalar('{\"a\":\"é\"}','$.a')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"varchar(9)\",\"value\":\"é\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "varchar(9)",
+        "value": "é",
+        "sql_null": false
+      },
+      "variant-type-boundary": {
+        "sql": "SELECT typeof((CAST('{\"a\":2}' AS VARIANT))) AS sql_type,CAST((CAST('{\"a\":2}' AS VARIANT)) AS VARCHAR) AS value,((CAST('{\"a\":2}' AS VARIANT)) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"variant\",\"value\":\"{\\\"a\\\":2}\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "variant",
+        "value": "{\"a\":2}",
+        "sql_null": false
+      },
+      "month-boundaries": {
+        "sql": "SELECT typeof((date_diff('month',DATE '2026-01-31',DATE '2026-02-01'))) AS sql_type,CAST((date_diff('month',DATE '2026-01-31',DATE '2026-02-01')) AS VARCHAR) AS value,((date_diff('month',DATE '2026-01-31',DATE '2026-02-01')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"bigint\",\"value\":\"0\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "bigint",
+        "value": "0",
+        "sql_null": false
+      },
+      "submicrosecond-text": {
+        "sql": "SELECT typeof((TIMESTAMP '2024-01-01 00:00:00.123456789')) AS sql_type,CAST((TIMESTAMP '2024-01-01 00:00:00.123456789') AS VARCHAR) AS value,((TIMESTAMP '2024-01-01 00:00:00.123456789') IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"timestamp(9)\",\"value\":\"2024-01-01 00:00:00.123456789\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "timestamp(9)",
+        "value": "2024-01-01 00:00:00.123456789",
+        "sql_null": false
+      },
+      "regex-partial": {
+        "sql": "SELECT typeof((regexp_like('abc','b'))) AS sql_type,CAST((regexp_like('abc','b')) AS VARCHAR) AS value,((regexp_like('abc','b')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"boolean\",\"value\":\"true\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "boolean",
+        "value": "true",
+        "sql_null": false
+      },
+      "regex-lookbehind": {
+        "sql": "SELECT typeof((regexp_like('ab','(?<=a)b'))) AS sql_type,CAST((regexp_like('ab','(?<=a)b')) AS VARCHAR) AS value,((regexp_like('ab','(?<=a)b')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"boolean\",\"value\":\"true\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "boolean",
+        "value": "true",
+        "sql_null": false
+      },
+      "regex-replace-default": {
+        "sql": "SELECT typeof((regexp_replace('aba','a','x'))) AS sql_type,CAST((regexp_replace('aba','a','x')) AS VARCHAR) AS value,((regexp_replace('aba','a','x')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"varchar(7)\",\"value\":\"xbx\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "varchar(7)",
+        "value": "xbx",
+        "sql_null": false
+      },
+      "integer-zero": {
+        "sql": "SELECT typeof((BIGINT '1'/BIGINT '0')) AS sql_type,CAST((BIGINT '1'/BIGINT '0') AS VARCHAR) AS value,((BIGINT '1'/BIGINT '0') IS NULL) AS sql_null",
+        "status": "engine_error",
+        "stdout": "",
+        "stderr": "Query 20261101_211449_00036_fch2r failed: Division by zero\n\n",
+        "error": "Query 20261101_211449_00036_fch2r failed: Division by zero\n\n"
+      },
+      "floating-modulo-zero": {
+        "sql": "SELECT typeof((mod(DOUBLE '1',DOUBLE '0'))) AS sql_type,CAST((mod(DOUBLE '1',DOUBLE '0')) AS VARCHAR) AS value,((mod(DOUBLE '1',DOUBLE '0')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"double\",\"value\":\"NaN\",\"sql_null\":false}\n",
+        "stderr": "",
+        "sql_type": "double",
+        "value": "NaN",
+        "sql_null": false
+      }
+    },
+    "doris": {
+      "json-duplicate-key": {
+        "sql": "SELECT (json_extract('{\"a\":1,\"a\":2}','$.a')) AS native_value,HEX(CAST((json_extract('{\"a\":1,\"a\":2}','$.a')) AS STRING)) AS value_hex,((json_extract('{\"a\":1,\"a\":2}','$.a')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (json_extract('{\"a\":1,\"a\":2}','$.a')) AS native_value,HEX(CAST((json_extract('{\"a\":1,\"a\":2}','$.a')) AS STRING)) AS value_hex,((json_extract('{\"a\":1,\"a\":2}','$.a')) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       JSON\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 1\nDecimals:   0\nFlags:      \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 2\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n|    1 |   31 |    0 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:JSON",
+        "value": "1",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "JSON",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "255",
+          "Max_length": "1",
+          "Decimals": "0",
+          "Flags": ""
+        }
+      },
+      "json-null": {
+        "sql": "SELECT (json_extract('{\"a\":null}','$.a')) AS native_value,HEX(CAST((json_extract('{\"a\":null}','$.a')) AS STRING)) AS value_hex,((json_extract('{\"a\":null}','$.a')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (json_extract('{\"a\":null}','$.a')) AS native_value,HEX(CAST((json_extract('{\"a\":null}','$.a')) AS STRING)) AS value_hex,((json_extract('{\"a\":null}','$.a')) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       JSON\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 4\nDecimals:   0\nFlags:      \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 0\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| null | NULL |    0 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:JSON",
+        "value": null,
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "JSON",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "255",
+          "Max_length": "4",
+          "Decimals": "0",
+          "Flags": ""
+        }
+      },
+      "json-scalar-unicode": {
+        "sql": "SELECT (get_json_string('{\"a\":\"é\"}','$.a')) AS native_value,HEX(CAST((get_json_string('{\"a\":\"é\"}','$.a')) AS STRING)) AS value_hex,((get_json_string('{\"a\":\"é\"}','$.a')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (get_json_string('{\"a\":\"é\"}','$.a')) AS native_value,HEX(CAST((get_json_string('{\"a\":\"é\"}','$.a')) AS STRING)) AS value_hex,((get_json_string('{\"a\":\"é\"}','$.a')) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       BLOB\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 2\nDecimals:   0\nFlags:      \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 4\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n|    é | C3A9 |    0 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:BLOB",
+        "value": "é",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "BLOB",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "255",
+          "Max_length": "2",
+          "Decimals": "0",
+          "Flags": ""
+        }
+      },
+      "variant-type-boundary": {
+        "sql": "SELECT (CAST('{\"a\":2}' AS VARIANT)) AS native_value,HEX(CAST((CAST('{\"a\":2}' AS VARIANT)) AS STRING)) AS value_hex,((CAST('{\"a\":2}' AS VARIANT)) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (CAST('{\"a\":2}' AS VARIANT)) AS native_value,HEX(CAST((CAST('{\"a\":2}' AS VARIANT)) AS STRING)) AS value_hex,((CAST('{\"a\":2}' AS VARIANT)) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       JSON\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 7\nDecimals:   0\nFlags:      \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 14\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+---------+----------------+------+\n| {\"a\":2} | 7B2261223A327D |    0 |\n+---------+----------------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:JSON",
+        "value": "{\"a\":2}",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "JSON",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "255",
+          "Max_length": "7",
+          "Decimals": "0",
+          "Flags": ""
+        }
+      },
+      "month-boundaries": {
+        "sql": "SELECT (months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))) AS native_value,HEX(CAST((months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))) AS STRING)) AS value_hex,((months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))) AS native_value,HEX(CAST((months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))) AS STRING)) AS value_hex,((months_diff(CAST('2026-02-01' AS DATE),CAST('2026-01-31' AS DATE))) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  utf8mb3_general_ci (33)\nLength:     20\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 2\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n|    0 |   30 |    0 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:LONGLONG",
+        "value": "0",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "LONGLONG",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "20",
+          "Max_length": "1",
+          "Decimals": "0",
+          "Flags": "NUM "
+        }
+      },
+      "submicrosecond-text": {
+        "sql": "SELECT (CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))) AS native_value,HEX(CAST((CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))) AS STRING)) AS value_hex,((CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))) AS native_value,HEX(CAST((CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))) AS STRING)) AS value_hex,((CAST('2024-01-01 00:00:00.123456789' AS DATETIMEV2(6))) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DATETIME\nCollation:  utf8mb3_general_ci (33)\nLength:     19\nMax_length: 26\nDecimals:   6\nFlags:      \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 52\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+----------------------------+------------------------------------------------------+------+\n| 2024-01-01 00:00:00.123457 | 323032342D30312D30312030303A30303A30302E313233343537 |    0 |\n+----------------------------+------------------------------------------------------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:DATETIME",
+        "value": "2024-01-01 00:00:00.123457",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "DATETIME",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "19",
+          "Max_length": "26",
+          "Decimals": "6",
+          "Flags": ""
+        }
+      },
+      "regex-partial": {
+        "sql": "SELECT ('abc' REGEXP 'b') AS native_value,HEX(CAST(('abc' REGEXP 'b') AS STRING)) AS value_hex,(('abc' REGEXP 'b') IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT ('abc' REGEXP 'b') AS native_value,HEX(CAST(('abc' REGEXP 'b') AS STRING)) AS value_hex,(('abc' REGEXP 'b') IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 2\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n|    1 |   31 |    0 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:TINY",
+        "value": "1",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "TINY",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "1",
+          "Max_length": "1",
+          "Decimals": "0",
+          "Flags": "NUM "
+        }
+      },
+      "regex-lookbehind": {
+        "sql": "SELECT ('ab' REGEXP '(?<=a)b') AS native_value,HEX(CAST(('ab' REGEXP '(?<=a)b') AS STRING)) AS value_hex,(('ab' REGEXP '(?<=a)b') IS NULL) AS sql_null",
+        "status": "engine_error",
+        "stdout": "--------------\nSELECT ('ab' REGEXP '(?<=a)b') AS native_value,HEX(CAST(('ab' REGEXP '(?<=a)b') AS STRING)) AS value_hex,(('ab' REGEXP '(?<=a)b') IS NULL) AS sql_null\n--------------\n\nBye\n",
+        "stderr": "ERROR 1105 (HY000) at line 1: errCode = 2, detailMessage = (172.18.0.3)[INTERNAL_ERROR]Invalid regex expression: (?<=a)b. Error: invalid perl operator: (?<. If you need advanced regex features, try setting enable_extended_regex=true\n",
+        "error": "ERROR 1105 (HY000) at line 1: errCode = 2, detailMessage = (172.18.0.3)[INTERNAL_ERROR]Invalid regex expression: (?<=a)b. Error: invalid perl operator: (?<. If you need advanced regex features, try setting enable_extended_regex=true\n"
+      },
+      "regex-replace-default": {
+        "sql": "SELECT (regexp_replace('aba','a','x')) AS native_value,HEX(CAST((regexp_replace('aba','a','x')) AS STRING)) AS value_hex,((regexp_replace('aba','a','x')) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (regexp_replace('aba','a','x')) AS native_value,HEX(CAST((regexp_replace('aba','a','x')) AS STRING)) AS value_hex,((regexp_replace('aba','a','x')) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 3\nDecimals:   0\nFlags:      \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 6\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+--------+------+\n|  xbx | 786278 |    0 |\n+------+--------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:STRING",
+        "value": "xbx",
+        "sql_null": false,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "STRING",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "255",
+          "Max_length": "3",
+          "Decimals": "0",
+          "Flags": ""
+        }
+      },
+      "integer-zero": {
+        "sql": "SELECT (CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)) AS native_value,HEX(CAST((CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)) AS STRING)) AS value_hex,((CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)) AS native_value,HEX(CAST((CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)) AS STRING)) AS value_hex,((CAST(1 AS BIGINT) DIV CAST(0 AS BIGINT)) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       LONGLONG\nCollation:  utf8mb3_general_ci (33)\nLength:     20\nMax_length: 0\nDecimals:   0\nFlags:      NUM \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 0\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| NULL | NULL |    1 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:LONGLONG",
+        "value": null,
+        "sql_null": true,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "LONGLONG",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "20",
+          "Max_length": "0",
+          "Decimals": "0",
+          "Flags": "NUM "
+        }
+      },
+      "floating-modulo-zero": {
+        "sql": "SELECT (CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)) AS native_value,HEX(CAST((CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)) AS STRING)) AS value_hex,((CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)) IS NULL) AS sql_null",
+        "status": "ok",
+        "stdout": "--------------\nSELECT (CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)) AS native_value,HEX(CAST((CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)) AS STRING)) AS value_hex,((CAST(1 AS DOUBLE)%CAST(0 AS DOUBLE)) IS NULL) AS sql_null\n--------------\n\nField   1:  `native_value`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       DOUBLE\nCollation:  utf8mb3_general_ci (33)\nLength:     22\nMax_length: 0\nDecimals:   31\nFlags:      NUM \n\nField   2:  `value_hex`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       STRING\nCollation:  utf8mb3_general_ci (33)\nLength:     255\nMax_length: 0\nDecimals:   0\nFlags:      \n\nField   3:  `sql_null`\nCatalog:    `def`\nDatabase:   ``\nTable:      ``\nOrg_table:  ``\nType:       TINY\nCollation:  utf8mb3_general_ci (33)\nLength:     1\nMax_length: 1\nDecimals:   0\nFlags:      NUM \n\n\n+------+------+------+\n| NULL | NULL |    1 |\n+------+------+------+\n1 row in set (0.01 sec)\n\nBye\n",
+        "stderr": "",
+        "sql_type": "MYSQL_WIRE:DOUBLE",
+        "value": null,
+        "sql_null": true,
+        "type_evidence": "protocol-only; exact logical type unavailable",
+        "wire_metadata": {
+          "Catalog": "`def`",
+          "Database": "``",
+          "Table": "``",
+          "Org_table": "``",
+          "Type": "DOUBLE",
+          "Collation": "utf8mb3_general_ci (33)",
+          "Length": "22",
+          "Max_length": "0",
+          "Decimals": "31",
+          "Flags": "NUM "
+        }
+      }
+    },
+    "clickhouse": {
+      "json-duplicate-key": {
+        "sql": "SELECT toTypeName((JSONExtractRaw('{\"a\":1,\"a\":2}','a'))) AS sql_type,toString((JSONExtractRaw('{\"a\":1,\"a\":2}','a'))) AS value,isNull((JSONExtractRaw('{\"a\":1,\"a\":2}','a'))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"String\",\"value\":\"1\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "String",
+        "value": "1",
+        "sql_null": false
+      },
+      "json-null": {
+        "sql": "SELECT toTypeName((JSONExtractRaw('{\"a\":null}','a'))) AS sql_type,toString((JSONExtractRaw('{\"a\":null}','a'))) AS value,isNull((JSONExtractRaw('{\"a\":null}','a'))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"String\",\"value\":\"null\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "String",
+        "value": "null",
+        "sql_null": false
+      },
+      "json-scalar-unicode": {
+        "sql": "SELECT toTypeName((JSONExtractString('{\"a\":\"é\"}','a'))) AS sql_type,toString((JSONExtractString('{\"a\":\"é\"}','a'))) AS value,isNull((JSONExtractString('{\"a\":\"é\"}','a'))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"String\",\"value\":\"é\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "String",
+        "value": "é",
+        "sql_null": false
+      },
+      "variant-type-boundary": {
+        "sql": "SELECT toTypeName((CAST('{\"a\":2}' AS VARIANT))) AS sql_type,toString((CAST('{\"a\":2}' AS VARIANT))) AS value,isNull((CAST('{\"a\":2}' AS VARIANT))) AS sql_null FORMAT JSONEachRow",
+        "status": "engine_error",
+        "stdout": "",
+        "stderr": "Received exception from server (version 26.10.2):\nCode: 50. DB::Exception: Received from localhost:9000. DB::Exception: Unknown data type family: VARIANT. Maybe you meant: ['Variant']: In scope SELECT toTypeName((CAST('{\"a\":2}', 'VARIANT'))) AS sql_type, toString((CAST('{\"a\":2}', 'VARIANT'))) AS value, isNull((CAST('{\"a\":2}', 'VARIANT'))) AS sql_null. (UNKNOWN_TYPE)\n(query: SELECT toTypeName((CAST('{\"a\":2}' AS VARIANT))) AS sql_type,toString((CAST('{\"a\":2}' AS VARIANT))) AS value,isNull((CAST('{\"a\":2}' AS VARIANT))) AS sql_null FORMAT JSONEachRow)\n",
+        "error": "Received exception from server (version 26.10.2):\nCode: 50. DB::Exception: Received from localhost:9000. DB::Exception: Unknown data type family: VARIANT. Maybe you meant: ['Variant']: In scope SELECT toTypeName((CAST('{\"a\":2}', 'VARIANT'))) AS sql_type, toString((CAST('{\"a\":2}', 'VARIANT'))) AS value, isNull((CAST('{\"a\":2}', 'VARIANT'))) AS sql_null. (UNKNOWN_TYPE)\n(query: SELECT toTypeName((CAST('{\"a\":2}' AS VARIANT))) AS sql_type,toString((CAST('{\"a\":2}' AS VARIANT))) AS value,isNull((CAST('{\"a\":2}' AS VARIANT))) AS sql_null FORMAT JSONEachRow)\n"
+      },
+      "month-boundaries": {
+        "sql": "SELECT toTypeName((dateDiff('month',toDate('2026-01-31'),toDate('2026-02-01')))) AS sql_type,toString((dateDiff('month',toDate('2026-01-31'),toDate('2026-02-01')))) AS value,isNull((dateDiff('month',toDate('2026-01-31'),toDate('2026-02-01')))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"Int64\",\"value\":\"1\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "Int64",
+        "value": "1",
+        "sql_null": false
+      },
+      "submicrosecond-text": {
+        "sql": "SELECT toTypeName((toDateTime64('2024-01-01 00:00:00.123456789',9,'UTC'))) AS sql_type,toString((toDateTime64('2024-01-01 00:00:00.123456789',9,'UTC'))) AS value,isNull((toDateTime64('2024-01-01 00:00:00.123456789',9,'UTC'))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"DateTime64(9, 'UTC')\",\"value\":\"2024-01-01 00:00:00.123456789\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "DateTime64(9, 'UTC')",
+        "value": "2024-01-01 00:00:00.123456789",
+        "sql_null": false
+      },
+      "regex-partial": {
+        "sql": "SELECT toTypeName((CAST(match('abc','b') AS Bool))) AS sql_type,toString((CAST(match('abc','b') AS Bool))) AS value,isNull((CAST(match('abc','b') AS Bool))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"Bool\",\"value\":\"true\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "Bool",
+        "value": "true",
+        "sql_null": false
+      },
+      "regex-lookbehind": {
+        "sql": "SELECT toTypeName((CAST(match('ab','(?<=a)b') AS Bool))) AS sql_type,toString((CAST(match('ab','(?<=a)b') AS Bool))) AS value,isNull((CAST(match('ab','(?<=a)b') AS Bool))) AS sql_null FORMAT JSONEachRow",
+        "status": "engine_error",
+        "stdout": "",
+        "stderr": "Received exception from server (version 26.10.2):\nCode: 427. DB::Exception: Received from localhost:9000. DB::Exception: OptimizedRegularExpression: cannot compile re2: (?<=a)b, error: invalid perl operator: (?<=. Look at https://github.com/google/re2/wiki/Syntax for reference. Please note that if you specify regex as an SQL string literal, the slashes have to be additionally escaped. For example, to match an opening brace, write '\\(' -- the first slash is for SQL and the second one is for regex: In scope SELECT toTypeName((CAST(match('ab', '(?<=a)b'), 'Bool'))) AS sql_type, toString((CAST(match('ab', '(?<=a)b'), 'Bool'))) AS value, isNull((CAST(match('ab', '(?<=a)b'), 'Bool'))) AS sql_null. (CANNOT_COMPILE_REGEXP)\n(query: SELECT toTypeName((CAST(match('ab','(?<=a)b') AS Bool))) AS sql_type,toString((CAST(match('ab','(?<=a)b') AS Bool))) AS value,isNull((CAST(match('ab','(?<=a)b') AS Bool))) AS sql_null FORMAT JSONEachRow)\n",
+        "error": "Received exception from server (version 26.10.2):\nCode: 427. DB::Exception: Received from localhost:9000. DB::Exception: OptimizedRegularExpression: cannot compile re2: (?<=a)b, error: invalid perl operator: (?<=. Look at https://github.com/google/re2/wiki/Syntax for reference. Please note that if you specify regex as an SQL string literal, the slashes have to be additionally escaped. For example, to match an opening brace, write '\\(' -- the first slash is for SQL and the second one is for regex: In scope SELECT toTypeName((CAST(match('ab', '(?<=a)b'), 'Bool'))) AS sql_type, toString((CAST(match('ab', '(?<=a)b'), 'Bool'))) AS value, isNull((CAST(match('ab', '(?<=a)b'), 'Bool'))) AS sql_null. (CANNOT_COMPILE_REGEXP)\n(query: SELECT toTypeName((CAST(match('ab','(?<=a)b') AS Bool))) AS sql_type,toString((CAST(match('ab','(?<=a)b') AS Bool))) AS value,isNull((CAST(match('ab','(?<=a)b') AS Bool))) AS sql_null FORMAT JSONEachRow)\n"
+      },
+      "regex-replace-default": {
+        "sql": "SELECT toTypeName((replaceRegexpAll('aba','a','x'))) AS sql_type,toString((replaceRegexpAll('aba','a','x'))) AS value,isNull((replaceRegexpAll('aba','a','x'))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"String\",\"value\":\"xbx\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "String",
+        "value": "xbx",
+        "sql_null": false
+      },
+      "integer-zero": {
+        "sql": "SELECT toTypeName((intDiv(toInt64(1),toInt64(0)))) AS sql_type,toString((intDiv(toInt64(1),toInt64(0)))) AS value,isNull((intDiv(toInt64(1),toInt64(0)))) AS sql_null FORMAT JSONEachRow",
+        "status": "engine_error",
+        "stdout": "",
+        "stderr": "Received exception from server (version 26.10.2):\nCode: 153. DB::Exception: Received from localhost:9000. DB::Exception: Division by zero: In scope SELECT toTypeName((intDiv(toInt64(1), toInt64(0)))) AS sql_type, toString((intDiv(toInt64(1), toInt64(0)))) AS value, isNull((intDiv(toInt64(1), toInt64(0)))) AS sql_null. (ILLEGAL_DIVISION)\n(query: SELECT toTypeName((intDiv(toInt64(1),toInt64(0)))) AS sql_type,toString((intDiv(toInt64(1),toInt64(0)))) AS value,isNull((intDiv(toInt64(1),toInt64(0)))) AS sql_null FORMAT JSONEachRow)\n",
+        "error": "Received exception from server (version 26.10.2):\nCode: 153. DB::Exception: Received from localhost:9000. DB::Exception: Division by zero: In scope SELECT toTypeName((intDiv(toInt64(1), toInt64(0)))) AS sql_type, toString((intDiv(toInt64(1), toInt64(0)))) AS value, isNull((intDiv(toInt64(1), toInt64(0)))) AS sql_null. (ILLEGAL_DIVISION)\n(query: SELECT toTypeName((intDiv(toInt64(1),toInt64(0)))) AS sql_type,toString((intDiv(toInt64(1),toInt64(0)))) AS value,isNull((intDiv(toInt64(1),toInt64(0)))) AS sql_null FORMAT JSONEachRow)\n"
+      },
+      "floating-modulo-zero": {
+        "sql": "SELECT toTypeName((modulo(toFloat64(1),toFloat64(0)))) AS sql_type,toString((modulo(toFloat64(1),toFloat64(0)))) AS value,isNull((modulo(toFloat64(1),toFloat64(0)))) AS sql_null FORMAT JSONEachRow",
+        "status": "ok",
+        "stdout": "{\"sql_type\":\"Float64\",\"value\":\"nan\",\"sql_null\":0}\n",
+        "stderr": "",
+        "sql_type": "Float64",
+        "value": "nan",
+        "sql_null": false
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "case": "json-duplicate-key",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "json-duplicate-key",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "json-duplicate-key",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "json-duplicate-key",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "json-duplicate-key",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "json-duplicate-key",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "json-null",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": false
+    },
+    {
+      "case": "json-null",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "json-null",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "json-null",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "json-null",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": false
+    },
+    {
+      "case": "json-null",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "json-scalar-unicode",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "json-scalar-unicode",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "json-scalar-unicode",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "json-scalar-unicode",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "json-scalar-unicode",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "json-scalar-unicode",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "variant-type-boundary",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "variant-type-boundary",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "variant-type-boundary",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "variant-type-boundary",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "variant-type-boundary",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "variant-type-boundary",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "month-boundaries",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": false
+    },
+    {
+      "case": "month-boundaries",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "month-boundaries",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "month-boundaries",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "month-boundaries",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": false
+    },
+    {
+      "case": "month-boundaries",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "submicrosecond-text",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "submicrosecond-text",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "submicrosecond-text",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "submicrosecond-text",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "submicrosecond-text",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "submicrosecond-text",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-partial",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "regex-partial",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-partial",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "regex-partial",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-partial",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": true
+    },
+    {
+      "case": "regex-partial",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-lookbehind",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "regex-lookbehind",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "regex-lookbehind",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "regex-lookbehind",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "regex-lookbehind",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "regex-lookbehind",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "regex-replace-default",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-replace-default",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-replace-default",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": false
+    },
+    {
+      "case": "regex-replace-default",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "regex-replace-default",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "typed-or-representation-difference",
+      "projection_equal": true
+    },
+    {
+      "case": "regex-replace-default",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": true
+    },
+    {
+      "case": "integer-zero",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "integer-zero",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "integer-zero",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "integer-zero",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "integer-zero",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "integer-zero",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-error-or-unavailable",
+      "projection_equal": null
+    },
+    {
+      "case": "floating-modulo-zero",
+      "engines": [
+        "duckdb",
+        "trino"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": false
+    },
+    {
+      "case": "floating-modulo-zero",
+      "engines": [
+        "duckdb",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "floating-modulo-zero",
+      "engines": [
+        "duckdb",
+        "clickhouse"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": false
+    },
+    {
+      "case": "floating-modulo-zero",
+      "engines": [
+        "trino",
+        "doris"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    },
+    {
+      "case": "floating-modulo-zero",
+      "engines": [
+        "trino",
+        "clickhouse"
+      ],
+      "verdict": "same-observed",
+      "projection_equal": false
+    },
+    {
+      "case": "floating-modulo-zero",
+      "engines": [
+        "doris",
+        "clickhouse"
+      ],
+      "verdict": "unqualified-logical-type",
+      "projection_equal": false
+    }
+  ],
+  "findings": [
+    {
+      "family": "json",
+      "verdict": "conditional-unqualified",
+      "cases": [
+        "json-duplicate-key",
+        "json-null",
+        "json-scalar-unicode"
+      ],
+      "reason": "Only the explicit typed/string projections are observed. JSON null is not SQL NULL; CAST to a string can produce SQL NULL while the original JSON value is non-NULL. No general extraction identity follows."
+    },
+    {
+      "family": "variant",
+      "verdict": "unqualified-embedded-shape",
+      "cases": [
+        "variant-type-boundary"
+      ],
+      "reason": "Trino 484 accepts VARIANT in this literal probe. That does not qualify Trino 483, matching embedded VARIANT shapes, a generic JSON substitute or a cross-target lowering."
+    },
+    {
+      "family": "temporal",
+      "verdict": "no-general-equivalence",
+      "cases": [
+        "month-boundaries",
+        "submicrosecond-text"
+      ],
+      "reason": "The month-boundary candidate returns one in DuckDB/ClickHouse and zero in Trino/Doris. Doris rounds the selected DATETIMEV2(6) value while nanosecond-capable candidates retain nine digits. No unqualified DATE_DIFF/precision mapping is admitted."
+    },
+    {
+      "family": "regex",
+      "verdict": "conditional-unqualified",
+      "cases": [
+        "regex-partial",
+        "regex-lookbehind",
+        "regex-replace-default"
+      ],
+      "reason": "Partial literal matches agree in the selected projections, but lookbehind is accepted only by the selected Trino oracle and default replacement changes first versus all matches. No general regex or REGEXP_COUNT qualification."
+    },
+    {
+      "family": "numeric",
+      "verdict": "no-general-equivalence",
+      "cases": [
+        "integer-zero",
+        "floating-modulo-zero"
+      ],
+      "reason": "Default zero arithmetic distinguishes errors, SQL NULL and NaN. Two errors are not equivalent successful results; no error-to-NULL emulation or setting mutation is inferred."
+    }
+  ]
+}

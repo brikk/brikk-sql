@@ -5,7 +5,7 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-056.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-063.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -1669,10 +1669,45 @@ and IDE introspection/completion are separate contracts.
   log /tmp/opencode/duckdb-reviewed-typing-expanded.log. Existing corpora/ledgers, public
   data-class shapes, dependency pins and production IntelliJ APIs are unchanged. No release.
 
-- [ ] `DDB20-063` Function gap reports and semantic hazard refresh [AUDIT].
+- [x] `DDB20-063` Function gap reports and semantic hazard refresh [DONE].
   Update affected DuckDB/Trino/Doris/ClickHouse findings using live evidence at recorded versions.
   Cover changed JSON/VARIANT, temporal, regex and numeric behavior. Regenerate registries only
   after reviewing evidence; do not relabel historical probes as 2.0 or overwrite old hazard versions.
+  Bounded live supplement: vendor/data/duckdb-2.0-bounded-semantic-refresh.json records
+  eleven hand-owned literal candidates, 44 executions and 66 pair comparisons across
+  DuckDB 2.0.0/d54cbbe3df/JDBC 2.0.0.0, Trino 484, Doris 4.1.5-release-917b20be838 and
+  ClickHouse 26.10.2.103. Actual image digests, runtime versions, selected settings, tool/
+  probe hashes, original SQL, native types, SQL-NULL flags, string projections and errors
+  are retained. Profiles are explicit; Trino 484 does not qualify the queued 483 handoff.
+  Cached-image oracles ran only in disposable, isolated local instances with no host ports
+  or user-data mounts. The Doris fixture needed recorded JVM container-support and file-cache
+  workarounds; no host/engine code or SQL policy was changed. Startup failures and an initial
+  unsupported typeof instrumentation query were discarded, never treated as semantic evidence.
+  The verified run has 37 successful candidates, seven native query errors and no unavailable
+  transports. SQL-NULL is measured separately because casting non-NULL JSON null to text can
+  itself return SQL NULL. Doris exposes only MySQL protocol types in this adapter, so all
+  logical-type pair qualifications involving it remain explicit unknowns; no type is guessed.
+  Reviewed findings cover JSON/VARIANT projection limits, month-boundary and nanosecond versus
+  microsecond behavior, partial regex versus lookbehind and first/all replacement, and
+  error/NULL/NaN zero arithmetic. Trino 484's accepted VARIANT sample is recorded without
+  claiming embedded-shape equality, general JSON equivalence or a new lowering. Candidate
+  availability supplements the selected function gaps; global relationship/hazard registries
+  and historical raw evidence are deliberately not regenerated from this tiny sample.
+  tools/duckdb_semantic_audit.py replays offline; five Python tests cover complete exact-version
+  evidence, reviewed findings, SQL-NULL separation, error/unavailable handling and replay.
+  All owned oracle containers and the isolated network were removed after capture. Existing
+  parser/AST/annotation/native-acceptance baselines and old hazard versions remain unchanged.
+  Final frozen-source JVM gates passed 1,426 core, 133 metadata and 270 native/verifier tests,
+  zero failures; one existing Quack routing test is assumption-aborted because its former
+  opt-in temporary binary is unavailable, not disabled or replaced by a new Quack release.
+  Log /tmp/opencode/duckdb-metadata-audit-final.log. All 760 shared IntelliJ tests pass on
+  261.25134.95, log /tmp/opencode/duckdb-metadata-audit-ide-final.log. The 13 hermetic capture
+  tests also pass with all seven explicit local fixtures; no new internal/experimental
+  IntelliJ API, old public data-class shape, dependency pin or publication change.
+  This finishes the authorized 059/060/062/063 batch with separate verified commits/pushes.
+  65/78 checklist deliverables are complete, not a blanket semantic or consumer qualification.
+  Broader unproved cases retain conservative refusals/unknowns and remaining SQL/UDF/temporal
+  work stays separate. No merge/release; recursive IDE schemas and Trino REGEXP_COUNT stay deferred.
 
 - [x] `DDB20-064` Formal library publication and dependency pin [DONE].
   SQL 0.20.1 and SQL IntelliJ support 0.2.4 are on Central. Formal candidate/public POM/module

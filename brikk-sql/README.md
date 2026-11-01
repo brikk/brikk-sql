@@ -670,6 +670,14 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+The bounded semantic supplement is `vendor/data/duckdb-2.0-bounded-semantic-refresh.json`.
+It records exact DuckDB/Trino/Doris/ClickHouse versions, 44 literal executions and scoped
+comparisons without rewriting older hazard records. SQL-NULL flags are separate from text
+projections, and Doris wire types are not promoted into guessed logical types. Same observed
+projection is not general JSON/VARIANT/regex equivalence or pushdown qualification. Replay
+offline with `tools/duckdb_semantic_audit.py --replay ... --output ...`. Trino 484 evidence
+does not qualify the separate Trino 483 REGEXP_COUNT handoff.
+
 Native typing now preserves binom's HUGEINT result, decimal_average's exact DECIMAL(p,s),
 vertex_extract's DOUBLE and LTTB's typed struct-array fields for proved signatures. The same
 facts reach derived-column completion. Unknown inputs, qualified UDF names, lambda/macro
