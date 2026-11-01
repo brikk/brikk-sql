@@ -18,6 +18,7 @@ internal enum class ClickhouseCompositionRule(val nativeErrorCode: Int) {
     RIGHT_OPERAND_ARITY(42), CALL_ARGUMENT_COUNT(42), ARRAY_MAP_ARITY(43), ARRAY_INPUT_TYPE(43), INPUT_TYPE(43),
     HIGHER_ORDER_ARGUMENT_COUNT(42), HIGHER_ORDER_ARITY(43), PREDICATE_TYPE(43), MAP_INPUT_TYPE(43), MAP_RESULT_TYPE(36),
     DIVISION_BY_ZERO(153), INTEGER_DIVISION_OVERFLOW(153),
+    DECIMAL_DIVISION_SCALE(69), DECIMAL_DIVISION_SCALE_OVERFLOW(407),
 }
 
 internal enum class ClickhouseCompositionUnknownReason {
@@ -656,6 +657,22 @@ private class ClickhouseCompositionValidator(
             return Value()
         }
         val inputs = call.operands.map { value(it, context, depth + 1) }
+        val checkOverflow = clickhouseBooleanSetting(node, "decimal_check_overflow", sessionSettings)
+        val constantSourcesProved = inputs.indices.all { index -> inputs[index].constant != true ||
+            inputs[index].nullLiteral || clickhouseDecimalConstantProved(call.operands[index], inputs[index].type) }
+        if (constantSourcesProved) {
+            val nonNullDispatch = inputs.indices.all { index -> !inputs[index].nullLiteral &&
+                (inputs[index].type?.args?.get("nullable") == false ||
+                    clickhouseDecimalConstantProved(call.operands[index], inputs[index].type)) }
+            val failure = clickhouseDecimalDivisionTypeFailure(inputs.map { it.type }, checkOverflow, nonNullDispatch)
+            if (failure != null) {
+                error(node, failure, if (failure == ClickhouseCompositionRule.DECIMAL_DIVISION_SCALE)
+                    "Decimal division result scale is less than the divisor scale."
+                    else "Decimal division operand scales exceed the result storage precision with decimal_check_overflow enabled.")
+                if (inferResults) blockedFallbacks.add(node.objectId)
+                return Value()
+            }
+        }
         if (inputs.any { it.nullLiteral }) {
             unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER)
             if (inferResults) blockedFallbacks.add(node.objectId)
@@ -670,8 +687,7 @@ private class ClickhouseCompositionValidator(
             types = types.mapIndexed { index, type -> type ?: literalTypes[index] }
         }
         val decimalInput = types.any { it?.thisArg in setOf(DType.DECIMAL, DType.DECIMAL32, DType.DECIMAL64, DType.DECIMAL128, DType.DECIMAL256) }
-        val result = clickhouseDecimalDivisionResult(types[0], types[1],
-            clickhouseBooleanSetting(node, "decimal_check_overflow", sessionSettings))
+        val result = clickhouseDecimalDivisionResult(types[0], types[1], checkOverflow)
             ?: clickhouseDivisionResult(types[0], types[1], call.integerMode)
             ?: if (call.integerMode == false && inputs.all { it.plain && it.family == Family.NUMBER })
                 plainType(DType.DOUBLE) else null
@@ -687,7 +703,11 @@ private class ClickhouseCompositionValidator(
                 "Integer division by zero." else "Integer division result is outside the first operand's result bounds.")
             else if (check == null) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
         }
-        if (decimalInput) unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
+        if (decimalInput) {
+            if (clickhouseDecimalDivisionZero(call.operands, types, result, checkOverflow, checkCanceled))
+                error(node, ClickhouseCompositionRule.DIVISION_BY_ZERO, "Decimal division by zero.")
+            else unknown(node, ClickhouseCompositionUnknownReason.RUNTIME_RESTRICTION)
+        }
         return nativeType(result)
     }
 

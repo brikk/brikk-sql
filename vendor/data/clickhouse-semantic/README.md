@@ -56,6 +56,10 @@ one script analysis call with query-local overrides and explicit unknown resets.
 CHSEM-015 adds [exact bounded Decimal division typing](decimal-division-README.md),
 with independent native type matrices and named refinements to CHSEM-012.
 
+CHSEM-016 adds [positioned Decimal division diagnostics](decimal-diagnostics-README.md),
+with explicit-setting guards, NULL/overflow ordering controls and named refinements
+to CHSEM-015's typing-only captures.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

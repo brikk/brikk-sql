@@ -71,6 +71,7 @@ class ClickhouseDecimalDivisionTest {
     @Test fun nativeValueErrorWitnesses() {
         val folder = File(projectRoot(), "vendor/data/clickhouse-semantic")
         val cases = Json.parseToJsonElement(File(folder, "decimal-division-cases.json").readText()).jsonObject.getValue("execution").jsonArray
+        val refinements = Json.parseToJsonElement(File(folder, "decimal-diagnostics-refinements.json").readText()).jsonObject
         val rows = cases.map { row ->
             val case = row.jsonObject
             val id = case.getValue("id").jsonPrimitive.content
@@ -86,7 +87,7 @@ class ClickhouseDecimalDivisionTest {
             val report = clickhouseSemanticDiagnostics(sql, sql.indices, "26.10.2.103")
             assertTrue(report.parseDiagnostics.isEmpty(), id)
             val rules = report.errors.map { it.rule.name }.distinct().sorted()
-            assertEquals(case.getValue("rules").jsonArray.map { it.jsonPrimitive.content }, rules, id)
+            assertEquals((refinements[id] ?: case.getValue("rules")).jsonArray.map { it.jsonPrimitive.content }, rules, id)
             buildJsonObject {
                 put("id", id); put("input_sql", sql); put("generated", generated); put("result_type", type)
                 put("rules", JsonArray(rules.map(::JsonPrimitive)))

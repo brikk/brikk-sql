@@ -1,0 +1,60 @@
+[
+    {
+        "id": "CHSEM-016-SCRIPT01",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4))",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4));",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-SCRIPT02",
+        "input_sql": "SET decimal_check_overflow=0; SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4))",
+        "generated": "SET decimal_check_overflow = 0; SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4));",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-SCRIPT03",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=0",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 0;",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-016-SCRIPT04",
+        "input_sql": "SET decimal_check_overflow=0; SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+        "generated": "SET decimal_check_overflow = 0; SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1;",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-SCRIPT05",
+        "input_sql": "SET decimal_check_overflow=1; SET decimal_check_overflow=DEFAULT; SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4))",
+        "generated": "SET decimal_check_overflow = 1; SET decimal_check_overflow = DEFAULT; SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-SCRIPT06",
+        "input_sql": "SET decimal_check_overflow=1; SET decimal_check_overflow={enabled:UInt8}; SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4))",
+        "generated": "SET decimal_check_overflow = 1; SET decimal_check_overflow = {enabled:UInt8}; SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4));",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-016-SCRIPT07",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST(NULL AS Nullable(Decimal32(6)))/CAST(0 AS Decimal32(4))",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST(NULL AS Nullable(Decimal32(6))) / CAST(0 AS Decimal32(4));",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-016-SCRIPT08",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST(NULL AS Nullable(Decimal(5,2)))/CAST(2 AS Decimal(12,3))",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST(NULL AS Nullable(Decimal(5, 2))) / CAST(2 AS Decimal(12, 3));",
+        "rules": []
+    }
+]

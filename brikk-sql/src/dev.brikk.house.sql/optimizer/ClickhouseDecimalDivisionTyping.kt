@@ -4,9 +4,9 @@ import dev.brikk.house.sql.ast.*
 import kotlin.Boolean
 import kotlin.Int
 
-private data class DecimalShape(val precision: Int, val storage: Int, val scale: Int)
+internal data class ClickhouseDecimalShape(val precision: Int, val storage: Int, val scale: Int)
 
-private fun decimalShape(type: DataType): DecimalShape? {
+internal fun clickhouseDecimalShape(type: DataType): ClickhouseDecimalShape? {
     val parameters = type.expressionsArg.map {
         val value = if (it is DataTypeParam) it.thisArg else it
         (value as? Literal)?.name?.toIntOrNull() ?: return null
@@ -25,20 +25,20 @@ private fun decimalShape(type: DataType): DecimalShape? {
         else -> return null
     }
     if (precision !in 1..76 || scale !in 0..precision) return null
-    return DecimalShape(precision, listOf(9, 18, 38, 76).first { it >= precision }, scale)
+    return ClickhouseDecimalShape(precision, listOf(9, 18, 38, 76).first { it >= precision }, scale)
 }
 
 /** Exact tagged DecimalUtils/FunctionBinaryArithmetic rules, independent of integer division mode. */
 internal fun clickhouseDecimalDivisionResult(left: DataType?, right: DataType?, checkOverflow: Boolean?): DataType? {
     if (left == null || right == null || left.args["nullable"] !is Boolean || right.args["nullable"] !is Boolean) return null
-    val a = decimalShape(left)
-    val b = decimalShape(right)
+    val a = clickhouseDecimalShape(left)
+    val b = clickhouseDecimalShape(right)
     val result = when {
         a != null && b != null -> {
             val storage = maxOf(a.storage, b.storage)
             // Avoid unproved dry-run scale-factor dispatch and setting-dependent type failures.
             if (b.scale > a.scale || a.scale + b.scale > storage && checkOverflow != false) return null
-            DecimalShape(storage, storage, a.scale)
+            ClickhouseDecimalShape(storage, storage, a.scale)
         }
         a != null && clickhouseIntegerShape(right) != null -> a
         b != null && clickhouseIntegerShape(left) != null -> b

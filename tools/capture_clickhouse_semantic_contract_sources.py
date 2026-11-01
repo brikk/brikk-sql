@@ -47,6 +47,12 @@ DECIMAL_DIVISION = [
     ("src/Functions/FunctionBinaryArithmetic.h", "using ResultDataType = typename BinaryOperationTraits<Op, LeftDataType, RightDataType>::ResultDataType;", "else if constexpr (std::is_same_v<ResultDataType, DataTypeDateTime>)"),
     DIVISION[0], DIVISION[1], DIVISION[-1],
 ]
+DECIMAL_DIAGNOSTICS = DECIMAL_DIVISION + [
+    ("src/Functions/FunctionBinaryArithmetic.h", "struct DecimalBinaryOperation", "using namespace traits_;"),
+    ("src/Functions/FunctionBinaryArithmetic.h", "NativeResultType castConstantToNative", "void helperInvokeEither"),
+    ("src/Functions/FunctionBinaryArithmetic.h", "        using T0 = typename LeftDataType::FieldType;", "if (col_left && col_right)"),
+    ("src/Functions/DivisionUtils.h", "inline void throwIfDivisionLeadsToFPE", "inline bool divisionLeadsToFPE"),
+]
 
 
 def selection(data, begin, end):
@@ -63,16 +69,16 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division"), default="higher-order")
+    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
-        if args.round in ("division", "script-settings", "decimal-division") and version != "26.10.2.103":
+        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics") and version != "26.10.2.103":
             continue
         records = []
         cache = {}
-        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION}[args.round]
-        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015"}[args.round]
+        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS}[args.round]
+        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016"}[args.round]
         for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:

@@ -1,0 +1,807 @@
+{
+  "task": "CHSEM-016",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-016-E01",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) SETTINGS decimal_check_overflow=0",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E02",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal(5,2)))/CAST(2 AS Decimal(12,3)) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E03",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(NULL AS Nullable(Decimal(12,3))) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E04",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal128(2))/CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow=0",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E05",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal128(2)))/CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E06",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal128(2))/CAST(NULL AS Nullable(Decimal128(3))) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E07",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal256(2))/CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow=0",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E08",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal256(2)))/CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E09",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal256(2))/CAST(NULL AS Nullable(Decimal256(3))) SETTINGS decimal_check_overflow=0",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E10",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E11",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal32(6)))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E12",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(6))/CAST(NULL AS Nullable(Decimal32(4))) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E13",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal64(10))/CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E14",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal64(10)))/CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E15",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal64(10))/CAST(NULL AS Nullable(Decimal64(9))) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E16",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal128(20))/CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E17",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal128(20)))/CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E18",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal128(20))/CAST(NULL AS Nullable(Decimal128(19))) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E19",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal256(39))/CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E20",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal256(39)))/CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E21",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal256(39))/CAST(NULL AS Nullable(Decimal256(38))) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E22",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal(12,3)))/CAST(0 AS Int8)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E23",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(NULL AS Nullable(Int8))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E24",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(2147483648 AS UInt64)/CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E25",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal32(6))/CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E26",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal32(2))/CAST(0 AS Decimal32(2))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E27",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal64(2))/CAST(0 AS Decimal64(2))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E28",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal128(2))/CAST(0 AS Decimal128(2))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E29",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal256(2))/CAST(0 AS Decimal256(2))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E30",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Int8)",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E31",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS UInt8)/CAST(0 AS Decimal(12,3))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E32",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST('7.25' AS Decimal(12,3))/CAST('-0.000' AS Decimal(12,3))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E33",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Nullable(Decimal(12,3)))/CAST(0 AS Nullable(Int8))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E34",
+      "task": "CHSEM-016",
+      "sql": "SELECT divideExact(CAST(7 AS Decimal(12,3)),CAST(0 AS Int8))",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E35",
+      "task": "CHSEM-016",
+      "sql": "SELECT divide(CAST(7 AS Decimal(12,3)),CAST(0 AS Int8)) SETTINGS sql_compatible_division_for_integers=0",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E36",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow=0",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E37",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(6))/CAST(0 AS Decimal32(4))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E38",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(4))/CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow=1",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E39",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(4))/CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow=0",
+      "rules": [
+        "DECIMAL_DIVISION_SCALE"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        },
+        "26.10.2.103": {
+          "error_code": 69,
+          "error_name": "ARGUMENT_OUT_OF_BOUND"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E40",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(0 AS Decimal32(4))/CAST(0 AS Decimal32(6))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E41",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST('bad' AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) SETTINGS decimal_check_overflow=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 6,
+          "error_name": "CANNOT_PARSE_TEXT"
+        },
+        "26.10.2.103": {
+          "error_code": 6,
+          "error_name": "CANNOT_PARSE_TEXT"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E42",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST('0.0001' AS Decimal32(3))/CAST(0 AS Int8)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E43",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(256 AS UInt8)/CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E44",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Float64)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "inf\n"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E45",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(1 AS Float64)/CAST(0 AS Decimal(12,3))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "inf\n"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E46",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow=1",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-016-E47",
+      "task": "CHSEM-016",
+      "sql": "SELECT CAST(1 AS UInt8)/CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow=0",
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    }
+  ]
+}

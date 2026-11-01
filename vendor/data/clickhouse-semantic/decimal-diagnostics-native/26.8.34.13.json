@@ -1,0 +1,831 @@
+{
+  "captured_at": "2026-11-01T03:50:40.417932+00:00",
+  "fixture_sha256": "6cadcf7be0517b372a48381239fae831ecdf5f22144b6a223e89e58660b4c9e8",
+  "brikk_sha256": "e2d83d678b38ef8d25dd7e2149c55babf87040b5ef5f2575309858fa6e3d2599",
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-016-E01\",\"formatted\":\"SELECT CAST(7, 'Decimal(5, 2)') \\/ CAST(2, 'Decimal(12, 3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E02\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal(5, 2))') \\/ CAST(2, 'Decimal(12, 3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E03\",\"formatted\":\"SELECT CAST(7, 'Decimal(5, 2)') \\/ CAST(NULL, 'Nullable(Decimal(12, 3))')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E04\",\"formatted\":\"SELECT CAST(7, 'Decimal128(2)') \\/ CAST(2, 'Decimal128(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E05\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal128(2))') \\/ CAST(2, 'Decimal128(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E06\",\"formatted\":\"SELECT CAST(7, 'Decimal128(2)') \\/ CAST(NULL, 'Nullable(Decimal128(3))')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E07\",\"formatted\":\"SELECT CAST(7, 'Decimal256(2)') \\/ CAST(2, 'Decimal256(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E08\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal256(2))') \\/ CAST(2, 'Decimal256(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E09\",\"formatted\":\"SELECT CAST(7, 'Decimal256(2)') \\/ CAST(NULL, 'Nullable(Decimal256(3))')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E10\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E11\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal32(6))') \\/ CAST(0, 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E12\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(NULL, 'Nullable(Decimal32(4))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E13\",\"formatted\":\"SELECT CAST(0, 'Decimal64(10)') \\/ CAST(0, 'Decimal64(9)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E14\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal64(10))') \\/ CAST(0, 'Decimal64(9)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E15\",\"formatted\":\"SELECT CAST(0, 'Decimal64(10)') \\/ CAST(NULL, 'Nullable(Decimal64(9))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E16\",\"formatted\":\"SELECT CAST(0, 'Decimal128(20)') \\/ CAST(0, 'Decimal128(19)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E17\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal128(20))') \\/ CAST(0, 'Decimal128(19)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E18\",\"formatted\":\"SELECT CAST(0, 'Decimal128(20)') \\/ CAST(NULL, 'Nullable(Decimal128(19))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E19\",\"formatted\":\"SELECT CAST(0, 'Decimal256(39)') \\/ CAST(0, 'Decimal256(38)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E20\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal256(39))') \\/ CAST(0, 'Decimal256(38)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E21\",\"formatted\":\"SELECT CAST(0, 'Decimal256(39)') \\/ CAST(NULL, 'Nullable(Decimal256(38))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E22\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal(12, 3))') \\/ CAST(0, 'Int8')\"}\n{\"id\":\"CHSEM-016-E23\",\"formatted\":\"SELECT CAST(7, 'Decimal(12, 3)') \\/ CAST(NULL, 'Nullable(Int8)')\"}\n{\"id\":\"CHSEM-016-E24\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST(0, 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E25\",\"formatted\":\"SELECT CAST(7, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E26\",\"formatted\":\"SELECT CAST(7, 'Decimal32(2)') \\/ CAST(0, 'Decimal32(2)')\"}\n{\"id\":\"CHSEM-016-E27\",\"formatted\":\"SELECT CAST(7, 'Decimal64(2)') \\/ CAST(0, 'Decimal64(2)')\"}\n{\"id\":\"CHSEM-016-E28\",\"formatted\":\"SELECT CAST(7, 'Decimal128(2)') \\/ CAST(0, 'Decimal128(2)')\"}\n{\"id\":\"CHSEM-016-E29\",\"formatted\":\"SELECT CAST(7, 'Decimal256(2)') \\/ CAST(0, 'Decimal256(2)')\"}\n{\"id\":\"CHSEM-016-E30\",\"formatted\":\"SELECT CAST(7, 'Decimal(12, 3)') \\/ CAST(0, 'Int8')\"}\n{\"id\":\"CHSEM-016-E31\",\"formatted\":\"SELECT CAST(7, 'UInt8') \\/ CAST(0, 'Decimal(12, 3)')\"}\n{\"id\":\"CHSEM-016-E32\",\"formatted\":\"SELECT CAST('7.25', 'Decimal(12, 3)') \\/ CAST('-0.000', 'Decimal(12, 3)')\"}\n{\"id\":\"CHSEM-016-E33\",\"formatted\":\"SELECT CAST(7, 'Nullable(Decimal(12, 3))') \\/ CAST(0, 'Nullable(Int8)')\"}\n{\"id\":\"CHSEM-016-E34\",\"formatted\":\"SELECT divideExact(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8'))\"}\n{\"id\":\"CHSEM-016-E35\",\"formatted\":\"SELECT divide(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8'))\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-016-E36\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E37\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(4)')\"}\n{\"id\":\"CHSEM-016-E38\",\"formatted\":\"SELECT CAST(0, 'Decimal32(4)') \\/ CAST(0, 'Decimal32(6)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E39\",\"formatted\":\"SELECT CAST(0, 'Decimal32(4)') \\/ CAST(0, 'Decimal32(6)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E40\",\"formatted\":\"SELECT CAST(0, 'Decimal32(4)') \\/ CAST(0, 'Decimal32(6)')\"}\n{\"id\":\"CHSEM-016-E41\",\"formatted\":\"SELECT CAST('bad', 'Decimal(5, 2)') \\/ CAST(2, 'Decimal(12, 3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E42\",\"formatted\":\"SELECT CAST('0.0001', 'Decimal32(3)') \\/ CAST(0, 'Int8')\"}\n{\"id\":\"CHSEM-016-E43\",\"formatted\":\"SELECT CAST(256, 'UInt8') \\/ CAST(0, 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E44\",\"formatted\":\"SELECT CAST(7, 'Decimal(12, 3)') \\/ CAST(0, 'Float64')\"}\n{\"id\":\"CHSEM-016-E45\",\"formatted\":\"SELECT CAST(1, 'Float64') \\/ CAST(0, 'Decimal(12, 3)')\"}\n{\"id\":\"CHSEM-016-E46\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST(0, 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E47\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST(0, 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 0\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-016-E01",
+      "formatted": "SELECT CAST(7, 'Decimal(5, 2)') / CAST(2, 'Decimal(12, 3)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E02",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal(5, 2))') / CAST(2, 'Decimal(12, 3)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E03",
+      "formatted": "SELECT CAST(7, 'Decimal(5, 2)') / CAST(NULL, 'Nullable(Decimal(12, 3))')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E04",
+      "formatted": "SELECT CAST(7, 'Decimal128(2)') / CAST(2, 'Decimal128(3)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E05",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal128(2))') / CAST(2, 'Decimal128(3)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E06",
+      "formatted": "SELECT CAST(7, 'Decimal128(2)') / CAST(NULL, 'Nullable(Decimal128(3))')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E07",
+      "formatted": "SELECT CAST(7, 'Decimal256(2)') / CAST(2, 'Decimal256(3)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E08",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal256(2))') / CAST(2, 'Decimal256(3)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E09",
+      "formatted": "SELECT CAST(7, 'Decimal256(2)') / CAST(NULL, 'Nullable(Decimal256(3))')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E10",
+      "formatted": "SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E11",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal32(6))') / CAST(0, 'Decimal32(4)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E12",
+      "formatted": "SELECT CAST(0, 'Decimal32(6)') / CAST(NULL, 'Nullable(Decimal32(4))')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E13",
+      "formatted": "SELECT CAST(0, 'Decimal64(10)') / CAST(0, 'Decimal64(9)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E14",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal64(10))') / CAST(0, 'Decimal64(9)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E15",
+      "formatted": "SELECT CAST(0, 'Decimal64(10)') / CAST(NULL, 'Nullable(Decimal64(9))')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E16",
+      "formatted": "SELECT CAST(0, 'Decimal128(20)') / CAST(0, 'Decimal128(19)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E17",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal128(20))') / CAST(0, 'Decimal128(19)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E18",
+      "formatted": "SELECT CAST(0, 'Decimal128(20)') / CAST(NULL, 'Nullable(Decimal128(19))')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E19",
+      "formatted": "SELECT CAST(0, 'Decimal256(39)') / CAST(0, 'Decimal256(38)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E20",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal256(39))') / CAST(0, 'Decimal256(38)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E21",
+      "formatted": "SELECT CAST(0, 'Decimal256(39)') / CAST(NULL, 'Nullable(Decimal256(38))')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E22",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Decimal(12, 3))') / CAST(0, 'Int8')"
+    },
+    {
+      "id": "CHSEM-016-E23",
+      "formatted": "SELECT CAST(7, 'Decimal(12, 3)') / CAST(NULL, 'Nullable(Int8)')"
+    },
+    {
+      "id": "CHSEM-016-E24",
+      "formatted": "SELECT CAST(2147483648, 'UInt64') / CAST(0, 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E25",
+      "formatted": "SELECT CAST(7, 'Decimal32(6)') / CAST(0, 'Decimal32(3)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E26",
+      "formatted": "SELECT CAST(7, 'Decimal32(2)') / CAST(0, 'Decimal32(2)')"
+    },
+    {
+      "id": "CHSEM-016-E27",
+      "formatted": "SELECT CAST(7, 'Decimal64(2)') / CAST(0, 'Decimal64(2)')"
+    },
+    {
+      "id": "CHSEM-016-E28",
+      "formatted": "SELECT CAST(7, 'Decimal128(2)') / CAST(0, 'Decimal128(2)')"
+    },
+    {
+      "id": "CHSEM-016-E29",
+      "formatted": "SELECT CAST(7, 'Decimal256(2)') / CAST(0, 'Decimal256(2)')"
+    },
+    {
+      "id": "CHSEM-016-E30",
+      "formatted": "SELECT CAST(7, 'Decimal(12, 3)') / CAST(0, 'Int8')"
+    },
+    {
+      "id": "CHSEM-016-E31",
+      "formatted": "SELECT CAST(7, 'UInt8') / CAST(0, 'Decimal(12, 3)')"
+    },
+    {
+      "id": "CHSEM-016-E32",
+      "formatted": "SELECT CAST('7.25', 'Decimal(12, 3)') / CAST('-0.000', 'Decimal(12, 3)')"
+    },
+    {
+      "id": "CHSEM-016-E33",
+      "formatted": "SELECT CAST(7, 'Nullable(Decimal(12, 3))') / CAST(0, 'Nullable(Int8)')"
+    },
+    {
+      "id": "CHSEM-016-E34",
+      "formatted": "SELECT divideExact(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8'))"
+    },
+    {
+      "id": "CHSEM-016-E35",
+      "formatted": "SELECT divide(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8'))\nSETTINGS sql_compatible_division_for_integers = 0"
+    },
+    {
+      "id": "CHSEM-016-E36",
+      "formatted": "SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E37",
+      "formatted": "SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)')"
+    },
+    {
+      "id": "CHSEM-016-E38",
+      "formatted": "SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E39",
+      "formatted": "SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)')\nSETTINGS decimal_check_overflow = 0"
+    },
+    {
+      "id": "CHSEM-016-E40",
+      "formatted": "SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)')"
+    },
+    {
+      "id": "CHSEM-016-E41",
+      "formatted": "SELECT CAST('bad', 'Decimal(5, 2)') / CAST(2, 'Decimal(12, 3)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E42",
+      "formatted": "SELECT CAST('0.0001', 'Decimal32(3)') / CAST(0, 'Int8')"
+    },
+    {
+      "id": "CHSEM-016-E43",
+      "formatted": "SELECT CAST(256, 'UInt8') / CAST(0, 'Decimal32(0)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E44",
+      "formatted": "SELECT CAST(7, 'Decimal(12, 3)') / CAST(0, 'Float64')"
+    },
+    {
+      "id": "CHSEM-016-E45",
+      "formatted": "SELECT CAST(1, 'Float64') / CAST(0, 'Decimal(12, 3)')"
+    },
+    {
+      "id": "CHSEM-016-E46",
+      "formatted": "SELECT CAST(1, 'UInt8') / CAST(0, 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 1"
+    },
+    {
+      "id": "CHSEM-016-E47",
+      "formatted": "SELECT CAST(1, 'UInt8') / CAST(0, 'Decimal64(10)')\nSETTINGS decimal_check_overflow = 0"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-016-E01\",\"formatted\":\"SELECT CAST(7, 'Decimal(5, 2)') \\/ CAST(2, 'Decimal(12, 3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E02\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal(5, 2))') \\/ CAST(2, 'Decimal(12, 3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E03\",\"formatted\":\"SELECT CAST(7, 'Decimal(5, 2)') \\/ CAST(NULL, 'Nullable(Decimal(12, 3))')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E04\",\"formatted\":\"SELECT CAST(7, 'Decimal128(2)') \\/ CAST(2, 'Decimal128(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E05\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal128(2))') \\/ CAST(2, 'Decimal128(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E06\",\"formatted\":\"SELECT CAST(7, 'Decimal128(2)') \\/ CAST(NULL, 'Nullable(Decimal128(3))')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E07\",\"formatted\":\"SELECT CAST(7, 'Decimal256(2)') \\/ CAST(2, 'Decimal256(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E08\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal256(2))') \\/ CAST(2, 'Decimal256(3)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E09\",\"formatted\":\"SELECT CAST(7, 'Decimal256(2)') \\/ CAST(NULL, 'Nullable(Decimal256(3))')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E10\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E11\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal32(6))') \\/ CAST(0, 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E12\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(NULL, 'Nullable(Decimal32(4))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E13\",\"formatted\":\"SELECT CAST(0, 'Decimal64(10)') \\/ CAST(0, 'Decimal64(9)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E14\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal64(10))') \\/ CAST(0, 'Decimal64(9)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E15\",\"formatted\":\"SELECT CAST(0, 'Decimal64(10)') \\/ CAST(NULL, 'Nullable(Decimal64(9))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E16\",\"formatted\":\"SELECT CAST(0, 'Decimal128(20)') \\/ CAST(0, 'Decimal128(19)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E17\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal128(20))') \\/ CAST(0, 'Decimal128(19)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E18\",\"formatted\":\"SELECT CAST(0, 'Decimal128(20)') \\/ CAST(NULL, 'Nullable(Decimal128(19))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E19\",\"formatted\":\"SELECT CAST(0, 'Decimal256(39)') \\/ CAST(0, 'Decimal256(38)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E20\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal256(39))') \\/ CAST(0, 'Decimal256(38)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E21\",\"formatted\":\"SELECT CAST(0, 'Decimal256(39)') \\/ CAST(NULL, 'Nullable(Decimal256(38))')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E22\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Decimal(12, 3))') \\/ CAST(0, 'Int8')\"}\n{\"id\":\"CHSEM-016-E23\",\"formatted\":\"SELECT CAST(7, 'Decimal(12, 3)') \\/ CAST(NULL, 'Nullable(Int8)')\"}\n{\"id\":\"CHSEM-016-E24\",\"formatted\":\"SELECT CAST(2147483648, 'UInt64') \\/ CAST(0, 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E25\",\"formatted\":\"SELECT CAST(7, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E26\",\"formatted\":\"SELECT CAST(7, 'Decimal32(2)') \\/ CAST(0, 'Decimal32(2)')\"}\n{\"id\":\"CHSEM-016-E27\",\"formatted\":\"SELECT CAST(7, 'Decimal64(2)') \\/ CAST(0, 'Decimal64(2)')\"}\n{\"id\":\"CHSEM-016-E28\",\"formatted\":\"SELECT CAST(7, 'Decimal128(2)') \\/ CAST(0, 'Decimal128(2)')\"}\n{\"id\":\"CHSEM-016-E29\",\"formatted\":\"SELECT CAST(7, 'Decimal256(2)') \\/ CAST(0, 'Decimal256(2)')\"}\n{\"id\":\"CHSEM-016-E30\",\"formatted\":\"SELECT CAST(7, 'Decimal(12, 3)') \\/ CAST(0, 'Int8')\"}\n{\"id\":\"CHSEM-016-E31\",\"formatted\":\"SELECT CAST(7, 'UInt8') \\/ CAST(0, 'Decimal(12, 3)')\"}\n{\"id\":\"CHSEM-016-E32\",\"formatted\":\"SELECT CAST('7.25', 'Decimal(12, 3)') \\/ CAST('-0.000', 'Decimal(12, 3)')\"}\n{\"id\":\"CHSEM-016-E33\",\"formatted\":\"SELECT CAST(7, 'Nullable(Decimal(12, 3))') \\/ CAST(0, 'Nullable(Int8)')\"}\n{\"id\":\"CHSEM-016-E34\",\"formatted\":\"SELECT divideExact(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8'))\"}\n{\"id\":\"CHSEM-016-E35\",\"formatted\":\"SELECT divide(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8'))\\nSETTINGS sql_compatible_division_for_integers = 0\"}\n{\"id\":\"CHSEM-016-E36\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(4)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E37\",\"formatted\":\"SELECT CAST(0, 'Decimal32(6)') \\/ CAST(0, 'Decimal32(4)')\"}\n{\"id\":\"CHSEM-016-E38\",\"formatted\":\"SELECT CAST(0, 'Decimal32(4)') \\/ CAST(0, 'Decimal32(6)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E39\",\"formatted\":\"SELECT CAST(0, 'Decimal32(4)') \\/ CAST(0, 'Decimal32(6)')\\nSETTINGS decimal_check_overflow = 0\"}\n{\"id\":\"CHSEM-016-E40\",\"formatted\":\"SELECT CAST(0, 'Decimal32(4)') \\/ CAST(0, 'Decimal32(6)')\"}\n{\"id\":\"CHSEM-016-E41\",\"formatted\":\"SELECT CAST('bad', 'Decimal(5, 2)') \\/ CAST(2, 'Decimal(12, 3)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E42\",\"formatted\":\"SELECT CAST('0.0001', 'Decimal32(3)') \\/ CAST(0, 'Int8')\"}\n{\"id\":\"CHSEM-016-E43\",\"formatted\":\"SELECT CAST(256, 'UInt8') \\/ CAST(0, 'Decimal32(0)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E44\",\"formatted\":\"SELECT CAST(7, 'Decimal(12, 3)') \\/ CAST(0, 'Float64')\"}\n{\"id\":\"CHSEM-016-E45\",\"formatted\":\"SELECT CAST(1, 'Float64') \\/ CAST(0, 'Decimal(12, 3)')\"}\n{\"id\":\"CHSEM-016-E46\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST(0, 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 1\"}\n{\"id\":\"CHSEM-016-E47\",\"formatted\":\"SELECT CAST(1, 'UInt8') \\/ CAST(0, 'Decimal64(10)')\\nSETTINGS decimal_check_overflow = 0\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-016-E01",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal(5, 2)') / CAST(2, 'Decimal(12, 3)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E02",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E03",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal(5, 2)') / CAST(NULL, 'Nullable(Decimal(12, 3))') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E04",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal128(2)') / CAST(2, 'Decimal128(3)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E05",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E06",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal128(2)') / CAST(NULL, 'Nullable(Decimal128(3))') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E07",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal256(2)') / CAST(2, 'Decimal256(3)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E08",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E09",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal256(2)') / CAST(NULL, 'Nullable(Decimal256(3))') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E10",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E11",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal32(6))') / CAST(0, 'Decimal32(4)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E12",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(NULL, 'Nullable(Decimal32(4))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E13",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal64(10)') / CAST(0, 'Decimal64(9)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E14",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal64(10))') / CAST(0, 'Decimal64(9)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E15",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal64(10)') / CAST(NULL, 'Nullable(Decimal64(9))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E16",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal128(20)') / CAST(0, 'Decimal128(19)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E17",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal128(20))') / CAST(0, 'Decimal128(19)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E18",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal128(20)') / CAST(NULL, 'Nullable(Decimal128(19))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E19",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal256(39)') / CAST(0, 'Decimal256(38)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E20",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal256(39))') / CAST(0, 'Decimal256(38)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E21",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal256(39)') / CAST(NULL, 'Nullable(Decimal256(38))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E22",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E23",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E24",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(2147483648, 'UInt64') / CAST(0, 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E25",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(7, 'Decimal32(6)') / CAST(0, 'Decimal32(3)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E26",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal32(2)') / CAST(0, 'Decimal32(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E27",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal64(2)') / CAST(0, 'Decimal64(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E28",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal128(2)') / CAST(0, 'Decimal128(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E29",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal256(2)') / CAST(0, 'Decimal256(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E30",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal(12, 3)') / CAST(0, 'Int8'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E31",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'UInt8') / CAST(0, 'Decimal(12, 3)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E32",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('7.25', 'Decimal(12, 3)') / CAST('-0.000', 'Decimal(12, 3)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E33",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Nullable(Decimal(12, 3))') / CAST(0, 'Nullable(Int8)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E34",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `divideExact` does not exist. In scope SELECT divideExact(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8')). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-016-E35",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-016-E36",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)') SETTINGS decimal_check_overflow = 0. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E37",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E38",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E39",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E40",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E41",
+      "returncode": 6,
+      "stdout": "",
+      "stderr": "Code: 6. DB::Exception: Cannot parse string 'bad' as Decimal(5, 2): syntax error at begin of string: In scope SELECT CAST('bad', 'Decimal(5, 2)') / CAST(2, 'Decimal(12, 3)') SETTINGS decimal_check_overflow = 1. (CANNOT_PARSE_TEXT)\n"
+    },
+    {
+      "id": "CHSEM-016-E42",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('0.0001', 'Decimal32(3)') / CAST(0, 'Int8'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E43",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(256, 'UInt8') / CAST(0, 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E44",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E45",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E46",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(1, 'UInt8') / CAST(0, 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E47",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(1, 'UInt8') / CAST(0, 'Decimal64(10)') SETTINGS decimal_check_overflow = 0. (ILLEGAL_DIVISION)\n"
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-016-E01",
+      "sql": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal(5, 2)') / CAST(2, 'Decimal(12, 3)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E02",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal(5, 2))) / CAST(2 AS Decimal(12, 3)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E03",
+      "sql": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(NULL AS Nullable(Decimal(12, 3))) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal(5, 2)') / CAST(NULL, 'Nullable(Decimal(12, 3))') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E04",
+      "sql": "SELECT CAST(7 AS Decimal128(2)) / CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal128(2)') / CAST(2, 'Decimal128(3)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E05",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal128(2))) / CAST(2 AS Decimal128(3)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E06",
+      "sql": "SELECT CAST(7 AS Decimal128(2)) / CAST(NULL AS Nullable(Decimal128(3))) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal128(2)') / CAST(NULL, 'Nullable(Decimal128(3))') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E07",
+      "sql": "SELECT CAST(7 AS Decimal256(2)) / CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal256(2)') / CAST(2, 'Decimal256(3)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E08",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal256(2))) / CAST(2 AS Decimal256(3)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E09",
+      "sql": "SELECT CAST(7 AS Decimal256(2)) / CAST(NULL AS Nullable(Decimal256(3))) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(7, 'Decimal256(2)') / CAST(NULL, 'Nullable(Decimal256(3))') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E10",
+      "sql": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E11",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal32(6))) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal32(6))') / CAST(0, 'Decimal32(4)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E12",
+      "sql": "SELECT CAST(0 AS Decimal32(6)) / CAST(NULL AS Nullable(Decimal32(4))) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(NULL, 'Nullable(Decimal32(4))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E13",
+      "sql": "SELECT CAST(0 AS Decimal64(10)) / CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal64(10)') / CAST(0, 'Decimal64(9)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E14",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal64(10))) / CAST(0 AS Decimal64(9)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal64(10))') / CAST(0, 'Decimal64(9)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E15",
+      "sql": "SELECT CAST(0 AS Decimal64(10)) / CAST(NULL AS Nullable(Decimal64(9))) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal64(10)') / CAST(NULL, 'Nullable(Decimal64(9))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E16",
+      "sql": "SELECT CAST(0 AS Decimal128(20)) / CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal128(20)') / CAST(0, 'Decimal128(19)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E17",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal128(20))) / CAST(0 AS Decimal128(19)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal128(20))') / CAST(0, 'Decimal128(19)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E18",
+      "sql": "SELECT CAST(0 AS Decimal128(20)) / CAST(NULL AS Nullable(Decimal128(19))) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal128(20)') / CAST(NULL, 'Nullable(Decimal128(19))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E19",
+      "sql": "SELECT CAST(0 AS Decimal256(39)) / CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal256(39)') / CAST(0, 'Decimal256(38)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E20",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal256(39))) / CAST(0 AS Decimal256(38)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(NULL, 'Nullable(Decimal256(39))') / CAST(0, 'Decimal256(38)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E21",
+      "sql": "SELECT CAST(0 AS Decimal256(39)) / CAST(NULL AS Nullable(Decimal256(38))) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal256(39)') / CAST(NULL, 'Nullable(Decimal256(38))') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E22",
+      "sql": "SELECT CAST(NULL AS Nullable(Decimal(12, 3))) / CAST(0 AS Int8)",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E23",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(NULL AS Nullable(Int8))",
+      "returncode": 0,
+      "stdout": "\\N\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E24",
+      "sql": "SELECT CAST(2147483648 AS UInt64) / CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(2147483648, 'UInt64') / CAST(0, 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E25",
+      "sql": "SELECT CAST(7 AS Decimal32(6)) / CAST(0 AS Decimal32(3)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(7, 'Decimal32(6)') / CAST(0, 'Decimal32(3)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E26",
+      "sql": "SELECT CAST(7 AS Decimal32(2)) / CAST(0 AS Decimal32(2))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal32(2)') / CAST(0, 'Decimal32(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E27",
+      "sql": "SELECT CAST(7 AS Decimal64(2)) / CAST(0 AS Decimal64(2))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal64(2)') / CAST(0, 'Decimal64(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E28",
+      "sql": "SELECT CAST(7 AS Decimal128(2)) / CAST(0 AS Decimal128(2))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal128(2)') / CAST(0, 'Decimal128(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E29",
+      "sql": "SELECT CAST(7 AS Decimal256(2)) / CAST(0 AS Decimal256(2))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal256(2)') / CAST(0, 'Decimal256(2)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E30",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Int8)",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Decimal(12, 3)') / CAST(0, 'Int8'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E31",
+      "sql": "SELECT CAST(7 AS UInt8) / CAST(0 AS Decimal(12, 3))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'UInt8') / CAST(0, 'Decimal(12, 3)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E32",
+      "sql": "SELECT CAST('7.25' AS Decimal(12, 3)) / CAST('-0.000' AS Decimal(12, 3))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('7.25', 'Decimal(12, 3)') / CAST('-0.000', 'Decimal(12, 3)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E33",
+      "sql": "SELECT CAST(7 AS Nullable(Decimal(12, 3))) / CAST(0 AS Nullable(Int8))",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(7, 'Nullable(Decimal(12, 3))') / CAST(0, 'Nullable(Int8)'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E34",
+      "sql": "SELECT divideExact(CAST(7 AS Decimal(12, 3)), CAST(0 AS Int8))",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `divideExact` does not exist. In scope SELECT divideExact(CAST(7, 'Decimal(12, 3)'), CAST(0, 'Int8')). (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-016-E35",
+      "sql": "SELECT divide(CAST(7 AS Decimal(12, 3)), CAST(0 AS Int8)) SETTINGS sql_compatible_division_for_integers = 0",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING) (version 26.8.34.13 (official build)). (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-016-E36",
+      "sql": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)') SETTINGS decimal_check_overflow = 0. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E37",
+      "sql": "SELECT CAST(0 AS Decimal32(6)) / CAST(0 AS Decimal32(4))",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(6)') / CAST(0, 'Decimal32(4)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E38",
+      "sql": "SELECT CAST(0 AS Decimal32(4)) / CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E39",
+      "sql": "SELECT CAST(0 AS Decimal32(4)) / CAST(0 AS Decimal32(6)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 69,
+      "stdout": "",
+      "stderr": "Code: 69. DB::Exception: Decimal result's scale is less than argument's one: In scope SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)') SETTINGS decimal_check_overflow = 0. (ARGUMENT_OUT_OF_BOUND)\n"
+    },
+    {
+      "id": "CHSEM-016-E40",
+      "sql": "SELECT CAST(0 AS Decimal32(4)) / CAST(0 AS Decimal32(6))",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST(0, 'Decimal32(4)') / CAST(0, 'Decimal32(6)'). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E41",
+      "sql": "SELECT CAST('bad' AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 6,
+      "stdout": "",
+      "stderr": "Code: 6. DB::Exception: Cannot parse string 'bad' as Decimal(5, 2): syntax error at begin of string: In scope SELECT CAST('bad', 'Decimal(5, 2)') / CAST(2, 'Decimal(12, 3)') SETTINGS decimal_check_overflow = 1. (CANNOT_PARSE_TEXT)\n"
+    },
+    {
+      "id": "CHSEM-016-E42",
+      "sql": "SELECT CAST('0.0001' AS Decimal32(3)) / CAST(0 AS Int8)",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST('0.0001', 'Decimal32(3)') / CAST(0, 'Int8'). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E43",
+      "sql": "SELECT CAST(256 AS UInt8) / CAST(0 AS Decimal32(0)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(256, 'UInt8') / CAST(0, 'Decimal32(0)') SETTINGS decimal_check_overflow = 1. (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-016-E44",
+      "sql": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Float64)",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E45",
+      "sql": "SELECT CAST(1 AS Float64) / CAST(0 AS Decimal(12, 3))",
+      "returncode": 0,
+      "stdout": "inf\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-016-E46",
+      "sql": "SELECT CAST(1 AS UInt8) / CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow = 1",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: In scope SELECT CAST(1, 'UInt8') / CAST(0, 'Decimal64(10)') SETTINGS decimal_check_overflow = 1. (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-016-E47",
+      "sql": "SELECT CAST(1 AS UInt8) / CAST(0 AS Decimal64(10)) SETTINGS decimal_check_overflow = 0",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT CAST(1, 'UInt8') / CAST(0, 'Decimal64(10)') SETTINGS decimal_check_overflow = 0. (ILLEGAL_DIVISION)\n"
+    }
+  ]
+}

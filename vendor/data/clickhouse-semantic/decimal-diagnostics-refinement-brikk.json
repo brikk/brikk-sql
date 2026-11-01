@@ -1,0 +1,166 @@
+[
+    {
+        "id": "CHSEM-015-E01",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Decimal(5,2)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Decimal(5, 2)) AS v, toTypeName(v)",
+        "result_type": "Decimal(18, 3)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E02",
+        "input_sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-015-E03",
+        "input_sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Int256) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Int256) AS v, toTypeName(v)",
+        "result_type": "Decimal(5, 2)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E04",
+        "input_sql": "SELECT CAST(7 AS UInt256)/CAST(2 AS Decimal(5,2)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS UInt256) / CAST(2 AS Decimal(5, 2)) AS v, toTypeName(v)",
+        "result_type": "Decimal(5, 2)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E05",
+        "input_sql": "SELECT divideExact(CAST(7 AS Decimal(65,8)),CAST(2 AS UInt8)) AS v,toTypeName(v)",
+        "generated": "SELECT divideExact(CAST(7 AS Decimal(65, 8)), CAST(2 AS UInt8)) AS v, toTypeName(v)",
+        "result_type": "Decimal(65, 8)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E06",
+        "input_sql": "SELECT CAST(7 AS Decimal32(2))/CAST(2 AS Decimal64(1)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal32(2)) / CAST(2 AS Decimal64(1)) AS v, toTypeName(v)",
+        "result_type": "Decimal(18, 2)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E07",
+        "input_sql": "SELECT CAST(7 AS Decimal128(4))/CAST(2 AS Decimal256(3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal128(4)) / CAST(2 AS Decimal256(3)) AS v, toTypeName(v)",
+        "result_type": "Decimal(76, 4)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E08",
+        "input_sql": "SELECT CAST(7 AS Nullable(Decimal(12,3)))/CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Nullable(Decimal(12, 3))) / CAST(2 AS Int8) AS v, toTypeName(v)",
+        "result_type": "Nullable(Decimal(12, 3))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E09",
+        "input_sql": "SELECT CAST(7 AS UInt8)/CAST(2 AS Nullable(Decimal(12,3))) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS UInt8) / CAST(2 AS Nullable(Decimal(12, 3))) AS v, toTypeName(v)",
+        "result_type": "Nullable(Decimal(12, 3))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E10",
+        "input_sql": "SELECT CAST(7 AS Nullable(Decimal(12,3)))/CAST(2 AS Nullable(Decimal(5,2))) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Nullable(Decimal(12, 3))) / CAST(2 AS Nullable(Decimal(5, 2))) AS v, toTypeName(v)",
+        "result_type": "Nullable(Decimal(18, 3))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E11",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Int8) AS v, toTypeName(v)",
+        "result_type": "Decimal(12, 3)",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-015-E12",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(0 AS Decimal(12,3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(0 AS Decimal(12, 3)) AS v, toTypeName(v)",
+        "result_type": "Decimal(18, 3)",
+        "rules": [
+            "DIVISION_BY_ZERO"
+        ]
+    },
+    {
+        "id": "CHSEM-015-E13",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Decimal(12,3)))/CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(NULL AS Nullable(Decimal(12, 3))) / CAST(2 AS Int8) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E14",
+        "input_sql": "SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v) SETTINGS decimal_check_overflow=1",
+        "generated": "SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.0001' AS Decimal32(4)) AS v, toTypeName(v) SETTINGS decimal_check_overflow = 1",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE_OVERFLOW"
+        ]
+    },
+    {
+        "id": "CHSEM-015-E15",
+        "input_sql": "SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.0001' AS Decimal32(4)) AS v, toTypeName(v) SETTINGS decimal_check_overflow = 0",
+        "result_type": "Decimal(9, 6)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E16",
+        "input_sql": "SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.001' AS Decimal32(3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST('0.000001' AS Decimal32(6)) / CAST('0.001' AS Decimal32(3)) AS v, toTypeName(v)",
+        "result_type": "Decimal(9, 6)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E17",
+        "input_sql": "SELECT CAST(7 AS Decimal(5,2))/CAST(2 AS Decimal(12,3)) AS v,toTypeName(v) SETTINGS decimal_check_overflow=0",
+        "generated": "SELECT CAST(7 AS Decimal(5, 2)) / CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v) SETTINGS decimal_check_overflow = 0",
+        "result_type": "UNKNOWN",
+        "rules": [
+            "DECIMAL_DIVISION_SCALE"
+        ]
+    },
+    {
+        "id": "CHSEM-015-E18",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1",
+        "result_type": "Decimal(12, 3)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E19",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Int8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Int8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0",
+        "result_type": "Decimal(12, 3)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E20",
+        "input_sql": "SELECT arrayMap((a,b) -> a/b,CAST([7] AS Array(Decimal(12,3))),CAST([2] AS Array(Int8))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap((a, b) -> a / b, CAST([7] AS Array(Decimal(12, 3))), CAST([2] AS Array(Int8))) AS v, toTypeName(v)",
+        "result_type": "Array(Decimal(12, 3))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E21",
+        "input_sql": "SELECT CAST(7 AS Decimal(0,0))/CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(0, 0)) / CAST(2 AS Int8) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-015-E22",
+        "input_sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Decimal(12, 3)) / CAST(2 AS Float64) AS v, toTypeName(v)",
+        "result_type": "UNKNOWN",
+        "rules": []
+    }
+]

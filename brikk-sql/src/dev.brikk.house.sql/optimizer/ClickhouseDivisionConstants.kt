@@ -76,6 +76,15 @@ private fun integerConstant(node: Expression, depth: Int = 0): IntegerConstant? 
     }
 }
 
+/** The same bounded literal/lossless-integer-cast proof used by integer division diagnostics. */
+internal fun clickhouseExactIntegerConstant(node: Expression): Pair<String, Boolean>? =
+    integerConstant(node)?.let { it.magnitude to it.negative }
+
+internal fun clickhouseFitsSignedMagnitude(magnitude: String, negative: Boolean, bits: Int): Boolean {
+    val comparison = compareMagnitude(magnitude, powerOfTwo(bits - 1))
+    return comparison < 0 || negative && comparison == 0
+}
+
 internal data class ClickhouseConstantDivisionCheck(val failure: ClickhouseCompositionRule?)
 
 /** null means unproved; a check without a failure only establishes this constant division's bounds. */

@@ -213,6 +213,10 @@ CHSEM-015's `decimal-division-sources.json` adds Apache-2.0 Decimal result-trait
 precision/scale, overflow/delegate and nullable-dispatch excerpts. Its isolated
 observations are in `decimal-division-native/` and `decimal-division-types/`.
 
+CHSEM-016's `decimal-diagnostics-sources.json` adds Apache-2.0 Decimal execution,
+NULL-map, narrowing/scaling and division exception excerpts. Its finite and session
+observations are in `decimal-diagnostics-native/` and `decimal-diagnostics-script-native/`.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

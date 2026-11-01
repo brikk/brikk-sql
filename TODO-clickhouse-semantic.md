@@ -8,6 +8,7 @@ contracts, CHSEM-009 bounded composite/overload typing, CHSEM-010 lowering
 assessment and CHSEM-011 parenthesized lambda parsing are complete.
 CHSEM-012 adds exact division result typing; CHSEM-013 adds constant-error diagnostics.
 CHSEM-014 adds preceding script SET state; CHSEM-015 adds bounded Decimal division typing.
+CHSEM-016 adds positioned Decimal division failures with guard-order and NULL controls.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -46,6 +47,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-013: Add offline diagnostics for provable division-by-zero and integer quotient overflow. Keep value-dependent/runtime cases unknown; reuse the exact type/mode facts from CHSEM-012 without claiming whole-query acceptance.
 - [x] CHSEM-014: Track explicit preceding `SET` statements in script analysis with clear scope/reset rules. Do not infer external connection state. Record unknown or parameterized assignments explicitly and preserve query-local overrides.
 - [x] CHSEM-015: Infer exact Decimal/Decimal and Decimal/integer division precision and scale from pinned source/native evidence. Cover supported nullable dispatch and mode differences; preserve unknowns outside the proved overloads. User authorized CHSEM-013–015 in order, with tests and a separate commit/push for each.
+- [x] CHSEM-016: Add positioned Decimal-division diagnostics for proved zero divisors, invalid scale dispatch and scale overflow under explicit decimal_check_overflow settings. Reuse CHSEM-015 facts, account for NULL masking and guard order, preserve conditional types and unknowns, capture exact-pin native witnesses, then test/commit/push separately.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
 documentation caveats. Keep settled boundaries in their guides and these TODOs;
@@ -54,7 +56,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-015 are complete. Commit/push each round separately; stop after this requested batch. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-016 are complete. Commit/push CHSEM-016 separately, then stop after this requested round. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -463,6 +465,31 @@ Python passes 106 tests with one opt-in skip; ClickHouse-only discovery passes 5
 The isolated IntelliJ gate passes 757 tests on 261.25134.95. No new IntelliJ API
 calls or public signature changes. No toolchain, release, dependency or
 consumer changes. This completes the requested three-item batch.
+
+## CHSEM-016 result
+
+Added `DECIMAL_DIVISION_SCALE` with native category 69 and
+`DECIMAL_DIVISION_SCALE_OVERFLOW` with category 407, plus Decimal zero findings
+through the existing `DIVISION_BY_ZERO` category 153. The checks reuse resolved
+CHSEM-015 type facts and query/script overflow settings. Return-type overflow is
+checked before NULL masking; later scale-factor and zero failures require their
+own dispatch/value proofs. Narrowing, multiplier squaring and numerator scaling
+are checked before reporting zero. Invalid casts, uncertain values/settings and
+unsupported dispatch remain unknown. Known conditional types survive runtime
+zero errors. UTF-16/source/serde/parser separation and public signatures stay intact.
+Guide: `vendor/data/clickhouse-semantic/decimal-diagnostics-README.md`.
+
+Forty-seven original/generated finite witnesses plus eight original/generated
+whole-session scripts pass on each exact pin, without execution/version skips.
+Every reported failure matches its own native category and no native success is
+flagged. Source guard captures are tagged/hashed; five CHSEM-015 findings are
+strengthened in a named refinement without replacing old evidence or types.
+Full JVM regression passes 1,869 tests with 61 optional integration assumption
+aborts and zero failures. Python discovery passes 110 tests with one opt-in skip.
+Fixture, script and refinement reports regenerate byte-identically. No toolchain,
+release, dependency, consumer or IntelliJ API changes. ClickHouse-only Python
+discovery passes 62 tests; the isolated IntelliJ gate passes 757 on 261.25134.95.
+Other IDE versions were not run. Commit/push this round, then stop.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,
