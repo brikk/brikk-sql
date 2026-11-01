@@ -9,30 +9,38 @@
       "scope": "JSON parse/serialization, exponent rendering, decimal scale/precision, duplicate keys/member order, and legacy JSON path extraction only. Other entries retain their historical provenance.",
       "raw": "vendor/data/trino-484-doris-4.1.5-json/results.json",
       "vectors": "vendor/data/trino-484-doris-4.1.5-json/vectors.json"
+    },
+    {
+      "date": "2026-11-01",
+      "trino": "484",
+      "doris": "4.1.5-release-917b20be838",
+      "scope": "LOWER/UPPER unrestricted Unicode identity correction from connector-reported native and column-backed evidence. No new upstream engine run; other historical entries are unchanged.",
+      "issue": "https://github.com/brikk/brikk-sql/issues/1",
+      "consumer_commit": "42a4738d2d3ccb7b68b3cc59033c2679b5bd14ea"
     }
   ],
   "pairs": [
     {
       "trino": "lower",
       "doris": "lower",
-      "verdict": "identical",
-      "hazard": null,
+      "verdict": "divergent",
+      "hazard": "Connector-reported native and column-backed evidence on Trino 484 / Doris 4.1.5: lower('ΑΣ') returns 'ασ' with U+03C3 on Trino, but 'ας' with final sigma U+03C2 on Doris; lower('İ') returns 'i' (U+0069) on Trino, but 'i' plus combining dot U+0307 on Doris. Unrestricted Unicode case folding is not identical, including projections, predicates, grouping and nested expressions. Matching ASCII/NULL controls do not qualify arbitrary VARCHAR contents. Keep the connector's local fallback in every mode; this metadata correction does not authorize pushdown or a dependency-pin change. Evidence is scoped to the reported versions; other versions are not newly qualified.",
       "areas": [
         "string",
         "unicode"
       ],
-      "provenance": "REPORT-doris-differential-probe-2026-07-13.md#lower"
+      "provenance": "https://github.com/brikk/brikk-sql/issues/1; connector 42a4738d2d3ccb7b68b3cc59033c2679b5bd14ea; supersedes unrestricted identity from REPORT-doris-differential-probe-2026-07-13.md#lower"
     },
     {
       "trino": "upper",
       "doris": "upper",
-      "verdict": "identical",
-      "hazard": null,
+      "verdict": "divergent",
+      "hazard": "Connector-reported native and column-backed evidence on Trino 484 / Doris 4.1.5: upper('ß') remains 'ß' (U+00DF) on Trino, while Doris returns 'SS' (U+0053 U+0053). Unrestricted Unicode case folding is not identical, including projections, predicates, grouping and nested expressions. Matching ASCII/NULL controls do not qualify arbitrary VARCHAR contents. Keep the connector's local fallback in every mode; this metadata correction does not authorize pushdown or a dependency-pin change. Evidence is scoped to the reported versions; other versions are not newly qualified.",
       "areas": [
         "string",
         "unicode"
       ],
-      "provenance": "REPORT-doris-differential-probe-2026-07-13.md#upper"
+      "provenance": "https://github.com/brikk/brikk-sql/issues/1; connector 42a4738d2d3ccb7b68b3cc59033c2679b5bd14ea; supersedes unrestricted identity from REPORT-doris-differential-probe-2026-07-13.md#upper"
     },
     {
       "trino": "concat",

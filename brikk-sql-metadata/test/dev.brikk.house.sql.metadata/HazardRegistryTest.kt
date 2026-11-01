@@ -11,6 +11,24 @@ class HazardRegistryTest {
     // ------------------------------------------------------------ lookups
 
     @Test
+    fun trinoDorisCaseFoldingRetainsTheVersionScopedUnicodeCounterexamples() {
+        for ((source, target) in listOf("trino" to "doris", "doris" to "trino")) {
+            for (name in listOf("lower", "upper")) {
+                val evidence = assertNotNull(HazardRegistry.lookup(source, target, name))
+                assertEquals(HazardVerdict.DIVERGENT, evidence.verdict)
+                assertTrue("unicode" in evidence.areas)
+                val detail = assertNotNull(evidence.hazard)
+                assertTrue(detail.contains("Trino 484") && detail.contains("Doris 4.1.5"), detail)
+                assertTrue(evidence.provenance.contains("https://github.com/brikk/brikk-sql/issues/1"))
+                assertTrue(evidence.provenance.contains("42a4738d2d3ccb7b68b3cc59033c2679b5bd14ea"))
+                if (name == "lower") {
+                    assertTrue(detail.contains("U+03C2") && detail.contains("U+0307"), detail)
+                } else assertTrue(detail.contains("U+00DF") && detail.contains("SS"), detail)
+            }
+        }
+    }
+
+    @Test
     fun lookupWorksInBothDirections() {
         // 'lower' | 'lower' divergent (Turkish İ case-folding probe).
         val fwd = HazardRegistry.lookup("trino", "duckdb", "lower")
