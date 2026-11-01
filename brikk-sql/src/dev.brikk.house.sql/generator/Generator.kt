@@ -22,6 +22,7 @@ import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
 import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
 import dev.brikk.house.sql.dialects.isDuckdbStorageAttach
 import dev.brikk.house.sql.dialects.duckdbDivisionTranslationIssue
+import dev.brikk.house.sql.dialects.duckdbExecutableBoundaryIssue
 import dev.brikk.house.sql.dialects.hasDuckdbZoneOrCollation
 import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.TokenType
@@ -412,6 +413,8 @@ open class Generator(
         }
         if(duckdbNativeSemantics || forExecution)
             expr.duckdbDivisionTranslationIssue(sourceDialect, dialect.name)?.let(::unexecutable)
+        if(duckdbNativeSemantics || forExecution)
+            expr.duckdbExecutableBoundaryIssue(sourceDialect,dialect.name,forExecution)?.let(::unexecutable)
         if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.hasDuckdbZoneOrCollation())
             unexecutable("DuckDB zone/calendar/collation and nanosecond semantics have no verified cross-target translation")
         if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.walk().any { it.isDuckdbCheckpointCommand() })

@@ -1495,10 +1495,41 @@ and IDE introspection/completion are separate contracts.
   Log /tmp/opencode/duckdb-upstream-reconciled.log. No parity ledger changes, publication,
   consumer pins, user connections/URLs or new IntelliJ API calls.
 
-- [ ] `DDB20-055` Cross-dialect executable behavior [AUDIT].
+- [x] `DDB20-055` Cross-dialect executable behavior [DONE].
   For new semantic nodes/options, verify a faithful mapping or an explicit unsupported result
   for each supported target. NEAREST already has a refusal regression; extend the matrix where
   unproved. Anonymous function-name preservation is not proof of equivalent JSON/VARIANT semantics.
+  DuckdbExecutableBoundaryMatrixTest now checks 43 native feature families against all 13
+  other registered canonical generator profiles, including DataFusion and the generic base.
+  All 559 paths require an explicit UnsupportedError, never a parser exception or silently
+  emitted function name. Existing NEAREST/routing/trigger/VARIANT/JSON/CTE/extension/resource/
+  binary/regex/storage/layout/zone guards are retained and tested beyond the former target
+  subsets. New gaps found by the matrix now refuse DuckDB MERGE action/RETURNING semantics,
+  storage ATTACH and session/raw commands, deep table paths, bare-NULL CTAS storage types,
+  regex match/full/extract/extract-all/replace option flags and temporal diff/truncation
+  boundary/result-type mappings. Ordinary constant SQL and native same-target controls stay
+  available. This is not native execution qualification of thirteen foreign engines.
+  Reviewed incoming array endpoint/insertion/sort/null replacement, Unicode escape strings,
+  custom Base64 alphabets and programmatic SQL/JSON constructor options explicitly refuse
+  where faithful DuckDB behavior is unproved. The SQL parser does not gain SQL/JSON clause
+  support from those AST-option controls. No general JSON/regex equivalence is inferred.
+  Same-target execution also refuses fractional interval/unit splitting and multi-argument
+  JSON extraction before losing meaning. Native counterexamples pin 129600 seconds for
+  INTERVAL '1.5 days' versus 86400 after the old rendering, and a multi-path binder error
+  versus an accepted single-path NULL. Flag-dropping and boundary-counting examples are
+  measured locally; no foreign oracle is claimed and no replacement is invented. Whole-day
+  intervals, typed native binds and previously verified native feature results stay intact.
+  Historical parsing/rendering parity remains unchanged; new refusals use the existing
+  source-aware native/executable path. Broader typing, precision, unknown-function capability
+  and hazard work retain 060/062/063/073/077 ownership. No provider access or engine work.
+  The established clean regexp_replace(...,'g') -> Trino preview rule is preserved along
+  with its original hand-owned test. Strict executable qualification remains separate and
+  conservative; no preview or historical parity expectation was weakened to pass this audit.
+  Fresh frozen-source full gates passed 1,423 core, 130 metadata and 267 native/verifier tests,
+  zero skips, including all 559 refusal cells, native counterexamples and unchanged 049/050
+  fingerprints. Log /tmp/opencode/duckdb-executable-boundaries-full-v3.log. Public data-class
+  shapes, source parity corpora/ledgers, production IntelliJ APIs and dependency pins are
+  unchanged. No merge/publication, consumer update or real-resource provisioning.
 
 - [ ] `DDB20-056` Final release-note and acceptance closure [AUDIT].
   Triage the full v2.0.0 release-note PR list for additional user-visible SQL/type changes not

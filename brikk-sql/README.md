@@ -670,6 +670,19 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Executable safety checks cover 43 reviewed native feature families against every other
+registered target profile. New refusals include unqualified MERGE/session/storage behavior,
+bare-NULL CTAS storage types, deep names, regex option flags and temporal boundary/result
+types. Incoming array semantics, Unicode escape strings, custom Base64 alphabets and
+SQL/JSON constructor options require proof rather than same-name rendering.
+
+Two same-target historical renderings are deliberately non-executable: fractional interval
+strings can lose their fraction when split into value/unit syntax, and extra JSON paths
+can disappear. Native counterexamples test both. Ordinary constant SQL, native typed binds
+and the existing qualified same-target features remain available. This refusal matrix is
+not a blanket certification of all SQL or any unrun foreign engine; historical generator
+parity and the remaining type/precision/hazard audits are separate.
+
 The upstream reconciliation is pinned in `vendor/data/duckdb-sqlglot-2.0-audit.json` and
 reproduced by `tools/duckdb_sqlglot_audit.py` using two explicit clean reference checkouts.
 It does not refresh the historical SQLGlot corpus. The SORT BY lexical fix is ported only
