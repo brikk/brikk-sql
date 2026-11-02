@@ -1954,10 +1954,38 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   Full gates pass 1,439 core and 133 metadata tests, zero failures, log
   /tmp/opencode/duckdb-colon-076-core.log. No dependency, consumer or production IDE API change.
 
-- [ ] `DDB20-077` Temporal precision and TRY_CAST changes [AUDIT].
+- [x] `DDB20-077` Temporal precision and TRY_CAST changes [DONE].
   Pin TIMESTAMP_NS to TIMESTAMPTZ_NS conversion and new time-related TRY_CAST support,
   including accepted type spellings, precision, zone effects, invalid input and inferred types.
   Reuse existing temporal result probes rather than claiming these types are entirely unmodeled.
+  Added native cast-result typing for TIMESTAMP(p): 0 -> seconds, 1–3 -> milliseconds,
+  4–6 -> microseconds and 7–10 -> nanoseconds. Precision 10 is accepted by final 2.0 but
+  still yields nine-digit TIMESTAMP_NS. Authored destination AST/precision and generated
+  SQL remain intact; shapes/scopes use the physical result family. Invalid precision or
+  modifiers on other known temporal types remain unknown, with native parsing/binding still
+  authoritative. Historical annotations, the existing TIME_NS enum and the opaque named
+  TIMESTAMPTZ_NS representation are preserved rather than extending a public enum. Added
+  native TIMESTAMPTZ_NS string-literal parsing as an ordinary Cast with that named target.
+  New native controls cover all eleven accepted precision values for CAST/TRY_CAST, invalid strings for
+  ten temporal destinations, supported/unsupported time conversions, exact original/copy/serde
+  types/values and SQL NULL. TIME_NS->TIME and nanosecond->microsecond timestamp casts round
+  the selected fractional value rather than truncate it. TIMESTAMP_NS->TIMESTAMPTZ_NS retains
+  nine digits; exact epoch_ns values differ by two hours under the two tested zones. No implicit
+  zone assumption, catch-to-NULL emulation or new foreign lowering is added. Broader arbitrary
+  casts, user types and session-mode qualifications are not inferred from these samples.
+  Existing explicit caller type slots remain protected when overwriteTypes is false; native
+  precision reconciliation replaces only the declared-target fallback, not caller evidence.
+  Eight focused temporal/ICU core/native tests pass without skips, log
+  /tmp/opencode/duckdb-temporal-077.log. The new native matrix makes 117 original/copy/serde
+  result-type/value comparisons, with engine VARCHAR projections used for session-zone strings
+  rather than mistaking JDBC's client-zone OffsetDateTime formatting for native rendering.
+  Full core/metadata portions pass 1,440/133 tests, log /tmp/opencode/duckdb-temporal-077-full.log.
+  That run's four old-version fixture controls used a mistyped local JAR path; their failures
+  are not native SQL evidence. The path was corrected for a complete native rerun without
+  changing tests, thresholds, dependencies or historical files.
+  Corrected fixture-enabled native gate passes 281 tests, zero failures, with only the existing
+  unavailable Quack fixture aborted, log /tmp/opencode/duckdb-temporal-077-native.log. Existing
+  public parser/Cast/scope JVM signatures match the previous batch. No publication or pin change.
 
 - [ ] `DDB20-078` Dialect compatibility mode [AUDIT].
   The release notes add `SET dialect_compatibility_mode = 'spark'`. Classify its final parser,

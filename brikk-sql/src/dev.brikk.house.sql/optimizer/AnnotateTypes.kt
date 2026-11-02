@@ -70,6 +70,7 @@ import dev.brikk.house.sql.dialects.duckdbVariantReturnType
 import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionName
 import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionType
 import dev.brikk.house.sql.dialects.duckdbNativeSumType
+import dev.brikk.house.sql.dialects.duckdbTemporalCastType
 import dev.brikk.house.sql.ast.Sum
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 
@@ -620,7 +621,8 @@ class TypeAnnotator(
 
             if (
                 expr.objectId in visited ||
-                (!overwriteTypes && expr.type != null && !expr.isType(DType.UNKNOWN))
+                (!overwriteTypes && expr.type != null && !expr.isType(DType.UNKNOWN) &&
+                    !(expr.typeSlot == null && dialect.name == "duckdb" && dialect.supportsNullType && expr.duckdbTemporalCastType()!=null))
             ) {
                 continue // We've already inferred the expression's type
             }
@@ -646,9 +648,11 @@ class TypeAnnotator(
             }
 
             val duckdbJson = if (dialect.name == "duckdb") expr.duckdbJsonCall() else null
+            val duckdbTemporalCast = if (dialect.name == "duckdb" && dialect.supportsNullType) expr.duckdbTemporalCastType() else null
             val spec = expressionMetadata[expr::class]
 
             when {
+                duckdbTemporalCast != null -> setType(expr,duckdbTemporalCast)
                 dialect.name == "duckdb" && dialect.supportsNullType && expr is Sum ->
                     setType(expr,expr.duckdbNativeSumType())
                 dialect.name == "duckdb" && dialect.supportsNullType && expr.reviewedDuckdbFunctionName()!=null ->

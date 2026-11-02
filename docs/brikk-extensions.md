@@ -2017,6 +2017,14 @@ Historical annotation corpora keep their existing contract. Native macro paramet
 preserve `name type := default` using existing ColumnDef/PropertyEQ nodes, without host
 coercion or an inferred default-value binding contract. No public data-class shape changes.
 
+Native cast-result typing maps valid TIMESTAMP precision to its physical family: 0 seconds,
+1–3 milliseconds, 4–6 microseconds and 7–10 nanoseconds. Final 2.0 accepts precision 10
+but still returns a nine-digit nanosecond type. The destination AST retains the
+authored precision, so this is not a SQL rewrite. Unsupported temporal modifiers stay
+unknown, not a guessed type. The existing TIME_NS enum and opaque named TIMESTAMPTZ_NS
+representation are retained; native TIMESTAMPTZ_NS string literals become ordinary casts.
+No enum or public constructor change is needed.
+
 Native table-prefix aliases also reject a simultaneous postfix alias instead of silently
 overwriting it. Subquery/FROM-first/JOIN/nested-scope tests qualify the existing colon-alias
 AST and generation. The historical parser retains its old behavior for corpus compatibility.

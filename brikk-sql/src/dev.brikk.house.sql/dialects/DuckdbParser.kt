@@ -286,6 +286,14 @@ open class DuckdbParser(
     // Native 2.0 expression.gram: factorial is an indirection alongside casts and
     // subscripts, below prefix unary/exponent/multiplication, not a whole-term suffix.
     override fun parseType(parseInterval: Boolean, fallbackToIdentifier: Boolean): Expression? {
+        if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER &&
+            currToken.text.equals("TIMESTAMPTZ_NS",true) && nextToken.tokenType == TokenType.STRING) {
+            val start=currToken
+            advance()
+            val value=parsePrimary() ?: raiseError("Expected nanosecond zoned timestamp literal")
+            return parseColumnOps(expression(dev.brikk.house.sql.ast.Cast(args("this" to value,
+                "to" to DataType(args("this" to DType.USERDEFINED,"kind" to "TIMESTAMPTZ_NS")))),start))
+        }
         val parsed = super.parseType(parseInterval, fallbackToIdentifier)
         // Literal atoms can bypass parseColumnOps in the base parser's fast path.
         return if (!fallbackToIdentifier && (parsed is dev.brikk.house.sql.ast.DuckdbBinaryLiteral ||
