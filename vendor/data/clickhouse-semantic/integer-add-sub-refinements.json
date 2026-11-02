@@ -1,0 +1,23 @@
+{
+  "task": "CHSEM-020",
+  "refinements": [
+    {
+      "id": "CHSEM-020-R01",
+      "refines": "ClickhouseProjectionLiteralTypesTest.genericTypingOtherDialectsAndCompoundArithmeticKeepTheirPolicies",
+      "sql": "SELECT 1+2",
+      "previous_native_type": "Nullable(Int32)",
+      "generic_type": "Nullable(Int32)",
+      "native_type": "UInt16",
+      "witness": "CHSEM-020-E01"
+    },
+    {
+      "id": "CHSEM-020-R02",
+      "refines": "ClickhouseDivisionTypingTest.unknownOverloadsNullConstantsAndGenericArithmeticAreNotTypeProofs",
+      "sql": "SELECT (CAST(1 AS UInt8)+CAST(1 AS UInt8))/CAST(2 AS UInt8) SETTINGS sql_compatible_division_for_integers=1",
+      "previous_native_type": "UNKNOWN",
+      "generic_type": "UNKNOWN",
+      "native_type": "UInt16",
+      "witness": "CHSEM-020-SCRIPT08"
+    }
+  ]
+}

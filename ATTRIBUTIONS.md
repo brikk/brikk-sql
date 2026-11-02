@@ -229,6 +229,11 @@ CHSEM-019's `projection-literal-sources.json` adds Apache-2.0 scalar parser and
 FieldToDataType excerpts. Its isolated observations live in `projection-literal-types/`,
 `projection-literal-native/` and `projection-literal-script-native/`.
 
+CHSEM-020's `integer-add-sub-sources.json` adds Apache-2.0 NumberTraits, plus/minus
+delegate, return-construction and nullable-dispatch excerpts. Its isolated type,
+value and session observations live under `integer-add-sub-types/`,
+`integer-add-sub-native/` and `integer-add-sub-script-native/`.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

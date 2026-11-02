@@ -1,0 +1,76 @@
+[
+    {
+        "id": "CHSEM-020-SCRIPT01",
+        "input_sql": "SELECT 1+2 AS v,toTypeName(v); SELECT 1-2 AS v,toTypeName(v)",
+        "generated": "SELECT 1 + 2 AS v, toTypeName(v); SELECT 1 - 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt16",
+            "Int16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT02",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT (1+2)/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT (1 + 2) / 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT03",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT (1+2)/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT (1 + 2) / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT04",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT (1+2)/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0; SELECT 1+2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT (1 + 2) / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0; SELECT 1 + 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64",
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT05",
+        "input_sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT 1+2 AS v) q",
+        "generated": "SELECT q.v, toTypeName(q.v) FROM (SELECT 1 + 2 AS v) AS q;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT06",
+        "input_sql": "SELECT CAST(1 AS Nullable(Int128))+CAST(2 AS UInt256) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(Int128)) + CAST(2 AS UInt256) AS v, toTypeName(v);",
+        "types": [
+            "Nullable(Int256)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT07",
+        "input_sql": "SET decimal_check_overflow=1; SELECT CAST(18446744073709551615 AS UInt64)+CAST(1 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SET decimal_check_overflow = 1; SELECT CAST(18446744073709551615 AS UInt64) + CAST(1 AS UInt8) AS v, toTypeName(v);",
+        "types": [
+            "UInt64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-SCRIPT08",
+        "input_sql": "SELECT (CAST(1 AS UInt8)+CAST(1 AS UInt8))/CAST(2 AS UInt8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+        "generated": "SELECT (CAST(1 AS UInt8) + CAST(1 AS UInt8)) / CAST(2 AS UInt8) AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 1;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    }
+]

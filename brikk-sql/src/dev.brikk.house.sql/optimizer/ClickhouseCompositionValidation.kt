@@ -235,6 +235,7 @@ private class ClickhouseCompositionValidator(
                 }
             }
             if (clickhouseDivisionCall(node, sessionSettings) != null) value(node, context, 0)
+            if (inferResults && nativeLiterals && clickhouseIntegerAddSubCall(node) != null) value(node, context, 0)
             val map = arrayMap(node)
             if (map != null) {
                 val name = map.name
@@ -648,6 +649,8 @@ private class ClickhouseCompositionValidator(
             is Tuple -> tupleValue(node.expressionsArg.filterIsInstance<Expression>().map { value(it, context, depth + 1) })
             is EQ, is NEQ, is GT, is GTE, is LT, is LTE -> comparisonValue(node, context, depth)
             is Div -> divisionValue(node, context, depth)
+            is Add, is Sub -> if (inferResults && nativeLiterals) integerAddSubValue(node, context, depth)
+                else { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
                 val source = node.thisArg as? Expression
@@ -664,6 +667,8 @@ private class ClickhouseCompositionValidator(
             }
             else -> {
                 if (clickhouseDivisionCall(node) != null) return remember(node, divisionValue(node, context, depth))
+                if (inferResults && nativeLiterals && clickhouseIntegerAddSubCall(node) != null)
+                    return remember(node, integerAddSubValue(node, context, depth))
                 val call = scalarCall(node)
                 if (call == null) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
                 else if (call.name == "arrayMap") { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
@@ -673,6 +678,46 @@ private class ClickhouseCompositionValidator(
                 }
             }
         })
+    }
+
+    private fun integerAddSubValue(node: Expression, context: Context, depth: Int): Value {
+        val call = clickhouseIntegerAddSubCall(node) ?: return Value()
+        if (call.name != null && context.blocked(call.name)) {
+            unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION)
+            blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        val inputs = call.operands.map { operand ->
+            if (ignoredIntegerAddSubOperand(operand)) { unknown(operand, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
+            else value(operand, context, depth + 1)
+        }
+        if (inputs.any { it.nullLiteral }) {
+            unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER)
+            blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        val types = inputs.mapIndexed { index, input ->
+            val operand = call.operands[index]
+            input.type ?: if (!ignoredIntegerAddSubOperand(operand))
+                clickhouseProjectionLiteralType(operand.unnest())?.takeIf { clickhouseIntegerShape(it) != null } else null
+        }
+        val result = clickhouseIntegerAddSubResult(types[0], types[1], call.subtract)
+        if (result == null) {
+            unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+            blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        return nativeType(result)
+    }
+
+    private fun ignoredIntegerAddSubOperand(raw: Expression): Boolean {
+        var node = raw
+        while (true) {
+            checkCanceled()
+            if (ignored(node)) return true
+            if (node is Paren || node is Alias) node = node.thisArg as? Expression ?: return false
+            else return node is Neg && node.thisArg is Literal && ignored(node.thisArg as Literal)
+        }
     }
 
     private fun divisionValue(node: Expression, context: Context, depth: Int): Value {

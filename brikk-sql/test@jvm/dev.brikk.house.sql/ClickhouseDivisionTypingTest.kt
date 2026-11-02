@@ -74,12 +74,14 @@ class ClickhouseDivisionTypingTest {
     fun unknownOverloadsNullConstantsAndGenericArithmeticAreNotTypeProofs() {
         for (expression in listOf("CAST(NULL AS Nullable(Int8))/CAST(2 AS Int8)",
             "TRY_CAST('bad' AS Int8)/CAST(2 AS Int8)",
-            "(CAST(1 AS UInt8)+CAST(1 AS UInt8))/CAST(2 AS UInt8)",
             "DIVIDEEXACT(CAST(7 AS Int8),CAST(2 AS Int8))")) {
             assertEquals("UNKNOWN", type(typed("SELECT $expression SETTINGS sql_compatible_division_for_integers=1")), expression)
         }
         val shadowed = "WITH ((a,b) -> 'x') AS divide SELECT divide(CAST(7 AS Int8),CAST(2 AS Int8)) SETTINGS sql_compatible_division_for_integers=1"
         assertEquals("UNKNOWN", type(typed(shadowed)))
+        val nested = "SELECT (CAST(1 AS UInt8)+CAST(1 AS UInt8))/CAST(2 AS UInt8) SETTINGS sql_compatible_division_for_integers=1"
+        assertEquals("UInt16", type(typed(nested))) // CHSEM-020 proves the intermediate addition width.
+        assertEquals("UNKNOWN", type(typed(nested, native = false)))
     }
 
     @Test

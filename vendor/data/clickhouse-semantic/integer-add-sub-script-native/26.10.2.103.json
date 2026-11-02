@@ -1,0 +1,115 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "c5d6519851455b43a5a2f86aed8ccf00e3c1ba0471ed50c3e32224daf3973937",
+  "brikk_sha256": "54d84c6961a2e197381e5c5dbdb979d88ae62950484883d7117a09ad7875dbcb",
+  "execution": [
+    {
+      "id": "CHSEM-020-SCRIPT01",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n-1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT02",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT03",
+      "returncode": 0,
+      "stdout": "1.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT04",
+      "returncode": 0,
+      "stdout": "1.5\tFloat64\n3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT05",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT06",
+      "returncode": 0,
+      "stdout": "3\tNullable(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT07",
+      "returncode": 0,
+      "stdout": "0\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT08",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-020-SCRIPT01",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n-1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT02",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT03",
+      "returncode": 0,
+      "stdout": "1.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT04",
+      "returncode": 0,
+      "stdout": "1.5\tFloat64\n3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT05",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT06",
+      "returncode": 0,
+      "stdout": "3\tNullable(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT07",
+      "returncode": 0,
+      "stdout": "0\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-SCRIPT08",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    }
+  ]
+}

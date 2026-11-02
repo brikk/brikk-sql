@@ -1,0 +1,139 @@
+{
+  "task": "CHSEM-020",
+  "execution": [
+    {
+      "id": "CHSEM-020-SCRIPT01",
+      "sql": "SELECT 1+2 AS v,toTypeName(v); SELECT 1-2 AS v,toTypeName(v)",
+      "types": [
+        "UInt16",
+        "Int16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tUInt16\n-1\tInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt16\n-1\tInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT02",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT (1+2)/2 AS v,toTypeName(v)",
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT03",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT (1+2)/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "1.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT04",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT (1+2)/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0; SELECT 1+2 AS v,toTypeName(v)",
+      "types": [
+        "Float64",
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "1.5\tFloat64\n3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT05",
+      "sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT 1+2 AS v) q",
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT06",
+      "sql": "SELECT CAST(1 AS Nullable(Int128))+CAST(2 AS UInt256) AS v,toTypeName(v)",
+      "types": [
+        "Nullable(Int256)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tNullable(Int256)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Int256)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT07",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST(18446744073709551615 AS UInt64)+CAST(1 AS UInt8) AS v,toTypeName(v)",
+      "types": [
+        "UInt64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-020-SCRIPT08",
+      "sql": "SELECT (CAST(1 AS UInt8)+CAST(1 AS UInt8))/CAST(2 AS UInt8) AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=1",
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tUInt16\n"
+        }
+      }
+    }
+  ]
+}

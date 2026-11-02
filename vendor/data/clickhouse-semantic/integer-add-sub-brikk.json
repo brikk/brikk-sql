@@ -1,0 +1,212 @@
+[
+    {
+        "id": "CHSEM-020-E01",
+        "input_sql": "SELECT 1+2 AS v,toTypeName(v)",
+        "generated": "SELECT 1 + 2 AS v, toTypeName(v);",
+        "result_type": "UInt16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E02",
+        "input_sql": "SELECT 1-2 AS v,toTypeName(v)",
+        "generated": "SELECT 1 - 2 AS v, toTypeName(v);",
+        "result_type": "Int16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E03",
+        "input_sql": "SELECT -0+1 AS v,toTypeName(v)",
+        "generated": "SELECT -0 + 1 AS v, toTypeName(v);",
+        "result_type": "UInt16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E04",
+        "input_sql": "SELECT -1+2 AS v,toTypeName(v)",
+        "generated": "SELECT -1 + 2 AS v, toTypeName(v);",
+        "result_type": "Int16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E05",
+        "input_sql": "SELECT CAST(1 AS UInt32)+CAST(2 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt32) + CAST(2 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "UInt64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E06",
+        "input_sql": "SELECT CAST(1 AS UInt64)+CAST(2 AS UInt64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt64) + CAST(2 AS UInt64) AS v, toTypeName(v);",
+        "result_type": "UInt64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E07",
+        "input_sql": "SELECT CAST(1 AS UInt128)+CAST(2 AS UInt64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt128) + CAST(2 AS UInt64) AS v, toTypeName(v);",
+        "result_type": "UInt128",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E08",
+        "input_sql": "SELECT CAST(1 AS UInt128)-CAST(2 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt128) - CAST(2 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "Int128",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E09",
+        "input_sql": "SELECT CAST(1 AS UInt256)+CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt256) + CAST(2 AS Int8) AS v, toTypeName(v);",
+        "result_type": "Int256",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E10",
+        "input_sql": "SELECT CAST(1 AS UInt256)-CAST(2 AS UInt256) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt256) - CAST(2 AS UInt256) AS v, toTypeName(v);",
+        "result_type": "Int256",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E11",
+        "input_sql": "SELECT plus(CAST(1 AS UInt8),CAST(2 AS UInt8)) AS v,toTypeName(v)",
+        "generated": "SELECT plus(CAST(1 AS UInt8), CAST(2 AS UInt8)) AS v, toTypeName(v);",
+        "result_type": "UInt16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E12",
+        "input_sql": "SELECT minus(CAST(1 AS UInt8),CAST(2 AS UInt8)) AS v,toTypeName(v)",
+        "generated": "SELECT minus(CAST(1 AS UInt8), CAST(2 AS UInt8)) AS v, toTypeName(v);",
+        "result_type": "Int16",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E13",
+        "input_sql": "SELECT CAST(1 AS Nullable(UInt8))+CAST(2 AS UInt16) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(UInt8)) + CAST(2 AS UInt16) AS v, toTypeName(v);",
+        "result_type": "Nullable(UInt32)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E14",
+        "input_sql": "SELECT CAST(1 AS UInt8)-CAST(2 AS Nullable(Int16)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt8) - CAST(2 AS Nullable(Int16)) AS v, toTypeName(v);",
+        "result_type": "Nullable(Int32)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E15",
+        "input_sql": "SELECT CAST(1 AS Nullable(Int128))+CAST(2 AS Nullable(UInt256)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(Int128)) + CAST(2 AS Nullable(UInt256)) AS v, toTypeName(v);",
+        "result_type": "Nullable(Int256)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E16",
+        "input_sql": "SELECT (CAST(1 AS UInt8)+CAST(2 AS UInt8))+CAST(3 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT (CAST(1 AS UInt8) + CAST(2 AS UInt8)) + CAST(3 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "UInt32",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E17",
+        "input_sql": "SELECT CAST(18446744073709551615 AS UInt64)+CAST(1 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(18446744073709551615 AS UInt64) + CAST(1 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "UInt64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E18",
+        "input_sql": "SELECT CAST(0 AS UInt64)-CAST(1 AS UInt64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(0 AS UInt64) - CAST(1 AS UInt64) AS v, toTypeName(v);",
+        "result_type": "Int64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E19",
+        "input_sql": "SELECT CAST(18446744073709551615 AS UInt64)-CAST(1 AS UInt64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(18446744073709551615 AS UInt64) - CAST(1 AS UInt64) AS v, toTypeName(v);",
+        "result_type": "Int64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E20",
+        "input_sql": "SELECT CAST('115792089237316195423570985008687907853269984665640564039457584007913129639935' AS UInt256)+CAST(1 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST('115792089237316195423570985008687907853269984665640564039457584007913129639935' AS UInt256) + CAST(1 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "UInt256",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E21",
+        "input_sql": "SELECT arrayMap((a,b) -> a-b,CAST([7] AS Array(UInt16)),CAST([2] AS Array(Int8))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap((a, b) -> a - b, CAST([7] AS Array(UInt16)), CAST([2] AS Array(Int8))) AS v, toTypeName(v);",
+        "result_type": "Array(Int32)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E22",
+        "input_sql": "SELECT arrayMap(x -> plus(x,1),CAST([7] AS Array(UInt8))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> plus(x, 1), CAST([7] AS Array(UInt8))) AS v, toTypeName(v);",
+        "result_type": "Array(UInt16)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E23",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Int8))+CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(NULL AS Nullable(Int8)) + CAST(2 AS Int8) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E24",
+        "input_sql": "SELECT CAST(1 AS Float64)+CAST(2 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float64) + CAST(2 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E25",
+        "input_sql": "SELECT CAST(1 AS Decimal(12,3))-CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Decimal(12, 3)) - CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E26",
+        "input_sql": "SELECT 'x'+1 AS v,toTypeName(v)",
+        "generated": "SELECT 'x' + 1 AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E27",
+        "input_sql": "SELECT TRUE+1 AS v,toTypeName(v)",
+        "generated": "SELECT TRUE + 1 AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E28",
+        "input_sql": "SELECT TRY_CAST('bad' AS Int8)+CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT TRY_CAST('bad' AS Int8) + CAST(2 AS Int8) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E29",
+        "input_sql": "SELECT plus(CAST(1 AS UInt8)) AS v,toTypeName(v)",
+        "generated": "SELECT plus(CAST(1 AS UInt8)) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-020-E30",
+        "input_sql": "WITH ((a,b) -> 'x') AS plus SELECT plus(CAST(1 AS UInt8),CAST(2 AS UInt8)) AS v,toTypeName(v)",
+        "generated": "WITH ((a, b) -> 'x') AS plus SELECT plus(CAST(1 AS UInt8), CAST(2 AS UInt8)) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    }
+]

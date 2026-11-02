@@ -71,6 +71,10 @@ CHSEM-019 adds [exact native scalar literal projection typing](projection-litera
 including numeric widths, non-null String/Bool and Nullable(Nothing), without
 changing generic annotateTypes or unrelated arithmetic/NULL-dispatch contracts.
 
+CHSEM-020 adds [bounded native integer addition/subtraction typing](integer-add-sub-README.md),
+with operator/builtin and nullable matrices through 256 bits. Generic typing and
+earlier diagnostic coverage remain separate and unchanged.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

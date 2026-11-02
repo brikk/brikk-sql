@@ -98,3 +98,7 @@ toolchain floor or consumer dependency change is introduced.
 ClickHouse-only Python discovery passes 75 tests. The isolated IntelliJ gate passes
 757 tests on 261.25134.95; other IDE versions were not run. No new IntelliJ API call
 or automatic statement/script mode change is introduced.
+
+CHSEM-020 subsequently qualifies integer addition/subtraction result typing as a
+separate native-only contract. See `integer-add-sub-README.md`; the earlier literal
+projection captures and generic typing policy remain unchanged.

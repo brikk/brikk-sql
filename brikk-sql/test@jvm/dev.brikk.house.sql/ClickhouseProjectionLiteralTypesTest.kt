@@ -40,7 +40,8 @@ class ClickhouseProjectionLiteralTypesTest {
         assertEquals("Nullable(String)", type(reused))
         assertEquals(DType.INT, (annotateTypes(parseOne("SELECT 7", "clickhouse"), dialect = Dialects.CLICKHOUSE) as Select).selects.filterIsInstance<Expression>().first().type?.thisArg)
         val arithmetic = "SELECT 1+2"
-        assertEquals(type(annotateTypes(parseOne(arithmetic, "clickhouse"), dialect = Dialects.CLICKHOUSE)), type(native(arithmetic)))
+        assertEquals(DType.INT, (annotateTypes(parseOne(arithmetic, "clickhouse"), dialect = Dialects.CLICKHOUSE) as Select).selects.filterIsInstance<Expression>().first().type?.thisArg)
+        assertEquals("UInt16", type(native(arithmetic))) // CHSEM-020's separate native arithmetic proof.
         val duck = parseOne("SELECT 'x'", "duckdb")
         annotateTypes(duck, dialect = Dialects.DUCKDB)
         assertNull((duck as Select).selects.filterIsInstance<Expression>().first().type?.args?.get("nullable"))

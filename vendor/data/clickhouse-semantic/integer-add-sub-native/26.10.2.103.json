@@ -1,0 +1,542 @@
+{
+  "captured_at": "2026-11-02T17:39:58.564017+00:00",
+  "fixture_sha256": "40ed551e22576c03ade90b54ef41abffc49ea2dfbbbb4ce7830e7e4359221c4e",
+  "brikk_sha256": "22fa8ad1c2ca46696a0ec372fb79ec446d5983be9e5f6f6df2a8efcd94d9fa5b",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-020-E01\",\"formatted\":\"SELECT\\n    1 + 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E02\",\"formatted\":\"SELECT\\n    1 - 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E03\",\"formatted\":\"SELECT\\n    0 + 1 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E04\",\"formatted\":\"SELECT\\n    -1 + 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E05\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt32') + CAST(2, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E06\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt64') + CAST(2, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E07\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt128') + CAST(2, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E08\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt128') - CAST(2, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E09\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt256') + CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E10\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt256') - CAST('2', 'UInt256') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E11\",\"formatted\":\"SELECT\\n    plus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E12\",\"formatted\":\"SELECT\\n    minus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E13\",\"formatted\":\"SELECT\\n    CAST(1, 'Nullable(UInt8)') + CAST(2, 'UInt16') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E14\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt8') - CAST(2, 'Nullable(Int16)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E15\",\"formatted\":\"SELECT\\n    CAST('1', 'Nullable(Int128)') + CAST('2', 'Nullable(UInt256)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E16\",\"formatted\":\"SELECT\\n    (CAST(1, 'UInt8') + CAST(2, 'UInt8')) + CAST(3, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E17\",\"formatted\":\"SELECT\\n    CAST(18446744073709551615, 'UInt64') + CAST(1, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E18\",\"formatted\":\"SELECT\\n    CAST(0, 'UInt64') - CAST(1, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E19\",\"formatted\":\"SELECT\\n    CAST(18446744073709551615, 'UInt64') - CAST(1, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E20\",\"formatted\":\"SELECT\\n    CAST('115792089237316195423570985008687907853269984665640564039457584007913129639935', 'UInt256') + CAST(1, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E21\",\"formatted\":\"SELECT\\n    arrayMap((a, b) -> (a - b), CAST([7], 'Array(UInt16)'), CAST([2], 'Array(Int8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E22\",\"formatted\":\"SELECT\\n    arrayMap(x -> plus(x, 1), CAST([7], 'Array(UInt8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E23\",\"formatted\":\"SELECT\\n    CAST(NULL, 'Nullable(Int8)') + CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E24\",\"formatted\":\"SELECT\\n    CAST(1, 'Float64') + CAST(2, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E25\",\"formatted\":\"SELECT\\n    CAST('1', 'Decimal(12, 3)') - CAST('2', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E26\",\"formatted\":\"SELECT\\n    'x' + 1 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E27\",\"formatted\":\"SELECT\\n    true + 1 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E28\",\"formatted\":\"SELECT\\n    accurateCastOrNull('bad', 'Int8') + CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E29\",\"formatted\":\"SELECT\\n    plus(CAST(1, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E30\",\"formatted\":\"WITH\\n    ((a, b) -> 'x') AS plus\\nSELECT\\n    plus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-020-E01",
+      "formatted": "SELECT\n    1 + 2 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E02",
+      "formatted": "SELECT\n    1 - 2 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E03",
+      "formatted": "SELECT\n    0 + 1 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E04",
+      "formatted": "SELECT\n    -1 + 2 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E05",
+      "formatted": "SELECT\n    CAST(1, 'UInt32') + CAST(2, 'UInt8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E06",
+      "formatted": "SELECT\n    CAST(1, 'UInt64') + CAST(2, 'UInt64') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E07",
+      "formatted": "SELECT\n    CAST('1', 'UInt128') + CAST(2, 'UInt64') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E08",
+      "formatted": "SELECT\n    CAST('1', 'UInt128') - CAST(2, 'UInt8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E09",
+      "formatted": "SELECT\n    CAST('1', 'UInt256') + CAST(2, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E10",
+      "formatted": "SELECT\n    CAST('1', 'UInt256') - CAST('2', 'UInt256') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E11",
+      "formatted": "SELECT\n    plus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E12",
+      "formatted": "SELECT\n    minus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E13",
+      "formatted": "SELECT\n    CAST(1, 'Nullable(UInt8)') + CAST(2, 'UInt16') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E14",
+      "formatted": "SELECT\n    CAST(1, 'UInt8') - CAST(2, 'Nullable(Int16)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E15",
+      "formatted": "SELECT\n    CAST('1', 'Nullable(Int128)') + CAST('2', 'Nullable(UInt256)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E16",
+      "formatted": "SELECT\n    (CAST(1, 'UInt8') + CAST(2, 'UInt8')) + CAST(3, 'UInt8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E17",
+      "formatted": "SELECT\n    CAST(18446744073709551615, 'UInt64') + CAST(1, 'UInt8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E18",
+      "formatted": "SELECT\n    CAST(0, 'UInt64') - CAST(1, 'UInt64') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E19",
+      "formatted": "SELECT\n    CAST(18446744073709551615, 'UInt64') - CAST(1, 'UInt64') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E20",
+      "formatted": "SELECT\n    CAST('115792089237316195423570985008687907853269984665640564039457584007913129639935', 'UInt256') + CAST(1, 'UInt8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E21",
+      "formatted": "SELECT\n    arrayMap((a, b) -> (a - b), CAST([7], 'Array(UInt16)'), CAST([2], 'Array(Int8)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E22",
+      "formatted": "SELECT\n    arrayMap(x -> plus(x, 1), CAST([7], 'Array(UInt8)')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E23",
+      "formatted": "SELECT\n    CAST(NULL, 'Nullable(Int8)') + CAST(2, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E24",
+      "formatted": "SELECT\n    CAST(1, 'Float64') + CAST(2, 'UInt8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E25",
+      "formatted": "SELECT\n    CAST('1', 'Decimal(12, 3)') - CAST('2', 'Decimal(12, 3)') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E26",
+      "formatted": "SELECT\n    'x' + 1 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E27",
+      "formatted": "SELECT\n    true + 1 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E28",
+      "formatted": "SELECT\n    accurateCastOrNull('bad', 'Int8') + CAST(2, 'Int8') AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E29",
+      "formatted": "SELECT\n    plus(CAST(1, 'UInt8')) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-020-E30",
+      "formatted": "WITH\n    ((a, b) -> 'x') AS plus\nSELECT\n    plus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\n    toTypeName(v)"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-020-E01\",\"formatted\":\"SELECT\\n    1 + 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E02\",\"formatted\":\"SELECT\\n    1 - 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E03\",\"formatted\":\"SELECT\\n    0 + 1 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E04\",\"formatted\":\"SELECT\\n    -1 + 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E05\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt32') + CAST(2, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E06\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt64') + CAST(2, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E07\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt128') + CAST(2, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E08\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt128') - CAST(2, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E09\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt256') + CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E10\",\"formatted\":\"SELECT\\n    CAST('1', 'UInt256') - CAST('2', 'UInt256') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E11\",\"formatted\":\"SELECT\\n    plus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E12\",\"formatted\":\"SELECT\\n    minus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E13\",\"formatted\":\"SELECT\\n    CAST(1, 'Nullable(UInt8)') + CAST(2, 'UInt16') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E14\",\"formatted\":\"SELECT\\n    CAST(1, 'UInt8') - CAST(2, 'Nullable(Int16)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E15\",\"formatted\":\"SELECT\\n    CAST('1', 'Nullable(Int128)') + CAST('2', 'Nullable(UInt256)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E16\",\"formatted\":\"SELECT\\n    (CAST(1, 'UInt8') + CAST(2, 'UInt8')) + CAST(3, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E17\",\"formatted\":\"SELECT\\n    CAST(18446744073709551615, 'UInt64') + CAST(1, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E18\",\"formatted\":\"SELECT\\n    CAST(0, 'UInt64') - CAST(1, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E19\",\"formatted\":\"SELECT\\n    CAST(18446744073709551615, 'UInt64') - CAST(1, 'UInt64') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E20\",\"formatted\":\"SELECT\\n    CAST('115792089237316195423570985008687907853269984665640564039457584007913129639935', 'UInt256') + CAST(1, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E21\",\"formatted\":\"SELECT\\n    arrayMap((a, b) -> (a - b), CAST([7], 'Array(UInt16)'), CAST([2], 'Array(Int8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E22\",\"formatted\":\"SELECT\\n    arrayMap(x -> plus(x, 1), CAST([7], 'Array(UInt8)')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E23\",\"formatted\":\"SELECT\\n    CAST(NULL, 'Nullable(Int8)') + CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E24\",\"formatted\":\"SELECT\\n    CAST(1, 'Float64') + CAST(2, 'UInt8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E25\",\"formatted\":\"SELECT\\n    CAST('1', 'Decimal(12, 3)') - CAST('2', 'Decimal(12, 3)') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E26\",\"formatted\":\"SELECT\\n    'x' + 1 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E27\",\"formatted\":\"SELECT\\n    true + 1 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E28\",\"formatted\":\"SELECT\\n    accurateCastOrNull('bad', 'Int8') + CAST(2, 'Int8') AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E29\",\"formatted\":\"SELECT\\n    plus(CAST(1, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-020-E30\",\"formatted\":\"WITH\\n    ((a, b) -> 'x') AS plus\\nSELECT\\n    plus(CAST(1, 'UInt8'), CAST(2, 'UInt8')) AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-020-E01",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E02",
+      "returncode": 0,
+      "stdout": "-1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E03",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E04",
+      "returncode": 0,
+      "stdout": "1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E05",
+      "returncode": 0,
+      "stdout": "3\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E06",
+      "returncode": 0,
+      "stdout": "3\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E07",
+      "returncode": 0,
+      "stdout": "3\tUInt128\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E08",
+      "returncode": 0,
+      "stdout": "-1\tInt128\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E09",
+      "returncode": 0,
+      "stdout": "3\tInt256\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E10",
+      "returncode": 0,
+      "stdout": "-1\tInt256\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E11",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E12",
+      "returncode": 0,
+      "stdout": "-1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E13",
+      "returncode": 0,
+      "stdout": "3\tNullable(UInt32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E14",
+      "returncode": 0,
+      "stdout": "-1\tNullable(Int32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E15",
+      "returncode": 0,
+      "stdout": "3\tNullable(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E16",
+      "returncode": 0,
+      "stdout": "6\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E17",
+      "returncode": 0,
+      "stdout": "0\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E18",
+      "returncode": 0,
+      "stdout": "-1\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E19",
+      "returncode": 0,
+      "stdout": "-2\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E20",
+      "returncode": 0,
+      "stdout": "0\tUInt256\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E21",
+      "returncode": 0,
+      "stdout": "[5]\tArray(Int32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E22",
+      "returncode": 0,
+      "stdout": "[8]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E23",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E24",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E25",
+      "returncode": 0,
+      "stdout": "-1\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E26",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types String and UInt8 of arguments of function plus: In scope SELECT 'x' + 1 AS v, toTypeName(v). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-020-E27",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E28",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E29",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function plus doesn't match: passed 1, should be 2: In scope SELECT plus(CAST(1, 'UInt8')) AS v, toTypeName(v). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-020-E30",
+      "returncode": 0,
+      "stdout": "x\tString\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-020-E01",
+      "sql": "SELECT 1 + 2 AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E02",
+      "sql": "SELECT 1 - 2 AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E03",
+      "sql": "SELECT -0 + 1 AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E04",
+      "sql": "SELECT -1 + 2 AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E05",
+      "sql": "SELECT CAST(1 AS UInt32) + CAST(2 AS UInt8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E06",
+      "sql": "SELECT CAST(1 AS UInt64) + CAST(2 AS UInt64) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E07",
+      "sql": "SELECT CAST(1 AS UInt128) + CAST(2 AS UInt64) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tUInt128\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E08",
+      "sql": "SELECT CAST(1 AS UInt128) - CAST(2 AS UInt8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tInt128\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E09",
+      "sql": "SELECT CAST(1 AS UInt256) + CAST(2 AS Int8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tInt256\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E10",
+      "sql": "SELECT CAST(1 AS UInt256) - CAST(2 AS UInt256) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tInt256\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E11",
+      "sql": "SELECT plus(CAST(1 AS UInt8), CAST(2 AS UInt8)) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E12",
+      "sql": "SELECT minus(CAST(1 AS UInt8), CAST(2 AS UInt8)) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E13",
+      "sql": "SELECT CAST(1 AS Nullable(UInt8)) + CAST(2 AS UInt16) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tNullable(UInt32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E14",
+      "sql": "SELECT CAST(1 AS UInt8) - CAST(2 AS Nullable(Int16)) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tNullable(Int32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E15",
+      "sql": "SELECT CAST(1 AS Nullable(Int128)) + CAST(2 AS Nullable(UInt256)) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tNullable(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E16",
+      "sql": "SELECT (CAST(1 AS UInt8) + CAST(2 AS UInt8)) + CAST(3 AS UInt8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "6\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E17",
+      "sql": "SELECT CAST(18446744073709551615 AS UInt64) + CAST(1 AS UInt8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "0\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E18",
+      "sql": "SELECT CAST(0 AS UInt64) - CAST(1 AS UInt64) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E19",
+      "sql": "SELECT CAST(18446744073709551615 AS UInt64) - CAST(1 AS UInt64) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-2\tInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E20",
+      "sql": "SELECT CAST('115792089237316195423570985008687907853269984665640564039457584007913129639935' AS UInt256) + CAST(1 AS UInt8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "0\tUInt256\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E21",
+      "sql": "SELECT arrayMap((a, b) -> a - b, CAST([7] AS Array(UInt16)), CAST([2] AS Array(Int8))) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "[5]\tArray(Int32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E22",
+      "sql": "SELECT arrayMap(x -> plus(x, 1), CAST([7] AS Array(UInt8))) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "[8]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E23",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8)) + CAST(2 AS Int8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E24",
+      "sql": "SELECT CAST(1 AS Float64) + CAST(2 AS UInt8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E25",
+      "sql": "SELECT CAST(1 AS Decimal(12, 3)) - CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "-1\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E26",
+      "sql": "SELECT 'x' + 1 AS v, toTypeName(v);",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types String and UInt8 of arguments of function plus: In scope SELECT 'x' + 1 AS v, toTypeName(v). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-020-E27",
+      "sql": "SELECT TRUE + 1 AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E28",
+      "sql": "SELECT TRY_CAST('bad' AS Int8) + CAST(2 AS Int8) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-020-E29",
+      "sql": "SELECT plus(CAST(1 AS UInt8)) AS v, toTypeName(v);",
+      "returncode": 42,
+      "stdout": "",
+      "stderr": "Code: 42. DB::Exception: Number of arguments for function plus doesn't match: passed 1, should be 2: In scope SELECT plus(CAST(1, 'UInt8')) AS v, toTypeName(v). (NUMBER_OF_ARGUMENTS_DOESNT_MATCH)\n"
+    },
+    {
+      "id": "CHSEM-020-E30",
+      "sql": "WITH ((a, b) -> 'x') AS plus SELECT plus(CAST(1 AS UInt8), CAST(2 AS UInt8)) AS v, toTypeName(v);",
+      "returncode": 0,
+      "stdout": "x\tString\n",
+      "stderr": ""
+    }
+  ]
+}
