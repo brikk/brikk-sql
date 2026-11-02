@@ -1738,10 +1738,23 @@ and IDE introspection/completion are separate contracts.
   later changes are independent. That is not proof of follow-console parity or permission to
   replay variables/scripts into helpers; retain the deferred matching-session requirement.
 
-- [ ] `DDB20-068` Static-versus-extension grammar isolation guards [AUDIT].
+- [x] `DDB20-068` Static-versus-extension grammar isolation guards [DONE].
   Policy is established: core DuckSQL plus documented Brikk extensions is not the union of loaded
   native grammars. Add focused identifier/keyword-collision and unknown-statement controls where
   coverage is missing. Do not reserve extension-only keywords globally or assign invented AST semantics.
+  Added collision controls for extend/rename/psql/graph/match/vertex as ordinary identifiers,
+  native and historical static parse/copy/serde, and unknown statement refusals or explicitly
+  flagged raw passthrough. Raw passthrough is not structured semantic support and its existing
+  same-target contract is unchanged. Brikk's documented PIPE syntax may overlap PSQL, but
+  static parsing/generation never changes when an engine loads or activates that grammar.
+  A real local 2.0 PSQL binary, copied and signed only for the private test repository, proves
+  inactive rejection, active parse acceptance, malformed rejection and opt-out rejection via
+  json_serialize_sql. The table-function argument's sequence remains untouched. No editor
+  text was prepared/bound/executed, no provider/network was used and no user binary, grammar
+  preference, trust store or unsigned-extension policy changed. Three focused controls pass
+  without skips, log /tmp/opencode/duckdb-grammar-068.log. Historical corpora are unchanged.
+  The full core gate passes 1,428 tests, zero skips/failures, log
+  /tmp/opencode/duckdb-grammar-068-core.log. No production grammar/API change was necessary.
 
 - [ ] `DDB20-069` Java UDF syntax and live catalog overlay [AUDIT].
   Pin unknown table functions with positional/named arguments, same-name scalar/table functions,
