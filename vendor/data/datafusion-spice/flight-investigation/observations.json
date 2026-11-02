@@ -1,0 +1,1768 @@
+{
+  "schema_version": 1,
+  "runtime": {
+    "version": "v2.4.0+models",
+    "binary_sha256": "257b9fd8cf1f46c1f4ddf0b6280ba5b6033b79c276ec6840dd5e5d81710b1002",
+    "spicepod_sha256": "a3dfddafb19b7620137fab3d05cf5cdf83dc31f0f187f1dda37f8a687686affd",
+    "cpu_cores": 2,
+    "transport": "isolated loopback Arrow Flight SQL JDBC",
+    "java": "openjdk version \"25.0.3\" 2026-04-21\nOpenJDK Runtime Environment JBR-25.0.3+9-329.124-jcef (build 25.0.3+9-b329.124)\nOpenJDK 64-Bit Server VM JBR-25.0.3+9-329.124-jcef (build 25.0.3+9-b329.124, mixed mode, sharing)",
+    "java_options": [
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--sun-misc-unsafe-memory-access=allow"
+    ]
+  },
+  "driver": {
+    "coordinates": "org.apache.arrow:flight-sql-jdbc-driver:19.0.0",
+    "url": "https://repo.maven.apache.org/maven2/org/apache/arrow/flight-sql-jdbc-driver/19.0.0/flight-sql-jdbc-driver-19.0.0.jar",
+    "sha256": "d3beee43c613c457789825343368f652d570d76c08799dad38a43a10e569b57f"
+  },
+  "probe_sources": {
+    "tools/datafusion-reference/FlightCatalogProbe.java": "39f40737037f4d3f90570151ce9df62b5cffb306611c758207f0197b184d902f",
+    "tools/datafusion-reference/FlightFailureProbe.java": "6c62f2874c00a09735a165fda92e89e8b550fca833e6a33f9dc878853376e39d"
+  },
+  "observations": {
+    "jdbc_matrix": [
+      {
+        "sql": "SELECT 1 AS n",
+        "execute": {
+          "status": "returned",
+          "value": {
+            "result": {
+              "rows": [
+                [
+                  "1"
+                ]
+              ],
+              "columns": [
+                {
+                  "name": "n",
+                  "type": "BIGINT",
+                  "jdbc_type": -5
+                }
+              ]
+            }
+          }
+        },
+        "query": {
+          "status": "returned",
+          "value": {
+            "rows": [
+              [
+                "1"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "n",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "update": {
+          "status": "returned",
+          "value": {
+            "update_count": -1
+          }
+        }
+      },
+      {
+        "sql": "SELECT missing_column FROM sample",
+        "execute": {
+          "status": "returned",
+          "value": {
+            "update_count": 0
+          }
+        },
+        "query": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Statement did not return a result set",
+          "stack": [
+            "java.sql.SQLException: Statement did not return a result set",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:60)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:230)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "update": {
+          "status": "returned",
+          "value": {
+            "update_count": 0
+          }
+        }
+      },
+      {
+        "sql": "SELECT no_such_column",
+        "execute": {
+          "status": "returned",
+          "value": {
+            "update_count": 0
+          }
+        },
+        "query": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Statement did not return a result set",
+          "stack": [
+            "java.sql.SQLException: Statement did not return a result set",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:60)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:230)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "update": {
+          "status": "returned",
+          "value": {
+            "update_count": 0
+          }
+        }
+      },
+      {
+        "sql": "SELECT * FROM no_such_table",
+        "execute": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM no_such_table\": table 'spice.public.no_such_table' not found",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT * FROM no_such_table\": table 'spice.public.no_such_table' not found",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: table 'spice.public.no_such_table' not found",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "query": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM no_such_table\": table 'spice.public.no_such_table' not found",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT * FROM no_such_table\": table 'spice.public.no_such_table' not found",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: table 'spice.public.no_such_table' not found",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "update": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM no_such_table\": table 'spice.public.no_such_table' not found",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT * FROM no_such_table\": table 'spice.public.no_such_table' not found",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: table 'spice.public.no_such_table' not found",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        }
+      },
+      {
+        "sql": "SELECT no_such_function(1)",
+        "execute": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT no_such_function(1)\": Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT no_such_function(1)\": Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "query": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT no_such_function(1)\": Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT no_such_function(1)\": Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "update": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT no_such_function(1)\": Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT no_such_function(1)\": Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Invalid function 'no_such_function'.\nDid you mean 'list_union'?",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        }
+      },
+      {
+        "sql": "SELECT FROM",
+        "execute": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT FROM\": Expected: identifier, found: EOF",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT FROM\": Expected: identifier, found: EOF",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected: identifier, found: EOF",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "query": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT FROM\": Expected: identifier, found: EOF",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT FROM\": Expected: identifier, found: EOF",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected: identifier, found: EOF",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        },
+        "update": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT FROM\": Expected: identifier, found: EOF",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT FROM\": Expected: identifier, found: EOF",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected: identifier, found: EOF",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils$1.next(StatusUtils.java:249)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient$PreparedStatement.<init>(FlightSqlClient.java:1231)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:901)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.prepare(FlightSqlClient.java:880)",
+            "org.apache.arrow.driver.jdbc.client.ArrowFlightSqlClientHandler.prepare(ArrowFlightSqlClientHandler.java:445)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareForHandle(ArrowFlightMetaImpl.java:178)",
+            "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.prepareAndExecute(ArrowFlightMetaImpl.java:214)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.prepareAndExecuteInternal(AvaticaConnection.java:677)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:157)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)"
+          ]
+        }
+      },
+      {
+        "sql": "SELECT CAST('not-an-integer' AS BIGINT)",
+        "execute": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT CAST('not-an-integer' AS BIGINT)\": Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT CAST('not-an-integer' AS BIGINT)\": Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.execute(AvaticaStatement.java:218)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:47)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "query": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT CAST('not-an-integer' AS BIGINT)\": Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT CAST('not-an-integer' AS BIGINT)\": Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeQuery(AvaticaStatement.java:228)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:45)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        },
+        "update": {
+          "status": "threw",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT CAST('not-an-integer' AS BIGINT)\": Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+          "stack": [
+            "java.sql.SQLException: Error while executing SQL \"SELECT CAST('not-an-integer' AS BIGINT)\": Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeInternal(AvaticaStatement.java:164)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeLargeUpdate(AvaticaStatement.java:247)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaStatement.executeUpdate(AvaticaStatement.java:241)",
+            "FlightFailureProbe.jdbc(FlightFailureProbe.java:46)",
+            "FlightFailureProbe.lambda$main$0(FlightFailureProbe.java:205)",
+            "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+            "FlightFailureProbe.main(FlightFailureProbe.java:205)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Cast error: Cannot cast string 'not-an-integer' to value of Int64 type",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    ],
+    "jdbc_prepare": {
+      "status": "returned",
+      "value": {
+        "update_count": 0
+      }
+    },
+    "jdbc_execute": {
+      "status": "returned",
+      "value": {
+        "update_count": 0
+      }
+    },
+    "jdbc_execute_unknown": {
+      "status": "returned",
+      "value": {
+        "update_count": 0
+      }
+    },
+    "jdbc_null_only": {
+      "sql": "SELECT CAST($1 AS BIGINT) AS n",
+      "kind": "null",
+      "initial_bytes": 0,
+      "rounds": [
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Can't set null on non-nullable parameter",
+            "stack": [
+              "java.sql.SQLException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:214)",
+              "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:214)"
+            ]
+          },
+          "after_execute_bytes": 0,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 0
+        }
+      ],
+      "subsequent_query": {
+        "status": "returned",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      },
+      "before_connection_close_bytes": 0,
+      "connection_close": {
+        "status": "returned",
+        "value": true
+      }
+    },
+    "jdbc_object_null": {
+      "sql": "SELECT CAST($1 AS BIGINT) AS n",
+      "kind": "object_null",
+      "initial_bytes": 0,
+      "rounds": [
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Can't set null on non-nullable parameter",
+            "stack": [
+              "java.sql.SQLException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:215)",
+              "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:215)"
+            ]
+          },
+          "after_execute_bytes": 0,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 0
+        }
+      ],
+      "subsequent_query": {
+        "status": "returned",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      },
+      "before_connection_close_bytes": 0,
+      "connection_close": {
+        "status": "returned",
+        "value": true
+      }
+    },
+    "jdbc_null_first": {
+      "sql": "SELECT CAST($1 AS BIGINT) AS n, CAST($2 AS VARCHAR) AS txt",
+      "kind": "null_then_string",
+      "initial_bytes": 0,
+      "rounds": [
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": -5
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": 12
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Can't set null on non-nullable parameter",
+            "stack": [
+              "java.sql.SQLException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:216)",
+              "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:216)"
+            ]
+          },
+          "after_execute_bytes": 0,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 0
+        }
+      ],
+      "subsequent_query": {
+        "status": "returned",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      },
+      "before_connection_close_bytes": 0,
+      "connection_close": {
+        "status": "returned",
+        "value": true
+      }
+    },
+    "jdbc_partial_null_repeated": {
+      "sql": "SELECT CAST($1 AS VARCHAR) AS txt, CAST($2 AS BIGINT) AS n",
+      "kind": "string_then_null",
+      "initial_bytes": 0,
+      "rounds": [
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": 12
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Can't set null on non-nullable parameter",
+            "stack": [
+              "java.sql.SQLException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:217)",
+              "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:217)"
+            ]
+          },
+          "after_execute_bytes": 1056,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 1056
+        },
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": 12
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 1056,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Can't set null on non-nullable parameter",
+            "stack": [
+              "java.sql.SQLException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:217)",
+              "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:217)"
+            ]
+          },
+          "after_execute_bytes": 2112,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 2112
+        },
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": 12
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 2112,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Can't set null on non-nullable parameter",
+            "stack": [
+              "java.sql.SQLException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:217)",
+              "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:217)"
+            ]
+          },
+          "after_execute_bytes": 3168,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 3168
+        }
+      ],
+      "subsequent_query": {
+        "status": "returned",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      },
+      "before_connection_close_bytes": 3168,
+      "connection_close": {
+        "status": "threw",
+        "class": "java.sql.SQLException",
+        "message": "Memory was leaked by query. Memory leaked: (3168)\nAllocator(ROOT) 0/3168/3296/9223372036854775807 (res/actual/peak/limit)\n",
+        "stack": [
+          "java.sql.SQLException: Memory was leaked by query. Memory leaked: (3168)\nAllocator(ROOT) 0/3168/3296/9223372036854775807 (res/actual/peak/limit)\n",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+          "org.apache.arrow.driver.jdbc.ArrowFlightConnection.close(ArrowFlightConnection.java:248)",
+          "FlightFailureProbe.lambda$nullCase$5(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+          "FlightFailureProbe.nullCase(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.main(FlightFailureProbe.java:217)",
+          "java.lang.IllegalStateException: Memory was leaked by query. Memory leaked: (3168)\nAllocator(ROOT) 0/3168/3296/9223372036854775807 (res/actual/peak/limit)\n",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.memory.BaseAllocator.close(BaseAllocator.java:504)",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.memory.RootAllocator.close(RootAllocator.java:27)",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.util.AutoCloseables.close(AutoCloseables.java:108)",
+          "org.apache.arrow.driver.jdbc.ArrowFlightConnection.close(ArrowFlightConnection.java:230)",
+          "FlightFailureProbe.lambda$nullCase$5(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+          "FlightFailureProbe.nullCase(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.main(FlightFailureProbe.java:217)"
+        ]
+      }
+    },
+    "jdbc_wrong_type": {
+      "sql": "SELECT CAST($1 AS VARCHAR) AS txt, CAST($2 AS BIGINT) AS n",
+      "kind": "wrong_type",
+      "initial_bytes": 0,
+      "rounds": [
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": 12
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "threw",
+            "class": "java.sql.SQLException",
+            "message": "Binding value of type STRING is not yet supported for expected Arrow type Int(64, true)",
+            "stack": [
+              "java.sql.SQLException: Binding value of type STRING is not yet supported for expected Arrow type Int(64, true)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:559)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:218)",
+              "java.lang.UnsupportedOperationException: Binding value of type STRING is not yet supported for expected Arrow type Int(64, true)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:135)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+              "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:110)",
+              "org.apache.arrow.driver.jdbc.ArrowFlightMetaImpl.execute(ArrowFlightMetaImpl.java:137)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaConnection.executeQueryInternal(AvaticaConnection.java:551)",
+              "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.AvaticaPreparedStatement.executeQuery(AvaticaPreparedStatement.java:137)",
+              "FlightFailureProbe.lambda$nullCase$1(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+              "FlightFailureProbe.nullCase(FlightFailureProbe.java:78)",
+              "FlightFailureProbe.main(FlightFailureProbe.java:218)"
+            ]
+          },
+          "after_execute_bytes": 1040,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 1040
+        }
+      ],
+      "subsequent_query": {
+        "status": "returned",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      },
+      "before_connection_close_bytes": 1040,
+      "connection_close": {
+        "status": "threw",
+        "class": "java.sql.SQLException",
+        "message": "Memory was leaked by query. Memory leaked: (1040)\nAllocator(ROOT) 0/1040/1168/9223372036854775807 (res/actual/peak/limit)\n",
+        "stack": [
+          "java.sql.SQLException: Memory was leaked by query. Memory leaked: (1040)\nAllocator(ROOT) 0/1040/1168/9223372036854775807 (res/actual/peak/limit)\n",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:56)",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.calcite.avatica.Helper.createException(Helper.java:41)",
+          "org.apache.arrow.driver.jdbc.ArrowFlightConnection.close(ArrowFlightConnection.java:248)",
+          "FlightFailureProbe.lambda$nullCase$5(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+          "FlightFailureProbe.nullCase(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.main(FlightFailureProbe.java:218)",
+          "java.lang.IllegalStateException: Memory was leaked by query. Memory leaked: (1040)\nAllocator(ROOT) 0/1040/1168/9223372036854775807 (res/actual/peak/limit)\n",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.memory.BaseAllocator.close(BaseAllocator.java:504)",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.memory.RootAllocator.close(RootAllocator.java:27)",
+          "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.util.AutoCloseables.close(AutoCloseables.java:108)",
+          "org.apache.arrow.driver.jdbc.ArrowFlightConnection.close(ArrowFlightConnection.java:230)",
+          "FlightFailureProbe.lambda$nullCase$5(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+          "FlightFailureProbe.nullCase(FlightFailureProbe.java:88)",
+          "FlightFailureProbe.main(FlightFailureProbe.java:218)"
+        ]
+      }
+    },
+    "jdbc_valid_control": {
+      "sql": "SELECT CAST($1 AS VARCHAR) AS txt, CAST($2 AS BIGINT) AS n",
+      "kind": "valid",
+      "initial_bytes": 0,
+      "rounds": [
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": 12
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "returned",
+            "value": {
+              "rows": [
+                [
+                  "x",
+                  "9"
+                ]
+              ],
+              "columns": [
+                {
+                  "name": "txt",
+                  "type": "LONGVARCHAR",
+                  "jdbc_type": -1
+                },
+                {
+                  "name": "n",
+                  "type": "BIGINT",
+                  "jdbc_type": -5
+                }
+              ]
+            }
+          },
+          "after_execute_bytes": 33808,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 0
+        },
+        {
+          "metadata": [
+            {
+              "nullable": 2,
+              "index": 1,
+              "jdbc_type": 12
+            },
+            {
+              "nullable": 2,
+              "index": 2,
+              "jdbc_type": -5
+            }
+          ],
+          "setters": {
+            "status": "returned",
+            "value": true
+          },
+          "after_setters_bytes": 0,
+          "execute": {
+            "status": "returned",
+            "value": {
+              "rows": [
+                [
+                  "x",
+                  "9"
+                ]
+              ],
+              "columns": [
+                {
+                  "name": "txt",
+                  "type": "LONGVARCHAR",
+                  "jdbc_type": -1
+                },
+                {
+                  "name": "n",
+                  "type": "BIGINT",
+                  "jdbc_type": -5
+                }
+              ]
+            }
+          },
+          "after_execute_bytes": 33808,
+          "clear_parameters": {
+            "status": "returned",
+            "value": true
+          },
+          "statement_close": {
+            "status": "returned",
+            "value": true
+          },
+          "after_statement_close_bytes": 0
+        }
+      ],
+      "subsequent_query": {
+        "status": "returned",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      },
+      "before_connection_close_bytes": 0,
+      "connection_close": {
+        "status": "returned",
+        "value": true
+      }
+    },
+    "server_free_binder": {
+      "before_bytes": 0,
+      "bind": {
+        "status": "threw",
+        "class": "java.lang.UnsupportedOperationException",
+        "message": "Can't set null on non-nullable parameter",
+        "stack": [
+          "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter",
+          "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:124)",
+          "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:102)",
+          "org.apache.arrow.driver.jdbc.utils.AvaticaParameterBinder.bind(AvaticaParameterBinder.java:84)",
+          "FlightFailureProbe.lambda$localBinder$0(FlightFailureProbe.java:187)",
+          "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+          "FlightFailureProbe.localBinder(FlightFailureProbe.java:187)",
+          "FlightFailureProbe.main(FlightFailureProbe.java:220)"
+        ]
+      },
+      "ownership_transferred": false,
+      "after_failure_bytes": 16388,
+      "after_owner_close_bytes": 16388,
+      "after_manual_probe_cleanup_bytes": 0
+    },
+    "raw_valid": {
+      "status": "returned",
+      "value": {
+        "rows": [
+          [
+            "1"
+          ]
+        ],
+        "fields": [
+          {
+            "nullable": false,
+            "name": "n",
+            "type": "Int(64, true)"
+          }
+        ],
+        "advertised_fields": [
+          {
+            "nullable": false,
+            "name": "n",
+            "type": "Int(64, true)"
+          }
+        ]
+      }
+    },
+    "raw_invalid_direct": {
+      "status": "threw",
+      "class": "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException",
+      "message": "No field named missing_column.\nValid fields are sample.id, sample.name, sample.age, sample.body.",
+      "stack": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: No field named missing_column.\nValid fields are sample.id, sample.name, sample.age, sample.body.",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient.getInfo(FlightClient.java:292)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.execute(FlightSqlClient.java:136)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.sql.FlightSqlClient.execute(FlightSqlClient.java:116)",
+        "FlightFailureProbe.rawQuery(FlightFailureProbe.java:116)",
+        "FlightFailureProbe.lambda$main$5(FlightFailureProbe.java:224)",
+        "FlightFailureProbe.attempt(FlightFailureProbe.java:25)",
+        "FlightFailureProbe.main(FlightFailureProbe.java:224)"
+      ]
+    },
+    "raw_invalid_prepared": {
+      "status": "returned",
+      "value": {
+        "dataset_fields": [],
+        "parameter_fields": [],
+        "force_query_path": {
+          "status": "threw",
+          "class": "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException",
+          "message": "No field named missing_column.\nValid fields are sample.id, sample.name, sample.age, sample.body.",
+          "stack": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: No field named missing_column.\nValid fields are sample.id, sample.name, sample.age, sample.body.",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    },
+    "raw_wrong_update_reply": {
+      "status": "returned",
+      "value": {
+        "metadata_hex": "0aed012153454c454354206d697373696e675f636f6c756d6e2046524f4d2073616d706c65c801ffffffff380000001000000000000a000c000a00090004000a000000100000000001040008000800000004000800000004000000000000000000000000000000ffffffff780000001000000000000a000e000c000b0004000a000000140000000000000304000a000c000000080004000a00000010000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffff0000000000",
+        "decoded_update_count": 0,
+        "update_unknown_fields": "1: \"!SELECT missing_column FROM sample\\310\\001\\377\\377\\377\\3778\\000\\000\\000\\020\\000\\000\\000\\000\\000\\n\\000\\f\\000\\n\\000\\t\\000\\004\\000\\n\\000\\000\\000\\020\\000\\000\\000\\000\\001\\004\\000\\b\\000\\b\\000\\000\\000\\004\\000\\b\\000\\000\\000\\004\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\377\\377\\377\\377x\\000\\000\\000\\020\\000\\000\\000\\000\\000\\n\\000\\016\\000\\f\\000\\v\\000\\004\\000\\n\\000\\000\\000\\024\\000\\000\\000\\000\\000\\000\\003\\004\\000\\n\\000\\f\\000\\000\\000\\b\\000\\004\\000\\n\\000\\000\\000\\020\\000\\000\\000\\004\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\377\\377\\377\\377\\000\\000\\000\\000\\000\"\n",
+        "returned_binding_handle_bytes": 237,
+        "record_count_field_type": "INT64",
+        "binding_handle_field_type": "BYTES"
+      }
+    },
+    "raw_parameter_schemas": {
+      "status": "returned",
+      "value": [
+        {
+          "parameters": [
+            {
+              "nullable": false,
+              "name": "$1",
+              "type": "Utf8View"
+            },
+            {
+              "nullable": false,
+              "name": "$2",
+              "type": "Int(64, true)"
+            }
+          ],
+          "result": [
+            {
+              "nullable": true,
+              "name": "txt",
+              "type": "LargeUtf8"
+            },
+            {
+              "nullable": true,
+              "name": "n",
+              "type": "Int(64, true)"
+            }
+          ],
+          "sql": "SELECT CAST($1 AS VARCHAR) AS txt, CAST($2 AS BIGINT) AS n"
+        },
+        {
+          "parameters": [
+            {
+              "nullable": false,
+              "name": "$1",
+              "type": "Int(64, true)"
+            }
+          ],
+          "result": [
+            {
+              "nullable": false,
+              "name": "is_null",
+              "type": "Bool"
+            }
+          ],
+          "sql": "SELECT CAST($1 AS BIGINT) IS NULL AS is_null"
+        },
+        {
+          "parameters": [
+            {
+              "nullable": false,
+              "name": "$1",
+              "type": "Int(64, true)"
+            }
+          ],
+          "result": [
+            {
+              "nullable": false,
+              "name": "n",
+              "type": "Int(64, true)"
+            }
+          ],
+          "sql": "SELECT COALESCE(CAST($1 AS BIGINT), 42) AS n"
+        }
+      ]
+    },
+    "raw_named_prepare": {
+      "status": "returned",
+      "value": {
+        "rows": [],
+        "fields": [],
+        "advertised_fields": []
+      }
+    },
+    "raw_named_execute": {
+      "status": "returned",
+      "value": {
+        "rows": [
+          [
+            "8"
+          ]
+        ],
+        "fields": [
+          {
+            "nullable": false,
+            "name": "n",
+            "type": "Int(64, true)"
+          }
+        ],
+        "advertised_fields": []
+      }
+    },
+    "raw_named_other_session": {
+      "status": "threw",
+      "class": "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException",
+      "message": "Prepared statement 'named_raw' does not exist",
+      "stack": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Prepared statement 'named_raw' does not exist",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+        "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+        "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+        "java.base/java.lang.Thread.run(Thread.java:1474)"
+      ]
+    },
+    "raw_named_deallocate": {
+      "status": "returned",
+      "value": {
+        "rows": [],
+        "fields": [],
+        "advertised_fields": []
+      }
+    },
+    "raw_named_after_deallocate": {
+      "status": "threw",
+      "class": "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException",
+      "message": "Prepared statement 'named_raw' does not exist",
+      "stack": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Prepared statement 'named_raw' does not exist",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+        "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+        "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+        "java.base/java.lang.Thread.run(Thread.java:1474)"
+      ]
+    },
+    "jdbc_shared_session_control": {
+      "status": "returned",
+      "value": {
+        "raw_prepare": {
+          "rows": [],
+          "fields": [],
+          "advertised_fields": []
+        },
+        "jdbc_execute_prepared_elsewhere": {
+          "status": "returned",
+          "value": {
+            "update_count": 0
+          }
+        },
+        "prepared_execute_query_control": {
+          "status": "returned",
+          "value": {
+            "dataset_fields": [],
+            "parameter_fields": [],
+            "force_query_path": {
+              "status": "returned",
+              "value": {
+                "rows": [
+                  [
+                    "8"
+                  ]
+                ],
+                "fields": [
+                  {
+                    "nullable": false,
+                    "name": "n",
+                    "type": "Int(64, true)"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "jdbc_force_flight_query_control": {
+          "status": "returned",
+          "value": {
+            "rows": [
+              [
+                "8"
+              ]
+            ],
+            "fields": [
+              {
+                "nullable": false,
+                "name": "n",
+                "type": "Int(64, true)"
+              }
+            ]
+          }
+        },
+        "jdbc_deallocate": {
+          "status": "returned",
+          "value": {
+            "update_count": 0
+          }
+        },
+        "raw_still_exists": {
+          "status": "returned",
+          "value": {
+            "rows": [
+              [
+                "8"
+              ]
+            ],
+            "fields": [
+              {
+                "nullable": false,
+                "name": "n",
+                "type": "Int(64, true)"
+              }
+            ],
+            "advertised_fields": []
+          }
+        },
+        "raw_deallocate": {
+          "status": "returned",
+          "value": {
+            "rows": [],
+            "fields": [],
+            "advertised_fields": []
+          }
+        },
+        "raw_now_missing": {
+          "status": "threw",
+          "class": "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException",
+          "message": "Prepared statement 'bridge_name' does not exist",
+          "stack": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Prepared statement 'bridge_name' does not exist",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+            "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+            "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+            "java.base/java.lang.Thread.run(Thread.java:1474)"
+          ]
+        }
+      }
+    },
+    "raw_prepare_update_reply": {
+      "status": "returned",
+      "value": {
+        "metadata_hex": "0af7012b50524550415245206e6f5f65666665637428424947494e54292041532053454c454354202431204153206ec801ffffffff380000001000000000000a000c000a00090004000a000000100000000001040008000800000004000800000004000000000000000000000000000000ffffffff780000001000000000000a000e000c000b0004000a000000140000000000000304000a000c000000080004000a00000010000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffff0000000000",
+        "decoded_update_count": 0,
+        "update_unknown_fields": "1: \"+PREPARE no_effect(BIGINT) AS SELECT $1 AS n\\310\\001\\377\\377\\377\\3778\\000\\000\\000\\020\\000\\000\\000\\000\\000\\n\\000\\f\\000\\n\\000\\t\\000\\004\\000\\n\\000\\000\\000\\020\\000\\000\\000\\000\\001\\004\\000\\b\\000\\b\\000\\000\\000\\004\\000\\b\\000\\000\\000\\004\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\377\\377\\377\\377x\\000\\000\\000\\020\\000\\000\\000\\000\\000\\n\\000\\016\\000\\f\\000\\v\\000\\004\\000\\n\\000\\000\\000\\024\\000\\000\\000\\000\\000\\000\\003\\004\\000\\n\\000\\f\\000\\000\\000\\b\\000\\004\\000\\n\\000\\000\\000\\020\\000\\000\\000\\004\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\000\\377\\377\\377\\377\\000\\000\\000\\000\\000\"\n",
+        "returned_binding_handle_bytes": 247,
+        "record_count_field_type": "INT64",
+        "binding_handle_field_type": "BYTES"
+      }
+    },
+    "raw_execute_after_update_prepare": {
+      "status": "threw",
+      "class": "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException",
+      "message": "Prepared statement 'no_effect' does not exist",
+      "stack": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Prepared statement 'no_effect' does not exist",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.CallStatus.toRuntimeException(CallStatus.java:121)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromGrpcRuntimeException(StatusUtils.java:161)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.StatusUtils.fromThrowable(StatusUtils.java:182)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightStream$Observer.onError(FlightStream.java:489)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightClient$1.onError(FlightClient.java:361)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.stub.ClientCalls$StreamObserverToCallListenerAdapter.onClose(ClientCalls.java:581)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.PartialForwardingClientCallListener.onClose(PartialForwardingClientCallListener.java:39)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener.onClose(ForwardingClientCallListener.java:23)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.ForwardingClientCallListener$SimpleForwardingClientCallListener.onClose(ForwardingClientCallListener.java:40)",
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.grpc.ClientInterceptorAdapter$FlightClientCallListener.onClose(ClientInterceptorAdapter.java:118)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.closeObserver(ClientCallImpl.java:566)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl.access$100(ClientCallImpl.java:72)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInternal(ClientCallImpl.java:734)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ClientCallImpl$ClientStreamListenerImpl$1StreamClosed.runInContext(ClientCallImpl.java:715)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37)",
+        "org.apache.arrow.driver.jdbc.shaded.io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133)",
+        "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1090)",
+        "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:614)",
+        "java.base/java.lang.Thread.run(Thread.java:1474)"
+      ]
+    },
+    "raw_nullable_override": {
+      "status": "returned",
+      "value": {
+        "advertised_parameters": [
+          {
+            "nullable": false,
+            "name": "$1",
+            "type": "Int(64, true)"
+          }
+        ],
+        "sent_parameters": [
+          {
+            "nullable": true,
+            "name": "$1",
+            "type": "Int(64, true)"
+          }
+        ],
+        "execute": {
+          "status": "returned",
+          "value": {
+            "rows": [
+              [
+                null
+              ]
+            ],
+            "fields": [
+              {
+                "nullable": true,
+                "name": "n",
+                "type": "Int(64, true)"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "raw_nullable_coalesce": {
+      "status": "returned",
+      "value": {
+        "advertised_parameters": [
+          {
+            "nullable": false,
+            "name": "$1",
+            "type": "Int(64, true)"
+          }
+        ],
+        "sent_parameters": [
+          {
+            "nullable": true,
+            "name": "$1",
+            "type": "Int(64, true)"
+          }
+        ],
+        "execute": {
+          "status": "returned",
+          "value": {
+            "rows": [
+              [
+                "42"
+              ]
+            ],
+            "fields": [
+              {
+                "nullable": false,
+                "name": "n",
+                "type": "Int(64, true)"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

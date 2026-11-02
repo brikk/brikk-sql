@@ -111,7 +111,8 @@ These concrete limitations must remain in the consumer handoff:
   zero occurs for the missing-column SELECT control. Do not interpret this as successful
   validation or advertise reliable SQL PREPARE session continuity on this transport.
   The tested SQL SET is explicitly rejected with `Statements are not allowed: SetVariable`.
-- **DFS-010-T2.** Spice reports the tested parameter as non-nullable, so JDBC `setNull` fails.
+- **DFS-010-T2.** Spice reports the tested parameter as non-nullable, so JDBC execution fails
+  when its client binder processes a null value; `setNull` itself returns normally.
   Failing a null bind after a string bind also produces an Arrow allocator leak on connection
   close in the separate failure connection. The capture records the close failure.
 - **DFS-010-T3.** The bounded DataFusion embedding does not normalize JDBC `?` into DataFusion's
@@ -124,6 +125,11 @@ These concrete limitations must remain in the consumer handoff:
 
 No HTTP request or helper connection is treated as the same SQL session. No automatic
 protocol substitution or driver dependency upgrade is introduced by this round.
+
+The later [root-cause investigation](spice-flight-failures.md) isolates the T1 schema suppression,
+incorrect prepared-update reply and SQL EXECUTE schema issues in Spice, plus T2's hardcoded
+parameter nullability and independent Arrow JDBC error-path allocation leak. It records
+raw-Flight and server-free controls without changing the supported JDBC claims.
 
 ## Error positions and source freshness
 

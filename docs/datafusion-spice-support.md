@@ -117,6 +117,8 @@ Earlier evidence remains useful for specific contracts:
 - `round8`: editor semantic controls and source-backed named arguments.
 - `round9`: live catalog, namespace and driver/harvester evidence.
 - `round10`: execution, result rows, binding, cancellation and Brikk-stage evidence.
+- `flight-investigation`: [root causes of T1 and T2](research/spice-flight-failures.md), isolated
+  with raw Flight, JDBC and server-free controls. These findings do not remove the exclusions.
 - `round11`: immutable refresh and controlled-delta tracking; historical RESET gap retained.
 - `reset`: the subsequent DataFusion RESET correction and native round trips.
 - `utilities`: structured DataFusion SHOW, EXPLAIN, PREPARE/EXECUTE and CLUSTER BY. This resolves

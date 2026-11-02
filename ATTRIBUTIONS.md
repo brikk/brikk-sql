@@ -64,6 +64,12 @@ The Spice.ai OSS Authors, Apache License 2.0; each excerpt records its source li
 The same attribution applies to `round8/editor-source-evidence.json` and its named-argument
 and decision-result excerpts from that pinned release.
 
+`vendor/data/datafusion-spice/flight-investigation/source-evidence.json` includes Flight
+protocol and parameter-schema excerpts from the same Spice release, plus Apache Arrow Java
+19.0.0 at commit `b410fb26d01c7cefc4c6e3443a53562164001371`. The Arrow sources are licensed
+to the Apache Software Foundation under Apache License 2.0. Source paths, line ranges,
+hashes and Maven source-artifact provenance accompany the excerpts.
+
 `tools/datafusion-reference/src/flight.rs` adapts the Apache DataFusion Flight SQL example
 at commit `500744d5c25499055e3b2ca46b022bc425989203`,
 `datafusion-examples/examples/flight/sql_server.rs`, under Apache License 2.0.
