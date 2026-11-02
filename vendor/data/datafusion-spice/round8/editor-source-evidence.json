@@ -1,0 +1,78 @@
+{
+  "source_commit": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+  "evidence": "source inspection, not model/search execution",
+  "sources": [
+    {
+      "path": "crates/runtime/src/embeddings/udtf.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/embeddings/udtf.rs",
+      "sha256": "b7538c6bb9932789a3af6e403b4e31ff332bb4a36b7e206b92914176724076d7",
+      "excerpts": [
+        {
+          "start": 118,
+          "end": 136,
+          "text": "/// 2. Support named parameters via `with_parameter_names()`\npub static VECTOR_SEARCH_SIGNATURE: LazyLock<Signature> = LazyLock::new(|| {\n    // Parameter names that can be passed as named arguments.\n    // These are passthrough parameters used by RRF and other table functions.\n    let param_names = vec![\n        \"tbl\".to_string(),\n        \"query\".to_string(),\n        \"column\".to_string(),\n        \"limit\".to_string(),\n        \"include_score\".to_string(),\n        \"rank_weight\".to_string(),\n        \"distance_metric\".to_string(),\n    ];\n    match Signature::user_defined(Volatility::Stable).with_parameter_names(param_names) {\n        Ok(sig) => sig,\n        Err(_) => Signature::variadic_any(Volatility::Stable),\n    }\n});\n"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-search/src/full_text_udtf.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-search/src/full_text_udtf.rs",
+      "sha256": "70a5ca1cdc3761a4c622c1e0da9fc189926afaa3fe04bbd01acfafe5fa945906",
+      "excerpts": [
+        {
+          "start": 72,
+          "end": 87,
+          "text": "pub static TEXT_SEARCH_SIGNATURE: LazyLock<Signature> = LazyLock::new(|| {\n    // Parameter names that can be passed as named arguments.\n    // These are passthrough parameters used by RRF and other table functions.\n    let param_names = vec![\n        \"tbl\".to_string(),\n        \"query\".to_string(),\n        \"column\".to_string(),\n        \"limit\".to_string(),\n        \"include_score\".to_string(),\n        \"rank_weight\".to_string(),\n    ];\n    // SAFETY: These are valid ASCII parameter names\n    Signature::user_defined(Volatility::Stable)\n        .with_parameter_names(param_names)\n        .unwrap_or_else(|_| unreachable!(\"valid parameter names for text_search\"))\n});"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-search/src/rrf.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-search/src/rrf.rs",
+      "sha256": "88640cd29f74c66c6c8220a80d6a01d0051f9371a3706763dcd44970a83f49f3",
+      "excerpts": [
+        {
+          "start": 112,
+          "end": 146,
+          "text": "/// parameter name a fixed slot equal to its index in `parameter_names`, and\n/// fills positional args into slots `0..N` in call order. `rrf`'s real\n/// positional arguments are a variable-length list of nested search\n/// subqueries, so the named option slots below must sit past any plausible\n/// source count \u2014 otherwise a named option (e.g. `k => 60`) can land in the\n/// same slot as a positional search subquery, and `DataFusion` rejects the\n/// call (\"Parameter 'k' specified multiple times\") instead of accepting it.\nconst RRF_MAX_SOURCES: usize = 16;\n\n/// Signature for the scalar documentation stub used when `rrf` is nested in\n/// another table function, such as `rerank`.\npub static SIGNATURE: LazyLock<Signature> = LazyLock::new(|| {\n    let param_names = (0..RRF_MAX_SOURCES)\n        .map(|i| format!(\"_source_{i}\"))\n        .chain(\n            [\n                \"k\",\n                \"limit\",\n                \"join_key\",\n                \"time_column\",\n                \"recency_decay\",\n                \"decay_constant\",\n                \"decay_scale_secs\",\n                \"decay_window_secs\",\n                \"rank_weight\",\n            ]\n            .into_iter()\n            .map(str::to_string),\n        )\n        .collect();\n    match Signature::user_defined(Volatility::Stable).with_parameter_names(param_names) {\n        Ok(signature) => signature,\n        Err(_) => Signature::variadic_any(Volatility::Stable),\n    }\n});"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-search/src/rerank.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-search/src/rerank.rs",
+      "sha256": "df2b73456b3ee3be9c952d060b1f3e5f0cbb2ef8503f24ff868b9e0857e01671",
+      "excerpts": [
+        {
+          "start": 87,
+          "end": 105,
+          "text": "/// Signature accepts a variadic positional input plus named arguments.\n/// Parameter names are declared so `DataFusion` v51+ named-arg syntax works.\npub static RERANK_SIGNATURE: LazyLock<Signature> = LazyLock::new(|| {\n    let param_names = vec![\n        \"input\".to_string(),\n        \"model\".to_string(),\n        \"document\".to_string(),\n        \"query\".to_string(),\n        \"limit\".to_string(),\n        \"strategy\".to_string(),\n        \"prompt_template\".to_string(),\n    ];\n    match Signature::user_defined(Volatility::Volatile).with_parameter_names(param_names) {\n        Ok(sig) => sig,\n        Err(_) => Signature::variadic_any(Volatility::Volatile),\n    }\n});\n\nstatic RERANK_DOCUMENTATION: LazyLock<Documentation> = LazyLock::new(|| Documentation {"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-decide/src/functions.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-decide/src/functions.rs",
+      "sha256": "92e7eac34ac00ebff6c9a63c42c835acb7f546b182108497e2390b510e05c271",
+      "excerpts": [
+        {
+          "start": 60,
+          "end": 116,
+          "text": "            Self::Score => AI_SCORE_NAME,\n            Self::Decide => AI_DECIDE_NAME,\n        }\n    }\n\n    /// The parameters, in position order, and how many are required.\n    pub(crate) fn layout(self) -> Layout {\n        match self {\n            Self::If | Self::Probability => Layout {\n                params: &[\"input\", \"condition\", \"model\", \"on_error\"],\n                required: 2,\n            },\n            Self::Classify => Layout {\n                params: &[\"input\", \"labels\", \"instructions\", \"model\", \"on_error\"],\n                required: 2,\n            },\n            Self::Score => Layout {\n                params: &[\"input\", \"instructions\", \"levels\", \"model\", \"on_error\"],\n                required: 3,\n            },\n            Self::Decide => Layout {\n                params: &[\"input\", \"questions\", \"model\", \"on_error\"],\n                required: 2,\n            },\n        }\n    }\n\n    /// The usage line shown in argument errors.\n    pub(crate) fn usage(self) -> &'static str {\n        match self {\n            Self::If => \"ai_if(input, condition[, model => 'name'][, on_error => 'fail' | 'null'])\",\n            Self::Probability => {\n                \"ai_probability(input, condition[, model => 'name'][, on_error => 'fail' | 'null'])\"\n            }\n            Self::Classify => {\n                \"ai_classify(input, labels[, instructions => '...'][, model => 'name'][, on_error => 'fail' | 'null'])\"\n            }\n            Self::Score => {\n                \"ai_score(input, instructions, levels[, model => 'name'][, on_error => 'fail' | 'null'])\"\n            }\n            Self::Decide => {\n                \"ai_decide(input, questions[, model => 'name'][, on_error => 'fail' | 'null'])\"\n            }\n        }\n    }\n\n    /// The SQL type a typed function returns. `ai_decide`'s struct depends on its\n    /// questions, so it has none here.\n    pub(crate) fn typed_return(self) -> Option<DataType> {\n        match self {\n            Self::If => Some(DataType::Boolean),\n            Self::Probability | Self::Score => Some(DataType::Float64),\n            Self::Classify => Some(DataType::Utf8),\n            Self::Decide => None,\n        }\n    }\n}"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-decide/src/output.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-decide/src/output.rs",
+      "sha256": "8d28517f40a50c540dccf3ce007df0a32cf20a2e32c1470c527e83fda838ccb9",
+      "excerpts": [
+        {
+          "start": 17,
+          "end": 104,
+          "text": "//! The SQL values decision functions return.\n//!\n//! `ai_decide` returns a struct with one field per question id:\n//!\n//! - `noul` \u2192 `{probability}`\n//! - `choice` \u2192 `{choice, probabilities: [{value, probability}], confidence}`\n//! - `score` \u2192 `{score, probabilities: [{value, label, probability}], confidence}`\n//!\n//! The typed functions return the one value they ask for.\n\nuse std::collections::BTreeMap;\nuse std::sync::Arc;\n\nuse arrow::array::{ArrayRef, BooleanArray, Float64Array, StringArray};\nuse arrow::datatypes::{DataType, Field, Fields, Schema};\nuse datafusion::common::{DataFusionError, Result, exec_err, internal_err};\nuse evaluate_api::{Answer, EntryType, NonNullEntry, Question};\nuse serde_json::{Map, Value, json};\n\nuse crate::args::TYPED_QUESTION_ID;\nuse crate::exec::RowAnswers;\nuse crate::functions::Kind;\n\n/// The struct field names, shared by the planner's field accesses.\npub(crate) const PROBABILITY: &str = \"probability\";\npub(crate) const CHOICE: &str = \"choice\";\npub(crate) const SCORE: &str = \"score\";\nconst PROBABILITIES: &str = \"probabilities\";\nconst CONFIDENCE: &str = \"confidence\";\nconst VALUE: &str = \"value\";\nconst LABEL: &str = \"label\";\n\n/// The threshold above which `ai_if` is true: yes is more likely than no.\npub(crate) const IF_THRESHOLD: f64 = 0.5;\n\nfn float(name: &str) -> Field {\n    Field::new(name, DataType::Float64, true)\n}\n\nfn list_of(fields: Vec<Field>) -> DataType {\n    DataType::List(Arc::new(Field::new_list_field(\n        DataType::Struct(Fields::from(fields)),\n        true,\n    )))\n}\n\n/// The struct one question's answer has.\nfn answer_type(question: &Question) -> DataType {\n    let fields = match question {\n        Question::Noul { .. } => vec![float(PROBABILITY)],\n        Question::Choice { .. } => vec![\n            Field::new(CHOICE, DataType::Utf8, true),\n            Field::new(\n                PROBABILITIES,\n                list_of(vec![\n                    Field::new(VALUE, DataType::Utf8, true),\n                    float(PROBABILITY),\n                ]),\n                true,\n            ),\n            float(CONFIDENCE),\n        ],\n        Question::Score { .. } => vec![\n            float(SCORE),\n            Field::new(\n                PROBABILITIES,\n                list_of(vec![\n                    Field::new(VALUE, DataType::Int64, true),\n                    Field::new(LABEL, DataType::Utf8, true),\n                    float(PROBABILITY),\n                ]),\n                true,\n            ),\n            float(CONFIDENCE),\n        ],\n    };\n    DataType::Struct(Fields::from(fields))\n}\n\n/// The struct `ai_decide` returns for `questions`.\npub(crate) fn decision_type(questions: &BTreeMap<String, Question>) -> DataType {\n    DataType::Struct(Fields::from(\n        questions\n            .iter()\n            .map(|(id, question)| Field::new(id, answer_type(question), true))\n            .collect::<Vec<_>>(),\n    ))\n}"
+        }
+      ]
+    }
+  ]
+}

@@ -155,7 +155,8 @@ public class EngineBuiltins(
     /** The function [call] (named [name]) calls in [file], of a kind its position takes, unless the platform dialect has the name. */
     private fun function(dialect: SqlLanguageDialectEx, file: PsiFile, call: SqlFunctionCallExpression, name: String): FunctionPresentation? {
         if (dialect.supportedFunctions.contains(name)) return null
-        val table = call.parent?.node?.elementType == SqlCompositeElementTypes.SQL_TABLE_PROCEDURE_CALL_EXPRESSION
+        val table = call.parent?.node?.elementType == SqlCompositeElementTypes.SQL_TABLE_PROCEDURE_CALL_EXPRESSION ||
+            (completion as? DatafusionEditorProfile)?.tableCall(file, call.textRange.startOffset) == true
         val caseSensitive = completion.snapshot(file).functions.caseSensitive
         return completion.functions(file).firstOrNull { function ->
             function.name.equals(name, ignoreCase = !caseSensitive) && (function.kind == FunctionKind.TABLE_VALUED) == table

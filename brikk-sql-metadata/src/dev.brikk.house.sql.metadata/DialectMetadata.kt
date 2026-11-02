@@ -113,9 +113,11 @@ class DialectMetadata(
 /** The bundled metadata of the core dialect named [dialect] (`doris`, `duckdb`, ...), or null when none is bundled. */
 fun bundledMetadata(dialect: String): DialectMetadata? = when (dialect) {
     "clickhouse" -> CLICKHOUSE_METADATA
+    "datafusion" -> DATAFUSION_METADATA
     "doris" -> DORIS_METADATA
     "duckdb" -> DUCKDB_METADATA
     "starrocks" -> STARROCKS_METADATA
+    "spice" -> SPICE_METADATA
     "trino" -> TRINO_METADATA
     else -> null
 }

@@ -61,6 +61,19 @@ class BinaryCompatibilityTest {
     }
 
     @Test
+    fun relationFactsKeepsItsShapeFromBeforeCallSites() {
+        val map = Map::class.java
+        val shape = arrayOf(map, map, map, CatalogKnowledge::class.java, List::class.java)
+        assertEquals(RelationFacts(), allDefaults(RelationFacts::class.java, *shape))
+        val fact = dev.brikk.house.sql.scope.RelationFact()
+        val facts = RelationFacts(callSites = mapOf(12 to fact))
+        val copy = RelationFacts::class.java.getMethod("copy", *shape)
+        assertEquals(facts, copy.invoke(facts, emptyMap<String, Any>(), emptyMap<String, Any>(), emptyMap<String, Any>(), CatalogKnowledge.OPEN, emptyList<String>()))
+        RelationFacts::class.java.getDeclaredMethod("copy\$default", RelationFacts::class.java, *shape, Int::class.javaPrimitiveType, Any::class.java)
+        RelationFacts::class.java.getConstructor(*shape)
+    }
+
+    @Test
     fun sqlScriptParametersKeepsItsShapeFromBeforeAmbiguousRanges() {
         val string = String::class.java
         val shape = arrayOf(string, string, List::class.java, Integer::class.java, string)

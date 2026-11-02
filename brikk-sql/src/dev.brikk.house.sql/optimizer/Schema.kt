@@ -529,6 +529,7 @@ fun dataTypeFromStr(dtype: String, dialect: Dialect? = null, udt: Boolean = fals
     if (dtype.uppercase() == "UNKNOWN") return DataType(args("this" to DType.UNKNOWN))
 
     val d = dialect ?: Dialects.BASE
+    if (d.name in setOf("datafusion", "spice")) DatafusionTypes.parse(dtype)?.let { return it }
     val parsed = try {
         d.parser(errorLevel = ErrorLevel.IGNORE).parseIntoDataType(d.tokenize(dtype), dtype)
     } catch (e: Exception) {

@@ -1,0 +1,170 @@
+{
+  "cases": {
+    "negative": {
+      "execute": false,
+      "generated": {
+        "parse": {
+          "status": "rejected"
+        }
+      },
+      "generated_sql": "SELECT (",
+      "negative": true,
+      "original": {
+        "parse": {
+          "statements": [],
+          "status": "accepted"
+        }
+      },
+      "sql_sha256": "3f7d7e5101f96b2d8496513b4d26712312ba5f3c3a1d1ec554e5fc2b98852c81"
+    },
+    "positive": {
+      "execute": true,
+      "generated": {
+        "execute": {
+          "fields": [
+            {
+              "name": "v",
+              "type": "Int64"
+            }
+          ],
+          "rows": [
+            [
+              "99"
+            ]
+          ],
+          "status": "accepted"
+        },
+        "parse": {
+          "statements": [],
+          "status": "accepted"
+        }
+      },
+      "generated_sql": "SELECT kept(1)",
+      "negative": false,
+      "original": {
+        "execute": {
+          "fields": [
+            {
+              "name": "v",
+              "type": "Int64"
+            }
+          ],
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "status": "accepted"
+        },
+        "parse": {
+          "status": "rejected"
+        }
+      },
+      "sql_sha256": "b583c8d163ba11150d3ce00656ae183d06449677c892631cf0c75efe2e7d52db"
+    }
+  },
+  "coverage": {
+    "functions": "complete",
+    "keywords": "complete",
+    "settings": "complete",
+    "table_function_schemas": "observed-candidates",
+    "types": "observed-candidates"
+  },
+  "functions": {
+    "SCALAR:added": {
+      "aliases": null,
+      "canonical": null,
+      "descriptions": [
+        "added"
+      ],
+      "kind": "SCALAR",
+      "name": "added",
+      "native_kind": "SCALAR",
+      "overloads": [],
+      "returns": [],
+      "samples": [],
+      "signature": null,
+      "syntax": [
+        "added(x)"
+      ],
+      "volatility": null
+    },
+    "SCALAR:kept": {
+      "aliases": [],
+      "canonical": "kept",
+      "descriptions": [
+        "kept"
+      ],
+      "kind": "SCALAR",
+      "name": "kept",
+      "native_kind": "SCALAR",
+      "overloads": [
+        {
+          "args": [
+            "Utf8"
+          ],
+          "names": null,
+          "return": "Utf8"
+        }
+      ],
+      "returns": [
+        "Utf8"
+      ],
+      "samples": [
+        {
+          "function_name": "kept",
+          "function_type": "SCALAR",
+          "parameter_types": [
+            "Utf8"
+          ],
+          "return_type": "Utf8"
+        }
+      ],
+      "signature": "Exact([Utf8])",
+      "syntax": [
+        "kept(x)"
+      ],
+      "volatility": "Immutable"
+    },
+    "TABLE_VALUED:table_fn": {
+      "aliases": null,
+      "canonical": null,
+      "descriptions": [
+        "table_fn"
+      ],
+      "kind": "TABLE_VALUED",
+      "name": "table_fn",
+      "native_kind": "TABLE",
+      "overloads": [],
+      "returns": [],
+      "samples": [],
+      "signature": null,
+      "syntax": [
+        "table_fn(x)"
+      ],
+      "volatility": null
+    }
+  },
+  "keywords": {
+    "NEW_KEYWORD": true,
+    "SELECT": true
+  },
+  "settings": {
+    "default": {
+      "description": null,
+      "value": "new"
+    }
+  },
+  "table_function_schemas": {
+    "TABLE_VALUED:table_fn": {
+      "columns": [
+        [
+          "v",
+          "Utf8"
+        ]
+      ],
+      "knowledge": "full"
+    }
+  },
+  "types": {}
+}

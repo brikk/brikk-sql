@@ -55,13 +55,20 @@ dependencies {
 
 Supported names: `sqlglot` (also `""`), `mysql`, `doris`, `starrocks`, `postgres`
 (`postgresql`), `duckdb`, `presto`, `trino`, `clickhouse`, `hive`, `spark2`, `spark`
-(`sparksql`), `bigquery`, and `datafusion` (`arrow-datafusion`). Names are
+(`sparksql`), `bigquery`, `datafusion` (`arrow-datafusion`), and `spice`. Names are
 case-insensitive. Use `read=<dialect>` when parsing and `write=<dialect>` when
 transpiling.
 
 SQLGlot-backed dialects are checked differentially against the pinned Python
-oracle. DataFusion is Brikk-native: its gates use polyglot fixtures, DataFusion
-sqllogictest parse acceptance, and hand assertions instead. StarRocks is pinned
+oracle. DataFusion and Spice are Brikk-native: their gates use pinned native references,
+fixtures, and hand assertions. Spice's development support targets v2.4.0's PostgreSQL
+parser profile, case-preserving identifiers, native functions/operators, and structured
+utility statements. See [Spice core support and limits](docs/research/spice-core-dialect.md).
+The shared-library qualification targets DataFusion 55.2.0 and Spice v2.4.0 with explicit
+[feature and transport boundaries](docs/datafusion-spice-support.md). A tested
+[dual-dialect consumer fixture and wiring guide](docs/datafusion-spice-consumer.md) prepares
+one IntelliJ plugin for both products; packaged plugin qualification remains downstream work.
+StarRocks is pinned
 to 4.1.4 with a versioned catalog and a deliberately partial evidence-backed
 semantic matrix; unprobed functions do not receive inferred certification.
 

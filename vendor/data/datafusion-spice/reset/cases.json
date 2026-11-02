@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "description": "DataFusion 55.2.0 RESET parser/render controls. No RESET statement is executed.",
+  "cases": [
+    {"id":"DFS-reset","area":"statement","execute":false,"sql":"RESET datafusion.execution.batch_size"},
+    {"id":"reset-all-name","area":"statement","execute":false,"sql":"RESET ALL"},
+    {"id":"reset-quoted-parts","area":"identifiers","execute":false,"sql":"RESET \"MiXeD\".\"a.b\""},
+    {"id":"reset-quoted-whole","area":"identifiers","execute":false,"sql":"RESET 'datafusion.execution.batch_size'"},
+    {"id":"reset-escape","area":"identifiers","execute":false,"sql":"RESET E'a\\tb'"},
+    {"id":"reset-adjacent","area":"statement","execute":false,"sql":"RESET a b"},
+    {"id":"reset-time-zone","area":"statement","execute":false,"sql":"RESET time zone"},
+    {"id":"reset-empty-identifier","area":"identifiers","execute":false,"sql":"RESET \"\""},
+    {"id":"reset-unicode","area":"identifiers","execute":false,"sql":"RESET \"😀\""},
+    {"id":"reset-quote-escape","area":"identifiers","execute":false,"sql":"RESET \"a\"\"b\""},
+    {"id":"reset-comments","area":"statement","execute":false,"sql":"RESET a /* comment */ . b"},
+    {"id":"reset-script","area":"statement","execute":false,"sql":"RESET a; SELECT 1"},
+    {"id":"reset-no-name","area":"negative","execute":false,"sql":"RESET"},
+    {"id":"reset-leading-dot","area":"negative","execute":false,"sql":"RESET .a"},
+    {"id":"reset-trailing-dot","area":"negative","execute":false,"sql":"RESET a."},
+    {"id":"reset-double-dot","area":"negative","execute":false,"sql":"RESET a..b"},
+    {"id":"reset-number","area":"negative","execute":false,"sql":"RESET 1"},
+    {"id":"reset-assignment","area":"negative","execute":false,"sql":"RESET a = 1"},
+    {"id":"reset-comma","area":"negative","execute":false,"sql":"RESET a,b"},
+    {"id":"reset-colon-bind","area":"negative","execute":false,"sql":"RESET :name"},
+    {"id":"reset-numbered-bind","area":"negative","execute":false,"sql":"RESET $1"},
+    {"id":"reset-operator","area":"negative","execute":false,"sql":"RESET a - b"},
+    {"id":"reset-national-string","area":"negative","execute":false,"sql":"RESET N'x'"},
+    {"id":"reset-hex-string","area":"negative","execute":false,"sql":"RESET X'41'"},
+    {"id":"reset-malformed-tail","area":"negative","execute":false,"sql":"RESET a; SELECT ("}
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "negative/generated/parse": {
+    "statements": [],
+    "status": "rejected"
+  },
+  "negative/original/parse": {
+    "statements": [],
+    "status": "rejected"
+  },
+  "positive/generated/execute": {
+    "fields": [
+      {
+        "name": "v",
+        "type": "Int64"
+      }
+    ],
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "positive/generated/parse": {
+    "statements": [],
+    "status": "accepted"
+  },
+  "positive/original/execute": {
+    "fields": [
+      {
+        "name": "v",
+        "type": "Int64"
+      }
+    ],
+    "rows": [
+      [
+        "1"
+      ]
+    ],
+    "status": "accepted"
+  },
+  "positive/original/parse": {
+    "statements": [],
+    "status": "accepted"
+  }
+}

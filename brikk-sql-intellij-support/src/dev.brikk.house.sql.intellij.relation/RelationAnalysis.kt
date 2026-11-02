@@ -19,6 +19,8 @@ import dev.brikk.house.sql.scope.ScopeColumn
 import dev.brikk.house.sql.scope.ScopeReference
 import dev.brikk.house.sql.scope.ScopeRelation
 import java.util.concurrent.ConcurrentHashMap
+import java.util.IdentityHashMap
+import dev.brikk.house.sql.scope.ColumnFact
 
 /**
  * The relation scope of one file's SQL (unescaped when injected) at one document revision, over
@@ -58,7 +60,7 @@ internal class RelationAnalysis(
     }
 
     /** The provider of [column]'s fact; null for a computed column. */
-    fun providerOf(column: ScopeColumn): ExternalRelationFacts? = column.source?.let { facts.providerOf(it.kind, it.relation) }
+    fun providerOf(column: ScopeColumn): ExternalRelationFacts? = facts.providerOf(column)
 
     fun providerOf(relation: ScopeRelation): ExternalRelationFacts? =
         relation.kind.takeIf { it in PROVIDED }?.let { kind -> relation.source?.let { facts.providerOf(kind, it) } }
@@ -73,6 +75,7 @@ internal class RelationAnalysis(
         val source = column.source ?: return false
         if (column.origin == ColumnOrigin.COMPUTED || providerOf(column)?.platformResolves != false) return false
         if (column.relationKind in PROVIDED) return true
+        if (profile.dialect == "spice" && column.relationKind == RelationKind.FUNCTION) return true
         if (column.relationKind != RelationKind.CTE && column.relationKind != RelationKind.SUBQUERY) return false
         val (_, scope) = statementOf(offset) ?: return false
         return scope.references.none { reference ->
@@ -131,16 +134,25 @@ internal class RelationAnalysis(
 }
 
 /** The facts of several providers merged in order, remembering which provider supplied each key of each kind. */
-internal class MergedFacts(val merged: RelationFacts, private val owners: Map<Pair<RelationKind, String>, ExternalRelationFacts>) {
+internal class MergedFacts(val merged: RelationFacts, private val owners: Map<Pair<RelationKind, String>, ExternalRelationFacts>,
+    private val callColumns: Map<ColumnFact, ExternalRelationFacts>) {
     fun providerOf(kind: RelationKind, key: String): ExternalRelationFacts? = owners[kind to key]
+    fun providerOf(column: ScopeColumn): ExternalRelationFacts? = column.source?.let {
+        (if (it.kind == RelationKind.CALL) callColumns[it.column] else null) ?: providerOf(it.kind, it.relation)
+    }
 
     companion object {
         fun of(facts: List<Pair<ExternalRelationFacts, RelationFacts>>): MergedFacts {
             val slots = LinkedHashMap<String, RelationFact>()
             val tables = LinkedHashMap<String, RelationFact>()
             val calls = LinkedHashMap<String, RelationFact>()
+            val callSites = LinkedHashMap<Int, RelationFact>()
+            val callColumns = IdentityHashMap<ColumnFact, ExternalRelationFacts>()
             val owners = HashMap<Pair<RelationKind, String>, ExternalRelationFacts>()
             for ((provider, one) in facts) {
+                for ((offset, fact) in one.callSites) if (callSites.putIfAbsent(offset, fact) == null) {
+                    fact.columns.forEach { callColumns.putIfAbsent(it, provider) }
+                }
                 for ((kind, map, entries) in listOf(
                     Triple(RelationKind.SLOT, slots, one.slots),
                     Triple(RelationKind.TABLE, tables, one.tables),
@@ -155,7 +167,7 @@ internal class MergedFacts(val merged: RelationFacts, private val owners: Map<Pa
             val catalog = if (catalogs.isNotEmpty() && catalogs.all { it == CatalogKnowledge.CLOSED }) CatalogKnowledge.CLOSED else CatalogKnowledge.OPEN
             // Each provider's namespaces, in provider order.
             val searchPath = facts.flatMap { it.second.searchPath }.distinct()
-            return MergedFacts(RelationFacts(slots, tables, calls, catalog, searchPath), owners)
+            return MergedFacts(RelationFacts(slots, tables, calls, catalog, searchPath, callSites), owners, callColumns)
         }
     }
 }

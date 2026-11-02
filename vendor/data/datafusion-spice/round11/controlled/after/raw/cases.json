@@ -1,0 +1,15 @@
+{
+  "cases": [
+    {
+      "execute": true,
+      "id": "positive",
+      "sql": "SELECT kept(1)"
+    },
+    {
+      "area": "negative",
+      "execute": false,
+      "id": "negative",
+      "sql": "SELECT ("
+    }
+  ]
+}

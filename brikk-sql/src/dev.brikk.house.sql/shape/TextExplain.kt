@@ -126,6 +126,12 @@ private val STATEMENTS = setOf(
     dev.brikk.house.sql.ast.ClickhouseExplain::class, dev.brikk.house.sql.ast.ClickhouseCreateToken::class,
     dev.brikk.house.sql.ast.ClickhouseUserAuthentication::class, dev.brikk.house.sql.ast.ClickhouseHandler::class,
     dev.brikk.house.sql.ast.ClickhouseHypotheticalIndex::class, dev.brikk.house.sql.ast.ClickhouseSystem::class,
+    dev.brikk.house.sql.ast.SpiceExplain::class, dev.brikk.house.sql.ast.SpicePrepare::class,
+    dev.brikk.house.sql.ast.SpiceExecute::class, dev.brikk.house.sql.ast.SpiceShow::class,
+    dev.brikk.house.sql.ast.SpiceReset::class,
+    dev.brikk.house.sql.ast.DatafusionReset::class,
+    dev.brikk.house.sql.ast.DatafusionExplain::class, dev.brikk.house.sql.ast.DatafusionPrepare::class,
+    dev.brikk.house.sql.ast.DatafusionExecute::class, dev.brikk.house.sql.ast.DatafusionShow::class,
 )
 
 private const val PARAMETERS = "The query has parameters: resolve them with Execute before EXPLAIN."

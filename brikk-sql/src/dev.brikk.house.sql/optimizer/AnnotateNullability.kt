@@ -190,6 +190,27 @@ private class NullabilityAnnotator(
     }
 
     fun visit(node: Expression) {
+        if (dialect.name in setOf("datafusion", "spice")) {
+            if (node is dev.brikk.house.sql.ast.JSONExtract || node is dev.brikk.house.sql.ast.JSONExtractScalar ||
+                node is dev.brikk.house.sql.ast.Array) {
+                put(node, true)
+                return
+            }
+            if (node is Anonymous || node is dev.brikk.house.sql.ast.AnonymousAggFunc) {
+                val name = node.name.lowercase()
+                val verdict = when {
+                    node.parent is dev.brikk.house.sql.ast.Dot -> null
+                    node.thisArg is dev.brikk.house.sql.ast.Identifier && node.name != name -> null
+                    name == "arrow_cast" -> get(node.expressionsArg.firstOrNull() as? Expression)
+                    name == "arrow_typeof" -> false
+                    node is AggFunc -> true
+                    dialect.name == "spice" && (name.startsWith("json_get") || name in setOf("ai_if", "ai_probability", "ai_classify", "ai_score", "ai_decide")) -> true
+                    else -> null
+                }
+                put(node, verdict)
+                return
+            }
+        }
         val verdict: Boolean? = when (node) {
             // --- literals ---
             is Null -> true

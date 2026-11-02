@@ -60,6 +60,11 @@ jobs:
           TEST_KOTLIN_RELEASE_MODEL: '1'
         run: python3 -m unittest discover -s tools -p 'test_*release*.py'
 
+      - name: Test DataFusion and Spice evidence and upgrade contracts (offline)
+        run: |
+          python3 -m unittest discover -s tools -p 'test_*datafusion*.py'
+          python3 -m unittest discover -s tools -p 'test_spice_native_evidence.py'
+
       # Core contains wall-clock scaling assertions. Do not run its measurements
       # alongside other module suites, and give its JVM a repeatable resource budget.
       - name: Test core

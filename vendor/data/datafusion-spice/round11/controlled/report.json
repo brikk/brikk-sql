@@ -1,0 +1,341 @@
+{
+  "boundaries": [
+    "controlled-before",
+    "controlled-after"
+  ],
+  "changes": [
+    {
+      "after": {
+        "statements": [],
+        "status": "accepted"
+      },
+      "before": {
+        "status": "rejected"
+      },
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-38d8ad24f4abd176",
+      "impact": "parser",
+      "introduced_at": null,
+      "kind": "parser_more_permissive",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "cases/negative/original/parse"
+    },
+    {
+      "after": {
+        "fields": [
+          {
+            "name": "v",
+            "type": "Int64"
+          }
+        ],
+        "rows": [
+          [
+            "99"
+          ]
+        ],
+        "status": "accepted"
+      },
+      "before": {
+        "fields": [
+          {
+            "name": "v",
+            "type": "Int64"
+          }
+        ],
+        "rows": [
+          [
+            "1"
+          ]
+        ],
+        "status": "accepted"
+      },
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-961611e5e2c1ff2d",
+      "impact": "generator",
+      "introduced_at": null,
+      "kind": "semantic_change",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "cases/positive/generated/execute"
+    },
+    {
+      "after": {
+        "status": "rejected"
+      },
+      "before": {
+        "statements": [],
+        "status": "accepted"
+      },
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-244a7d34b7195a11",
+      "impact": "parser",
+      "introduced_at": null,
+      "kind": "parser_regression",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "cases/positive/original/parse"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "canonical": null,
+        "descriptions": [
+          "added"
+        ],
+        "kind": "SCALAR",
+        "name": "added",
+        "native_kind": "SCALAR",
+        "overloads": [],
+        "returns": [],
+        "samples": [],
+        "signature": null,
+        "syntax": [
+          "added(x)"
+        ],
+        "volatility": null
+      },
+      "before": null,
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-bda012dfa9a1564f",
+      "impact": "metadata-only",
+      "introduced_at": "controlled-after",
+      "kind": "item_added",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "functions/SCALAR:added"
+    },
+    {
+      "after": [
+        {
+          "args": [
+            "Utf8"
+          ],
+          "names": null,
+          "return": "Utf8"
+        }
+      ],
+      "before": [
+        {
+          "args": [
+            "Int64"
+          ],
+          "names": null,
+          "return": "Int64"
+        }
+      ],
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-32426a1963a686b7",
+      "impact": "type/scope",
+      "introduced_at": null,
+      "kind": "overloads_changed",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "functions/SCALAR:kept/overloads"
+    },
+    {
+      "after": [
+        "Utf8"
+      ],
+      "before": [
+        "Int64"
+      ],
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-bae7cd69d3ef7885",
+      "impact": "type/scope",
+      "introduced_at": null,
+      "kind": "returns_changed",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "functions/SCALAR:kept/returns"
+    },
+    {
+      "after": [
+        {
+          "function_name": "kept",
+          "function_type": "SCALAR",
+          "parameter_types": [
+            "Utf8"
+          ],
+          "return_type": "Utf8"
+        }
+      ],
+      "before": [
+        {
+          "function_name": "kept",
+          "function_type": "SCALAR",
+          "parameter_types": [
+            "Int64"
+          ],
+          "return_type": "Int64"
+        }
+      ],
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-436d7827b759ce11",
+      "impact": "metadata-only",
+      "introduced_at": null,
+      "kind": "samples_changed",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "functions/SCALAR:kept/samples"
+    },
+    {
+      "after": "Exact([Utf8])",
+      "before": "Exact([Int64])",
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-d5463d1840ff27d4",
+      "impact": "breaking behavior",
+      "introduced_at": null,
+      "kind": "signature_changed",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "functions/SCALAR:kept/signature"
+    },
+    {
+      "after": null,
+      "before": {
+        "aliases": [],
+        "canonical": "removed",
+        "descriptions": [
+          "removed"
+        ],
+        "kind": "SCALAR",
+        "name": "removed",
+        "native_kind": "SCALAR",
+        "overloads": [
+          {
+            "args": [
+              "Int64"
+            ],
+            "names": null,
+            "return": "Int64"
+          }
+        ],
+        "returns": [
+          "Int64"
+        ],
+        "samples": [
+          {
+            "function_name": "removed",
+            "function_type": "SCALAR",
+            "parameter_types": [
+              "Int64"
+            ],
+            "return_type": "Int64"
+          }
+        ],
+        "signature": "Exact([Int64])",
+        "syntax": [
+          "removed(x)"
+        ],
+        "volatility": "Immutable"
+      },
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-3185d2e771fe6a26",
+      "impact": "breaking behavior",
+      "introduced_at": null,
+      "kind": "item_removed",
+      "last_observed_at": "controlled-before",
+      "removed_at": "controlled-after",
+      "subject": "functions/SCALAR:removed"
+    },
+    {
+      "after": true,
+      "before": null,
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-f6148912577be72b",
+      "impact": "parser",
+      "introduced_at": "controlled-after",
+      "kind": "item_added",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "keywords/NEW_KEYWORD"
+    },
+    {
+      "after": {
+        "description": null,
+        "value": "new"
+      },
+      "before": {
+        "description": null,
+        "value": "old"
+      },
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-cf3f2c40397d193f",
+      "impact": "IDE",
+      "introduced_at": null,
+      "kind": "item_changed",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "settings/default"
+    },
+    {
+      "after": {
+        "columns": [
+          [
+            "v",
+            "Utf8"
+          ]
+        ],
+        "knowledge": "full"
+      },
+      "before": {
+        "columns": [
+          [
+            "v",
+            "Int64"
+          ]
+        ],
+        "knowledge": "full"
+      },
+      "first_observed_at": "controlled-after",
+      "id": "DFS-UP-c1ad363628f6b198",
+      "impact": "type/scope",
+      "introduced_at": null,
+      "kind": "item_changed",
+      "last_observed_at": "controlled-before",
+      "removed_at": null,
+      "subject": "table_function_schemas/TABLE_VALUED:table_fn"
+    }
+  ],
+  "coverage": {
+    "after": {
+      "functions": "complete",
+      "keywords": "complete",
+      "settings": "complete",
+      "table_function_schemas": "observed-candidates",
+      "types": "observed-candidates"
+    },
+    "before": {
+      "functions": "complete",
+      "keywords": "complete",
+      "settings": "complete",
+      "table_function_schemas": "observed-candidates",
+      "types": "observed-candidates"
+    }
+  },
+  "evidence_kinds": [
+    "controlled-fixture",
+    "controlled-fixture"
+  ],
+  "from": "8cdef32c9fbb59f9810bb0d779c7d7a30742d391ae0eb75342df20af987282c3",
+  "gaps": [],
+  "product": "datafusion",
+  "promotion_allowed": false,
+  "required_gates": [
+    "Review all changes and coverage gaps, including native rejections",
+    "Re-run this exact corpus on both pinned profiles with fresh Brikk output",
+    "Regenerate candidate metadata twice and compare bytes",
+    "Run core/native/IDE and ABI gates",
+    "Requalify Flight SQL metadata, binding, sessions, errors and cancellation for the selected driver",
+    "Update support matrix, compatibility notes and consumer handoff",
+    "Explicit approval before changing bundled defaults or publishing"
+  ],
+  "schema_version": 1,
+  "to": "66b1edfd91fa9f19e637225213bbb20b20072b918f569b3541b2dedc6f2cf783",
+  "unchanged_local_refusals_of_native_invalid_sql": [],
+  "unchanged_rejections_not_equivalence": [
+    "cases/negative/generated/parse"
+  ],
+  "unknown_function_schemas": []
+}

@@ -12,6 +12,20 @@ no internal-API annotation.
 
 ## API
 
+DataFusion and Spice consumers use `DatafusionFamilyDialect` with separate
+`DatafusionIdeProfile` identities and `DatafusionFamilyParserDefinition`. The shared jar
+registers nothing and maps no generic Flight SQL or PostgreSQL source to these products.
+See [the DFS-007 wiring and parsing contract](../docs/research/datafusion-spice-ide-parsing.md).
+`DatafusionEditorProfile` adds versioned completion, function evidence documentation and
+relation features. See [the DFS-008 registration and inspection contract](../docs/research/datafusion-spice-editor-features.md).
+`ConnectedDatafusionEditorProfile` and the DataFusion/Spice catalog profiles connect those
+features to Flight SQL inventories. See [the DFS-009 transport and cache contract](../docs/research/datafusion-spice-live-catalogs.md).
+`DatafusionNativeErrorProfile` and `DatafusionPipeDialect` add offline diagnostics and opt-in
+Brikk PIPE execution. See [the DFS-010 execution contract and measured driver limits](../docs/research/datafusion-spice-execution.md).
+The [DFS-012 consumer handoff](../docs/datafusion-spice-consumer.md) combines these registrations
+in a tested dual-dialect fixture and lists candidate artifacts and downstream packaging checks.
+Its [support matrix](../docs/datafusion-spice-support.md) keeps execution exclusions explicit.
+
 `queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries
 or trusted session initialization over an existing `DatabaseConnectionCore`, without owning
 or closing that connection. Use them from the connection/execution hooks, off the EDT and

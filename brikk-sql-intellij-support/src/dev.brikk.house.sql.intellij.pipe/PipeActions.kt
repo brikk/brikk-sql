@@ -121,7 +121,8 @@ private fun PipeDialect.preview(file: PsiFile, editor: Editor) {
             }, BorderLayout.SOUTH)
         }
     }
-    val notes = diagnostics?.let { JBTextArea(it).apply { isEditable = false; lineWrap = true; wrapStyleWord = true } }
+    val notes = listOfNotNull(diagnostics, previewNote).joinToString("\n\n").takeIf { it.isNotEmpty() }
+        ?.let { JBTextArea(it).apply { isEditable = false; lineWrap = true; wrapStyleWord = true } }
     notes?.let {
         content.add(JBScrollPane(it).apply { preferredSize = JBUI.size(640, 100) }, if (sql == null) BorderLayout.CENTER else BorderLayout.NORTH)
     }

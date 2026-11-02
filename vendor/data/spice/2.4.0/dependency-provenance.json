@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "product": "spice",
+  "version": "2.4.0",
+  "source_commit": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+  "captured_on": "2026-10-30",
+  "lockfile": {
+    "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/Cargo.lock",
+    "sha256": "2320e1cd42b48693b089933c3c740df920ec51a8e8b8b246c1dba2d26e718a7c",
+    "license": "Apache-2.0"
+  },
+  "resolved_packages": [
+    {
+      "name": "arrow",
+      "version": "59.3.0",
+      "source": "git+https://github.com/spiceai/arrow-rs.git?rev=2e2cc330c64ac8a9e44d2a5f2da171b391f775b8#2e2cc330c64ac8a9e44d2a5f2da171b391f775b8"
+    },
+    {
+      "name": "arrow-schema",
+      "version": "59.3.0",
+      "source": "git+https://github.com/spiceai/arrow-rs.git?rev=2e2cc330c64ac8a9e44d2a5f2da171b391f775b8#2e2cc330c64ac8a9e44d2a5f2da171b391f775b8"
+    },
+    {
+      "name": "datafusion",
+      "version": "55.2.0",
+      "source": "git+https://github.com/spiceai/datafusion.git?rev=cf084aa85dfdc27b4736208f5c132828020774ea#cf084aa85dfdc27b4736208f5c132828020774ea"
+    },
+    {
+      "name": "datafusion-functions-json",
+      "version": "0.55.6",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "f3edcc7d53e84d8a9e05e50b58a153f616ea11d5a07eabcdf5559b532a14119b"
+    },
+    {
+      "name": "datafusion-spark",
+      "version": "55.2.0",
+      "source": "git+https://github.com/spiceai/datafusion.git?rev=cf084aa85dfdc27b4736208f5c132828020774ea#cf084aa85dfdc27b4736208f5c132828020774ea"
+    },
+    {
+      "name": "datafusion-sql",
+      "version": "55.2.0",
+      "source": "git+https://github.com/spiceai/datafusion.git?rev=cf084aa85dfdc27b4736208f5c132828020774ea#cf084aa85dfdc27b4736208f5c132828020774ea"
+    },
+    {
+      "name": "sqlparser",
+      "version": "0.62.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "13c6d1b651dc4edf07eead2a0c6c78016ce971bc2c10da5266861b13f25e7cec"
+    }
+  ],
+  "reference_lockfile": {
+    "path": "tools/datafusion-reference/spice/Cargo.lock",
+    "sha256": "f74a7e8fe3754f3769e6346a87fd696df297c54f76ad76b87c5d3e8d53d65c98",
+    "resolved_packages": [
+      {
+        "name": "arrow",
+        "version": "59.3.2",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "3f04e0a89cc175eaf3740282537851e6fd9d7276f97730b9d0ea2859c11a85df"
+      },
+      {
+        "name": "arrow-schema",
+        "version": "59.3.2",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "e87acb0c6bf6237fca7a50d7b51e801c98a18a5fe6f3bb34f7d77b85ca165388"
+      },
+      {
+        "name": "datafusion-sql",
+        "version": "55.2.0",
+        "source": "git+https://github.com/spiceai/datafusion.git?rev=cf084aa85dfdc27b4736208f5c132828020774ea#cf084aa85dfdc27b4736208f5c132828020774ea"
+      },
+      {
+        "name": "sqlparser",
+        "version": "0.62.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "13c6d1b651dc4edf07eead2a0c6c78016ce971bc2c10da5266861b13f25e7cec"
+      }
+    ]
+  },
+  "reference_tool_version": "0.1.0",
+  "protocol_version": 1,
+  "capture_command": "python3 tools/capture_datafusion_spice_provenance.py",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-datafusion/src/session_config.rs",
+      "sha256": "34e660f9018ff305efc67bd3580faf8c4d4c40595ca46966dee4cc293415c0fb",
+      "license": "Apache-2.0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/datafusion/planner/mod.rs",
+      "sha256": "0907b3c61bd037a21f5801ab2f795be724816dc448408a5a1680c8d786823343",
+      "license": "Apache-2.0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/datafusion/udf.rs",
+      "sha256": "2cd36312765ecea163e9bb76e2d8d0dc58f199e1ad837e8d5362be63c67d4a62",
+      "license": "Apache-2.0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/udtfs.rs",
+      "sha256": "335a81527f64714a8b7ef1a7bf0b73da58a6ae21a33d202fb9b303cc75ccf96e",
+      "license": "Apache-2.0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spiceai/datafusion/cf084aa85dfdc27b4736208f5c132828020774ea/datafusion/sql/src/parser.rs",
+      "sha256": "4315147252cd9d4e6e58edec37d1e55f3cea49595d94be6f1a0cd198a6ec049e",
+      "license": "Apache-2.0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/spiceai/datafusion/cf084aa85dfdc27b4736208f5c132828020774ea/datafusion/catalog/src/information_schema.rs",
+      "sha256": "1d066fa9ff4e350570b5c528dafb899fc84cdb64a450eb221e22143574dff2f7",
+      "license": "Apache-2.0"
+    }
+  ],
+  "release": {
+    "url": "https://github.com/spiceai/spiceai/releases/tag/v2.4.0",
+    "published_at": "2026-10-27T04:28:25Z",
+    "asset_url": "https://github.com/spiceai/spiceai/releases/download/v2.4.0/spiced_linux_x86_64.tar.gz",
+    "asset_sha256": "4c8179e1a7983a06d907b4efff29b17f0c1d779159efe117c1cafcc3bd3cd918",
+    "binary_sha256": "257b9fd8cf1f46c1f4ddf0b6280ba5b6033b79c276ec6840dd5e5d81710b1002",
+    "reported_version": "v2.4.0+models",
+    "platform": "linux-x86_64",
+    "features": "models is reported by --version; other compiled features are not inferred"
+  },
+  "parser_profile": {
+    "dialect": "PostgreSQL",
+    "identifier_normalization": false,
+    "extensions": [
+      "adapted Spice CREATE TABLE CLUSTER BY wrapper"
+    ],
+    "limitation": "Parser reference locks its own transitive Arrow dependencies, not Spice's patched Arrow build; execution uses the checksum-pinned released spiced binary"
+  },
+  "runtime_fixture": {
+    "path": "tools/datafusion-reference/spicepod.yaml",
+    "sha256": "a3dfddafb19b7620137fab3d05cf5cdf83dc31f0f187f1dda37f8a687686affd",
+    "models_configured": [],
+    "remote_datasets": [],
+    "cpu_cores": 2
+  }
+}

@@ -159,6 +159,14 @@ public class PipeExecutionContract(
         }
     }
 
+    /** Profiles with a connection fingerprint also pin login/settings across the stock parameter dialog. */
+    public fun refusesConnectionSettingsChangesDuringPrompting() {
+        for (entry in Entry.entries) Run(PARAMETERIZED).use { run ->
+            run.whilePrompting(entry) { run.recording.console.dataSource.username = "another-user" }
+            expectRefused(run, "connection settings changed during parameter prompting via $entry")
+        }
+    }
+
     /** Cancellation during preparation propagates unchanged, submits nothing, and is not notified. */
     public fun propagatesCancellation() {
         for (cancellation in listOf(ProcessCanceledException(), CancellationException())) Run(PROGRAM).use { run ->
