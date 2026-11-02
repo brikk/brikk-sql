@@ -1,0 +1,235 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "9d7a7a65b5f27e2723c7132237664766bccaef4b28a10b9d5718850ce54c1b12",
+  "brikk_sha256": "0dd5cd3ba49f19703d833e9d62c74808c76b9d27203e59c10f6ed6908d4f1115",
+  "execution": [
+    {
+      "id": "CHSEM-023-E01",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-023-E02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-023-E03",
+      "returncode": 0,
+      "stdout": "[6]\tArray(Nullable(Float64))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E04",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper,CAST(['MiXeD'] AS Array(String))) AS v,toTypeName(v). Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-023-E05",
+      "returncode": 0,
+      "stdout": "{'a':8}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E06",
+      "returncode": 0,
+      "stdout": "[7,8]\tArray(Float32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E07",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E08",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E09",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-023-E10",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-023-E11",
+      "returncode": 0,
+      "stdout": "-2147483648\tDecimal(9, 0)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E12",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E13",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT CAST(1, 'Float32') + CAST(2, 'Int128') AS v, toTypeName(v). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-023-E14",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E15",
+      "returncode": 0,
+      "stdout": "5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E16",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E17",
+      "returncode": 0,
+      "stdout": "3\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E18",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-023-E01",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-023-E02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-023-E03",
+      "returncode": 0,
+      "stdout": "[6]\tArray(Nullable(Float64))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E04",
+      "returncode": 62,
+      "stdout": "",
+      "stderr": "Code: 62. DB::Exception: Syntax error: failed at position 23 (|): | upper, CAST(['MiXeD'] AS Array(String))) AS v, toTypeName(v);. Expected one of: token sequence, Dot, token, Comma, ClosingRoundBracket, OR, AND, IS NOT DISTINCT FROM, IS DISTINCT FROM, IS NOT UNKNOWN, IS UNKNOWN, IS NOT FALSE, IS FALSE, IS NOT TRUE, IS TRUE, IS NULL, IS NOT NULL, BETWEEN, NOT BETWEEN, LIKE, ILIKE, NOT LIKE, NOT ILIKE, REGEXP, IN, NOT IN, GLOBAL IN, GLOBAL NOT IN, AT TIME ZONE, MOD, DIV, alias, AS. (SYNTAX_ERROR)\n"
+    },
+    {
+      "id": "CHSEM-023-E05",
+      "returncode": 0,
+      "stdout": "{'a':8}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E06",
+      "returncode": 0,
+      "stdout": "[7,8]\tArray(Float32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E07",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E08",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E09",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-023-E10",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-023-E11",
+      "returncode": 0,
+      "stdout": "-2147483648\tDecimal(9, 0)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E12",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E13",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT CAST(1, 'Float32') + CAST(2, 'Int128') AS v, toTypeName(v). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-023-E14",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E15",
+      "returncode": 0,
+      "stdout": "5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E16",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E17",
+      "returncode": 0,
+      "stdout": "3\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E18",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    }
+  ]
+}

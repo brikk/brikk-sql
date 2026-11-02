@@ -1,0 +1,235 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "9d7a7a65b5f27e2723c7132237664766bccaef4b28a10b9d5718850ce54c1b12",
+  "brikk_sha256": "0dd5cd3ba49f19703d833e9d62c74808c76b9d27203e59c10f6ed6908d4f1115",
+  "execution": [
+    {
+      "id": "CHSEM-023-E01",
+      "returncode": 0,
+      "stdout": "[4,5]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E02",
+      "returncode": 0,
+      "stdout": "[4.5,5.5]\tArray(Float64)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E03",
+      "returncode": 0,
+      "stdout": "[6]\tArray(Nullable(Float64))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E04",
+      "returncode": 0,
+      "stdout": "['MIXED']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E05",
+      "returncode": 0,
+      "stdout": "{'a':8}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E06",
+      "returncode": 0,
+      "stdout": "[7,8]\tArray(Float32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E07",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E08",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E09",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-023-E10",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(1, 0) AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-023-E11",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-023-E12",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E13",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT CAST(1, 'Float32') + CAST('2', 'Int128') AS v, toTypeName(v). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-023-E14",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E15",
+      "returncode": 0,
+      "stdout": "5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E16",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E17",
+      "returncode": 0,
+      "stdout": "3\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E18",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-023-E01",
+      "returncode": 0,
+      "stdout": "[4,5]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E02",
+      "returncode": 0,
+      "stdout": "[4.5,5.5]\tArray(Float64)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E03",
+      "returncode": 0,
+      "stdout": "[6]\tArray(Nullable(Float64))\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E04",
+      "returncode": 0,
+      "stdout": "['MIXED']\tArray(String)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E05",
+      "returncode": 0,
+      "stdout": "{'a':8}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E06",
+      "returncode": 0,
+      "stdout": "[7,8]\tArray(Float32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E07",
+      "returncode": 0,
+      "stdout": "3.5\tDecimal(12, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E08",
+      "returncode": 0,
+      "stdout": "0.01\tDecimal(9, 6)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E09",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Overflow during decimal division: In scope SELECT CAST('0.000001', 'Decimal32(6)') / CAST('0.0001', 'Decimal32(4)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-023-E10",
+      "returncode": 153,
+      "stdout": "",
+      "stderr": "Code: 153. DB::Exception: Division by zero: In scope SELECT divideExact(1, 0) AS v, toTypeName(v). (ILLEGAL_DIVISION)\n"
+    },
+    {
+      "id": "CHSEM-023-E11",
+      "returncode": 151,
+      "stdout": "",
+      "stderr": "Code: 407. DB::Exception: Decimal math overflow: the operand does not fit into the 32 bits of the result: In scope SELECT CAST(2147483648, 'UInt64') / CAST('1', 'Decimal32(0)') AS v, toTypeName(v). (DECIMAL_OVERFLOW)\n"
+    },
+    {
+      "id": "CHSEM-023-E12",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E13",
+      "returncode": 43,
+      "stdout": "",
+      "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT CAST(1, 'Float32') + CAST('2', 'Int128') AS v, toTypeName(v). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+    },
+    {
+      "id": "CHSEM-023-E14",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E15",
+      "returncode": 0,
+      "stdout": "5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E16",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E17",
+      "returncode": 0,
+      "stdout": "3\tDecimal(18, 3)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-023-E18",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    }
+  ]
+}

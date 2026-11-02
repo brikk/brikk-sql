@@ -59,7 +59,7 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-020: Add bounded native integer addition/subtraction result typing for operators and resolved plus/minus builtins. Prove width/signedness/nullability through pinned source/native matrices, including 64/128/256-bit boundaries and conditional overflow outcomes. Preserve generic typing, resolution, NULL/unsupported overload boundaries, signatures and source/serde; test, commit/push separately, then present the next option.
 - [x] CHSEM-021: Extend native-only addition/subtraction typing to Float32/Float64, supported mixed integers and nullable inputs. Prove promotion and wide-integer refusal boundaries with tagged source/native evidence, preserve generic typing and existing ownership/resolution/NULL contracts, then test/commit/push separately. Present an overall coverage/delivery summary and the next recommended option afterward.
 - [x] CHSEM-022: Fix scientific-number token boundaries around compact +/- expressions such as 1e0+2.0. CHSEM-021 found the shared lexer can consume the binary sign into the first token. Preserve the captured counterexample, qualify a scoped fix with parser/type/source/serde/native controls, and keep generic parity/ABI unchanged rather than weakening ledgers. Authorized as a separate round after CHSEM-021; commit/push before CHSEM-023.
-- [ ] CHSEM-023: Consolidated qualification and closeout. Freeze the supported scope, exercise the public statement/script APIs together, rerun regression/native/ABI gates, and report concrete missing coverage and delivery work for the user's final decision. Defer further feature expansion. Commit/push separately after CHSEM-022; no merge/publication/consumer changes implied.
+- [x] CHSEM-023: Consolidated qualification and closeout. Freeze the supported scope, exercise the public statement/script APIs together, rerun regression/native/ABI gates, and report concrete missing coverage and delivery work for the user's final decision. Defer further feature expansion. Commit/push separately after CHSEM-022; no merge/publication/consumer changes implied.
 
 Closeout observation to retain, not expand during CHSEM-022: a root multiplication
 such as `SELECT 1e0*(2e0+3.0)` parses correctly after the lexer fix but can retain
@@ -671,6 +671,36 @@ ledger relaxation, public signature, release, toolchain, consumer or IntelliJ AP
 changes. The IntelliJ gate passes 757 tests on 261.25134.95; other IDE versions were
 not run. ClickHouse-only Python passes 88 tests. Commit/push CHSEM-022 before the separate CHSEM-023 closeout; do not expand
 further feature scope during qualification.
+
+## CHSEM-023 result
+
+The feature batch is frozen. The combined public API closeout corpus contains
+18 scripts, with 12 qualified interactions and six explicitly deferred cases.
+Six additional G01-G06 examples retain known generic fallback deviations and
+intentional/unqualified unknowns. Original/generated whole-session outcomes match
+recorded expectations on both exact digest pins without execution/version skips.
+Guide and final-decision report: `vendor/data/clickhouse-semantic/closeout-README.md`.
+
+The report distinguishes per-node proof/provenance and root-propagation gaps,
+unqualified functions/overloads/type families, incomplete general semantic errors,
+catalog/query/session context, cross-dialect lowering and delivery qualification.
+For example, root `1*2` has frontend `Nullable(Int32)` versus native `UInt16`;
+root `1e0*(2e0+3.0)` has frontend `Nullable(Float64)` versus native `Float64`.
+These are recorded deviations, never counted as native-exact matches.
+
+Full JVM/ABI regression passes 1,917 tests with 61 optional integration assumption
+aborts and zero failures. Both new frontend reports regenerate byte-identically.
+Python discovery passes 139 tests with one opt-in skip on the unchanged SQLGlot
+pin; ClickHouse-only discovery passes 91 tests. Historical fixtures are replayed
+against the current library; not every historical native Docker matrix was freshly
+executed during closeout. No production code or public signature changes here.
+The sequential IntelliJ gate passes 757 tests on 261.25134.95. Other IDE versions
+were not run. CHSEM-022 was committed/pushed first as `148ebfb`.
+
+Stop feature expansion after the separate CHSEM-023 commit/push. The next option
+is the user's scope/integration decision, not another automatically started typing
+round. No main merge/reconciliation, release, publication, consumer dependency
+update or sibling-repository change has occurred or is implied.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

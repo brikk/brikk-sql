@@ -1,0 +1,334 @@
+{
+  "task": "CHSEM-023",
+  "engine_contract": "26.10.2.103",
+  "execution": [
+    {
+      "id": "CHSEM-023-E01",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT arrayMap((x,y) -> (x+y)/2,CAST([7,8] AS Array(UInt8)),CAST([2,3] AS Array(UInt8))) AS v,toTypeName(v)",
+      "types": [
+        "Array(UInt16)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "[4,5]\tArray(UInt16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E02",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT arrayMap((x,y) -> (x+y)/2,CAST([7,8] AS Array(UInt8)),CAST([2,3] AS Array(UInt8))) AS v,toTypeName(v)",
+      "types": [
+        "Array(Float64)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "[4.5,5.5]\tArray(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E03",
+      "sql": "SELECT arrayMap(x -> x-1,CAST([7] AS Array(Nullable(Float32)))) AS v,toTypeName(v)",
+      "types": [
+        "Array(Nullable(Float64))"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[6]\tArray(Nullable(Float64))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[6]\tArray(Nullable(Float64))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E04",
+      "sql": "SELECT arrayMap(lower | upper,CAST(['MiXeD'] AS Array(String))) AS v,toTypeName(v)",
+      "types": [
+        "Array(String)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 62,
+          "error_name": "SYNTAX_ERROR"
+        },
+        "26.10.2.103": {
+          "stdout": "['MIXED']\tArray(String)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E05",
+      "sql": "SELECT mapApply((k,v) -> (k,v+1),CAST(map('a',7) AS Map(String,UInt8))) AS v,toTypeName(v)",
+      "types": [
+        "Map(String, UInt16)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "{'a':8}\tMap(String, UInt16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "{'a':8}\tMap(String, UInt16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E06",
+      "sql": "SELECT arrayFilter(x -> x>CAST(0 AS Float64),CAST([7,8] AS Array(Float32))) AS v,toTypeName(v)",
+      "types": [
+        "Array(Float32)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[7,8]\tArray(Float32)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[7,8]\tArray(Float32)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E07",
+      "sql": "SELECT CAST(7 AS Decimal(12,3))/CAST(2 AS Int8) AS v,toTypeName(v)",
+      "types": [
+        "Decimal(12, 3)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tDecimal(12, 3)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tDecimal(12, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E08",
+      "sql": "SET decimal_check_overflow=0; SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v)",
+      "types": [
+        "Decimal(9, 6)"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0.01\tDecimal(9, 6)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0.01\tDecimal(9, 6)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E09",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST('0.000001' AS Decimal32(6))/CAST('0.0001' AS Decimal32(4)) AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "qualified": true,
+      "rules": [
+        "DECIMAL_DIVISION_SCALE_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E10",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT 1/0 AS v,toTypeName(v)",
+      "types": [
+        "UInt8"
+      ],
+      "qualified": true,
+      "rules": [
+        "DIVISION_BY_ZERO"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "error_code": 153,
+          "error_name": "ILLEGAL_DIVISION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E11",
+      "sql": "SET decimal_check_overflow=1; SELECT CAST(2147483648 AS UInt64)/CAST(1 AS Decimal32(0)) AS v,toTypeName(v)",
+      "types": [
+        "Decimal(9, 0)"
+      ],
+      "qualified": true,
+      "rules": [
+        "DECIMAL_DIVISION_NARROWING_OVERFLOW"
+      ],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-2147483648\tDecimal(9, 0)\n"
+        },
+        "26.10.2.103": {
+          "error_code": 407,
+          "error_name": "DECIMAL_OVERFLOW"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E12",
+      "sql": "SELECT 1e0+2.0 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "qualified": true,
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E13",
+      "sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Int128) AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "qualified": false,
+      "rules": [],
+      "gap": "NO-GENERAL-OVERLOAD-DIAGNOSTICS",
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        },
+        "26.10.2.103": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E14",
+      "sql": "SELECT 7/2 AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "qualified": false,
+      "rules": [],
+      "gap": "NO-EXTERNAL-SESSION-FACTS",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E15",
+      "sql": "SELECT 1e0*(2e0+3.0) AS v,toTypeName(v)",
+      "types": [
+        "Nullable(Float64)"
+      ],
+      "qualified": false,
+      "rules": [],
+      "gap": "ROOT-MUL-GENERIC-FALLBACK",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E16",
+      "sql": "SELECT 1*2 AS v,toTypeName(v)",
+      "types": [
+        "Nullable(Int32)"
+      ],
+      "qualified": false,
+      "rules": [],
+      "gap": "ROOT-MUL-GENERIC-FALLBACK",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E17",
+      "sql": "SELECT CAST(1 AS Decimal(12,3))+CAST(2 AS Decimal(5,2)) AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "qualified": false,
+      "rules": [],
+      "gap": "DECIMAL-ADD-SUB-UNQUALIFIED",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tDecimal(18, 3)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tDecimal(18, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-023-E18",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8))+CAST(2 AS UInt8) AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "qualified": false,
+      "rules": [],
+      "gap": "CONSTANT-NULL-DISPATCH-UNQUALIFIED",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\tNullable(Int16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Int16)\n"
+        }
+      }
+    }
+  ]
+}

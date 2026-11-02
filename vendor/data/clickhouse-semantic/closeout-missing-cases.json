@@ -1,0 +1,91 @@
+{
+  "task": "CHSEM-023",
+  "execution": [
+    {
+      "id": "G01",
+      "category": "generic-fallback",
+      "sql": "SELECT 1*2 AS v,toTypeName(v)",
+      "reason": "Root multiplication still uses a generic width/nullability fallback.",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "G02",
+      "category": "generic-fallback",
+      "sql": "SELECT 1e0*(2e0+3.0) AS v,toTypeName(v)",
+      "reason": "A correctly parsed inner sum does not make outer multiplication nullability native-exact.",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "G03",
+      "category": "unqualified-overload",
+      "sql": "SELECT CAST(1 AS Decimal(12,3))+CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+      "reason": "Decimal addition/subtraction has not been qualified.",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tDecimal(18, 3)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tDecimal(18, 3)\n"
+        }
+      }
+    },
+    {
+      "id": "G04",
+      "category": "intentional-unknown",
+      "sql": "SELECT CAST(NULL AS Nullable(Int8))+CAST(2 AS Int8) AS v,toTypeName(v)",
+      "reason": "Constant NULL dispatch is outside ordinary nullable propagation.",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\tNullable(Int16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Int16)\n"
+        }
+      }
+    },
+    {
+      "id": "G05",
+      "category": "intentional-unknown",
+      "sql": "SET sql_compatible_division_for_integers=DEFAULT; SELECT 7/2 AS v,toTypeName(v)",
+      "reason": "No external/session/default fact is invented after DEFAULT.",
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "G06",
+      "category": "unqualified-function",
+      "sql": "SELECT unknown_udf(1) AS v,toTypeName(v)",
+      "reason": "Arbitrary UDF/catalog signature resolution is not modelled.",
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        }
+      }
+    }
+  ]
+}
