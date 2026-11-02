@@ -913,6 +913,16 @@ open class DuckdbParser(
     // sqlglot: DuckDBParser._parse_struct_types
     override fun parseStructTypes(typeRequired: Boolean): Expression? = parseFieldDef()
 
+    // Native typed macro defaults preserve their declared type and authored value;
+    // only the engine binder decides whether a literal fits that type.
+    override fun parseFunctionParameter(): Expression? {
+        val parameter=super.parseFunctionParameter() ?: return null
+        if(nativeRegexOperators && match(TokenType.COLON_EQ))return expression(dev.brikk.house.sql.ast.PropertyEQ(args(
+            "this" to parameter,"expression" to (parseExpression() ?: raiseError("Expected macro default")),
+        )))
+        return parameter
+    }
+
     // sqlglot: DuckDBParser._pivot_column_names
     override fun pivotColumnNames(aggregations: List<Expression>): List<String> {
         if (aggregations.size == 1) {

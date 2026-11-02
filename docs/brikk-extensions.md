@@ -2007,6 +2007,16 @@ ANALYSE/ANALYZE retain their explicitly flagged raw-passthrough contract; they a
 misrepresented as standalone Analyze nodes. Historical token/AST corpora remain unchanged.
 No cross-target statistics execution mapping is inferred from the shared keyword.
 
+## 59. DuckDB native aggregate types and macro defaults
+
+Native analysis uses the reviewed SUM overloads rather than SQLGlot's generic BIGINT
+promotion: Boolean and integral inputs through signed HUGEINT produce HUGEINT, unsigned
+HUGEINT and floating inputs produce DOUBLE, and DECIMAL(p,s) produces DECIMAL(38,s).
+Unknown inputs and approximate bare decimal/wide-integer literal facts remain unknown.
+Historical annotation corpora keep their existing contract. Native macro parameters also
+preserve `name type := default` using existing ColumnDef/PropertyEQ nodes, without host
+coercion or an inferred default-value binding contract. No public data-class shape changes.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

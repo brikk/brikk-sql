@@ -69,6 +69,8 @@ import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
 import dev.brikk.house.sql.dialects.duckdbVariantReturnType
 import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionName
 import dev.brikk.house.sql.dialects.reviewedDuckdbFunctionType
+import dev.brikk.house.sql.dialects.duckdbNativeSumType
+import dev.brikk.house.sql.ast.Sum
 import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
 
 /**
@@ -647,6 +649,8 @@ class TypeAnnotator(
             val spec = expressionMetadata[expr::class]
 
             when {
+                dialect.name == "duckdb" && dialect.supportsNullType && expr is Sum ->
+                    setType(expr,expr.duckdbNativeSumType())
                 dialect.name == "duckdb" && dialect.supportsNullType && expr.reviewedDuckdbFunctionName()!=null ->
                     setType(expr,expr.reviewedDuckdbFunctionType() ?: DType.UNKNOWN)
                 dialect.name == "duckdb" && dialect.supportsNullType && expr is dev.brikk.house.sql.ast.AtTimeZone ->

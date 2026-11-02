@@ -1869,7 +1869,7 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   batch with separate verified commits/pushes: 69/78 deliverables complete, not blanket
   native/SQLGlot parity or recursive IDE qualification. No new internal/experimental IDE API.
 
-- [ ] `DDB20-073` Compound and numeric type edge cases [AUDIT].
+- [x] `DDB20-073` Compound and numeric type edge cases [DONE].
   Classify SQL-visible empty STRUCT support versus internal LogicalType::TUPLE implementation
   details. Cover final type-literal syntax, integer-only DECIMAL parameters, typed macro defaults
   and numeric promotions that affect inferred types. Do not expose an internal type as new SQL syntax.
@@ -1879,6 +1879,25 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   and native results remain separate from that broader aggregate-typing gap.
   DDB20-018 has a separate proved USING KEY SUM(INT) output contract, canonical INT128/native
   HUGEINT. Ordinary SELECT aggregate promotion remains open here; do not infer it was fixed globally.
+  Native analysis now reconciles ordinary SUM's reviewed overloads: Boolean/integral through
+  signed HUGEINT -> INT128/native HUGEINT, UHUGEINT/FLOAT/DOUBLE -> DOUBLE, valid explicit
+  DECIMAL(p,s) -> DECIMAL(38,s). Shapes, scopes, CTE completion, DISTINCT and window wrappers
+  share these facts. Bare decimal/wide literal approximations, missing and unsupported inputs
+  remain unknown; historical SQLGlot aggregate annotations remain unchanged. Native comparisons
+  cover sixteen input signatures in ordinary/DISTINCT/window contexts, plus empty/all-NULL sums.
+  Existing empty {} / struct_pack() / NULL::STRUCT forms and typed INTEGER/DECIMAL string
+  literals round-trip and execute. STRUCT() is a native parser error, while fractional DECIMAL
+  parameters parse but fail native type binding; no host rounding or integer coercion is added.
+  The dynamic native type binder recognizes TUPLE in a NULL cast, but that is not promoted
+  into a public DType, tuple-construction grammar, shape or executor contract.
+  Added native typed macro-default parsing using existing ColumnDef/PropertyEQ nodes. A fitting
+  TINYINT default executes; a nonfitting literal remains a native binder error. No implementation
+  is initialized while parsing. New metadata/AST classes, UDF role guesses and coercion rules
+  were unnecessary. The existing USING KEY result contract and historical evidence are intact.
+  All 1,435 core and 133 metadata tests pass, log /tmp/opencode/duckdb-types-073-core.log;
+  four focused core/native tests pass without skips, including 96 SUM metadata comparisons,
+  log /tmp/opencode/duckdb-types-073.log. COUNT/MAX controls retain their original types.
+  No historical corpus/ledger, dependency pin, public data-class signature or IDE API changed.
 
 - [ ] `DDB20-074` Table-function identifier-to-string deprecation [AUDIT].
   Review the release's deprecated implicit identifier-to-string conversion for table functions.
