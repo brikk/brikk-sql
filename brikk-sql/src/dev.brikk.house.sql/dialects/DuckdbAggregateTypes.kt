@@ -2,6 +2,12 @@ package dev.brikk.house.sql.dialects
 
 import dev.brikk.house.sql.ast.*
 
+private fun Expression.sumLiteralAtom(): Literal? = when(this) {
+    is Literal -> this
+    is Neg,is Paren -> (thisArg as? Expression)?.sumLiteralAtom()
+    else -> null
+}
+
 /** Native SUM overloads, not the historical SQLGlot aggregate promotion table. */
 internal fun Sum.duckdbNativeSumType(): DataType {
     fun unknown()=DataType.build(DType.UNKNOWN)
@@ -10,8 +16,8 @@ internal fun Sum.duckdbNativeSumType(): DataType {
     if(value is Distinct)value=value.expressionsArg.singleOrNull() as? Expression ?: return unknown()
     value=value.unnest()
     // Generic literal annotations are not exact native wide-integer/decimal facts.
-    if(value is Literal && value.isNumber &&
-        (!value.isInt || value.name.toIntOrNull()==null))return unknown()
+    val atom=value.sumLiteralAtom()
+    if(atom?.isNumber==true && (!atom.isInt || atom.name.toIntOrNull()==null))return unknown()
     val input=value.type as? DataType ?: return unknown()
     return when(input.thisArg) {
         DType.BOOLEAN,DType.NULL,DType.TINYINT,DType.SMALLINT,DType.INT,DType.BIGINT,DType.INT128,

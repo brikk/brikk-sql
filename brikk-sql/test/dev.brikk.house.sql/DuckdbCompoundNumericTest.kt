@@ -21,7 +21,7 @@ class DuckdbCompoundNumericTest {
         val parity=annotateTypes(Dialects.DUCKDB.parseOne("SELECT sum(1)"),dialect=Dialects.DUCKDB)
         assertTrue((parity.expressionsArg.single() as Expression).isType(DType.BIGINT))
         assertEquals(listOf("BIGINT","INT"),SqlFragment("SELECT count(1) AS n,max(1) AS m","duckdb").outputShape().columns.map { it.type })
-        for(body in listOf("sum(x)","sum(1.25)","sum(99999999999999999999999999999999999999999999)"))
+        for(body in listOf("sum(x)","sum(1.25)","sum(-1.25)","sum(99999999999999999999999999999999999999999999)","sum(-99999999999999999999999999999999999999999999)"))
             assertEquals("UNKNOWN",SqlFragment("SELECT $body AS n","duckdb").outputShape().columns.single().type)
     }
     @Test fun emptyStructAndTypedLiteralsKeepTheirExistingAstWithoutInventingTupleSyntax() {
