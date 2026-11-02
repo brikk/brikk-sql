@@ -670,6 +670,11 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Native parsing supports `SET SCHEMA 'name'` as a structured session assignment and preserves
+the quoted namespace string. Execution still decides whether it exists. DuckDB 2.0 rejects
+nested current namespaces; a schema whose literal name contains a dot is a different case.
+IDE readback uses the existing top-level catalog/schema strategy without splitting that name.
+
 Java UDF calls parse without an installed implementation or argument binding. JDBC 2.0.0.0
 registrations are database-instance-owned: duplicate connections share them, unrelated memory
 instances do not. They report `system.main` and `internal=true`, so those fields alone do not

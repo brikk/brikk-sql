@@ -1807,10 +1807,33 @@ These are candidates from the final release notes, beyond the user's links and t
 index. They need final-grammar/runtime classification before assuming a new implementation
 is needed. Their IDs follow the existing sequence and must remain stable.
 
-- [ ] `DDB20-071` SET SCHEMA and namespace switching [AUDIT].
+- [x] `DDB20-071` SET SCHEMA and namespace switching [DONE].
   The release notes explicitly add SET SCHEMA grammar support. Pin accepted forms against
   USE/current-schema behavior, multipart/nested schema paths, quoting and search-path resolution.
   Check IDE namespace tracking without inferring a catalog from a nested schema prefix.
+  The native parser now models delimiter-free SET SCHEMA 'name' using existing Set/SetItem/EQ
+  nodes; generation emits the equivalent delimited assignment, preserving the entire string
+  and its embedded identifier quotes. Historical SQLGlot parsing retains its opaque fallback.
+  Tests cover bare/= /TO forms, script boundaries, copy/serde, executable same-target generation
+  and cross-target refusal. Native execution covers attached-catalog/doubled-quote/apostrophe/
+  literal-dot names, USE parity, search-path replacement and table resolution. A bare schema
+  resolves in the current catalog, not whichever database contains a matching name. Native
+  search_path readback may retain a catalog-qualified entry rather than the authored spelling.
+  Failed missing, empty, comma-list, unquoted-name and nested namespace switches preserve the
+  current namespace. Nested CREATE/SELECT support does not imply nested USE/SET support.
+  Existing IDE readback probes observe current_database()/current_schema() after SET SCHEMA;
+  the added control keeps a literally dotted schema one component and a quoted catalog intact.
+  The existing strategy still refuses nested schema parents. No recursive IDE support, flat-name
+  fallback, catalog-from-schema-prefix inference or new IntelliJ API was added. Native editor
+  serialization of SET stays unverified, not an excuse to bind, prepare or execute editor SQL.
+  Full core/metadata gates pass 1,431/133 tests, zero failures, log
+  /tmp/opencode/duckdb-schema-071-full.log. The same run passes 262 native tests with twelve
+  optional-fixture controls aborted; the explicit-fixture native rerun is recorded separately.
+  Existing public AST/JVM shapes and all historical parity/acceptance ledgers are unchanged.
+  The fixture-enabled native gate passes 273 tests, zero failures, with only the existing
+  unavailable Quack control aborted, log /tmp/opencode/duckdb-schema-071-native.log.
+  All 762 shared IntelliJ tests pass on 261.25134.95, log
+  /tmp/opencode/duckdb-schema-071-ide.log. No production IntelliJ API or consumer change.
 
 - [ ] `DDB20-072` ANALYSE synonym [AUDIT].
   The release notes add ANALYSE wherever ANALYZE is accepted. Verify tokenizer, statement

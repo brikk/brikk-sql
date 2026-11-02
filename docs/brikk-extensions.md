@@ -1986,6 +1986,18 @@ through it), and DuckDB's own `system.main.array_to_string` is a macro that call
 a user `list_aggr` ran even through the qualified helper. A macro's parameters are read as a list column and
 quoted here, so `"select"("a b", "c, d")` round-trips.
 
+## 58. DuckDB native session-statement grammar
+
+`parseDuckdbNativeOne`, native analysis and executable parsing recognize the DuckDB 2.0
+delimiter-free `SET SCHEMA 'name'` form as the existing Set/SetItem/EQ AST. Generation uses
+the equivalent delimited assignment. The value remains a string, including its embedded
+identifier quotes; the parser does not split it into catalog/schema components or claim
+the named namespace exists. The historical SQLGlot parser keeps its raw-command fallback.
+Native engine tests cover quoted names, search-path replacement, failed switches and
+rejection of nested current namespaces. IDE tests read the actual top-level catalog/schema
+through the existing strategy; recursive IDE schemas remain deferred. No parity ledger
+or published AST constructor changes are needed.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

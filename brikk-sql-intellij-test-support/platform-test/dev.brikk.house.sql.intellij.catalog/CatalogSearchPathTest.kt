@@ -115,6 +115,25 @@ class CatalogSearchPathTest : BasePlatformTestCase() {
         assertEquals(1, statements.get())
     }
 
+    fun testDuckdbSetSchemaReadsTheActualTopLevelNamespaceWithoutSplittingQuotedDots() {
+        val engine = embeddedDuckdb()
+        val connection = connection(engine)
+        engine.createStatement().use {
+            it.execute("CREATE SCHEMA \"finance.reports\"")
+            it.execute("ATTACH ':memory:' AS \"la\"\"ke\"")
+            it.execute("CREATE SCHEMA \"la\"\"ke\".web")
+        }
+        for ((sql, expected) in listOf(
+            "SET SCHEMA 'memory.\"finance.reports\"'" to path("memory", "finance.reports"),
+            "SET SCHEMA '\"la\"\"ke\".web'" to path("la\"ke", "web"),
+            "SET SCHEMA 'memory.main'" to path("memory", "main"),
+        )) {
+            engine.createStatement().use { it.execute(sql) }
+            assertEquals(expected.current, duckdb.readBack(connection)?.current)
+        }
+        assertNull(duckdb.switchSql(path("memory", "finance", "reports")))
+    }
+
     fun testReadBackFallsBackThroughItsProbes() {
         val engine = embeddedDuckdb()
         val connection = connection(engine)

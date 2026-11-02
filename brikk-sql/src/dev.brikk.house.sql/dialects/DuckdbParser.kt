@@ -20,6 +20,8 @@ import dev.brikk.house.sql.ast.Attach
 import dev.brikk.house.sql.ast.AttachOption
 import dev.brikk.house.sql.ast.CTE
 import dev.brikk.house.sql.ast.Copy
+import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.EQ
 import dev.brikk.house.sql.ast.DML
 import dev.brikk.house.sql.ast.Delete
 import dev.brikk.house.sql.ast.DuckdbPrepare
@@ -344,6 +346,19 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        // brikk extension #58: native 2.0 adds a delimiter-free SET SCHEMA string form. Keep the
+        // historical parser's raw-command classification separate from this grammar.
+        if (nativeRegexOperators && currToken.tokenType == TokenType.SET &&
+            nextToken.tokenType == TokenType.SCHEMA && tokens.getOrNull(index + 2)?.tokenType == TokenType.STRING) {
+            advance(2)
+            val value = parsePrimary() ?: raiseError("Expected schema string")
+            return expression(dev.brikk.house.sql.ast.Set(args("expressions" to listOf(
+                dev.brikk.house.sql.ast.SetItem(args("this" to EQ(args(
+                    "this" to Column(args("this" to Identifier(args("this" to "schema", "quoted" to false)))),
+                    "expression" to value,
+                )))),
+            ))))
+        }
         // Qualified CHECKPOINT is storage control, never Column("CHECKPOINT") AS db.
         // Keep the parity parser unchanged; native callers retain this opaque command.
         if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER && currToken.text.equals("CHECKPOINT",true)) {
