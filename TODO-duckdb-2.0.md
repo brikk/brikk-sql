@@ -1756,11 +1756,35 @@ and IDE introspection/completion are separate contracts.
   The full core gate passes 1,428 tests, zero skips/failures, log
   /tmp/opencode/duckdb-grammar-068-core.log. No production grammar/API change was necessary.
 
-- [ ] `DDB20-069` Java UDF syntax and live catalog overlay [AUDIT].
+- [x] `DDB20-069` Java UDF syntax and live catalog overlay [DONE].
   Pin unknown table functions with positional/named arguments, same-name scalar/table functions,
   registration ownership and connection-local visibility. Reuse the existing live catalog/session
   overlay where appropriate; do not put application UDFs into static metadata. Parsing a call must
   not require installing/initializing its implementation or binding its arguments.
+  Native JDBC 2.0.0.0 controls register real same-name Java scalar/table functions using
+  finalized builders, preserve distinct FunctionKind entries and raw positional/named labels,
+  and prove parse/copy/serde without bind/init/apply/scalar callbacks. Even unknown options
+  and nonexistent sequence arguments parse without binding. Separate execution controls then
+  invoke the callbacks and validate the table output type and scalar result.
+  Ownership is database-instance-local, not registering-connection-only: a duplicate sees
+  registrations and can invoke them after the builder and owner connection close. An unrelated
+  memory instance sees no rows and fails binding, while still accepting the call's syntax.
+  Native rows are system.main/internal=true, so those fields are not a persistence/ownership
+  proof. Registration-owned rows must be identified by the registering application before a
+  shared harvest is persisted. The existing SessionFacts/LiveCatalogStore path can hold known
+  registration-owned functions without writing them to disk, leaking them to another session/
+  identity or retaining them after restart/replacement. No static application-UDF catalog,
+  name-only ownership inference, fresh-memory matching helper or registration/executor API
+  was added. Automatic ownership attribution for arbitrary external registrations remains
+  unproved, not fabricated from internal or colN. DDB20-067/070 remain deferred.
+  Focused syntax/native controls pass without skips, log /tmp/opencode/duckdb-udf-069.log.
+  Full gates pass 1,429 core, 133 metadata and 272 native/verifier tests, zero failures;
+  the existing optional Quack routing fixture remains assumption-aborted, not disabled or
+  replaced. Logs /tmp/opencode/duckdb-udf-069-{core,native}.log. No production API or driver
+  dependency change was needed, and historical captures/parity corpora remain unchanged.
+  All 761 shared IntelliJ tests pass on 261.25134.95, including the real-Java-registration
+  nonpersisting overlay control, log /tmp/opencode/duckdb-udf-069-ide.log. No new internal or
+  experimental IntelliJ calls, consumer changes or publication.
 
 - [ ] `DDB20-070` Chunked results and native/client APIs [DEFER].
   The verifier already correctly uses ordinary JDBC ResultSet for a few metadata/JSON cells.

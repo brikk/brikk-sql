@@ -670,6 +670,14 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Java UDF calls parse without an installed implementation or argument binding. JDBC 2.0.0.0
+registrations are database-instance-owned: duplicate connections share them, unrelated memory
+instances do not. They report `system.main` and `internal=true`, so those fields alone do not
+prove builtin or persistent ownership. An application that registers functions must keep its
+registration-owned rows out of shared disk inventories; the existing session overlay can hold
+them without persistence. This audit does not add a registration registry or claim that a fresh
+helper reaches the same in-memory instance. Static bundled metadata never learns application UDFs.
+
 The bounded semantic supplement is `vendor/data/duckdb-2.0-bounded-semantic-refresh.json`.
 It records exact DuckDB/Trino/Doris/ClickHouse versions, 44 literal executions and scoped
 comparisons without rewriting older hazard records. SQL-NULL flags are separate from text
