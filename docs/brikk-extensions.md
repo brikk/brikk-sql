@@ -2017,6 +2017,10 @@ Historical annotation corpora keep their existing contract. Native macro paramet
 preserve `name type := default` using existing ColumnDef/PropertyEQ nodes, without host
 coercion or an inferred default-value binding contract. No public data-class shape changes.
 
+Native table-prefix aliases also reject a simultaneous postfix alias instead of silently
+overwriting it. Subquery/FROM-first/JOIN/nested-scope tests qualify the existing colon-alias
+AST and generation. The historical parser retains its old behavior for corpus compatibility.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

@@ -1939,10 +1939,20 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   Three focused core/native tests pass without skips, log /tmp/opencode/duckdb-secrets-075.log.
   No production code/API, global configuration, user session, static capture or dependency changed.
 
-- [ ] `DDB20-076` Colon aliases for subqueries [AUDIT].
+- [x] `DDB20-076` Colon aliases for subqueries [DONE].
   The release notes add TableAliasColon for subqueries. Verify exact final spelling, FROM-first
   and JOIN placement, nested scopes, reference resolution and generation; existing expression
   prefix-alias tests do not prove subquery-table alias behavior.
+  Existing prefix-alias AST/generation handles subqueries, FROM-first, JOIN, nested subqueries
+  and CTE references. Added focused copy/serde/output-scope/completion/native-row controls for
+  those placements. Parse-only subquery checks leave a sequence untouched.
+  Found and fixed a native-parser loss: prefix plus postfix aliases were silently overwritten.
+  Native parsing now refuses both names just as the final engine does. Prefix column-list
+  spellings, numeric aliases, missing targets and extra postfix column lists remain rejected.
+  Historical SQLGlot parsing/corpora remain unchanged; no new alias node or public shape.
+  Three focused core/native controls pass without skips, log /tmp/opencode/duckdb-colon-076.log.
+  Full gates pass 1,439 core and 133 metadata tests, zero failures, log
+  /tmp/opencode/duckdb-colon-076-core.log. No dependency, consumer or production IDE API change.
 
 - [ ] `DDB20-077` Temporal precision and TRY_CAST changes [AUDIT].
   Pin TIMESTAMP_NS to TIMESTAMPTZ_NS conversion and new time-related TRY_CAST support,

@@ -748,6 +748,8 @@ open class DuckdbParser(
             consumePipe = false,
         )
         if (table != null && alias != null) {
+            if (nativeRegexOperators && table.args["alias"] != null)
+                raiseError("A DuckDB table reference cannot have both prefix and postfix aliases")
             // Moves the comment next to the alias in `alias: table /* comment */`
             comments += table.popComments()
             alias.comments = (alias.popComments() + comments).toMutableList()
