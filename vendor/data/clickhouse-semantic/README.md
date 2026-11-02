@@ -75,6 +75,10 @@ CHSEM-020 adds [bounded native integer addition/subtraction typing](integer-add-
 with operator/builtin and nullable matrices through 256 bits. Generic typing and
 earlier diagnostic coverage remain separate and unchanged.
 
+CHSEM-021 adds [bounded native floating addition/subtraction typing](floating-add-sub-README.md),
+with nullable/mixed integer coverage and independently observed wide-integer refusals.
+The compact scientific-token counterexample is retained for proposed CHSEM-022.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

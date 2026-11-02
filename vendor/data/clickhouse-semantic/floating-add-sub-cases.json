@@ -1,0 +1,485 @@
+{
+  "task": "CHSEM-021",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-021-E01",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Float32) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E02",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float64)-CAST(2 AS Float32) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E03",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Int64) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E04",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS UInt64)-CAST(2 AS Float32) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E05",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float64)+CAST(2 AS Float64) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E06",
+      "task": "CHSEM-021",
+      "sql": "SELECT 1.5+2 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E07",
+      "task": "CHSEM-021",
+      "sql": "SELECT 18446744073709551616+0.5 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "18446744073709552000\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "18446744073709552000\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E08",
+      "task": "CHSEM-021",
+      "sql": "SELECT -9223372036854775809-0.5 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-9223372036854776000\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-9223372036854776000\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E09",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Nullable(Float32))+CAST(2 AS Int8) AS v,toTypeName(v)",
+      "type": "Nullable(Float64)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tNullable(Float64)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E10",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Int64)-CAST(2 AS Nullable(Float64)) AS v,toTypeName(v)",
+      "type": "Nullable(Float64)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tNullable(Float64)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tNullable(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E11",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Nullable(Float32))+CAST(2 AS Nullable(UInt64)) AS v,toTypeName(v)",
+      "type": "Nullable(Float64)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tNullable(Float64)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tNullable(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E12",
+      "task": "CHSEM-021",
+      "sql": "SELECT plus(CAST(1 AS Float32),CAST(2 AS UInt16)) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E13",
+      "task": "CHSEM-021",
+      "sql": "SELECT minus(CAST(1 AS UInt32),CAST(2 AS Float64)) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E14",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(16777217 AS Float32)+CAST(0 AS UInt8) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "16777216\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "16777216\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E15",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(9007199254740993 AS UInt64)+CAST(0 AS Float64) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "9007199254740992\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "9007199254740992\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E16",
+      "task": "CHSEM-021",
+      "sql": "SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "inf\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E17",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST('inf' AS Float64)-CAST('inf' AS Float64) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "nan\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "nan\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E18",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST('nan' AS Float64)+CAST(1 AS UInt8) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "nan\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "nan\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E19",
+      "task": "CHSEM-021",
+      "sql": "SELECT -0.0+0.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E20",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Int128) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        },
+        "26.10.2.103": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E21",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS UInt256)-CAST(2 AS Float64) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        },
+        "26.10.2.103": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E22",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Nullable(Float64))+CAST(2 AS Int128) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        },
+        "26.10.2.103": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E23",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(NULL AS Nullable(Float32))+CAST(2 AS Float64) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\tNullable(Float64)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E24",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float64)+CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E25",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float64)+TRUE AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E26",
+      "task": "CHSEM-021",
+      "sql": "SELECT CAST(1 AS Float32)+TRY_CAST('bad' AS Int8) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E27",
+      "task": "CHSEM-021",
+      "sql": "SELECT plus(CAST(1 AS Float32)) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 42,
+          "error_name": "NUMBER_OF_ARGUMENTS_DOESNT_MATCH"
+        },
+        "26.10.2.103": {
+          "error_code": 42,
+          "error_name": "NUMBER_OF_ARGUMENTS_DOESNT_MATCH"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E28",
+      "task": "CHSEM-021",
+      "sql": "SELECT (CAST(1 AS Float32)+CAST(2 AS Int8))-CAST(3 AS Int16) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E29",
+      "task": "CHSEM-021",
+      "sql": "SELECT arrayMap((a,b) -> a+b,CAST([7] AS Array(Float32)),CAST([2] AS Array(Int64))) AS v,toTypeName(v)",
+      "type": "Array(Float64)",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[9]\tArray(Float64)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[9]\tArray(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E30",
+      "task": "CHSEM-021",
+      "sql": "SELECT arrayMap(x -> x-1,CAST([7] AS Array(Nullable(Float32)))) AS v,toTypeName(v)",
+      "type": "Array(Nullable(Float64))",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[6]\tArray(Nullable(Float64))\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[6]\tArray(Nullable(Float64))\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-E31",
+      "task": "CHSEM-021",
+      "sql": "WITH ((a,b) -> 'x') AS plus SELECT plus(CAST(1 AS Float32),2) AS v,toTypeName(v)",
+      "type": "UNKNOWN",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "x\tString\n"
+        },
+        "26.10.2.103": {
+          "stdout": "x\tString\n"
+        }
+      }
+    }
+  ]
+}

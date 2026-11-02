@@ -8,7 +8,7 @@ import kotlin.collections.List
 
 internal data class ClickhouseIntegerAddSubCall(val operands: List<Expression>, val subtract: Boolean, val name: String? = null)
 
-/** Operators are intrinsic; named functions must resolve through the exact builtin catalog. */
+/** Shared integer/floating operator resolver. Named calls require the exact builtin catalog. */
 internal fun clickhouseIntegerAddSubCall(node: Expression): ClickhouseIntegerAddSubCall? {
     if (node is Add) return ClickhouseIntegerAddSubCall(listOf(node.left, node.right), false)
     if (node is Sub) return ClickhouseIntegerAddSubCall(listOf(node.left, node.right), true)

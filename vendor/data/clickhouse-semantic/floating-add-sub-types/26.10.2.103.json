@@ -1,0 +1,2802 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "input_sha256": "f07b210e6458c7da7c8c5229f596cd1183fae6aaf9da94a0564bdf495799233d",
+  "batches": [
+    {
+      "id": "plus-op-nullable-00",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Float64\",\"p001\":\"Float64\",\"p002\":\"Float64\",\"p003\":\"Float64\",\"p004\":\"Float64\",\"p005\":\"Float64\",\"p006\":\"Float64\",\"p007\":\"Float64\",\"p008\":\"Float64\",\"p009\":\"Float64\",\"p010\":\"Float64\",\"p011\":\"Float64\",\"p012\":\"Float64\",\"p013\":\"Float64\",\"p014\":\"Float64\",\"p015\":\"Float64\",\"p016\":\"Float64\",\"p017\":\"Float64\",\"p018\":\"Float64\",\"p019\":\"Float64\",\"p020\":\"Float64\",\"p021\":\"Float64\",\"p022\":\"Float64\",\"p023\":\"Float64\",\"p024\":\"Float64\",\"p025\":\"Float64\",\"p026\":\"Float64\",\"p027\":\"Float64\",\"p028\":\"Float64\",\"p029\":\"Float64\",\"p030\":\"Float64\",\"p031\":\"Float64\",\"p032\":\"Float64\",\"p033\":\"Float64\",\"p034\":\"Float64\",\"p035\":\"Float64\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Float64",
+        "p001": "Float64",
+        "p002": "Float64",
+        "p003": "Float64",
+        "p004": "Float64",
+        "p005": "Float64",
+        "p006": "Float64",
+        "p007": "Float64",
+        "p008": "Float64",
+        "p009": "Float64",
+        "p010": "Float64",
+        "p011": "Float64",
+        "p012": "Float64",
+        "p013": "Float64",
+        "p014": "Float64",
+        "p015": "Float64",
+        "p016": "Float64",
+        "p017": "Float64",
+        "p018": "Float64",
+        "p019": "Float64",
+        "p020": "Float64",
+        "p021": "Float64",
+        "p022": "Float64",
+        "p023": "Float64",
+        "p024": "Float64",
+        "p025": "Float64",
+        "p026": "Float64",
+        "p027": "Float64",
+        "p028": "Float64",
+        "p029": "Float64",
+        "p030": "Float64",
+        "p031": "Float64",
+        "p032": "Float64",
+        "p033": "Float64",
+        "p034": "Float64",
+        "p035": "Float64"
+      }
+    },
+    {
+      "id": "plus-op-nullable-10",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "plus-op-nullable-01",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "plus-op-nullable-11",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "minus-op-nullable-00",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Float64\",\"p001\":\"Float64\",\"p002\":\"Float64\",\"p003\":\"Float64\",\"p004\":\"Float64\",\"p005\":\"Float64\",\"p006\":\"Float64\",\"p007\":\"Float64\",\"p008\":\"Float64\",\"p009\":\"Float64\",\"p010\":\"Float64\",\"p011\":\"Float64\",\"p012\":\"Float64\",\"p013\":\"Float64\",\"p014\":\"Float64\",\"p015\":\"Float64\",\"p016\":\"Float64\",\"p017\":\"Float64\",\"p018\":\"Float64\",\"p019\":\"Float64\",\"p020\":\"Float64\",\"p021\":\"Float64\",\"p022\":\"Float64\",\"p023\":\"Float64\",\"p024\":\"Float64\",\"p025\":\"Float64\",\"p026\":\"Float64\",\"p027\":\"Float64\",\"p028\":\"Float64\",\"p029\":\"Float64\",\"p030\":\"Float64\",\"p031\":\"Float64\",\"p032\":\"Float64\",\"p033\":\"Float64\",\"p034\":\"Float64\",\"p035\":\"Float64\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Float64",
+        "p001": "Float64",
+        "p002": "Float64",
+        "p003": "Float64",
+        "p004": "Float64",
+        "p005": "Float64",
+        "p006": "Float64",
+        "p007": "Float64",
+        "p008": "Float64",
+        "p009": "Float64",
+        "p010": "Float64",
+        "p011": "Float64",
+        "p012": "Float64",
+        "p013": "Float64",
+        "p014": "Float64",
+        "p015": "Float64",
+        "p016": "Float64",
+        "p017": "Float64",
+        "p018": "Float64",
+        "p019": "Float64",
+        "p020": "Float64",
+        "p021": "Float64",
+        "p022": "Float64",
+        "p023": "Float64",
+        "p024": "Float64",
+        "p025": "Float64",
+        "p026": "Float64",
+        "p027": "Float64",
+        "p028": "Float64",
+        "p029": "Float64",
+        "p030": "Float64",
+        "p031": "Float64",
+        "p032": "Float64",
+        "p033": "Float64",
+        "p034": "Float64",
+        "p035": "Float64"
+      }
+    },
+    {
+      "id": "minus-op-nullable-10",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "minus-op-nullable-01",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "minus-op-nullable-11",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "plus-fn-nullable-00",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Float64\",\"p001\":\"Float64\",\"p002\":\"Float64\",\"p003\":\"Float64\",\"p004\":\"Float64\",\"p005\":\"Float64\",\"p006\":\"Float64\",\"p007\":\"Float64\",\"p008\":\"Float64\",\"p009\":\"Float64\",\"p010\":\"Float64\",\"p011\":\"Float64\",\"p012\":\"Float64\",\"p013\":\"Float64\",\"p014\":\"Float64\",\"p015\":\"Float64\",\"p016\":\"Float64\",\"p017\":\"Float64\",\"p018\":\"Float64\",\"p019\":\"Float64\",\"p020\":\"Float64\",\"p021\":\"Float64\",\"p022\":\"Float64\",\"p023\":\"Float64\",\"p024\":\"Float64\",\"p025\":\"Float64\",\"p026\":\"Float64\",\"p027\":\"Float64\",\"p028\":\"Float64\",\"p029\":\"Float64\",\"p030\":\"Float64\",\"p031\":\"Float64\",\"p032\":\"Float64\",\"p033\":\"Float64\",\"p034\":\"Float64\",\"p035\":\"Float64\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Float64",
+        "p001": "Float64",
+        "p002": "Float64",
+        "p003": "Float64",
+        "p004": "Float64",
+        "p005": "Float64",
+        "p006": "Float64",
+        "p007": "Float64",
+        "p008": "Float64",
+        "p009": "Float64",
+        "p010": "Float64",
+        "p011": "Float64",
+        "p012": "Float64",
+        "p013": "Float64",
+        "p014": "Float64",
+        "p015": "Float64",
+        "p016": "Float64",
+        "p017": "Float64",
+        "p018": "Float64",
+        "p019": "Float64",
+        "p020": "Float64",
+        "p021": "Float64",
+        "p022": "Float64",
+        "p023": "Float64",
+        "p024": "Float64",
+        "p025": "Float64",
+        "p026": "Float64",
+        "p027": "Float64",
+        "p028": "Float64",
+        "p029": "Float64",
+        "p030": "Float64",
+        "p031": "Float64",
+        "p032": "Float64",
+        "p033": "Float64",
+        "p034": "Float64",
+        "p035": "Float64"
+      }
+    },
+    {
+      "id": "plus-fn-nullable-10",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "plus-fn-nullable-01",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "plus-fn-nullable-11",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "minus-fn-nullable-00",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Float64\",\"p001\":\"Float64\",\"p002\":\"Float64\",\"p003\":\"Float64\",\"p004\":\"Float64\",\"p005\":\"Float64\",\"p006\":\"Float64\",\"p007\":\"Float64\",\"p008\":\"Float64\",\"p009\":\"Float64\",\"p010\":\"Float64\",\"p011\":\"Float64\",\"p012\":\"Float64\",\"p013\":\"Float64\",\"p014\":\"Float64\",\"p015\":\"Float64\",\"p016\":\"Float64\",\"p017\":\"Float64\",\"p018\":\"Float64\",\"p019\":\"Float64\",\"p020\":\"Float64\",\"p021\":\"Float64\",\"p022\":\"Float64\",\"p023\":\"Float64\",\"p024\":\"Float64\",\"p025\":\"Float64\",\"p026\":\"Float64\",\"p027\":\"Float64\",\"p028\":\"Float64\",\"p029\":\"Float64\",\"p030\":\"Float64\",\"p031\":\"Float64\",\"p032\":\"Float64\",\"p033\":\"Float64\",\"p034\":\"Float64\",\"p035\":\"Float64\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Float64",
+        "p001": "Float64",
+        "p002": "Float64",
+        "p003": "Float64",
+        "p004": "Float64",
+        "p005": "Float64",
+        "p006": "Float64",
+        "p007": "Float64",
+        "p008": "Float64",
+        "p009": "Float64",
+        "p010": "Float64",
+        "p011": "Float64",
+        "p012": "Float64",
+        "p013": "Float64",
+        "p014": "Float64",
+        "p015": "Float64",
+        "p016": "Float64",
+        "p017": "Float64",
+        "p018": "Float64",
+        "p019": "Float64",
+        "p020": "Float64",
+        "p021": "Float64",
+        "p022": "Float64",
+        "p023": "Float64",
+        "p024": "Float64",
+        "p025": "Float64",
+        "p026": "Float64",
+        "p027": "Float64",
+        "p028": "Float64",
+        "p029": "Float64",
+        "p030": "Float64",
+        "p031": "Float64",
+        "p032": "Float64",
+        "p033": "Float64",
+        "p034": "Float64",
+        "p035": "Float64"
+      }
+    },
+    {
+      "id": "minus-fn-nullable-10",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "minus-fn-nullable-01",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    },
+    {
+      "id": "minus-fn-nullable-11",
+      "raw": {
+        "returncode": 0,
+        "stdout": "{\"p000\":\"Nullable(Float64)\",\"p001\":\"Nullable(Float64)\",\"p002\":\"Nullable(Float64)\",\"p003\":\"Nullable(Float64)\",\"p004\":\"Nullable(Float64)\",\"p005\":\"Nullable(Float64)\",\"p006\":\"Nullable(Float64)\",\"p007\":\"Nullable(Float64)\",\"p008\":\"Nullable(Float64)\",\"p009\":\"Nullable(Float64)\",\"p010\":\"Nullable(Float64)\",\"p011\":\"Nullable(Float64)\",\"p012\":\"Nullable(Float64)\",\"p013\":\"Nullable(Float64)\",\"p014\":\"Nullable(Float64)\",\"p015\":\"Nullable(Float64)\",\"p016\":\"Nullable(Float64)\",\"p017\":\"Nullable(Float64)\",\"p018\":\"Nullable(Float64)\",\"p019\":\"Nullable(Float64)\",\"p020\":\"Nullable(Float64)\",\"p021\":\"Nullable(Float64)\",\"p022\":\"Nullable(Float64)\",\"p023\":\"Nullable(Float64)\",\"p024\":\"Nullable(Float64)\",\"p025\":\"Nullable(Float64)\",\"p026\":\"Nullable(Float64)\",\"p027\":\"Nullable(Float64)\",\"p028\":\"Nullable(Float64)\",\"p029\":\"Nullable(Float64)\",\"p030\":\"Nullable(Float64)\",\"p031\":\"Nullable(Float64)\",\"p032\":\"Nullable(Float64)\",\"p033\":\"Nullable(Float64)\",\"p034\":\"Nullable(Float64)\",\"p035\":\"Nullable(Float64)\"}\n",
+        "stderr": ""
+      },
+      "types": {
+        "p000": "Nullable(Float64)",
+        "p001": "Nullable(Float64)",
+        "p002": "Nullable(Float64)",
+        "p003": "Nullable(Float64)",
+        "p004": "Nullable(Float64)",
+        "p005": "Nullable(Float64)",
+        "p006": "Nullable(Float64)",
+        "p007": "Nullable(Float64)",
+        "p008": "Nullable(Float64)",
+        "p009": "Nullable(Float64)",
+        "p010": "Nullable(Float64)",
+        "p011": "Nullable(Float64)",
+        "p012": "Nullable(Float64)",
+        "p013": "Nullable(Float64)",
+        "p014": "Nullable(Float64)",
+        "p015": "Nullable(Float64)",
+        "p016": "Nullable(Float64)",
+        "p017": "Nullable(Float64)",
+        "p018": "Nullable(Float64)",
+        "p019": "Nullable(Float64)",
+        "p020": "Nullable(Float64)",
+        "p021": "Nullable(Float64)",
+        "p022": "Nullable(Float64)",
+        "p023": "Nullable(Float64)",
+        "p024": "Nullable(Float64)",
+        "p025": "Nullable(Float64)",
+        "p026": "Nullable(Float64)",
+        "p027": "Nullable(Float64)",
+        "p028": "Nullable(Float64)",
+        "p029": "Nullable(Float64)",
+        "p030": "Nullable(Float64)",
+        "p031": "Nullable(Float64)",
+        "p032": "Nullable(Float64)",
+        "p033": "Nullable(Float64)",
+        "p034": "Nullable(Float64)",
+        "p035": "Nullable(Float64)"
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "id": "r000",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r001",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int128') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r002",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r003",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int256') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r004",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r005",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt128') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r006",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r007",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt256') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r008",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r009",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int128') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r010",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r011",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int256') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r012",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r013",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt128') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r014",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r015",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt256') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r016",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r017",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r018",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r019",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r020",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r021",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r022",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r023",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') + CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r024",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r025",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r026",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r027",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r028",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r029",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r030",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r031",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') + CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r032",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r033",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int128') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r034",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r035",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int256') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r036",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r037",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt128') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r038",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float32') + CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r039",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt256') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r040",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r041",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int128') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r042",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r043",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Int256') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r044",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r045",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt128') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r046",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Float64') + CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r047",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'UInt256') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r048",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r049",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r050",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r051",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r052",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r053",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r054",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') + CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r055",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') + CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r056",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r057",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r058",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r059",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r060",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r061",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r062",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') + CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r063",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') + CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r064",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r065",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int128') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r066",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r067",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int256') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r068",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r069",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt128') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r070",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r071",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt256') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r072",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r073",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int128') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r074",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r075",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int256') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r076",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r077",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt128') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r078",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r079",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt256') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r080",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r081",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r082",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r083",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r084",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r085",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r086",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r087",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') - CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r088",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r089",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r090",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r091",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r092",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r093",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r094",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r095",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') - CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r096",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r097",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int128') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r098",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r099",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int256') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r100",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r101",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt128') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r102",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float32') - CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r103",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt256') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r104",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r105",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int128') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r106",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r107",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Int256') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r108",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r109",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt128') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r110",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Float64') - CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r111",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'UInt256') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r112",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r113",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r114",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r115",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r116",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r117",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r118",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float32)') - CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r119",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') - CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r120",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r121",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int128)') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r122",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r123",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(Int256)') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r124",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r125",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt128)') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r126",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName((CAST(7, 'Nullable(Float64)') - CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r127",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName((CAST('7', 'Nullable(UInt256)') - CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r128",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r129",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int128'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r130",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r131",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int256'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r132",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r133",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt128'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r134",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r135",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt256'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r136",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r137",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int128'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r138",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r139",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int256'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r140",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r141",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt128'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r142",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r143",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt256'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r144",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r145",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r146",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r147",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r148",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r149",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r150",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r151",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r152",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r153",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r154",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r155",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r156",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r157",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r158",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r159",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r160",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r161",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int128'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r162",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r163",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int256'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r164",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r165",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt128'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r166",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float32'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r167",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt256'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r168",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r169",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int128'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r170",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r171",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Int256'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r172",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r173",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt128'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r174",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Float64'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r175",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'UInt256'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r176",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r177",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r178",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r179",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r180",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r181",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r182",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r183",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r184",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r185",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r186",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r187",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r188",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r189",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r190",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function plus: In scope SELECT toTypeName(plus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r191",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function plus: In scope SELECT toTypeName(plus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r192",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r193",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int128'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r194",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r195",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int256'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r196",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r197",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt128'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r198",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r199",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt256'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r200",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r201",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int128'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r202",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r203",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int256'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r204",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r205",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt128'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r206",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r207",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt256'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r208",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r209",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r210",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r211",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r212",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r213",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r214",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r215",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Float32'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r216",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Int128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r217",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r218",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Int256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r219",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r220",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'UInt128'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r221",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r222",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'UInt256'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r223",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Float64'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r224",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r225",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int128'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r226",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r227",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int256'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r228",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r229",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt128'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r230",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float32'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r231",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt256'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r232",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r233",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int128'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r234",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r235",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Int256'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r236",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r237",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt128'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r238",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Float64'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r239",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'UInt256'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r240",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r241",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r242",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r243",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r244",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r245",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r246",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float32 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float32)'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r247",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float32 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Nullable(Float32)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r248",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(Int128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r249",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int128)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r250",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and Int256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(Int256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r251",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Int256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(Int256)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r252",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt128 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(UInt128)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r253",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt128 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt128)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r254",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types Float64 and UInt256 of arguments of function minus: In scope SELECT toTypeName(minus(CAST(7, 'Nullable(Float64)'), CAST('2', 'Nullable(UInt256)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    },
+    {
+      "id": "r255",
+      "raw": {
+        "returncode": 43,
+        "stdout": "",
+        "stderr": "Code: 43. DB::Exception: Illegal types UInt256 and Float64 of arguments of function minus: In scope SELECT toTypeName(minus(CAST('7', 'Nullable(UInt256)'), CAST(2, 'Nullable(Float64)'))). (ILLEGAL_TYPE_OF_ARGUMENT)\n"
+      }
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+[
+    {
+        "id": "CHSEM-021-SCRIPT01",
+        "input_sql": "SELECT CAST(7 AS Float32)+2 AS v,toTypeName(v); SELECT CAST(7 AS Float64)-CAST(2 AS Int64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Float32) + 2 AS v, toTypeName(v); SELECT CAST(7 AS Float64) - CAST(2 AS Int64) AS v, toTypeName(v);",
+        "types": [
+            "Float64",
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT02",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT (CAST(7 AS Float32)+2)/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT (CAST(7 AS Float32) + 2) / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT03",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT (CAST(7 AS Float32)+2)/2 AS v,toTypeName(v)",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT (CAST(7 AS Float32) + 2) / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT04",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT (CAST(7 AS Float32)+2)/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT (CAST(7 AS Float32) + 2) / 2 AS v, toTypeName(v) SETTINGS sql_compatible_division_for_integers = 0;",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT05",
+        "input_sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT CAST(7 AS Float32)+2 AS v) q",
+        "generated": "SELECT q.v, toTypeName(q.v) FROM (SELECT CAST(7 AS Float32) + 2 AS v) AS q;",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT06",
+        "input_sql": "SELECT CAST(7 AS Nullable(Float32))+CAST(2 AS UInt64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(7 AS Nullable(Float32)) + CAST(2 AS UInt64) AS v, toTypeName(v);",
+        "types": [
+            "Nullable(Float64)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT07",
+        "input_sql": "SET decimal_check_overflow=1; SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v,toTypeName(v)",
+        "generated": "SET decimal_check_overflow = 1; SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-SCRIPT08",
+        "input_sql": "SELECT CAST(1 AS Int128)+CAST(2 AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Int128) + CAST(2 AS Float64) AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    }
+]

@@ -13,6 +13,7 @@ CHSEM-017 adds proved constant narrowing and scaling-overflow diagnostics.
 CHSEM-018 adds an explicit script-aware native typing entrypoint; statement APIs stay local.
 CHSEM-019 adds exact native scalar literal projection types and nullability.
 CHSEM-020 adds bounded native integer addition/subtraction result typing.
+CHSEM-021 adds supported floating/mixed addition/subtraction types and wide-integer controls.
 Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Context
@@ -56,6 +57,8 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-018: Add an explicit script-aware native typing entrypoint. Reuse shared script framing, parsing, diagnostics and preceding SET state; return independently owned typed ASTs with positioned per-statement reports. Do not infer script/session execution from semicolons or editor files, change existing statement API behavior, rewrite authored settings or guess external state. Preserve signatures, add native witnesses, then test/commit/push separately.
 - [x] CHSEM-019: Add exact native scalar-literal projection types and nullability to native-only statement/script APIs. Research integer/sign/float boundaries, strings, Boolean and NULL constants; preserve generic annotateTypes policy, arithmetic/NULL-dispatch boundaries, source/serde/caller ownership and signatures. Capture pinned native comparisons, run gates, then commit/push separately and present the next option.
 - [x] CHSEM-020: Add bounded native integer addition/subtraction result typing for operators and resolved plus/minus builtins. Prove width/signedness/nullability through pinned source/native matrices, including 64/128/256-bit boundaries and conditional overflow outcomes. Preserve generic typing, resolution, NULL/unsupported overload boundaries, signatures and source/serde; test, commit/push separately, then present the next option.
+- [x] CHSEM-021: Extend native-only addition/subtraction typing to Float32/Float64, supported mixed integers and nullable inputs. Prove promotion and wide-integer refusal boundaries with tagged source/native evidence, preserve generic typing and existing ownership/resolution/NULL contracts, then test/commit/push separately. Present an overall coverage/delivery summary and the next recommended option afterward.
+- [ ] CHSEM-022 (proposed, not authorized): Fix scientific-number token boundaries around compact +/- expressions such as 1e0+2.0. CHSEM-021 found the shared lexer can consume the binary sign into the first token. Preserve the captured counterexample, qualify a scoped fix with parser/type/source/serde/native controls, and keep generic parity/ABI unchanged rather than weakening ledgers. Do not implement as part of CHSEM-021.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
 documentation caveats. Keep settled boundaries in their guides and these TODOs;
@@ -64,7 +67,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-020 are complete. Commit/push CHSEM-020 separately, then present the next recommended option without starting it. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-021 are complete. Commit/push CHSEM-021 separately, then summarize overall coverage/delivery and present the next option without starting it. CHSEM-022 is proposed, not authorized. Publication and consumer adoption remain separate.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -604,6 +607,42 @@ publication, dependency, consumer or IntelliJ API changes. ClickHouse-only Pytho
 discovery passes 80 tests; the isolated IntelliJ gate passes 757 on 261.25134.95.
 Other IDE versions were not run. Commit/push this round, then present the next
 option for approval rather than starting it automatically.
+
+## CHSEM-021 result
+
+Native-only statement/script APIs now infer Float64 for Float32/64 +/- and supported
+mixed Int/UInt8–64 inputs, with ordinary nullable propagation. Int/UInt128/256 mixes
+remain UNKNOWN, backed by native category-43 rejection controls, not blanket Double
+conversion. Operators and resolved unqualified plus/minus share the rules across
+schema/derived/lambda/chained/script contexts. Integer/generic typing, caller ownership,
+resolution, NULL/unsupported overload boundaries, source/serde and signatures remain
+intact. Types do not imply exact/finite values or execution success. Guide:
+`vendor/data/clickhouse-semantic/floating-add-sub-README.md`.
+
+Both exact pins match 576 independent accepted types, 256 independent rejection
+controls, 31 original/generated finite outcomes and eight whole-session scripts,
+without execution/version skips. Native rounding, inf and nan outcomes are retained
+without fabricated runtime errors. Tagged source captures and a named CHSEM-020-E24
+refinement preserve old evidence. New reports, the refinement/parser counterexample,
+the integer matrix and historical CHSEM-018 typing output regenerate byte-identically.
+Full JVM regression passes 1,907 tests with 61 optional integration assumption aborts
+and zero failures; Python passes 133 tests with one opt-in skip, using the unchanged
+SQLGlot pin. No corpus/ledger, release, toolchain, publication, consumer or IntelliJ
+API changes.
+
+A separate lexer gap was captured: compact scientific +/- can merge a sign into
+the numeric token or yield a Dot AST despite valid native Float64 arithmetic.
+The spaced form works; CHSEM-022 is proposed, not authorized or implemented here.
+
+Overall, the original CHSEM-001–011 composition/lambda target and the approved
+CHSEM-012–021 type/diagnostic/script extensions are implemented as bounded contracts,
+not full ClickHouse analyzer parity. This work remains on clickhouse-semantic;
+no merge, publication or consumer adoption was performed. The concrete proposed
+next item is CHSEM-022, while broader overload/catalog/settings coverage and
+delivery/integration qualification remain separate decisions.
+ClickHouse-only Python discovery passes 85 tests. The isolated IntelliJ gate passes
+757 tests on 261.25134.95; other IDE versions were not run. Commit/push this round,
+then present the overall status and proposed CHSEM-022 for approval.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

@@ -649,7 +649,7 @@ private class ClickhouseCompositionValidator(
             is Tuple -> tupleValue(node.expressionsArg.filterIsInstance<Expression>().map { value(it, context, depth + 1) })
             is EQ, is NEQ, is GT, is GTE, is LT, is LTE -> comparisonValue(node, context, depth)
             is Div -> divisionValue(node, context, depth)
-            is Add, is Sub -> if (inferResults && nativeLiterals) integerAddSubValue(node, context, depth)
+            is Add, is Sub -> if (inferResults && nativeLiterals) addSubValue(node, context, depth)
                 else { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
@@ -668,7 +668,7 @@ private class ClickhouseCompositionValidator(
             else -> {
                 if (clickhouseDivisionCall(node) != null) return remember(node, divisionValue(node, context, depth))
                 if (inferResults && nativeLiterals && clickhouseIntegerAddSubCall(node) != null)
-                    return remember(node, integerAddSubValue(node, context, depth))
+                    return remember(node, addSubValue(node, context, depth))
                 val call = scalarCall(node)
                 if (call == null) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
                 else if (call.name == "arrayMap") { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
@@ -680,7 +680,7 @@ private class ClickhouseCompositionValidator(
         })
     }
 
-    private fun integerAddSubValue(node: Expression, context: Context, depth: Int): Value {
+    private fun addSubValue(node: Expression, context: Context, depth: Int): Value {
         val call = clickhouseIntegerAddSubCall(node) ?: return Value()
         if (call.name != null && context.blocked(call.name)) {
             unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION)
@@ -688,7 +688,7 @@ private class ClickhouseCompositionValidator(
             return Value()
         }
         val inputs = call.operands.map { operand ->
-            if (ignoredIntegerAddSubOperand(operand)) { unknown(operand, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
+            if (ignoredAddSubOperand(operand)) { unknown(operand, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
             else value(operand, context, depth + 1)
         }
         if (inputs.any { it.nullLiteral }) {
@@ -698,10 +698,11 @@ private class ClickhouseCompositionValidator(
         }
         val types = inputs.mapIndexed { index, input ->
             val operand = call.operands[index]
-            input.type ?: if (!ignoredIntegerAddSubOperand(operand))
-                clickhouseProjectionLiteralType(operand.unnest())?.takeIf { clickhouseIntegerShape(it) != null } else null
+            input.type ?: if (!ignoredAddSubOperand(operand))
+                clickhouseProjectionLiteralType(operand.unnest())?.takeIf { clickhouseIntegerShape(it) != null || it.thisArg in setOf(DType.FLOAT, DType.DOUBLE) } else null
         }
         val result = clickhouseIntegerAddSubResult(types[0], types[1], call.subtract)
+            ?: clickhouseFloatingAddSubResult(types[0], types[1])
         if (result == null) {
             unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
             blockedFallbacks.add(node.objectId)
@@ -710,7 +711,7 @@ private class ClickhouseCompositionValidator(
         return nativeType(result)
     }
 
-    private fun ignoredIntegerAddSubOperand(raw: Expression): Boolean {
+    private fun ignoredAddSubOperand(raw: Expression): Boolean {
         var node = raw
         while (true) {
             checkCanceled()

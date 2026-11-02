@@ -100,3 +100,7 @@ or consumer dependency update is included.
 ClickHouse-only Python discovery passes 80 tests. The isolated IntelliJ gate passes
 757 tests on 261.25134.95; other IDE versions were not run. No new IntelliJ API call
 or automatic statement/script mode switch is included.
+
+CHSEM-021 subsequently qualifies Float32/64 and supported mixed standard-width
+integer addition/subtraction separately. See `floating-add-sub-README.md`; the
+integer matrix and earlier captures are unchanged.

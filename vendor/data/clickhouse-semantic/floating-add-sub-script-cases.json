@@ -1,0 +1,139 @@
+{
+  "task": "CHSEM-021",
+  "execution": [
+    {
+      "id": "CHSEM-021-SCRIPT01",
+      "sql": "SELECT CAST(7 AS Float32)+2 AS v,toTypeName(v); SELECT CAST(7 AS Float64)-CAST(2 AS Int64) AS v,toTypeName(v)",
+      "types": [
+        "Float64",
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "9\tFloat64\n5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "9\tFloat64\n5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT02",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT (CAST(7 AS Float32)+2)/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "4.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT03",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT (CAST(7 AS Float32)+2)/2 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "4.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT04",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT (CAST(7 AS Float32)+2)/2 AS v,toTypeName(v) SETTINGS sql_compatible_division_for_integers=0",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "4.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT05",
+      "sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT CAST(7 AS Float32)+2 AS v) q",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "9\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "9\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT06",
+      "sql": "SELECT CAST(7 AS Nullable(Float32))+CAST(2 AS UInt64) AS v,toTypeName(v)",
+      "types": [
+        "Nullable(Float64)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "9\tNullable(Float64)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "9\tNullable(Float64)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT07",
+      "sql": "SET decimal_check_overflow=1; SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v,toTypeName(v)",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "inf\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-021-SCRIPT08",
+      "sql": "SELECT CAST(1 AS Int128)+CAST(2 AS Float64) AS v,toTypeName(v)",
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        },
+        "26.10.2.103": {
+          "error_code": 43,
+          "error_name": "ILLEGAL_TYPE_OF_ARGUMENT"
+        }
+      }
+    }
+  ]
+}

@@ -234,6 +234,12 @@ delegate, return-construction and nullable-dispatch excerpts. Its isolated type,
 value and session observations live under `integer-add-sub-types/`,
 `integer-add-sub-native/` and `integer-add-sub-script-native/`.
 
+CHSEM-021's `floating-add-sub-sources.json` reuses Apache-2.0 numeric traits/delegates
+and adds binary operation selection excerpts. Type/refusal, value and session
+observations are in `floating-add-sub-types/`, `floating-add-sub-native/` and
+`floating-add-sub-script-native/`; a separately retained parser counterexample
+records the proposed CHSEM-022 gap without replacing older evidence.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

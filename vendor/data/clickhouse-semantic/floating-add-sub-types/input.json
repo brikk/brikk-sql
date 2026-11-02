@@ -1,0 +1,4774 @@
+{
+  "batches": [
+    {
+      "id": "plus-op-nullable-00",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Float32))) AS p000,toTypeName((CAST(7 AS Float32)+CAST(2 AS Float64))) AS p001,toTypeName((CAST(7 AS Float32)+CAST(2 AS Int8))) AS p002,toTypeName((CAST(7 AS Float32)+CAST(2 AS Int16))) AS p003,toTypeName((CAST(7 AS Float32)+CAST(2 AS Int32))) AS p004,toTypeName((CAST(7 AS Float32)+CAST(2 AS Int64))) AS p005,toTypeName((CAST(7 AS Float32)+CAST(2 AS UInt8))) AS p006,toTypeName((CAST(7 AS Float32)+CAST(2 AS UInt16))) AS p007,toTypeName((CAST(7 AS Float32)+CAST(2 AS UInt32))) AS p008,toTypeName((CAST(7 AS Float32)+CAST(2 AS UInt64))) AS p009,toTypeName((CAST(7 AS Float64)+CAST(2 AS Float32))) AS p010,toTypeName((CAST(7 AS Float64)+CAST(2 AS Float64))) AS p011,toTypeName((CAST(7 AS Float64)+CAST(2 AS Int8))) AS p012,toTypeName((CAST(7 AS Float64)+CAST(2 AS Int16))) AS p013,toTypeName((CAST(7 AS Float64)+CAST(2 AS Int32))) AS p014,toTypeName((CAST(7 AS Float64)+CAST(2 AS Int64))) AS p015,toTypeName((CAST(7 AS Float64)+CAST(2 AS UInt8))) AS p016,toTypeName((CAST(7 AS Float64)+CAST(2 AS UInt16))) AS p017,toTypeName((CAST(7 AS Float64)+CAST(2 AS UInt32))) AS p018,toTypeName((CAST(7 AS Float64)+CAST(2 AS UInt64))) AS p019,toTypeName((CAST(7 AS Int8)+CAST(2 AS Float32))) AS p020,toTypeName((CAST(7 AS Int8)+CAST(2 AS Float64))) AS p021,toTypeName((CAST(7 AS Int16)+CAST(2 AS Float32))) AS p022,toTypeName((CAST(7 AS Int16)+CAST(2 AS Float64))) AS p023,toTypeName((CAST(7 AS Int32)+CAST(2 AS Float32))) AS p024,toTypeName((CAST(7 AS Int32)+CAST(2 AS Float64))) AS p025,toTypeName((CAST(7 AS Int64)+CAST(2 AS Float32))) AS p026,toTypeName((CAST(7 AS Int64)+CAST(2 AS Float64))) AS p027,toTypeName((CAST(7 AS UInt8)+CAST(2 AS Float32))) AS p028,toTypeName((CAST(7 AS UInt8)+CAST(2 AS Float64))) AS p029,toTypeName((CAST(7 AS UInt16)+CAST(2 AS Float32))) AS p030,toTypeName((CAST(7 AS UInt16)+CAST(2 AS Float64))) AS p031,toTypeName((CAST(7 AS UInt32)+CAST(2 AS Float32))) AS p032,toTypeName((CAST(7 AS UInt32)+CAST(2 AS Float64))) AS p033,toTypeName((CAST(7 AS UInt64)+CAST(2 AS Float32))) AS p034,toTypeName((CAST(7 AS UInt64)+CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-op-nullable-10",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Float32))) AS p000,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Float64))) AS p001,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Int8))) AS p002,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Int16))) AS p003,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Int32))) AS p004,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Int64))) AS p005,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS UInt8))) AS p006,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS UInt16))) AS p007,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS UInt32))) AS p008,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS UInt64))) AS p009,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Float32))) AS p010,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Float64))) AS p011,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Int8))) AS p012,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Int16))) AS p013,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Int32))) AS p014,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Int64))) AS p015,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS UInt8))) AS p016,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS UInt16))) AS p017,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS UInt32))) AS p018,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS UInt64))) AS p019,toTypeName((CAST(7 AS Nullable(Int8))+CAST(2 AS Float32))) AS p020,toTypeName((CAST(7 AS Nullable(Int8))+CAST(2 AS Float64))) AS p021,toTypeName((CAST(7 AS Nullable(Int16))+CAST(2 AS Float32))) AS p022,toTypeName((CAST(7 AS Nullable(Int16))+CAST(2 AS Float64))) AS p023,toTypeName((CAST(7 AS Nullable(Int32))+CAST(2 AS Float32))) AS p024,toTypeName((CAST(7 AS Nullable(Int32))+CAST(2 AS Float64))) AS p025,toTypeName((CAST(7 AS Nullable(Int64))+CAST(2 AS Float32))) AS p026,toTypeName((CAST(7 AS Nullable(Int64))+CAST(2 AS Float64))) AS p027,toTypeName((CAST(7 AS Nullable(UInt8))+CAST(2 AS Float32))) AS p028,toTypeName((CAST(7 AS Nullable(UInt8))+CAST(2 AS Float64))) AS p029,toTypeName((CAST(7 AS Nullable(UInt16))+CAST(2 AS Float32))) AS p030,toTypeName((CAST(7 AS Nullable(UInt16))+CAST(2 AS Float64))) AS p031,toTypeName((CAST(7 AS Nullable(UInt32))+CAST(2 AS Float32))) AS p032,toTypeName((CAST(7 AS Nullable(UInt32))+CAST(2 AS Float64))) AS p033,toTypeName((CAST(7 AS Nullable(UInt64))+CAST(2 AS Float32))) AS p034,toTypeName((CAST(7 AS Nullable(UInt64))+CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-op-nullable-01",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Float32)))) AS p000,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Float64)))) AS p001,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Int8)))) AS p002,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Int16)))) AS p003,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Int32)))) AS p004,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Int64)))) AS p005,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Float32)))) AS p010,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Float64)))) AS p011,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Int8)))) AS p012,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Int16)))) AS p013,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Int32)))) AS p014,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Int64)))) AS p015,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName((CAST(7 AS Int8)+CAST(2 AS Nullable(Float32)))) AS p020,toTypeName((CAST(7 AS Int8)+CAST(2 AS Nullable(Float64)))) AS p021,toTypeName((CAST(7 AS Int16)+CAST(2 AS Nullable(Float32)))) AS p022,toTypeName((CAST(7 AS Int16)+CAST(2 AS Nullable(Float64)))) AS p023,toTypeName((CAST(7 AS Int32)+CAST(2 AS Nullable(Float32)))) AS p024,toTypeName((CAST(7 AS Int32)+CAST(2 AS Nullable(Float64)))) AS p025,toTypeName((CAST(7 AS Int64)+CAST(2 AS Nullable(Float32)))) AS p026,toTypeName((CAST(7 AS Int64)+CAST(2 AS Nullable(Float64)))) AS p027,toTypeName((CAST(7 AS UInt8)+CAST(2 AS Nullable(Float32)))) AS p028,toTypeName((CAST(7 AS UInt8)+CAST(2 AS Nullable(Float64)))) AS p029,toTypeName((CAST(7 AS UInt16)+CAST(2 AS Nullable(Float32)))) AS p030,toTypeName((CAST(7 AS UInt16)+CAST(2 AS Nullable(Float64)))) AS p031,toTypeName((CAST(7 AS UInt32)+CAST(2 AS Nullable(Float32)))) AS p032,toTypeName((CAST(7 AS UInt32)+CAST(2 AS Nullable(Float64)))) AS p033,toTypeName((CAST(7 AS UInt64)+CAST(2 AS Nullable(Float32)))) AS p034,toTypeName((CAST(7 AS UInt64)+CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-op-nullable-11",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Float32)))) AS p000,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Float64)))) AS p001,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Int8)))) AS p002,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Int16)))) AS p003,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Int32)))) AS p004,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Int64)))) AS p005,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Float32)))) AS p010,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Float64)))) AS p011,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Int8)))) AS p012,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Int16)))) AS p013,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Int32)))) AS p014,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Int64)))) AS p015,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName((CAST(7 AS Nullable(Int8))+CAST(2 AS Nullable(Float32)))) AS p020,toTypeName((CAST(7 AS Nullable(Int8))+CAST(2 AS Nullable(Float64)))) AS p021,toTypeName((CAST(7 AS Nullable(Int16))+CAST(2 AS Nullable(Float32)))) AS p022,toTypeName((CAST(7 AS Nullable(Int16))+CAST(2 AS Nullable(Float64)))) AS p023,toTypeName((CAST(7 AS Nullable(Int32))+CAST(2 AS Nullable(Float32)))) AS p024,toTypeName((CAST(7 AS Nullable(Int32))+CAST(2 AS Nullable(Float64)))) AS p025,toTypeName((CAST(7 AS Nullable(Int64))+CAST(2 AS Nullable(Float32)))) AS p026,toTypeName((CAST(7 AS Nullable(Int64))+CAST(2 AS Nullable(Float64)))) AS p027,toTypeName((CAST(7 AS Nullable(UInt8))+CAST(2 AS Nullable(Float32)))) AS p028,toTypeName((CAST(7 AS Nullable(UInt8))+CAST(2 AS Nullable(Float64)))) AS p029,toTypeName((CAST(7 AS Nullable(UInt16))+CAST(2 AS Nullable(Float32)))) AS p030,toTypeName((CAST(7 AS Nullable(UInt16))+CAST(2 AS Nullable(Float64)))) AS p031,toTypeName((CAST(7 AS Nullable(UInt32))+CAST(2 AS Nullable(Float32)))) AS p032,toTypeName((CAST(7 AS Nullable(UInt32))+CAST(2 AS Nullable(Float64)))) AS p033,toTypeName((CAST(7 AS Nullable(UInt64))+CAST(2 AS Nullable(Float32)))) AS p034,toTypeName((CAST(7 AS Nullable(UInt64))+CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-op-nullable-00",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Float32))) AS p000,toTypeName((CAST(7 AS Float32)-CAST(2 AS Float64))) AS p001,toTypeName((CAST(7 AS Float32)-CAST(2 AS Int8))) AS p002,toTypeName((CAST(7 AS Float32)-CAST(2 AS Int16))) AS p003,toTypeName((CAST(7 AS Float32)-CAST(2 AS Int32))) AS p004,toTypeName((CAST(7 AS Float32)-CAST(2 AS Int64))) AS p005,toTypeName((CAST(7 AS Float32)-CAST(2 AS UInt8))) AS p006,toTypeName((CAST(7 AS Float32)-CAST(2 AS UInt16))) AS p007,toTypeName((CAST(7 AS Float32)-CAST(2 AS UInt32))) AS p008,toTypeName((CAST(7 AS Float32)-CAST(2 AS UInt64))) AS p009,toTypeName((CAST(7 AS Float64)-CAST(2 AS Float32))) AS p010,toTypeName((CAST(7 AS Float64)-CAST(2 AS Float64))) AS p011,toTypeName((CAST(7 AS Float64)-CAST(2 AS Int8))) AS p012,toTypeName((CAST(7 AS Float64)-CAST(2 AS Int16))) AS p013,toTypeName((CAST(7 AS Float64)-CAST(2 AS Int32))) AS p014,toTypeName((CAST(7 AS Float64)-CAST(2 AS Int64))) AS p015,toTypeName((CAST(7 AS Float64)-CAST(2 AS UInt8))) AS p016,toTypeName((CAST(7 AS Float64)-CAST(2 AS UInt16))) AS p017,toTypeName((CAST(7 AS Float64)-CAST(2 AS UInt32))) AS p018,toTypeName((CAST(7 AS Float64)-CAST(2 AS UInt64))) AS p019,toTypeName((CAST(7 AS Int8)-CAST(2 AS Float32))) AS p020,toTypeName((CAST(7 AS Int8)-CAST(2 AS Float64))) AS p021,toTypeName((CAST(7 AS Int16)-CAST(2 AS Float32))) AS p022,toTypeName((CAST(7 AS Int16)-CAST(2 AS Float64))) AS p023,toTypeName((CAST(7 AS Int32)-CAST(2 AS Float32))) AS p024,toTypeName((CAST(7 AS Int32)-CAST(2 AS Float64))) AS p025,toTypeName((CAST(7 AS Int64)-CAST(2 AS Float32))) AS p026,toTypeName((CAST(7 AS Int64)-CAST(2 AS Float64))) AS p027,toTypeName((CAST(7 AS UInt8)-CAST(2 AS Float32))) AS p028,toTypeName((CAST(7 AS UInt8)-CAST(2 AS Float64))) AS p029,toTypeName((CAST(7 AS UInt16)-CAST(2 AS Float32))) AS p030,toTypeName((CAST(7 AS UInt16)-CAST(2 AS Float64))) AS p031,toTypeName((CAST(7 AS UInt32)-CAST(2 AS Float32))) AS p032,toTypeName((CAST(7 AS UInt32)-CAST(2 AS Float64))) AS p033,toTypeName((CAST(7 AS UInt64)-CAST(2 AS Float32))) AS p034,toTypeName((CAST(7 AS UInt64)-CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-op-nullable-10",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Float32))) AS p000,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Float64))) AS p001,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Int8))) AS p002,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Int16))) AS p003,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Int32))) AS p004,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Int64))) AS p005,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS UInt8))) AS p006,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS UInt16))) AS p007,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS UInt32))) AS p008,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS UInt64))) AS p009,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Float32))) AS p010,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Float64))) AS p011,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Int8))) AS p012,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Int16))) AS p013,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Int32))) AS p014,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Int64))) AS p015,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS UInt8))) AS p016,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS UInt16))) AS p017,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS UInt32))) AS p018,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS UInt64))) AS p019,toTypeName((CAST(7 AS Nullable(Int8))-CAST(2 AS Float32))) AS p020,toTypeName((CAST(7 AS Nullable(Int8))-CAST(2 AS Float64))) AS p021,toTypeName((CAST(7 AS Nullable(Int16))-CAST(2 AS Float32))) AS p022,toTypeName((CAST(7 AS Nullable(Int16))-CAST(2 AS Float64))) AS p023,toTypeName((CAST(7 AS Nullable(Int32))-CAST(2 AS Float32))) AS p024,toTypeName((CAST(7 AS Nullable(Int32))-CAST(2 AS Float64))) AS p025,toTypeName((CAST(7 AS Nullable(Int64))-CAST(2 AS Float32))) AS p026,toTypeName((CAST(7 AS Nullable(Int64))-CAST(2 AS Float64))) AS p027,toTypeName((CAST(7 AS Nullable(UInt8))-CAST(2 AS Float32))) AS p028,toTypeName((CAST(7 AS Nullable(UInt8))-CAST(2 AS Float64))) AS p029,toTypeName((CAST(7 AS Nullable(UInt16))-CAST(2 AS Float32))) AS p030,toTypeName((CAST(7 AS Nullable(UInt16))-CAST(2 AS Float64))) AS p031,toTypeName((CAST(7 AS Nullable(UInt32))-CAST(2 AS Float32))) AS p032,toTypeName((CAST(7 AS Nullable(UInt32))-CAST(2 AS Float64))) AS p033,toTypeName((CAST(7 AS Nullable(UInt64))-CAST(2 AS Float32))) AS p034,toTypeName((CAST(7 AS Nullable(UInt64))-CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-op-nullable-01",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Float32)))) AS p000,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Float64)))) AS p001,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Int8)))) AS p002,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Int16)))) AS p003,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Int32)))) AS p004,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Int64)))) AS p005,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Float32)))) AS p010,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Float64)))) AS p011,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Int8)))) AS p012,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Int16)))) AS p013,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Int32)))) AS p014,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Int64)))) AS p015,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName((CAST(7 AS Int8)-CAST(2 AS Nullable(Float32)))) AS p020,toTypeName((CAST(7 AS Int8)-CAST(2 AS Nullable(Float64)))) AS p021,toTypeName((CAST(7 AS Int16)-CAST(2 AS Nullable(Float32)))) AS p022,toTypeName((CAST(7 AS Int16)-CAST(2 AS Nullable(Float64)))) AS p023,toTypeName((CAST(7 AS Int32)-CAST(2 AS Nullable(Float32)))) AS p024,toTypeName((CAST(7 AS Int32)-CAST(2 AS Nullable(Float64)))) AS p025,toTypeName((CAST(7 AS Int64)-CAST(2 AS Nullable(Float32)))) AS p026,toTypeName((CAST(7 AS Int64)-CAST(2 AS Nullable(Float64)))) AS p027,toTypeName((CAST(7 AS UInt8)-CAST(2 AS Nullable(Float32)))) AS p028,toTypeName((CAST(7 AS UInt8)-CAST(2 AS Nullable(Float64)))) AS p029,toTypeName((CAST(7 AS UInt16)-CAST(2 AS Nullable(Float32)))) AS p030,toTypeName((CAST(7 AS UInt16)-CAST(2 AS Nullable(Float64)))) AS p031,toTypeName((CAST(7 AS UInt32)-CAST(2 AS Nullable(Float32)))) AS p032,toTypeName((CAST(7 AS UInt32)-CAST(2 AS Nullable(Float64)))) AS p033,toTypeName((CAST(7 AS UInt64)-CAST(2 AS Nullable(Float32)))) AS p034,toTypeName((CAST(7 AS UInt64)-CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-op-nullable-11",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Float32)))) AS p000,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Float64)))) AS p001,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Int8)))) AS p002,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Int16)))) AS p003,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Int32)))) AS p004,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Int64)))) AS p005,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Float32)))) AS p010,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Float64)))) AS p011,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Int8)))) AS p012,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Int16)))) AS p013,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Int32)))) AS p014,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Int64)))) AS p015,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName((CAST(7 AS Nullable(Int8))-CAST(2 AS Nullable(Float32)))) AS p020,toTypeName((CAST(7 AS Nullable(Int8))-CAST(2 AS Nullable(Float64)))) AS p021,toTypeName((CAST(7 AS Nullable(Int16))-CAST(2 AS Nullable(Float32)))) AS p022,toTypeName((CAST(7 AS Nullable(Int16))-CAST(2 AS Nullable(Float64)))) AS p023,toTypeName((CAST(7 AS Nullable(Int32))-CAST(2 AS Nullable(Float32)))) AS p024,toTypeName((CAST(7 AS Nullable(Int32))-CAST(2 AS Nullable(Float64)))) AS p025,toTypeName((CAST(7 AS Nullable(Int64))-CAST(2 AS Nullable(Float32)))) AS p026,toTypeName((CAST(7 AS Nullable(Int64))-CAST(2 AS Nullable(Float64)))) AS p027,toTypeName((CAST(7 AS Nullable(UInt8))-CAST(2 AS Nullable(Float32)))) AS p028,toTypeName((CAST(7 AS Nullable(UInt8))-CAST(2 AS Nullable(Float64)))) AS p029,toTypeName((CAST(7 AS Nullable(UInt16))-CAST(2 AS Nullable(Float32)))) AS p030,toTypeName((CAST(7 AS Nullable(UInt16))-CAST(2 AS Nullable(Float64)))) AS p031,toTypeName((CAST(7 AS Nullable(UInt32))-CAST(2 AS Nullable(Float32)))) AS p032,toTypeName((CAST(7 AS Nullable(UInt32))-CAST(2 AS Nullable(Float64)))) AS p033,toTypeName((CAST(7 AS Nullable(UInt64))-CAST(2 AS Nullable(Float32)))) AS p034,toTypeName((CAST(7 AS Nullable(UInt64))-CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-fn-nullable-00",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Float32))) AS p000,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Float64))) AS p001,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Int8))) AS p002,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Int16))) AS p003,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Int32))) AS p004,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Int64))) AS p005,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS UInt8))) AS p006,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS UInt16))) AS p007,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS UInt32))) AS p008,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS UInt64))) AS p009,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Float32))) AS p010,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Float64))) AS p011,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Int8))) AS p012,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Int16))) AS p013,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Int32))) AS p014,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Int64))) AS p015,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS UInt8))) AS p016,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS UInt16))) AS p017,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS UInt32))) AS p018,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS UInt64))) AS p019,toTypeName(plus(CAST(7 AS Int8),CAST(2 AS Float32))) AS p020,toTypeName(plus(CAST(7 AS Int8),CAST(2 AS Float64))) AS p021,toTypeName(plus(CAST(7 AS Int16),CAST(2 AS Float32))) AS p022,toTypeName(plus(CAST(7 AS Int16),CAST(2 AS Float64))) AS p023,toTypeName(plus(CAST(7 AS Int32),CAST(2 AS Float32))) AS p024,toTypeName(plus(CAST(7 AS Int32),CAST(2 AS Float64))) AS p025,toTypeName(plus(CAST(7 AS Int64),CAST(2 AS Float32))) AS p026,toTypeName(plus(CAST(7 AS Int64),CAST(2 AS Float64))) AS p027,toTypeName(plus(CAST(7 AS UInt8),CAST(2 AS Float32))) AS p028,toTypeName(plus(CAST(7 AS UInt8),CAST(2 AS Float64))) AS p029,toTypeName(plus(CAST(7 AS UInt16),CAST(2 AS Float32))) AS p030,toTypeName(plus(CAST(7 AS UInt16),CAST(2 AS Float64))) AS p031,toTypeName(plus(CAST(7 AS UInt32),CAST(2 AS Float32))) AS p032,toTypeName(plus(CAST(7 AS UInt32),CAST(2 AS Float64))) AS p033,toTypeName(plus(CAST(7 AS UInt64),CAST(2 AS Float32))) AS p034,toTypeName(plus(CAST(7 AS UInt64),CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-fn-nullable-10",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Float32))) AS p000,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Float64))) AS p001,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int8))) AS p002,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int16))) AS p003,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int32))) AS p004,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int64))) AS p005,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt8))) AS p006,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt16))) AS p007,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt32))) AS p008,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt64))) AS p009,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Float32))) AS p010,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Float64))) AS p011,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int8))) AS p012,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int16))) AS p013,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int32))) AS p014,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int64))) AS p015,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt8))) AS p016,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt16))) AS p017,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt32))) AS p018,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt64))) AS p019,toTypeName(plus(CAST(7 AS Nullable(Int8)),CAST(2 AS Float32))) AS p020,toTypeName(plus(CAST(7 AS Nullable(Int8)),CAST(2 AS Float64))) AS p021,toTypeName(plus(CAST(7 AS Nullable(Int16)),CAST(2 AS Float32))) AS p022,toTypeName(plus(CAST(7 AS Nullable(Int16)),CAST(2 AS Float64))) AS p023,toTypeName(plus(CAST(7 AS Nullable(Int32)),CAST(2 AS Float32))) AS p024,toTypeName(plus(CAST(7 AS Nullable(Int32)),CAST(2 AS Float64))) AS p025,toTypeName(plus(CAST(7 AS Nullable(Int64)),CAST(2 AS Float32))) AS p026,toTypeName(plus(CAST(7 AS Nullable(Int64)),CAST(2 AS Float64))) AS p027,toTypeName(plus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Float32))) AS p028,toTypeName(plus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Float64))) AS p029,toTypeName(plus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Float32))) AS p030,toTypeName(plus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Float64))) AS p031,toTypeName(plus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Float32))) AS p032,toTypeName(plus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Float64))) AS p033,toTypeName(plus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Float32))) AS p034,toTypeName(plus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-fn-nullable-01",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Float32)))) AS p000,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Float64)))) AS p001,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Int8)))) AS p002,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Int16)))) AS p003,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Int32)))) AS p004,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Int64)))) AS p005,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Float32)))) AS p010,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Float64)))) AS p011,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Int8)))) AS p012,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Int16)))) AS p013,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Int32)))) AS p014,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Int64)))) AS p015,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName(plus(CAST(7 AS Int8),CAST(2 AS Nullable(Float32)))) AS p020,toTypeName(plus(CAST(7 AS Int8),CAST(2 AS Nullable(Float64)))) AS p021,toTypeName(plus(CAST(7 AS Int16),CAST(2 AS Nullable(Float32)))) AS p022,toTypeName(plus(CAST(7 AS Int16),CAST(2 AS Nullable(Float64)))) AS p023,toTypeName(plus(CAST(7 AS Int32),CAST(2 AS Nullable(Float32)))) AS p024,toTypeName(plus(CAST(7 AS Int32),CAST(2 AS Nullable(Float64)))) AS p025,toTypeName(plus(CAST(7 AS Int64),CAST(2 AS Nullable(Float32)))) AS p026,toTypeName(plus(CAST(7 AS Int64),CAST(2 AS Nullable(Float64)))) AS p027,toTypeName(plus(CAST(7 AS UInt8),CAST(2 AS Nullable(Float32)))) AS p028,toTypeName(plus(CAST(7 AS UInt8),CAST(2 AS Nullable(Float64)))) AS p029,toTypeName(plus(CAST(7 AS UInt16),CAST(2 AS Nullable(Float32)))) AS p030,toTypeName(plus(CAST(7 AS UInt16),CAST(2 AS Nullable(Float64)))) AS p031,toTypeName(plus(CAST(7 AS UInt32),CAST(2 AS Nullable(Float32)))) AS p032,toTypeName(plus(CAST(7 AS UInt32),CAST(2 AS Nullable(Float64)))) AS p033,toTypeName(plus(CAST(7 AS UInt64),CAST(2 AS Nullable(Float32)))) AS p034,toTypeName(plus(CAST(7 AS UInt64),CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "plus-fn-nullable-11",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Float32)))) AS p000,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Float64)))) AS p001,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int8)))) AS p002,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int16)))) AS p003,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int32)))) AS p004,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int64)))) AS p005,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Float32)))) AS p010,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Float64)))) AS p011,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int8)))) AS p012,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int16)))) AS p013,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int32)))) AS p014,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int64)))) AS p015,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName(plus(CAST(7 AS Nullable(Int8)),CAST(2 AS Nullable(Float32)))) AS p020,toTypeName(plus(CAST(7 AS Nullable(Int8)),CAST(2 AS Nullable(Float64)))) AS p021,toTypeName(plus(CAST(7 AS Nullable(Int16)),CAST(2 AS Nullable(Float32)))) AS p022,toTypeName(plus(CAST(7 AS Nullable(Int16)),CAST(2 AS Nullable(Float64)))) AS p023,toTypeName(plus(CAST(7 AS Nullable(Int32)),CAST(2 AS Nullable(Float32)))) AS p024,toTypeName(plus(CAST(7 AS Nullable(Int32)),CAST(2 AS Nullable(Float64)))) AS p025,toTypeName(plus(CAST(7 AS Nullable(Int64)),CAST(2 AS Nullable(Float32)))) AS p026,toTypeName(plus(CAST(7 AS Nullable(Int64)),CAST(2 AS Nullable(Float64)))) AS p027,toTypeName(plus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Nullable(Float32)))) AS p028,toTypeName(plus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Nullable(Float64)))) AS p029,toTypeName(plus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Nullable(Float32)))) AS p030,toTypeName(plus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Nullable(Float64)))) AS p031,toTypeName(plus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Nullable(Float32)))) AS p032,toTypeName(plus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Nullable(Float64)))) AS p033,toTypeName(plus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Nullable(Float32)))) AS p034,toTypeName(plus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-fn-nullable-00",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Float32))) AS p000,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Float64))) AS p001,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Int8))) AS p002,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Int16))) AS p003,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Int32))) AS p004,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Int64))) AS p005,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS UInt8))) AS p006,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS UInt16))) AS p007,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS UInt32))) AS p008,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS UInt64))) AS p009,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Float32))) AS p010,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Float64))) AS p011,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Int8))) AS p012,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Int16))) AS p013,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Int32))) AS p014,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Int64))) AS p015,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS UInt8))) AS p016,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS UInt16))) AS p017,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS UInt32))) AS p018,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS UInt64))) AS p019,toTypeName(minus(CAST(7 AS Int8),CAST(2 AS Float32))) AS p020,toTypeName(minus(CAST(7 AS Int8),CAST(2 AS Float64))) AS p021,toTypeName(minus(CAST(7 AS Int16),CAST(2 AS Float32))) AS p022,toTypeName(minus(CAST(7 AS Int16),CAST(2 AS Float64))) AS p023,toTypeName(minus(CAST(7 AS Int32),CAST(2 AS Float32))) AS p024,toTypeName(minus(CAST(7 AS Int32),CAST(2 AS Float64))) AS p025,toTypeName(minus(CAST(7 AS Int64),CAST(2 AS Float32))) AS p026,toTypeName(minus(CAST(7 AS Int64),CAST(2 AS Float64))) AS p027,toTypeName(minus(CAST(7 AS UInt8),CAST(2 AS Float32))) AS p028,toTypeName(minus(CAST(7 AS UInt8),CAST(2 AS Float64))) AS p029,toTypeName(minus(CAST(7 AS UInt16),CAST(2 AS Float32))) AS p030,toTypeName(minus(CAST(7 AS UInt16),CAST(2 AS Float64))) AS p031,toTypeName(minus(CAST(7 AS UInt32),CAST(2 AS Float32))) AS p032,toTypeName(minus(CAST(7 AS UInt32),CAST(2 AS Float64))) AS p033,toTypeName(minus(CAST(7 AS UInt64),CAST(2 AS Float32))) AS p034,toTypeName(minus(CAST(7 AS UInt64),CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-fn-nullable-10",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Int8"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Int16"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Int32"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Int64"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Int8"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Int16"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Int32"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Int64"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "UInt8"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "UInt16"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "UInt32"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "UInt64"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Float64"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Float32"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Float64"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Float32"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Float64"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Float32"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Float64"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Float32"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Float64"
+        }
+      ],
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Float32))) AS p000,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Float64))) AS p001,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int8))) AS p002,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int16))) AS p003,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int32))) AS p004,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int64))) AS p005,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt8))) AS p006,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt16))) AS p007,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt32))) AS p008,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt64))) AS p009,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Float32))) AS p010,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Float64))) AS p011,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int8))) AS p012,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int16))) AS p013,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int32))) AS p014,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int64))) AS p015,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt8))) AS p016,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt16))) AS p017,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt32))) AS p018,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt64))) AS p019,toTypeName(minus(CAST(7 AS Nullable(Int8)),CAST(2 AS Float32))) AS p020,toTypeName(minus(CAST(7 AS Nullable(Int8)),CAST(2 AS Float64))) AS p021,toTypeName(minus(CAST(7 AS Nullable(Int16)),CAST(2 AS Float32))) AS p022,toTypeName(minus(CAST(7 AS Nullable(Int16)),CAST(2 AS Float64))) AS p023,toTypeName(minus(CAST(7 AS Nullable(Int32)),CAST(2 AS Float32))) AS p024,toTypeName(minus(CAST(7 AS Nullable(Int32)),CAST(2 AS Float64))) AS p025,toTypeName(minus(CAST(7 AS Nullable(Int64)),CAST(2 AS Float32))) AS p026,toTypeName(minus(CAST(7 AS Nullable(Int64)),CAST(2 AS Float64))) AS p027,toTypeName(minus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Float32))) AS p028,toTypeName(minus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Float64))) AS p029,toTypeName(minus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Float32))) AS p030,toTypeName(minus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Float64))) AS p031,toTypeName(minus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Float32))) AS p032,toTypeName(minus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Float64))) AS p033,toTypeName(minus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Float32))) AS p034,toTypeName(minus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Float64))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-fn-nullable-01",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Float32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Float32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Float32",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Float32",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Float32",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Float32",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Float32",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Float32",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Float32",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Float32",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Float64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Float64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Float64",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Float64",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Float64",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Float64",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Float64",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Float64",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Float64",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Float64",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Int8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Int8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Int16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Int16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Int32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Int32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Int64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Int64",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "UInt8",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "UInt8",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "UInt16",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "UInt16",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "UInt32",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "UInt32",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "UInt64",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "UInt64",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Float32)))) AS p000,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Float64)))) AS p001,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Int8)))) AS p002,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Int16)))) AS p003,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Int32)))) AS p004,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Int64)))) AS p005,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Float32)))) AS p010,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Float64)))) AS p011,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Int8)))) AS p012,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Int16)))) AS p013,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Int32)))) AS p014,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Int64)))) AS p015,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName(minus(CAST(7 AS Int8),CAST(2 AS Nullable(Float32)))) AS p020,toTypeName(minus(CAST(7 AS Int8),CAST(2 AS Nullable(Float64)))) AS p021,toTypeName(minus(CAST(7 AS Int16),CAST(2 AS Nullable(Float32)))) AS p022,toTypeName(minus(CAST(7 AS Int16),CAST(2 AS Nullable(Float64)))) AS p023,toTypeName(minus(CAST(7 AS Int32),CAST(2 AS Nullable(Float32)))) AS p024,toTypeName(minus(CAST(7 AS Int32),CAST(2 AS Nullable(Float64)))) AS p025,toTypeName(minus(CAST(7 AS Int64),CAST(2 AS Nullable(Float32)))) AS p026,toTypeName(minus(CAST(7 AS Int64),CAST(2 AS Nullable(Float64)))) AS p027,toTypeName(minus(CAST(7 AS UInt8),CAST(2 AS Nullable(Float32)))) AS p028,toTypeName(minus(CAST(7 AS UInt8),CAST(2 AS Nullable(Float64)))) AS p029,toTypeName(minus(CAST(7 AS UInt16),CAST(2 AS Nullable(Float32)))) AS p030,toTypeName(minus(CAST(7 AS UInt16),CAST(2 AS Nullable(Float64)))) AS p031,toTypeName(minus(CAST(7 AS UInt32),CAST(2 AS Nullable(Float32)))) AS p032,toTypeName(minus(CAST(7 AS UInt32),CAST(2 AS Nullable(Float64)))) AS p033,toTypeName(minus(CAST(7 AS UInt64),CAST(2 AS Nullable(Float32)))) AS p034,toTypeName(minus(CAST(7 AS UInt64),CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    },
+    {
+      "id": "minus-fn-nullable-11",
+      "pairs": [
+        {
+          "id": "p000",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p001",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p002",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p003",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p004",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p005",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p006",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p007",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p008",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p009",
+          "left": "Nullable(Float32)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p010",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p011",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p012",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int8)"
+        },
+        {
+          "id": "p013",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int16)"
+        },
+        {
+          "id": "p014",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int32)"
+        },
+        {
+          "id": "p015",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(Int64)"
+        },
+        {
+          "id": "p016",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt8)"
+        },
+        {
+          "id": "p017",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt16)"
+        },
+        {
+          "id": "p018",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt32)"
+        },
+        {
+          "id": "p019",
+          "left": "Nullable(Float64)",
+          "right": "Nullable(UInt64)"
+        },
+        {
+          "id": "p020",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p021",
+          "left": "Nullable(Int8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p022",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p023",
+          "left": "Nullable(Int16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p024",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p025",
+          "left": "Nullable(Int32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p026",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p027",
+          "left": "Nullable(Int64)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p028",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p029",
+          "left": "Nullable(UInt8)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p030",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p031",
+          "left": "Nullable(UInt16)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p032",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p033",
+          "left": "Nullable(UInt32)",
+          "right": "Nullable(Float64)"
+        },
+        {
+          "id": "p034",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float32)"
+        },
+        {
+          "id": "p035",
+          "left": "Nullable(UInt64)",
+          "right": "Nullable(Float64)"
+        }
+      ],
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Float32)))) AS p000,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Float64)))) AS p001,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int8)))) AS p002,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int16)))) AS p003,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int32)))) AS p004,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int64)))) AS p005,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt8)))) AS p006,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt16)))) AS p007,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt32)))) AS p008,toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt64)))) AS p009,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Float32)))) AS p010,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Float64)))) AS p011,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int8)))) AS p012,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int16)))) AS p013,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int32)))) AS p014,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int64)))) AS p015,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt8)))) AS p016,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt16)))) AS p017,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt32)))) AS p018,toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt64)))) AS p019,toTypeName(minus(CAST(7 AS Nullable(Int8)),CAST(2 AS Nullable(Float32)))) AS p020,toTypeName(minus(CAST(7 AS Nullable(Int8)),CAST(2 AS Nullable(Float64)))) AS p021,toTypeName(minus(CAST(7 AS Nullable(Int16)),CAST(2 AS Nullable(Float32)))) AS p022,toTypeName(minus(CAST(7 AS Nullable(Int16)),CAST(2 AS Nullable(Float64)))) AS p023,toTypeName(minus(CAST(7 AS Nullable(Int32)),CAST(2 AS Nullable(Float32)))) AS p024,toTypeName(minus(CAST(7 AS Nullable(Int32)),CAST(2 AS Nullable(Float64)))) AS p025,toTypeName(minus(CAST(7 AS Nullable(Int64)),CAST(2 AS Nullable(Float32)))) AS p026,toTypeName(minus(CAST(7 AS Nullable(Int64)),CAST(2 AS Nullable(Float64)))) AS p027,toTypeName(minus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Nullable(Float32)))) AS p028,toTypeName(minus(CAST(7 AS Nullable(UInt8)),CAST(2 AS Nullable(Float64)))) AS p029,toTypeName(minus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Nullable(Float32)))) AS p030,toTypeName(minus(CAST(7 AS Nullable(UInt16)),CAST(2 AS Nullable(Float64)))) AS p031,toTypeName(minus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Nullable(Float32)))) AS p032,toTypeName(minus(CAST(7 AS Nullable(UInt32)),CAST(2 AS Nullable(Float64)))) AS p033,toTypeName(minus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Nullable(Float32)))) AS p034,toTypeName(minus(CAST(7 AS Nullable(UInt64)),CAST(2 AS Nullable(Float64)))) AS p035 FORMAT JSONEachRow"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "r000",
+      "form": "plus-op-nullable-00",
+      "left": "Float32",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r001",
+      "form": "plus-op-nullable-00",
+      "left": "Int128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r002",
+      "form": "plus-op-nullable-00",
+      "left": "Float32",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r003",
+      "form": "plus-op-nullable-00",
+      "left": "Int256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r004",
+      "form": "plus-op-nullable-00",
+      "left": "Float32",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r005",
+      "form": "plus-op-nullable-00",
+      "left": "UInt128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r006",
+      "form": "plus-op-nullable-00",
+      "left": "Float32",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r007",
+      "form": "plus-op-nullable-00",
+      "left": "UInt256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r008",
+      "form": "plus-op-nullable-00",
+      "left": "Float64",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r009",
+      "form": "plus-op-nullable-00",
+      "left": "Int128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r010",
+      "form": "plus-op-nullable-00",
+      "left": "Float64",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r011",
+      "form": "plus-op-nullable-00",
+      "left": "Int256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r012",
+      "form": "plus-op-nullable-00",
+      "left": "Float64",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r013",
+      "form": "plus-op-nullable-00",
+      "left": "UInt128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r014",
+      "form": "plus-op-nullable-00",
+      "left": "Float64",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r015",
+      "form": "plus-op-nullable-00",
+      "left": "UInt256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r016",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r017",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r018",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r019",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r020",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r021",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r022",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r023",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))+CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r024",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r025",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r026",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r027",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r028",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r029",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r030",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r031",
+      "form": "plus-op-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))+CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r032",
+      "form": "plus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r033",
+      "form": "plus-op-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r034",
+      "form": "plus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r035",
+      "form": "plus-op-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r036",
+      "form": "plus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r037",
+      "form": "plus-op-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r038",
+      "form": "plus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)+CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r039",
+      "form": "plus-op-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r040",
+      "form": "plus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r041",
+      "form": "plus-op-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r042",
+      "form": "plus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r043",
+      "form": "plus-op-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r044",
+      "form": "plus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r045",
+      "form": "plus-op-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r046",
+      "form": "plus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)+CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r047",
+      "form": "plus-op-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r048",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r049",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r050",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r051",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r052",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r053",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r054",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))+CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r055",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))+CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r056",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r057",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r058",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r059",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r060",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r061",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r062",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))+CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r063",
+      "form": "plus-op-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))+CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r064",
+      "form": "minus-op-nullable-00",
+      "left": "Float32",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r065",
+      "form": "minus-op-nullable-00",
+      "left": "Int128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r066",
+      "form": "minus-op-nullable-00",
+      "left": "Float32",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r067",
+      "form": "minus-op-nullable-00",
+      "left": "Int256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r068",
+      "form": "minus-op-nullable-00",
+      "left": "Float32",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r069",
+      "form": "minus-op-nullable-00",
+      "left": "UInt128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r070",
+      "form": "minus-op-nullable-00",
+      "left": "Float32",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r071",
+      "form": "minus-op-nullable-00",
+      "left": "UInt256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r072",
+      "form": "minus-op-nullable-00",
+      "left": "Float64",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r073",
+      "form": "minus-op-nullable-00",
+      "left": "Int128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r074",
+      "form": "minus-op-nullable-00",
+      "left": "Float64",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r075",
+      "form": "minus-op-nullable-00",
+      "left": "Int256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r076",
+      "form": "minus-op-nullable-00",
+      "left": "Float64",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r077",
+      "form": "minus-op-nullable-00",
+      "left": "UInt128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r078",
+      "form": "minus-op-nullable-00",
+      "left": "Float64",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r079",
+      "form": "minus-op-nullable-00",
+      "left": "UInt256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r080",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r081",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r082",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r083",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r084",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r085",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r086",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r087",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))-CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r088",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r089",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r090",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r091",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r092",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r093",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r094",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r095",
+      "form": "minus-op-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))-CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r096",
+      "form": "minus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r097",
+      "form": "minus-op-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r098",
+      "form": "minus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r099",
+      "form": "minus-op-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r100",
+      "form": "minus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r101",
+      "form": "minus-op-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r102",
+      "form": "minus-op-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float32)-CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r103",
+      "form": "minus-op-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r104",
+      "form": "minus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r105",
+      "form": "minus-op-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int128)-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r106",
+      "form": "minus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r107",
+      "form": "minus-op-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Int256)-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r108",
+      "form": "minus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r109",
+      "form": "minus-op-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt128)-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r110",
+      "form": "minus-op-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Float64)-CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r111",
+      "form": "minus-op-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS UInt256)-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r112",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r113",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r114",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r115",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r116",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r117",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r118",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float32))-CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r119",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))-CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r120",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r121",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int128))-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r122",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r123",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Int256))-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r124",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r125",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt128))-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r126",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(Float64))-CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r127",
+      "form": "minus-op-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName((CAST(7 AS Nullable(UInt256))-CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r128",
+      "form": "plus-fn-nullable-00",
+      "left": "Float32",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r129",
+      "form": "plus-fn-nullable-00",
+      "left": "Int128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int128),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r130",
+      "form": "plus-fn-nullable-00",
+      "left": "Float32",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r131",
+      "form": "plus-fn-nullable-00",
+      "left": "Int256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int256),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r132",
+      "form": "plus-fn-nullable-00",
+      "left": "Float32",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r133",
+      "form": "plus-fn-nullable-00",
+      "left": "UInt128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt128),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r134",
+      "form": "plus-fn-nullable-00",
+      "left": "Float32",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r135",
+      "form": "plus-fn-nullable-00",
+      "left": "UInt256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt256),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r136",
+      "form": "plus-fn-nullable-00",
+      "left": "Float64",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r137",
+      "form": "plus-fn-nullable-00",
+      "left": "Int128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int128),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r138",
+      "form": "plus-fn-nullable-00",
+      "left": "Float64",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r139",
+      "form": "plus-fn-nullable-00",
+      "left": "Int256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int256),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r140",
+      "form": "plus-fn-nullable-00",
+      "left": "Float64",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r141",
+      "form": "plus-fn-nullable-00",
+      "left": "UInt128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt128),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r142",
+      "form": "plus-fn-nullable-00",
+      "left": "Float64",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r143",
+      "form": "plus-fn-nullable-00",
+      "left": "UInt256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt256),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r144",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r145",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int128)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r146",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r147",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int256)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r148",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r149",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r150",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r151",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r152",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r153",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int128)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r154",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r155",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int256)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r156",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r157",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r158",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r159",
+      "form": "plus-fn-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r160",
+      "form": "plus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r161",
+      "form": "plus-fn-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int128),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r162",
+      "form": "plus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r163",
+      "form": "plus-fn-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int256),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r164",
+      "form": "plus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r165",
+      "form": "plus-fn-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt128),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r166",
+      "form": "plus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r167",
+      "form": "plus-fn-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt256),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r168",
+      "form": "plus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r169",
+      "form": "plus-fn-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int128),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r170",
+      "form": "plus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r171",
+      "form": "plus-fn-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Int256),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r172",
+      "form": "plus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r173",
+      "form": "plus-fn-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt128),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r174",
+      "form": "plus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r175",
+      "form": "plus-fn-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS UInt256),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r176",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r177",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int128)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r178",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r179",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int256)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r180",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r181",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r182",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r183",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r184",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r185",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int128)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r186",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r187",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Int256)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r188",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r189",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r190",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r191",
+      "form": "plus-fn-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(plus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r192",
+      "form": "minus-fn-nullable-00",
+      "left": "Float32",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r193",
+      "form": "minus-fn-nullable-00",
+      "left": "Int128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int128),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r194",
+      "form": "minus-fn-nullable-00",
+      "left": "Float32",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r195",
+      "form": "minus-fn-nullable-00",
+      "left": "Int256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int256),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r196",
+      "form": "minus-fn-nullable-00",
+      "left": "Float32",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r197",
+      "form": "minus-fn-nullable-00",
+      "left": "UInt128",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt128),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r198",
+      "form": "minus-fn-nullable-00",
+      "left": "Float32",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r199",
+      "form": "minus-fn-nullable-00",
+      "left": "UInt256",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt256),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r200",
+      "form": "minus-fn-nullable-00",
+      "left": "Float64",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r201",
+      "form": "minus-fn-nullable-00",
+      "left": "Int128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int128),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r202",
+      "form": "minus-fn-nullable-00",
+      "left": "Float64",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r203",
+      "form": "minus-fn-nullable-00",
+      "left": "Int256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int256),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r204",
+      "form": "minus-fn-nullable-00",
+      "left": "Float64",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r205",
+      "form": "minus-fn-nullable-00",
+      "left": "UInt128",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt128),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r206",
+      "form": "minus-fn-nullable-00",
+      "left": "Float64",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r207",
+      "form": "minus-fn-nullable-00",
+      "left": "UInt256",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt256),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r208",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r209",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int128)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r210",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r211",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int256)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r212",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r213",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r214",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float32)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r215",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float32",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Float32)))"
+    },
+    {
+      "id": "r216",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int128)))"
+    },
+    {
+      "id": "r217",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Int128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int128)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r218",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "Int256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Int256)))"
+    },
+    {
+      "id": "r219",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Int256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int256)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r220",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt128",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt128)))"
+    },
+    {
+      "id": "r221",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(UInt128)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r222",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(Float64)",
+      "right": "UInt256",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS UInt256)))"
+    },
+    {
+      "id": "r223",
+      "form": "minus-fn-nullable-10",
+      "left": "Nullable(UInt256)",
+      "right": "Float64",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Float64)))"
+    },
+    {
+      "id": "r224",
+      "form": "minus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r225",
+      "form": "minus-fn-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int128),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r226",
+      "form": "minus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r227",
+      "form": "minus-fn-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int256),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r228",
+      "form": "minus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r229",
+      "form": "minus-fn-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt128),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r230",
+      "form": "minus-fn-nullable-01",
+      "left": "Float32",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float32),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r231",
+      "form": "minus-fn-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt256),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r232",
+      "form": "minus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r233",
+      "form": "minus-fn-nullable-01",
+      "left": "Int128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int128),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r234",
+      "form": "minus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r235",
+      "form": "minus-fn-nullable-01",
+      "left": "Int256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Int256),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r236",
+      "form": "minus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r237",
+      "form": "minus-fn-nullable-01",
+      "left": "UInt128",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt128),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r238",
+      "form": "minus-fn-nullable-01",
+      "left": "Float64",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Float64),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r239",
+      "form": "minus-fn-nullable-01",
+      "left": "UInt256",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS UInt256),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r240",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r241",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int128)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r242",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r243",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int256)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r244",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r245",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r246",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float32)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float32)),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r247",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float32)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Nullable(Float32))))"
+    },
+    {
+      "id": "r248",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int128))))"
+    },
+    {
+      "id": "r249",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Int128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int128)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r250",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(Int256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(Int256))))"
+    },
+    {
+      "id": "r251",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Int256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Int256)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r252",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt128)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt128))))"
+    },
+    {
+      "id": "r253",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(UInt128)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt128)),CAST(2 AS Nullable(Float64))))"
+    },
+    {
+      "id": "r254",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(Float64)",
+      "right": "Nullable(UInt256)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(Float64)),CAST(2 AS Nullable(UInt256))))"
+    },
+    {
+      "id": "r255",
+      "form": "minus-fn-nullable-11",
+      "left": "Nullable(UInt256)",
+      "right": "Nullable(Float64)",
+      "sql": "SELECT toTypeName(minus(CAST(7 AS Nullable(UInt256)),CAST(2 AS Nullable(Float64))))"
+    }
+  ]
+}

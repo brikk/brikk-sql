@@ -43,7 +43,7 @@ class ClickhouseIntegerAddSubTest {
 
     @Test fun unsupportedOverloadsNullConstantsAndShadowedFunctionsRemainUnproved() {
         for (expression in listOf("CAST(NULL AS Nullable(Int8))+CAST(2 AS Int8)",
-            "CAST(1 AS Float64)+CAST(2 AS UInt8)", "CAST(1 AS Decimal(12,3))-CAST(2 AS Decimal(12,3))",
+            "CAST(1 AS Decimal(12,3))-CAST(2 AS Decimal(12,3))",
             "'x'+1", "TRUE+1", "TRY_CAST('bad' AS Int8)+CAST(2 AS Int8)", "missing+1")) {
             assertEquals("UNKNOWN", type(typed("SELECT $expression")), expression)
         }
@@ -51,6 +51,7 @@ class ClickhouseIntegerAddSubTest {
         assertEquals("UNKNOWN", type(typed(shadowed)))
         assertTrue(clickhouseSemanticDiagnostics(shadowed, shadowed.indices, "26.10.2.103").errors.isEmpty())
         assertEquals("UNKNOWN", type(typed("SELECT ns.plus(1,2)")))
+        assertEquals("Float64", type(typed("SELECT CAST(1 AS Float64)+CAST(2 AS UInt8)"))) // CHSEM-021.
     }
 
     @Test fun genericTypingCallerOwnershipOverwriteAndCacheInvalidationStayUnchanged() {
@@ -128,13 +129,15 @@ class ClickhouseIntegerAddSubTest {
     private fun capture(name: String, property: String, script: kotlin.Boolean) {
         val folder = File(projectRoot(), "vendor/data/clickhouse-semantic")
         val cases = Json.parseToJsonElement(File(folder, "$name-cases.json").readText()).jsonObject.getValue("execution").jsonArray
+        val refinements = Json.parseToJsonElement(File(folder, "floating-add-sub-refinements.json").readText()).jsonObject
         val rows = cases.map { element ->
             val case = element.jsonObject
             val sql = case.getValue("sql").jsonPrimitive.content
             val units = annotateClickhouseScriptSemanticTypes(sql, "26.10.2.103")
             assertTrue(units.all { it.expression != null && it.diagnostics.parseDiagnostics.isEmpty() }, sql)
             val actualTypes = units.mapNotNull { (it.expression as? Select)?.let(::type) }
-            val expectedTypes = if (script) case.getValue("types").jsonArray.map { it.jsonPrimitive.content } else listOf(case.getValue("type").jsonPrimitive.content)
+            val expectedTypes = if (script) case.getValue("types").jsonArray.map { it.jsonPrimitive.content }
+                else listOf((refinements[case.getValue("id").jsonPrimitive.content] ?: case.getValue("type")).jsonPrimitive.content)
             assertEquals(expectedTypes, actualTypes, case.getValue("id").toString())
             val rules = units.flatMap { it.diagnostics.errors }.map { it.rule.name }.distinct().sorted()
             assertEquals(case.getValue("rules").jsonArray.map { it.jsonPrimitive.content }, rules)

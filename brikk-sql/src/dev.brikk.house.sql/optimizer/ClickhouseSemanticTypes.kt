@@ -5,7 +5,7 @@ import dev.brikk.house.sql.dialects.Dialects
 
 /**
  * Annotate the bounded native ClickHouse semantic slice, including higher-order
- * results, bounded integer addition/subtraction, setting-aware integer/Decimal division
+ * results, bounded integer/floating addition/subtraction, setting-aware integer/Decimal division
  * and exact scalar literal projection types.
  * Mutates [expression] like [annotateTypes]; types are conditional,
  * never acceptance/execution verdicts. An exact researched pin is mandatory.

@@ -1,0 +1,219 @@
+[
+    {
+        "id": "CHSEM-021-E01",
+        "input_sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Float32) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float32) + CAST(2 AS Float32) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E02",
+        "input_sql": "SELECT CAST(1 AS Float64)-CAST(2 AS Float32) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float64) - CAST(2 AS Float32) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E03",
+        "input_sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Int64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float32) + CAST(2 AS Int64) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E04",
+        "input_sql": "SELECT CAST(1 AS UInt64)-CAST(2 AS Float32) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt64) - CAST(2 AS Float32) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E05",
+        "input_sql": "SELECT CAST(1 AS Float64)+CAST(2 AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float64) + CAST(2 AS Float64) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E06",
+        "input_sql": "SELECT 1.5+2 AS v,toTypeName(v)",
+        "generated": "SELECT 1.5 + 2 AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E07",
+        "input_sql": "SELECT 18446744073709551616+0.5 AS v,toTypeName(v)",
+        "generated": "SELECT 18446744073709551616 + 0.5 AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E08",
+        "input_sql": "SELECT -9223372036854775809-0.5 AS v,toTypeName(v)",
+        "generated": "SELECT -9223372036854775809 - 0.5 AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E09",
+        "input_sql": "SELECT CAST(1 AS Nullable(Float32))+CAST(2 AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(Float32)) + CAST(2 AS Int8) AS v, toTypeName(v);",
+        "result_type": "Nullable(Float64)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E10",
+        "input_sql": "SELECT CAST(1 AS Int64)-CAST(2 AS Nullable(Float64)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Int64) - CAST(2 AS Nullable(Float64)) AS v, toTypeName(v);",
+        "result_type": "Nullable(Float64)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E11",
+        "input_sql": "SELECT CAST(1 AS Nullable(Float32))+CAST(2 AS Nullable(UInt64)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(Float32)) + CAST(2 AS Nullable(UInt64)) AS v, toTypeName(v);",
+        "result_type": "Nullable(Float64)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E12",
+        "input_sql": "SELECT plus(CAST(1 AS Float32),CAST(2 AS UInt16)) AS v,toTypeName(v)",
+        "generated": "SELECT plus(CAST(1 AS Float32), CAST(2 AS UInt16)) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E13",
+        "input_sql": "SELECT minus(CAST(1 AS UInt32),CAST(2 AS Float64)) AS v,toTypeName(v)",
+        "generated": "SELECT minus(CAST(1 AS UInt32), CAST(2 AS Float64)) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E14",
+        "input_sql": "SELECT CAST(16777217 AS Float32)+CAST(0 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(16777217 AS Float32) + CAST(0 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E15",
+        "input_sql": "SELECT CAST(9007199254740993 AS UInt64)+CAST(0 AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(9007199254740993 AS UInt64) + CAST(0 AS Float64) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E16",
+        "input_sql": "SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v,toTypeName(v)",
+        "generated": "SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E17",
+        "input_sql": "SELECT CAST('inf' AS Float64)-CAST('inf' AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST('inf' AS Float64) - CAST('inf' AS Float64) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E18",
+        "input_sql": "SELECT CAST('nan' AS Float64)+CAST(1 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST('nan' AS Float64) + CAST(1 AS UInt8) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E19",
+        "input_sql": "SELECT -0.0+0.0 AS v,toTypeName(v)",
+        "generated": "SELECT -0.0 + 0.0 AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E20",
+        "input_sql": "SELECT CAST(1 AS Float32)+CAST(2 AS Int128) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float32) + CAST(2 AS Int128) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E21",
+        "input_sql": "SELECT CAST(1 AS UInt256)-CAST(2 AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt256) - CAST(2 AS Float64) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E22",
+        "input_sql": "SELECT CAST(1 AS Nullable(Float64))+CAST(2 AS Int128) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(Float64)) + CAST(2 AS Int128) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E23",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Float32))+CAST(2 AS Float64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(NULL AS Nullable(Float32)) + CAST(2 AS Float64) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E24",
+        "input_sql": "SELECT CAST(1 AS Float64)+CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float64) + CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E25",
+        "input_sql": "SELECT CAST(1 AS Float64)+TRUE AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float64) + TRUE AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E26",
+        "input_sql": "SELECT CAST(1 AS Float32)+TRY_CAST('bad' AS Int8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float32) + TRY_CAST('bad' AS Int8) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E27",
+        "input_sql": "SELECT plus(CAST(1 AS Float32)) AS v,toTypeName(v)",
+        "generated": "SELECT plus(CAST(1 AS Float32)) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E28",
+        "input_sql": "SELECT (CAST(1 AS Float32)+CAST(2 AS Int8))-CAST(3 AS Int16) AS v,toTypeName(v)",
+        "generated": "SELECT (CAST(1 AS Float32) + CAST(2 AS Int8)) - CAST(3 AS Int16) AS v, toTypeName(v);",
+        "result_type": "Float64",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E29",
+        "input_sql": "SELECT arrayMap((a,b) -> a+b,CAST([7] AS Array(Float32)),CAST([2] AS Array(Int64))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap((a, b) -> a + b, CAST([7] AS Array(Float32)), CAST([2] AS Array(Int64))) AS v, toTypeName(v);",
+        "result_type": "Array(Float64)",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E30",
+        "input_sql": "SELECT arrayMap(x -> x-1,CAST([7] AS Array(Nullable(Float32)))) AS v,toTypeName(v)",
+        "generated": "SELECT arrayMap(x -> x - 1, CAST([7] AS Array(Nullable(Float32)))) AS v, toTypeName(v);",
+        "result_type": "Array(Nullable(Float64))",
+        "rules": []
+    },
+    {
+        "id": "CHSEM-021-E31",
+        "input_sql": "WITH ((a,b) -> 'x') AS plus SELECT plus(CAST(1 AS Float32),2) AS v,toTypeName(v)",
+        "generated": "WITH ((a, b) -> 'x') AS plus SELECT plus(CAST(1 AS Float32), 2) AS v, toTypeName(v);",
+        "result_type": "UNKNOWN",
+        "rules": []
+    }
+]
