@@ -7,6 +7,7 @@ On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work,
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
 continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-063
 and the separately authorized DDB20-068/069/071/072 audit batch.
+The later authorized DDB20-073–078 type/session audit batch is recorded below as well.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -1898,6 +1899,9 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   four focused core/native tests pass without skips, including 96 SUM metadata comparisons,
   log /tmp/opencode/duckdb-types-073.log. COUNT/MAX controls retain their original types.
   No historical corpus/ledger, dependency pin, public data-class signature or IDE API changed.
+  Final review tightened the same refusal boundary for negative decimal/wide literal atoms;
+  follow-up a24be6b retains unknown facts through unary minus/parentheses rather than borrowing
+  approximate generic annotations. The fresh end-of-batch suite verifies these controls too.
 
 - [x] `DDB20-074` Table-function identifier-to-string deprecation [DONE].
   Review the release's deprecated implicit identifier-to-string conversion for table functions.
@@ -1986,11 +1990,51 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   Corrected fixture-enabled native gate passes 281 tests, zero failures, with only the existing
   unavailable Quack fixture aborted, log /tmp/opencode/duckdb-temporal-077-native.log. Existing
   public parser/Cast/scope JVM signatures match the previous batch. No publication or pin change.
+  Follow-up dfb4adb makes the caller-slot control explicitly request overwriteTypes=false.
+  The fresh end-of-batch run below supersedes cached focused outputs for that current source.
 
-- [ ] `DDB20-078` Dialect compatibility mode [AUDIT].
+- [x] `DDB20-078` Dialect compatibility mode [DONE].
   The release notes add `SET dialect_compatibility_mode = 'spark'`. Classify its final parser,
   binding and result effects; document which connection modes the static DuckDB dialect models.
   Do not silently assume copying active grammar extensions reproduces every SQL-semantic setting.
+  SET dialect_compatibility_mode remains a structured setting assignment through copy/serde/
+  generation. Unknown values parse but fail native setting validation, preserving the prior
+  mode. Syntax acceptance is not mode validation. The registry labels the setting GLOBAL,
+  but that does not prove propagation: an existing JDBC duplicate retains NONE after the
+  tested ordinary SET; a later duplicate initially copies SPARK, then remains independent
+  of the owner's RESET. An unrelated memory instance retains NONE. These are measured
+  ordinary-SET/JDBC-copy observations, not a blanket claim about SET GLOBAL or every client.
+  Native controls prove identical parse-only JSON and active grammar lists in NONE/SPARK while
+  indexed list_transform changes [1,2] -> [0,1] and list_filter's selected item changes 10 -> 20.
+  The indexed transform result remains BIGINT[]; original/generated SQL agree within each mode.
+  A fresh helper given the same empty grammar list still has NONE semantics. RESET restores
+  the selected ordinary behavior. These are bounded mode counterexamples, not full Spark
+  compatibility, alias/binder parity or a general session-copy mechanism.
+  Static DuckDB parsing/facts model ordinary NONE behavior. They do not read live mode, change
+  themselves when a connection changes it, replay settings/scripts or qualify foreign runtime
+  semantics from a setting name. No new public profile field, executor, helper, consumer mode
+  switch or IntelliJ API was added. DDB20-067 remains deferred; parse-only verification stays
+  parse-only and does not certify source/target semantic equivalence.
+  Both focused mode core/native tests pass without skips, log /tmp/opencode/duckdb-mode-078.log.
+  An initial final build still contained older test controls. The current source explicitly
+  requests overwriteTypes=false for caller-type retention and measures duplicate visibility
+  rather than asserting it from the registry's GLOBAL label. Fresh final directories, not
+  cached focused classes, are the authoritative end-of-batch gates.
+  Fresh final gates pass 1,441 core, 133 metadata and 282 native/verifier tests with zero
+  failures, log /tmp/opencode/duckdb-type-session-verified.log. Only the existing unavailable
+  opt-in Quack fixture is assumption-aborted, not disabled or replaced with a newer driver.
+  All thirteen hermetic-capture tests pass with explicit local fixtures, log
+  /tmp/opencode/duckdb-type-session-capture.log; five offline semantic-audit Python tests pass.
+  Existing public JVM signatures, historical captures/corpora/mismatch ledgers, dependency
+  pins and production IDE APIs are unchanged. No provider, user database/session/URL/grammar
+  preference or trust store was changed. No publication, merge or consumer adoption occurred.
+  The fresh final IDE gate passes all 762 tests on 261.25134.95, log
+  /tmp/opencode/duckdb-type-session-ide.log. This completes the authorized 073–078 batch
+  with tested commits/pushes between items and separately verified safety/test follow-ups.
+  All 78 checklist IDs are preserved: 75/78 deliverables complete; only DDB20-002/067/070
+  remain deferred. This is not blanket native/SQLGlot parity, executor, recursive IDE or
+  consumer qualification. Recursive schemas, matching helpers, executor work and the queued
+  Trino REGEXP_COUNT handoff were not started. Main/Java-17/release reconciliation remains held.
 
 ## Doris lessons for nested schemas
 

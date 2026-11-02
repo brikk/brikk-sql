@@ -670,6 +670,12 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Static DuckDB analysis models ordinary `dialect_compatibility_mode=NONE`, not arbitrary
+connection modes. Spark compatibility can change lambda indices and filter results while
+the SQL parse tree and active grammar list stay identical. A fresh helper with copied grammar
+is therefore not semantic-session parity. No mode is inferred, replayed or silently installed
+by static analysis; exact matching-helper support remains separately deferred.
+
 Secret SQL retains its explicit opaque same-target contract. Native 2.0 distinguishes
 instance-shared memory storage from owner-only `IN connection` storage. The secret audit
 uses synthetic HTTP configuration only; it neither harvests credentials into metadata nor
