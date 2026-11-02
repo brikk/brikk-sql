@@ -26,7 +26,7 @@ class DuckdbTemporalPrecisionTest {
         }
         val caller=parseDuckdbNativeOne("SELECT CAST('2024-01-01' AS TIMESTAMP(9))")
         caller.findAll<Cast>().single().typeSlot=DataType.build(DType.VARCHAR)
-        val retained=annotateTypes(caller,dialect=nativeDuckdbAnalysisDialect())
+        val retained=annotateTypes(caller,dialect=nativeDuckdbAnalysisDialect(),overwriteTypes=false)
         assertEquals(DType.VARCHAR,retained.findAll<Cast>().single().type?.thisArg)
     }
 }
