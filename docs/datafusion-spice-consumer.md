@@ -117,25 +117,28 @@ The generic JDBC function list is empty on both measured endpoints. Use the nati
 The optional `brikk-sql-intellij-jdbc-support` gate only routes generic JDBC introspection;
 it does not supply missing native schemas or qualify another transport.
 
-## Candidate artifacts
+## Released artifacts
 
-These are this branch's candidate coordinates, not a claim that a remote repository contains
-these changes. All artifacts use group `dev.brikk.house`.
+These final coordinates are published and verified on Maven Central. All artifacts use group
+`dev.brikk.house`. Use `mavenCentral()`; no Maven Local or snapshot repository is needed.
+See [the release record](sql-0.22.0.md).
 
-| Artifact | Candidate version | Consumer use |
+| Artifact | Release version | Consumer use |
 | --- | --- | --- |
-| `brikk-sql-jvm` | `0.22.0-SNAPSHOT` | Core, Java 17 |
-| `brikk-sql-metadata-jvm` | `0.22.0-SNAPSHOT` | Metadata, Java 17 |
-| `brikk-sql-verify-api` | `0.22.0-SNAPSHOT` | Verification contracts, Java 17 |
-| `brikk-sql-intellij-support` | `0.2.5-SNAPSHOT` | Embedded support, Java 21 |
-| `brikk-sql-intellij-jdbc-support` | `0.2.5-SNAPSHOT` | Optional reviewed generic JDBC gate |
-| `brikk-sql-intellij-test-support` | `0.2.5-SNAPSHOT` | Consumer test dependency only |
+| `brikk-sql-jvm` | `0.22.0` | Core, Java 17 |
+| `brikk-sql-metadata-jvm` | `0.22.0` | Metadata, Java 17 |
+| `brikk-sql-verify-api` | `0.22.0` | Verification contracts, Java 17 |
+| `brikk-sql-intellij-support` | `0.3.0` | Embedded support, Java 21 |
+| `brikk-sql-intellij-jdbc-support` | `0.3.0` | Optional reviewed generic JDBC gate |
+| `brikk-sql-intellij-test-support` | `0.3.0` | Consumer test dependency only |
 
-Resolve all Brikk artifacts from one qualified build. The support POM exports core, metadata
-and verification API. Do not package the heavy verifier aggregate or Kotlin IDE plugin just
+Keep the SQL family at `0.22.0` and the three support artifacts at `0.3.0` together.
+The support POM exports core, metadata and verification API.
+Do not package the heavy verifier aggregate or Kotlin IDE plugin just
 to use these profiles. Shared jars contain no plugin descriptor or consumer fixture classes.
-`./kotlin publish mavenLocal` exercises packaging locally; remote release and downstream
-dependency updates remain subject to the release hold.
+`./kotlin publish mavenLocal` still exercises development packaging locally. The earlier
+shared-library release hold was lifted for these releases; downstream dependency changes and
+production plugin publication still require separate authorization.
 
 ## Downstream adoption checks
 

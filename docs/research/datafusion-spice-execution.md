@@ -2,7 +2,9 @@
 
 DFS-010 supplies shared consumer profiles and console contracts, plus bounded Flight SQL
 execution evidence. It qualifies individual operations rather than declaring either product's
-entire execution protocol supported. The release hold still applies.
+entire execution protocol supported. The release hold applied during DFS-010. The later
+[SQL 0.22.0 and IntelliJ 0.3.0 releases](../sql-0.22.0.md) lift the shared-library hold,
+not the transport exclusions or downstream plugin publication requirements.
 
 ## Background diagnostics
 

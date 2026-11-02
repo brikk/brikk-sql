@@ -197,4 +197,6 @@ that gap with native round-trip evidence; the round11 summary remains unchanged.
 has no missing-verdict gaps. Dynamic function-output schemas remain labeled unknown for both.
 
 No supported catalog, Kotlin/IDE API, driver pin or default version changed in this round.
-The existing release hold and DFS-010 transport limitations remain in force.
+The release hold remained in force during this round. The later
+[SQL 0.22.0 and IntelliJ 0.3.0 releases](../sql-0.22.0.md) lift the shared-library hold;
+the DFS-010 transport limitations and downstream publication requirements remain.

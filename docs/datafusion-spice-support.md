@@ -2,7 +2,9 @@
 
 This is the shared-library qualification for DFS-012. It covers the pinned profiles below
 and the tested consumer fixture. A production IntelliJ plugin still needs its own packaged
-integration and driver smoke tests. Publication remains on hold.
+integration and driver smoke tests. SQL `0.22.0` and IntelliJ support `0.3.0` are now
+[published and verified](sql-0.22.0.md). This does not authorize production plugin publication
+or broaden the qualification below.
 
 ## Qualified profiles
 
@@ -128,5 +130,5 @@ Earlier evidence remains useful for specific contracts:
 Core and metadata remain Java 17 compatible. Shared IDE support targets Java 21 and compiles
 against IDE 261; runtime contracts also run on 262 and 263. ABI bridges preserve earlier public
 data-class shapes. No new production API signatures or internal-API allowances are needed for
-this handoff. See the [consumer guide](datafusion-spice-consumer.md) for candidate coordinates,
+this handoff. See the [consumer guide](datafusion-spice-consumer.md) for released coordinates,
 extension registration, transport configuration and downstream adoption gates.

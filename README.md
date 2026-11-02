@@ -39,15 +39,15 @@ See [Java 17 embedding and verification](docs/java17-compatibility.md).
 The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest core, metadata, verify and oracle release: **`0.21.0`**. SQL IntelliJ
-support is independently versioned at **`0.2.4`**. Current development snapshots:
-SQL **`0.22.0-SNAPSHOT`**, IntelliJ support **`0.3.0-SNAPSHOT`**.
+Latest core, metadata, verify and oracle release: **`0.22.0`**. SQL IntelliJ
+support is independently versioned at **`0.3.0`**. Current development snapshots:
+SQL **`0.23.0-SNAPSHOT`**, IntelliJ support **`0.3.1-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.21.0")
-    // Optional, Java 25 runtime: implementation("dev.brikk.house:brikk-sql-verify:0.21.0")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.22.0")
+    // Optional, Java 25 runtime: implementation("dev.brikk.house:brikk-sql-verify:0.22.0")
 }
 ```
 
@@ -141,14 +141,20 @@ generation, `NEAREST` joins, session routing, triggers, nested schemas, DML CTEs
 DuckDB instance and active extension grammar profile. Unlike the restricted standalone
 editor parser, it can use registered custom PEG grammars. The IDE consumer owns grammar
 selection and connection setup; the shared parser does not infer or install extensions.
-SQL IntelliJ support `0.2.4` exposes its existing query and trusted session-initialization helpers
+Since `0.2.4`, SQL IntelliJ support exposes its existing query and trusted session-initialization helpers
 so consumers can configure isolated helpers without duplicating remote JDBC handling.
 Both releases are published on Maven Central from commit `1387aad`.
 
-`0.21.0` publishes Trino 484, Doris 4.1.5 parser/metadata, the versioned paired
+SQL `0.22.0` and IntelliJ support `0.3.0` publish the merged DataFusion and Spice shared-library
+support, including structured utilities, analysis, catalogs and editor integrations. Both are
+verified on Maven Central. See [the release record](docs/sql-0.22.0.md) and the
+[released consumer coordinates](docs/datafusion-spice-consumer.md#released-artifacts).
+Production plugin packaging and the documented Flight transport exclusions remain separate.
+
+The earlier `0.21.0` release published Trino 484, Doris 4.1.5 parser/metadata, the versioned paired
 JSON evidence and Java 17 embedding support for core, metadata, verifier API and
-Doris verifier. All aligned SQL artifacts are on Maven Central from `fcd1b91`;
-IntelliJ support stays at 0.2.4. See [the release record](docs/sql-0.21.0.md).
+Doris verifier. Those SQL artifacts were published on Maven Central from `fcd1b91`.
+At that release, IntelliJ support stayed at 0.2.4. See [its release record](docs/sql-0.21.0.md).
 
 ## Build and test
 
@@ -185,7 +191,7 @@ IntelliJ support has its own version and scoped release command; build tooling i
 never published. The template owns sources, POM metadata and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
-  SQL `0.22.0-SNAPSHOT` and IDE support `0.2.5-SNAPSHOT` to
+  SQL `0.23.0-SNAPSHOT` and IDE support `0.3.1-SNAPSHOT` to
   `https://central.sonatype.com/repository/maven-snapshots/`.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
@@ -206,7 +212,7 @@ IDE support descriptors as appropriate; release launchers restore their input
 templates and do not advance development versions automatically. Release-policy
 tests compare these descriptors with the stable versions recorded above. The old
 `0.20.0-SNAPSHOT`/`0.2.3-SNAPSHOT` builds are historical, not the current development
-streams. Stable `0.21.0` and `0.2.4` coordinates remain unchanged.
+streams. Stable `0.22.0` and `0.3.0` coordinates remain unchanged.
 
 Required GitHub organization/repository secrets:
 `KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME`, `KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD`,
