@@ -41,7 +41,7 @@ from Maven Central, without a sibling source checkout or bundled native engine.
 
 Latest core, metadata, verify and oracle release: **`0.21.0`**. SQL IntelliJ
 support is independently versioned at **`0.2.4`**. Current development snapshots:
-SQL **`0.22.0-SNAPSHOT`**, IntelliJ support **`0.2.5-SNAPSHOT`**.
+SQL **`0.22.0-SNAPSHOT`**, IntelliJ support **`0.3.0-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
