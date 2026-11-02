@@ -187,7 +187,12 @@ These are investigation conclusions, not applied fixes. Updating a driver pin al
 proved sufficient, and changing Brikk parsing cannot repair these protocol/ownership paths.
 Keep the existing JDBC exclusions until the relevant fixes pass a new end-to-end qualification.
 The previous SQL SET rejection remains separate runtime-policy evidence; this investigation
-does not claim to change it. No production plugin changes or upstream issue submissions were made.
+does not claim to change it. No production plugin changes were made.
+
+Filed upstream on 2026-11-02: SFI-01 [spiceai/spiceai#15944](https://github.com/spiceai/spiceai/issues/15944),
+SFI-02 [#15946](https://github.com/spiceai/spiceai/issues/15946), SFI-03 [#15948](https://github.com/spiceai/spiceai/issues/15948),
+SFI-04 [#15950](https://github.com/spiceai/spiceai/issues/15950) and SFI-05
+[apache/arrow-java#1439](https://github.com/apache/arrow-java/issues/1439). [Issue texts](flight-issue-drafts/README.md).
 
 ## Reproduction and evidence
 
