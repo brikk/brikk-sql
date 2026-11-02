@@ -77,16 +77,19 @@ into consumers here. Those steps require separate authorization and combined-tre
 artifact/consumer validation. Existing published snapshots are not evidence that
 these feature-branch semantic changes have been released.
 
-## Decision recommendation
+## Accepted decision
 
 The result is useful as a bounded, opt-in semantic/type-hint foundation with
 explicit unknowns and separately proved errors. It is not ready to be described
 as a full ClickHouse validator or an all-node native-exact type certifier.
 
-Choose whether this bounded scope is sufficient for integration. If authoritative
-all-expression metadata or hard rejection is required, resolve generic-fallback
-provenance/root propagation and the selected missing families before that use.
-No further feature work is started automatically after this closeout.
+On 2026-11-02 the user accepted this bounded, opt-in scope and asked to track later
+improvements. The [deferred backlog](../../../TODO-clickhouse-semantic.md#deferred-improvement-backlog)
+records CHSEM-024 through CHSEM-034 with priorities, evidence and completion criteria;
+[SQL-08](../../../TODO.md) is the top-level index. If authoritative all-expression
+metadata or hard rejection is required, resolve generic-fallback provenance/root
+propagation and the selected missing families before that use. No further feature
+work, merge, publication or consumer changes start automatically from this decision.
 
 ## Evidence and freshness
 

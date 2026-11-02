@@ -14,7 +14,110 @@ CHSEM-018 adds an explicit script-aware native typing entrypoint; statement APIs
 CHSEM-019 adds exact native scalar literal projection types and nullability.
 CHSEM-020 adds bounded native integer addition/subtraction result typing.
 CHSEM-021 adds supported floating/mixed addition/subtraction types and wide-integer controls.
+CHSEM-022 fixes native scientific-number boundaries; CHSEM-023 qualifies and freezes the batch.
 Keep these IDs stable so individual items can be discussed and resumed by label.
+
+## Accepted scope
+
+On 2026-11-02 the user accepted the closeout recommendation: keep this as a bounded,
+opt-in semantic/type-hint foundation with explicit unknowns and separately proved
+errors. It is not a full ClickHouse validator or a guarantee that every populated
+AST type is native-exact. CHSEM-001 through CHSEM-023 are complete and pushed,
+ending with `148ebfb` and `13505ff` for the final two rounds.
+
+The items below are deferred improvements, not an active implementation plan or
+blockers to accepting this bounded scope. No merge, publication, release, consumer
+update or sibling-repository change is authorized by this decision. The SQL-owned
+index is [SQL-08](TODO.md); the qualification record is the
+[closeout report](vendor/data/clickhouse-semantic/closeout-README.md).
+
+## Deferred improvement backlog
+
+All items are open and unscheduled. P1 means address before offering authoritative
+all-expression metadata; P2 means select a concrete consumer need before expanding
+coverage. Delivery has its own approval gate. Every implementation round needs an
+explicitly agreed scope, tests and its own commit/push. Do not reopen completed
+CHSEM IDs or silently broaden their contracts.
+
+- [ ] **CHSEM-024: Expose per-node native proof provenance.** P1. Distinguish
+  native-proved conditional types, generic fallbacks and unknowns without treating
+  an error or parser acceptance as a proof. Define how consumers inspect these
+  facts and how AST ownership/copy/serde affects them. Done when tests cover each
+  category and consumers can avoid treating G01/G02 fallbacks as native metadata.
+  Preserve existing entrypoints and public JVM shapes.
+- [ ] **CHSEM-025: Qualify standalone multiplication and root propagation.** P1.
+  Use closeout G01 and G02 as regression seeds: `1*2` currently yields frontend
+  `Nullable(Int32)` versus native `UInt16`; `1e0*(2e0+3.0)` yields frontend
+  `Nullable(Float64)` versus native `Float64`. Prove selected operator/builtin,
+  width, signedness, floating and nullable rules and nested/root propagation.
+  Done when the selected cases have source/native-backed types and named
+  refinements, generic `annotateTypes` stays unchanged, and CHSEM-024 identifies
+  any remaining fallbacks. Depends on the provenance contract in CHSEM-024.
+- [ ] **CHSEM-026: Qualify Decimal addition/subtraction.** P2. Start with G03 and
+  closeout E17. Research precision, scale, mixed integer/Decimal dispatch,
+  nullability and relevant settings; keep conditional result types separate from
+  overflow/error outcomes. Done when a bounded operator/resolved-builtin matrix
+  has tagged source rules, exact-pin observations and unsupported controls.
+- [ ] **CHSEM-027: Qualify constant-NULL and wrapper dispatch.** P2. Start with
+  G04 and closeout E18. Separate constant NULL masking from ordinary nullable
+  propagation; research only admitted LowCardinality/common-type combinations.
+  Done when guard order, nullability and refusal/unknown boundaries have positive
+  and negative native witnesses without weakening existing NULL controls.
+- [ ] **CHSEM-028: Expand selected function and type contracts.** P2. Choose
+  individual scalar/aggregate/window or temporal families, broader literal/unary
+  forms, BFloat16 or catalog/UDF signatures only for a demonstrated use case.
+  G06 remains unknown until a real signature source is supplied. Done per family
+  when resolution/alias policy, argument/result rules and unsupported combinations
+  have source/native evidence. Do not turn the name catalog into guessed overloads.
+- [ ] **CHSEM-029: Add selected semantic rejection rules.** P2. Start with the
+  native-refused Float/wide-integer addition in closeout E13. Add positioned
+  diagnostics only for proved overload/cast/value failures; distinguish missing
+  knowledge from success. Done per rule when native failures, valid neighbors,
+  ranges, guard order and parser-accepted semantic failures have tests. Runtime,
+  permission and unknown parameter failures must not be invented offline.
+- [ ] **CHSEM-030: Improve catalog and complex-query context.** P2. Select
+  bounded schema-backed alias/CTE, join or set-operation cases. Done per slice
+  when scope/capture/ambiguity handling, schema ownership and original/generated
+  native results have tests, and missing catalog information stays explicit.
+  This does not promise full native analyzer parity.
+- [ ] **CHSEM-031: Extend explicit session facts when needed.** P2. G05 remains
+  intentionally unknown after `SET ...=DEFAULT` without external default facts.
+  Design caller-supplied settings/profile/parameter facts or additional SET/DDL
+  behavior only for a scoped need. Done when precedence, reset, invalidation and
+  statement isolation have tests. Never infer session state from semicolons,
+  editor contents or previous API calls; keep client execution policy separate.
+- [ ] **CHSEM-032: Prove selected cross-dialect lowering.** P2. Continue from
+  CHSEM-010's assessment rather than blanket-enabling composition/placeholder
+  conversion. Done for a named source/target/version slice when bindings,
+  evaluation behavior, types and errors match paired native evidence. Retain
+  explicit refusal everywhere equivalence remains unproved.
+- [ ] **CHSEM-033: Qualify additional engine and IDE versions.** P2. Current
+  native APIs require exactly `26.10.2.103`; `26.8.34.13` is only a control.
+  Current shared IntelliJ qualification is `261.25134.95`. Done for each proposed
+  version when it is pinned, relevant historical matrices are freshly executed,
+  changed contracts are labelled, and API/ABI/toolchain/platform gates pass.
+  Report optional integration skips separately; do not treat them as successes.
+- [ ] **CHSEM-034: Deliver the accepted bounded scope.** Separate approval gate,
+  not feature expansion. After authorization, reconcile with current main and
+  validate the combined tree, then publish approved artifacts and qualify each
+  opted-in consumer separately. Done when exact merge/artifact/consumer revisions,
+  integration tests and explicit statement/script policy are recorded. Publication
+  alone is not adoption. Do not expose the result as a full validator or require
+  every P2 family before a bounded consumer can adopt it.
+
+### Evidence and completion rules
+
+The starting witnesses are `closeout-cases.json`, `closeout-missing-cases.json`,
+their `*-brikk.json` reports and `*-native/` captures under
+`vendor/data/clickhouse-semantic/`. Keep historical captures intact; record stronger
+facts as named refinements. Qualified successes, conditional types, proved errors,
+intentional unknowns and known deviations must remain separate counts.
+
+Before closing an implementation item, record its exact scope, dependencies,
+source/native evidence, JVM/ABI and affected consumer/platform gates, Python checks,
+freshness and skips. Preserve generic parity, source ranges, serde, cancellation,
+ownership, explicit mode selection and public binary compatibility. Acceptance of
+this backlog does not authorize work on its items.
 
 ## Context
 
@@ -74,7 +177,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-021 are complete. User authorized CHSEM-022, then CHSEM-023 closeout if important; perform both as separate tested commits/pushes, freeze this feature batch and report missing coverage/delivery for a final decision. No further expansion, merge, publication or consumer adoption without approval.
+- CHSEM-001 through CHSEM-023 are complete and pushed. The user accepted the bounded opt-in scope on 2026-11-02. CHSEM-024 through CHSEM-034 track deferred improvements and delivery; none is started or authorized for implementation. No further expansion, merge, publication or consumer adoption without approval.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
