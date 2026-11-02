@@ -1,0 +1,26 @@
+{
+    "task": "CHSEM-022",
+    "discovered_in": "CHSEM-021",
+    "cases": [
+        {
+            "sql": "SELECT 1e0+2.0 AS v,toTypeName(v)",
+            "type": "Float64",
+            "root_node": "Add",
+            "literal_texts": [
+                "1e0",
+                "2.0"
+            ],
+            "generated": "SELECT 1e0 + 2.0 AS v, toTypeName(v)"
+        },
+        {
+            "sql": "SELECT 1.7976931348623157e308+1.7976931348623157e308 AS v,toTypeName(v)",
+            "type": "Float64",
+            "root_node": "Add",
+            "literal_texts": [
+                "1.7976931348623157e308",
+                "1.7976931348623157e308"
+            ],
+            "generated": "SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v, toTypeName(v)"
+        }
+    ]
+}

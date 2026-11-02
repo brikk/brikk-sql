@@ -96,3 +96,7 @@ corpus/ledger evidence and public JVM signatures are preserved.
 ClickHouse-only Python discovery passes 85 tests. The isolated IntelliJ gate passes
 757 tests on 261.25134.95; other IDE versions were not run. No new IntelliJ API calls
 or automatic statement/script mode changes are introduced.
+
+CHSEM-022 subsequently closes the compact scientific-token gap. Its old Literal/Dot
+captures remain as historical evidence; the new scientific-number refinement records
+Add ASTs and Float64 types without rewriting those captures.

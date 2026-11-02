@@ -72,6 +72,10 @@ INTEGER_ADD_SUB = [
 FLOATING_ADD_SUB = INTEGER_ADD_SUB + [
     ("src/Functions/FunctionBinaryArithmetic.h", "struct BinaryOperationTraits", "namespace impl_"),
 ]
+SCIENTIFIC_BOUNDARY = [
+    ("src/Parsers/Lexer.cpp", "/// The task is not to parse a number", "case '\"':"),
+    ("src/Parsers/ExpressionElementParsers.cpp", "static bool parseNumber", "bool ParserUnsignedInteger::parseImpl"),
+]
 
 
 def selection(data, begin, end):
@@ -88,16 +92,16 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub"), default="higher-order")
+    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub", "scientific-boundary"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
-        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub") and version != "26.10.2.103":
+        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub", "scientific-boundary") and version != "26.10.2.103":
             continue
         records = []
         cache = {}
-        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS, "decimal-runtime": DECIMAL_RUNTIME, "projection-literals": PROJECTION_LITERALS, "integer-add-sub": INTEGER_ADD_SUB, "floating-add-sub": FLOATING_ADD_SUB}[args.round]
-        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016", "decimal-runtime": "CHSEM-017", "projection-literals": "CHSEM-019", "integer-add-sub": "CHSEM-020", "floating-add-sub": "CHSEM-021"}[args.round]
+        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS, "decimal-runtime": DECIMAL_RUNTIME, "projection-literals": PROJECTION_LITERALS, "integer-add-sub": INTEGER_ADD_SUB, "floating-add-sub": FLOATING_ADD_SUB, "scientific-boundary": SCIENTIFIC_BOUNDARY}[args.round]
+        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016", "decimal-runtime": "CHSEM-017", "projection-literals": "CHSEM-019", "integer-add-sub": "CHSEM-020", "floating-add-sub": "CHSEM-021", "scientific-boundary": "CHSEM-022"}[args.round]
         for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:

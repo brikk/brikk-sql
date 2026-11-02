@@ -1,0 +1,406 @@
+{
+  "captured_at": "2026-11-02T20:11:18.179562+00:00",
+  "fixture_sha256": "5a406e5da6694db6b4b21c3d509f416696febcbf4c7b71a71f4cf2e5a8dc02bf",
+  "brikk_sha256": "6ab08edd261819f18f2ec930391ba05469ded9169f0a438371412bf58530575a",
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-022-E01\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E02\",\"formatted\":\"SELECT\\n    1. - 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E03\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E04\",\"formatted\":\"SELECT\\n    (10. + 2.) + 3. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E05\",\"formatted\":\"SELECT\\n    1. + (2. * 3.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E06\",\"formatted\":\"SELECT\\n    1. + -2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E07\",\"formatted\":\"SELECT\\n    1. - -2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E08\",\"formatted\":\"SELECT\\n    -1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E09\",\"formatted\":\"SELECT\\n    0.01 + 3. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E10\",\"formatted\":\"SELECT\\n    100. - 3. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E11\",\"formatted\":\"SELECT\\n    1. + 0.2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E12\",\"formatted\":\"SELECT\\n    1. - 20. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E13\",\"formatted\":\"SELECT\\n    1. + (2. * 2.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E14\",\"formatted\":\"SELECT\\n    (1. + 2.) \\/ 3 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E15\",\"formatted\":\"SELECT\\n    1.7976931348623157e308 + 1.7976931348623157e308 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E16\",\"formatted\":\"SELECT\\n    1e308 - 1e308 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E17\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E18\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E19\",\"formatted\":\"SELECT\\n    1. - (2.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E20\",\"formatted\":\"SELECT\\n    1. + 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E21\",\"formatted\":\"SELECT\\n    1. - 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E22\",\"formatted\":\"SELECT\\n    1. + CAST(2, 'Float32') AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CHSEM-022-E01",
+      "formatted": "SELECT\n    1. + 2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E02",
+      "formatted": "SELECT\n    1. - 2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E03",
+      "formatted": "SELECT\n    1. + 2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E04",
+      "formatted": "SELECT\n    (10. + 2.) + 3. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E05",
+      "formatted": "SELECT\n    1. + (2. * 3.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E06",
+      "formatted": "SELECT\n    1. + -2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E07",
+      "formatted": "SELECT\n    1. - -2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E08",
+      "formatted": "SELECT\n    -1. + 2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E09",
+      "formatted": "SELECT\n    0.01 + 3. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E10",
+      "formatted": "SELECT\n    100. - 3. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E11",
+      "formatted": "SELECT\n    1. + 0.2 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E12",
+      "formatted": "SELECT\n    1. - 20. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E13",
+      "formatted": "SELECT\n    1. + (2. * 2.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E14",
+      "formatted": "SELECT\n    (1. + 2.) / 3 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E15",
+      "formatted": "SELECT\n    1.7976931348623157e308 + 1.7976931348623157e308 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E16",
+      "formatted": "SELECT\n    1e308 - 1e308 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E17",
+      "formatted": "SELECT\n    1. + 2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E18",
+      "formatted": "SELECT\n    1. + 2. AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E19",
+      "formatted": "SELECT\n    1. - (2.) AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E20",
+      "formatted": "SELECT\n    1. + 2 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E21",
+      "formatted": "SELECT\n    1. - 2 AS v,\n    toTypeName(v)"
+    },
+    {
+      "id": "CHSEM-022-E22",
+      "formatted": "SELECT\n    1. + CAST(2, 'Float32') AS v,\n    toTypeName(v)"
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CHSEM-022-E01\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E02\",\"formatted\":\"SELECT\\n    1. - 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E03\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E04\",\"formatted\":\"SELECT\\n    (10. + 2.) + 3. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E05\",\"formatted\":\"SELECT\\n    1. + (2. * 3.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E06\",\"formatted\":\"SELECT\\n    1. + -2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E07\",\"formatted\":\"SELECT\\n    1. - -2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E08\",\"formatted\":\"SELECT\\n    -1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E09\",\"formatted\":\"SELECT\\n    0.01 + 3. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E10\",\"formatted\":\"SELECT\\n    100. - 3. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E11\",\"formatted\":\"SELECT\\n    1. + 0.2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E12\",\"formatted\":\"SELECT\\n    1. - 20. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E13\",\"formatted\":\"SELECT\\n    1. + (2. * 2.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E14\",\"formatted\":\"SELECT\\n    (1. + 2.) \\/ 3 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E15\",\"formatted\":\"SELECT\\n    1.7976931348623157e308 + 1.7976931348623157e308 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E16\",\"formatted\":\"SELECT\\n    1e308 - 1e308 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E17\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E18\",\"formatted\":\"SELECT\\n    1. + 2. AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E19\",\"formatted\":\"SELECT\\n    1. - (2.) AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E20\",\"formatted\":\"SELECT\\n    1. + 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E21\",\"formatted\":\"SELECT\\n    1. - 2 AS v,\\n    toTypeName(v)\"}\n{\"id\":\"CHSEM-022-E22\",\"formatted\":\"SELECT\\n    1. + CAST(2, 'Float32') AS v,\\n    toTypeName(v)\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CHSEM-022-E01",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E02",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E03",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E04",
+      "returncode": 0,
+      "stdout": "15\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E05",
+      "returncode": 0,
+      "stdout": "7\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E06",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E07",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E08",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E09",
+      "returncode": 0,
+      "stdout": "3.01\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E10",
+      "returncode": 0,
+      "stdout": "97\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E11",
+      "returncode": 0,
+      "stdout": "1.2\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E12",
+      "returncode": 0,
+      "stdout": "-19\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E13",
+      "returncode": 0,
+      "stdout": "5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E14",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E15",
+      "returncode": 0,
+      "stdout": "inf\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E16",
+      "returncode": 0,
+      "stdout": "0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E17",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E18",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E19",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E20",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E21",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E22",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-022-E01",
+      "sql": "SELECT 1e0 + 2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E02",
+      "sql": "SELECT 1e0 - 2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E03",
+      "sql": "SELECT 1E0 + 2E0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E04",
+      "sql": "SELECT 1e1 + 2e0 + 3.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "15\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E05",
+      "sql": "SELECT 1e0 + 2.0 * 3.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "7\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E06",
+      "sql": "SELECT 1e0 + -2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E07",
+      "sql": "SELECT 1e0 - -2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E08",
+      "sql": "SELECT -1e0 + 2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E09",
+      "sql": "SELECT 1e-2 + 3.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3.01\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E10",
+      "sql": "SELECT 1e+2 - 3.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "97\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E11",
+      "sql": "SELECT 1e0 + 2e-1 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1.2\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E12",
+      "sql": "SELECT 1e0 - 2e+1 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-19\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E13",
+      "sql": "SELECT 1e0 + 2e0 * 2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E14",
+      "sql": "SELECT (1e0 + 2.0) / 3 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E15",
+      "sql": "SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "inf\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E16",
+      "sql": "SELECT 1e308 - 1e308 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "0\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E17",
+      "sql": "SELECT 1e0 + 2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E18",
+      "sql": "SELECT 1e0 + 2.0 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E19",
+      "sql": "SELECT 1e0 - (2.0) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E20",
+      "sql": "SELECT 1e0 + 2 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E21",
+      "sql": "SELECT 1e0 - 2 AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "-1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-022-E22",
+      "sql": "SELECT 1e0 + CAST(2 AS Float32) AS v, toTypeName(v)",
+      "returncode": 0,
+      "stdout": "3\tFloat64\n",
+      "stderr": ""
+    }
+  ]
+}

@@ -44,6 +44,13 @@ class TokenizerConfig(
     private var numericPolicy = NumericPolicy()
     private var commentPolicy = CommentPolicy()
     private var bytePolicy = false
+    private var scientificBoundaryPolicy = false
+    /** Native scientific mantissas/exponents have distinct sign and decimal-point boundaries. */
+    val strictScientificNumberBoundaries: Boolean get() = scientificBoundaryPolicy
+
+    /** Additive dialect policy; keeps the published constructor/default bridge unchanged. */
+    fun withScientificNumberBoundaries(enabled: Boolean = true): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences).also { it.scientificBoundaryPolicy = enabled }
     val byteStringsAreBytes: Boolean get() = bytePolicy
 
     fun withByteStringPolicy(byteStringsAreBytes: Boolean): TokenizerConfig =
@@ -190,6 +197,7 @@ class TokenizerConfig(
         it.numericPolicy = numericPolicy; it.commentPolicy = commentPolicy; it.bytePolicy = bytePolicy
         it.lexicalPolicy = lexicalPolicy
         it.insertDataPolicy = insertDataPolicy
+        it.scientificBoundaryPolicy = scientificBoundaryPolicy
     }
 
     companion object {

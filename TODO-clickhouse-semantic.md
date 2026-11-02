@@ -58,7 +58,14 @@ checks parsing only and must not be relabeled as semantic validation.
 - [x] CHSEM-019: Add exact native scalar-literal projection types and nullability to native-only statement/script APIs. Research integer/sign/float boundaries, strings, Boolean and NULL constants; preserve generic annotateTypes policy, arithmetic/NULL-dispatch boundaries, source/serde/caller ownership and signatures. Capture pinned native comparisons, run gates, then commit/push separately and present the next option.
 - [x] CHSEM-020: Add bounded native integer addition/subtraction result typing for operators and resolved plus/minus builtins. Prove width/signedness/nullability through pinned source/native matrices, including 64/128/256-bit boundaries and conditional overflow outcomes. Preserve generic typing, resolution, NULL/unsupported overload boundaries, signatures and source/serde; test, commit/push separately, then present the next option.
 - [x] CHSEM-021: Extend native-only addition/subtraction typing to Float32/Float64, supported mixed integers and nullable inputs. Prove promotion and wide-integer refusal boundaries with tagged source/native evidence, preserve generic typing and existing ownership/resolution/NULL contracts, then test/commit/push separately. Present an overall coverage/delivery summary and the next recommended option afterward.
-- [ ] CHSEM-022 (proposed, not authorized): Fix scientific-number token boundaries around compact +/- expressions such as 1e0+2.0. CHSEM-021 found the shared lexer can consume the binary sign into the first token. Preserve the captured counterexample, qualify a scoped fix with parser/type/source/serde/native controls, and keep generic parity/ABI unchanged rather than weakening ledgers. Do not implement as part of CHSEM-021.
+- [x] CHSEM-022: Fix scientific-number token boundaries around compact +/- expressions such as 1e0+2.0. CHSEM-021 found the shared lexer can consume the binary sign into the first token. Preserve the captured counterexample, qualify a scoped fix with parser/type/source/serde/native controls, and keep generic parity/ABI unchanged rather than weakening ledgers. Authorized as a separate round after CHSEM-021; commit/push before CHSEM-023.
+- [ ] CHSEM-023: Consolidated qualification and closeout. Freeze the supported scope, exercise the public statement/script APIs together, rerun regression/native/ABI gates, and report concrete missing coverage and delivery work for the user's final decision. Defer further feature expansion. Commit/push separately after CHSEM-022; no merge/publication/consumer changes implied.
+
+Closeout observation to retain, not expand during CHSEM-022: a root multiplication
+such as `SELECT 1e0*(2e0+3.0)` parses correctly after the lexer fix but can retain
+the generic `Nullable(Float64)` annotation instead of native `Float64`. Existing
+multiplication proofs are contextual rather than a complete scalar-root contract.
+CHSEM-023 must include this concrete fallback in the remaining-coverage report.
 
 The earlier eleven items remain complete. These are fixes to pursue, not merely
 documentation caveats. Keep settled boundaries in their guides and these TODOs;
@@ -67,7 +74,7 @@ do not repeatedly surface them as new warnings or block unrelated work.
 ## Constraints and resumption
 
 - User authorized the last two items, CHSEM-010 and CHSEM-011, in order, with a separate commit/push between them and after CHSEM-011.
-- CHSEM-001 through CHSEM-021 are complete. Commit/push CHSEM-021 separately, then summarize overall coverage/delivery and present the next option without starting it. CHSEM-022 is proposed, not authorized. Publication and consumer adoption remain separate.
+- CHSEM-001 through CHSEM-021 are complete. User authorized CHSEM-022, then CHSEM-023 closeout if important; perform both as separate tested commits/pushes, freeze this feature batch and report missing coverage/delivery for a final decision. No further expansion, merge, publication or consumer adoption without approval.
 - Do not fabricate overloads from documentation or finite probes that cannot prove a general rule.
 - Preserve existing source ranges, safe verifier behavior and historical native evidence.
 - Preserve public JVM signatures per AGENTS.md and the current Java/toolchain floor.
@@ -643,6 +650,27 @@ delivery/integration qualification remain separate decisions.
 ClickHouse-only Python discovery passes 85 tests. The isolated IntelliJ gate passes
 757 tests on 261.25134.95; other IDE versions were not run. Commit/push this round,
 then present the overall status and proposed CHSEM-022 for approval.
+
+## CHSEM-022 result
+
+ClickHouse's native tokenizer config now enables scientific number boundaries:
+exponent signs require an immediately preceding E/e, and exponent text cannot
+consume another decimal point. Binary +/- after exponent digits becomes a separate
+token. Raw generated/base tokenizer parity is unchanged. An additive copied policy
+preserves all existing TokenizerConfig constructor/default signatures and builder
+state. Token/AST/type/source/UTF-16/editor/cancellation/serde tests close both captured
+counterexamples; their earlier captures are preserved with a named refinement.
+Guide: `vendor/data/clickhouse-semantic/scientific-number-README.md`.
+
+Both pins pass 22 original/generated value/type/parser witnesses without execution/
+version skips. Tagged source excerpts and current reports are retained; current
+reports regenerate byte-identically. Full JVM regression passes 1,913 tests with
+61 optional integration assumption aborts and zero failures; Python discovery
+passes 136 tests with one opt-in skip on the unchanged SQLGlot pin. No corpus or
+ledger relaxation, public signature, release, toolchain, consumer or IntelliJ API
+changes. The IntelliJ gate passes 757 tests on 261.25134.95; other IDE versions were
+not run. ClickHouse-only Python passes 88 tests. Commit/push CHSEM-022 before the separate CHSEM-023 closeout; do not expand
+further feature scope during qualification.
 
 References: `docs/research/clickhouse-2026-batch3.md`,
 `docs/research/clickhouse-2026-batch4.md`,

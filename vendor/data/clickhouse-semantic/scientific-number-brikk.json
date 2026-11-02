@@ -1,0 +1,1772 @@
+[
+    {
+        "id": "CHSEM-022-E01",
+        "input_sql": "SELECT 1e0+2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 11,
+                "end": 13
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 15,
+                "end": 16
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 18,
+                "end": 18
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 20,
+                "end": 29
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 30,
+                "end": 30
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 32,
+                "end": 32
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E02",
+        "input_sql": "SELECT 1e0-2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 - 2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 11,
+                "end": 13
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 15,
+                "end": 16
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 18,
+                "end": 18
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 20,
+                "end": 29
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 30,
+                "end": 30
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 32,
+                "end": 32
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E03",
+        "input_sql": "SELECT 1E0+2E0 AS v,toTypeName(v)",
+        "generated": "SELECT 1E0 + 2E0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1E0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2E0",
+                "start": 11,
+                "end": 13
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 15,
+                "end": 16
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 18,
+                "end": 18
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 20,
+                "end": 29
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 30,
+                "end": 30
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 32,
+                "end": 32
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E04",
+        "input_sql": "SELECT 1e1+2e0+3.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e1 + 2e0 + 3.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e1",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2e0",
+                "start": 11,
+                "end": 13
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 14,
+                "end": 14
+            },
+            {
+                "kind": "NUMBER",
+                "text": "3.0",
+                "start": 15,
+                "end": 17
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 19,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 22,
+                "end": 22
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 23,
+                "end": 23
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 24,
+                "end": 33
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 34,
+                "end": 34
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 35,
+                "end": 35
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 36,
+                "end": 36
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E05",
+        "input_sql": "SELECT 1e0+2.0*3.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2.0 * 3.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 11,
+                "end": 13
+            },
+            {
+                "kind": "STAR",
+                "text": "*",
+                "start": 14,
+                "end": 14
+            },
+            {
+                "kind": "NUMBER",
+                "text": "3.0",
+                "start": 15,
+                "end": 17
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 19,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 22,
+                "end": 22
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 23,
+                "end": 23
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 24,
+                "end": 33
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 34,
+                "end": 34
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 35,
+                "end": 35
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 36,
+                "end": 36
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E06",
+        "input_sql": "SELECT 1e0+-2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + -2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E07",
+        "input_sql": "SELECT 1e0- -2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 - -2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 12,
+                "end": 12
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 13,
+                "end": 15
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 17,
+                "end": 18
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 21,
+                "end": 21
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 22,
+                "end": 31
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 33,
+                "end": 33
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 34,
+                "end": 34
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E08",
+        "input_sql": "SELECT -1e0+2.0 AS v,toTypeName(v)",
+        "generated": "SELECT -1e0 + 2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 7,
+                "end": 7
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 8,
+                "end": 10
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E09",
+        "input_sql": "SELECT 1e-2+3.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e-2 + 3.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e-2",
+                "start": 7,
+                "end": 10
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "3.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E10",
+        "input_sql": "SELECT 1e+2-3.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e+2 - 3.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e+2",
+                "start": 7,
+                "end": 10
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "3.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E11",
+        "input_sql": "SELECT 1e0+2e-1 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2e-1 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2e-1",
+                "start": 11,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E12",
+        "input_sql": "SELECT 1e0-2e+1 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 - 2e+1 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2e+1",
+                "start": 11,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E13",
+        "input_sql": "SELECT 1e0+2e0*2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2e0 * 2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2e0",
+                "start": 11,
+                "end": 13
+            },
+            {
+                "kind": "STAR",
+                "text": "*",
+                "start": 14,
+                "end": 14
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 15,
+                "end": 17
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 19,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 22,
+                "end": 22
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 23,
+                "end": 23
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 24,
+                "end": 33
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 34,
+                "end": 34
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 35,
+                "end": 35
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 36,
+                "end": 36
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E14",
+        "input_sql": "SELECT (1e0+2.0)/3 AS v,toTypeName(v)",
+        "generated": "SELECT (1e0 + 2.0) / 3 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 7,
+                "end": 7
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 8,
+                "end": 10
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 15,
+                "end": 15
+            },
+            {
+                "kind": "SLASH",
+                "text": "/",
+                "start": 16,
+                "end": 16
+            },
+            {
+                "kind": "NUMBER",
+                "text": "3",
+                "start": 17,
+                "end": 17
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 19,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 22,
+                "end": 22
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 23,
+                "end": 23
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 24,
+                "end": 33
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 34,
+                "end": 34
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 35,
+                "end": 35
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 36,
+                "end": 36
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E15",
+        "input_sql": "SELECT 1.7976931348623157e308+1.7976931348623157e308 AS v,toTypeName(v)",
+        "generated": "SELECT 1.7976931348623157e308 + 1.7976931348623157e308 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1.7976931348623157e308",
+                "start": 7,
+                "end": 28
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 29,
+                "end": 29
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1.7976931348623157e308",
+                "start": 30,
+                "end": 51
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 53,
+                "end": 54
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 56,
+                "end": 56
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 57,
+                "end": 57
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 58,
+                "end": 67
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 68,
+                "end": 68
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 69,
+                "end": 69
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 70,
+                "end": 70
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E16",
+        "input_sql": "SELECT 1e308-1e308 AS v,toTypeName(v)",
+        "generated": "SELECT 1e308 - 1e308 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e308",
+                "start": 7,
+                "end": 11
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 12,
+                "end": 12
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e308",
+                "start": 13,
+                "end": 17
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 19,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 22,
+                "end": 22
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 23,
+                "end": 23
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 24,
+                "end": 33
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 34,
+                "end": 34
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 35,
+                "end": 35
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 36,
+                "end": 36
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E17",
+        "input_sql": "SELECT 1e0 +2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E18",
+        "input_sql": "SELECT 1e0+ 2.0 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2.0 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 16,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 19,
+                "end": 19
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 21,
+                "end": 30
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 31,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 33,
+                "end": 33
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E19",
+        "input_sql": "SELECT 1e0-(2.0) AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 - (2.0) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2.0",
+                "start": 12,
+                "end": 14
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 15,
+                "end": 15
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 17,
+                "end": 18
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 20,
+                "end": 20
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 21,
+                "end": 21
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 22,
+                "end": 31
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 32,
+                "end": 32
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 33,
+                "end": 33
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 34,
+                "end": 34
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E20",
+        "input_sql": "SELECT 1e0+2 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + 2 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 13,
+                "end": 14
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 16,
+                "end": 16
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 17,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 18,
+                "end": 27
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 28,
+                "end": 28
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 29,
+                "end": 29
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 30,
+                "end": 30
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E21",
+        "input_sql": "SELECT 1e0-2 AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 - 2 AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "DASH",
+                "text": "-",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2",
+                "start": 11,
+                "end": 11
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 13,
+                "end": 14
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 16,
+                "end": 16
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 17,
+                "end": 17
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 18,
+                "end": 27
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 28,
+                "end": 28
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 29,
+                "end": 29
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 30,
+                "end": 30
+            }
+        ]
+    },
+    {
+        "id": "CHSEM-022-E22",
+        "input_sql": "SELECT 1e0+CAST(2 AS Float32) AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 + CAST(2 AS Float32) AS v, toTypeName(v)",
+        "result_type": "Float64",
+        "rules": [],
+        "tokens": [
+            {
+                "kind": "SELECT",
+                "text": "SELECT",
+                "start": 0,
+                "end": 5
+            },
+            {
+                "kind": "NUMBER",
+                "text": "1e0",
+                "start": 7,
+                "end": 9
+            },
+            {
+                "kind": "PLUS",
+                "text": "+",
+                "start": 10,
+                "end": 10
+            },
+            {
+                "kind": "VAR",
+                "text": "CAST",
+                "start": 11,
+                "end": 14
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 15,
+                "end": 15
+            },
+            {
+                "kind": "NUMBER",
+                "text": "2",
+                "start": 16,
+                "end": 16
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 18,
+                "end": 19
+            },
+            {
+                "kind": "FLOAT",
+                "text": "Float32",
+                "start": 21,
+                "end": 27
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 28,
+                "end": 28
+            },
+            {
+                "kind": "ALIAS",
+                "text": "AS",
+                "start": 30,
+                "end": 31
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 33,
+                "end": 33
+            },
+            {
+                "kind": "COMMA",
+                "text": ",",
+                "start": 34,
+                "end": 34
+            },
+            {
+                "kind": "VAR",
+                "text": "toTypeName",
+                "start": 35,
+                "end": 44
+            },
+            {
+                "kind": "L_PAREN",
+                "text": "(",
+                "start": 45,
+                "end": 45
+            },
+            {
+                "kind": "VAR",
+                "text": "v",
+                "start": 46,
+                "end": 46
+            },
+            {
+                "kind": "R_PAREN",
+                "text": ")",
+                "start": 47,
+                "end": 47
+            }
+        ]
+    }
+]

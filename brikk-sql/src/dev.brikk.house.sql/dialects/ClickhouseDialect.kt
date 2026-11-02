@@ -90,7 +90,8 @@ open class ClickhouseDialect : Dialect() {
         ClickhouseGenerator(pretty = pretty, tokenizerConfig = tokenizerConfig, sourceDialect = sourceDialect)
 
     companion object {
-        /** The generated tables with the editor-only inline INSERT data rule (docs/brikk-extensions.md #56). */
-        internal val TOKENIZER_CONFIG: TokenizerConfig = StringEscapeProfiles.CLICKHOUSE.withInlineInsertData()
+        /** Native numeric boundaries plus the editor-only inline INSERT data rule. */
+        internal val TOKENIZER_CONFIG: TokenizerConfig = StringEscapeProfiles.CLICKHOUSE
+            .withScientificNumberBoundaries().withInlineInsertData()
     }
 }

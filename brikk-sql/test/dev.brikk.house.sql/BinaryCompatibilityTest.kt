@@ -26,6 +26,20 @@ class BinaryCompatibilityTest {
     private val marker = Class.forName("kotlin.jvm.internal.DefaultConstructorMarker")
 
     @Test
+    fun nativeScientificPolicyKeepsThePublishedTokenizerConfigurationConstructor() {
+        val map = Map::class.java
+        val set = Set::class.java
+        val bool = Boolean::class.javaPrimitiveType!!
+        val shape = arrayOf(map, map, map, map, map, map, set, set, set, set, set, set,
+            bool, String::class.java, set, bool, bool, map, set, bool, bool,
+            dev.brikk.house.sql.parser.TokenType::class.java, bool, bool, bool, map)
+        val config = dev.brikk.house.sql.parser.TokenizerConfig::class.java
+        config.getConstructor(*shape)
+        config.getDeclaredConstructor(*shape, Int::class.javaPrimitiveType, marker)
+        config.getConstructor().newInstance()
+    }
+
+    @Test
     fun explicitClickhouseScriptTypingKeepsStatementEntryPointsAndFreezesItsOwnShape() {
         val expression = dev.brikk.house.sql.ast.Expression::class.java
         val string = String::class.java

@@ -79,6 +79,10 @@ CHSEM-021 adds [bounded native floating addition/subtraction typing](floating-ad
 with nullable/mixed integer coverage and independently observed wide-integer refusals.
 The compact scientific-token counterexample is retained for proposed CHSEM-022.
 
+CHSEM-022 fixes [scientific numeric token boundaries](scientific-number-README.md)
+in the native ClickHouse dialect while preserving raw generic tokenizer parity.
+CHSEM-023 freezes and qualifies the batch and reports deferred coverage/delivery work.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

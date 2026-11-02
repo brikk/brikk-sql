@@ -827,7 +827,7 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 var e = current + 1
                 while (e < size && sql[e] in DIGIT_CHARS) e++
                 advance(e - current)
-            } else if (peek == '.' && !decimal) {
+            } else if (peek == '.' && !decimal && (!config.strictScientificNumberBoundaries || scientific == 0)) {
                 if (
                     (tokens.isNotEmpty() && tokens.last().tokenType == TokenType.PARAMETER) ||
                     !config.numbersCanHaveDecimals
@@ -836,8 +836,10 @@ class Tokenizer(private val config: TokenizerConfig = TokenizerConfig.BASE) {
                 }
                 decimal = true
                 advance()
-            } else if ((peek == '-' || peek == '+') && scientific == 1) {
-                // Only consume +/- if followed by a digit
+            } else if ((peek == '-' || peek == '+') && scientific == 1 &&
+                (!config.strictScientificNumberBoundaries || asciiUpper(char) == 'E')) {
+                // Native mode: only an immediately preceding E permits an exponent sign.
+                // The legacy generic policy remains unchanged for oracle parity.
                 if (current + 1 < size && sql[current + 1] in DIGIT_CHARS) {
                     scientific += 1
                     advance()

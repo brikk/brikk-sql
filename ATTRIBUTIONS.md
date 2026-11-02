@@ -240,6 +240,10 @@ observations are in `floating-add-sub-types/`, `floating-add-sub-native/` and
 `floating-add-sub-script-native/`; a separately retained parser counterexample
 records the proposed CHSEM-022 gap without replacing older evidence.
 
+CHSEM-022's `scientific-number-sources.json` adds Apache-2.0 native lexer/numeric
+parser excerpts. Original/generated observations live in `scientific-number-native/`;
+the separate refinement retains the earlier parser-gap captures unchanged.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

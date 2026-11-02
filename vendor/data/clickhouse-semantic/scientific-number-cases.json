@@ -1,0 +1,341 @@
+{
+  "task": "CHSEM-022",
+  "parse_execution": true,
+  "proven_versions": [
+    "26.8.34.13",
+    "26.10.2.103"
+  ],
+  "cases": [],
+  "execution": [
+    {
+      "id": "CHSEM-022-E01",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E02",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0-2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E03",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1E0+2E0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E04",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e1+2e0+3.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "15\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "15\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E05",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+2.0*3.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "7\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "7\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E06",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+-2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E07",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0- -2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E08",
+      "task": "CHSEM-022",
+      "sql": "SELECT -1e0+2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E09",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e-2+3.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.01\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.01\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E10",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e+2-3.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "97\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "97\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E11",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+2e-1 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1.2\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1.2\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E12",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0-2e+1 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-19\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-19\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E13",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+2e0*2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E14",
+      "task": "CHSEM-022",
+      "sql": "SELECT (1e0+2.0)/3 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E15",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1.7976931348623157e308+1.7976931348623157e308 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "inf\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "inf\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E16",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e308-1e308 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "0\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "0\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E17",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0 +2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E18",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+ 2.0 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E19",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0-(2.0) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E20",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+2 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E21",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0-2 AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "-1\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "-1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-022-E22",
+      "task": "CHSEM-022",
+      "sql": "SELECT 1e0+CAST(2 AS Float32) AS v,toTypeName(v)",
+      "type": "Float64",
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tFloat64\n"
+        }
+      }
+    }
+  ]
+}
