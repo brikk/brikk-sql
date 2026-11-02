@@ -5,7 +5,8 @@ documentation index, follow-up Gems post, the user's linked examples and existin
 source/tests. The user selected DDB20-001 and DDB20-002 after the planning checkpoint.
 On 2026-10-28 the user deferred DDB20-002 until after the remaining syntax work, to keep the
 recursive IDE model/native-introspection effort isolated. The user subsequently authorized
-continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-063.
+continued DuckDB work on `duckdb-2-0-syntax`; focused batches cover DDB20-003 through DDB20-063
+and the separately authorized DDB20-068/069/071/072 audit batch.
 Keep deferred integration/model work separate from syntax and core semantic fixes.
 
 ## Baseline and how to use this list
@@ -1835,9 +1836,38 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   All 762 shared IntelliJ tests pass on 261.25134.95, log
   /tmp/opencode/duckdb-schema-071-ide.log. No production IntelliJ API or consumer change.
 
-- [ ] `DDB20-072` ANALYSE synonym [AUDIT].
+- [x] `DDB20-072` ANALYSE synonym [DONE].
   The release notes add ANALYSE wherever ANALYZE is accepted. Verify tokenizer, statement
   boundaries, AST/generation and native acceptance without treating it as an unknown command.
+  Native-only tokenization maps ANALYSE to ANALYZE; both standalone spellings now use the
+  existing Analyze AST with an optional qualified target, quoted names and identifier column
+  lists represented by Schema, not Anonymous function calls. Canonical generation uses
+  ANALYZE. Tests cover copy/serde, bare/targeted statements, multiple script boundaries,
+  column-name quoting, malformed/empty/trailing clauses and existing structured EXPLAIN
+  ANALYSE/EXPLAIN (ANALYSE). Historical SQLGlot token/AST/generation corpora are unchanged.
+  Native execution of original/copy/serde statements accepts both statistics spellings;
+  missing-table binding errors and accepted-but-unimplemented VERBOSE remain separate from
+  parser support. Statistics leave the controlled table rows unchanged. Parse-only EXPLAIN
+  checks leave a sequence untouched; direct execution controls use only literal SELECTs.
+  VACUUM ANALYSE/ANALYZE are both native-accepted but retain the existing explicit raw-command
+  contract, not invented standalone Analyze semantics. Native editor serialization of these
+  non-SELECT statements stays unverified, with no prepare/bind/EXPLAIN validation fallback.
+  Cross-target statistics execution refuses rather than assume shared-keyword equivalence.
+  All seventeen focused ANALYSE/EXPLAIN core/native controls pass without skips, log
+  /tmp/opencode/duckdb-analyse-072.log. No public node, constructor/copy signature, grammar
+  preference, dependency or production IntelliJ API changed.
+  Fresh final gates pass 1,433 core, 133 metadata and 274 native/verifier tests with zero
+  failures, log /tmp/opencode/duckdb-grammar-audit-final.log. Only the existing unavailable
+  Quack opt-in fixture is assumption-aborted. The final thirteen hermetic-capture tests and
+  five offline semantic-audit Python tests also pass; capture log
+  /tmp/opencode/duckdb-grammar-audit-final-capture.log. Historical captures, evidence versions,
+  mismatch ledgers and all 78 stable checklist IDs remain intact. No publication, merge or pin
+  change. DDB20-002/067/070, recursive IDE schemas and the Trino REGEXP_COUNT handoff remain
+  deferred; DDB20-073–078 were not started by this batch.
+  The fresh final shared IDE gate passes all 762 tests on 261.25134.95, log
+  /tmp/opencode/duckdb-grammar-audit-final-ide.log. This finishes the authorized four-item
+  batch with separate verified commits/pushes: 69/78 deliverables complete, not blanket
+  native/SQLGlot parity or recursive IDE qualification. No new internal/experimental IDE API.
 
 - [ ] `DDB20-073` Compound and numeric type edge cases [AUDIT].
   Classify SQL-visible empty STRUCT support versus internal LogicalType::TUPLE implementation

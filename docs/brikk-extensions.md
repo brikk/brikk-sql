@@ -1998,6 +1998,15 @@ rejection of nested current namespaces. IDE tests read the actual top-level cata
 through the existing strategy; recursive IDE schemas remain deferred. No parity ledger
 or published AST constructor changes are needed.
 
+Native tokenization maps ANALYSE to the ANALYZE token. Both standalone spellings use the
+existing Analyze AST, including an optional target and column list, and generate canonical
+ANALYZE. The native statement grammar refuses unsupported trailing clauses instead of
+discarding them. VERBOSE remains syntactically represented even though DuckDB 2.0 rejects
+its implementation. Existing structured EXPLAIN ANALYSE is covered separately. VACUUM
+ANALYSE/ANALYZE retain their explicitly flagged raw-passthrough contract; they are not
+misrepresented as standalone Analyze nodes. Historical token/AST corpora remain unchanged.
+No cross-target statistics execution mapping is inferred from the shared keyword.
+
 ## Upstream sync protocol
 
 1. Re-pin `reference/sqlglot`, regenerate all generated tables/corpora (`tools/*.py`),

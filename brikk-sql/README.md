@@ -670,6 +670,11 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Native `ANALYSE` and `ANALYZE` use the same structured statistics AST, including target
+column lists. Generation uses `ANALYZE`. EXPLAIN retains its existing structured handling;
+VACUUM keeps its flagged raw-passthrough contract. Native acceptance does not make statistics
+statements bind-free executable editor checks or establish cross-target statistics semantics.
+
 Native parsing supports `SET SCHEMA 'name'` as a structured session assignment and preserves
 the quoted namespace string. Execution still decides whether it exists. DuckDB 2.0 rejects
 nested current namespaces; a schema whose literal name contains a dot is a different case.

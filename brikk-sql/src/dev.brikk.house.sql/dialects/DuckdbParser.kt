@@ -346,6 +346,8 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
+        // brikk extension #58: native ANALYSE shares ANALYZE's statement grammar.
+        if (nativeRegexOperators && match(TokenType.ANALYZE)) return parseNativeAnalyze()
         // brikk extension #58: native 2.0 adds a delimiter-free SET SCHEMA string form. Keep the
         // historical parser's raw-command classification separate from this grammar.
         if (nativeRegexOperators && currToken.tokenType == TokenType.SET &&
@@ -477,6 +479,21 @@ open class DuckdbParser(
             }
         }
         return super.parseCommand()
+    }
+
+    private fun parseNativeAnalyze(): Expression {
+        val options = if (currToken.tokenType != TokenType.IDENTIFIER && matchTextSeq("VERBOSE")) listOf("VERBOSE") else emptyList()
+        val table = if (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) {
+            if (currToken.tokenType == TokenType.TABLE) raiseError("DuckDB ANALYZE does not take a TABLE keyword")
+            parseTableParts(schema = true) ?: raiseError("Expected ANALYZE table")
+        } else null
+        val target = if (table != null && match(TokenType.L_PAREN)) {
+            val columns = parseCsv { parseIdVar(anyToken = false) ?: raiseError("Expected ANALYZE column") }
+            if (!match(TokenType.R_PAREN)) raiseError("Expected closing ANALYZE column list")
+            expression(dev.brikk.house.sql.ast.Schema(args("this" to table, "expressions" to columns)))
+        } else table
+        if (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) raiseError("Unexpected ANALYZE clause")
+        return expression(dev.brikk.house.sql.ast.Analyze(args("tables" to listOfNotNull(target), "options" to options)))
     }
 
     private fun parseDuckdbExplain(): Expression {

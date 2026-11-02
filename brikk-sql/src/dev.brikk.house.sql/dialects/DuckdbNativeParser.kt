@@ -7,10 +7,12 @@ import dev.brikk.house.sql.ast.Star
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
 import dev.brikk.house.sql.parser.Parser
+import dev.brikk.house.sql.parser.TokenType
 
 // Ported from SQLGlot f31f109daef0ca99347d36295534a0d59956059c.
 // SORT is an identifier before INSERT BY NAME, not a Hive SORT BY clause.
 internal val nativeDuckdbTokenizerConfig = DuckdbParserTables.TOKENIZER_CONFIG.withoutKeywords(setOf("SORT BY"))
+    .withKeywords(mapOf("ANALYSE" to TokenType.ANALYZE))
 
 /** Native execution parser. The ordinary dialect parser retains the historical SQLGlot
  * regex AST for parity, which is not a DuckDB 2.0 operator execution contract.

@@ -30,6 +30,7 @@ internal fun Expression.duckdbExecutableBoundaryIssue(source: String?, target: S
             return "SQL/JSON constructor options have no lossless executable DuckDB mapping"
     }
     if(from=="duckdb" && target!="duckdb") {
+        if(this is Analyze)return "DuckDB statistics statements have no verified cross-target execution contract"
         if(nodes.any { it is Merge })return "DuckDB MERGE matching/actions/RETURNING have no verified cross-target execution contract"
         if(this is dev.brikk.house.sql.ast.Set || this is Pragma || this is Attach || this is Command)
             return "DuckDB session/storage/raw commands have no verified cross-target execution contract"
