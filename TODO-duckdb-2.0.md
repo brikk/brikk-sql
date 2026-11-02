@@ -1899,10 +1899,21 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   log /tmp/opencode/duckdb-types-073.log. COUNT/MAX controls retain their original types.
   No historical corpus/ledger, dependency pin, public data-class signature or IDE API changed.
 
-- [ ] `DDB20-074` Table-function identifier-to-string deprecation [AUDIT].
+- [x] `DDB20-074` Table-function identifier-to-string deprecation [DONE].
   Review the release's deprecated implicit identifier-to-string conversion for table functions.
   Pin quoted identifiers versus path string literals and positional/named reader arguments;
   do not quietly rewrite identifiers into filenames or bind readers during editor checking.
+  Focused static controls distinguish bare/quoted Columns from Literal paths through
+  native parse/copy/serde/executable generation, including a named header argument. No
+  identifier is rewritten into a filename and no arbitrary parameter label proves a role.
+  Native controls use only a private, allowlisted local CSV. DEFAULT and ENABLE_IMPLICIT_STRING
+  accept the selected quoted path identifier; DISABLE_IMPLICIT_STRING rejects it at binding.
+  A string path succeeds in all three modes. Both forms still parse without binding in every
+  mode, and sequence arguments remain untouched. This is bounded read_csv evidence, not a
+  guarantee that arbitrary table functions, UDFs or user settings have the same contract.
+  Both focused core/native tests pass without skips, log /tmp/opencode/duckdb-reader-074.log.
+  No production change, public API change, file-path inference, dependency change or user
+  setting/resource access was necessary. The scratch reader directory is removed by the test.
 
 - [ ] `DDB20-075` Connection-scoped secret storage [AUDIT].
   Classify the final SQL surface for the new `connection` secret storage, ordinary/persistent

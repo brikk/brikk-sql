@@ -670,6 +670,11 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+DuckDB reader identifiers are not filename literals. Parsing preserves bare and quoted
+identifiers and string arguments as distinct nodes. The native connection's deprecated
+identifier-conversion policy decides binding; editor parsing neither infers that policy nor
+rewrites identifiers into paths. The focused conversion tests read only a private local CSV.
+
 Native `ANALYSE` and `ANALYZE` use the same structured statistics AST, including target
 column lists. Generation uses `ANALYZE`. EXPLAIN retains its existing structured handling;
 VACUUM keeps its flagged raw-passthrough contract. Native acceptance does not make statistics
