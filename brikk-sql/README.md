@@ -670,6 +670,12 @@ binding checks; no host regex engine or invented capture schema is used.
 
 ### Native corpus acceptance audits
 
+Secret SQL retains its explicit opaque same-target contract. Native 2.0 distinguishes
+instance-shared memory storage from owner-only `IN connection` storage. The secret audit
+uses synthetic HTTP configuration only; it neither harvests credentials into metadata nor
+contacts providers. The internal TRANSACTION persist type does not establish a supported
+`CREATE TRANSACTION SECRET` SQL form.
+
 DuckDB reader identifiers are not filename literals. Parsing preserves bare and quoted
 identifiers and string arguments as distinct nodes. The native connection's deprecated
 identifier-conversion policy decides binding; editor parsing neither infers that policy nor

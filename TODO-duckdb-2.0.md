@@ -1915,12 +1915,29 @@ is needed. Their IDs follow the existing sequence and must remain stable.
   No production change, public API change, file-path inference, dependency change or user
   setting/resource access was necessary. The scratch reader directory is removed by the test.
 
-- [ ] `DDB20-075` Connection-scoped secret storage [AUDIT].
+- [x] `DDB20-075` Connection-scoped secret storage [DONE].
   Classify the final SQL surface for the new `connection` secret storage, ordinary/persistent
   secret creation, scope/visibility and session cleanup. Preserve options without exposing
   credentials in capture files, diagnostics, completions or test logs.
   The full-release triage also names TRANSACTION persist-type for SECRET. Audit its lifetime
   separately from connection storage; the 056 title inventory is not an implementation claim.
+  Final grammar accepts CREATE [TEMPORARY] SECRET name IN connection and ordinary/PERSISTENT
+  forms. Static SQL retains the existing explicit raw-command contract, including storage,
+  options and quotes; no credential-bearing AST, completion inventory or foreign mapping is
+  invented. Tests use only synthetic HTTP config and an isolated secret/extension directory,
+  never a user secret directory or provider. Secret SQL failures/assertions omit option values
+  and exception causes; native redacted inventory and parse-only diagnostics reveal no token.
+  Memory storage is instance-shared; connection storage is absent from both existing and newly
+  duplicated connections. Rolled-back creations disappear, committed connection secrets remain
+  owner-only until close, and instance-shared memory secrets survive the owner's close while a
+  sibling remains. Synthetic persistent files can be reopened by a new private instance and
+  dropped, then the scratch directory is removed. No persistent file is retained as evidence.
+  Internal SecretPersistType::TRANSACTION is not a SQL promise: CREATE TRANSACTION SECRET is
+  a parser error on final 2.0. Ordinary native creation rollback/commit behavior is measured
+  separately, without transaction emulation or mutation retries. Editor serialization remains
+  unverified and creates nothing. This audits SQL/ownership, not arbitrary credential providers.
+  Three focused core/native tests pass without skips, log /tmp/opencode/duckdb-secrets-075.log.
+  No production code/API, global configuration, user session, static capture or dependency changed.
 
 - [ ] `DDB20-076` Colon aliases for subqueries [AUDIT].
   The release notes add TableAliasColon for subqueries. Verify exact final spelling, FROM-first
