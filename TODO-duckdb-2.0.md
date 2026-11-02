@@ -34,6 +34,36 @@ Unchecked items are not all release blockers. In particular, syntax acceptance,
 AST preservation, namespace resolution, result semantics, native editor validation
 and IDE introspection/completion are separate contracts.
 
+## Next release scope: nested IDE schemas excluded
+
+User decision on 2026-11-02: hold DDB20-002, wrap up non-schema release work, ship the
+DuckDB 2.0 catch-up without nested-schema IDE support, then revisit nesting after release.
+
+- Keep completed DDB20-001 core SQL/name/scope support and the existing safeguards. This is
+  an IDE feature exclusion, not a rollback of working SQL support or a flat-name fallback.
+- Retain the ordinary catalog/database -> schema -> object IDE model. Do not claim recursive
+  browser/introspection/editing support, start a model-replacement spike, or disguise nested
+  schemas as dotted top-level names. Verify that excluded nested objects cannot be confused
+  with supported top-level objects; literally dotted top-level schema names remain distinct.
+- Review DDB20-067 for this release using existing approved APIs. Enable only demonstrated
+  connection contexts; unsafe/unmatched contexts remain explicitly unavailable rather than
+  guessed, reconnected or reconstructed by replaying scripts/settings.
+- Give DDB20-070 an explicit release disposition. Future chunked/native executor work is not
+  a parser/verifier release requirement. Qualify relevant existing client behavior without
+  silently adopting another driver's version or starting a new executor implementation.
+- Reconcile with current main's Java-17/library/version-line changes, build the integrated
+  candidate, check packaged ABI/dependencies and qualify the actual DuckDB plugin/IDE targets.
+  Shared-library tests alone do not qualify the consumer distribution.
+- The consumer checkout currently has uncommitted Quack 0.12/cancellation/driver-result work.
+  Treat it as existing user work: review its ownership and intended release inclusion before
+  editing or packaging it. Do not discard, overwrite or silently commit it.
+- Confirm exact library/plugin versions and publication targets at a release checkpoint before
+  merging/tagging/publishing or changing consumer pins. Previously published versions remain
+  immutable; no unrelated consumer adoption is authorized by this scope decision.
+
+All 78 IDs and previous evidence remain intact. The count remains 75/78: deferring a release
+feature does not mark it implemented. Trino REGEXP_COUNT remains separately queued.
+
 ## SQL grammar, names and statement behavior
 
 - [x] `DDB20-001` Nested schemas: core qualification, scope and lineage [DONE].
@@ -59,6 +89,9 @@ and IDE introspection/completion are separate contracts.
   existing corpus/ledger and binary compatibility checks. No ledgers were weakened or refreshed.
 
 - [ ] `DDB20-002` Nested schemas: IDE catalog tree and editing [DEFER].
+  Release-scope decision on 2026-11-02 supersedes the earlier next-step recommendation:
+  keep this item and its feasibility plan on hold until after the non-nested DuckDB 2.0
+  release. No recursive-model implementation or flat-name substitute is approved for it.
   User decision: finish the other syntax work first, then revisit this as an isolated effort.
   It is not a gate for syntax fixes. Keep the true hierarchy requirement; no flat-name fallback
   or custom model replacement was approved or implemented in this pass.
