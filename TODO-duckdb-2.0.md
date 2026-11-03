@@ -1772,6 +1772,44 @@ feature does not mark it implemented. Trino REGEXP_COUNT remains separately queu
   DDB20-016/017 measured that JDBC duplicate copies current session variables at creation but
   later changes are independent. That is not proof of follow-console parity or permission to
   replay variables/scripts into helpers; retain the deferred matching-session requirement.
+  Release-scoped safety work in the DuckDB plugin (not completion of this broader item):
+  - 2842948/d6f823e: autocomplete admits only the single reviewed native extension-origin/
+    signature row, refuses unknown/mixed registrations and missing metadata, and system-qualifies
+    its registry JSON conversions. A real same-named Java UDF and shadowed public to_json macro
+    leave callbacks/sequence untouched; arbitrary application code is not invoked for completion.
+  - 5cfdbbd: managed-profile files retain weak correlation to their own console/runtime and a
+    console-specific cache identity. Another console cannot bypass a routed/unavailable state;
+    availability is rechecked even before a revision notification. The routing flag is controlled
+    in the regression, not a claim of fresh live remote-routing qualification.
+  - 1d2aaa5: opaque in-memory configuration identity covers declared source/driver properties,
+    working directory and module descriptors/local file stamps. Changed configurations/modules
+    discard targets before helper use and result application. Helper URL/properties are captured;
+    original source/driver handles are retained because copying them creates another JDBC process
+    and failed the same-file lock test. No reconnect, script replay, transaction mutation or
+    credential-value logging. Presentation/introspection preferences are not connection identity.
+  The fresh baseline guard/native grammar suite passes 45 tests without skips, including genuine
+  PSQL/autocomplete and replacement-module rejection; log
+  /tmp/opencode/ddb20-067-fixes/native-verified-261.log. Broader SDK checks are recorded separately.
+  b17e63d removes the binary reference to a public single-connection getter removed by IDE 263.
+  It uses cached public-method lookup only, with no private field/API access or warning suppression;
+  unexpected lookup/invocation failures leave isolation unavailable. Console-fixture UI callbacks
+  are drained before their editors are changed/disposed; no assertions or error checks were removed.
+  Final committed-only b17e63d snapshot (excluding the pre-existing Quack working changes) passes
+  45 affected tests each on IDE 261/262/263, zero failures/errors/skips. Distribution checks pass;
+  Plugin Verifier is compatible on DB-261.24374.56, IU-262.10968.63, DB-262.10315.132,
+  IU-263.4732.28 and IU-263.7307.44. The existing 16 experimental/1 approved internal reports
+  match the 0.5.1 baseline byte-for-byte on the three previously recorded targets; no increased
+  API-risk warning or approval suppression. Two pre-existing deprecated usages remain too.
+  Evidence: /tmp/opencode/ddb20-067-fixes/final-committed-gates.log, final-sdk-counts.json and
+  api-warning-baseline-comparison.json. This does not qualify a new integrated library release,
+  manual installed-plugin smoke, live remote routing or the unrelated Quack working changes.
+  Remaining explicit exclusions: general follow-console, unnamed/named-memory and remote helper
+  matching; unproved single-connection isolation; unverifiable non-local/directory module roots;
+  cryptographic binary attestation and arbitrary session/template/runtime-setting equivalence.
+  These fixes do not make the helper the console session or add a cloning/routing mechanism.
+  DDB20-002 remains held after release and DDB20-070 remains separate future executor/client work.
+  Actual integrated-library candidate, consumer-version coordination, release qualification and
+  publication are still pending. Existing uncommitted Quack work was neither changed nor committed.
 
 - [x] `DDB20-068` Static-versus-extension grammar isolation guards [DONE].
   Policy is established: core DuckSQL plus documented Brikk extensions is not the union of loaded
