@@ -19,6 +19,13 @@ Keep these IDs stable so individual items can be discussed and resumed by label.
 
 ## Accepted scope
 
+Release-preparation approval: the user subsequently authorized CHSEM-024 and
+CHSEM-025 in order, with separate tested commits/pushes, followed by release-candidate
+qualification and reconciliation with main as needed. P2 expansion stays deferred.
+Publication and consumer updates still require approval. This supersedes the
+unscheduled status below for those two P1 items and the preparation portion of
+CHSEM-034 only.
+
 On 2026-11-02 the user accepted the closeout recommendation: keep this as a bounded,
 opt-in semantic/type-hint foundation with explicit unknowns and separately proved
 errors. It is not a full ClickHouse validator or a guarantee that every populated
@@ -39,7 +46,7 @@ coverage. Delivery has its own approval gate. Every implementation round needs a
 explicitly agreed scope, tests and its own commit/push. Do not reopen completed
 CHSEM IDs or silently broaden their contracts.
 
-- [ ] **CHSEM-024: Expose per-node native proof provenance.** P1. Distinguish
+- [x] **CHSEM-024: Expose per-node native proof provenance.** P1. Distinguish
   native-proved conditional types, generic fallbacks and unknowns without treating
   an error or parser acceptance as a proof. Define how consumers inspect these
   facts and how AST ownership/copy/serde affects them. Done when tests cover each
@@ -119,7 +126,23 @@ freshness and skips. Preserve generic parity, source ranges, serde, cancellation
 ownership, explicit mode selection and public binary compatibility. Acceptance of
 this backlog does not authorize work on its items.
 
+## CHSEM-024 result
+
+Additive statement/script `WithProvenance` APIs report each walked node as native
+conditional proof, generic fallback or unknown using the native proof pass's own
+facts. Type spellings/IDs form an external analysis-time snapshot, not serialized
+AST metadata. Copy/serde/new calls do not transfer it; mutation requires reanalysis.
+Conditional types still coexist with errors and explicit script settings remain
+isolated. Existing entrypoints, result constructors and generic typing are unchanged.
+Guide: `vendor/data/clickhouse-semantic/type-provenance-README.md`.
+
+Full JVM/ABI regression passes 1,921 tests with 61 optional assumption aborts;
+Python passes 139 with one opt-in skip. The sequential IntelliJ gate passes 757
+tests on 261.25134.95. No new native typing rules or native captures in this round.
+Commit/push separately, then perform the authorized CHSEM-025 round.
+
 ## Context
+
 
 The CH26 catch-up added structured composition and implicit-lambda nodes, correct
 argument binding, scope/lineage handling, SQL round trips and representative native

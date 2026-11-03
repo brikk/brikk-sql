@@ -83,6 +83,9 @@ CHSEM-022 fixes [scientific numeric token boundaries](scientific-number-README.m
 in the native ClickHouse dialect while preserving raw generic tokenizer parity.
 CHSEM-023 [freezes the supported scope and reports missing coverage and delivery work](closeout-README.md).
 
+CHSEM-024 adds opt-in [per-node native type evidence](type-provenance-README.md)
+without changing the existing AST-only statement/script APIs or serialization.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

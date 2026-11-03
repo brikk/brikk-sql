@@ -236,6 +236,9 @@ class TypeAnnotator(
         }
     }
     private val clickhouseNativeTypes = HashMap<Long, DataType>()
+    /** A fresh report takes copies; generic annotations are never added to this map. */
+    internal fun clickhouseProvedTypes(): Map<Long, DataType> =
+        clickhouseNativeTypes.mapValues { (_, type) -> type.copy() as DataType }
     // The explicit pin-aware entrypoint enables literal FieldToDataType rules.
     // Generic annotateTypes retains its published literal/parity policy.
     internal var clickhouseNativeLiterals: Boolean = false
