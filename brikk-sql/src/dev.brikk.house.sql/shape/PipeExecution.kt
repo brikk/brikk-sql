@@ -42,6 +42,7 @@ fun lowerForExecution(text: String, dialect: String, allowFirstStage: Boolean = 
     if (statements.count { it.hasSql } != 1) return PipeLowering.Refused(null, "Select exactly one statement to execute")
     return try {
         val fragment = SqlFragment(text, dialect)
+        datafusionPipeRefusal(fragment.ast, dialect)?.let { return PipeLowering.Refused(null, it) }
         if (!fragment.containsPipe && !(allowFirstStage && fragment.ast is Query)) {
             return PipeLowering.Refused(null, "The statement is not a pipe query")
         }

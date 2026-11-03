@@ -86,6 +86,9 @@ public interface LiveCatalogProfile {
 
     public val trigger: HarvestTrigger get() = HarvestTrigger.ONCE_PER_SESSION
 
+    /** A console's whole registry/catalog belongs to that connection, as in DataFusion embeddings. */
+    public val sessionScopedInventory: Boolean get() = false
+
     public val mergePolicy: LiveMergePolicy get() = LiveMergePolicy.REPLACE
 
     /** The directory name, unique to the plugin, harvests persist under; null keeps them in memory only. */
@@ -255,7 +258,10 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         val identity = profile.identity(dataSource)
         val console = requestor is DataProducer
         if (console) {
-            consoleConnections[requestor] = ConsoleConnection(connection, identity)
+            synchronized(consoleConnections) {
+                if (profile.sessionScopedInventory) store.storeSession(requestor, dataSource.uniqueId, identity, SessionFacts.NONE)
+                consoleConnections[requestor] = ConsoleConnection(connection, identity)
+            }
             // A new connection starts outside any transaction.
             synchronized(sessionRequestors) { sessionRequestors.filterValues { it.get() === requestor }.keys.toList() }.forEach(explicitTransactions::remove)
         }
@@ -270,7 +276,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         if (claim != null && !inFlight.add(claim)) return
         try {
             val outcome = runHarvest(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
-            record(dataSource, identity, outcome, requestor.takeIf { console })
+            record(dataSource, identity, outcome, requestor.takeIf { console }, connection)
         } finally {
             claim?.let(inFlight::remove)
         }
@@ -363,7 +369,7 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
         }
         val outcome = runHarvestBlocking(profile.harvester, profile.deadline) { RemoteCatalogRows(connection, it) }
         return when {
-            !record(dataSource, identity, outcome, requestor) -> RefreshOutcome.Superseded
+            !record(dataSource, identity, outcome, requestor, connection) -> RefreshOutcome.Superseded
             outcome is HarvestOutcome.Complete -> RefreshOutcome.Refreshed(outcome.harvest.shared, requestor?.let { outcome.harvest.session } ?: SessionFacts.NONE)
             else -> RefreshOutcome.HarvestFailed(outcome)
         }
@@ -453,21 +459,30 @@ public abstract class LiveCatalogService(protected val scope: CoroutineScope) {
      * Stores [outcome], harvested from [identity]; false when the data source names another server now, and
      * nothing was stored.
      */
-    private fun record(dataSource: LocalDataSource, identity: ConnectionIdentity, outcome: HarvestOutcome, session: Any?): Boolean {
-        if (profile.identity(dataSource) != identity) {
-            LOG.info("The live catalog harvest of ${dataSource.name} is from the server it named before; discarded")
-            return false
-        }
-        when (outcome) {
-            is HarvestOutcome.Complete -> {
-                store.store(dataSource.uniqueId, identity, outcome.harvest.shared)
-                session?.let { store.storeSession(it, dataSource.uniqueId, identity, outcome.harvest.session) }
+    private fun record(dataSource: LocalDataSource, identity: ConnectionIdentity, outcome: HarvestOutcome, session: Any?, connection: DatabaseConnectionCore? = null): Boolean {
+        synchronized(consoleConnections) {
+            if (profile.sessionScopedInventory && session != null && consoleConnections[session]?.let { it.connection !== connection } == true) {
+                LOG.info("The console reconnected while its catalog was being read; discarded")
+                return false
             }
-            is HarvestOutcome.Failed -> LOG.info("The live catalog harvest of ${dataSource.name} failed; the previous catalog stays", outcome.error)
-            HarvestOutcome.Incomplete -> LOG.info("The live catalog harvest of ${dataSource.name} was incomplete; the previous catalog stays")
-            HarvestOutcome.TimedOut -> LOG.info("The live catalog harvest of ${dataSource.name} exceeded ${profile.deadline}; the previous catalog stays")
+            if (profile.identity(dataSource) != identity) {
+                LOG.info("The live catalog harvest of ${dataSource.name} is from the server it named before; discarded")
+                return false
+            }
+            when (outcome) {
+                is HarvestOutcome.Complete -> {
+                    if (session == null || !profile.sessionScopedInventory) store.store(dataSource.uniqueId, identity, outcome.harvest.shared)
+                    session?.let {
+                        val facts = if (profile.sessionScopedInventory) outcome.harvest.session.copy(inventory = outcome.harvest.shared) else outcome.harvest.session
+                        store.storeSession(it, dataSource.uniqueId, identity, facts)
+                    }
+                }
+                is HarvestOutcome.Failed -> LOG.info("The live catalog harvest of ${dataSource.name} failed; the previous catalog stays", outcome.error)
+                HarvestOutcome.Incomplete -> LOG.info("The live catalog harvest of ${dataSource.name} was incomplete; the previous catalog stays")
+                HarvestOutcome.TimedOut -> LOG.info("The live catalog harvest of ${dataSource.name} exceeded ${profile.deadline}; the previous catalog stays")
+            }
+            return true
         }
-        return true
     }
 
     /** Equal by the identity of what a merge reads, so a new harvest or snapshot merges again. */

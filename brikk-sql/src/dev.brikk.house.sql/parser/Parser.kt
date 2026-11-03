@@ -1243,6 +1243,18 @@ open class Parser(
     fun parse(rawTokens: List<Token>, sql: String): List<Expression?> =
         parseInternal({ it.parseStatement() }, rawTokens, sql)
 
+    /** Cancellable parsing for editor adapters; cancellation propagates and the prior callback is restored. */
+    fun parse(rawTokens: List<Token>, sql: String, checkCanceled: () -> Unit): List<Expression?> {
+        val previous = this.checkCanceled
+        this.checkCanceled = checkCanceled
+        return try {
+            checkCanceled()
+            parse(rawTokens, sql)
+        } finally {
+            this.checkCanceled = previous
+        }
+    }
+
     // sqlglot: Parser.parse_into — subset limited to the EXPRESSION_PARSERS entries the
     // schema layer needs (exp.DataType, exp.Table, exp.Identifier).
 
@@ -1839,6 +1851,9 @@ open class Parser(
         return Command(args("this" to text.take(size), "expression" to text.drop(size)))
     }
 
+    /** Compatibility default; engines whose pipes apply to the enclosing FROM query opt out. */
+    protected open val tableSubqueryConsumesPipe: kotlin.Boolean get() = true
+
     // sqlglot: Parser._parse_select
     fun parseSelect(
         nested: kotlin.Boolean = false,
@@ -1855,7 +1870,9 @@ open class Parser(
             parseSetOperation = parseSetOperation,
         )
 
-        if (consumePipe && match(TokenType.PIPE_GT, advance = false)) {
+        // A pipe after a closed FROM subquery belongs to the enclosing query, not its table factor.
+        // Pipes inside the parentheses were already consumed by that subquery's own parseSelect.
+        if (consumePipe && (tableSubqueryConsumesPipe || !table || query !is Subquery) && match(TokenType.PIPE_GT, advance = false)) {
             if (query == null && from != null) {
                 query = expression(
                     Select(

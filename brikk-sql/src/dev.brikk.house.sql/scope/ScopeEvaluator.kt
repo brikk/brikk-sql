@@ -20,6 +20,10 @@ import dev.brikk.house.sql.ast.Lambda
 import dev.brikk.house.sql.ast.Lateral
 import dev.brikk.house.sql.ast.EQ
 import dev.brikk.house.sql.ast.Func
+import dev.brikk.house.sql.ast.Kwarg
+import dev.brikk.house.sql.ast.Unnest
+import dev.brikk.house.sql.ast.ColumnDef
+import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.Literal
 import dev.brikk.house.sql.ast.Tuple
 import dev.brikk.house.sql.ast.Ntile
@@ -351,6 +355,14 @@ internal class ScopeEvaluator(
     /** A FROM item whose columns only its alias names: UNNEST, an unmodelled table expression. */
     private fun opaque(node: Expression, lateral: Frame, env: Env): Binding {
         expression(node, lateral, env)
+        if (dialect.name in setOf("datafusion", "spice") && node is Unnest) {
+            val columns = node.expressionsArg.filterIsInstance<Expression>().map { value ->
+                val array = sqlTypeOf(value)?.let { runCatching { dataTypeFromStr(it, dialect) }.getOrNull() }
+                val element = if (array?.thisArg == DType.ARRAY) array.expressionsArg.firstOrNull() as? DataType else null
+                computed("", Nullability.NULLABLE, "UNNEST", element?.let { renderType(it, dialect) })
+            }
+            return bound(Row(columns, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL), null, true, RelationKind.FUNCTION, null)
+        }
         val columns = (node.args["alias"] as? TableAlias)?.columns.orEmpty().filterIsInstance<Identifier>()
         val row = Row(columns.map { computed(stored(it), Nullability.UNKNOWN, node.key.uppercase()).copy(declaration = declared(it)) }, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
         return bound(row, null, synthetic = true, kind = RelationKind.FUNCTION, source = null)
@@ -372,7 +384,7 @@ internal class ScopeEvaluator(
             }
         }
         val parts = node.parts.filterIsInstance<Identifier>()
-        val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }
+        val matches = facts.tables.entries.filter { (key, _) -> sameTable(key, parts) }.distinctBy { catalogPathParts(it.key) }
         val match = matches.singleOrNull()
             ?: facts.searchPath.firstNotNullOfOrNull { namespace -> matches.singleOrNull { (key, _) -> inNamespace(key, parts.size, namespace) } }
         if (match == null && matches.size > 1) {
@@ -399,6 +411,10 @@ internal class ScopeEvaluator(
     }
 
     private fun tableFunction(node: Table, function: Expression, name: String, arguments: List<Expression>, env: Env, lateral: Frame): Binding {
+        if (dialect.name == "spice" && node.db.isEmpty() && node.catalog.isEmpty() &&
+            (function.thisArg !is Identifier || (function.thisArg as Identifier).name == name.lowercase())) {
+            spiceFunction(function, name.lowercase(), arguments, env, lateral)?.let { return it }
+        }
         val rows = arguments.map { argument ->
             val query = (argument as? Subquery)?.thisArg as? Expression ?: argument.takeIf { it is Select || it is SetOperation }
             when {
@@ -415,7 +431,9 @@ internal class ScopeEvaluator(
             }
         }
         val qualified = node.db.isNotEmpty() || node.catalog.isNotEmpty()
+        val callSite = names.range(function)?.first?.let { facts.callSites[it] }
         val (kind, key, fact) = when {
+            callSite != null -> Triple(RelationKind.CALL, name, callSite)
             !qualified && arguments.isEmpty() && name in facts.slots -> Triple(RelationKind.SLOT, name, facts.slots.getValue(name))
             !qualified && name in facts.calls -> Triple(RelationKind.CALL, name, facts.calls.getValue(name))
             else -> Triple(RelationKind.FUNCTION, null, null)
@@ -429,6 +447,93 @@ internal class ScopeEvaluator(
         val label = stored(name, quoted = false)
         val columns = declared ?: fact?.columns.orEmpty().map { it.visible(name, label, kind) }
         return Binding(label, true, relation.copy(name = label), columns)
+    }
+
+    /** A function argument can name a dataset without adding it to the caller's FROM scope. */
+    private fun spiceFunction(function: Expression, name: String, arguments: List<Expression>, env: Env, lateral: Frame): Binding? {
+        val fixed = when (name) {
+            "flatten_json", "flatten_json_properties" -> listOf("path", "parent_path", "key", "value", "type")
+            "json_tree" -> listOf("key", "value", "type", "atom", "id", "parent", "fullkey", "path")
+            else -> null
+        }
+        if (fixed == null && name !in setOf("vector_search", "text_search", "rrf", "rerank")) return null
+        val positional = arguments.filterNot { it is Kwarg }
+        val named = arguments.filterIsInstance<Kwarg>().associateBy { (it.thisArg as? Expression)?.name.orEmpty() }
+        fun relationArgument(value: Expression?): Binding {
+            if (value is Anonymous) return spiceFunction(value, value.name.lowercase(), value.expressionsArg.filterIsInstance<Expression>(), env, lateral)
+                ?: unknownRelation(value.name, RelationKind.FUNCTION)
+            if (value is Subquery || value is Select || value is SetOperation) {
+                val row = query(value, env)
+                return bound(row, null, true, RelationKind.SUBQUERY, null)
+            }
+            if (value is Table) return table(value, env, lateral)
+            if (value is Column) {
+                val parts = value.parts.filterIsInstance<Identifier>()
+                if (parts.size in 1..3) return table(Table(args("this" to parts.last().copy(),
+                    "db" to parts.getOrNull(parts.size - 2)?.copy(), "catalog" to parts.getOrNull(parts.size - 3)?.copy())), env, lateral)
+            }
+            return unknownRelation("", RelationKind.FUNCTION)
+        }
+        val inputs = if (fixed != null) emptyList() else if (name == "rrf") positional.map(::relationArgument)
+            else listOf(relationArgument(positional.firstOrNull()))
+        val argumentFrame = if (inputs.isEmpty()) lateral else Frame(inputs, env.outer)
+        if (fixed != null) arguments.forEach { expression((it as? Kwarg)?.expressionArg as? Expression ?: it, lateral, env) }
+        else {
+            if (name != "rrf") positional.drop(1).forEach { expression(it, argumentFrame, env) }
+            named.forEach { (key, arg) ->
+                val value = arg.expressionArg as? Expression
+                // String-valued document/join-key options name fields, but are not identifier rename sites.
+                if (key in setOf("document", "join_key") && value is Literal && value.isString) {
+                    val found = unqualified(argumentFrame, Identifier(args("this" to value.name, "quoted" to true)))
+                    if (found.candidates.isEmpty() && found.knowledge == Knowledge.FULL)
+                        diagnose(ScopeProblem.MISSING_COLUMN, "Unknown column '${value.name}'", value, value)
+                }
+                if (key !in setOf("document", "join_key", "model", "query")) expression(value, argumentFrame, env)
+            }
+        }
+        val exact = names.range(function)?.first?.let { facts.callSites[it] }
+        val row = if (exact != null) Row(exact.columns.map { it.visible(name, name, RelationKind.CALL) }, exact.knowledge)
+        else if (fixed != null) Row(fixed.map { key ->
+            val nullable = if (name == "json_tree") key in setOf("key", "value", "atom", "parent", "path") else key == "value"
+            computed(key, if (nullable) Nullability.NULLABLE else Nullability.NON_NULL, name,
+                if (name == "json_tree" && key in setOf("id", "parent")) "BIGINT" else "VARCHAR")
+        }, Knowledge.FULL)
+        else when (name) {
+            "vector_search", "text_search" -> {
+                val input = inputs.single()
+                val scoreOption = named["include_score"]?.expressionArg as? Expression
+                    ?: positional.drop(2).firstOrNull { it is dev.brikk.house.sql.ast.Boolean }
+                val include = if (scoreOption == null) true else (scoreOption as? dev.brikk.house.sql.ast.Boolean)?.thisArg as? Boolean
+                val columns = input.columns.filter { column ->
+                    val type = column.sqlType?.let { runCatching { dataTypeFromStr(it, dialect) }.getOrNull() }
+                    // Index-backed search can omit list/embedding fields. Only call-site facts can promise those.
+                    type?.thisArg != DType.ARRAY
+                }.map { it.copy(nullability = Nullability.UNKNOWN) } +
+                    if (include == true) listOf(computed("_score", Nullability.UNKNOWN, name, "DOUBLE")) else emptyList()
+                // Backend search indexes can add/drop fields. Connection facts can close this call's schema.
+                Row(columns, if (columns.isEmpty()) Knowledge.UNKNOWN else Knowledge.PARTIAL)
+            }
+            "rrf" -> {
+                val common = inputs.firstOrNull()?.columns.orEmpty().filter { column ->
+                    column.name !in setOf("rank", "_score") && !column.name.endsWith("_embedding") &&
+                        inputs.drop(1).all { input -> input.columns.count { it.name == column.name } == 1 }
+                }.map { column -> column.copy(nullability = Nullability.UNKNOWN, source = null,
+                    origin = ColumnOrigin.COMPUTED, computedBy = name, provenance = null,
+                    sqlType = column.sqlType?.takeIf { type -> inputs.all { b -> b.columns.singleOrNull { it.name == column.name }?.sqlType == type } }) }
+                Row(listOf(computed("_fused_score", Nullability.UNKNOWN, name, "DOUBLE")) + common,
+                    if (inputs.isNotEmpty() && inputs.all { it.knowledge == Knowledge.FULL }) Knowledge.FULL else Knowledge.PARTIAL)
+            }
+            else -> {
+                val input = inputs.single()
+                // Preserve duplicate rerank_score names: the native schema appends rather than replaces.
+                Row(input.columns.filterNot { it.name in setOf("_score", "_fused_score") } +
+                    computed("rerank_score", Nullability.NON_NULL, name, "FLOAT"),
+                    if (input.knowledge == Knowledge.FULL) Knowledge.FULL else Knowledge.PARTIAL)
+            }
+        }
+        names.range(function)?.let { span -> references += ScopeReference(ReferenceKind.TABLE, name, span.first, span.last + 1,
+            Resolution.RESOLVED, row.knowledge, relation = ScopeRelation(name, RelationKind.FUNCTION, row.knowledge)) }
+        return Binding(name, true, ScopeRelation(name, RelationKind.FUNCTION, row.knowledge), row.columns.map { it.through(name, RelationKind.FUNCTION) })
     }
 
     /**
@@ -472,7 +577,11 @@ internal class ScopeEvaluator(
         val label = alias.thisArg as? Identifier
         val name = label?.let(::stored) ?: binding.name
         val qualifiable = if (label != null) names.positioned(label) else binding.qualifiable
-        val columns = renamedColumns(binding.columns, alias).map { it.through(if (qualifiable) name else "", binding.relation.kind) }
+        val named = if (dialect.name in setOf("datafusion", "spice") && binding.knowledge != Knowledge.FULL && alias.columns.isNotEmpty()) {
+            // Unknown input width means a known appended score has no proven alias ordinal.
+            alias.columns.filterIsInstance<Identifier>().map { computed(stored(it), Nullability.UNKNOWN, "ALIAS").copy(declaration = declared(it)) }
+        } else renamedColumns(binding.columns, alias)
+        val columns = named.map { it.through(if (qualifiable) name else "", binding.relation.kind) }
         val declaration = label?.let(::declared) ?: binding.relation.declaration
         return Binding(name, qualifiable, binding.relation.copy(name = name, declaration = declaration), columns)
     }
@@ -623,7 +732,7 @@ internal class ScopeEvaluator(
             }
         }
         val type = annotateTypes(copy, dialect = dialect, overwriteTypes = false).type as? DataType ?: return null
-        return if (type.thisArg == DType.UNKNOWN) null else renderType(type, dialect)
+        return if (type.thisArg == DType.UNKNOWN && type.metaOrNull?.get(dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE) == null) null else renderType(type, dialect)
     }
 
     private fun aggregated(projection: Any?): Boolean =
@@ -763,6 +872,18 @@ internal class ScopeEvaluator(
                 return Row(columns.map { ScopeColumn(it.name, "", ColumnOrigin.DECLARED, Nullability.UNKNOWN, it.sqlType) }, Knowledge.FULL)
             }
         }
+        if (dialect.name in setOf("datafusion", "spice")) {
+            val rows = node.expressionsArg.filterIsInstance<Tuple>().map { it.expressionsArg.filterIsInstance<Expression>() }
+            val width = rows.firstOrNull()?.size ?: return Row(emptyList(), Knowledge.UNKNOWN)
+            if (rows.any { it.size != width }) return Row(emptyList(), Knowledge.UNKNOWN)
+            return Row((0 until width).map { i ->
+                val types = rows.map { sqlTypeOf(it[i]) }
+                val nulls = rows.map { nullabilityOf(it[i]) }
+                computed(names.getOrNull(i)?.let(::stored) ?: "column${i + 1}",
+                    if (Nullability.NULLABLE in nulls) Nullability.NULLABLE else if (nulls.all { it == Nullability.NON_NULL }) Nullability.NON_NULL else Nullability.UNKNOWN,
+                    "VALUES", types.firstOrNull()?.takeIf { t -> types.all { it == t } })
+            }, Knowledge.FULL)
+        }
         return Row(names.map { computed(stored(it), Nullability.UNKNOWN, "VALUES").copy(declaration = declared(it)) }, if (names.isEmpty()) Knowledge.UNKNOWN else Knowledge.FULL)
     }
 
@@ -788,6 +909,13 @@ internal class ScopeEvaluator(
                 is Lambda -> {
                     val parameters = current.expressionsArg.filterIsInstance<Identifier>().map(::stored)
                     (current.thisArg as? Expression)?.let { pending.addLast(it to hidden + parameters) }
+                }
+                is Kwarg -> (current.expressionArg as? Expression)?.let { pending.addLast(it to hidden) }
+                is Anonymous -> {
+                    val native = if (dialect.name == "spice" && current.parent !is dev.brikk.house.sql.ast.Dot &&
+                        (current.thisArg !is Identifier || current.name == current.name.lowercase()))
+                        spiceFunction(current, current.name.lowercase(), current.expressionsArg.filterIsInstance<Expression>(), env, frame ?: Frame(emptyList(), env.outer)) else null
+                    if (native == null) current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
                 }
                 is Select, is SetOperation, is Subquery -> query(current, env.withOuter(frame))
                 else -> current.iterExpressions(reverse = true).forEach { pending.addLast(it to hidden) }
@@ -821,6 +949,7 @@ internal class ScopeEvaluator(
         }
         val first = qualifier.first()
         val last = qualifier.last()
+        if (dialect.name in setOf("datafusion", "spice") && frame != null && nestedField(node, identifier, qualifier, frame)) return
         val field = frame?.let { unqualified(it, first) } ?: Lookup(emptyList(), Knowledge.UNKNOWN)
         if (field.candidates.isNotEmpty()) {
             // A struct field: the qualifier is a column, the field is beyond what facts describe.
@@ -839,6 +968,56 @@ internal class ScopeEvaluator(
         reference(ReferenceKind.QUALIFIER, last, Resolution.UNRESOLVED, Knowledge.FULL, start = first)
         diagnose(ScopeProblem.UNKNOWN_QUALIFIER, "Unknown relation '${qualifier.joinToString(".") { it.name }}'", first, last)
         record(identifier, null, Lookup(emptyList(), Knowledge.FULL), report = false)
+    }
+
+    private fun nestedField(node: Column, identifier: Identifier, qualifier: List<Identifier>, frame: Frame): Boolean {
+        val parts = qualifier + identifier
+        for (prefix in qualifier.size - 1 downTo 0) {
+            val base = parts[prefix]
+            val lookup = if (prefix == 0) unqualified(frame, base) else {
+                val bindings = findBindings(frame, parts.take(prefix))
+                if (bindings.isEmpty()) continue
+                Lookup(bindings.flatMap { b -> b.columns.filter { same(base, it.name, columns = true) } }, Frame(bindings, null).absence)
+            }
+            val source = lookup.single ?: continue
+            var type = source.sqlType?.let { runCatching { dataTypeFromStr(it, dialect) }.getOrNull() } ?: continue
+            record(base, null, lookup)
+            var nullability = source.nullability
+            for (field in parts.drop(prefix + 1)) {
+                if (type.thisArg != DType.STRUCT) { record(field, null, Lookup(emptyList(), Knowledge.UNKNOWN)); return true }
+                val match = type.expressionsArg.filterIsInstance<ColumnDef>().singleOrNull { it.name == field.name }
+                if (match == null) { record(field, null, Lookup(emptyList(), Knowledge.FULL)); return true }
+                type = match.args["kind"] as? DataType ?: return true
+                if (type.args["nullable"] != false) nullability = Nullability.NULLABLE
+                val column = source.copy(name = field.name, sqlType = renderType(type, dialect), nullability = nullability)
+                record(field, if (field === identifier) node else null, Lookup(listOf(column), Knowledge.FULL))
+            }
+            return true
+        }
+        return false
+    }
+
+    internal fun nestedFields(frame: Frame, qualifier: List<Identifier>): Pair<List<ScopeColumn>, Knowledge>? {
+        if (dialect.name !in setOf("datafusion", "spice")) return null
+        for (prefix in qualifier.size - 1 downTo 0) {
+            val base = qualifier[prefix]
+            val candidates = if (prefix == 0) unqualified(frame, base).candidates else findBindings(frame, qualifier.take(prefix))
+                .flatMap { binding -> binding.columns.filter { same(base, it.name, columns = true) } }
+            val source = candidates.singleOrNull() ?: continue
+            var type = source.sqlType?.let { runCatching { dataTypeFromStr(it, dialect) }.getOrNull() } ?: continue
+            for (part in qualifier.drop(prefix + 1)) {
+                type = type.expressionsArg.filterIsInstance<ColumnDef>().singleOrNull { it.name == part.name }?.args?.get("kind") as? DataType
+                    ?: return emptyList<ScopeColumn>() to Knowledge.UNKNOWN
+            }
+            if (type.thisArg != DType.STRUCT) return emptyList<ScopeColumn>() to Knowledge.UNKNOWN
+            return type.expressionsArg.filterIsInstance<ColumnDef>().map { field ->
+                val fieldType = field.args["kind"] as? DataType
+                source.copy(name = field.name, relation = qualifier.joinToString(".") { it.name },
+                    sqlType = fieldType?.let { renderType(it, dialect) },
+                    nullability = if (source.nullability == Nullability.NULLABLE || fieldType?.args?.get("nullable") == true) Nullability.NULLABLE else Nullability.UNKNOWN)
+            } to Knowledge.FULL
+        }
+        return null
     }
 
     /** A column's qualifier parts, outermost first: `catalog.db.t`. */
@@ -902,13 +1081,13 @@ internal class ScopeEvaluator(
         source != null && source == alias.source || copy(name = alias.name, relation = "", relationKind = null) == alias
 
     private fun record(identifier: Identifier, column: Column?, lookup: Lookup, report: Boolean = true) {
-        val span = names.range(identifier) ?: return
         val resolution = when (lookup.candidates.size) {
             0 -> Resolution.UNRESOLVED
             1 -> Resolution.RESOLVED
             else -> Resolution.AMBIGUOUS
         }
         if (column != null && resolution == Resolution.RESOLVED) resolved[column] = lookup.candidates.single()
+        val span = names.range(identifier) ?: return
         references += ScopeReference(ReferenceKind.COLUMN, identifier.name, span.first, span.last + 1, resolution, lookup.knowledge, lookup.candidates)
         if (!report) return
         when {
@@ -977,7 +1156,7 @@ internal class ScopeEvaluator(
 
     /** A table's qualifying path: as written, completed by the catalog key's leading parts. */
     private fun path(parts: List<Identifier>, key: String): List<String> {
-        val keys = key.split('.')
+        val keys = catalogPathParts(key)
         return keys.take(keys.size - parts.size) + parts.map(::stored)
     }
 
@@ -988,13 +1167,13 @@ internal class ScopeEvaluator(
      * innermost ones (`sales` for `one.sales.orders`).
      */
     private fun inNamespace(key: String, named: Int, namespace: String): Boolean {
-        val missing = key.split('.').dropLast(named)
-        val path = namespace.split('.')
+        val missing = catalogPathParts(key).dropLast(named)
+        val path = catalogPathParts(namespace)
         return if (missing.size <= path.size) missing == path.take(missing.size) else missing.takeLast(path.size) == path
     }
 
     private fun sameTable(key: String, parts: List<Identifier>): Boolean {
-        val keys = key.split('.')
+        val keys = catalogPathParts(key)
         if (keys.size < parts.size || parts.isEmpty()) return false
         return parts.reversed().zip(keys.reversed()).all { (part, name) -> same(part, name, columns = false) }
     }

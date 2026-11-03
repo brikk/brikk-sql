@@ -6,6 +6,8 @@ import dev.brikk.house.sql.ast.Array as ArrayNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.generator.GenMethod
 import dev.brikk.house.sql.generator.Generator
+import dev.brikk.house.sql.generator.GeneratorTables
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.TokenizerConfig
 import kotlin.Boolean
 import kotlin.String
@@ -55,7 +57,7 @@ open class DatafusionGenerator(
     comments: Boolean = true,
     // brikk: DataFusion lowercases function names (polyglot NormalizeFunctions::Lower)
     normalizeFunctions: kotlin.Any = "lower",
-    tokenizerConfig: TokenizerConfig = TokenizerConfig.BASE,
+    tokenizerConfig: TokenizerConfig = DatafusionDialect.TOKENIZER_CONFIG,
     overrides: Map<KClass<out Expression>, GenMethod> = emptyMap(),
     sourceDialect: String? = null,
 ) : Generator(
@@ -71,6 +73,39 @@ open class DatafusionGenerator(
     // brikk: dialect back-reference for annotate_types-driven paths (falls back to BASE)
     override val dialect: Dialect get() = Dialects.DATAFUSION
 
+    private fun resetSql(reset: DatafusionReset): String {
+        if (dialect.name != "datafusion" || reset.expressionsArg.isEmpty() || reset.expressionsArg.any { it !is Identifier })
+            throw UnsupportedError("Expected a DataFusion RESET configuration name")
+        return "RESET " + reset.expressionsArg.joinToString(".") { sql(it as Expression) }
+    }
+
+    private fun utilitySql(e: Expression): String {
+        if (dialect.name != "datafusion") throw UnsupportedError("DataFusion utility statements require the DataFusion dialect")
+        return when (e) {
+            is DatafusionPrepare -> {
+                if (e.args["typed"] == true && e.expressionsArg.isEmpty()) throw UnsupportedError("PREPARE requires at least one declared parameter type")
+                "PREPARE ${sql(e, "this")}" +
+                    (if (e.expressionsArg.isNotEmpty()) "(${expressions(e)})" else "") + " AS ${sql(e, "expression") }"
+            }
+            is DatafusionExecute -> "EXECUTE ${sql(e, "this")}" +
+                (if (e.args["parenthesized"] == true) "(${expressions(e)})" else if (e.expressionsArg.isNotEmpty()) " ${expressions(e)}" else "")
+            is DatafusionShow -> "SHOW" + (if (e.args["extended"] == true) " EXTENDED" else "") +
+                (if (e.args["full"] == true) " FULL" else "") +
+                (if (e.text("this") == "SETTING") e.expressionsArg.joinToString("") { " ${sql(it as Expression)}" } else " ${e.text("this")}") +
+                (if (e.args["scope"] != null) " ${e.text("scope")} ${sql(e, "target")}" else "") +
+                (if (e.args["filter"] != null) " ${e.text("filter")} ${sql(e, "expression")}" else "")
+            is DatafusionExplain -> {
+                val options = e.expressionsArg.joinToString(if (e.args["list"] == true) ", " else " ") {
+                    val option = it as? PropertyEQ ?: throw UnsupportedError("Invalid DataFusion EXPLAIN option")
+                    sql(option, "this") + if (option.metaOrNull?.get("datafusion_implicit_option") == true &&
+                        (option.expressionArg as? Expression)?.name.equals("TRUE", true)) "" else " ${sql(option, "expression") }"
+                }
+                "EXPLAIN" + (if (options.isEmpty()) "" else if (e.args["list"] == true) " ($options)" else " $options") + " ${sql(e, "this") }"
+            }
+            else -> throw UnsupportedError("Unknown DataFusion utility statement")
+        }
+    }
+
     // ------------------------------------------------------------------
     // Flags (brikk: per polyglot datafusion.rs GeneratorConfig; BASE-matching knobs
     // are documented in the class KDoc rather than re-declared)
@@ -78,6 +113,23 @@ open class DatafusionGenerator(
 
     // brikk: COPY ... TO (no INTO keyword) — polyglot copy_has_into_keyword=false
     override val copyHasIntoKeyword: Boolean get() = false
+    override val copyParamsAreWrapped: Boolean get() = false
+    override val dialectCopyParamsAreCsv: Boolean get() = false
+    override val propertiesLocation get() = PROPERTY_LOCATIONS
+
+    override fun clusterpropertySql(expression: ClusterProperty): String =
+        if (expression.metaOrNull?.get("datafusion_cluster_expressions") == true) "CLUSTER BY ${expressions(expression, flat = true)}"
+        else super.clusterpropertySql(expression)
+
+    private fun nativeFileFormat(value: kotlin.Any?): String {
+        val name = (value as? Expression)?.name.orEmpty()
+        if (!Regex("[A-Za-z][A-Za-z0-9_]*").matches(name)) throw UnsupportedError("Expected a native file format name")
+        return name
+    }
+
+    override fun copyparameterSql(expression: CopyParameter): String =
+        if (expression.name.equals("STORED", true)) "STORED AS ${nativeFileFormat(expression.expressionArg)}"
+        else super.copyparameterSql(expression)
 
     // brikk: DataFusion has no LIKE ANY/ALL quantifiers — polyglot supports_like_quantifiers=false
     override val supportsLikeQuantifiers: Boolean get() = false
@@ -88,7 +140,21 @@ open class DatafusionGenerator(
     // brikk: window frame EXCLUDE unsupported — polyglot supports_window_exclude=false
     override val supportsWindowExclude: Boolean get() = false
 
-    override val dialectNullOrdering: String get() = "nulls_are_last"
+    override val dialectNullOrdering: String get() = "nulls_are_large"
+    override val dialectIndexOffset: Int get() = 1
+    override val parameterToken: String get() = "$"
+    override val byteStart: String get() = "E'"
+    override val byteEnd: String get() = "'"
+    override val hexStart: String get() = "X'"
+    override val hexEnd: String get() = "'"
+    override val dialectByteStringsSupportEscapedSequences: Boolean get() = true
+    override val escapedSequences: Map<String, String> = dev.brikk.house.sql.parser.StringEscapeProfiles.escapedSequences(tokenizerConfig)
+
+    override fun bytestringSql(expression: ByteString): String {
+        if (expression.args["is_bytes"] == true) return super.bytestringSql(expression)
+        val text = expression.thisArg as? String ?: ""
+        return "E'${escapeStr(text, escapeBackslash = true, delimiter = "'", escapedDelimiter = "''", isByteString = true)}'"
+    }
 
     override fun castSql(expression: Cast, safePrefix: String?): String =
         if (expression.meta["datafusion_cast_style"] == "dcolon") {
@@ -123,7 +189,7 @@ open class DatafusionGenerator(
 
     private fun sourceFunctionSql(expression: Expression): String {
         val sourceName = expression.meta["datafusion_function_name"] as? String
-        val functionName = sourceName ?: (expression as Func).sqlName()
+        val functionName = sourceName ?: if (expression is StrPosition) "strpos" else (expression as Func).sqlName()
         val args = expression.args.values.flatMap { value ->
             if (value is List<*>) value else listOf(value)
         }
@@ -148,6 +214,19 @@ open class DatafusionGenerator(
             sourceFunctionSql(expression)
         }
 
+    private fun datafusionStringAgg(expression: GroupConcat): String {
+        // ORDER BY follows the delimiter in DataFusion. Work on a copy so rendering
+        // never removes the order from a caller's AST, including DISTINCT inputs.
+        val value = (expression.thisArg as Expression).copy()
+        // Only the aggregate's outer Order is its modifier. An ORDER BY in a
+        // scalar subquery argument belongs to that subquery and must stay there.
+        val order = value as? Order
+        val argument = order?.thisArg as? Expression ?: value
+        order?.set("this", null)
+        val separator = expression.args["separator"] ?: Literal.string(",")
+        return "string_agg(${sql(argument)}, ${sql(separator)}${order?.let { sql(it) }.orEmpty()})"
+    }
+
     // ------------------------------------------------------------------
     // Renames for generic (Anonymous) function nodes
     // ------------------------------------------------------------------
@@ -155,6 +234,8 @@ open class DatafusionGenerator(
     // brikk: names that DataFusion spells differently and that BASE parses as generic
     // Anonymous functions (no dedicated AST node). Applied before lowercasing.
     override fun anonymousSql(expression: Anonymous): String {
+        if (expression.thisArg is Identifier) return func(sql(expression.thisArg), *expression.expressionsArg.toTypedArray(), normalize = false)
+        if (expression.meta["datafusion_native_call"] == true) return super.anonymousSql(expression)
         val parent = expression.parent
         val isQualified = parent is Dot && expression === parent.expressionArg
         if (!isQualified) {
@@ -175,25 +256,55 @@ open class DatafusionGenerator(
         return super.anonymousSql(expression)
     }
 
+    override fun anonymousaggfuncSql(expression: AnonymousAggFunc): String =
+        if (expression.thisArg is Identifier) func(sql(expression.thisArg), *expression.expressionsArg.toTypedArray(), normalize = false)
+        else super.anonymousaggfuncSql(expression)
+
+    override fun distinctSql(expression: Distinct): String {
+        val call = generateSequence(expression.parent) { it.parent }.firstOrNull { it is Func }
+        if (call?.meta?.get("datafusion_native_call") == true) {
+            val values = expressions(expression, flat = true)
+            return if (values.isEmpty()) "DISTINCT" else "DISTINCT $values"
+        }
+        return super.distinctSql(expression)
+    }
+
     companion object {
+        private val PROPERTY_LOCATIONS = GeneratorTables.PROPERTIES_LOCATION +
+            (FileFormatProperty::class to GeneratorTables.PropLocation.POST_SCHEMA)
         // brikk: dispatch-map overlay (dedicated AST nodes that need renaming). Names
         // that parse to Anonymous are handled in [anonymousSql] instead.
         val TRANSFORMS: Map<KClass<out Expression>, GenMethod> = buildMap {
             fun reg(cls: KClass<out Expression>, method: GenMethod) { put(cls, method) }
+            reg(DatafusionReset::class) { e -> (this as DatafusionGenerator).resetSql(e as DatafusionReset) }
+            for (type in listOf(DatafusionExplain::class, DatafusionPrepare::class, DatafusionExecute::class, DatafusionShow::class)) {
+                reg(type) { e -> (this as DatafusionGenerator).utilitySql(e) }
+            }
 
             fun Generator.flattenArgs(e: Expression): kotlin.Array<kotlin.Any?> =
                 e.args.values.flatMap { v -> if (v is List<*>) v else listOf(v) }.toTypedArray()
 
             // brikk: GROUP_CONCAT -> string_agg (dedicated exp.GroupConcat node)
-            reg(GroupConcat::class) { e -> func("string_agg", *flattenArgs(e)) }
+            reg(GroupConcat::class) { e -> (this as DatafusionGenerator).datafusionStringAgg(e as GroupConcat) }
             // brikk: TIME_TO_STR -> to_char (dedicated exp.TimeToStr node)
             reg(TimeToStr::class) { e -> func("to_char", *flattenArgs(e)) }
             // brikk: postgres-style regex-match operators (sqlparser-rs PGRegexMatch);
             // DataFusion renders them as operators, not function calls
-            reg(RegexpLike::class) { e -> binary(e as Binary, "~") }
+            reg(RegexpLike::class) { e ->
+                if (e.args["flag"] != null) func("regexp_like", e.thisArg, e.expressionArg, e.args["flag"])
+                else binary(e as Binary, "~")
+            }
             reg(RegexpILike::class) { e -> binary(e as Binary, "~*") }
             reg(NEQ::class) { e -> binary(e as Binary, e.meta["operator"] as? String ?: "!=") }
             reg(ArrayNode::class) { e -> "ARRAY[${expressions(e)}]" }
+            reg(FileFormatProperty::class) { e -> "STORED AS ${(this as DatafusionGenerator).nativeFileFormat(e.thisArg)}" }
+            reg(ArrayContainsAll::class) { e -> binary(e as Binary, "@>") }
+            reg(ArrayContainedBy::class) { e -> binary(e as Binary, "<@") }
+            reg(ToChar::class) { e -> func("to_char", e.thisArg, e.args["format"], e.args["nlsparam"]) }
+            reg(DateBin::class) { e ->
+                if (e.meta["datafusion_date_bin"] == true) func("date_bin", e.thisArg, e.expressionArg, e.args["origin"])
+                else functionFallbackSql(e as Func)
+            }
             reg(Unnest::class) { e -> (this as DatafusionGenerator).datafusionUnnestSql(e as Unnest) }
             reg(GenerateSeries::class) { e -> (this as DatafusionGenerator).generateSeriesSql(e as GenerateSeries) }
 

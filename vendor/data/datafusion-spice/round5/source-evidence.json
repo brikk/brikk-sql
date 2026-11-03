@@ -1,0 +1,132 @@
+{
+  "source_commit": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+  "evidence": "source inspection; no model/search execution",
+  "sources": [
+    {
+      "path": "crates/runtime/src/embeddings/udtf.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/embeddings/udtf.rs",
+      "sha256": "b7538c6bb9932789a3af6e403b4e31ff332bb4a36b7e206b92914176724076d7",
+      "excerpts": [
+        {
+          "start": 463,
+          "end": 498,
+          "text": "        // For Elasticsearch indexes, normalize the base table provider schema to strip any\n        // List/FixedSizeList columns (e.g. the embedding vector). ES does not return these\n        // columns, so they must be projected out of the base-table schema before\n        // `SearchQueryProvider` builds the join \u2014 otherwise Arrow rejects the type mismatch.\n        //\n        // Prefer the federated provider's schema when the top-level table is an\n        // `AcceleratedTable`, since the federated side already has the correct Arrow types\n        // (e.g. FixedSizeList) whereas the accelerator may store them differently.\n        #[cfg(feature = \"elasticsearch\")]\n        let federated_tbl_storage: Arc<dyn TableProvider>;\n        #[cfg(feature = \"elasticsearch\")]\n        let normalized_tbl_storage: Arc<dyn TableProvider>;\n        // For Elasticsearch indexes, normalize the base table provider schema to match\n        // what the ES HTTP client produces (e.g. LargeUtf8 \u2192 Utf8). This ensures that\n        // HashJoinExec key types match on both sides of the join.\n        #[cfg(feature = \"elasticsearch\")]\n        let tbl: &Arc<dyn TableProvider> = if let Some(es_index) =\n            vector_index.as_any().downcast_ref::<ElasticsearchIndex>()\n        {\n            let source_for_normalize = if let Some(acc) = spice_table::find_layer::<AcceleratedTable>(\n                tbl.as_ref(),\n                spice_table::LayerWalk::Read,\n            ) && let Some(fed) =\n                acc.get_federated_table_ref().try_table_provider_sync_ref()\n            {\n                federated_tbl_storage = Arc::clone(fed);\n                &federated_tbl_storage\n            } else {\n                tbl\n            };\n            normalized_tbl_storage =\n                es_index.normalize_source_table(Arc::clone(source_for_normalize))?;\n            &normalized_tbl_storage\n        } else {\n            tbl\n        };"
+        },
+        {
+          "start": 748,
+          "end": 765,
+          "text": "\n#[async_trait::async_trait]\nimpl TableProvider for VectorSearchUDTFProvider {\n    fn schema(&self) -> SchemaRef {\n        // When the caller asked `include_score => false`, don't advertise `_score`\n        // in the schema. The scan body also omits it from the final projection.\n        if matches!(self.args.include_score, Some(false)) {\n            return self.underlying.schema();\n        }\n        append_fields(\n            &self.underlying.schema(),\n            vec![Arc::new(Field::new(\n                SEARCH_SCORE_COLUMN_NAME.to_string(),\n                arrow_schema::DataType::Float64,\n                false,\n            ))],\n        )\n    }"
+        },
+        {
+          "start": 1134,
+          "end": 1238,
+          "text": "/// Parse the optional `(column, limit, include_score)` triplet shared by\n/// `vector_search` and `text_search` UDTFs.\n///\n/// Reads up to three remaining positional args (after `tbl` and `query` have\n/// been consumed), then merges any matching named overrides from `named`.\n/// The `include_score` default (`true`) is applied only after the named-arg\n/// merge so that `include_score => false` is never silently dropped.\n///\n/// `tbl_display` and `query_display` are used only in error messages.\nfn parse_column_limit_score<'a>(\n    positional: &mut impl Iterator<Item = &'a Expr>,\n    named: &HashMap<&str, &Expr>,\n    tbl_display: &str,\n    query_display: &str,\n) -> DataFusionResult<(Option<String>, Option<usize>, Option<bool>)> {\n    let (column, limit, include_score) = match (\n        positional.next(),\n        positional.next(),\n        positional.next(),\n    ) {\n        // No arguments\n        (None, None, None) => (None, None, None),\n\n        // Single argument cases\n        (Some(Expr::Column(Column { name: col, .. })), None, None) => {\n            (Some(col.clone()), None, None)\n        }\n        (Some(Expr::Literal(scalar, None)), None, None) => {\n            if let ScalarValue::Boolean(Some(include_score)) = *scalar {\n                (None, None, Some(include_score))\n            } else {\n                (None, Some(parse_limit_scalar(scalar)?), None)\n            }\n        }\n\n        // 2 of 3 arguments\n        (Some(Expr::Column(Column { name: col, .. })), Some(Expr::Literal(scalar, None)), None) => {\n            if let ScalarValue::Boolean(Some(include_score)) = *scalar {\n                (Some(col.clone()), None, Some(include_score))\n            } else {\n                (Some(col.clone()), Some(parse_limit_scalar(scalar)?), None)\n            }\n        }\n        (\n            Some(Expr::Literal(scalar, None)),\n            Some(Expr::Literal(ScalarValue::Boolean(Some(include_score)), None)),\n            None,\n        ) => (\n            None,\n            Some(parse_limit_scalar(scalar)?),\n            Some(*include_score),\n        ),\n\n        // All three arguments provided\n        (\n            Some(Expr::Column(Column { name: col, .. })),\n            Some(Expr::Literal(scalar, None)),\n            Some(Expr::Literal(ScalarValue::Boolean(Some(include_score)), None)),\n        ) => (\n            Some(col.clone()),\n            Some(parse_limit_scalar(scalar)?),\n            Some(*include_score),\n        ),\n\n        // Invalid argument combinations\n        (a, b, c) => {\n            return Err(DataFusionError::Plan(format!(\n                \"Invalid arguments: ({tbl_display}, {query_display}, {a:?}, {b:?}, {c:?}. Expected (table, query, [column, limit, include_score]).\"\n            )));\n        }\n    };\n\n    // Merge named overrides (with conflict detection).\n    let column = resolve_positional_or_named(column, named, \"column\", |e| match e {\n        Expr::Column(Column { name, .. }) => Ok(Some(name.clone())),\n        Expr::Literal(ScalarValue::Utf8(Some(s)), _) => Ok(Some(s.clone())),\n        other => Err(DataFusionError::Plan(format!(\n            \"Named 'column' argument must be a column reference or string, got {other:?}.\"\n        ))),\n    })?;\n    let limit = resolve_positional_or_named(limit, named, \"limit\", |e| match e {\n        Expr::Literal(scalar, _) => parse_limit_scalar(scalar).map(Some),\n        other => Err(DataFusionError::Plan(format!(\n            \"Named 'limit' argument must be an integer, got {other:?}.\"\n        ))),\n    })?;\n    let include_score =\n        resolve_positional_or_named(include_score, named, \"include_score\", |e| match e {\n            Expr::Literal(ScalarValue::Boolean(Some(b)), _) => Ok(Some(*b)),\n            other => Err(DataFusionError::Plan(format!(\n                \"Named 'include_score' argument must be a boolean, got {other:?}.\"\n            ))),\n        })?;\n    // Apply the `include_score` default once named-arg merge is done.\n    let include_score = include_score.or(Some(true));\n\n    let limit_usize = limit\n        .map(|l| {\n            usize::try_from(l).map_err(|_| {\n                DataFusionError::Plan(format!(\"limit value {l} is out of range for usize.\"))\n            })\n        })\n        .transpose()?;\n\n    Ok((column, limit_usize, include_score))"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-search/src/rrf.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-search/src/rrf.rs",
+      "sha256": "88640cd29f74c66c6c8220a80d6a01d0051f9371a3706763dcd44970a83f49f3",
+      "excerpts": [
+        {
+          "start": 78,
+          "end": 78,
+          "text": "pub static RRF_FUSED_SCORE_COLUMN_NAME: &str = \"_fused_score\";"
+        },
+        {
+          "start": 795,
+          "end": 829,
+          "text": "        args: &ReciprocalRankFusionArgs,\n        filters: &[Expr],\n    ) -> Result<DataFrame> {\n        let (subquery_dfs, join_key) = self.prepare_and_execute_subqueries(args, filters)?;\n        let score_expr = Self::compute_score_expr(args, &subquery_dfs)?;\n\n        // Create column expressions for final projection.\n        // Only include columns that exist in *all* subquery schemas so that\n        // cross-backend RRF (e.g. vector_search + Elasticsearch text_search)\n        // doesn't fail when one backend returns extra columns (e.g. `_value`,\n        // `content_offset`) that the other doesn't.\n        let mut columns: Vec<Expr> = vec![score_expr];\n        columns.extend(subquery_dfs[0].schema().columns().iter().filter_map(|c| {\n            match c.name.as_str() {\n                \"rank\" | \"_score\" => None,\n                // TODO: do we want the embedding in the final projection?\n                other if other.ends_with(\"_embedding\") => None,\n                other => {\n                    // Skip columns that don't exist in every subquery schema.\n                    let in_all = subquery_dfs\n                        .iter()\n                        .all(|df| df.schema().has_column_with_unqualified_name(other));\n                    if !in_all {\n                        return None;\n                    }\n                    Some(\n                        coalesce(\n                            (0..subquery_dfs.len())\n                                .map(|i| col_qualified!(format!(\"search_{i}\"), other))\n                                .collect(),\n                        )\n                        .alias(other),\n                    )\n                }\n            }"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-search/src/rerank.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-search/src/rerank.rs",
+      "sha256": "df2b73456b3ee3be9c952d060b1f3e5f0cbb2ef8503f24ff868b9e0857e01671",
+      "excerpts": [
+        {
+          "start": 150,
+          "end": 156,
+          "text": "});\n\n/// Output column for reranker scores. Chosen distinct from `_score` /\n/// `_fused_score` so downstream callers can tell which stage produced which\n/// score. The reranker output drops the upstream score columns and keeps only\n/// `rerank_score` \u2014 the fresh relevance judgement is what matters.\npub const RERANK_SCORE_COLUMN: &str = \"rerank_score\";"
+        },
+        {
+          "start": 588,
+          "end": 598,
+          "text": "    /// Build the output schema: input schema, minus `_score` / `_fused_score`\n    /// (they'd be confusing alongside `rerank_score`), plus `rerank_score`.\n    fn output_schema(input: &SchemaRef) -> SchemaRef {\n        let mut fields: Vec<Field> = input\n            .fields()\n            .iter()\n            .filter(|f| f.name() != \"_score\" && f.name() != RRF_FUSED_SCORE_COLUMN_NAME)\n            .map(|f| f.as_ref().clone())\n            .collect();\n        fields.push(Field::new(RERANK_SCORE_COLUMN, DataType::Float32, false));\n        Arc::new(Schema::new(fields))"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-datafusion-udfs/src/flatten_json.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-datafusion-udfs/src/flatten_json.rs",
+      "sha256": "96c496ddf255f1b281b0155f701376b20aefd9224fc1f869f5fa4ab91fd44240",
+      "excerpts": [
+        {
+          "start": 143,
+          "end": 163,
+          "text": "\n// -------- Output schema --------\n\nstatic ROW_FIELDS: LazyLock<Fields> = LazyLock::new(|| {\n    Fields::from(vec![\n        Field::new(\"path\", DataType::Utf8, false),\n        Field::new(\"parent_path\", DataType::Utf8, false),\n        Field::new(\"key\", DataType::Utf8, false),\n        Field::new(\"value\", DataType::Utf8, true),\n        Field::new(\"type\", DataType::Utf8, false),\n    ])\n});\n\nstatic OUTPUT_SCHEMA: LazyLock<SchemaRef> =\n    LazyLock::new(|| Arc::new(Schema::new(ROW_FIELDS.clone())));\n\nstatic ROW_LIST_TYPE: LazyLock<DataType> = LazyLock::new(|| {\n    DataType::LargeList(Arc::new(Field::new(\n        \"item\",\n        DataType::Struct(ROW_FIELDS.clone()),\n        true,"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-datafusion-udfs/src/json_tree.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-datafusion-udfs/src/json_tree.rs",
+      "sha256": "1536b948ad6b742d0abd329c9476b7248d35d5647cc8d952990efe4970caff94",
+      "excerpts": [
+        {
+          "start": 132,
+          "end": 165,
+          "text": "    }\n}\n\nstatic TREE_FIELDS: LazyLock<Fields> = LazyLock::new(|| {\n    Fields::from(vec![\n        Field::new(\"key\", DataType::Utf8, true),\n        Field::new(\"value\", DataType::Utf8, true),\n        Field::new(\"type\", DataType::Utf8, false),\n        Field::new(\"atom\", DataType::Utf8, true),\n        Field::new(\"id\", DataType::Int64, false),\n        Field::new(\"parent\", DataType::Int64, true),\n        Field::new(\"fullkey\", DataType::Utf8, false),\n        // `path` is the parent JSON-Path. The root row has no parent, so it's\n        // emitted as NULL (matches DuckDB / SQLite `json_tree` semantics).\n        Field::new(\"path\", DataType::Utf8, true),\n    ])\n});\n\nstatic OUTPUT_SCHEMA: LazyLock<SchemaRef> =\n    LazyLock::new(|| Arc::new(Schema::new(TREE_FIELDS.clone())));\n\n/// Return type of the scalar UDF form. Uses `LargeList` (i64 offsets)\n/// instead of `List` so a large batch can't overflow the offset range and\n/// silently drop rows. `UNNEST` works on both variants, so the change is\n/// transparent to downstream SQL.\nstatic ROW_LIST_TYPE: LazyLock<DataType> = LazyLock::new(|| {\n    DataType::LargeList(Arc::new(Field::new(\n        \"item\",\n        DataType::Struct(TREE_FIELDS.clone()),\n        true,\n    )))\n});\n\n#[derive(Debug, Clone, PartialEq, Eq)]"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-decide/src/output.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-decide/src/output.rs",
+      "sha256": "8d28517f40a50c540dccf3ce007df0a32cf20a2e32c1470c527e83fda838ccb9",
+      "excerpts": [
+        {
+          "start": 17,
+          "end": 104,
+          "text": "//! The SQL values decision functions return.\n//!\n//! `ai_decide` returns a struct with one field per question id:\n//!\n//! - `noul` \u2192 `{probability}`\n//! - `choice` \u2192 `{choice, probabilities: [{value, probability}], confidence}`\n//! - `score` \u2192 `{score, probabilities: [{value, label, probability}], confidence}`\n//!\n//! The typed functions return the one value they ask for.\n\nuse std::collections::BTreeMap;\nuse std::sync::Arc;\n\nuse arrow::array::{ArrayRef, BooleanArray, Float64Array, StringArray};\nuse arrow::datatypes::{DataType, Field, Fields, Schema};\nuse datafusion::common::{DataFusionError, Result, exec_err, internal_err};\nuse evaluate_api::{Answer, EntryType, NonNullEntry, Question};\nuse serde_json::{Map, Value, json};\n\nuse crate::args::TYPED_QUESTION_ID;\nuse crate::exec::RowAnswers;\nuse crate::functions::Kind;\n\n/// The struct field names, shared by the planner's field accesses.\npub(crate) const PROBABILITY: &str = \"probability\";\npub(crate) const CHOICE: &str = \"choice\";\npub(crate) const SCORE: &str = \"score\";\nconst PROBABILITIES: &str = \"probabilities\";\nconst CONFIDENCE: &str = \"confidence\";\nconst VALUE: &str = \"value\";\nconst LABEL: &str = \"label\";\n\n/// The threshold above which `ai_if` is true: yes is more likely than no.\npub(crate) const IF_THRESHOLD: f64 = 0.5;\n\nfn float(name: &str) -> Field {\n    Field::new(name, DataType::Float64, true)\n}\n\nfn list_of(fields: Vec<Field>) -> DataType {\n    DataType::List(Arc::new(Field::new_list_field(\n        DataType::Struct(Fields::from(fields)),\n        true,\n    )))\n}\n\n/// The struct one question's answer has.\nfn answer_type(question: &Question) -> DataType {\n    let fields = match question {\n        Question::Noul { .. } => vec![float(PROBABILITY)],\n        Question::Choice { .. } => vec![\n            Field::new(CHOICE, DataType::Utf8, true),\n            Field::new(\n                PROBABILITIES,\n                list_of(vec![\n                    Field::new(VALUE, DataType::Utf8, true),\n                    float(PROBABILITY),\n                ]),\n                true,\n            ),\n            float(CONFIDENCE),\n        ],\n        Question::Score { .. } => vec![\n            float(SCORE),\n            Field::new(\n                PROBABILITIES,\n                list_of(vec![\n                    Field::new(VALUE, DataType::Int64, true),\n                    Field::new(LABEL, DataType::Utf8, true),\n                    float(PROBABILITY),\n                ]),\n                true,\n            ),\n            float(CONFIDENCE),\n        ],\n    };\n    DataType::Struct(Fields::from(fields))\n}\n\n/// The struct `ai_decide` returns for `questions`.\npub(crate) fn decision_type(questions: &BTreeMap<String, Question>) -> DataType {\n    DataType::Struct(Fields::from(\n        questions\n            .iter()\n            .map(|(id, question)| Field::new(id, answer_type(question), true))\n            .collect::<Vec<_>>(),\n    ))\n}"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-decide/src/functions.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-decide/src/functions.rs",
+      "sha256": "92e7eac34ac00ebff6c9a63c42c835acb7f546b182108497e2390b510e05c271",
+      "excerpts": [
+        {
+          "start": 106,
+          "end": 120,
+          "text": "    /// The SQL type a typed function returns. `ai_decide`'s struct depends on its\n    /// questions, so it has none here.\n    pub(crate) fn typed_return(self) -> Option<DataType> {\n        match self {\n            Self::If => Some(DataType::Boolean),\n            Self::Probability | Self::Score => Some(DataType::Float64),\n            Self::Classify => Some(DataType::Utf8),\n            Self::Decide => None,\n        }\n    }\n}\n\n/// One decision function. All five share a [`Decider`], which holds the model store.\n#[derive(Debug)]\npub(crate) struct DecisionUdf {"
+        },
+        {
+          "start": 175,
+          "end": 195,
+          "text": "    fn return_type(&self, _arg_types: &[DataType]) -> Result<DataType> {\n        if let Some(data_type) = self.kind.typed_return() {\n            Ok(data_type)\n        } else {\n            internal_err!(\"{} derives its return type from its questions\", self.name())\n        }\n    }\n\n    fn return_field_from_args(&self, args: ReturnFieldArgs) -> Result<FieldRef> {\n        crate::args::check_planning_args(self.kind, args.arg_fields, args.scalar_arguments)?;\n        let data_type = if let Some(data_type) = self.kind.typed_return() {\n            data_type\n        } else {\n            let questions = crate::args::questions_from_scalar(\n                self.kind,\n                args.scalar_arguments.get(1).copied().flatten(),\n            )?;\n            output::decision_type(&questions)\n        };\n        Ok(Arc::new(Field::new(self.name(), data_type, true)))\n    }"
+        }
+      ]
+    },
+    {
+      "path": "crates/runtime-decide/src/args.rs",
+      "url": "https://raw.githubusercontent.com/spiceai/spiceai/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime-decide/src/args.rs",
+      "sha256": "0a1dcf161257b8ff9df79b98b306b867120dc1f6b4837b77556b78302ae06e56",
+      "excerpts": [
+        {
+          "start": 52,
+          "end": 52,
+          "text": "const MAX_CHOICE_OPTIONS: usize = 255;"
+        },
+        {
+          "start": 423,
+          "end": 467,
+          "text": "/// The questions of an `ai_decide` call: a JSON object of question id to a `noul`,\n/// `choice` or `score` question, the same grammar as `TypeSafe`'s API and Databricks'\n/// `ai_decide`.\npub(crate) fn parse_questions(kind: Kind, text: &str) -> Result<BTreeMap<String, Question>> {\n    let Entries(entries) = serde_json::from_str::<Entries<Question>>(text).map_err(|e| {\n        plan_datafusion_err!(\n            \"{}: `questions` is not a valid questions object: {e}. Each entry needs a `type` of 'noul', 'choice' or 'score', with `instructions` and, for choice and score, `criteria`.\",\n            kind.name()\n        )\n    })?;\n    if entries.is_empty() {\n        return plan_err!(\n            \"{}: `questions` must contain at least one question.\",\n            kind.name()\n        );\n    }\n    let mut questions = BTreeMap::new();\n    for (id, question) in entries {\n        if id.trim().is_empty() {\n            return plan_err!(\"{}: a question id cannot be empty.\", kind.name());\n        }\n        if let Question::Choice { criteria, .. } = &question {\n            if criteria.is_empty() || criteria.len() > MAX_CHOICE_OPTIONS {\n                return plan_err!(\n                    \"{}: choice question '{id}' must offer between 1 and {MAX_CHOICE_OPTIONS} options in `criteria`; it offers {}.\",\n                    kind.name(),\n                    criteria.len()\n                );\n            }\n            if criteria.keys().any(|label| label.trim().is_empty()) {\n                return plan_err!(\n                    \"{}: choice question '{id}' has an option with an empty label in `criteria`. Give every option a label.\",\n                    kind.name()\n                );\n            }\n        }\n        if questions.contains_key(&id) {\n            return plan_err!(\n                \"{}: question '{id}' is listed more than once. Give each question its own id.\",\n                kind.name()\n            );\n        }\n        questions.insert(id, question);\n    }\n    Ok(questions)"
+        }
+      ]
+    }
+  ]
+}

@@ -74,6 +74,7 @@ enum class CatalogKnowledge {
  *   Keys match the call's name exactly, case included: they are provider keys, not SQL names.
  * - [tables]: physical tables by name, dotted when qualified (`db.events`), matched by the
  *   dialect's identifier rules, the last parts of a qualified name included.
+ *   Components containing dots or double quotes can use SQL double-quote escaping (`"cat"."a.b"`).
  * - [calls]: the outputs of table functions, matched exactly like slots, called with any
  *   arguments, in `FROM` or a pipe `CALL`.
  * - [searchPath]: the namespaces a partly qualified table name is looked up in, in order, each a
@@ -89,7 +90,19 @@ data class RelationFacts(
     val calls: Map<String, RelationFact> = emptyMap(),
     val catalog: CatalogKnowledge = CatalogKnowledge.OPEN,
     val searchPath: List<String> = emptyList(),
+    /** Exact output facts for one table call, keyed by its function-name UTF-16 start in the script. */
+    val callSites: Map<Int, RelationFact> = emptyMap(),
 ) {
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(slots: Map<String, RelationFact> = emptyMap(), tables: Map<String, RelationFact> = emptyMap(),
+        calls: Map<String, RelationFact> = emptyMap(), catalog: CatalogKnowledge = CatalogKnowledge.OPEN,
+        searchPath: List<String> = emptyList()) : this(slots, tables, calls, catalog, searchPath, emptyMap())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    fun copy(slots: Map<String, RelationFact> = this.slots, tables: Map<String, RelationFact> = this.tables,
+        calls: Map<String, RelationFact> = this.calls, catalog: CatalogKnowledge = this.catalog,
+        searchPath: List<String> = this.searchPath): RelationFacts = copy(slots, tables, calls, catalog, searchPath, callSites)
+
     // Binary compatibility (AGENTS.md): the constructor and copy from before searchPath.
     @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
     constructor(
@@ -105,5 +118,5 @@ data class RelationFacts(
         tables: Map<String, RelationFact> = this.tables,
         calls: Map<String, RelationFact> = this.calls,
         catalog: CatalogKnowledge = this.catalog,
-    ): RelationFacts = copy(slots, tables, calls, catalog, searchPath)
+    ): RelationFacts = copy(slots, tables, calls, catalog, searchPath, callSites)
 }

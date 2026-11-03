@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "product": "datafusion",
+  "version": "55.2.0",
+  "source_commit": "500744d5c25499055e3b2ca46b022bc425989203",
+  "captured_on": "2026-10-30",
+  "lockfile": {
+    "url": "https://raw.githubusercontent.com/apache/datafusion/500744d5c25499055e3b2ca46b022bc425989203/Cargo.lock",
+    "sha256": "75a99c882425da83fdfacc78d23bfac7ae5d18adea760ff514779cf1d0595ff1",
+    "license": "Apache-2.0"
+  },
+  "resolved_packages": [
+    {
+      "name": "arrow",
+      "version": "59.2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf"
+    },
+    {
+      "name": "arrow-schema",
+      "version": "59.2.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "e6fed2ca0d1eade57e811cbe73b98ad50cc08a1183e13b2d2aa43a7df593f40e"
+    },
+    {
+      "name": "datafusion",
+      "version": "55.2.0"
+    },
+    {
+      "name": "datafusion-spark",
+      "version": "55.2.0"
+    },
+    {
+      "name": "datafusion-sql",
+      "version": "55.2.0"
+    },
+    {
+      "name": "sqlparser",
+      "version": "0.62.0",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "checksum": "13c6d1b651dc4edf07eead2a0c6c78016ce971bc2c10da5266861b13f25e7cec"
+    }
+  ],
+  "reference_lockfile": {
+    "path": "tools/datafusion-reference/upstream/Cargo.lock",
+    "sha256": "3f0a075dca5d9c2c4e7544d2e3c7e9f06f078e3164594d06445e4df53057173e",
+    "resolved_packages": [
+      {
+        "name": "arrow",
+        "version": "59.2.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "61d285d16bce7d0be61912f7928342b673067b6b7d7ef6cc179258ba7de1fecf"
+      },
+      {
+        "name": "arrow-schema",
+        "version": "59.2.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "e6fed2ca0d1eade57e811cbe73b98ad50cc08a1183e13b2d2aa43a7df593f40e"
+      },
+      {
+        "name": "datafusion",
+        "version": "55.2.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "4cd5317db77ba6bca25c761a8091b9d294a9f4188e4f9dcd0243e6a57de862ac"
+      },
+      {
+        "name": "datafusion-sql",
+        "version": "55.2.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "816c224a0ef5469a32a562b5d4830544f714f97c5f50142109286d40a288c7db"
+      },
+      {
+        "name": "sqlparser",
+        "version": "0.62.0",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "checksum": "13c6d1b651dc4edf07eead2a0c6c78016ce971bc2c10da5266861b13f25e7cec"
+      }
+    ]
+  },
+  "reference_tool_version": "0.1.0",
+  "protocol_version": 1,
+  "capture_command": "python3 tools/capture_datafusion_spice_provenance.py",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/apache/datafusion/500744d5c25499055e3b2ca46b022bc425989203/datafusion/sql/src/parser.rs",
+      "sha256": "4315147252cd9d4e6e58edec37d1e55f3cea49595d94be6f1a0cd198a6ec049e",
+      "license": "Apache-2.0"
+    }
+  ],
+  "parser_profile": {
+    "dialect": "Generic",
+    "identifier_normalization": true,
+    "extensions": [
+      "upstream DFParser"
+    ]
+  },
+  "engine_profile": {
+    "execution": "fresh in-memory SessionContext per request",
+    "target_partitions": 1,
+    "features": [
+      "sql",
+      "nested_expressions",
+      "datetime_expressions",
+      "regex_expressions",
+      "string_expressions",
+      "unicode_expressions",
+      "encoding_expressions",
+      "crypto_expressions"
+    ],
+    "optional_packages": [],
+    "limitation": "Explicit embedding profile, not every possible DataFusion embedding"
+  }
+}

@@ -40,7 +40,9 @@ index is [SQL-08](TODO.md); the qualification record is the
 
 ## Deferred improvement backlog
 
-All items are open and unscheduled. P1 means address before offering authoritative
+CHSEM-024/025 and CHSEM-034's local release preparation are complete; P2 items
+remain open and unscheduled. Publication/consumer delivery is still held for
+approval. P1 means address before offering authoritative
 all-expression metadata; P2 means select a concrete consumer need before expanding
 coverage. Delivery has its own approval gate. Every implementation round needs an
 explicitly agreed scope, tests and its own commit/push. Do not reopen completed
@@ -125,6 +127,38 @@ source/native evidence, JVM/ABI and affected consumer/platform gates, Python che
 freshness and skips. Preserve generic parity, source ranges, serde, cancellation,
 ownership, explicit mode selection and public binary compatibility. Acceptance of
 this backlog does not authorize work on its items.
+
+## CHSEM-034 release preparation
+
+The user authorized P1 fixes plus release-candidate preparation, not publication
+or consumer updates. CHSEM-024/025 are committed/pushed as `f58dc3d`/`3ae9205`.
+Current main `0572f6d` is reconciled into this feature branch. Conflict resolution
+retains both DataFusion encoded-string and ClickHouse scientific-number policies,
+with a combined-policy regression test, and both dialects' native typing rules.
+
+The combined tree builds all modules and passes 1,536 core tests, 455 other module
+tests with 61 optional-engine assumption aborts, and 817 IntelliJ tests on
+261.25134.95. Python discovery passes 210 tests with one opt-in skip; the separate
+enabled release-model run passes all 38 release tests. Multiplication reports
+regenerate byte-identically. CI now includes offline ClickHouse evidence tests.
+
+Unsigned local SQL `0.23.0-rc.1` and IntelliJ `0.3.1-rc.1` candidates pass alignment,
+verifier, Java 17 and IDE audits across all 15 coordinates. All 60 payloads and
+ZIP integrity are checked, representative packaged sources match the checkout,
+and the packaged semantic APIs compile/run on actual Java 17. Release helpers
+restore development descriptors; no remote artifacts or consumer repositories
+are changed. Logs, SHA-256 manifests and smoke evidence are under
+`build/clickhouse-release-gate/`; the release record is `docs/sql-0.23.0.md`.
+
+CHSEM-034 remains open for approval of final source/version selection, remote
+CI/publication and separately qualified consumer adoption. P2 items remain deferred.
+Local candidate preparation is not release or adoption, and does not authorize
+the remaining delivery steps.
+
+Release preparation is complete locally. A post-reconciliation native refresh of
+the 1,440-type matrix plus 19 finite/six script original/generated outcomes matches
+the committed CHSEM-025 evidence on both pins. The 95-test ClickHouse-only offline
+gate also passes. No further feature changes are planned for this candidate.
 
 ## CHSEM-024 result
 

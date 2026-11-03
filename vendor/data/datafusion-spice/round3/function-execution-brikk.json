@@ -1,0 +1,3073 @@
+{
+    "schema_version": 1,
+    "dialect": "datafusion",
+    "evidence": "local parser and generator observations only",
+    "cases": [
+        {
+            "id": "exec-abs",
+            "sql": "SELECT abs(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Abs",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Abs(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT abs(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-acos",
+            "sql": "SELECT acos(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Acos",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Acos(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT acos(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-acosh",
+            "sql": "SELECT acosh(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Acosh",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Acosh(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT acosh(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-approx_median",
+            "sql": "SELECT approx_median(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=approx_median, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT approx_median(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-approx_percentile_cont",
+            "sql": "SELECT approx_percentile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=approx_percentile_cont, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT approx_percentile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-approx_percentile_cont_with_weight",
+            "sql": "SELECT approx_percentile_cont_with_weight(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=approx_percentile_cont_with_weight, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT approx_percentile_cont_with_weight(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-ascii",
+            "sql": "SELECT ascii(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=ascii, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ascii(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-asin",
+            "sql": "SELECT asin(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Asin",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Asin(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT asin(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-asinh",
+            "sql": "SELECT asinh(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Asinh",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Asinh(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT asinh(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-atan",
+            "sql": "SELECT atan(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Atan",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Atan(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT atan(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-atan2",
+            "sql": "SELECT atan2(CAST(NULL AS REAL), CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Atan2",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Atan2(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false)), expression=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT atan2(CAST(NULL AS FLOAT), CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-atanh",
+            "sql": "SELECT atanh(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Atanh",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Atanh(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT atanh(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-avg",
+            "sql": "SELECT avg(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Avg",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Avg(this=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT avg(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-bit_and",
+            "sql": "SELECT bit_and(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=bit_and, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bit_and(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-bit_length",
+            "sql": "SELECT bit_length(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=bit_length, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bit_length(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-bit_or",
+            "sql": "SELECT bit_or(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=bit_or, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bit_or(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-bit_xor",
+            "sql": "SELECT bit_xor(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=bit_xor, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bit_xor(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-bool_and",
+            "sql": "SELECT bool_and(CAST(NULL AS BOOLEAN)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "LogicalAnd",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=LogicalAnd(this=Cast(this=Null(), to=DataType(this=BOOLEAN, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bool_and(CAST(NULL AS BOOLEAN)) AS v"
+        },
+        {
+            "id": "exec-bool_or",
+            "sql": "SELECT bool_or(CAST(NULL AS BOOLEAN)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "LogicalOr",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=LogicalOr(this=Cast(this=Null(), to=DataType(this=BOOLEAN, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT bool_or(CAST(NULL AS BOOLEAN)) AS v"
+        },
+        {
+            "id": "exec-btrim",
+            "sql": "SELECT btrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=btrim, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT btrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-cbrt",
+            "sql": "SELECT cbrt(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Cbrt",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Cbrt(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT cbrt(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-ceil",
+            "sql": "SELECT ceil(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Ceil",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Ceil(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ceil(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-char_length",
+            "sql": "SELECT char_length(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Length",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Length(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT char_length(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-character_length",
+            "sql": "SELECT character_length(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Length",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Length(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT length(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-chr",
+            "sql": "SELECT chr(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=chr, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT chr(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-contains",
+            "sql": "SELECT contains(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=contains, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT contains(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-corr",
+            "sql": "SELECT corr(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=corr, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT corr(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-cos",
+            "sql": "SELECT cos(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Cos",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Cos(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT cos(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-cosh",
+            "sql": "SELECT cosh(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Cosh",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Cosh(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT cosh(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-cot",
+            "sql": "SELECT cot(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Cot",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Cot(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT cot(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-covar",
+            "sql": "SELECT covar(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=covar, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT covar(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-covar_pop",
+            "sql": "SELECT covar_pop(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=covar_pop, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT covar_pop(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-covar_samp",
+            "sql": "SELECT covar_samp(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=covar_samp, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT covar_samp(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-date_trunc",
+            "sql": "SELECT date_trunc(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=date_trunc, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT date_trunc(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-datetrunc",
+            "sql": "SELECT datetrunc(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=datetrunc, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT datetrunc(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-decode",
+            "sql": "SELECT decode(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=decode, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT decode(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-degrees",
+            "sql": "SELECT degrees(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Degrees",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Degrees(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT degrees(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-digest",
+            "sql": "SELECT digest(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=digest, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT digest(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-encode",
+            "sql": "SELECT encode(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=encode, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT encode(CAST(NULL AS BYTEA), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-ends_with",
+            "sql": "SELECT ends_with(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=ends_with, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ends_with(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-exp",
+            "sql": "SELECT exp(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Exp",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Exp(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT exp(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-factorial",
+            "sql": "SELECT factorial(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Factorial",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Factorial(this=Cast(this=Null(), to=DataType(this=BIGINT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT factorial(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-find_in_set",
+            "sql": "SELECT find_in_set(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=find_in_set, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT find_in_set(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-floor",
+            "sql": "SELECT floor(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Floor",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Floor(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT floor(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-from_unixtime",
+            "sql": "SELECT from_unixtime(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=from_unixtime, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT from_unixtime(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-generate_series",
+            "sql": "SELECT generate_series(CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "GenerateSeries",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=GenerateSeries(start=Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), end=Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), step=Cast(this=Null(), to=DataType(this=BIGINT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT generate_series(CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-ifnull",
+            "sql": "SELECT ifnull(CAST(NULL AS BOOLEAN), CAST(NULL AS BOOLEAN)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=ifnull, expressions=[Cast(this=Null(), to=DataType(this=BOOLEAN, nested=false)), Cast(this=Null(), to=DataType(this=BOOLEAN, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ifnull(CAST(NULL AS BOOLEAN), CAST(NULL AS BOOLEAN)) AS v"
+        },
+        {
+            "id": "exec-initcap",
+            "sql": "SELECT initcap(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=initcap, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT initcap(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-instr",
+            "sql": "SELECT instr(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=instr, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT instr(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-isnan",
+            "sql": "SELECT isnan(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=isnan, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT isnan(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-iszero",
+            "sql": "SELECT iszero(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=iszero, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT iszero(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-left",
+            "sql": "SELECT left(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=left, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT left(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-length",
+            "sql": "SELECT length(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Length",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Length(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT length(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-levenshtein",
+            "sql": "SELECT levenshtein(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=levenshtein, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT levenshtein(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-ln",
+            "sql": "SELECT ln(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Ln",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Ln(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ln(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-log",
+            "sql": "SELECT log(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Log",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Log(this=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), expression=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT log(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-log10",
+            "sql": "SELECT log10(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Log",
+                        "Identifier",
+                        "Literal",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Log(this=Literal(this=10, is_string=false), expression=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT log10(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-log2",
+            "sql": "SELECT log2(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Log",
+                        "Identifier",
+                        "Literal",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Log(this=Literal(this=2, is_string=false), expression=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT log2(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-lower",
+            "sql": "SELECT lower(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Lower",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Lower(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT lower(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-lpad",
+            "sql": "SELECT lpad(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=lpad, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT lpad(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-ltrim",
+            "sql": "SELECT ltrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=ltrim, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT ltrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-make_date",
+            "sql": "SELECT make_date(CAST(NULL AS INT), CAST(NULL AS INT), CAST(NULL AS INT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=make_date, expressions=[Cast(this=Null(), to=DataType(this=INT, nested=false)), Cast(this=Null(), to=DataType(this=INT, nested=false)), Cast(this=Null(), to=DataType(this=INT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT make_date(CAST(NULL AS INT), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+        },
+        {
+            "id": "exec-make_time",
+            "sql": "SELECT make_time(CAST(NULL AS INT), CAST(NULL AS INT), CAST(NULL AS INT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=make_time, expressions=[Cast(this=Null(), to=DataType(this=INT, nested=false)), Cast(this=Null(), to=DataType(this=INT, nested=false)), Cast(this=Null(), to=DataType(this=INT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT make_time(CAST(NULL AS INT), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+        },
+        {
+            "id": "exec-md5",
+            "sql": "SELECT md5(CAST(NULL AS BYTEA)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=md5, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT md5(CAST(NULL AS BYTEA)) AS v"
+        },
+        {
+            "id": "exec-mean",
+            "sql": "SELECT mean(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=mean, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT mean(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-median",
+            "sql": "SELECT median(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=median, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT median(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-nanvl",
+            "sql": "SELECT nanvl(CAST(NULL AS REAL), CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=nanvl, expressions=[Cast(this=Null(), to=DataType(this=FLOAT, nested=false)), Cast(this=Null(), to=DataType(this=FLOAT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT nanvl(CAST(NULL AS FLOAT), CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-nvl",
+            "sql": "SELECT nvl(CAST(NULL AS BOOLEAN), CAST(NULL AS BOOLEAN)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=nvl, expressions=[Cast(this=Null(), to=DataType(this=BOOLEAN, nested=false)), Cast(this=Null(), to=DataType(this=BOOLEAN, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT nvl(CAST(NULL AS BOOLEAN), CAST(NULL AS BOOLEAN)) AS v"
+        },
+        {
+            "id": "exec-octet_length",
+            "sql": "SELECT octet_length(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=octet_length, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT octet_length(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-overlay",
+            "sql": "SELECT overlay(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=overlay, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT overlay(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-percentile_cont",
+            "sql": "SELECT percentile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=percentile_cont, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT percentile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-position",
+            "sql": "SELECT position(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=position, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT position(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-pow",
+            "sql": "SELECT pow(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), expression=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT power(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-power",
+            "sql": "SELECT power(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Pow",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Pow(this=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), expression=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT power(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-quantile_cont",
+            "sql": "SELECT quantile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=quantile_cont, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT quantile_cont(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-radians",
+            "sql": "SELECT radians(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Radians",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Radians(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT radians(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-range",
+            "sql": "SELECT range(CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=range, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT range(CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-regexp_count",
+            "sql": "SELECT regexp_count(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=regexp_count, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regexp_count(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-regexp_instr",
+            "sql": "SELECT regexp_instr(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=regexp_instr, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regexp_instr(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-regexp_like",
+            "sql": "SELECT regexp_like(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "RegexpLike",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=RegexpLike(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), expression=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), flag=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regexp_like(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-regexp_match",
+            "sql": "SELECT regexp_match(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=regexp_match, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regexp_match(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-regexp_replace",
+            "sql": "SELECT regexp_replace(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=regexp_replace, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regexp_replace(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-regr_avgx",
+            "sql": "SELECT regr_avgx(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_avgx, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_avgx(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_avgy",
+            "sql": "SELECT regr_avgy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_avgy, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_avgy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_count",
+            "sql": "SELECT regr_count(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_count, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_count(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_intercept",
+            "sql": "SELECT regr_intercept(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_intercept, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_intercept(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_r2",
+            "sql": "SELECT regr_r2(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_r2, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_r2(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_slope",
+            "sql": "SELECT regr_slope(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_slope, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_slope(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_sxx",
+            "sql": "SELECT regr_sxx(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_sxx, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_sxx(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_sxy",
+            "sql": "SELECT regr_sxy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_sxy, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_sxy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-regr_syy",
+            "sql": "SELECT regr_syy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=regr_syy, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false)), Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT regr_syy(CAST(NULL AS DOUBLE), CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-repeat",
+            "sql": "SELECT repeat(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=repeat, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT repeat(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-replace",
+            "sql": "SELECT replace(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=replace, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT replace(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-reverse",
+            "sql": "SELECT reverse(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=reverse, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT reverse(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-right",
+            "sql": "SELECT right(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=right, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT right(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-round",
+            "sql": "SELECT round(CAST(NULL AS REAL), CAST(NULL AS INT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Round",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Round(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false)), decimals=Cast(this=Null(), to=DataType(this=INT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT round(CAST(NULL AS FLOAT), CAST(NULL AS INT)) AS v"
+        },
+        {
+            "id": "exec-rpad",
+            "sql": "SELECT rpad(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=rpad, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT rpad(CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-rtrim",
+            "sql": "SELECT rtrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=rtrim, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT rtrim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-sha224",
+            "sql": "SELECT sha224(CAST(NULL AS BYTEA)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=sha224, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sha224(CAST(NULL AS BYTEA)) AS v"
+        },
+        {
+            "id": "exec-sha256",
+            "sql": "SELECT sha256(CAST(NULL AS BYTEA)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=sha256, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sha256(CAST(NULL AS BYTEA)) AS v"
+        },
+        {
+            "id": "exec-sha384",
+            "sql": "SELECT sha384(CAST(NULL AS BYTEA)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=sha384, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sha384(CAST(NULL AS BYTEA)) AS v"
+        },
+        {
+            "id": "exec-sha512",
+            "sql": "SELECT sha512(CAST(NULL AS BYTEA)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=sha512, expressions=[Cast(this=Null(), to=DataType(this=VARBINARY, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sha512(CAST(NULL AS BYTEA)) AS v"
+        },
+        {
+            "id": "exec-signum",
+            "sql": "SELECT signum(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=signum, expressions=[Cast(this=Null(), to=DataType(this=FLOAT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT signum(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-sin",
+            "sql": "SELECT sin(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Sin",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Sin(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sin(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-sinh",
+            "sql": "SELECT sinh(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Sinh",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Sinh(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sinh(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-split_part",
+            "sql": "SELECT split_part(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=split_part, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT split_part(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-sqrt",
+            "sql": "SELECT sqrt(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Sqrt",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Sqrt(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sqrt(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-starts_with",
+            "sql": "SELECT starts_with(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=starts_with, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT starts_with(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-stddev",
+            "sql": "SELECT stddev(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=stddev, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT stddev(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-stddev_pop",
+            "sql": "SELECT stddev_pop(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=stddev_pop, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT stddev_pop(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-stddev_samp",
+            "sql": "SELECT stddev_samp(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=stddev_samp, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT stddev_samp(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-string_agg",
+            "sql": "SELECT string_agg(CAST(NULL AS VARCHAR), NULL) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=string_agg, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Null()]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT string_agg(CAST(NULL AS VARCHAR), NULL) AS v"
+        },
+        {
+            "id": "exec-string_to_array",
+            "sql": "SELECT string_to_array(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=string_to_array, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT string_to_array(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-string_to_list",
+            "sql": "SELECT string_to_list(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=string_to_list, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT string_to_list(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-strpos",
+            "sql": "SELECT strpos(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "StrPosition",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=StrPosition(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), substr=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT strpos(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-substr",
+            "sql": "SELECT substr(CAST(NULL AS VARCHAR), CAST(NULL AS INT), CAST(NULL AS INT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Substring",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Substring(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), start=Cast(this=Null(), to=DataType(this=INT, nested=false)), length=Cast(this=Null(), to=DataType(this=INT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT substr(CAST(NULL AS VARCHAR), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+        },
+        {
+            "id": "exec-substr_index",
+            "sql": "SELECT substr_index(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=substr_index, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT substr_index(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-substring",
+            "sql": "SELECT substring(CAST(NULL AS VARCHAR), CAST(NULL AS INT), CAST(NULL AS INT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Substring",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Substring(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), start=Cast(this=Null(), to=DataType(this=INT, nested=false)), length=Cast(this=Null(), to=DataType(this=INT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT substring(CAST(NULL AS VARCHAR), CAST(NULL AS INT), CAST(NULL AS INT)) AS v"
+        },
+        {
+            "id": "exec-substring_index",
+            "sql": "SELECT substring_index(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=substring_index, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT substring_index(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-sum",
+            "sql": "SELECT sum(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Sum",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Sum(this=Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT sum(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-tan",
+            "sql": "SELECT tan(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Tan",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Tan(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT tan(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-tanh",
+            "sql": "SELECT tanh(CAST(NULL AS REAL)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Tanh",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Tanh(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT tanh(CAST(NULL AS FLOAT)) AS v"
+        },
+        {
+            "id": "exec-to_hex",
+            "sql": "SELECT to_hex(CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=to_hex, expressions=[Cast(this=Null(), to=DataType(this=BIGINT, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT to_hex(CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-translate",
+            "sql": "SELECT translate(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=translate, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT translate(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-trim",
+            "sql": "SELECT trim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Anonymous",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Anonymous(this=trim, expressions=[Cast(this=Null(), to=DataType(this=VARCHAR, nested=false)), Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT trim(CAST(NULL AS VARCHAR), CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-trunc",
+            "sql": "SELECT trunc(CAST(NULL AS REAL), CAST(NULL AS BIGINT)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Trunc",
+                        "Identifier",
+                        "Cast",
+                        "Cast",
+                        "Null",
+                        "DataType",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Trunc(this=Cast(this=Null(), to=DataType(this=FLOAT, nested=false)), decimals=Cast(this=Null(), to=DataType(this=BIGINT, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT trunc(CAST(NULL AS FLOAT), CAST(NULL AS BIGINT)) AS v"
+        },
+        {
+            "id": "exec-upper",
+            "sql": "SELECT upper(CAST(NULL AS VARCHAR)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "Upper",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=Upper(this=Cast(this=Null(), to=DataType(this=VARCHAR, nested=false))), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT upper(CAST(NULL AS VARCHAR)) AS v"
+        },
+        {
+            "id": "exec-var",
+            "sql": "SELECT var(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=var, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT var(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-var_pop",
+            "sql": "SELECT var_pop(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=var_pop, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT var_pop(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-var_population",
+            "sql": "SELECT var_population(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=var_population, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT var_population(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-var_samp",
+            "sql": "SELECT var_samp(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=var_samp, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT var_samp(CAST(NULL AS DOUBLE)) AS v"
+        },
+        {
+            "id": "exec-var_sample",
+            "sql": "SELECT var_sample(CAST(NULL AS DOUBLE)) AS v",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Alias",
+                        "AnonymousAggFunc",
+                        "Identifier",
+                        "Cast",
+                        "Null",
+                        "DataType"
+                    ],
+                    "ast": "Select(expressions=[Alias(this=AnonymousAggFunc(this=var_sample, expressions=[Cast(this=Null(), to=DataType(this=DOUBLE, nested=false))]), alias=Identifier(this=v, quoted=false))])"
+                }
+            ],
+            "generated": "SELECT var_sample(CAST(NULL AS DOUBLE)) AS v"
+        }
+    ]
+}

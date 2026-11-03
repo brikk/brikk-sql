@@ -54,6 +54,15 @@ public interface PipeDialect {
     /** Whether PIPE statements run through [session], typically decided by its DBMS. */
     public fun ownsSession(session: DatabaseSession): Boolean
 
+    /** Additional cached destination settings to pin across stock parameter prompting. No I/O. */
+    public fun connectionIdentity(session: DatabaseSession): String? = null
+
+    /** Information shown with generated SQL, distinct from a blocking diagnostic. */
+    public val previewNote: String? get() = null
+
+    /** Cached profile/version policy checked before lowering. No engine queries. */
+    public fun loweringRefusal(file: PsiFile?): String? = null
+
     /** Native check of generated SQL, or null. */
     public val validator: NativeSqlValidator? get() = null
 

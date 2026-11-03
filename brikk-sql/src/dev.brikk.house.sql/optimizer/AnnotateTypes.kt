@@ -680,6 +680,11 @@ class TypeAnnotator(
             annotateColumn(expr, scope)
             return
         }
+        val nativeType = DatafusionTypes.infer(expr, dialect)
+        if (nativeType != null) {
+            setType(expr, nativeType)
+            return
+        }
 
         // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
         // evidence, or its documented TEXT default (not a fabricated path type).
@@ -756,6 +761,16 @@ class TypeAnnotator(
         }
 
         if (source is Table) {
+            val function = source.thisArg as? Anonymous
+            if (dialect.name == "spice" && source.db.isEmpty() && source.catalog.isEmpty() && function != null && SpiceCalls.name(function) != null) {
+                val type = SpiceCalls.type(function, expr.name) { input, name ->
+                    val cte = if (input.db.isEmpty()) sourceScope?.cteSources?.get(input.name) as? Scope else null
+                    if (cte != null) getScopeSourceSelects(sourceScope ?: scope, input.name)[name] as? DataType
+                    else schema.getColumnType(input, name)
+                }
+                setType(expr, type ?: DType.UNKNOWN)
+                return
+            }
             var tableColType: Any? = schema.getColumnType(source, expr)
             if (
                 tableColType is DataType &&

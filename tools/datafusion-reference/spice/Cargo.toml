@@ -1,0 +1,27 @@
+[package]
+name = "brikk-spice-parser-reference"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "brikk-spice-parser-reference"
+path = "../src/main.rs"
+
+[features]
+default = ["spice"]
+spice = []
+
+[dependencies]
+datafusion-sql = { git = "https://github.com/spiceai/datafusion.git", rev = "cf084aa85dfdc27b4736208f5c132828020774ea" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt", "macros"] }
+
+[profile.dev]
+debug = 0
+
+[profile.test]
+debug = 0

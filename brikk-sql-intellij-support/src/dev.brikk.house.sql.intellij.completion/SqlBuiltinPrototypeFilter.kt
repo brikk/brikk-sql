@@ -5,6 +5,7 @@ import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.openapi.project.DumbAware
 import com.intellij.sql.dialects.BuiltinFunction
+import dev.brikk.house.sql.intellij.dialect.DatafusionEditorProfile
 
 /**
  * Drops the base dialect's builtin-function items that [SqlCompletionProfile.builtinFunctionFilter]
@@ -20,7 +21,8 @@ public abstract class SqlBuiltinPrototypeFilter(private val profile: SqlCompleti
         val keeps = profile.builtinFunctionFilter(file) ?: return
         result.runRemainingContributors(parameters) { completion ->
             val item = completion.lookupElement
-            if (item.`object` !is BuiltinFunction.Prototype || keeps(item.lookupString)) result.passResult(completion)
+            val inherited = if (profile is DatafusionEditorProfile) item.isBaseBuiltin() else item.`object` is BuiltinFunction.Prototype
+            if (!inherited || keeps(item.lookupString)) result.passResult(completion)
         }
     }
 }

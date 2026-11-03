@@ -314,6 +314,8 @@ class Scope(
 
                 val result = mutableListOf<Column>()
                 for (column in columns + externalColumns) {
+                    if (generateSequence<Expression>(column) { it.parent }.takeWhile { it !is Select }
+                            .any { it.metaOrNull?.get("spice_relation_call_argument") == true }) continue
                     val ancestor = column.findAncestor(
                         Select::class,
                         Qualify::class,

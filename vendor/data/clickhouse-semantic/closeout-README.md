@@ -7,6 +7,10 @@ G01/G02 captures below remain intact; their stronger current results are named i
 `multiplication-refinements.json`. Broader families and full validation remain out
 of scope.
 
+Current release-preparation status, including reconciliation with main and local
+candidate qualification, is recorded in [SQL 0.23.0 preparation](../../../docs/sql-0.23.0.md).
+The original closeout delivery statements below describe CHSEM-023's point in time.
+
 This closes the requested CHSEM implementation batch. It does not authorize more
 type families, merge/publication, consumer changes or automatic IDE mode changes.
 The original composition/lambda goal is implemented. Later arithmetic, diagnostics

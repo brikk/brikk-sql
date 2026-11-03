@@ -628,6 +628,11 @@ open class Generator(
             return if (isTruthyArg(value)) sql(value) else ""
         }
 
+        val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (nativeDialect != null && nativeDialect != dialect.name) {
+            throw UnsupportedError("${expression::class.simpleName} requires a $nativeDialect-specific translation")
+        }
+
         if (dialect.name != "clickhouse" &&
             (expression is CombinedAggFunc || expression is CombinedParameterizedAgg) &&
             "Tuple" in expression.name) {

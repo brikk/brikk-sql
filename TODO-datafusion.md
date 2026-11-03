@@ -29,3 +29,11 @@ Primary implementation areas:
 When an item is fixed, remove it from the committed DataFusion ledger and run:
 
 `./kotlin test -m brikk-sql --include-classes='dev.brikk.house.sql.DatafusionFixtureTest'`
+
+## Native reference work
+
+The fixture totals above cover the historical curated corpus, not every native feature.
+The `spice-support` branch adds pinned DataFusion 55.2.0 and Spice 2.4.0 references, versioned
+metadata, and initial native-proven fixes. See `docs/spice-datafusion-support-plan.md` and
+`docs/research/datafusion-spice-round2.md`. The broader DFS-004 collision/grammar audit is
+still open; Spice-specific function/operator semantics belong to its separate dialect.

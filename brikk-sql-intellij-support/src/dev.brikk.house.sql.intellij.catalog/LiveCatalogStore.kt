@@ -55,7 +55,7 @@ public class LiveCatalogStore(
 
     private class Entry(val inventory: LiveInventory, val source: CatalogSource)
 
-    private class SessionEntry(val key: Key, val facts: SessionFacts)
+    private class SessionEntry(val key: Key, val facts: SessionFacts, val harvestedAt: Instant)
 
     private val entries = ConcurrentHashMap<Key, Entry>()
 
@@ -67,7 +67,9 @@ public class LiveCatalogStore(
     /** The catalog for [dataSourceId] under [identity], with [session]'s facts when it has some under that identity. */
     public fun select(dataSourceId: String, identity: ConnectionIdentity, session: Any? = null): LiveCatalogSelection {
         val key = Key(dataSourceId, identity)
-        val facts = session?.let { sessions[it] }?.takeIf { it.key == key }?.facts ?: SessionFacts.NONE
+        val sessionEntry = session?.let { sessions[it] }?.takeIf { it.key == key }
+        val facts = sessionEntry?.facts ?: SessionFacts.NONE
+        facts.inventory?.let { return LiveCatalogSelection(CatalogSource.Live(sessionEntry!!.harvestedAt), it, facts) }
         val entry = entries[key] ?: loadOnce(key)
         return entry?.let { LiveCatalogSelection(it.source, it.inventory, facts) } ?: LiveCatalogSelection(CatalogSource.Bundled, null, facts)
     }
@@ -94,7 +96,7 @@ public class LiveCatalogStore(
 
     /** Replaces the facts of [session], read from [dataSourceId] under [identity]. */
     public fun storeSession(session: Any, dataSourceId: String, identity: ConnectionIdentity, facts: SessionFacts) {
-        sessions[session] = SessionEntry(Key(dataSourceId, identity), facts)
+        sessions[session] = SessionEntry(Key(dataSourceId, identity), facts, clock.instant())
     }
 
     /** Forgets everything about [dataSourceId], on disk too, for example after the data source was deleted. */
@@ -174,6 +176,7 @@ public class LiveCatalogStore(
             appendLine("signatures\t${inventory.signatures}")
             appendLine("extensions\t${json.encodeToString(names, inventory.extensions)}")
             inventory.keywords?.let { appendLine("keywords\t${json.encodeToString(keywords, it)}") }
+            inventory.nativeCatalog?.let { appendLine("native\t${it.encoded()}") }
             for (function in inventory.functions) {
                 appendLine("fn\t${json.encodeToString(names, function.namespace)}\t${json.encodeToString(FunctionDef.serializer(), function.def)}")
             }
@@ -216,6 +219,7 @@ public class LiveCatalogStore(
                 signatures = fields["signatures"]?.toBooleanStrictOrNull() ?: return null,
                 keywords = fields["keywords"]?.let { json.decodeFromString(keywords, it) },
                 extensions = json.decodeFromString(names, fields["extensions"] ?: return null),
+                nativeCatalog = fields["native"]?.let(::decodeNativeCatalog),
             )
             Entry(inventory, CatalogSource.Disk(harvestedAt))
         } catch (e: IOException) {
@@ -223,6 +227,9 @@ public class LiveCatalogStore(
             null
         } catch (e: IllegalArgumentException) {
             LOG.info("The live catalog file $file is corrupt: ${e.message}")
+            null
+        } catch (e: NoSuchElementException) {
+            LOG.info("The live catalog file $file is incomplete: ${e.message}")
             null
         }
     }

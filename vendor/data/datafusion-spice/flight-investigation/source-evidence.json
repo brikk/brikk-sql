@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "captured_on": "2026-11-02",
+  "sources": [
+    {
+      "product": "spice",
+      "repository": "spiceai/spiceai",
+      "revision": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+      "path": "crates/runtime/src/flight/flightsql/prepared_statement_query.rs",
+      "url": "https://github.com/spiceai/spiceai/blob/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/flight/flightsql/prepared_statement_query.rs",
+      "sha256": "3817b18097198d9d8e5c54518cc66730275b91da8704a922c221ecf26e6c5963",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 205,
+          "end": 260,
+          "text": "    let query = convert_jdbc_parameter_placeholders(&statement.query).map_err(error_to_status)?;\n\n    let context = RequestContext::current(AsyncMarker::new().await);\n    let datafusion = get_current_datafusion(&context);\n\n    // Try to get schema, but if it fails due to type inference issues with parameters,\n    // we'll return empty schemas. The actual type checking will happen when parameters are bound.\n    // For a `BEGIN \u2026 COMMIT` body, advertise the final statement's schema (the\n    // body is executed as a transaction at do_get, not planned as one here).\n    let schema_sql = schema_statement(&query);\n    let (dataset_schema, parameter_schema) = match Service::get_arrow_schema(\n        datafusion,\n        &schema_sql,\n    )\n    .await\n    {\n        Ok(schemas) => schemas,\n        Err(e) => {\n            // Check if this is a type inference error related to parameters\n            let err_msg = e.to_string();\n            if err_msg.contains(\"Cannot get result type\")\n                || err_msg.contains(\"Invalid arithmetic operation\")\n                || err_msg.contains(\"type inference\")\n                || err_msg.contains(\"No field named\")\n            {\n                tracing::debug!(\n                    \"Could not infer schema during prepare (will be determined at execution): {err_msg}\"\n                );\n                // Return empty schema - types will be determined when parameters are bound\n                (arrow_schema::Schema::empty(), None)\n            } else {\n                // This is a real error (syntax error, unknown table, etc.), return it\n                return Err(e);\n            }\n        }\n    };\n\n    let dataset_schema = Service::serialize_schema(&dataset_schema)?;\n    let parameter_schema = if let Some(schema) = &parameter_schema {\n        Service::serialize_schema(schema)?\n    } else {\n        Bytes::default()\n    };\n\n    let stmt = PreparedStatement {\n        query: query.to_string(),\n        parameters: vec![],\n        parameter_schema: None,\n    };\n\n    let handle = to_stdvec(&stmt).map_err(error_to_status)?;\n\n    Ok(sql::ActionCreatePreparedStatementResult {\n        prepared_statement_handle: handle.into(),\n        dataset_schema,\n        parameter_schema,"
+        },
+        {
+          "start": 284,
+          "end": 346,
+          "text": "    // Try to get schema, but if it fails due to type inference issues with parameters,\n    // we'll omit the schema from FlightInfo. The actual schema will be determined during execution.\n    // For a `BEGIN \u2026 COMMIT` body, advertise the final statement's schema.\n    //\n    // When parameters are already bound (DoPut before GetFlightInfo), plan with\n    // them exactly as `do_get` will: same type-cast rewrite, same bound values.\n    // Otherwise an output column that depends on a parameter is advertised as\n    // `Null`/nullable while the stream carries the bound, non-null type, and\n    // clients that check the endpoint schema (ADBC, arrow-go) reject it.\n    let schema_result = match decode_param_values(&parameters).map_err(param_error_to_status)? {\n        Some(param_values) if transaction_statements(&sql).is_none() => {\n            let sql_to_plan = match &parameter_schema {\n                Some(schema_bytes) => {\n                    let reader =\n                        StreamReader::try_new(&schema_bytes[..], None).map_err(error_to_status)?;\n                    rewrite_sql_with_type_casts(&sql, &reader.schema())\n                }\n                None => sql.clone(),\n            };\n            Service::get_arrow_schema_with_params(datafusion, &sql_to_plan, Some(param_values))\n                .await\n        }\n        _ => {\n            let schema_sql = schema_statement(&sql);\n            Service::get_arrow_schema(datafusion, &schema_sql).await\n        }\n    };\n    let maybe_arrow_schema = match schema_result {\n        Ok((schema, _)) => Some(schema),\n        Err(e) => {\n            let err_msg = e.to_string();\n            if err_msg.contains(\"Cannot get result type\")\n                || err_msg.contains(\"Invalid arithmetic operation\")\n                || err_msg.contains(\"type inference\")\n                || err_msg.contains(\"No field named\")\n            {\n                tracing::debug!(\n                    \"Could not infer schema for prepared statement (will be determined at execution): {err_msg}\"\n                );\n                // Return None to indicate schema is unknown - it will be determined during execution\n                None\n            } else {\n                return Err(e);\n            }\n        }\n    };\n\n    let fd = request.into_inner();\n\n    let endpoint = FlightEndpoint::new().with_ticket(Ticket {\n        ticket: handle.as_any().encode_to_vec().into(),\n    });\n\n    let mut info = FlightInfo::new()\n        .with_endpoint(endpoint)\n        .with_descriptor(fd);\n\n    // Only include schema if we were able to infer it\n    if let Some(schema) = maybe_arrow_schema {\n        info = info.try_with_schema(&schema).map_err(to_tonic_err)?;\n    }\n\n    Ok(Response::new(info))"
+        }
+      ]
+    },
+    {
+      "product": "spice",
+      "repository": "spiceai/spiceai",
+      "revision": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+      "path": "crates/runtime/src/flight/flightsql/prepared_statement_update.rs",
+      "url": "https://github.com/spiceai/spiceai/blob/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/flight/flightsql/prepared_statement_update.rs",
+      "sha256": "0902eb1d1ce7d0d41c6baa0645ac29d942196775092f54376280d1b85a4692ba",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 93,
+          "end": 129,
+          "text": "/// Execute a prepared UPDATE/INSERT/DELETE statement that has already had parameters bound.\n///\n/// This should only be called after `do_put_update` has been called to bind parameters.\n/// Returns the number of affected rows.\npub(crate) async fn do_get(\n    query: sql::CommandPreparedStatementUpdate,\n) -> Result<Response<<Service as FlightService>::DoGetStream>, Status> {\n    let _start = metrics::track_flight_request(\"do_get\", Some(\"prepared_statement_update\")).await;\n    set_flightsql_protocol().await;\n\n    let context = RequestContext::current(AsyncMarker::new().await);\n    let datafusion = get_current_datafusion(&context);\n\n    if is_auth_read_only(&context) {\n        return Err(Status::permission_denied(\n            \"Write access denied. Verify that authentication key used has write access and try again.\",\n        ));\n    }\n\n    tracing::trace!(\"do_get_prepared_statement_update: {query:?}\");\n\n    let PreparedStatement {\n        query: sql,\n        parameters,\n        parameter_schema: _,\n    } = from_bytes(&query.prepared_statement_handle).map_err(error_to_status)?;\n\n    let parameters = decode_param_values(&parameters).map_err(param_error_to_status)?;\n\n    // Execute through the standard query path, which handles DELETE and UPDATE\n    // via the runtime's DML interception in Query::run().\n    let query_result = QueryBuilder::new(&sql, datafusion)\n        .parameters(parameters)\n        .build()\n        .run()\n        .await\n        .map_err(handle_query_error)?;"
+        },
+        {
+          "start": 179,
+          "end": 219,
+          "text": "/// Bind the parameters from the [`FlightData`] to the prepared UPDATE statement.\n///\n/// This is identical to the query parameter binding, but handles UPDATE statements.\n/// See [Sequence Diagrams](https://arrow.apache.org/docs/format/FlightSql.html#sequence-diagrams)\npub(crate) async fn do_put_update(\n    query: CommandPreparedStatementUpdate,\n    streaming_flight: Peekable<Streaming<FlightData>>,\n) -> Result<Response<<Service as FlightService>::DoPutStream>, Status> {\n    let _start = metrics::track_flight_request(\"do_put\", Some(\"prepared_statement_update\")).await;\n    let decodable = DecodableSchema::default();\n    let streaming_flight = streaming_flight.map({\n        let decodable = decodable.clone();\n        move |flight_data| {\n            flight_data\n                .map_err(|status| FlightError::Tonic(Box::new(status)))\n                .map(|message| decodable.repair(message))\n        }\n    });\n\n    let mut decoder = FlightDataDecoder::new(streaming_flight);\n    let schema = decodable.declared(decode_schema(&mut decoder).await?);\n\n    // Bound the same way the query path binds: what is stored is what the statement will run\n    // with, so a `MAP` whose `entries` the client declared nullable is brought into line before\n    // it is written rather than at the next execution.\n    let normalizer = MapEntriesNormalizer::for_schema(&schema);\n    let parameters = encode_single_row_parameters(&mut decoder, &normalizer).await?;\n\n    let mut stmt: PreparedStatement =\n        from_bytes(&query.prepared_statement_handle).map_err(error_to_status)?;\n    stmt.parameters = parameters;\n    let handle = to_stdvec(&stmt).map_err(error_to_status)?;\n\n    let result = DoPutPreparedStatementResult {\n        prepared_statement_handle: Some(handle.into()),\n    };\n\n    let output = futures::stream::iter(vec![Ok(PutResult {\n        app_metadata: result.encode_to_vec().into(),\n    })]);\n    Ok(Response::new(Box::pin(output)))"
+        }
+      ]
+    },
+    {
+      "product": "spice",
+      "repository": "spiceai/spiceai",
+      "revision": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+      "path": "crates/runtime/src/datafusion/query.rs",
+      "url": "https://github.com/spiceai/spiceai/blob/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/datafusion/query.rs",
+      "sha256": "e894bc23410042d5bf48ccb37731ccb4e349690d0b78870203af0d7c784be9b2",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 1634,
+          "end": 1671,
+          "text": "                let (res_stream, physical_plan): (\n                    SendableRecordBatchStream,\n                    Arc<dyn ExecutionPlan>,\n                ) = if matches!(&*plan, LogicalPlan::Statement(_)) {\n                    // For Statement plans, use SessionContext::execute_logical_plan()\n                    // which handles PREPARE/EXECUTE/DEALLOCATE by modifying session state.\n                    // Use the session-specific context if available to ensure prepared statements\n                    // are scoped to individual sessions.\n                    let session_ctx = if let Some(flight_session) =\n                        owned_flight_session(&request_context)\n                    {\n                        tracing::debug!(\"Statement plan using the request's Flight session\");\n                        Arc::clone(flight_session.session_context())\n                    } else {\n                        tracing::debug!(\n                            \"Statement plan using ad-hoc session (no Flight session, or the session is not owned by this principal)\"\n                        );\n                        Arc::new(SessionContext::new_with_state(ctx.df.ctx.state()))\n                    };\n\n                    Self::ensure_not_cancelled(&query_cancel_token, &query_id_str, &timeout_state)?;\n                    let dataframe = match session_ctx\n                        .execute_logical_plan(plan.as_ref().clone())\n                        .await\n                    {\n                        Ok(df) => df,\n                        Err(e) => {\n                            let e = find_datafusion_root(e);\n                            let error_code = ErrorCode::from(&e);\n                            handle_error!(\n                                tracker,\n                                &request_context,\n                                error_code,\n                                e,\n                                UnableToExecuteQuery\n                            )\n                        }\n                    };"
+        },
+        {
+          "start": 2056,
+          "end": 2084,
+          "text": "        // Advertise the schema after the analyzer has applied type coercion,\n        // but before logical optimizer rules run. Execution also analyzes the\n        // plan before planning, so using the raw logical schema here can make\n        // FlightSQL GetFlightInfo disagree with DoGet for expressions such as\n        // `CASE WHEN ... THEN decimal_col ELSE 0 END`.\n        //\n        // Analyzed against the session's state in place: the analyzer reads only\n        // its configuration, and copying the state copies every registered\n        // function. Nothing is awaited while the state is read.\n        let analyzed_plan = {\n            let state = session_ctx.state_ref();\n            let state = state.read();\n            state\n                .analyzer()\n                .execute_and_check(*plan, state.config_options(), |_, _| {})\n        };\n        let analyzed_plan = match analyzed_plan {\n            Ok(plan) => plan,\n            Err(e) => {\n                let e = find_datafusion_root(e);\n                self.handle_schema_error(&request_context, &e);\n                return Err(e);\n            }\n        };\n\n        let dataset_schema = analyzed_plan.schema().as_arrow().clone();\n        let parameter_schema = parameter_schema_for_plan(&analyzed_plan)?;\n\n        Ok((dataset_schema, parameter_schema))"
+        },
+        {
+          "start": 2098,
+          "end": 2142,
+          "text": "fn parameter_schema_for_plan(plan: &LogicalPlan) -> Result<Option<Schema>, DataFusionError> {\n    let mut parameters: Vec<(String, arrow_schema::DataType)> = plan\n        .get_parameter_types()?\n        .into_iter()\n        .map(|(name, dt)| {\n            // If cannot determine datatype, we are assuming UInt64.\n            // This occurs for LIMIT/OFFSET parameters such as for:\n            // ```sql\n            // SELECT * FROM table LIMIT $1\n            // ```\n            // The plan types such an operand as Int64, but type coercion has already\n            // cast it to Int64 by the time this runs, and the cast is what is left\n            // here in place of the placeholder itself. Other cases are not known.\n            (name, dt.unwrap_or(arrow_schema::DataType::UInt64))\n        })\n        .collect();\n\n    // Sort parameters by their numeric value to ensure correct ordering\n    // For example, $1, $2, ..., $9, $10, $11 instead of $1, $10, $11, $2, ...\n    parameters.sort_by(|a, b| {\n        let parse_param_num =\n            |param_name: &str| -> Option<u32> { param_name.strip_prefix('$')?.parse().ok() };\n\n        let a_num = parse_param_num(&a.0);\n        let b_num = parse_param_num(&b.0);\n\n        match (a_num, b_num) {\n            (Some(a), Some(b)) => a.cmp(&b),\n            (Some(_), None) => std::cmp::Ordering::Less, // numeric params come before non-numeric\n            (None, Some(_)) => std::cmp::Ordering::Greater,\n            (None, None) => a.0.cmp(&b.0), // fallback to lexicographic for non-numeric params\n        }\n    });\n\n    let maybe_schema = if parameters.is_empty() {\n        None\n    } else {\n        let mut builder = SchemaBuilder::new();\n        for (name, typ) in parameters {\n            builder.push(Field::new(name, typ, false));\n        }\n        Some(builder.finish())\n    };\n\n    Ok(maybe_schema)"
+        }
+      ]
+    },
+    {
+      "product": "spice",
+      "repository": "spiceai/spiceai",
+      "revision": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94",
+      "path": "crates/runtime/src/flight/middleware/session.rs",
+      "url": "https://github.com/spiceai/spiceai/blob/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/flight/middleware/session.rs",
+      "sha256": "ec60f64dd86885e8fb4c2085364461eade8dbdbdf2bed9ce5f452ebd0494b5cb",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 32,
+          "end": 40,
+          "text": "/// Binds a request to the Flight SQL session its `x-session-id` header or\n/// Bearer token names, creating the session \u2014 owned by the request's\n/// principal \u2014 if it does not exist.\n///\n/// Must run after authentication. The session id is client-controlled and an\n/// unknown id creates a session, so when an authenticator is configured only a\n/// request with an authenticated principal is bound; otherwise any client could\n/// fill the bounded session store and evict authenticated sessions, whose\n/// Bearer tokens then stop authenticating."
+        },
+        {
+          "start": 93,
+          "end": 115,
+          "text": "        // With an authenticator configured, only `Handshake` reaches this layer\n        // unauthenticated, and it creates its own session.\n        let principal = req\n            .extensions()\n            .get::<Arc<dyn AuthRequestContext + Send + Sync>>()\n            .and_then(|context| context.auth_principal());\n        let authenticated = principal.is_some();\n        let principal_stable_id =\n            principal.and_then(|principal| principal.stable_id().map(Cow::into_owned));\n\n        if (authenticated || !self.auth_configured)\n            && let Some(request_context) = req.extensions().get::<Arc<RequestContext>>()\n            && let Some(session) = self.session_store.get_or_create_session_from_http(\n                req.headers(),\n                &self.df.ctx,\n                principal_stable_id.as_deref(),\n            )\n        {\n            request_context.insert_extension(FlightSessionExtension::new(\n                session.context,\n                session.owner_stable_id,\n            ));\n        }"
+        }
+      ]
+    },
+    {
+      "product": "arrow",
+      "repository": "apache/arrow-java",
+      "revision": "b410fb26d01c7cefc4c6e3443a53562164001371",
+      "path": "flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/ArrowFlightMetaImpl.java",
+      "url": "https://github.com/apache/arrow-java/blob/b410fb26d01c7cefc4c6e3443a53562164001371/flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/ArrowFlightMetaImpl.java",
+      "sha256": "ae287ad9a81125357284c79869aebaf992c999f4cbbebd3966ce76de0bbcc15e",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 55,
+          "end": 75,
+          "text": "  /** Construct a signature. */\n  static Signature newSignature(final String sql, Schema resultSetSchema, Schema parameterSchema) {\n    List<ColumnMetaData> columnMetaData =\n        resultSetSchema == null\n            ? new ArrayList<>()\n            : ConvertUtils.convertArrowFieldsToColumnMetaDataList(resultSetSchema.getFields());\n    List<AvaticaParameter> parameters =\n        parameterSchema == null\n            ? new ArrayList<>()\n            : ConvertUtils.convertArrowFieldsToAvaticaParameters(parameterSchema.getFields());\n    StatementType statementType =\n        resultSetSchema == null || resultSetSchema.getFields().isEmpty()\n            ? StatementType.IS_DML\n            : StatementType.SELECT;\n    return new Signature(\n        columnMetaData,\n        sql,\n        parameters,\n        Collections.emptyMap(),\n        null, // unnecessary, as SQL requests use ArrowFlightJdbcCursor\n        statementType);"
+        },
+        {
+          "start": 96,
+          "end": 118,
+          "text": "  public ExecuteResult execute(\n      final StatementHandle statementHandle,\n      final List<TypedValue> typedValues,\n      final long maxRowCount) {\n    Preconditions.checkArgument(\n        connection.id.equals(statementHandle.connectionId), \"Connection IDs are not consistent\");\n    PreparedStatement preparedStatement = getPreparedStatement(statementHandle);\n\n    if (preparedStatement == null) {\n      throw new IllegalStateException(\"Prepared statement not found: \" + statementHandle);\n    }\n\n    new AvaticaParameterBinder(\n            preparedStatement, ((ArrowFlightConnection) connection).getBufferAllocator())\n        .bind(typedValues);\n\n    if (statementHandle.signature == null\n        || statementHandle.signature.statementType == StatementType.IS_DML) {\n      // Update query\n      long updatedCount = preparedStatement.executeUpdate();\n      return new ExecuteResult(\n          Collections.singletonList(\n              MetaResultSet.count(statementHandle.connectionId, statementHandle.id, updatedCount)));"
+        },
+        {
+          "start": 206,
+          "end": 225,
+          "text": "  public ExecuteResult prepareAndExecute(\n      final StatementHandle handle,\n      final String query,\n      final long maxRowCount,\n      final int maxRowsInFirstFrame,\n      final PrepareCallback callback)\n      throws NoSuchStatementException {\n    try {\n      PreparedStatement preparedStatement = prepareForHandle(query, handle);\n      final StatementType statementType = preparedStatement.getType();\n\n      final long updateCount =\n          statementType.equals(StatementType.UPDATE) ? preparedStatement.executeUpdate() : -1;\n      synchronized (callback.getMonitor()) {\n        callback.clear();\n        callback.assign(handle.signature, null, updateCount);\n      }\n      callback.execute();\n      final MetaResultSet metaResultSet =\n          MetaResultSet.create(handle.connectionId, handle.id, false, handle.signature, null);"
+        }
+      ]
+    },
+    {
+      "product": "arrow",
+      "repository": "apache/arrow-java",
+      "revision": "b410fb26d01c7cefc4c6e3443a53562164001371",
+      "path": "flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/client/ArrowFlightSqlClientHandler.java",
+      "url": "https://github.com/apache/arrow-java/blob/b410fb26d01c7cefc4c6e3443a53562164001371/flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/client/ArrowFlightSqlClientHandler.java",
+      "sha256": "38ab9ef78de3ebd55e8f18d980391ac8fafe63c74387be00ed5839c458520153",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 443,
+          "end": 485,
+          "text": "  public PreparedStatement prepare(final String query) {\n    final FlightSqlClient.PreparedStatement preparedStatement =\n        sqlClient.prepare(query, getOptions());\n    return new PreparedStatement() {\n      @Override\n      public FlightInfo executeQuery() throws SQLException {\n        return preparedStatement.execute(getOptions());\n      }\n\n      @Override\n      public long executeUpdate() {\n        return preparedStatement.executeUpdate(getOptions());\n      }\n\n      @Override\n      public StatementType getType() {\n        final Schema schema = preparedStatement.getResultSetSchema();\n        return schema.getFields().isEmpty() ? StatementType.UPDATE : StatementType.SELECT;\n      }\n\n      @Override\n      public Schema getDataSetSchema() {\n        return preparedStatement.getResultSetSchema();\n      }\n\n      @Override\n      public Schema getParameterSchema() {\n        return preparedStatement.getParameterSchema();\n      }\n\n      @Override\n      public void setParameters(VectorSchemaRoot parameters) {\n        preparedStatement.setParameters(parameters);\n      }\n\n      @Override\n      public void close() {\n        try {\n          preparedStatement.close(getOptions());\n        } catch (FlightRuntimeException fre) {\n          handleBenignCloseException(fre, \"closing PreparedStatement\");\n        }\n      }"
+        }
+      ]
+    },
+    {
+      "product": "arrow",
+      "repository": "apache/arrow-java",
+      "revision": "b410fb26d01c7cefc4c6e3443a53562164001371",
+      "path": "flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/utils/AvaticaParameterBinder.java",
+      "url": "https://github.com/apache/arrow-java/blob/b410fb26d01c7cefc4c6e3443a53562164001371/flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/utils/AvaticaParameterBinder.java",
+      "sha256": "1c4585b2f3251f55db55d0df1e76922fd894ca1529e2434545311e1e4cb55bbd",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 55,
+          "end": 108,
+          "text": "/**\n * Convert Avatica PreparedStatement parameters from a list of TypedValue to Arrow and bind them to\n * the VectorSchemaRoot representing the PreparedStatement parameters.\n *\n * <p>NOTE: Make sure to close the parameters VectorSchemaRoot once we're done with them.\n */\npublic class AvaticaParameterBinder {\n  private final PreparedStatement preparedStatement;\n  private final VectorSchemaRoot parameters;\n\n  /**\n   * Instantiate a new AvaticaParameterBinder.\n   *\n   * @param preparedStatement The PreparedStatement to bind parameters to.\n   * @param bufferAllocator The BufferAllocator to use for allocating memory.\n   */\n  public AvaticaParameterBinder(\n      PreparedStatement preparedStatement, BufferAllocator bufferAllocator) {\n    this.parameters =\n        VectorSchemaRoot.create(preparedStatement.getParameterSchema(), bufferAllocator);\n    this.preparedStatement = preparedStatement;\n  }\n\n  /**\n   * Bind the given Avatica values to the prepared statement.\n   *\n   * @param typedValues The parameter values.\n   */\n  public void bind(List<TypedValue> typedValues) {\n    bind(typedValues, 0);\n  }\n\n  /**\n   * Bind the given Avatica values to the prepared statement at the given index.\n   *\n   * @param typedValues The parameter values.\n   * @param index index for parameter.\n   */\n  public void bind(List<TypedValue> typedValues, int index) {\n    if (preparedStatement.getParameterSchema().getFields().size() != typedValues.size()) {\n      throw new IllegalStateException(\n          String.format(\n              \"Prepared statement has %s parameters, but only received %s\",\n              preparedStatement.getParameterSchema().getFields().size(), typedValues.size()));\n    }\n\n    for (int i = 0; i < typedValues.size(); i++) {\n      bind(parameters.getVector(i), typedValues.get(i), index);\n    }\n\n    if (!typedValues.isEmpty()) {\n      parameters.setRowCount(index + 1);\n      preparedStatement.setParameters(parameters);\n    }"
+        },
+        {
+          "start": 118,
+          "end": 138,
+          "text": "  private void bind(FieldVector vector, @Nullable TypedValue typedValue, int index) {\n    try {\n      if (typedValue == null || typedValue.value == null) {\n        if (vector.getField().isNullable()) {\n          vector.setNull(index);\n        } else {\n          throw new UnsupportedOperationException(\"Can't set null on non-nullable parameter\");\n        }\n      } else if (!vector\n          .getField()\n          .getType()\n          .accept(new BinderVisitor(vector, typedValue, index))) {\n        throw new UnsupportedOperationException(\n            String.format(\"Binding to vector type %s is not yet supported\", vector.getClass()));\n      }\n    } catch (ClassCastException e) {\n      throw new UnsupportedOperationException(\n          String.format(\n              \"Binding value of type %s is not yet supported for expected Arrow type %s\",\n              typedValue == null ? \"null\" : typedValue.type, vector.getField().getType()));\n    }"
+        }
+      ]
+    },
+    {
+      "product": "arrow",
+      "repository": "apache/arrow-java",
+      "revision": "b410fb26d01c7cefc4c6e3443a53562164001371",
+      "path": "flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/ArrowFlightConnection.java",
+      "url": "https://github.com/apache/arrow-java/blob/b410fb26d01c7cefc4c6e3443a53562164001371/flight/flight-sql-jdbc-core/src/main/java/org/apache/arrow/driver/jdbc/ArrowFlightConnection.java",
+      "sha256": "6b587ee4a7da619222221488921fa64c6a2afd41fde0dad8fbc098d481b19edc",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 213,
+          "end": 245,
+          "text": "  @Override\n  public void close() throws SQLException {\n    Exception topLevelException = null;\n    try {\n      if (executorService != null) {\n        executorService.shutdown();\n      }\n    } catch (final Exception e) {\n      topLevelException = e;\n    }\n    // copies of the collections are used to avoid concurrent modification problems\n    ArrayList<AutoCloseable> closeables = new ArrayList<>(statementMap.values());\n    closeables.addAll(new ArrayList<>(metadataResultSetMap.values()));\n    closeables.add(clientHandler);\n    closeables.addAll(allocator.getChildAllocators());\n    closeables.add(allocator);\n    try {\n      AutoCloseables.close(closeables);\n    } catch (final Exception e) {\n      if (topLevelException == null) {\n        topLevelException = e;\n      } else {\n        topLevelException.addSuppressed(e);\n      }\n    }\n    try {\n      super.close();\n    } catch (final Exception e) {\n      if (topLevelException == null) {\n        topLevelException = e;\n      } else {\n        topLevelException.addSuppressed(e);\n      }"
+        }
+      ]
+    },
+    {
+      "product": "arrow",
+      "repository": "apache/arrow-java",
+      "revision": "b410fb26d01c7cefc4c6e3443a53562164001371",
+      "path": "flight/flight-sql/src/main/java/org/apache/arrow/flight/sql/FlightSqlClient.java",
+      "url": "https://github.com/apache/arrow-java/blob/b410fb26d01c7cefc4c6e3443a53562164001371/flight/flight-sql/src/main/java/org/apache/arrow/flight/sql/FlightSqlClient.java",
+      "sha256": "7323f47b871f618fd859ef0eaf776d8ec275dc80c2fd83e1e8a37e11992feb19",
+      "license": "Apache-2.0",
+      "excerpts": [
+        {
+          "start": 1242,
+          "end": 1258,
+          "text": "    public void setParameters(final VectorSchemaRoot parameterBindingRoot) {\n      if (parameterBindingRoot == this.parameterBindingRoot) {\n        // Nothing to do if we're attempting to set the same parameters again.\n        return;\n      }\n      clearParameters();\n      this.parameterBindingRoot = parameterBindingRoot;\n    }\n\n    /**\n     * Closes the {@link #parameterBindingRoot}, which contains the parameter binding from a {@link\n     * PreparedStatement} operation, releasing its resources.\n     */\n    public void clearParameters() {\n      if (parameterBindingRoot != null) {\n        parameterBindingRoot.close();\n      }"
+        },
+        {
+          "start": 1393,
+          "end": 1419,
+          "text": "    public long executeUpdate(final CallOption... options) {\n      checkOpen();\n      final FlightDescriptor descriptor =\n          FlightDescriptor.command(\n              Any.pack(\n                      CommandPreparedStatementUpdate.newBuilder()\n                          .setPreparedStatementHandle(\n                              preparedStatementResult.getPreparedStatementHandle())\n                          .build())\n                  .toByteArray());\n      setParameters(parameterBindingRoot == null ? VectorSchemaRoot.of() : parameterBindingRoot);\n      SyncPutListener putListener = putParameters(descriptor, options);\n\n      try {\n        final PutResult read = putListener.read();\n        try (final ArrowBuf metadata = read.getApplicationMetadata()) {\n          final DoPutUpdateResult doPutUpdateResult =\n              DoPutUpdateResult.parseFrom(metadata.nioBuffer());\n          return doPutUpdateResult.getRecordCount();\n        }\n      } catch (final InterruptedException e) {\n        throw CallStatus.CANCELLED.withCause(e).toRuntimeException();\n      } catch (final ExecutionException e) {\n        throw CallStatus.CANCELLED.withCause(e.getCause()).toRuntimeException();\n      } catch (final InvalidProtocolBufferException e) {\n        throw CallStatus.INTERNAL.withCause(e).toRuntimeException();\n      }"
+        },
+        {
+          "start": 1427,
+          "end": 1444,
+          "text": "    public void close(final CallOption... options) {\n      if (isClosed) {\n        return;\n      }\n      isClosed = true;\n      final Action action =\n          new Action(\n              FlightSqlUtils.FLIGHT_SQL_CLOSE_PREPARED_STATEMENT.getType(),\n              Any.pack(\n                      ActionClosePreparedStatementRequest.newBuilder()\n                          .setPreparedStatementHandle(\n                              preparedStatementResult.getPreparedStatementHandle())\n                          .build())\n                  .toByteArray());\n      final Iterator<Result> closePreparedStatementResults = client.doAction(action, options);\n      closePreparedStatementResults.forEachRemaining(result -> {});\n      clearParameters();\n    }"
+        }
+      ]
+    }
+  ],
+  "arrow_source_provenance": {
+    "maven": [
+      {
+        "url": "https://repo.maven.apache.org/maven2/org/apache/arrow/flight-sql-jdbc-core/19.0.0/flight-sql-jdbc-core-19.0.0-sources.jar",
+        "sha256": "be80c366033ea3f4116737320114ecac2e25deae7c08415c4f8c5cea3366c544"
+      },
+      {
+        "url": "https://repo.maven.apache.org/maven2/org/apache/arrow/flight-sql/19.0.0/flight-sql-19.0.0-sources.jar",
+        "sha256": "ee806a39fd2a461ffc448a79742d70fc837f261e59eb103701bda24df948b0f3"
+      }
+    ],
+    "tag": "v19.0.0",
+    "git_object": {
+      "sha": "b410fb26d01c7cefc4c6e3443a53562164001371",
+      "type": "commit",
+      "url": "https://api.github.com/repos/apache/arrow-java/git/commits/b410fb26d01c7cefc4c6e3443a53562164001371"
+    }
+  },
+  "note": "Arrow source files were byte-compared with Maven Central 19.0.0 source jars. Excerpts are source evidence; runtime outcomes are in observations.json."
+}

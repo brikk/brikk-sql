@@ -20,6 +20,8 @@ def verify(repository: Path, version: str, artifact: str, package: str, dependen
         assert 'META-INF/LICENSE' in names and 'META-INF/NOTICE' in names
         classes = [name for name in names if name.endswith('.class')]
         assert classes
+        assert 'META-INF/plugin.xml' not in names, 'Shared libraries must not register plugin extensions'
+        assert not any('ConsumerFixture' in name or 'FixtureDialect' in name for name in classes), 'Consumer fixtures are test-only'
         if artifact == 'brikk-sql-intellij-support':
             assert GATE not in classes, 'The optional internal-API gate must not leak into common support'
         if artifact == 'brikk-sql-intellij-jdbc-support':

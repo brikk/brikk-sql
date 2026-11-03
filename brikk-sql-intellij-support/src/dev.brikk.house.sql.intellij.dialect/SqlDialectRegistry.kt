@@ -27,13 +27,13 @@ public data class SqlDialectEntry(
  */
 public object SqlDialectRegistry {
     /** Changes whenever [entries] change. */
-    public const val VERSION: Int = 3
+    public const val VERSION: Int = 4
 
     /** Sorted by label. */
     public val entries: List<SqlDialectEntry> = listOf(
         SqlDialectEntry("bigquery", "BigQuery", languageIds = setOf("BigQuery"), dbmsIds = setOf("BIGQUERY")),
         SqlDialectEntry("clickhouse", "ClickHouse", languageIds = setOf("ClickHouseSQL", "ClickHouse"), dbmsIds = setOf("CLICKHOUSE_BRIKK", "CLICKHOUSE")),
-        SqlDialectEntry("datafusion", "DataFusion"),
+        SqlDialectEntry("datafusion", "DataFusion", languageIds = setOf("DataFusionSQL"), dbmsIds = setOf("DATAFUSION_BRIKK")),
         SqlDialectEntry("doris", "Doris", languageIds = setOf("DorisSQL"), dbmsIds = setOf("DORIS")),
         // Stock DuckDB: DUCKDB on the generic dialect before 263, DUCK with its own DuckDB language from 263.
         SqlDialectEntry("duckdb", "DuckDB", languageIds = setOf("DuckDBSQL", "DuckDB"), dbmsIds = setOf("DUCKDB_BRIKK", "DUCKDB", "DUCK")),
@@ -42,6 +42,7 @@ public object SqlDialectRegistry {
         SqlDialectEntry("postgres", "PostgreSQL", languageIds = setOf("PostgreSQL"), dbmsIds = setOf("POSTGRES")),
         SqlDialectEntry("presto", "Presto", dbmsIds = setOf("PRESTO")),
         SqlDialectEntry("spark2", "Spark", languageIds = setOf("SparkSQL"), dbmsIds = setOf("SPARK")),
+        SqlDialectEntry("spice", "Spice", languageIds = setOf("SpiceSQL"), dbmsIds = setOf("SPICE_BRIKK")),
         SqlDialectEntry("trino", "Trino", languageIds = setOf("TrinoSQL"), dbmsIds = setOf("TRINO_BRIKK", "TRINO")),
     )
 

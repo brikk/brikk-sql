@@ -51,6 +51,13 @@ class TokenizerConfig(
     /** Additive dialect policy; keeps the published constructor/default bridge unchanged. */
     fun withScientificNumberBoundaries(enabled: Boolean = true): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences).also { it.scientificBoundaryPolicy = enabled }
+    private var encodedStringPolicy = false
+    /** sqlparser E-strings reject NUL, surrogate escapes and non-ASCII byte escapes. */
+    val strictEncodedStrings: Boolean get() = encodedStringPolicy
+
+    fun withStrictEncodedStrings(): TokenizerConfig = copyWith(emptyMap(), unescapedSequences).also {
+        it.encodedStringPolicy = true
+    }
     val byteStringsAreBytes: Boolean get() = bytePolicy
 
     fun withByteStringPolicy(byteStringsAreBytes: Boolean): TokenizerConfig =
@@ -198,6 +205,7 @@ class TokenizerConfig(
         it.lexicalPolicy = lexicalPolicy
         it.insertDataPolicy = insertDataPolicy
         it.scientificBoundaryPolicy = scientificBoundaryPolicy
+        it.encodedStringPolicy = encodedStringPolicy
     }
 
     companion object {

@@ -114,7 +114,7 @@ data class Shape(val columns: List<ColumnShape>) {
                 continue
             }
             matchedKeys.add(key)
-            if (!typesMatch(expected.type, found.type)) {
+            if (!typesMatch(expected.type, found.type, d)) {
                 typeMismatches.add(expected to found)
             }
             // Nullability: only when both sides declare it. A not-null contract
@@ -136,18 +136,24 @@ data class Shape(val columns: List<ColumnShape>) {
         )
     }
 
-    private fun typesMatch(expected: String, actual: String): Boolean {
-        val expectedType = parseType(expected)
+    private fun typesMatch(expected: String, actual: String, dialect: dev.brikk.house.sql.dialects.Dialect): Boolean {
+        val expectedType = parseType(expected, dialect)
+        if (expectedType.thisArg == dev.brikk.house.sql.ast.DType.UNKNOWN && expectedType.metaOrNull?.get(dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE) == null) return true
+        val actualType = parseType(actual, dialect)
+        val native = dev.brikk.house.sql.optimizer.DatafusionTypes.NATIVE
+        if (expectedType.metaOrNull?.get(native) != null || actualType.metaOrNull?.get(native) != null) {
+            // Logical ARRAY/TIMESTAMP equivalence does not prove Arrow list width or timestamp unit/zone equality.
+            return expectedType.metaOrNull?.get(native) != null && expectedType.metaOrNull?.get(native) == actualType.metaOrNull?.get(native)
+        }
         // UNKNOWN expected = declared-any: matches whatever the actual side has.
         if (expectedType.thisArg == dev.brikk.house.sql.ast.DType.UNKNOWN) return true
-        val actualType = parseType(actual)
         // UNKNOWN actual vs concrete expected falls through to a structural compare,
         // which fails — the asymmetry documented on compare().
         return actualType.isType(expectedType)
     }
 
-    private fun parseType(type: String): DataType = try {
-        dataTypeFromStr(type)
+    private fun parseType(type: String, dialect: dev.brikk.house.sql.dialects.Dialect): DataType = try {
+        dataTypeFromStr(type, dialect)
     } catch (e: Exception) {
         throw ShapeError("Cannot parse column type '$type': ${e.message}")
     }

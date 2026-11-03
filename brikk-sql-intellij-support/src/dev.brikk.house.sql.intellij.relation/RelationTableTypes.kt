@@ -65,8 +65,13 @@ public object RelationTableTypes {
         if (call.parent?.node?.elementType != SqlCompositeElementTypes.SQL_TABLE_PROCEDURE_CALL_EXPRESSION) return null
         of(call, profile)?.let { return it }
         val file = call.containingFile ?: return null
-        val facts = RelationAnalysis.of(file, profile, lastKnown = true)?.facts?.merged ?: RelationFacts()
-        val sql = "SELECT $ALIAS. FROM ${call.text} AS $ALIAS"
+        val analysis = RelationAnalysis.of(file, profile, lastKnown = true)
+        val originalFacts = analysis?.facts?.merged ?: RelationFacts()
+        val callText = analysis?.source?.let { it.text.substring(it.textOffset(call.textRange.startOffset), it.textOffset(call.textRange.endOffset)) } ?: call.text
+        val sql = "SELECT $ALIAS. FROM $callText AS $ALIAS"
+        val callStart = analysis?.source?.textOffset(call.textRange.startOffset)
+        val exact = callStart?.let { originalFacts.callSites[it] }
+        val facts = originalFacts.copy(callSites = exact?.let { mapOf("SELECT $ALIAS. FROM ".length to it) }.orEmpty())
         val completion = RelationScope.complete(sql, profile.dialect, facts, "SELECT $ALIAS.".length, checkCanceled = ProgressManager::checkCanceled)
         if (completion.knowledge != Knowledge.FULL || completion.items.isEmpty()) return SqlTableTypeBase.EMPTY_TABLE
         val types = (file.language as? SqlLanguageDialectEx)?.dbms?.let(DasTypeSystems::getTypeSystem)
@@ -74,7 +79,9 @@ public object RelationTableTypes {
         for (item in completion.items) {
             val column = item.column ?: continue
             val type = column.sqlType?.let { sqlType -> types?.createDasType(DataTypeFactory.of(sqlType)) } ?: DasTypeSystemBase.UNKNOWN
-            table = table.add(SqlTableTypeBase.createType(call, type, column.name, false, false, true, null, null))
+            val provider = analysis?.providerOf(column)?.takeUnless { it.platformResolves }
+            val target = if (provider != null) RelationColumnSymbol(file, provider, column, call) else call
+            table = table.add(SqlTableTypeBase.createType(target, type, column.name, false, false, true, null, null))
         }
         return table
     }
