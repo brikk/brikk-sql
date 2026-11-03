@@ -18,6 +18,7 @@ class ClickhouseSemanticCloseoutTest {
     @Test fun frozenCorpusExercisesCombinedPublicStatementScriptAndDiagnosticContracts() {
         val folder = File(projectRoot(), "vendor/data/clickhouse-semantic")
         val cases = Json.parseToJsonElement(File(folder, "closeout-cases.json").readText()).jsonObject.getValue("execution").jsonArray
+        val refinements = Json.parseToJsonElement(File(folder, "multiplication-refinements.json").readText()).jsonObject.getValue("closeout").jsonObject
         val rows = cases.map { element ->
             val case = element.jsonObject
             val sql = case.getValue("sql").jsonPrimitive.content
@@ -25,7 +26,7 @@ class ClickhouseSemanticCloseoutTest {
             assertTrue(units.all { it.expression != null && it.diagnostics.parseDiagnostics.isEmpty() }, sql)
             assertEquals(clickhouseScriptSemanticDiagnostics(sql, "26.10.2.103"), units.map { it.diagnostics }, sql)
             val types = units.mapNotNull { (it.expression as? Select)?.let(::type) }
-            assertEquals(case.getValue("types").jsonArray.map { it.jsonPrimitive.content }, types, case.getValue("id").toString())
+            assertEquals((refinements[case.getValue("id").jsonPrimitive.content] ?: case.getValue("types")).jsonArray.map { it.jsonPrimitive.content }, types, case.getValue("id").toString())
             val rules = units.flatMap { it.diagnostics.errors }.map { it.rule.name }.distinct().sorted()
             assertEquals(case.getValue("rules").jsonArray.map { it.jsonPrimitive.content }, rules, sql)
             val generated = units.joinToString("; ", postfix = ";") { it.expression!!.sql("clickhouse") }
@@ -60,12 +61,12 @@ class ClickhouseSemanticCloseoutTest {
         assertFailsWith<IllegalArgumentException> { annotateClickhouseScriptSemanticTypes(sql, "26.8.34.13") }
     }
 
-    @Test fun deferredRootMultiplicationFallbackIsNotAdvertisedAsNativeQualification() {
+    @Test fun namedMultiplicationRefinementClosesTheFormerRootFallback() {
         val sql = "SELECT 1e0*(2e0+3.0)"
         val ast = annotateClickhouseSemanticTypes(parseOne(sql, "clickhouse"), "26.10.2.103")
         assertNotNull(ast.find<Mul>())
         assertNotNull(ast.find<Add>())
-        assertEquals("Nullable(Float64)", type(ast))
+        assertEquals("Float64", type(ast)) // CHSEM-025; old closeout captures are unchanged.
         val generic = annotateTypes(parseOne("SELECT 1+2", "clickhouse"), dialect = Dialects.CLICKHOUSE)
         assertEquals("Nullable(Int32)", type(generic))
     }
@@ -73,14 +74,15 @@ class ClickhouseSemanticCloseoutTest {
     @Test fun observedMissingCoverageIsPreservedWithoutFeatureExpansion() {
         val folder = File(projectRoot(), "vendor/data/clickhouse-semantic")
         val cases = Json.parseToJsonElement(File(folder, "closeout-missing-cases.json").readText()).jsonObject.getValue("execution").jsonArray
+        val refinements = Json.parseToJsonElement(File(folder, "multiplication-refinements.json").readText()).jsonObject.getValue("missing").jsonObject
         val rows = cases.map { element ->
             val case = element.jsonObject
             val sql = case.getValue("sql").jsonPrimitive.content
             val units = annotateClickhouseScriptSemanticTypes(sql, "26.10.2.103")
             assertTrue(units.all { it.expression != null && it.diagnostics.parseDiagnostics.isEmpty() }, sql)
             val types = units.mapNotNull { (it.expression as? Select)?.let(::type) }
-            assertEquals(if (case.getValue("id").jsonPrimitive.content == "G01") listOf("Nullable(Int32)")
-                else if (case.getValue("id").jsonPrimitive.content == "G02") listOf("Nullable(Float64)") else listOf("UNKNOWN"), types, sql)
+            assertEquals(refinements[case.getValue("id").jsonPrimitive.content]?.jsonArray?.map { it.jsonPrimitive.content }
+                ?: listOf("UNKNOWN"), types, sql)
             buildJsonObject {
                 put("id", case.getValue("id")); put("input_sql", sql)
                 put("generated", units.joinToString("; ", postfix = ";") { it.expression!!.sql("clickhouse") })

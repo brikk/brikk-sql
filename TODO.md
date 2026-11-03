@@ -12,11 +12,11 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
 - [ ] **SQL-08: Improve bounded ClickHouse semantic analysis.** The user accepted
   the CHSEM-001 through CHSEM-023 scope as opt-in hints and separately proved
   checks, not full validation or native-exact metadata for every AST node.
-  Prioritize proof provenance and root multiplication typing before expanding
-  families. Deferred work, evidence, dependencies and completion criteria:
+  CHSEM-024/025 now provide proof provenance and primitive root multiplication
+  typing. Release preparation is authorized; publication and consumer updates
+  still need approval. Deferred work, evidence, dependencies and completion criteria:
   [CHSEM-024 through CHSEM-034](TODO-clickhouse-semantic.md#deferred-improvement-backlog).
-  Tracking these items does not authorize implementation, merge, publication or
-  consumer updates.
+  The remaining P2 items are not authorized for implementation by this approval.
 - [ ] **SQL-01 — Decide and implement multi-output pipe semantics.** Get owner
   decisions on `FORK`/`TEE` and terminal operators; then land parsing/validation,
   multi-output desugaring, and fidelity certification in separate phases. Do

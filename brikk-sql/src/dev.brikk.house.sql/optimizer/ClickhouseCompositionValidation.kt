@@ -236,6 +236,8 @@ private class ClickhouseCompositionValidator(
             }
             if (clickhouseDivisionCall(node, sessionSettings) != null) value(node, context, 0)
             if (inferResults && nativeLiterals && clickhouseIntegerAddSubCall(node) != null) value(node, context, 0)
+            if (inferResults && nativeLiterals && node.objectId !in valueTypes && clickhouseMultiplicationCall(node) != null)
+                value(node, context, 0)
             val map = arrayMap(node)
             if (map != null) {
                 val name = map.name
@@ -651,6 +653,8 @@ private class ClickhouseCompositionValidator(
             is Div -> divisionValue(node, context, depth)
             is Add, is Sub -> if (inferResults && nativeLiterals) addSubValue(node, context, depth)
                 else { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
+            is Mul -> if (inferResults && nativeLiterals) multiplicationValue(node, context, depth)
+                else scalarValue(node, context, depth)
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
                 val source = node.thisArg as? Expression
@@ -669,15 +673,53 @@ private class ClickhouseCompositionValidator(
                 if (clickhouseDivisionCall(node) != null) return remember(node, divisionValue(node, context, depth))
                 if (inferResults && nativeLiterals && clickhouseIntegerAddSubCall(node) != null)
                     return remember(node, addSubValue(node, context, depth))
-                val call = scalarCall(node)
-                if (call == null) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
-                else if (call.name == "arrayMap") { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
-                else {
-                    val facts = facts(call.name, node, context)
-                    if (facts == null) Value() else checkCall(node, facts, call.arguments.map { value(it, context, depth + 1) })
-                }
+                if (inferResults && nativeLiterals && clickhouseMultiplicationCall(node) != null)
+                    return remember(node, multiplicationValue(node, context, depth))
+                scalarValue(node, context, depth)
             }
         })
+    }
+
+    private fun scalarValue(node: Expression, context: Context, depth: Int): Value {
+        val call = scalarCall(node)
+        if (call == null || call.name == "arrayMap") {
+            unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+            return Value()
+        }
+        val facts = facts(call.name, node, context) ?: return Value()
+        return checkCall(node, facts, call.arguments.map { value(it, context, depth + 1) })
+    }
+
+    private fun multiplicationValue(node: Expression, context: Context, depth: Int): Value {
+        val call = clickhouseMultiplicationCall(node) ?: return Value()
+        if (call.name != null && context.blocked(call.name)) {
+            unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION)
+            blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        val inputs = call.operands.map { operand ->
+            if (ignoredAddSubOperand(operand)) Value() else value(operand, context, depth + 1)
+        }
+        if (inputs.any { it.nullLiteral }) {
+            unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER)
+            blockedFallbacks.add(node.objectId)
+            return Value()
+        }
+        val types = inputs.mapIndexed { index, input ->
+            input.type ?: if (!ignoredAddSubOperand(call.operands[index]))
+                clickhouseProjectionLiteralType(call.operands[index].unnest()) else null
+        }
+        val result = clickhousePrimitiveMultiplicationResult(types[0], types[1])
+        if (result != null) return nativeType(result)
+        // Keep pre-existing contextual Decimal contracts; this round does not qualify
+        // standalone Decimal dispatch or infer its error/overflow behavior.
+        if ((context.callableScope || depth > 0) && inputs.any { it.family == Family.DECIMAL }) {
+            val legacy = facts("multiply", node, context)?.let { checkCall(node, it, inputs) }
+            if (legacy?.type != null) return legacy
+        }
+        unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
+        blockedFallbacks.add(node.objectId)
+        return Value()
     }
 
     private fun addSubValue(node: Expression, context: Context, depth: Int): Value {

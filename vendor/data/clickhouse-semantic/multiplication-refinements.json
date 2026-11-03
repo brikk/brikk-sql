@@ -1,0 +1,16 @@
+{
+  "task": "CHSEM-025",
+  "reason": "Standalone primitive multiplication now uses the source/native-backed numeric promotion rules. Earlier CHSEM-023 observations remain historical captures.",
+  "closeout": {
+    "CHSEM-023-E15": ["Float64"],
+    "CHSEM-023-E16": ["UInt16"]
+  },
+  "missing": {
+    "G01": ["UInt16"],
+    "G02": ["Float64"]
+  },
+  "witnesses": {
+    "G01": "CHSEM-025-E01",
+    "G02": "CHSEM-025-E02"
+  }
+}

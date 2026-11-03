@@ -1,0 +1,91 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "9382a4b4cf087bf50ad2c73d47ee213f7264e36befd528946f2205dafff76c03",
+  "brikk_sha256": "f6cbf5244936484701642593d8b90dedaef848043b4dbfa653fd778d51444961",
+  "execution": [
+    {
+      "id": "CHSEM-025-S01",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S02",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S03",
+      "returncode": 0,
+      "stdout": "[14]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S04",
+      "returncode": 0,
+      "stdout": "[14]\tArray(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S05",
+      "returncode": 0,
+      "stdout": "{'a':14}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S06",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-025-S01",
+      "returncode": 0,
+      "stdout": "1\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S02",
+      "returncode": 0,
+      "stdout": "1\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S03",
+      "returncode": 0,
+      "stdout": "[14]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S04",
+      "returncode": 0,
+      "stdout": "[14]\tArray(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S05",
+      "returncode": 0,
+      "stdout": "{'a':14}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S06",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    }
+  ]
+}

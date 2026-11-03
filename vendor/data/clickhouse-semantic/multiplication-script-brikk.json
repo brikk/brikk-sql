@@ -1,0 +1,56 @@
+[
+    {
+        "id": "CHSEM-025-S01",
+        "input_sql": "SET sql_compatible_division_for_integers=1; SELECT (1*2)/2 AS v,toTypeName(v);",
+        "generated": "SET sql_compatible_division_for_integers = 1; SELECT (1 * 2) / 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-S02",
+        "input_sql": "SET sql_compatible_division_for_integers=0; SELECT (1*2)/2 AS v,toTypeName(v);",
+        "generated": "SET sql_compatible_division_for_integers = 0; SELECT (1 * 2) / 2 AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-S03",
+        "input_sql": "SELECT arrayMap(x -> x*2,CAST([7] AS Array(UInt8))) AS v,toTypeName(v);",
+        "generated": "SELECT arrayMap(x -> x * 2, CAST([7] AS Array(UInt8))) AS v, toTypeName(v);",
+        "types": [
+            "Array(UInt16)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-S04",
+        "input_sql": "SELECT arrayMap((x,y) -> multiply(x,y),CAST([7] AS Array(UInt128)),CAST([2] AS Array(Int256))) AS v,toTypeName(v);",
+        "generated": "SELECT arrayMap((x, y) -> multiply(x, y), CAST([7] AS Array(UInt128)), CAST([2] AS Array(Int256))) AS v, toTypeName(v);",
+        "types": [
+            "Array(Int256)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-S05",
+        "input_sql": "SELECT mapApply((k,v) -> (k,v*2),CAST(map('a',7) AS Map(String,UInt8))) AS v,toTypeName(v);",
+        "generated": "SELECT mapApply((k, v) -> (k, v * 2), CAST(map('a', 7) AS Map(String, UInt8))) AS v, toTypeName(v);",
+        "types": [
+            "Map(String, UInt16)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-S06",
+        "input_sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT 1*2 AS v) q;",
+        "generated": "SELECT q.v, toTypeName(q.v) FROM (SELECT 1 * 2 AS v) AS q;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    }
+]

@@ -1,0 +1,103 @@
+{
+  "task": "CHSEM-025",
+  "execution": [
+    {
+      "id": "CHSEM-025-S01",
+      "sql": "SET sql_compatible_division_for_integers=1; SELECT (1*2)/2 AS v,toTypeName(v);",
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-025-S02",
+      "sql": "SET sql_compatible_division_for_integers=0; SELECT (1*2)/2 AS v,toTypeName(v);",
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-025-S03",
+      "sql": "SELECT arrayMap(x -> x*2,CAST([7] AS Array(UInt8))) AS v,toTypeName(v);",
+      "types": [
+        "Array(UInt16)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[14]\tArray(UInt16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[14]\tArray(UInt16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-025-S04",
+      "sql": "SELECT arrayMap((x,y) -> multiply(x,y),CAST([7] AS Array(UInt128)),CAST([2] AS Array(Int256))) AS v,toTypeName(v);",
+      "types": [
+        "Array(Int256)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[14]\tArray(Int256)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[14]\tArray(Int256)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-025-S05",
+      "sql": "SELECT mapApply((k,v) -> (k,v*2),CAST(map('a',7) AS Map(String,UInt8))) AS v,toTypeName(v);",
+      "types": [
+        "Map(String, UInt16)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "{'a':14}\tMap(String, UInt16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "{'a':14}\tMap(String, UInt16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-025-S06",
+      "sql": "SELECT q.v,toTypeName(q.v) FROM (SELECT 1*2 AS v) q;",
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    }
+  ]
+}

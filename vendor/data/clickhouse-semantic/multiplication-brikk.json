@@ -1,0 +1,173 @@
+[
+    {
+        "id": "CHSEM-025-E01",
+        "input_sql": "SELECT 1*2 AS v,toTypeName(v)",
+        "generated": "SELECT 1 * 2 AS v, toTypeName(v);",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E02",
+        "input_sql": "SELECT 1e0*(2e0+3.0) AS v,toTypeName(v)",
+        "generated": "SELECT 1e0 * (2e0 + 3.0) AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E03",
+        "input_sql": "SELECT multiply(1,2) AS v,toTypeName(v)",
+        "generated": "SELECT multiply(1, 2) AS v, toTypeName(v);",
+        "types": [
+            "UInt16"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E04",
+        "input_sql": "SELECT (1*2)*3 AS v,toTypeName(v)",
+        "generated": "SELECT (1 * 2) * 3 AS v, toTypeName(v);",
+        "types": [
+            "UInt32"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E05",
+        "input_sql": "SELECT 1*(2+3) AS v,toTypeName(v)",
+        "generated": "SELECT 1 * (2 + 3) AS v, toTypeName(v);",
+        "types": [
+            "UInt32"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E06",
+        "input_sql": "SELECT multiply(1e0,2e0+3.0) AS v,toTypeName(v)",
+        "generated": "SELECT multiply(1e0, 2e0 + 3.0) AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E07",
+        "input_sql": "SELECT CAST(18446744073709551615 AS UInt64)*CAST(2 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(18446744073709551615 AS UInt64) * CAST(2 AS UInt8) AS v, toTypeName(v);",
+        "types": [
+            "UInt64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E08",
+        "input_sql": "SELECT CAST(1 AS UInt128)*CAST(2 AS Int256) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt128) * CAST(2 AS Int256) AS v, toTypeName(v);",
+        "types": [
+            "Int256"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E09",
+        "input_sql": "SELECT CAST(1 AS Float32)*CAST(2 AS Int64) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float32) * CAST(2 AS Int64) AS v, toTypeName(v);",
+        "types": [
+            "Float64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E10",
+        "input_sql": "SELECT CAST(1 AS Nullable(UInt8))*CAST(2 AS UInt16) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Nullable(UInt8)) * CAST(2 AS UInt16) AS v, toTypeName(v);",
+        "types": [
+            "Nullable(UInt32)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E11",
+        "input_sql": "SELECT CAST(1 AS UInt8)*CAST(2 AS Nullable(Float32)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS UInt8) * CAST(2 AS Nullable(Float32)) AS v, toTypeName(v);",
+        "types": [
+            "Nullable(Float64)"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E12",
+        "input_sql": "SELECT (CAST(1 AS UInt8)*CAST(2 AS UInt8))+3 AS v,toTypeName(v)",
+        "generated": "SELECT (CAST(1 AS UInt8) * CAST(2 AS UInt8)) + 3 AS v, toTypeName(v);",
+        "types": [
+            "UInt32"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E13",
+        "input_sql": "SELECT 1*(2*3+4) AS v,toTypeName(v)",
+        "generated": "SELECT 1 * (2 * 3 + 4) AS v, toTypeName(v);",
+        "types": [
+            "UInt64"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E14",
+        "input_sql": "SELECT CAST(1 AS Float64)*CAST(2 AS Int128) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Float64) * CAST(2 AS Int128) AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E15",
+        "input_sql": "SELECT CAST(NULL AS Nullable(Int8))*CAST(2 AS UInt8) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(NULL AS Nullable(Int8)) * CAST(2 AS UInt8) AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E16",
+        "input_sql": "SELECT TRUE*2 AS v,toTypeName(v)",
+        "generated": "SELECT TRUE * 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E17",
+        "input_sql": "SELECT 'x'*2 AS v,toTypeName(v)",
+        "generated": "SELECT 'x' * 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E18",
+        "input_sql": "SELECT CAST(1 AS Decimal(12,3))*CAST(2 AS Decimal(12,3)) AS v,toTypeName(v)",
+        "generated": "SELECT CAST(1 AS Decimal(12, 3)) * CAST(2 AS Decimal(12, 3)) AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    },
+    {
+        "id": "CHSEM-025-E19",
+        "input_sql": "SELECT TRY_CAST('bad' AS Int8)*2 AS v,toTypeName(v)",
+        "generated": "SELECT TRY_CAST('bad' AS Int8) * 2 AS v, toTypeName(v);",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": []
+    }
+]

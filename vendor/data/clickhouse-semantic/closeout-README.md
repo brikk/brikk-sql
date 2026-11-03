@@ -1,5 +1,12 @@
 # CHSEM-023 qualification and scope freeze
 
+This is the CHSEM-023 closeout record. Subsequent approved release preparation adds
+[CHSEM-024 provenance](type-provenance-README.md) and
+[CHSEM-025 primitive multiplication](multiplication-README.md). The historical
+G01/G02 captures below remain intact; their stronger current results are named in
+`multiplication-refinements.json`. Broader families and full validation remain out
+of scope.
+
 This closes the requested CHSEM implementation batch. It does not authorize more
 type families, merge/publication, consumer changes or automatic IDE mode changes.
 The original composition/lambda goal is implemented. Later arithmetic, diagnostics

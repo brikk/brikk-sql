@@ -244,6 +244,12 @@ CHSEM-022's `scientific-number-sources.json` adds Apache-2.0 native lexer/numeri
 parser excerpts. Original/generated observations live in `scientific-number-native/`;
 the separate refinement retains the earlier parser-gap captures unchanged.
 
+CHSEM-025's `multiplication-sources.json` adds tagged Apache-2.0 MultiplyImpl,
+NumberTraits, binary-operation and nullable-dispatch excerpts. Independent native
+types and original/generated finite/script outcomes are in `multiplication-types/`,
+`multiplication-native/` and `multiplication-script-native/`. Earlier closeout
+captures remain unchanged and stronger facts use named refinements.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

@@ -86,6 +86,9 @@ CHSEM-023 [freezes the supported scope and reports missing coverage and delivery
 CHSEM-024 adds opt-in [per-node native type evidence](type-provenance-README.md)
 without changing the existing AST-only statement/script APIs or serialization.
 
+CHSEM-025 [qualifies standalone primitive multiplication](multiplication-README.md)
+and records named refinements for the earlier root-multiplication deviations.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

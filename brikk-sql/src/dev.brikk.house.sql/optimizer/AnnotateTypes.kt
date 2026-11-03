@@ -629,7 +629,7 @@ class TypeAnnotator(
             for ((id, type) in inference.valueTypes) clickhouseNativeTypes[id] = type.copy() as DataType
             val blockedGenericValues = if (clickhouseNativeLiterals) inference.blockedGenericValues + expression.walk()
                 .onEach { clickhouseCheckCanceled() }
-                .filter { (clickhouseHigherOrderCall(it) != null || clickhouseDivisionCall(it) != null || clickhouseIntegerAddSubCall(it) != null) &&
+                .filter { (clickhouseHigherOrderCall(it) != null || clickhouseDivisionCall(it) != null || clickhouseIntegerAddSubCall(it) != null || clickhouseMultiplicationCall(it) != null) &&
                     it.objectId !in inference.valueTypes && it::class !in callerTypingClasses }
                 .map { it.objectId }.toSet() else inference.blockedGenericValues
             ClickhouseLambdaTyping(

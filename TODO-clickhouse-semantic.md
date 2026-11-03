@@ -52,7 +52,7 @@ CHSEM IDs or silently broaden their contracts.
   facts and how AST ownership/copy/serde affects them. Done when tests cover each
   category and consumers can avoid treating G01/G02 fallbacks as native metadata.
   Preserve existing entrypoints and public JVM shapes.
-- [ ] **CHSEM-025: Qualify standalone multiplication and root propagation.** P1.
+- [x] **CHSEM-025: Qualify standalone multiplication and root propagation.** P1.
   Use closeout G01 and G02 as regression seeds: `1*2` currently yields frontend
   `Nullable(Int32)` versus native `UInt16`; `1e0*(2e0+3.0)` yields frontend
   `Nullable(Float64)` versus native `Float64`. Prove selected operator/builtin,
@@ -141,7 +141,26 @@ Python passes 139 with one opt-in skip. The sequential IntelliJ gate passes 757
 tests on 261.25134.95. No new native typing rules or native captures in this round.
 Commit/push separately, then perform the authorized CHSEM-025 round.
 
+## CHSEM-025 result
+
+Standalone primitive `*` and resolved unqualified `multiply` now reuse native
+integer/floating promotion and ordinary nullable dispatch, including supported
+nested, schema, callback, script and derived-relation propagation. Unsupported
+overloads stay unknown; generic typing and existing contextual Decimal contracts
+are preserved. G01/G02 now have native-conditional operation proofs. Their old
+captures remain unchanged; `multiplication-refinements.json` records stronger facts.
+Guide: `vendor/data/clickhouse-semantic/multiplication-README.md`.
+
+Both pins match 1,440 independently captured pair types and 19 finite/six script
+original/generated outcomes. Version-dependent control errors stay separate from
+successful type matches. Full JVM/ABI regression passes 1,926 tests with 61 optional
+assumption aborts; Python passes 143 with one opt-in skip. All three frontend
+reports regenerate byte-identically. The sequential IntelliJ gate passes 757
+tests on 261.25134.95; other IDE versions were not run. Commit/push separately,
+then perform the authorized CHSEM-034 release-preparation portion. No P2 expansion.
+
 ## Context
+
 
 
 The CH26 catch-up added structured composition and implicit-lambda nodes, correct

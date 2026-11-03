@@ -12,7 +12,7 @@ class ClickhouseTypeProvenanceTest {
     private val version = "26.10.2.103"
 
     @Test fun nativeConditionalFallbackAndUnknownHaveDistinctEvidence() {
-        val sql = "SELECT 1+2 AS a, 1*2 AS b, unknown_udf(1) AS c"
+        val sql = "SELECT 1+2 AS a, 1%2 AS b, unknown_udf(1) AS c"
         val ast = parseOne(sql, "clickhouse")
         val generated = ast.sql("clickhouse")
         val result = annotateClickhouseSemanticTypesWithProvenance(ast, version)
@@ -22,7 +22,7 @@ class ClickhouseTypeProvenanceTest {
         val add = result.provenance.factFor(ast.find<Add>()!!)!!
         assertEquals(ClickhouseTypeEvidence.NATIVE_CONDITIONAL, add.evidence)
         assertEquals("UInt16", add.typeSql)
-        val mul = result.provenance.factFor(ast.find<Mul>()!!)!!
+        val mul = result.provenance.factFor(ast.find<Mod>()!!)!!
         assertEquals(ClickhouseTypeEvidence.GENERIC_FALLBACK, mul.evidence)
         assertEquals("Nullable(Int32)", mul.typeSql)
         val udf = ast.findAll<Anonymous>().single { it.name == "unknown_udf" }
@@ -40,7 +40,7 @@ class ClickhouseTypeProvenanceTest {
         assertEquals("UInt8", fact.typeSql)
         assertEquals(ClickhouseSemanticRule.DIVISION_BY_ZERO, result[1].annotation.diagnostics.errors.single().rule)
         val product = result[2].annotation.expression!!.find<Mul>()!!
-        assertEquals(ClickhouseTypeEvidence.GENERIC_FALLBACK, result[2].provenance!!.factFor(product)!!.evidence)
+        assertEquals(ClickhouseTypeEvidence.NATIVE_CONDITIONAL, result[2].provenance!!.factFor(product)!!.evidence)
         val local = annotateClickhouseSemanticTypesWithProvenance(parseOne("SELECT 1/0", "clickhouse"), version)
         assertEquals(ClickhouseTypeEvidence.UNKNOWN, local.provenance.factFor(local.expression.find<Div>()!!)!!.evidence)
     }

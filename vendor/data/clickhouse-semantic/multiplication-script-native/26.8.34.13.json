@@ -1,0 +1,91 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "9382a4b4cf087bf50ad2c73d47ee213f7264e36befd528946f2205dafff76c03",
+  "brikk_sha256": "f6cbf5244936484701642593d8b90dedaef848043b4dbfa653fd778d51444961",
+  "execution": [
+    {
+      "id": "CHSEM-025-S01",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-025-S02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-025-S03",
+      "returncode": 0,
+      "stdout": "[14]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S04",
+      "returncode": 0,
+      "stdout": "[14]\tArray(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S05",
+      "returncode": 0,
+      "stdout": "{'a':14}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S06",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-025-S01",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-025-S02",
+      "returncode": 115,
+      "stdout": "",
+      "stderr": "Code: 115. DB::Exception: Unknown setting 'sql_compatible_division_for_integers'. (UNKNOWN_SETTING)\n"
+    },
+    {
+      "id": "CHSEM-025-S03",
+      "returncode": 0,
+      "stdout": "[14]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S04",
+      "returncode": 0,
+      "stdout": "[14]\tArray(Int256)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S05",
+      "returncode": 0,
+      "stdout": "{'a':14}\tMap(String, UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-025-S06",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    }
+  ]
+}
