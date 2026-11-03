@@ -1,11 +1,97 @@
-# SQL 0.23.0 release preparation
+# SQL 0.23.0 and IntelliJ support 0.4.0 releases
 
-This is a release-candidate record, not a publication announcement. The last
-published versions remain SQL `0.22.0` and IntelliJ support `0.3.0`.
-The provisional local candidates are SQL `0.23.0-rc.2` and IntelliJ support
-`0.3.1-rc.2`. RC2 includes the CTE follow-up and supersedes RC1 for this source.
-No remote publication, release tag or consumer update is authorized.
-Development descriptors stay at `0.23.0-SNAPSHOT` and `0.3.1-SNAPSHOT`.
+Published and verified on Maven Central on 2026-11-03 UTC from merged main commit
+`b406a1bd894963f3a09f63f02f6b04e606f083f2`, frozen at `release/0.23.0`.
+The user explicitly authorized final SQL `0.23.0` and IntelliJ `0.4.0` publication.
+Both move forward from the preceding SQL `0.22.0` and IntelliJ `0.3.0` releases.
+The historical RC labels below were local candidates, not published stable versions.
+
+## Published coordinates
+
+All artifacts use group `dev.brikk.house` and resolve from `mavenCentral()`.
+
+SQL `0.23.0` includes all 12 aligned coordinates:
+
+- `brikk-sql`, `brikk-sql-jvm`
+- `brikk-sql-metadata`, `brikk-sql-metadata-jvm`
+- `brikk-sql-verify-api`
+- `brikk-sql-verify-trino`, `brikk-sql-verify-duckdb`, `brikk-sql-verify-doris`
+- `brikk-sql-verify-shardingsphere`, `brikk-sql-verify-clickhouse`
+- `brikk-sql-verify`, `brikk-sql-oracle`
+
+IntelliJ `0.4.0` includes `brikk-sql-intellij-support`,
+`brikk-sql-intellij-jdbc-support` and `brikk-sql-intellij-test-support`.
+Its SQL dependencies are aligned at `0.23.0`. Publication used
+`publish_core=false`, so it did not republish the immutable SQL prerequisites.
+
+## Final merged release qualification
+
+The [SQL release workflow](https://github.com/brikk/brikk-sql/actions/runs/41570918595)
+and [IntelliJ release workflow](https://github.com/brikk/brikk-sql/actions/runs/41573875618)
+both passed their full gates on the frozen source, without a preverified bypass:
+
+- All modules built; 2,466 JVM tests passed, with 72 expected optional assumption
+  aborts and zero failures. Core scaling tests ran separately with the CI budget.
+- All 827 IntelliJ platform tests passed on `261.25134.95`. The native window
+  fixture was built from exact DuckDB `d54cbbe3df17e8e5ce68312f483b4155836112aa`
+  headers and checksum-pinned static libraries. Its genuine signed capture was
+  generated and checked before the IDE gate.
+- Each CI gate passed 43 enabled release-model tests, 64 DataFusion tests, three
+  Spice evidence tests and 99 ClickHouse evidence tests. Separate local full Python
+  discovery passed all 225 tests with the release model enabled, using the unchanged
+  SQLGlot commit `a00dc2e5c489214bea53bacbbeba8713f21ebce1`.
+- Formal release POM/module alignment, verifier packaging, Java 17 and IntelliJ
+  publication audits passed. No native evidence, known-failure ledger or test
+  expectation was relaxed. Historical ClickHouse CTE reports remain unchanged.
+
+The public audit downloaded all 15 coordinates from
+`https://repo.maven.apache.org/maven2/`, independently of Maven Local. It verified
+all 60 POM/module/binary/source payloads, ZIP integrity, SHA-1 sidecars and detached
+PGP signatures. The signer is `C8079FC776361E633B091E534E674B3D5F551356`, matching
+the preceding release. Dependency metadata contains no SNAPSHOTs or stale Brikk
+versions. Nine representative packaged sources match the exact frozen tree,
+including DuckDB parser/generator/catalog code and ClickHouse semantic APIs.
+
+The downloaded core and metadata JARs also pass the packaged ClickHouse semantic
+API smoke on actual Java `17.0.21`, including CTE propagation, proof categories,
+script diagnostics and the old result constructor shape. Core, metadata,
+verification API and Doris verifier retain Java 17 compatibility; IDE support
+retains Java 21 bytecode. Trino/aggregate/oracle runtime floors remain unchanged.
+
+Audit manifests and the Java 17 smoke report are under
+`build/release-023-040-public/`. `sql-verified.json` and `ide-verified.json` record
+public URLs, SHA-256 hashes, source comparisons and all 60 signature results.
+
+## DuckDB and Quack versions
+
+DuckDB is pinned to engine **2.0.0 LTS**, with official
+`org.duckdb:duckdb_jdbc:2.0.0.0`. The public DuckDB verifier POM confirms that pin.
+The qualified baseline is not silently raised to an untested newer engine.
+Nested-schema IDE support remains excluded from this release; core SQL/name/scope
+support and the existing safeguards remain intact.
+
+The requested Quack JDBC consumer-driver baseline is **0.12.1**. Quack JDBC is not
+a dependency of this repository or these published POMs. This release does not
+change consumer-plugin pins or qualify a Quack driver integration. Historical
+Quack 0.12.0 notes below or in the work list describe earlier work, not a downgrade.
+
+The merged release includes the bounded ClickHouse semantics/CTE scope described
+below and DuckDB 2.0 catch-up. It preserves DataFusion/Spice and existing Java/API
+compatibility guards. CHSEM-034 remains open for separately authorized consumer
+delivery; publication alone is not adoption or full-server-analyzer certification.
+
+Development resumes at SQL `0.24.0-SNAPSHOT` and IntelliJ `0.4.1-SNAPSHOT`, following
+the policy that development bases sort after the latest stable versions.
+
+## Historical candidate preparation
+
+Before final publication, the last stable versions were SQL `0.22.0` and IntelliJ
+`0.3.0`. The provisional local candidates were SQL `0.23.0-rc.2` and IntelliJ
+`0.3.1-rc.2`. RC2 included the CTE follow-up and superseded RC1 for its source.
+Remote publication, release tags and consumer updates were not authorized at that
+stage. Development descriptors then used `0.23.0-SNAPSHOT` and `0.3.1-SNAPSHOT`.
+The final release above supersedes those publication restrictions for the shared
+libraries only. The following records retain their original scope and evidence.
 
 ## Later main synchronization
 
@@ -164,7 +250,11 @@ python3 tools/verify_clickhouse_semantic_candidate.py 0.23.0-rc.2 --java-home /p
 The checked local coordinates already exist after this run. A later build should
 use new unused candidate labels rather than overwrite this qualification sample.
 
-## Remaining release approvals
+## Original candidate approval checklist
+
+This was the checklist before final release authorization. Items 1 through 3 are
+now covered by the final source, user-selected versions, CI gates and public audits
+above. Consumer adoption in item 4 remains separately authorized and qualified.
 
 1. Select the exact final source commit and approve landing/releasing it.
 2. Confirm final SQL and independently versioned IntelliJ release numbers.

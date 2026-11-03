@@ -1,7 +1,7 @@
 # Building and publishing
 
 Use the pinned Kotlin Toolchain 0.13.0 wrapper and Kotlin 2.4.10.
-Current development versions are SQL `0.23.0-SNAPSHOT` and IntelliJ support `0.3.1-SNAPSHOT`.
+Current development versions are SQL `0.24.0-SNAPSHOT` and IntelliJ support `0.4.1-SNAPSHOT`.
 Published versions are listed in the [root README](../README.md).
 
 ## Build and test
@@ -63,8 +63,9 @@ The three IntelliJ support modules use their own aligned version. Build tooling 
 - Local snapshot: `./kotlin publish centralSnapshots`.
 - SQL release: `./publish-release.sh <version>`. Optional module arguments select a subset;
   its in-repo dependencies must already be released at that version.
-- IntelliJ support release: `python3 tools/publish_intellij_support.py <support-version>`.
-  Add `--core-version <version>` only when also releasing core and metadata prerequisites.
+- IntelliJ support release: `python3 tools/publish_intellij_support.py <support-version> --core-version <sql-version> --skip-core-publication`.
+  Reference already-published SQL prerequisites without republishing them. Omit
+  `--skip-core-publication` only when explicitly releasing new core prerequisites too.
 
 After a stable release, advance the SQL template and all three IDE module descriptors.
 Release launchers restore their input templates; they do not advance development versions.

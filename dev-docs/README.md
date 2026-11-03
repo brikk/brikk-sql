@@ -4,7 +4,7 @@
 - [Active work index](TODO.md)
 - [DuckDB 2.0 work and release checks](TODO-duckdb-2.0.md)
 - [ClickHouse semantic work and deferred scope](TODO-clickhouse-semantic.md)
-- [SQL 0.23.0 release preparation](../docs/sql-0.23.0.md)
+- [SQL 0.23.0 and IntelliJ 0.4.0 release record](../docs/sql-0.23.0.md)
 - [Transpile rewrites](TODO-BUGS-rewrites.md)
 - [BigQuery limitations](TODO-bigquery.md)
 - [Doris DDL](TODO-doris-ddl.md)

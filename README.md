@@ -31,14 +31,14 @@ Other verifiers and IntelliJ support require Java 21; Trino, the aggregate verif
 and the oracle require Java 25. See [Java 17 embedding](docs/java17-compatibility.md)
 for dependency guidance.
 
-Latest core, metadata, verify and oracle release: **`0.22.0`**. SQL IntelliJ
-support is independently versioned at **`0.3.0`**.
+Latest core, metadata, verify and oracle release: **`0.23.0`**. SQL IntelliJ
+support is independently versioned at **`0.4.0`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.22.0")
-    // Optional, Java 25 runtime: implementation("dev.brikk.house:brikk-sql-verify:0.22.0")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.23.0")
+    // Optional, Java 25 runtime: implementation("dev.brikk.house:brikk-sql-verify:0.23.0")
 }
 ```
 
@@ -83,6 +83,7 @@ integrations. See the [support guide](docs/datafusion-spice-support.md) and
 - [Core API and examples](brikk-sql/README.md)
 - [Source-preserving SQL lowering](docs/source-preserving-lowering.md)
 - [IntelliJ integration](brikk-sql-intellij-support/README.md)
+- [SQL 0.23.0 and IntelliJ 0.4.0 release record](docs/sql-0.23.0.md)
 - [Dialect differences and extensions](docs/brikk-extensions.md)
 - [Building, testing and publishing](dev-docs/CONTRIBUTING.md)
 - [Developer work list](dev-docs/README.md)

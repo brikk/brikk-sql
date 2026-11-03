@@ -10,6 +10,11 @@ a platform test fails on any other use). SQL PSI hooks live in
 `com.intellij.sql.resolveExtension` interface from `com.intellij.sql.psi.impl`, which carries
 no internal-API annotation.
 
+The current Maven Central release is **0.4.0** for common support, the optional
+`brikk-sql-intellij-jdbc-support` adapter and `brikk-sql-intellij-test-support`.
+It references SQL core/metadata/verification API **0.23.0**. See the
+[release record](../docs/sql-0.23.0.md) for qualification and dependency details.
+
 ## API
 
 DataFusion and Spice consumers use `DatafusionFamilyDialect` with separate
@@ -23,7 +28,7 @@ features to Flight SQL inventories. See [the DFS-009 transport and cache contrac
 `DatafusionNativeErrorProfile` and `DatafusionPipeDialect` add offline diagnostics and opt-in
 Brikk PIPE execution. See [the DFS-010 execution contract and measured driver limits](../docs/research/datafusion-spice-execution.md).
 The [DFS-012 consumer handoff](../docs/datafusion-spice-consumer.md) combines these registrations
-in a tested dual-dialect fixture and lists candidate artifacts and downstream packaging checks.
+in a tested dual-dialect fixture and lists released artifacts and downstream packaging checks.
 Its [support matrix](../docs/datafusion-spice-support.md) keeps execution exclusions explicit.
 
 `queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries

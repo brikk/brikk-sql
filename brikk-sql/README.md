@@ -1000,7 +1000,9 @@ including MAP parameters/headers. The handwritten `DUCKDB_CORE_EXTENSION_ATTACH_
 vocabulary distinguishes canonical Iceberg URI from deprecated ENDPOINT and keeps backend
 options separate. It is not a runtime validator, installed-extension claim or a request to
 provision/migrate a catalog, enumerate schemas or contact endpoints. Quack JDBC is not a
-dependency of this checkout; its driver releases belong to the consumer plugin.
+dependency of this checkout; its driver releases belong to the consumer plugin. The requested
+consumer-driver baseline for this release is **0.12.1**, separate from the official DuckDB
+JDBC **2.0.0.0** used here. This library release does not qualify or change that plugin's driver.
 
 Known model gaps remain explicit: the upstream-shaped CREATE serializer can omit storage
 partition/properties clauses, and ALTER storage partition/sort/property actions can be
