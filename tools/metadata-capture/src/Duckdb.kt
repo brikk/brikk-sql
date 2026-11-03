@@ -99,6 +99,10 @@ private fun sha256(bytes:ByteArray)=MessageDigest.getInstance("SHA-256").digest(
 fun <T> withDuckdbCaptureEngine(allowLocalLoad:Boolean=false,block:(Connection)->T):T {
     val root=Files.createTempDirectory(Path.of(System.getProperty("java.io.tmpdir")),"duckdb-capture-")
     try {
+        // Official repositories bypass enable_external_access in DuckDB 2.0.
+        // INSTALL creates its destination first, so a file blocks every install
+        // before transport while duckdb_extensions() can still inventory it.
+        if (!allowLocalLoad) Files.createFile(root.resolve("extensions"))
         val properties=Properties().apply {
             setProperty("extension_directory",root.resolve("extensions").toString())
             setProperty("secret_directory",root.resolve("secrets").toString())

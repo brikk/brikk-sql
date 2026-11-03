@@ -1,5 +1,9 @@
 import java.nio.file.Files
 import java.nio.file.Path
+import java.net.InetSocketAddress
+import java.sql.SQLException
+import java.util.concurrent.atomic.AtomicInteger
+import com.sun.net.httpserver.HttpServer
 import kotlin.test.*
 import org.junit.jupiter.api.Assumptions.assumeTrue
 
@@ -12,9 +16,36 @@ class DuckdbHermeticCaptureTest {
                 root=Path.of(r.getString(5)).parent
                 assertEquals(root!!.resolve("secrets").toString(),r.getString(6))
             } }
-            assertFails { c.createStatement().use { it.execute("INSTALL inet") } }
+            assertTrue(Files.isRegularFile(root!!.resolve("extensions")))
+            val failure=assertFailsWith<SQLException> { c.createStatement().use { it.execute("INSTALL inet") } }
+            assertTrue("directory" in failure.message.orEmpty().lowercase(),failure.message)
+            assertFailsWith<SQLException> { c.createStatement().use { it.execute("SET extension_directory='elsewhere'") } }
+            assertFailsWith<SQLException> { c.createStatement().use { it.execute("SET enable_external_access=true") } }
         }
         assertFalse(Files.exists(root!!))
+    }
+    @Test fun coreCaptureCannotDownloadInstallOrLoadExtensions() {
+        val requests=AtomicInteger()
+        val server=HttpServer.create(InetSocketAddress("127.0.0.1",0),0)
+        server.createContext("/") { exchange -> requests.incrementAndGet();exchange.sendResponseHeaders(404,-1);exchange.close() }
+        server.start()
+        try {
+            withDuckdbCaptureEngine { c ->
+                val installed=c.createStatement().use { s -> s.executeQuery("SELECT extension_name FROM duckdb_extensions() WHERE installed ORDER BY extension_name").use { r -> buildList { while(r.next())add(r.getString(1)) } } }
+                val url="http://127.0.0.1:${server.address.port}"
+                for(sql in listOf("INSTALL inet", "FORCE INSTALL inet FROM core", "INSTALL brikk_capture_control FROM '$url'")) {
+                    val failure=assertFailsWith<SQLException> { c.createStatement().use { it.execute(sql) } }
+                    assertTrue("directory" in failure.message.orEmpty().lowercase(),failure.message)
+                }
+                assertFailsWith<SQLException> { c.createStatement().use { it.execute("LOAD inet") } }
+                val after=c.createStatement().use { s -> s.executeQuery("SELECT extension_name FROM duckdb_extensions() WHERE installed ORDER BY extension_name").use { r -> buildList { while(r.next())add(r.getString(1)) } } }
+                assertEquals(installed,after)
+                assertEquals(0,requests.get(),"An INSTALL must fail before making an HTTP request")
+                val extensionPath=c.createStatement().use { s -> s.executeQuery("SELECT current_setting('extension_directory')").use { r -> assertTrue(r.next());Path.of(r.getString(1)) } }
+                assertTrue(Files.isRegularFile(extensionPath))
+                assertEquals(0L,Files.size(extensionPath))
+            }
+        } finally { server.stop(0) }
     }
     @Test fun capturesIncludeRuntimeProvenanceWithoutCredentialsOrCurrentSettingsValues() {
         val root=Files.createTempDirectory(Path.of(System.getProperty("java.io.tmpdir")),"capture-output-")

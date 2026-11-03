@@ -90,8 +90,11 @@ same test environment. They are not fixed or suppressed by this merge, and the f
 must not be reported green until they are addressed:
 
 - `DuckdbHermeticCaptureTest.coreCaptureIsRestrictedAndDoesNotSeeUserExtensionOrSecretDirectories`:
-  restricted `INSTALL inet` returns `false` rather than throwing. Investigate the control
-  without weakening capture isolation or enabling installation/network access.
+  fixed: DuckDB 2.0 exempts official repositories from `enable_external_access=false`.
+  Core capture now uses a locked, non-directory extension destination, which blocks INSTALL
+  before transport while retaining catalog inventory. Tests cover default/forced official
+  installs, zero loopback HTTP requests, unchanged installed inventory, denied LOAD/config
+  changes and scratch cleanup. Explicit local-extension capture remains a separate opt-in.
 - `SparkDuckdbArrayResultTest.slicesExecuteWithLengthNegativeStartZeroLengthAndNullSemantics`:
   the test expects no warnings, but the existing conservative array boundary emits an
   unqualified-execution warning. Reconcile the assertion with the bounded semantic contract;
