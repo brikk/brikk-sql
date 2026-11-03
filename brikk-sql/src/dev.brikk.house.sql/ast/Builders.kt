@@ -77,7 +77,8 @@ internal fun <T> applyIndexOffset(
     }
 
     val thisType = this_?.type?.thisArg
-    if (thisType != DType.UNKNOWN && thisType != DType.ARRAY) {
+    if (thisType != DType.UNKNOWN && thisType != DType.ARRAY &&
+        !(dialect?.name == "duckdb" && thisType == DType.VARIANT)) {
         return expressions
     }
 

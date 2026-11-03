@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * BRIKK-NATIVE (no sqlglot counterpart): the shape/contract model consumed by pipeline
  * construction, the future compiler plugin, and IDE tooling. A [Shape] is the ordered
  * column signature of a table, fragment output, or table-valued slot — the "(input
- * shape, body, output shape)" contract from docs/parsing-research-and-plan.md
+ * shape, body, output shape)" contract from dev-docs/archive/parsing-research-and-plan.md
  * ("North star: composable, parameterized pipe fragments").
  */
 
@@ -216,7 +216,8 @@ data class ShapeComparison(
  *
  *  - [tables]: physical table name -> shape. Dotted names ("db.t", "cat.db.t") nest
  *    into the schema mapping. Components may use ANSI quotes or backticks independently
- *    of the consuming query's dialect. All entries must share one nesting depth.
+ *    of the consuming query's dialect. DuckDB also accepts deeper nested-schema paths.
+ *    All entries must share one nesting depth.
  *  - [slots]: table-valued slot name -> shape, binding the fragment's `FROM slot(...)`
  *    TVF-style inputs (see [SqlFragment.tableSlots]).
  */
@@ -235,7 +236,7 @@ internal fun catalogTableParts(name: String): List<Identifier> {
     if ('"' !in name && '`' !in name) {
         // Existing catalogs use raw dotted names, including names such as order-items.
         val parts = name.split('.')
-        if (';' !in name && parts.size in 1..3 && parts.all { it.isNotEmpty() }) {
+        if (';' !in name && parts.all { it.isNotEmpty() }) {
             return parts.map { Identifier(args("this" to it, "quoted" to false)) }
         }
     } else {
@@ -250,10 +251,10 @@ internal fun catalogTableParts(name: String): List<Identifier> {
             } catch (_: TokenError) {
                 null
             }
-            if (!parts.isNullOrEmpty() && parts.size <= 3 && parts.all { it is Identifier }) {
+            if (!parts.isNullOrEmpty() && parts.all { it is Identifier }) {
                 return parts.filterIsInstance<Identifier>()
             }
         }
     }
-    throw ShapeError("Shape catalog table names must contain one to three identifiers")
+    throw ShapeError("Catalog paths must contain identifiers separated by dots")
 }

@@ -1,6 +1,8 @@
 package dev.brikk.house.sql.scope
 
+import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.EQ
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Identifier
@@ -25,6 +27,9 @@ import dev.brikk.house.sql.ast.Values
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.desugarPipes
 import dev.brikk.house.sql.dialects.Dialect
+import dev.brikk.house.sql.dialects.duckdbExtensionResult
+import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
+import dev.brikk.house.sql.dialects.duckdbExplainResult
 import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.ParseError
@@ -32,6 +37,25 @@ import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
+
+/** Identifier-only dotted paths, including the Column-under-Dot representation of long names. */
+internal fun Expression.scopeIdentifierParts(): List<Identifier>? {
+    val pending = ArrayDeque<Expression>()
+    val parts = ArrayList<Identifier>()
+    pending.addLast(this)
+    while (pending.isNotEmpty()) {
+        when (val part = pending.removeLast()) {
+            is Identifier -> parts += part
+            is Column -> part.parts.asReversed().forEach { pending.addLast(it) }
+            is Dot -> {
+                pending.addLast(part.expressionArg as? Expression ?: return null)
+                pending.addLast(part.thisArg as? Expression ?: return null)
+            }
+            else -> return null
+        }
+    }
+    return parts
+}
 
 internal class ParsedRegion(val tokens: List<Token>, val statements: List<Expression>)
 
@@ -42,7 +66,7 @@ internal class Splice(val start: Int, val end: Int, val length: Int)
 internal fun parseRegion(text: String, dialect: Dialect, checkCanceled: () -> Unit): ParsedRegion? {
     val lexed = Tokenizer(dialect.tokenizerConfig).tokenizeForEditor(text, checkCanceled)
     if (lexed.failureOffset != null) return null
-    val parser = dialect.parser(ErrorLevel.IMMEDIATE).apply {
+    val parser = dialect.parser(ErrorLevel.IMMEDIATE).useNativeDuckdbOperators().apply {
         captureSourceRanges = true
         this.checkCanceled = checkCanceled
     }
@@ -112,7 +136,8 @@ internal fun Expression.isQuery(): Boolean = this is Select || this is SetOperat
 internal fun Expression.outermostQueries(): List<Expression> {
     val out = ArrayList<Expression>()
     fun visit(node: Expression) {
-        if (node.isQuery()) out += node else node.iterExpressions().forEach(::visit)
+        if (node is dev.brikk.house.sql.ast.DuckdbExplain) (node.thisArg as? Expression)?.let(::visit)
+        else if (node.isQuery()) out += node else node.iterExpressions().forEach(::visit)
     }
     visit(this)
     return out
@@ -144,7 +169,8 @@ internal class ScopeAnalysis(
                 val row = evaluator.query(lowered, root)
                 if (parsed.statements.size == 1) output = row.toFact()
             } else {
-                lowered.outermostQueries().forEach { evaluator.query(it, root) }
+                evaluator.statement(lowered, root)
+                if (parsed.statements.size == 1 && dialect.name == "duckdb") output = lowered.duckdbExtensionResult() ?: lowered.duckdbExternalResourceResult() ?: lowered.duckdbExplainResult()
             }
             references += evaluator.references
             diagnostics += evaluator.diagnostics
@@ -222,25 +248,28 @@ internal class CaretCompletion(
                 continue
             }
             val marker = lowered.findAll<Identifier>().firstOrNull { MARKER in it.name } ?: continue
-            val parent = marker.parent
+            var parent = marker.parent
+            // Long table names store their final components inside Dots, not directly on Table.
+            while (parent is Dot) parent = parent.parent
+            val markerParent = marker.parent
             val nativeRole = dev.brikk.house.sql.shape.datafusionCallSite(text, edit.start, dialect.name, checkCanceled)?.role
             val datasetArgument = nativeRole in setOf(dev.brikk.house.sql.shape.DatafusionArgumentRole.DATASET, dev.brikk.house.sql.shape.DatafusionArgumentRole.SEARCH_INPUT)
             val kind = when {
                 parent is Column && datasetArgument -> PositionKind.RELATION
+                parent is Table -> PositionKind.RELATION
+                markerParent is Dot && markerParent.expressionArg === marker -> PositionKind.COLUMN
                 parent is Column && parent.thisArg === marker -> PositionKind.COLUMN
                 parent is Column -> PositionKind.QUALIFIER
-                parent is Table -> PositionKind.RELATION
                 else -> PositionKind.OTHER
             }
             if (kind != PositionKind.COLUMN && kind != PositionKind.RELATION) return none(kind)
             val evaluator = ScopeEvaluator(dialect, completionFacts, names, origins, checkCanceled, MARKER)
-            val queries = if (lowered.isQuery()) listOf(lowered) else lowered.outermostQueries()
-            // Outside any query the marker is a word being typed, not a column.
-            if (queries.isEmpty()) return none(PositionKind.OTHER)
-            queries.forEach { evaluator.query(it, Env(emptyList(), null)) }
+            val root = Env(emptyList(), null)
+            if (lowered.isQuery()) evaluator.query(lowered, root)
+            else if (!evaluator.statement(lowered, root)) return none(PositionKind.OTHER)
             if (kind == PositionKind.RELATION) {
                 val qualifier = if (parent is Column) parent.parts.filterIsInstance<Identifier>().dropLast(1)
-                    else listOf("catalog", "db").mapNotNull { (parent as Table).args[it] as? Identifier }
+                    else (parent as Table).parts.filterIsInstance<Identifier>().dropLast(1)
                 return ScopeCompletion(kind, null, start, end, edit.prefix, relations(evaluator.caretCtes.orEmpty(), qualifier, start, end, edit.quoted))
             }
             val site = evaluator.caret ?: return ScopeCompletion(kind, Knowledge.UNKNOWN, start, end, edit.prefix, emptyList())
@@ -287,7 +316,7 @@ internal class CaretCompletion(
             return evaluator.visible(frame) to absence
         }
         val bindings = evaluator.findBindings(frame, qualifier)
-        if (bindings.isNotEmpty()) return bindings.flatMap { it.columns } to bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }
+        if (bindings.isNotEmpty()) return bindings.flatMap { it.allColumns } to bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }
         evaluator.nestedFields(frame, qualifier)?.let { return it }
         // A struct's fields are beyond the facts; an unknown qualifier names nothing, unless an open relation may hold the struct.
         val field = evaluator.unqualified(frame, qualifier.first())

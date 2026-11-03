@@ -553,7 +553,7 @@ class DorisDialectTest {
     }
 
     // ------------------------------------------------------------------
-    // Statement-level Doris DDL a pipeline runtime issues (TODO-doris-ddl.md C1/C3).
+    // Statement-level Doris DDL a pipeline runtime issues (dev-docs/TODO-doris-ddl.md C1/C3).
     // ------------------------------------------------------------------
 
     /** Parses to the given node class (never Command) and re-parses stably. */
@@ -776,7 +776,7 @@ class DorisDialectTest {
 
     @Test
     fun remainingAlterTableActions() {
-        // TODO-doris-ddl.md C2/C3: ADD COLUMN with a rollup target (was mis-parsed into a bogus
+        // dev-docs/TODO-doris-ddl.md C2/C3: ADD COLUMN with a rollup target (was mis-parsed into a bogus
         // second action), the parenthesized multi-column form, ORDER BY, ENABLE FEATURE,
         // MODIFY DISTRIBUTION | ENGINE | COMMENT.
         assertStatementRoundTrip<Alter>("ALTER TABLE t ADD COLUMN (c1 INT, c2 STRING) TO r1")
@@ -814,7 +814,7 @@ class DorisDialectTest {
     }
 
     // ------------------------------------------------------------------
-    // TODO-doris-ddl.md group B: renderings the FE rejected when inherited from MySQL.
+        // dev-docs/TODO-doris-ddl.md group B: renderings the FE rejected when inherited from MySQL.
     // ------------------------------------------------------------------
 
     @Test

@@ -11,7 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * EVAL-02 (TODO-rectify-from-eval.md): the library is used from many threads through the
+ * EVAL-02 (dev-docs/archive/TODO-rectify-from-eval.md): the library is used from many threads through the
  * shared [dev.brikk.house.sql.dialects.Dialects] singletons. Parser/Generator instances are
  * per-call, but `Expression.objectId` is drawn from one global counter and used as an identity
  * key by the optimizer, so it must be collision-free under contention.

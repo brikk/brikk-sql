@@ -25,13 +25,14 @@ internal sealed interface SerializedSql {
         val document: String,
     ) : SerializedSql {
         fun errorIn(sql: String, message: String): VerifyError {
+            val safe = dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql, message)
             val bytes = LOCATION.matchEntire(location.orEmpty())?.destructured?.let { (start, length) ->
                 start.toIntOrNull()?.let { it to length.toIntOrNull() }
             }
             return when {
-                bytes != null -> VerifyError.atUtf8Byte(sql, message, bytes.first, bytes.second?.let { bytes.first + it })
-                position != null -> VerifyError.atCodePoint(sql, message, position)
-                else -> VerifyError(message)
+                bytes != null -> VerifyError.atUtf8Byte(sql, safe, bytes.first, bytes.second?.let { bytes.first + it })
+                position != null -> VerifyError.atCodePoint(sql, safe, position)
+                else -> VerifyError(safe)
             }
         }
     }
@@ -44,19 +45,21 @@ internal sealed interface SerializedSql {
 /** Same result mapping for the restricted parser and an already configured helper connection. */
 internal fun SerializedSql.toParseOnlyResult(sql: String): VerifyResult = when (this) {
     SerializedSql.Parsed -> VerifyResult.Accepted
-    is SerializedSql.Failed -> if (type == "parser") {
+    is SerializedSql.Failed -> if (isResourceLimit()) {
+        VerifyResult.Unverified("DuckDB parse-only verification exceeded an engine resource limit.")
+    } else if (type == "parser") {
         VerifyResult.Rejected(errorIn(sql, "Parser Error: ${message.orEmpty()}"))
     } else {
         VerifyResult.Unverified(
-            "Parse-only DuckDB verification cannot check this statement: " +
-                listOfNotNull(type, message).joinToString(": "),
+            dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql,
+                "Parse-only DuckDB verification cannot check this statement: " + listOfNotNull(type, message).joinToString(": ")),
         )
     }
 }
 
 /** Null for a missing or malformed response, which is never a parser verdict. */
 internal fun serializedSqlDocument(document: String?): SerializedSql? {
-    if (document == null) return null
+    if (document == null || !duckdbParserResponseWithinBudget(document)) return null
     val root = try {
         Json.parseToJsonElement(document) as? JsonObject ?: return null
     } catch (_: IllegalArgumentException) {

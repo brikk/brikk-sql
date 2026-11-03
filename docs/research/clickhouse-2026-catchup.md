@@ -1,6 +1,6 @@
 # ClickHouse 2026 catch-up evidence
 
-Audit date: 2026-10-28. Batch 1 covers CH26-001 and CH26-002 in `docs/clickhouse-catchup-plan.md`.
+Audit date: 2026-10-28. Batch 1 covers CH26-001 and CH26-002 in `dev-docs/archive/clickhouse-catchup-plan.md`.
 
 The metadata and query/type follow-up is recorded separately in
 [batch 2](clickhouse-2026-batch2.md). The version-status statements below describe

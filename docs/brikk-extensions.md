@@ -713,7 +713,7 @@ round-trips, and every rendering is accepted by the real Doris FE parser.
   (the same types in current Doris). `PARTITION IF NOT EXISTS p ...` inside a CREATE TABLE
   definition list is accepted and the flag dropped (a no-op for a new table; the ALTER
   TABLE ADD PARTITION form keeps it).
-- **Backlog:** `TODO-doris-ddl.md` tracks the remaining Doris DDL gaps (statement-level
+- **Backlog:** `dev-docs/TODO-doris-ddl.md` tracks the remaining Doris DDL gaps (statement-level
   DDL, generator renderings the FE rejects).
 - **Corpus/ledger impact:** none — no Python-oracle corpus case exercises these inputs,
   and all ledgers are unchanged.
@@ -2026,7 +2026,7 @@ the full Kotlin suite with 1,695 successful methods, 59 optional engine assumpti
 aborted, and zero failures. That integration run has no live engine containers
 configured and does not replace the earlier native Trino 484 evidence. Paired
 484/Doris 4.1.5 JSON evidence remains on the
-[remaining-work list](trino-483-parity-todo.md#remaining-484-work).
+[remaining-work list](../dev-docs/archive/trino-483-parity-todo.md#remaining-484-work).
 
 ## 59. Versioned Trino/Doris JSON evidence and retained Doris JSON_PARSE
 
@@ -2152,6 +2152,49 @@ can capture actual executable pipe lowering and source-aware target examples. Fi
 checks cover every earlier batch again without editing failure ledgers or historical
 hazard provenance. See [the final handoff](research/clickhouse-2026-batch4.md) for
 commands, counts, version boundaries, optional skips and remaining limitations.
+
+## 64. DuckDB native session-statement grammar
+
+`parseDuckdbNativeOne`, native analysis and executable parsing recognize the DuckDB 2.0
+delimiter-free `SET SCHEMA 'name'` form as the existing Set/SetItem/EQ AST. Generation uses
+the equivalent delimited assignment. The value remains a string, including its embedded
+identifier quotes; the parser does not split it into catalog/schema components or claim
+the named namespace exists. The historical SQLGlot parser keeps its raw-command fallback.
+Native engine tests cover quoted names, search-path replacement, failed switches and
+rejection of nested current namespaces. IDE tests read the actual top-level catalog/schema
+through the existing strategy; recursive IDE schemas remain deferred. No parity ledger
+or published AST constructor changes are needed.
+
+Native tokenization maps ANALYSE to the ANALYZE token. Both standalone spellings use the
+existing Analyze AST, including an optional target and column list, and generate canonical
+ANALYZE. The native statement grammar refuses unsupported trailing clauses instead of
+discarding them. VERBOSE remains syntactically represented even though DuckDB 2.0 rejects
+its implementation. Existing structured EXPLAIN ANALYSE is covered separately. VACUUM
+ANALYSE/ANALYZE retain their explicitly flagged raw-passthrough contract; they are not
+misrepresented as standalone Analyze nodes. Historical token/AST corpora remain unchanged.
+No cross-target statistics execution mapping is inferred from the shared keyword.
+
+## 65. DuckDB native aggregate types and macro defaults
+
+Native analysis uses the reviewed SUM overloads rather than SQLGlot's generic BIGINT
+promotion: Boolean and integral inputs through signed HUGEINT produce HUGEINT, unsigned
+HUGEINT and floating inputs produce DOUBLE, and DECIMAL(p,s) produces DECIMAL(38,s).
+Unknown inputs and approximate bare decimal/wide-integer literal facts remain unknown.
+Historical annotation corpora keep their existing contract. Native macro parameters also
+preserve `name type := default` using existing ColumnDef/PropertyEQ nodes, without host
+coercion or an inferred default-value binding contract. No public data-class shape changes.
+
+Native cast-result typing maps valid TIMESTAMP precision to its physical family: 0 seconds,
+1–3 milliseconds, 4–6 microseconds and 7–10 nanoseconds. Final 2.0 accepts precision 10
+but still returns a nine-digit nanosecond type. The destination AST retains the
+authored precision, so this is not a SQL rewrite. Unsupported temporal modifiers stay
+unknown, not a guessed type. The existing TIME_NS enum and opaque named TIMESTAMPTZ_NS
+representation are retained; native TIMESTAMPTZ_NS string literals become ordinary casts.
+No enum or public constructor change is needed.
+
+Native table-prefix aliases also reject a simultaneous postfix alias instead of silently
+overwriting it. Subquery/FROM-first/JOIN/nested-scope tests qualify the existing colon-alias
+AST and generation. The historical parser retains its old behavior for corpus compatibility.
 
 ## Upstream sync protocol
 

@@ -2,6 +2,7 @@ package dev.brikk.house.sql.verify
 
 import dev.brikk.house.sql.dialects.Dialects
 import dev.brikk.house.sql.optimizer.annotateTypes
+import dev.brikk.house.sql.generator.UnsupportedError
 import dev.brikk.house.sql.shape.SqlFragment
 import java.sql.DriverManager
 import java.sql.SQLException
@@ -51,7 +52,7 @@ class SparkDuckdbArrayResultTest {
     }
 
     @Test
-    fun slicesExecuteWithLengthNegativeStartZeroLengthAndNullSemantics() {
+    fun slicePreviewsKeepMeasuredResultsWithoutClaimingExecutableSupport() {
         DriverManager.getConnection("jdbc:duckdb:").use { connection ->
             connection.createStatement().use { statement ->
                 for ((call, expected) in listOf(
@@ -68,8 +69,11 @@ class SparkDuckdbArrayResultTest {
                     "SLICE(NULL, 2, 1)" to null,
                 )) {
                     for (sourceDialect in listOf("spark2", "spark")) {
-                        val output = SqlFragment("SELECT $call AS a", sourceDialect).transpileTo("duckdb")
-                        assertTrue(output.unsupportedMessages.isEmpty(), output.toString())
+                        val fragment = SqlFragment("SELECT $call AS a", sourceDialect)
+                        val output = fragment.transpileTo("duckdb")
+                        assertEquals(listOf("Array index/endpoint/comparator/null-order semantics have no verified executable DuckDB mapping"),
+                            output.unsupportedMessages, output.toString())
+                        assertFailsWith<UnsupportedError> { fragment.toExecutable("duckdb") }
                         assertIs<VerifyResult.Accepted>(SqlVerifiers.forEngine("duckdb")!!.verify(output.sql), output.sql)
                         statement.executeQuery("SELECT to_json(a) FROM (${output.sql}) AS q").use { rows ->
                             assertTrue(rows.next())
@@ -78,10 +82,11 @@ class SparkDuckdbArrayResultTest {
                         }
                     }
                 }
-                val dynamic = SqlFragment("SELECT SLICE(a, s, n) AS result FROM " +
+                val dynamicFragment = SqlFragment("SELECT SLICE(a, s, n) AS result FROM " +
                     "(VALUES (ARRAY(1, 2, 3), -2, 2), (ARRAY(1, 2, 3), -4, 2), " +
                     "(ARRAY(1, 2, 3), 2, NULL), (ARRAY(1, 2, 3), NULL, 2)) AS t(a, s, n)", "spark")
-                    .transpileTo("duckdb").sql
+                assertFailsWith<UnsupportedError> { dynamicFragment.toExecutable("duckdb") }
+                val dynamic = dynamicFragment.transpileTo("duckdb").sql
                 statement.executeQuery("SELECT to_json(result) FROM ($dynamic) AS q").use { rows ->
                     for (expected in listOf("[2,3]", "[]", null, null)) {
                         assertTrue(rows.next())

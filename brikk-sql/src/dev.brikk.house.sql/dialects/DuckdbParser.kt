@@ -18,6 +18,26 @@ import dev.brikk.house.sql.ast.ArrayPrepend
 import dev.brikk.house.sql.ast.ArraySlice
 import dev.brikk.house.sql.ast.Attach
 import dev.brikk.house.sql.ast.AttachOption
+import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.Copy
+import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.EQ
+import dev.brikk.house.sql.ast.DML
+import dev.brikk.house.sql.ast.Delete
+import dev.brikk.house.sql.ast.DuckdbPrepare
+import dev.brikk.house.sql.ast.DuckdbExecute
+import dev.brikk.house.sql.ast.DuckdbDeallocate
+import dev.brikk.house.sql.ast.DuckdbResetVariable
+import dev.brikk.house.sql.ast.Insert
+import dev.brikk.house.sql.ast.Identifier
+import dev.brikk.house.sql.ast.Anonymous
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
+import dev.brikk.house.sql.ast.Update
+import dev.brikk.house.sql.ast.Values
+import dev.brikk.house.sql.ast.With
+import dev.brikk.house.sql.ast.Query
+import dev.brikk.house.sql.ast.Pivot
+import dev.brikk.house.sql.ast.PipeQuery
 import dev.brikk.house.sql.ast.BitwiseAndAgg
 import dev.brikk.house.sql.ast.BitwiseOrAgg
 import dev.brikk.house.sql.ast.BitwiseXor
@@ -43,6 +63,8 @@ import dev.brikk.house.sql.ast.Encode
 import dev.brikk.house.sql.ast.EndsWith
 import dev.brikk.house.sql.ast.EuclideanDistance
 import dev.brikk.house.sql.ast.Explode
+import dev.brikk.house.sql.ast.Fetch
+import dev.brikk.house.sql.ast.LimitOptions
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.GenerateSeries
 import dev.brikk.house.sql.ast.Getbit
@@ -100,6 +122,7 @@ import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.NodeFactory
 import dev.brikk.house.sql.parser.Parser
 import dev.brikk.house.sql.parser.ParseError
+import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenizerConfig
@@ -245,7 +268,52 @@ open class DuckdbParser(
     override val bitwise: Map<TokenType, NodeFactory> get() = DuckdbParserTables.BITWISE
 
     override val rangeParsers: Map<TokenType, (Parser, Expression?) -> Expression?>
-        get() = DuckdbParserTables.RANGE_PARSERS
+        get() = if (nativeRegexOperators) DuckdbParserTables.NATIVE_RANGE_PARSERS else DuckdbParserTables.RANGE_PARSERS
+
+    /** Opt in to session-dependent operators instead of the historical SQLGlot full-match AST.
+     * SqlFragment and nativeDuckdbParser enable this; the parity parser stays unchanged.
+     */
+    var nativeRegexOperators: Boolean = false
+
+    override fun negateRange(this_: Expression?): Expression? {
+        if (this_ is dev.brikk.house.sql.ast.DuckdbRegexOperator) {
+            this_.set("negate", true)
+            return this_
+        }
+        return super.negateRange(this_)
+    }
+
+    // Native 2.0 expression.gram: factorial is an indirection alongside casts and
+    // subscripts, below prefix unary/exponent/multiplication, not a whole-term suffix.
+    override fun parseType(parseInterval: Boolean, fallbackToIdentifier: Boolean): Expression? {
+        if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER &&
+            currToken.text.equals("TIMESTAMPTZ_NS",true) && nextToken.tokenType == TokenType.STRING) {
+            val start=currToken
+            advance()
+            val value=parsePrimary() ?: raiseError("Expected nanosecond zoned timestamp literal")
+            return parseColumnOps(expression(dev.brikk.house.sql.ast.Cast(args("this" to value,
+                "to" to DataType(args("this" to DType.USERDEFINED,"kind" to "TIMESTAMPTZ_NS")))),start))
+        }
+        val parsed = super.parseType(parseInterval, fallbackToIdentifier)
+        // Literal atoms can bypass parseColumnOps in the base parser's fast path.
+        return if (!fallbackToIdentifier && (parsed is dev.brikk.house.sql.ast.DuckdbBinaryLiteral ||
+                currToken.tokenType == TokenType.NOT && currToken.text == "!"))
+            parseColumnOps(parsed) else parsed
+    }
+
+    override fun parseColumnOps(this_: Expression?): Expression? {
+        var current = super.parseColumnOps(this_)
+        while (current != null && currToken.tokenType == TokenType.NOT && currToken.text == "!") {
+            // The scanner splits negated regex/LIKE operator spellings into ! and ~...
+            // tokens. They belong to parseRange, not to the preceding scalar operand.
+            if (nextToken.text.startsWith("~") && currToken.end + 1 == nextToken.start) break
+            if (currToken.end + 1 == nextToken.start && nextToken.text.firstOrNull()?.let { it in "+-*/%^&|#<>=!" } == true)
+                raiseError("Adjacent !${nextToken.text} is an unmodeled operator, not a DuckDB factorial suffix")
+            advance()
+            current = super.parseColumnOps(expression(dev.brikk.house.sql.ast.Factorial(args("this" to current))))
+        }
+        return current
+    }
 
     override val exponent: Map<TokenType, NodeFactory> get() = DuckdbParserTables.EXPONENT
 
@@ -254,6 +322,9 @@ open class DuckdbParser(
 
     override val functions: Map<String, (List<Expression?>) -> Expression>
         get() = DuckdbParserTables.FUNCTIONS
+
+    override val primaryParsers: Map<TokenType, (Parser, Token) -> Expression?>
+        get() = DuckdbParserTables.PRIMARY_PARSERS
 
     override val functionParsers: Map<String, (Parser) -> Expression?>
         get() = DuckdbParserTables.FUNCTION_PARSERS
@@ -273,34 +344,190 @@ open class DuckdbParser(
     override val setParsers: Map<String, (Parser) -> Expression?>
         get() = super.setParsers + DuckdbParserTables.SET_PARSERS_EXTRA
 
+    // PREPARE used to be a COMMAND token, which was also allowed in identifier/alias sites.
+    override val idVarTokens: Set<TokenType> get() = super.idVarTokens + TokenType.PREPARE
+    override val aliasTokens: Set<TokenType> get() = super.aliasTokens + TokenType.PREPARE
+    override val tableAliasTokens: Set<TokenType> get() = super.tableAliasTokens + TokenType.PREPARE
+
     // sqlglot: DuckDBParser.SHOW_PARSERS
     open val showParsers: Map<String, (DuckdbParser) -> Expression>
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
-        if (currToken.text.equals("DISCONNECT", ignoreCase = true)) {
+        // brikk extension #64: native ANALYSE shares ANALYZE's statement grammar.
+        if (nativeRegexOperators && match(TokenType.ANALYZE)) return parseNativeAnalyze()
+        // brikk extension #64: native 2.0 adds a delimiter-free SET SCHEMA string form. Keep the
+        // historical parser's raw-command classification separate from this grammar.
+        if (nativeRegexOperators && currToken.tokenType == TokenType.SET &&
+            nextToken.tokenType == TokenType.SCHEMA && tokens.getOrNull(index + 2)?.tokenType == TokenType.STRING) {
+            advance(2)
+            val value = parsePrimary() ?: raiseError("Expected schema string")
+            return expression(dev.brikk.house.sql.ast.Set(args("expressions" to listOf(
+                dev.brikk.house.sql.ast.SetItem(args("this" to EQ(args(
+                    "this" to Column(args("this" to Identifier(args("this" to "schema", "quoted" to false)))),
+                    "expression" to value,
+                )))),
+            ))))
+        }
+        // Qualified CHECKPOINT is storage control, never Column("CHECKPOINT") AS db.
+        // Keep the parity parser unchanged; native callers retain this opaque command.
+        if (nativeRegexOperators && currToken.tokenType != TokenType.IDENTIFIER && currToken.text.equals("CHECKPOINT",true)) {
+            val start = currToken
+            matchTextSeq("CHECKPOINT")
+            return parseAsCommand(start)
+        }
+        if (currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) && currToken.text.equals("EXPLAIN", true)) {
+            advance()
+            return parseDuckdbExplain()
+        }
+        if (currToken.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING)) {
+            if (currToken.text.equals("REGISTER", true) && nextToken.text.equals("EXTERNAL", true)) {
+                advance()
+                resourceKeywords()
+                val type = resourceType()
+                val alias = if (match(TokenType.ALIAS)) resourceName() else null
+                if (!match(TokenType.FROM)) raiseError("REGISTER EXTERNAL RESOURCE requires FROM and a handle expression")
+                return expression(dev.brikk.house.sql.ast.DuckdbRegisterExternalResource(args(
+                    "this" to type, "alias" to alias, "expression" to (parseExpression() ?: raiseError("Expected resource handle")),
+                )))
+            }
+            if (currToken.text.equals("DESTROY", true) && nextToken.text.equals("EXTERNAL", true)) {
+                advance()
+                resourceKeywords()
+                return expression(dev.brikk.house.sql.ast.DuckdbDestroyExternalResource(args("this" to resourceName())))
+            }
+            if (currToken.text.equals("CONNECT", true) && nextToken.text.equals("TO", true)) {
+                advance(2)
+                val source = externalResourceSource()
+                if (source.args["temporary"] == true && currToken.tokenType == TokenType.L_PAREN)
+                    raiseError("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
+                val options = resourceOptions()
+                return expression(dev.brikk.house.sql.ast.DuckdbConnectExternalResource(args("this" to source, "expressions" to options)))
+            }
+        }
+        if (match(TokenType.TABLE)) {
+            val table = parseTableParts() ?: raiseError("Expected relation after TABLE")
+            return parseQueryModifiers(expression(dev.brikk.house.sql.ast.Select(args(
+                "expressions" to listOf(dev.brikk.house.sql.ast.Star()),
+                "from_" to dev.brikk.house.sql.ast.From(args("this" to table)),
+            ))))
+        }
+        if (matchTextSeq("PREPARE")) {
+            val name = parseIdVar() ?: raiseError("Expected prepared statement name")
+            if (!matchTextSeq("AS")) raiseError("Expected AS after prepared statement name")
+            val body = parseStatement() ?: raiseError("Expected prepared statement body")
+            return expression(DuckdbPrepare(args("this" to name, "expression" to body)))
+        }
+        if (matchTextSeq("EXECUTE")) {
+            val name = parseIdVar() ?: raiseError("Expected prepared statement name")
+            val values = if (currToken.tokenType == TokenType.L_PAREN) parseWrappedCsv({ parseExpression() }) else emptyList()
+            return expression(DuckdbExecute(args("this" to name, "expressions" to values)))
+        }
+        if (matchTextSeq("DEALLOCATE")) {
+            matchTextSeq("PREPARE")
+            return expression(DuckdbDeallocate(args("this" to (parseIdVar() ?: raiseError("Expected prepared statement name")))))
+        }
+        if (currToken.tokenType != TokenType.IDENTIFIER && currToken.tokenType != TokenType.STRING && currToken.text.equals("DISCONNECT", ignoreCase = true)) {
             matchTextSeq("DISCONNECT")
             return expression(SessionDisconnect())
         }
-        if (currToken.text.equals("CONNECT", ignoreCase = true) &&
-            !nextToken.text.equals("TO", ignoreCase = true)) {
+        if (currToken.tokenType != TokenType.IDENTIFIER && currToken.tokenType != TokenType.STRING && currToken.text.equals("CONNECT", ignoreCase = true)) {
             matchTextSeq("CONNECT")
-            val target = parsePrimaryOrVar()
-            val options = if (currToken.tokenType == TokenType.L_PAREN) {
+            if (currToken.tokenType == TokenType.NUMBER) raiseError("CONNECT requires an identifier or connection string")
+            val target = if (currToken.tokenType == TokenType.STRING) parseString()
+                else if (currToken.tokenType != TokenType.IDENTIFIER && matchTextSeq("LOCAL")) expression(Var(args("this" to "LOCAL")))
+                else if (currToken.exists && currToken.tokenType !in setOf(TokenType.SEMICOLON, TokenType.R_PAREN))
+                    parseIdVar() ?: raiseError("Expected attached database name or connection string") else null
+            val options = if (target is Literal && target.isString && currToken.tokenType == TokenType.L_PAREN) {
                 parseWrappedCsv({
-                    expression(
-                        AttachOption(
-                            args(
-                                "this" to parseVar(anyToken = true),
-                                "expression" to parseField(anyToken = true),
-                            )
-                        )
-                    )
+                    val name = parseIdVar(anyToken = false) ?: raiseError("Expected CONNECT option name")
+                    if (currToken.tokenType == TokenType.EQ) raiseError("CONNECT options use whitespace, not assignment syntax")
+                    val value = if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) null else parseAssignment()
+                    expression(AttachOption(args("this" to name, "expression" to value)))
                 })
             } else null
             return expression(SessionConnect(args("this" to target, "expressions" to options)))
         }
         return super.parseStatement()
+    }
+
+    override fun parseCommand(): Expression {
+        if (prevToken.text.equals("EXPLAIN", true) && currToken.tokenType == TokenType.STRING) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            if (lexed.failureOffset != null) raiseError("Incomplete EXPLAIN statement")
+            val body = lexed.tokens.filter { it.start >= start && it.end < end }
+            val parser = DuckdbParser(errorLevel, tokenizerConfig).apply {
+                captureSourceRanges = this@DuckdbParser.captureSourceRanges
+                checkCanceled = this@DuckdbParser.checkCanceled
+                nativeRegexOperators = this@DuckdbParser.nativeRegexOperators
+            }
+            val parsed = parser.parseIntoWith(body, sql) { (it as DuckdbParser).parseDuckdbExplain() }
+            advance()
+            return parsed ?: throw ParseError("Expected EXPLAIN statement")
+        }
+        // Preserve existing RESET-setting command/token contracts. Only RESET VARIABLE is
+        // structured; the editor tokenizer gives its identifier the original absolute range.
+        if (prevToken.text.equals("RESET", ignoreCase = true) && currToken.tokenType == TokenType.STRING &&
+            currToken.text.trimStart().startsWith("VARIABLE", ignoreCase = true)) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            val bodyTokens = lexed.tokens.filter { it.start >= start && it.end < end }
+            if (bodyTokens.firstOrNull()?.text.equals("VARIABLE", ignoreCase = true)) {
+                val parser = DuckdbParser(errorLevel = errorLevel, tokenizerConfig = tokenizerConfig)
+                parser.captureSourceRanges = captureSourceRanges
+                val parsed = parser.parseIntoWith(bodyTokens, sql) { p ->
+                    p.matchTextSeq("VARIABLE")
+                    p.expression(DuckdbResetVariable(args("this" to (p.parseIdVar() ?: p.raiseError("Expected variable name")))))
+                }
+                advance()
+                return parsed ?: throw ParseError("Expected RESET VARIABLE name")
+            }
+        }
+        return super.parseCommand()
+    }
+
+    private fun parseNativeAnalyze(): Expression {
+        val options = if (currToken.tokenType != TokenType.IDENTIFIER && matchTextSeq("VERBOSE")) listOf("VERBOSE") else emptyList()
+        val table = if (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) {
+            if (currToken.tokenType == TokenType.TABLE) raiseError("DuckDB ANALYZE does not take a TABLE keyword")
+            parseTableParts(schema = true) ?: raiseError("Expected ANALYZE table")
+        } else null
+        val target = if (table != null && match(TokenType.L_PAREN)) {
+            val columns = parseCsv { parseIdVar(anyToken = false) ?: raiseError("Expected ANALYZE column") }
+            if (!match(TokenType.R_PAREN)) raiseError("Expected closing ANALYZE column list")
+            expression(dev.brikk.house.sql.ast.Schema(args("this" to table, "expressions" to columns)))
+        } else table
+        if (currToken.exists && currToken.tokenType != TokenType.SEMICOLON) raiseError("Unexpected ANALYZE clause")
+        return expression(dev.brikk.house.sql.ast.Analyze(args("tables" to listOfNotNull(target), "options" to options)))
+    }
+
+    private fun parseDuckdbExplain(): Expression {
+        // The normal tokenizer has one opaque command-tail STRING. Editor tokens
+        // already expose the tail; both routes arrive at this structured entry point.
+        if (currToken.tokenType == TokenType.STRING && prevToken.text.equals("EXPLAIN", true)) return parseCommand()
+        val analyze = if (currToken.tokenType != TokenType.IDENTIFIER && matchTexts(setOf("ANALYZE", "ANALYSE"))) true else false
+        val options = if (currToken.tokenType == TokenType.L_PAREN) parseWrappedCsv({
+            val name = parseIdVar(anyToken = false) ?: raiseError("Expected EXPLAIN option name")
+            if (currToken.tokenType == TokenType.EQ) raiseError("EXPLAIN options use whitespace, not assignment syntax")
+            val value = if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) null else parseAssignment()
+            expression(dev.brikk.house.sql.ast.DuckdbExplainOption(args("this" to name, "expression" to value)))
+        }).also { if (it.isEmpty()) raiseError("Expected EXPLAIN options") } else null
+        val heads = setOf("ALTER", "ANALYZE", "ANALYSE", "CALL", "CHECKPOINT", "COPY", "CREATE", "DEALLOCATE", "DELETE", "DROP", "EXECUTE",
+            "INSERT", "LOAD", "MERGE", "PRAGMA", "PREPARE", "SELECT", "FROM", "WITH", "VALUES", "TABLE", "PIVOT", "UNPIVOT",
+            "BEGIN", "START", "COMMIT", "ROLLBACK", "END", "ABORT", "UPDATE", "VACUUM", "SET", "RESET")
+        if (currToken.tokenType != TokenType.L_PAREN && (currToken.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING) || currToken.text.uppercase() !in heads) &&
+            !(currToken.text.equals("FORCE", true) && nextToken.text.equals("CHECKPOINT", true)))
+            raiseError("Expected a DuckDB explainable statement")
+        val childStart = currToken
+        var child = parseStatement() ?: raiseError("Expected EXPLAIN child statement")
+        if (child is dev.brikk.house.sql.ast.Command && currToken.exists) child = parseAsCommand(childStart)
+        if (child?.isDuckdbExternalResourceStatement() == true || child is dev.brikk.house.sql.ast.DuckdbCreateExtensionRepository ||
+            child is dev.brikk.house.sql.ast.DuckdbDropExtensionRepository)
+            raiseError("This management statement is not an EXPLAIN body in DuckDB 2.0")
+        return expression(dev.brikk.house.sql.ast.DuckdbExplain(args("this" to child, "analyze" to analyze, "expressions" to options)))
     }
 
     override fun parseTriggerAction(): Expression? {
@@ -312,6 +539,107 @@ open class DuckdbParser(
         }
         retreat(start)
         return null
+    }
+
+    override fun parseCreate(): Expression {
+        var resourceOffset = index
+        while (tokens.getOrNull(resourceOffset)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY")) resourceOffset++
+        if (tokens.getOrNull(resourceOffset)?.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) &&
+            tokens.getOrNull(resourceOffset)?.text.equals("EXTERNAL", true) && tokens.getOrNull(resourceOffset + 1)?.text.equals("RESOURCE", true)) {
+            if (resourceOffset != index) raiseError("CREATE EXTERNAL RESOURCE does not accept CREATE modifiers")
+            resourceKeywords()
+            val type = resourceType()
+            val alias = if (match(TokenType.ALIAS)) resourceName() else null
+            return expression(dev.brikk.house.sql.ast.DuckdbCreateExternalResource(args("this" to type, "alias" to alias, "expressions" to resourceOptions())))
+        }
+        val repositoryOffset = if (currToken.text.equals("OR", ignoreCase = true)) 2 else 0
+        if (tokens.getOrNull(index + repositoryOffset)?.let { it.tokenType != TokenType.IDENTIFIER && it.text.equals("EXTENSION", ignoreCase = true) } == true)
+            return parseExtensionRepositoryCreate()
+        val createStart = index
+        var cursor = index
+        while (tokens.getOrNull(cursor)?.text?.uppercase() in setOf("OR", "REPLACE", "ALTER", "TEMP", "TEMPORARY", "PERSISTENT", "CONSTRAINT", "UNIQUE", "SECURE", "RECURSIVE")) cursor++
+        val viewModifiers = tokens.subList(createStart, cursor).any { it.text.equals("SECURE", true) || it.text.equals("RECURSIVE", true) }
+        val trigger = tokens.getOrNull(cursor)?.tokenType == TokenType.TRIGGER
+        val orAlter = tokens.getOrNull(index)?.text.equals("OR", ignoreCase = true) && tokens.getOrNull(index + 1)?.text.equals("ALTER", ignoreCase = true)
+        val result = super.parseCreate()
+        if (viewModifiers && result !is dev.brikk.house.sql.ast.Create) raiseError("Expected structured DuckDB secure/recursive view definition")
+        val secure = result.findAll<dev.brikk.house.sql.ast.SecureProperty>().toList()
+        val recursive = result.findAll<dev.brikk.house.sql.ast.DuckdbRecursiveViewProperty>().toList()
+        if (secure.isNotEmpty() || recursive.isNotEmpty()) {
+            if (result !is dev.brikk.house.sql.ast.Create || result.text("kind") != "VIEW" ||
+                secure.size > 1 || recursive.size > 1) raiseError("SECURE and RECURSIVE modifiers require a DuckDB VIEW")
+            // The generic property parser accepts these words in other positions too. DuckDB
+            // requires OR REPLACE, TEMP, SECURE, RECURSIVE, VIEW in that order, all unquoted.
+            val prefix = tokens.subList(createStart, index).takeWhile { it.tokenType != TokenType.VIEW }
+            val words = prefix.map { it.text.uppercase() }.toMutableList()
+            if (words.take(2) == listOf("OR", "REPLACE")) repeat(2) { words.removeAt(0) }
+            if (words.firstOrNull() in setOf("TEMP", "TEMPORARY", "PERSISTENT")) words.removeAt(0)
+            if (secure.isNotEmpty() && words.firstOrNull() == "SECURE") words.removeAt(0) else if (secure.isNotEmpty()) raiseError("Expected SECURE before VIEW")
+            if (recursive.isNotEmpty() && words.firstOrNull() == "RECURSIVE") words.removeAt(0) else if (recursive.isNotEmpty()) raiseError("Expected RECURSIVE before VIEW")
+            val body = result.args["expression"]
+            if (words.isNotEmpty() || prefix.any { it.tokenType == TokenType.IDENTIFIER || it.tokenType == TokenType.STRING } ||
+                body !is Query && body !is Values && body !is PipeQuery) raiseError("Invalid DuckDB secure/recursive view definition")
+            var depth = 0
+            var hasAs = false
+            for (token in tokens.subList(createStart + prefix.size + 1, index)) {
+                if (depth == 0 && token.tokenType == TokenType.ALIAS) { hasAs = true; break }
+                if (depth == 0 && token.tokenType in setOf(TokenType.SELECT, TokenType.FROM, TokenType.VALUES, TokenType.TABLE)) break
+                if (token.tokenType == TokenType.L_PAREN) depth++
+                if (token.tokenType == TokenType.R_PAREN) depth--
+            }
+            if (!hasAs) raiseError("Expected AS before secure/recursive view query")
+            if (recursive.isNotEmpty() && (result.thisArg as? dev.brikk.house.sql.ast.Schema)?.expressionsArg.isNullOrEmpty())
+                raiseError("CREATE RECURSIVE VIEW requires a column list")
+        }
+        if (trigger) {
+            if (result !is dev.brikk.house.sql.ast.Create || orAlter) raiseError("Unsupported DuckDB trigger definition syntax")
+            val properties = result.findAll<dev.brikk.house.sql.ast.TriggerProperties>().firstOrNull()
+                ?: return result.also { raiseError("Expected inline trigger action") }
+            if (properties.args["constraint"] == true || properties.args["referenced_table"] != null ||
+                properties.args["deferrable"] != null || properties.args["initially"] != null ||
+                properties.args["when"].let { it != null && it != false } || result.args["unique"] == true) {
+                raiseError("This PostgreSQL trigger clause is not DuckDB trigger syntax")
+            }
+        }
+        return result
+    }
+
+    override val propertyParsers: Map<String, (dev.brikk.house.sql.parser.Parser, dev.brikk.house.sql.parser.Parser.PropertyKwargs) -> Any?>
+        get() = super.propertyParsers + ("RECURSIVE" to { parser, _ -> parser.expression(dev.brikk.house.sql.ast.DuckdbRecursiveViewProperty()) })
+
+    override fun parseTriggerEvents(): List<Expression> = super.parseTriggerEvents().also { events ->
+        if (events.size != 1 || events.single().name !in setOf("INSERT", "UPDATE", "DELETE")) raiseError("DuckDB requires one INSERT, UPDATE or DELETE trigger event")
+        for (column in events.flatMap { it.args["columns"] as? List<*> ?: emptyList<Any>() }) {
+            if (column !is dev.brikk.house.sql.ast.Column || column.parts.size != 1) raiseError("UPDATE OF requires unqualified column names")
+        }
+    }
+
+    override fun parseTriggerReferencingClause(keyword: String): Expression? {
+        if (!matchTextSeq(keyword)) return null
+        if (!matchTextSeq("TABLE", "AS")) raiseError("Expected TABLE AS in trigger REFERENCING")
+        return parseIdVar() ?: raiseError("Expected transition table alias")
+    }
+
+    override fun parseTriggerForEach(): String? {
+        if (!matchTextSeq("FOR", "EACH")) return null
+        if (!matchTexts(setOf("ROW", "STATEMENT"))) raiseError("Expected ROW or STATEMENT after FOR EACH")
+        return prevToken.text.uppercase()
+    }
+
+    override fun parseDropWithKind(kind: String?, exists: Boolean): Expression {
+        if (kind == null && currToken.tokenType != TokenType.IDENTIFIER && matchTextSeq("EXTENSION")) {
+            if (!matchTextSeq("REPOSITORY")) raiseError("Expected EXTENSION REPOSITORY")
+            val ifExists = exists || parseRepositoryExists(false)
+            return expression(dev.brikk.house.sql.ast.DuckdbDropExtensionRepository(args("this" to extensionAtom(), "exists" to ifExists)))
+        }
+        if (kind != null || !match(TokenType.TRIGGER)) return super.parseDropWithKind(kind, exists)
+        val ifExists = exists || parseExists()
+        val name = parseIdVar() ?: raiseError("Expected trigger name")
+        if (!match(TokenType.ON)) raiseError("DROP TRIGGER requires ON and its attached table")
+        val target = parseTableParts() ?: raiseError("Expected attached table")
+        return expression(dev.brikk.house.sql.ast.Drop(args("kind" to "TRIGGER", "exists" to ifExists,
+            "tables" to listOf(dev.brikk.house.sql.ast.Table(args("this" to name))),
+            "cluster" to dev.brikk.house.sql.ast.OnProperty(args("this" to target)))))
     }
 
     // sqlglot: DuckDBParser._parse_function_properties
@@ -354,6 +682,22 @@ open class DuckdbParser(
         return expression(
             Lambda(args("this" to this_, "expressions" to expressions, "colon" to true))
         )
+    }
+
+    // The 2.0 single arrow is the low-precedence lambda/JSON operator. The
+    // historical SQLGlot column-operator precedence remains the parity default.
+    override val columnOperators get() = if (nativeRegexOperators)
+        super.columnOperators - TokenType.ARROW else super.columnOperators
+
+    override fun parseAssignment(): Expression? {
+        var result = super.parseAssignment()
+        if (nativeRegexOperators) while (match(TokenType.ARROW)) {
+            val path = parseDisjunction() ?: run { raiseError("Expected expression after ->"); return result }
+            result = expression(dev.brikk.house.sql.ast.JSONExtract(args(
+                "this" to result, "expression" to toJsonPath(path), "only_json_types" to jsonArrowsRequireJsonType,
+            )))
+        }
+        return result
     }
 
     // sqlglot: DuckDBParser._parse_expression (prefix aliases, e.g. foo: 1)
@@ -412,6 +756,8 @@ open class DuckdbParser(
             consumePipe = false,
         )
         if (table != null && alias != null) {
+            if (nativeRegexOperators && table.args["alias"] != null)
+                raiseError("A DuckDB table reference cannot have both prefix and postfix aliases")
             // Moves the comment next to the alias in `alias: table /* comment */`
             comments += table.popComments()
             alias.comments = (alias.popComments() + comments).toMutableList()
@@ -421,11 +767,70 @@ open class DuckdbParser(
         return table
     }
 
+    override fun parseLimit(this_: Expression?, top: Boolean, skipLimitToken: Boolean): Expression? {
+        val start = index
+        if (top || skipLimitToken || !match(TokenType.FETCH, advance = false)) {
+            return super.parseLimit(this_, top, skipLimitToken)?.also { paginationPosition(it, start) }
+        }
+        match(TokenType.FETCH)
+        if (!matchSet(setOf(TokenType.FIRST, TokenType.NEXT))) raiseError("Expected FIRST or NEXT after FETCH")
+        val direction = prevToken.text.uppercase()
+        val count = if (matchTexts(setOf("ROW", "ROWS"), advance = false)) null else parseDisjunction()
+        if (!matchTexts(setOf("ROW", "ROWS"))) raiseError("Expected ROW or ROWS in FETCH")
+        if (!matchTextSeq("ONLY")) raiseError("Expected ONLY in FETCH; WITH TIES and PERCENT are not supported")
+        return expression(Fetch(args("direction" to direction, "count" to count,
+            "limit_options" to LimitOptions(args("percent" to false, "rows" to true, "with_ties" to false)))))
+            .also { paginationPosition(it, start) }
+    }
+
+    override fun parseOffset(this_: Expression?): Expression? {
+        val start = index
+        return super.parseOffset(this_)?.also { paginationPosition(it, start) }
+    }
+
+    private fun paginationPosition(node: Expression, start: Int) {
+        // LIMIT canonicalization may reorder OFFSET and FETCH. Retain order only where
+        // anonymous parameters make it semantic; metadata survives copy/serde.
+        if (node.findAll<Placeholder>().any { it.thisArg == null }) node.meta["duckdb_pagination_position"] = start
+    }
+
+    override fun parseCteKeyExpressions(): List<Expression> = parseWrappedCsv({
+        val key = parseExpression()
+        // Preserve the published/serde shape of plain keys; aggregate arguments are Columns.
+        if (key is dev.brikk.house.sql.ast.Column && key.parts.size == 1 && key.thisArg is dev.brikk.house.sql.ast.Identifier) {
+            (key.thisArg as dev.brikk.house.sql.ast.Identifier).copy()
+        } else key
+    }).also { if (it.isEmpty()) raiseError("USING KEY requires at least one expression") }
+
+    override fun parseCte(): Expression? {
+        val cte = super.parseCte() as? CTE ?: return null
+        val body = cte.thisArg
+        if (body is Copy && body.args["kind"] == true) {
+            raiseError("COPY FROM cannot be used as a CTE body")
+        } else if (body !is Query && body !is Pivot && body !is PipeQuery && body !is Insert && body !is Update && body !is Delete && body !is Copy) {
+            raiseError("A CTE body must be a query, INSERT, UPDATE, DELETE, or COPY TO statement")
+        }
+        return cte
+    }
+
+    override fun parseWith(skipWithToken: Boolean): With? {
+        val with = super.parseWith(skipWithToken) ?: return null
+        if (with.recursive && with.expressionsArg.filterIsInstance<CTE>().any { it.thisArg is DML }) {
+            raiseError("Recursive CTEs with data-modifying or COPY statements are not supported")
+        }
+        return with
+    }
+
+    // These words are contextual, not reserved aliases. Quoted names/literals are never hints.
+    private fun nearestKeyword(token: Token, word: String): Boolean =
+        token.tokenType != TokenType.IDENTIFIER && token.tokenType != TokenType.STRING &&
+            !token.tokenType.name.endsWith("_STRING") && token.text.equals(word, ignoreCase = true)
+
     override fun parseTableAlias(aliasTokens: Collection<TokenType>?): TableAlias? {
-        val nearest = currToken.text.equals("NEAREST", ignoreCase = true) &&
-            (nextToken.tokenType == TokenType.NUMBER || nextToken.text.equals("BY", ignoreCase = true))
-        val qualifiedNearest = currToken.text.uppercase() in setOf("APPROX", "EXACT") &&
-            nextToken.text.equals("NEAREST", ignoreCase = true)
+        val nearest = nearestKeyword(currToken, "NEAREST") &&
+            (nextToken.tokenType == TokenType.NUMBER || nearestKeyword(nextToken, "BY"))
+        val qualifiedNearest = (nearestKeyword(currToken, "APPROX") || nearestKeyword(currToken, "EXACT")) &&
+            nearestKeyword(nextToken, "NEAREST")
         if (nearest || qualifiedNearest) return null
         return super.parseTableAlias(aliasTokens)
     }
@@ -435,13 +840,35 @@ open class DuckdbParser(
         parseBracket: Boolean,
         aliasTokens: Collection<TokenType>?,
     ): Expression? {
+        val comma = currToken.tokenType == TokenType.COMMA
         val join = super.parseJoin(skipJoinToken, parseBracket, aliasTokens) ?: return null
-        val approximate = matchTextSeq("APPROX", "NEAREST")
-        val exact = !approximate && matchTextSeq("EXACT", "NEAREST")
-        if (approximate || exact || matchTextSeq("NEAREST")) {
+        val approximate = nearestKeyword(currToken, "APPROX") && nearestKeyword(nextToken, "NEAREST") &&
+            matchTextSeq("APPROX", "NEAREST")
+        val exact = !approximate && nearestKeyword(currToken, "EXACT") && nearestKeyword(nextToken, "NEAREST") &&
+            matchTextSeq("EXACT", "NEAREST")
+        if (approximate || exact || nearestKeyword(currToken, "NEAREST") && matchTextSeq("NEAREST")) {
+            val nearestToken = prevToken
+            val side = join.text("side").uppercase()
+            val kind = join.text("kind").uppercase()
+            val supported = when (side) {
+                "" -> kind.isEmpty() || kind == "INNER"
+                "LEFT" -> kind.isEmpty() || kind == "OUTER"
+                else -> false
+            }
+            if (comma || !supported || join.text("method").isNotEmpty() || join.text("hint").isNotEmpty() || join.args["directed"] == true) {
+                raiseError("NEAREST BY only supports INNER and LEFT OUTER joins", nearestToken)
+            }
+            if (join.args["on"] != null || join.args["using"] != null || join.args["match_condition"] != null) {
+                raiseError("NEAREST BY cannot be combined with ON, USING or MATCH_CONDITION", nearestToken)
+            }
+            val countToken = currToken
             val count = parseNumber()
-            if (!matchTextSeq("BY")) raiseError("Expected BY after NEAREST count")
-            if (!matchTexts(setOf("DISTANCE", "SIMILARITY"))) {
+            // Native k is a positive int64 literal, not a fractional value or runtime bind.
+            if (count != null && (count !is Literal || count.isString || count.name.toLongOrNull()?.let { it > 0 } != true)) {
+                raiseError("NEAREST expects a positive integer literal", countToken)
+            }
+            if (!nearestKeyword(currToken, "BY") || !matchTextSeq("BY")) raiseError("Expected BY after NEAREST count")
+            if (!(nearestKeyword(currToken, "DISTANCE") || nearestKeyword(currToken, "SIMILARITY")) || !matchTexts(setOf("DISTANCE", "SIMILARITY"))) {
                 raiseError("Expected DISTANCE or SIMILARITY after BY")
             }
             val similarity = prevToken.text.equals("SIMILARITY", ignoreCase = true)
@@ -496,6 +923,16 @@ open class DuckdbParser(
     // sqlglot: DuckDBParser._parse_struct_types
     override fun parseStructTypes(typeRequired: Boolean): Expression? = parseFieldDef()
 
+    // Native typed macro defaults preserve their declared type and authored value;
+    // only the engine binder decides whether a literal fits that type.
+    override fun parseFunctionParameter(): Expression? {
+        val parameter=super.parseFunctionParameter() ?: return null
+        if(nativeRegexOperators && match(TokenType.COLON_EQ))return expression(dev.brikk.house.sql.ast.PropertyEQ(args(
+            "this" to parameter,"expression" to (parseExpression() ?: raiseError("Expected macro default")),
+        )))
+        return parameter
+    }
+
     // sqlglot: DuckDBParser._pivot_column_names
     override fun pivotColumnNames(aggregations: List<Expression>): List<String> {
         if (aggregations.size == 1) {
@@ -522,11 +959,19 @@ open class DuckdbParser(
 
     // sqlglot: DuckDBParser._parse_attach_detach
     open fun parseAttachDetach(isAttach: Boolean = true): Expression {
+        if (isAttach && matchTextSeq("TO")) {
+            val source = externalResourceSource()
+            if (!match(TokenType.ALIAS)) raiseError("ATTACH TO EXTERNAL RESOURCE requires AS and an attachment alias")
+            val alias = resourceName()
+            return expression(dev.brikk.house.sql.ast.DuckdbAttachExternalResource(args("this" to source, "alias" to alias, "expressions" to resourceOptions())))
+        }
         fun parseAttachOption(): Expression = expression(
             AttachOption(
                 args(
                     "this" to parseVar(anyToken = true),
-                    "expression" to parseField(anyToken = true),
+                    "expression" to if(currToken.tokenType==TokenType.INTERVAL ||
+                        currToken.text.uppercase() in setOf("TIMESTAMP","TIMESTAMPTZ","DATE","TIME") && nextToken.tokenType==TokenType.STRING)
+                        parseDisjunction() else parseField(anyToken = true),
                 )
             )
         )
@@ -558,9 +1003,116 @@ open class DuckdbParser(
 
     // sqlglot: Parser._parse_show (dispatch through SHOW_PARSERS via _find_parser)
     open fun parseShow(): Expression {
+        // SHOW is a command token in the ordinary tokenizer. Re-tokenize only this
+        // resource form, retaining offsets and leaving existing SHOW contracts intact.
+        if (currToken.tokenType == TokenType.STRING) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            val body = lexed.tokens.filter { it.start >= start && it.end < end }
+            if (body.firstOrNull()?.tokenType !in setOf(TokenType.IDENTIFIER, TokenType.STRING) &&
+                (body.firstOrNull()?.text.equals("EXTERNAL", true) ||
+                    body.firstOrNull()?.text.equals("ALL", true) && body.getOrNull(1)?.text.equals("EXTERNAL", true))) {
+                if (lexed.failureOffset != null) raiseError("Incomplete SHOW EXTERNAL RESOURCES")
+                val parser = DuckdbParser(errorLevel, tokenizerConfig).apply {
+                    captureSourceRanges = this@DuckdbParser.captureSourceRanges
+                    checkCanceled = this@DuckdbParser.checkCanceled
+                    nativeRegexOperators = this@DuckdbParser.nativeRegexOperators
+                }
+                val parsed = parser.parseIntoWith(body, sql) { (it as DuckdbParser).parseShowExternalResources() }
+                advance()
+                return parsed ?: throw ParseError("Expected SHOW EXTERNAL RESOURCES")
+            }
+        } else if (currToken.tokenType != TokenType.IDENTIFIER && (currToken.text.equals("EXTERNAL", true) || currToken.text.equals("ALL", true) && nextToken.text.equals("EXTERNAL", true))) {
+            return parseShowExternalResources()
+        }
         val parser = findParser(showParsers)
         if (parser != null) return parser(this)
+        if (currToken.tokenType == TokenType.STRING) {
+            val start = prevToken.end + 1
+            val end = currToken.end + 1
+            val lexed = dev.brikk.house.sql.parser.Tokenizer(tokenizerConfig).tokenizeForEditor(sql)
+            val body = lexed.tokens.filter { it.start >= start && it.end < end }
+            if (body.firstOrNull()?.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING) ||
+                body.firstOrNull()?.text?.uppercase() !in setOf("DATABASES", "SCHEMAS", "TABLES", "ALL")) {
+                if (lexed.failureOffset != null) raiseError("Incomplete SHOW target")
+                val nested = DuckdbParser(errorLevel, tokenizerConfig).apply {
+                    captureSourceRanges = this@DuckdbParser.captureSourceRanges
+                    checkCanceled = this@DuckdbParser.checkCanceled
+                    nativeRegexOperators = this@DuckdbParser.nativeRegexOperators
+                }
+                val result = nested.parseIntoWith(body, sql) { (it as DuckdbParser).parseShowNameBody() }
+                advance()
+                return result ?: throw ParseError("Expected SHOW target")
+            }
+        } else if (currToken.tokenType == TokenType.IDENTIFIER || currToken.text.uppercase() !in setOf("DATABASES", "SCHEMAS", "TABLES", "ALL")) return parseShowNameBody()
         return parseAsCommand(prevToken)
+    }
+
+    private fun parseShowNameBody(): Expression {
+        if (currToken.tokenType == TokenType.L_PAREN) {
+            val query = parseSelect(nested = true, parseSubqueryAlias = false)
+            return expression(Show(args("this" to "DUCKDB_QUERY", "query" to query)))
+        }
+        val target = if (currToken.tokenType == TokenType.STRING) parseString() else {
+            val parts = mutableListOf<Expression>()
+            parseIdVar()?.let(parts::add)
+            while (match(TokenType.DOT)) parts += parseIdVar() ?: throw ParseError("Expected SHOW name component")
+            if (parts.size > 1) dev.brikk.house.sql.ast.Dot.build(parts) else parts.singleOrNull()
+        }
+        if (target == null) raiseError("Expected SHOW name")
+        return expression(Show(args("this" to "DUCKDB_NAME", "target" to target)))
+    }
+
+    private fun resourceWords(vararg words: String): Boolean {
+        if (words.indices.any { offset -> tokens.getOrNull(index + offset)?.let {
+                it.tokenType in setOf(TokenType.IDENTIFIER, TokenType.STRING) || !it.text.equals(words[offset], true)
+            } != false }) return false
+        advance(words.size)
+        return true
+    }
+
+    private fun resourceKeywords() {
+        if (!resourceWords("EXTERNAL", "RESOURCE")) raiseError("Expected EXTERNAL RESOURCE")
+    }
+
+    private fun resourceType(): Expression? {
+        if (currToken.tokenType != TokenType.STRING) return raiseError("External resource type must be a literal string")
+        return parseString()
+    }
+
+    private fun resourceName(): Expression? {
+        if (currToken.tokenType == TokenType.NUMBER) return raiseError("Expected external resource identifier")
+        val name = parseIdVar(anyToken = false)
+        if (name !is Identifier) return raiseError("Expected external resource identifier")
+        return name
+    }
+
+    private fun resourceOptions(): List<Expression>? {
+        if (currToken.tokenType != TokenType.L_PAREN) return null
+        val seen = HashSet<String>()
+        return parseWrappedCsv({
+            val name = resourceName()
+            if (name != null && !seen.add(name.name.lowercase())) raiseError("Duplicate external resource option")
+            if (currToken.tokenType == TokenType.EQ) raiseError("External resource options use whitespace, not assignment syntax")
+            val value = if (currToken.tokenType in setOf(TokenType.COMMA, TokenType.R_PAREN)) null else parseAssignment()
+            expression(AttachOption(args("this" to name, "expression" to value)))
+        }).also { if (it.isEmpty()) raiseError("Expected at least one external resource option") }
+    }
+
+    private fun externalResourceSource(): dev.brikk.house.sql.ast.DuckdbExternalResourceSource {
+        val temporary = resourceWords("NEW")
+        if (temporary && !resourceWords("TEMPORARY")) raiseError("Expected NEW TEMPORARY EXTERNAL RESOURCE")
+        resourceKeywords()
+        val target = if (temporary) resourceType() else resourceName()
+        val options = if (temporary) resourceOptions() else null
+        return expression(dev.brikk.house.sql.ast.DuckdbExternalResourceSource(args("this" to target, "temporary" to temporary, "expressions" to options)))
+    }
+
+    private fun parseShowExternalResources(): Expression {
+        val all = resourceWords("ALL")
+        if (!resourceWords("EXTERNAL", "RESOURCES")) raiseError("Expected SHOW [ALL] EXTERNAL RESOURCES")
+        return expression(dev.brikk.house.sql.ast.DuckdbShowExternalResources(args("all" to all)))
     }
 
     // sqlglot: DuckDBParser._parse_force — FORCE can only be followed by INSTALL or
@@ -574,15 +1126,66 @@ open class DuckdbParser(
     }
 
     // sqlglot: DuckDBParser._parse_install
-    open fun parseInstall(force: Boolean = false): Expression = expression(
-        Install(
-            args(
-                "this" to parseIdVar(),
-                "from_" to if (match(TokenType.FROM)) parseVarOrString() else null,
-                "force" to force,
-            )
-        )
-    )
+    open fun parseInstall(force: Boolean = false): Expression {
+        val load = if (matchTextSeq("AND")) {
+            if (!matchTextSeq("LOAD")) raiseError("Expected LOAD after INSTALL AND")
+            true
+        } else false
+        val target = extensionAtom()
+        val from = if (match(TokenType.FROM)) {
+            // Keep the existing simple INSTALL serde contract. Quoted identifiers must
+            // remain Identifier nodes instead of losing their quotes through parseVar.
+            if (currToken.tokenType == TokenType.STRING || currToken.tokenType == TokenType.IDENTIFIER) extensionAtom()
+            else extensionAtom()?.let { expression(Var(args("this" to it.name))) }
+        } else null
+        val version = if (matchTextSeq("VERSION")) extensionAtom() else null
+        return if (load || version != null) expression(dev.brikk.house.sql.ast.DuckdbInstallExtension(args(
+            "this" to target, "from_" to from, "force" to force, "load" to load, "version" to version,
+        ))) else expression(Install(args("this" to target, "from_" to from, "force" to force)))
+    }
+
+    private fun extensionAtom(identifierOnly: Boolean = false): Expression? {
+        if (!identifierOnly && currToken.tokenType == TokenType.STRING) return parseString()!!
+        if (currToken.tokenType == TokenType.NUMBER) return raiseError("Expected extension/repository identifier or literal string")
+        val atom = parseIdVar(anyToken = false)
+        if (atom !is Identifier) return raiseError("Expected extension/repository identifier or literal string")
+        return atom
+    }
+
+    private fun parseRepositoryExists(not: Boolean): Boolean {
+        if (!matchTextSeq("IF")) return false
+        if (not && !matchTextSeq("NOT")) raiseError("Expected IF NOT EXISTS")
+        if (!matchTextSeq("EXISTS")) raiseError("Expected EXISTS")
+        return true
+    }
+
+    private fun parseExtensionRepositoryCreate(): Expression {
+        val replace = matchTextSeq("OR", "REPLACE")
+        if (!matchTextSeq("EXTENSION", "REPOSITORY")) raiseError("Expected CREATE EXTENSION REPOSITORY")
+        val exists = parseRepositoryExists(true)
+        if (replace && exists) raiseError("Cannot combine OR REPLACE with IF NOT EXISTS")
+        val name = extensionAtom()
+        matchTextSeq("WITH")
+        if (!matchTextSeq("PREFIX") || currToken.tokenType != TokenType.STRING) raiseError("Expected literal repository PREFIX")
+        val prefix = parseString()
+        val keys = if (matchTextSeq("USING") || currToken.text.equals("PUBLIC", ignoreCase = true)) {
+            if (!matchTextSeq("PUBLIC") || !matchTexts(setOf("KEY", "KEYS"))) raiseError("Expected PUBLIC KEY or PUBLIC KEYS")
+            parseCsv {
+                if (currToken.tokenType != TokenType.STRING) raiseError("Expected literal public key")
+                parseString()
+            }
+        } else null
+        return expression(dev.brikk.house.sql.ast.DuckdbCreateExtensionRepository(args(
+            "this" to name, "prefix" to prefix, "expressions" to keys, "replace" to replace, "exists" to exists,
+        )))
+    }
+
+    open fun parseDuckdbLoad(): Expression {
+        val target = extensionAtom()
+        val from = if (match(TokenType.FROM)) extensionAtom() else null
+        val alias = if (match(TokenType.ALIAS)) extensionAtom(identifierOnly = true) else null
+        return expression(dev.brikk.house.sql.ast.DuckdbLoadExtension(args("this" to target, "from_" to from, "alias" to alias)))
+    }
 
     // sqlglot: DuckDBParser._parse_primary (#N positional columns)
     override fun parsePrimary(): Expression? {
@@ -592,6 +1195,86 @@ open class DuckdbParser(
 
         return super.parsePrimary()
     }
+
+    override fun parseOverlay(): Expression {
+        val start = index
+        val source = parseDisjunction()
+        if (matchTextSeq("PLACING")) {
+            val replacement = parseDisjunction() ?: raiseError("Expected OVERLAY replacement")
+            if (!match(TokenType.FROM)) raiseError("OVERLAY PLACING requires FROM")
+            val offset = parseDisjunction() ?: raiseError("Expected OVERLAY start")
+            val count = if (matchTextSeq("FOR")) parseDisjunction() ?: raiseError("Expected OVERLAY count") else null
+            if (currToken.tokenType != TokenType.R_PAREN) raiseError("Do not mix OVERLAY keyword and comma syntax")
+            return expression(dev.brikk.house.sql.ast.Overlay(args("this" to source, "expression" to replacement, "from_" to offset, "for_" to count)))
+        }
+        retreat(start)
+        val values = parseCsv { parseDisjunction() }
+        if (values.isEmpty() || currToken.tokenType != TokenType.R_PAREN) raiseError("Expected OVERLAY positional expressions")
+        // Native parsing accepts other arities; binding rejects them. Keep every
+        // argument instead of truncating extras or manufacturing a missing start.
+        if (values.size !in 3..4) return expression(Anonymous(args("this" to "overlay", "expressions" to values)))
+        return expression(dev.brikk.house.sql.ast.Overlay(args("this" to values[0], "expression" to values[1], "from_" to values[2], "for_" to values.getOrNull(3))))
+    }
+
+    override fun parseCopyParameters(): List<Expression> {
+        // Keep the existing PostgreSQL-compatible legacy option parser outside ().
+        if (prevToken.tokenType != TokenType.L_PAREN) return super.parseCopyParameters()
+        val options = mutableListOf<Expression>()
+        val seen = mutableSetOf<String>()
+        while (currToken.exists && currToken.tokenType != TokenType.R_PAREN) {
+            val option = parseVar(anyToken = true)
+            if (option == null) { raiseError("Expected COPY option"); break }
+            val name = when (option.name.uppercase()) {
+                "ORDER BY" -> "ORDER_BY"
+                "PARTITION BY", "PARTITIONED BY", "PARTITIONED_BY" -> "PARTITION_BY"
+                else -> option.name.uppercase()
+            }
+            if (!seen.add(name)) raiseError("Unexpected duplicate COPY option $name")
+            option.set("this", name)
+            val value = if (name in setOf("ORDER_BY", "PARTITION_BY") && match(TokenType.L_PAREN)) {
+                val terms = parseCsv {
+                    val term = parseDisjunction() ?: return@parseCsv null
+                    if (name == "PARTITION_BY") {
+                        if (currToken.tokenType in setOf(TokenType.ASC, TokenType.DESC) || currToken.text.equals("NULLS", true))
+                            raiseError("Ordering modifiers require COPY ORDER_BY")
+                        return@parseCsv term
+                    }
+                    // Do not infer defaults. COPY resolves both defaults in its executing session.
+                    val desc = when { match(TokenType.ASC) -> false; match(TokenType.DESC) -> true; else -> null }
+                    val nulls = when { matchTextSeq("NULLS", "FIRST") -> true; matchTextSeq("NULLS", "LAST") -> false; else -> null }
+                    expression(dev.brikk.house.sql.ast.Ordered(args("this" to term, "desc" to desc, "nulls_first" to (nulls ?: false)))).also {
+                        if (nulls == null) it.meta["duckdb_copy_default_null_order"] = true
+                    }
+                }
+                if (terms.isEmpty()) raiseError("Expected COPY $name terms")
+                matchRParen()
+                expression(dev.brikk.house.sql.ast.Tuple(args("expressions" to terms)))
+            } else if (name in setOf("ORDER_BY", "PARTITION_BY", "PARTITION_PATH")) parseDisjunction()
+            else if (currToken.tokenType in setOf(TokenType.DASH,TokenType.PLUS) && nextToken.tokenType==TokenType.NUMBER) parseDisjunction()
+            else parseUnquotedField() ?: parseBracket(null)
+            if (name == "ORDER_BY" && value == null) raiseError("Expected COPY ORDER_BY value")
+            if (name == "PARTITION_PATH") {
+                if (value == null) raiseError("PARTITION_PATH expects an expression")
+                if (value is dev.brikk.house.sql.ast.Tuple || value is dev.brikk.house.sql.ast.Paren && value.thisArg is dev.brikk.house.sql.ast.Alias)
+                    raiseError("PARTITION_PATH expects a single expression without ordering modifiers")
+            }
+            options += expression(dev.brikk.house.sql.ast.CopyParameter(args("this" to option, "expression" to value)))
+            if (currToken.tokenType == TokenType.R_PAREN) break
+            if (!match(TokenType.COMMA) || currToken.tokenType == TokenType.R_PAREN) raiseError("Expected comma-separated COPY options")
+        }
+        return options
+    }
+
+    override fun parseFunction(
+        functions: Map<String, (List<Expression?>) -> Expression>?,
+        anonymous: Boolean,
+        optionalParens: Boolean,
+        anyToken: Boolean,
+    ): Expression? = super.parseFunction(functions,
+        // Quoting bypasses DuckDB's special OVERLAY grammar. The ordinary function
+        // call admits named arguments; retain the quoted identifier and authored order.
+        anonymous || currToken.tokenType == TokenType.IDENTIFIER && currToken.text.equals("overlay", true),
+        optionalParens, anyToken)
 }
 
 /**
@@ -602,6 +1285,39 @@ object DuckdbParserTables {
 
     val TOKENIZER_CONFIG: TokenizerConfig =
         dev.brikk.house.sql.parser.StringEscapeProfiles.DUCKDB.withIdentifiers(mapOf('`' to "`"))
+            // Existing non-command token, dedicated parser above. Keeping the tail
+            // tokenized is necessary for exact body/option parameter intervals.
+            .withKeywords(mapOf("EXPLAIN" to TokenType.DESCRIBE))
+            .withFormatStrings(mapOf(
+                "x'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.HEX_STRING),
+                "X'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.HEX_STRING),
+                "b'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.BIT_STRING),
+                "B'" to dev.brikk.house.sql.parser.StringFormat("'", TokenType.BIT_STRING),
+            ))
+
+    val PRIMARY_PARSERS: Map<TokenType, (Parser, Token) -> Expression?> = BaseParserTables.PRIMARY_PARSERS +
+        listOf(TokenType.HEX_STRING, TokenType.BIT_STRING).associateWith { kind ->
+            { parser: Parser, token: Token ->
+                var text = token.text
+                var last = token
+                while (parser.currToken.tokenType == TokenType.STRING) {
+                    val gap = parser.sql.substring(last.end + 1, parser.currToken.start)
+                    if (!gap.all { it.isWhitespace() } || '\n' !in gap)
+                        parser.raiseError("Binary literal continuation requires a newline")
+                    text += parser.currToken.text
+                    parser.match(TokenType.STRING)
+                    last = parser.prevToken
+                }
+                if (kind == TokenType.HEX_STRING && (text.length % 2 != 0 || text.any { it !in "0123456789abcdefABCDEF" }))
+                    parser.raiseError("X literal requires an even number of ASCII hexadecimal digits")
+                if (kind == TokenType.BIT_STRING && text.any { it != '0' && it != '1' })
+                    parser.raiseError("B literal requires binary digits")
+                val span = Token(kind, text, last.line, last.col, token.start, last.end,
+                    (token.comments + last.comments).distinct().toMutableList(), token.lineStart, token.colStart)
+                parser.expression(dev.brikk.house.sql.ast.DuckdbBinaryLiteral(args("this" to text,
+                    "kind" to if (kind == TokenType.HEX_STRING) "X" else "B")), span)
+            }
+        }
 
     // sqlglot: DuckDBParser.NO_PAREN_FUNCTIONS
     val NO_PAREN_FUNCTIONS: Map<TokenType, () -> Expression> =
@@ -621,6 +1337,12 @@ object DuckdbParserTables {
             TokenType.DAMP to binaryRangeParser { ArrayOverlaps(it) },
             TokenType.CARET_AT to binaryRangeParser { StartsWith(it) },
             TokenType.TILDE to binaryRangeParser { RegexpFullMatch(it) },
+        )
+
+    val NATIVE_RANGE_PARSERS: Map<TokenType, (Parser, Expression?) -> Expression?> =
+        RANGE_PARSERS + mapOf(
+            TokenType.TILDE to binaryRangeParser { dev.brikk.house.sql.ast.DuckdbRegexOperator(it) },
+            TokenType.IRLIKE to binaryRangeParser { dev.brikk.house.sql.ast.DuckdbRegexOperator(it + ("insensitive" to true)) },
         )
 
     // sqlglot: DuckDBParser.EXPONENT
@@ -780,13 +1502,14 @@ object DuckdbParserTables {
         put("QUANTILE_CONT", fromArgList(listOf("this", "expression"), false) { PercentileCont(it) })
         put("QUANTILE_DISC", fromArgList(listOf("this", "expression"), false) { PercentileDisc(it) })
         put("RANGE", buildGenerateSeries(endExclusive = true))
-        put("REGEXP_EXTRACT", buildRegexpExtract(all = false))
-        put("REGEXP_EXTRACT_ALL", buildRegexpExtract(all = true))
+        put("REGEXP_EXTRACT", buildDuckdbRegexpExtract(all = false))
+        put("REGEXP_EXTRACT_ALL", buildDuckdbRegexpExtract(all = true))
         put(
             "REGEXP_MATCHES",
             fromArgList(listOf("this", "expression", "flag", "full_match"), false) { RegexpLike(it) },
         )
         put("REGEXP_REPLACE") { a ->
+            if (a.size !in 3..4) Anonymous(args("this" to "regexp_replace", "expressions" to a)) else
             RegexpReplace(
                 args(
                     "this" to seqGet(a, 0),
@@ -876,7 +1599,10 @@ object DuckdbParserTables {
     val PLACEHOLDER_PARSERS: Map<TokenType, (Parser) -> Expression?> =
         BaseParserTables.PLACEHOLDER_PARSERS + mapOf<TokenType, (Parser) -> Expression?>(
             TokenType.PARAMETER to { p ->
-                if (p.match(TokenType.NUMBER) || p.matchSet(p.idVarTokens)) {
+                if (p.match(TokenType.IDENTIFIER)) {
+                    p.expression(dev.brikk.house.sql.ast.Parameter(args("this" to
+                        dev.brikk.house.sql.ast.Identifier(args("this" to p.prevToken.text, "quoted" to true)))))
+                } else if (p.match(TokenType.NUMBER) || p.matchSet(p.idVarTokens)) {
                     p.expression(Placeholder(args("this" to p.prevToken.text)))
                 } else {
                     null
@@ -919,6 +1645,7 @@ object DuckdbParserTables {
             TokenType.DETACH to { p -> (p as DuckdbParser).parseAttachDetach(isAttach = false) },
             TokenType.FORCE to { p -> (p as DuckdbParser).parseForce() },
             TokenType.INSTALL to { p -> (p as DuckdbParser).parseInstall() },
+            TokenType.LOAD to { p -> (p as DuckdbParser).parseDuckdbLoad() },
             TokenType.SHOW to { p -> (p as DuckdbParser).parseShow() },
         )
 

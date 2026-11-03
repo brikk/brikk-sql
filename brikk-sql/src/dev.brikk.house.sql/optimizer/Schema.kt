@@ -133,7 +133,8 @@ open class AbstractMappingSchema(
 
                 supportedTableArgsCache = when {
                     depth == 0 -> emptyList()
-                    depth in 1..3 -> TABLE_PARTS.take(depth)
+                    // The named AST slots stay fixed; Table.parts also includes any Dot children.
+                    depth >= 1 -> TABLE_PARTS.take(depth)
                     else -> throw SchemaError("Invalid mapping shape. Depth: $depth")
                 }
             }
@@ -177,7 +178,7 @@ open class AbstractMappingSchema(
         raiseOnMissing: Boolean = true,
         ensureDataTypes: Boolean = false,
     ): Any? {
-        val parts = tableParts(table).take(supportedTableArgs.size).toMutableList()
+        val parts = tableParts(table).take(depth()).toMutableList()
         val resolvedParts = findInTrie(parts, mappingTrie, raiseOnMissing) ?: return null
         return nestedGetParts(resolvedParts, raiseOnMissing = raiseOnMissing)
     }
@@ -190,7 +191,7 @@ open class AbstractMappingSchema(
     ): Any? =
         nestedGet(
             d ?: mapping,
-            supportedTableArgs.zip(parts.asReversed()),
+            parts.asReversed().mapIndexed { index, name -> (supportedTableArgs.getOrNull(index) ?: "namespace") to name },
             raiseOnMissing = raiseOnMissing,
         )
 }
@@ -529,6 +530,10 @@ fun dataTypeFromStr(dtype: String, dialect: Dialect? = null, udt: Boolean = fals
     if (dtype.uppercase() == "UNKNOWN") return DataType(args("this" to DType.UNKNOWN))
 
     val d = dialect ?: Dialects.BASE
+    // Native catalog spelling, not a user-defined type called NULL. Keep the parity
+    // parser/annotator unchanged when native NULL-type analysis was not requested.
+    if (d.name == "duckdb" && d.supportsNullType && dtype.trim() == "\"NULL\"")
+        return DataType(args("this" to DType.NULL))
     if (d.name in setOf("datafusion", "spice")) DatafusionTypes.parse(dtype)?.let { return it }
     val parsed = try {
         d.parser(errorLevel = ErrorLevel.IGNORE).parseIntoDataType(d.tokenize(dtype), dtype)

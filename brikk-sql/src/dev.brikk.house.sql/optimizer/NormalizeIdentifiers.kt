@@ -7,6 +7,7 @@ import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.parts
 import dev.brikk.house.sql.dialects.Dialect
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.hasExplicitDuckdbVariantRoot
 
 /**
  * Port of sqlglot/optimizer/normalize_identifiers.py.
@@ -41,6 +42,9 @@ fun <E : Expression> normalizeIdentifiers(
             }
 
             if (node is Identifier) {
+                val dot = node.parent as? Dot
+                if (resolved.name == "duckdb" && dot?.expressionArg === node &&
+                    (dot.thisArg as? Expression)?.hasExplicitDuckdbVariantRoot() == true) continue
                 resolved.normalizeIdentifier(node)
             }
         }

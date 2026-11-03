@@ -4,6 +4,7 @@ import dev.brikk.house.sql.diagnostics.DiagnosticSeverity
 import dev.brikk.house.sql.diagnostics.DiagnosticSource
 import dev.brikk.house.sql.diagnostics.SqlDiagnostic
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
 import kotlinx.serialization.Serializable
 
 /**
@@ -178,8 +179,15 @@ data class ScopeCompletion(
  * analyze (a statement of a script, a dialect region of a host document), and results stay in
  * the script's coordinates. PIPE stages scope as brikk-sql lowers them for execution
  * (ast/PipeDesugar.kt): projection-changing stages drop old qualifiers, `AS` replaces them, and a
- * qualifier execution cannot keep across a stage boundary does not resolve. Only queries are
- * analyzed, including those inside other statements (INSERT ... SELECT).
+ * qualifier execution cannot keep across a stage boundary does not resolve. Queries are
+ * analyzed, including those inside other statements (INSERT ... SELECT). DuckDB UPDATE also
+ * scopes its target assignments, FROM inputs, predicates and target-only RETURNING, including
+ * the outer target visible to a correlated scalar subquery. DuckDB MERGE scopes matched,
+ * source-only and target-only branches separately, plus target RETURNING and merge_action.
+ * Standalone writes still expose no statement result shape. In DuckDB CTEs, INSERT/UPDATE/DELETE
+ * expose RETURNING columns, or the native BIGINT Count contract without RETURNING; COPY TO exposes
+ * its Count/Files/statistics contract. New INSERT/UPDATE row images do not claim pre-write value
+ * provenance. This is declarative analysis, never preparation, binding or execution.
  *
  * Experimental: the shape of these types may change until the IntelliJ and LSP consumers use it.
  */
@@ -210,7 +218,7 @@ data class RelationScope(
             checkCanceled: () -> Unit = {},
         ): RelationScope {
             require(range.isEmpty() || range.first >= 0 && range.last < script.length) { "Range $range is outside the script" }
-            return ScopeAnalysis(script, range, Dialects.forName(dialect), facts, checkCanceled).analyze()
+            return ScopeAnalysis(script, range, Dialects.forName(dialect).withNativeDuckdbFacts(), facts, checkCanceled).analyze()
         }
 
         /**
@@ -227,7 +235,7 @@ data class RelationScope(
         ): ScopeCompletion {
             require(range.isEmpty() || range.first >= 0 && range.last < script.length) { "Range $range is outside the script" }
             require(offset in range.first..range.last + 1) { "Offset $offset is outside $range" }
-            return CaretCompletion(script, range, offset, Dialects.forName(dialect), facts, checkCanceled).complete()
+            return CaretCompletion(script, range, offset, Dialects.forName(dialect).withNativeDuckdbFacts(), facts, checkCanceled).complete()
         }
     }
 }

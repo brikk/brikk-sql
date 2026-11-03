@@ -16,6 +16,11 @@ import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.Distinct
 import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Explode
+import dev.brikk.house.sql.ast.hasKeyedCte
+import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
+import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Group
 import dev.brikk.house.sql.ast.Identifier
@@ -99,6 +104,12 @@ fun <E : Expression> qualifyColumns(
     allowPartialQualification: Boolean = false,
     dialect: Dialect? = null,
 ): E {
+    if (expression.hasKeyedCte()) throw OptimizeError("Automatic column qualification across recursive USING KEY state is not modeled")
+    if (expression.isTriggerDdl()) throw OptimizeError("Trigger definitions require their image/transition scope, not SELECT qualification")
+    if (expression.isDuckdbExtensionManagement()) throw OptimizeError("Extension/repository management has no query column scope")
+    if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw OptimizeError("EXPLAIN options are not query-column expressions")
+    if (expression.isDuckdbExternalResourceStatement()) throw OptimizeError("External-resource management has no query column scope")
+    if (expression.isDuckdbRecursiveViewDefinition()) throw OptimizeError("Recursive view self-reference qualification is not modeled")
     val resolvedSchema = ensureSchema(schema, dialect = dialect)
     val annotator = TypeAnnotator(resolvedSchema)
     val resolvedInferSchema = inferSchema ?: resolvedSchema.empty
@@ -954,6 +965,14 @@ private fun convertColumnsToDots(scope: Scope, resolver: Resolver) {
             if (newColumnTable != null) {
                 converted = true
                 val newColumn = column(root, table = newColumnTable)
+
+                if (resolver.dialect.name == "duckdb" && resolver.sourceColumnType(
+                        newColumnTable.name, newColumn as Column)?.isType(DType.VARIANT) == true) {
+                    val originals = dotParts.drop(if (wasQualified) 2 else 1)
+                    for ((part, original) in parts.zip(originals)) if (part is Identifier && original is String) {
+                        part.set("this", original)
+                    }
+                }
 
                 if (dotParts.isNotEmpty()) {
                     // Remove the actual column parts from the rest of dot parts

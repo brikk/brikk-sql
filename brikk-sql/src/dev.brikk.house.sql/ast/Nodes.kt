@@ -631,6 +631,26 @@ internal fun registerNativeDuckdbNodes(m: MutableMap<String, ExpressionRegistry.
     val module = "brikk.duckdb"
     m["SessionConnect"] = ExpressionRegistry.Entry(module) { SessionConnect() }
     m["SessionDisconnect"] = ExpressionRegistry.Entry(module) { SessionDisconnect() }
+    m["DuckdbPrepare"] = ExpressionRegistry.Entry(module) { DuckdbPrepare() }
+    m["DuckdbExecute"] = ExpressionRegistry.Entry(module) { DuckdbExecute() }
+    m["DuckdbDeallocate"] = ExpressionRegistry.Entry(module) { DuckdbDeallocate() }
+    m["DuckdbResetVariable"] = ExpressionRegistry.Entry(module) { DuckdbResetVariable() }
+    m["DuckdbRecursiveViewProperty"] = ExpressionRegistry.Entry(module) { DuckdbRecursiveViewProperty() }
+    m["DuckdbCreateExtensionRepository"] = ExpressionRegistry.Entry(module) { DuckdbCreateExtensionRepository() }
+    m["DuckdbDropExtensionRepository"] = ExpressionRegistry.Entry(module) { DuckdbDropExtensionRepository() }
+    m["DuckdbInstallExtension"] = ExpressionRegistry.Entry(module) { DuckdbInstallExtension() }
+    m["DuckdbLoadExtension"] = ExpressionRegistry.Entry(module) { DuckdbLoadExtension() }
+    m["DuckdbCreateExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbCreateExternalResource() }
+    m["DuckdbRegisterExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbRegisterExternalResource() }
+    m["DuckdbDestroyExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbDestroyExternalResource() }
+    m["DuckdbShowExternalResources"] = ExpressionRegistry.Entry(module) { DuckdbShowExternalResources() }
+    m["DuckdbExternalResourceSource"] = ExpressionRegistry.Entry(module) { DuckdbExternalResourceSource() }
+    m["DuckdbAttachExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbAttachExternalResource() }
+    m["DuckdbConnectExternalResource"] = ExpressionRegistry.Entry(module) { DuckdbConnectExternalResource() }
+    m["DuckdbExplain"] = ExpressionRegistry.Entry(module) { DuckdbExplain() }
+    m["DuckdbExplainOption"] = ExpressionRegistry.Entry(module) { DuckdbExplainOption() }
+    m["DuckdbRegexOperator"] = ExpressionRegistry.Entry(module) { DuckdbRegexOperator() }
+    m["DuckdbBinaryLiteral"] = ExpressionRegistry.Entry(module) { DuckdbBinaryLiteral() }
 }
 
 // sqlglot: query.Subquery(Expression, DerivedTable, Query) — is_subquery

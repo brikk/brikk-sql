@@ -7,6 +7,31 @@ The provisional local candidates are SQL `0.23.0-rc.2` and IntelliJ support
 No remote publication, release tag or consumer update is authorized.
 Development descriptors stay at `0.23.0-SNAPSHOT` and `0.3.1-SNAPSHOT`.
 
+## Later main synchronization
+
+The branch subsequently merges main `95f4fcd4`, including DuckDB 2.0 work and
+the developer-documentation reorganization. The shared annotator retains DuckDB,
+ClickHouse and DataFusion rules. Its entry guard also preserves main's native
+timestamp-precision handling without overwriting caller-owned type slots.
+The ClickHouse tracker now lives under `dev-docs/` with repaired evidence/test links.
+
+The RC2 artifacts below qualify the earlier `c770484` CTE source, not this later
+merge. Final release checks must rebuild/audit artifacts from the final main
+commit, including main's genuine signed DuckDB window capture before IDE gates.
+No newer candidate artifacts are built by this synchronization alone.
+
+The user authorized fast-forwarding and pushing main after the merged-tree gates
+pass and this branch is committed/pushed. No force update, formal release or
+consumer update is part of that authorization.
+
+Merged-tree validation passes 1,734 core tests, 732 other module tests with 72
+optional assumption aborts, 827 IntelliJ tests on 261.25134.95, and 224 Python
+tests with one opt-in skip. The enabled release-model suite passes 43 tests.
+The genuine signed DuckDB 2.0 window capture is generated from the exact pinned
+headers/static libraries and validated before the IDE gate. Both ClickHouse CTE
+reports regenerate byte-identically. Source/test fingerprints remain unchanged
+through final validation. Logs are in `build/merge-main-final-gate/`.
+
 ## Candidate scope
 
 The candidate combines current main's DataFusion/Spice release baseline
@@ -66,7 +91,7 @@ Guides and evidence:
 - [Per-node provenance](../vendor/data/clickhouse-semantic/type-provenance-README.md)
 - [Primitive multiplication](../vendor/data/clickhouse-semantic/multiplication-README.md)
 - [Non-recursive CTE slice](../vendor/data/clickhouse-semantic/cte-context-README.md)
-- [Deferred CHSEM backlog](../TODO-clickhouse-semantic.md#deferred-improvement-backlog)
+- [Deferred CHSEM backlog](../dev-docs/TODO-clickhouse-semantic.md#deferred-improvement-backlog)
 
 P2 families, general rejection coverage, broader session/catalog inference,
 cross-dialect lowering and additional version qualification remain deferred.

@@ -6,6 +6,25 @@ import dev.brikk.house.sql.ast.*
 import dev.brikk.house.sql.ast.Any as AnyNode
 import dev.brikk.house.sql.ast.Boolean as BooleanNode
 import dev.brikk.house.sql.ast.Set as SetNode
+import dev.brikk.house.sql.dialects.duckdbJsonCall
+import dev.brikk.house.sql.dialects.isDuckdbVariantFunction
+import dev.brikk.house.sql.dialects.explainProblems
+import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
+import dev.brikk.house.sql.dialects.duckdbOverlayArguments
+import dev.brikk.house.sql.dialects.hasDuckdbCopyLayout
+import dev.brikk.house.sql.dialects.duckdbPathFunctionName
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.hasDuckdbRegexOverload
+import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
+import dev.brikk.house.sql.dialects.hasDuckdbParquetWriteContract
+import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
+import dev.brikk.house.sql.dialects.isDuckdbStorageAttach
+import dev.brikk.house.sql.dialects.duckdbDivisionTranslationIssue
+import dev.brikk.house.sql.dialects.duckdbExecutableBoundaryIssue
+import dev.brikk.house.sql.dialects.hasDuckdbZoneOrCollation
+import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.TokenizerConfig
 import dev.brikk.house.sql.parser.formatTimeString
@@ -287,6 +306,10 @@ open class Generator(
     // target rejects (#55). Additive state, not a constructor parameter: existing
     // generator JVM signatures stay intact.
     internal var forExecution: Boolean = false
+    /** SqlFragment previews opt in too; plain generators retain faithful syntax parity. */
+    internal var duckdbNativeSemantics: Boolean = false
+    /** Authored-sigil evidence, null when a caller supplies only a legacy ambiguous AST. */
+    internal var duckdbSessionDefaults: Boolean? = null
 
     /** brikk-native (#55): whether a lowered pipe CALL (a table function taking `(query)`) runs. */
     protected open val executesPipeCall: Boolean get() = true
@@ -387,6 +410,107 @@ open class Generator(
         if (trackSpans) {
             spanStack.clear()
             spanStack.addLast(mutableListOf())
+        }
+        if(duckdbNativeSemantics || forExecution)
+            expr.duckdbDivisionTranslationIssue(sourceDialect, dialect.name)?.let(::unexecutable)
+        if(duckdbNativeSemantics || forExecution)
+            expr.duckdbExecutableBoundaryIssue(sourceDialect,dialect.name,forExecution)?.let(::unexecutable)
+        if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.hasDuckdbZoneOrCollation())
+            unexecutable("DuckDB zone/calendar/collation and nanosecond semantics have no verified cross-target translation")
+        if((duckdbNativeSemantics || forExecution) && sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.walk().any { it.isDuckdbCheckpointCommand() })
+            unexecutable("DuckDB CHECKPOINT storage control has no verified cross-target translation")
+        if (dialect.name != "duckdb" && expr.hasKeyedCte()) {
+            unexecutable("$targetName has no verified recursive USING KEY translation")
+        }
+        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExtensionManagement() })
+            unexecutable("$targetName has no verified DuckDB extension/repository management translation")
+        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbExternalResourceStatement() || it is DuckdbExternalResourceSource })
+            unexecutable("$targetName has no verified DuckDB external-resource lifecycle translation")
+        if (dialect.name != "duckdb" && expr.findAll<DuckdbExplain>().any())
+            unexecutable("$targetName has no verified DuckDB EXPLAIN option/plan translation")
+        if (dialect.name != "duckdb" && expr.walk().any { it.isDuckdbNameShow() })
+            unexecutable("DuckDB SHOW name/query resolution has no verified cross-target translation")
+        if(sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && expr.find<Factorial>()!=null)
+            unexecutable("DuckDB factorial input, HUGEINT result and error semantics have no verified cross-target translation")
+        if(sourceDialect.equals("duckdb",true) && dialect.name!="duckdb" && (expr.hasDuckdbSnapshot() || expr.walk().any { it.isDuckdbStorageAttach() }))
+            unexecutable("DuckDB extension attachment/snapshot semantics have no verified cross-target translation")
+        if(expr.hasDuckdbParquetContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet schema/virtual columns have no verified cross-target translation")
+        if(expr.hasDuckdbParquetWriteContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB Parquet writer encoding options have no verified cross-target translation")
+        if(expr.hasDuckdbGeoJsonContract() && sourceDialect!=null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name=="duckdb" || sourceDialect.equals("duckdb",true)))unexecutable("DuckDB GeoJSON Feature/geometry semantics have no verified cross-target translation")
+        if (expr.walk().any { it.hasDuckdbRegexOverload() } && sourceDialect != null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name == "duckdb" || sourceDialect.equals("duckdb",true)))
+            unexecutable("DuckDB regex options/name-list overload has no verified cross-target translation")
+        if (expr.walk().any { it.isDuckdbSetval() } && sourceDialect != null && !sourceDialect.equals(dialect.name,true) &&
+            (dialect.name == "duckdb" || sourceDialect.equals("duckdb",true)))
+            unexecutable("DuckDB SETVAL sequence-state behavior has no verified cross-target translation")
+        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true) &&
+            expr.walk().any { it is Show || it is Command && it.name.equals("SHOW", true) })
+            unexecutable("DuckDB SHOW is not a verified setting/table resolution translation from $sourceDialect")
+        if (expr.hasDuckdbCopyLayout() && sourceDialect != null && !sourceDialect.equals(dialect.name, true) &&
+            (dialect.name == "duckdb" || sourceDialect.equals("duckdb", true)))
+            unexecutable("DuckDB COPY PARTITION_BY/PARTITION_PATH/ORDER_BY has no verified cross-target file-layout translation")
+        if (expr.walk().any { it.duckdbPathFunctionName() != null } && sourceDialect != null &&
+            !sourceDialect.equals(dialect.name, true) && (dialect.name == "duckdb" || sourceDialect.equals("duckdb", true)))
+            unexecutable("DuckDB path helpers have no verified cross-target escaping/normalization translation")
+        if (expr.walk().any { it.isDuckdbOverlayCall() }) {
+            if (sourceDialect.equals("duckdb", true) && dialect.name != "duckdb")
+                unexecutable("$targetName has no verified DuckDB OVERLAY offset/count/Unicode translation")
+            if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", true))
+                unexecutable("DuckDB OVERLAY is not a verified same-name translation from $sourceDialect")
+            if (dialect.name == "duckdb" && expr.walk().any { it.isDuckdbOverlayCall() && it.duckdbOverlayArguments() == null })
+                unexecutable("DuckDB OVERLAY has no valid modeled three/four-argument signature")
+        }
+        if (expr.findAll<SecureProperty>().any()) {
+            // Among the implemented targets only DuckDB has a verified secure-view
+            // contract. An origin-less AST is not permission to emit an unsafe DDL.
+            if (dialect.name != "duckdb")
+                unexecutable("$targetName has no verified DuckDB SECURE VIEW information-hiding translation")
+            if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true))
+                unexecutable("DuckDB SECURE VIEW is not a verified same-keyword translation from $sourceDialect")
+        }
+        if (dialect.name != "duckdb" && expr.findAll<DuckdbRecursiveViewProperty>().any())
+            unexecutable("$targetName has no verified DuckDB recursive view translation")
+        val triggerDdl = expr.walk().any { it.isTriggerDdl() }
+        if (triggerDdl && sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb")
+            unexecutable("$targetName has no verified DuckDB trigger translation")
+        if (triggerDdl && dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true))
+            unexecutable("DuckDB trigger semantics are not a verified translation from $sourceDialect")
+        if (dialect.name == "duckdb" && expr.isTriggerDdl() && expr.findAll<TemporaryProperty>().any())
+            unexecutable("DuckDB 2.0 does not support temporary triggers")
+        if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb") {
+            if (duckdbSessionDefaults == true || duckdbSessionDefaults == null && expr.walk().any { parameter ->
+                    (parameter is Parameter || parameter is Placeholder && parameter.thisArg != null) && parameter.name.any { it !in '0'..'9' }
+                } ||
+                expr.findAll<SetItem>().any { it.text("kind").equals("VARIABLE", ignoreCase = true) }) {
+                unexecutable("$targetName has no verified DuckDB session-variable/default translation")
+            }
+            if (expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
+                unexecutable("$targetName has no verified DuckDB VARIANT translation")
+            }
+            if (expr.walk().any { it.duckdbJsonCall() != null }) {
+                unexecutable("$targetName has no verified DuckDB JSON mutation/normalization translation")
+            }
+            // Check before target SELECT transforms move projection UNNESTs into FROM.
+            // Alias/ordinal grouping and ungrouped post-aggregate expansions also need a
+            // proved translation; an ordinary table-source UNNEST is not this operation.
+            if (expr.findAll<Select>().any { select ->
+                select.args["group"] != null && select.walk().any { node ->
+                    (node is Explode || node is Unnest) && node.findAncestor<Select>() === select &&
+                        generateSequence(node.parent) { it.parent }.takeWhile { it !== select }
+                            .none { it is From || it is Join || it is Table || it is Lateral }
+                }
+            }) unexecutable("$targetName has no verified DuckDB grouping UNNEST translation")
+        }
+        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
+            expr.walk().any { it.duckdbJsonCall() != null }) {
+            unexecutable("DuckDB JSON mutation/normalization is not a verified same-name translation from $sourceDialect")
+        }
+        if (dialect.name == "duckdb" && sourceDialect != null && !sourceDialect.equals("duckdb", ignoreCase = true) &&
+            expr.walk().any { it is DataType && it.isType(DType.VARIANT) || it.isDuckdbVariantFunction() }) {
+            unexecutable("DuckDB VARIANT is not a verified translation from $sourceDialect")
         }
         val raw = sql(preprocess(expr))
         var sql = raw.trim()
@@ -1429,6 +1553,9 @@ open class Generator(
 
     // sqlglot: Generator.cte_sql
     open fun cteSql(expression: CTE): String {
+        if (sourceDialect.equals("duckdb", ignoreCase = true) && dialect.name != "duckdb" && expression.thisArg is DML) {
+            unexecutable("$targetName has no verified DuckDB side-effecting CTE translation")
+        }
         val alias = expression.args["alias"] as? Expression
         alias?.addComments(expression.popComments())
 
@@ -1837,6 +1964,7 @@ open class Generator(
             if (loc != GeneratorTables.PropLocation.UNSUPPORTED) {
                 locations.getOrPut(loc) { mutableListOf() }.add(p)
             } else {
+                if (p is SecureProperty) unexecutable("$targetName cannot discard SECURE VIEW information hiding")
                 unsupported("Unsupported property ${p.key}")
             }
         }
@@ -1988,6 +2116,7 @@ open class Generator(
 
     // sqlglot: Generator.triggerproperties_sql
     open fun triggerpropertiesSql(expression: TriggerProperties): String {
+        if (dialect.name == "duckdb") checkDuckdbTriggerMode(expression)
         val timing = expression.args["timing"] as? String ?: ""
         val events = (expression.args["events"] as? List<*>).orEmpty()
             .joinToString(" OR ") { sql(it) }
@@ -2015,6 +2144,25 @@ open class Generator(
         parts.add(sql(expression, "execute"))
 
         return parts.joinToString(sep())
+    }
+
+    private fun checkDuckdbTriggerMode(properties: TriggerProperties) {
+        val timing = properties.text("timing").uppercase()
+        val row = properties.text("for_each").equals("ROW", ignoreCase = true)
+        val events = (properties.args["events"] as? List<*>).orEmpty().filterIsInstance<TriggerEvent>()
+        val event = events.singleOrNull()?.name
+        val referencing = properties.args["referencing"] as? TriggerReferencing
+        val body = properties.args["execute"]
+        val updateColumns = events.singleOrNull()?.args?.get("columns") as? List<*>
+        if (body !is Insert && body !is Update && body !is Delete && body !is Merge)
+            unexecutable("DuckDB triggers require one inline INSERT/UPDATE/DELETE/MERGE action")
+        if (event !in setOf("INSERT", "UPDATE", "DELETE") || timing == "INSTEAD OF")
+            unexecutable("DuckDB 2.0 does not support this trigger event/timing")
+        if (row && (timing != "AFTER" || event == "UPDATE" || body is Update || referencing != null))
+            unexecutable("DuckDB 2.0 does not support this FOR EACH ROW trigger form")
+        if (referencing != null && (timing != "AFTER" || event == "INSERT" && referencing.args["old"] != null ||
+                event == "DELETE" && referencing.args["new"] != null || !updateColumns.isNullOrEmpty()))
+            unexecutable("DuckDB 2.0 does not support these transition tables for this event")
     }
 
     // sqlglot: Generator.triggerreferencing_sql
@@ -2633,6 +2781,10 @@ open class Generator(
 
     open fun sessionconnectSql(expression: SessionConnect): String {
         if (!supportsSessionRouting) unexecutable("$targetName cannot execute CONNECT session routing")
+        val authoredTarget = expression.thisArg
+        if (dialect.name == "duckdb" && (authoredTarget == null || authoredTarget is Var && authoredTarget.name.equals("LOCAL", ignoreCase = true))) {
+            unexecutable("DuckDB 2.0 does not implement bare CONNECT or CONNECT LOCAL")
+        }
         val target = sql(expression, "this").let { if (it.isEmpty()) "" else " $it" }
         val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
         return "CONNECT$target$options"
@@ -2641,6 +2793,17 @@ open class Generator(
     open fun sessiondisconnectSql(expression: SessionDisconnect): String {
         if (!supportsSessionRouting) unexecutable("$targetName cannot execute DISCONNECT session routing")
         return "DISCONNECT"
+    }
+
+    internal fun duckdbSessionStatementSql(expression: Expression): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB prepared/session statements")
+        val name = sql(expression, "this")
+        return when (expression) {
+            is DuckdbPrepare -> "PREPARE $name AS ${sql(expression, "expression")}"
+            is DuckdbExecute -> expressions(expression, flat = true).let { "EXECUTE $name" + if (it.isEmpty()) "" else "($it)" }
+            is DuckdbDeallocate -> "DEALLOCATE $name"
+            else -> "RESET VARIABLE $name"
+        }
     }
 
     // sqlglot: Generator.lambda_sql
@@ -3050,6 +3213,10 @@ open class Generator(
 
         // sqlglot: LIMIT_FETCH conversion between Fetch and Limit
         if (limitFetch == "LIMIT" && limit is Fetch) {
+            val options = limit.args["limit_options"] as? Expression
+            if (options?.args?.get("with_ties") == true || options?.args?.get("percent") == true) {
+                unexecutable("$targetName cannot preserve FETCH WITH TIES/PERCENT through LIMIT conversion")
+            }
             val count = limit.args["count"] as? Expression
             limit = Limit(args("expression" to (count?.copy() ?: Literal.number("1"))))
         } else if (limitFetch == "FETCH" && limit is Limit) {
@@ -3097,10 +3264,22 @@ open class Generator(
         expression: Expression,
         fetch: Boolean,
         limit: Expression?,
-    ): List<String> = listOf(
-        if (fetch) sql(expression, "offset") else sql(limit),
-        if (fetch) sql(limit) else sql(expression, "offset"),
-    )
+    ): List<String> {
+        val limitPosition = anonymousPaginationPosition(expression.args["limit"] as? Expression)
+        val offsetPosition = anonymousPaginationPosition(expression.args["offset"] as? Expression)
+        if (limitPosition != null && offsetPosition != null && (offsetPosition < limitPosition) != fetch) {
+            unexecutable("$targetName would reorder anonymous pagination parameters; use numbered parameters")
+        }
+        return listOf(
+            if (fetch) sql(expression, "offset") else sql(limit),
+            if (fetch) sql(limit) else sql(expression, "offset"),
+        )
+    }
+
+    protected fun anonymousPaginationPosition(node: Expression?): Int? =
+        (node?.metaOrNull?.get("duckdb_pagination_position") as? Number)?.toInt()?.takeIf {
+            node.findAll<Placeholder>().any { it.thisArg == null }
+        }
 
     // sqlglot: Generator.after_limit_modifiers
     open fun afterLimitModifiers(expression: Expression): List<String> {
@@ -4510,6 +4689,10 @@ open class Generator(
         var then: String
         if (thenExpression is Insert) {
             var this_ = sql(thenExpression, "this")
+            if (thenExpression.args["by_name"] == true) {
+                if (dialect.name != "duckdb") unexecutable("MERGE INSERT BY NAME is supported only for DuckDB")
+                this_ = "BY NAME" + if (this_.isNotEmpty()) " $this_" else ""
+            }
             this_ = if (this_.isNotEmpty()) "INSERT $this_" else "INSERT"
             val thenExpr = sql(thenExpression, "expression")
             then = if (thenExpr.isNotEmpty()) "$this_ VALUES $thenExpr" else this_
@@ -4679,8 +4862,70 @@ open class Generator(
 
     // sqlglot: Generator.install_sql (base: unsupported)
     open fun installSql(expression: Install): String {
+        unexecutable("$targetName cannot execute DuckDB extension installation")
         unsupported("Unsupported INSTALL statement")
         return ""
+    }
+
+    internal fun duckdbExtensionSql(expression: Expression): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB extension/repository management")
+        val target = sql(expression, "this")
+        val from = sql(expression, "from_").let { if (it.isEmpty()) "" else " FROM $it" }
+        return when (expression) {
+            is DuckdbCreateExtensionRepository -> {
+                val replace = if (expression.args["replace"] == true) " OR REPLACE" else ""
+                val exists = if (expression.args["exists"] == true) " IF NOT EXISTS" else ""
+                val keys = expressions(expression).let { if (it.isEmpty()) "" else " USING PUBLIC ${if (expression.expressionsArg.size == 1) "KEY" else "KEYS"} $it" }
+                "CREATE$replace EXTENSION REPOSITORY$exists $target WITH PREFIX ${sql(expression, "prefix")}$keys"
+            }
+            is DuckdbDropExtensionRepository -> "DROP EXTENSION REPOSITORY${if (expression.args["exists"] == true) " IF EXISTS" else ""} $target"
+            is DuckdbInstallExtension -> {
+                val force = if (expression.args["force"] == true) "FORCE " else ""
+                val load = if (expression.args["load"] == true) " AND LOAD" else ""
+                val version = sql(expression, "version").let { if (it.isEmpty()) "" else " VERSION $it" }
+                "${force}INSTALL$load $target$from$version"
+            }
+            is DuckdbLoadExtension -> "LOAD $target$from" + sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+            else -> error("Not an extension management statement")
+        }
+    }
+
+    internal fun duckdbExternalResourceSql(expression: Expression): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB external-resource statements")
+        fun options(node: Expression): String = expressions(node).let { if (it.isEmpty()) "" else " ($it)" }
+        val target = sql(expression, "this")
+        val alias = sql(expression, "alias").let { if (it.isEmpty()) "" else " AS $it" }
+        return when (expression) {
+            is DuckdbCreateExternalResource -> {
+                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
+                "CREATE EXTERNAL RESOURCE $target$alias${options(expression)}"
+            }
+            is DuckdbRegisterExternalResource -> {
+                if (alias.isEmpty()) unexecutable("DuckDB durable external resources require AS and a registration name")
+                val handle = sql(expression, "expression")
+                "REGISTER EXTERNAL RESOURCE $target$alias FROM $handle"
+            }
+            is DuckdbDestroyExternalResource -> "DESTROY EXTERNAL RESOURCE $target"
+            is DuckdbShowExternalResources -> "SHOW${if (expression.args["all"] == true) " ALL" else ""} EXTERNAL RESOURCES"
+            is DuckdbExternalResourceSource -> if (expression.args["temporary"] == true)
+                "NEW TEMPORARY EXTERNAL RESOURCE $target${options(expression)}" else "EXTERNAL RESOURCE $target"
+            is DuckdbAttachExternalResource -> "ATTACH TO $target$alias${options(expression)}"
+            is DuckdbConnectExternalResource -> {
+                if ((expression.thisArg as? DuckdbExternalResourceSource)?.args?.get("temporary") == true && expression.expressionsArg.isNotEmpty())
+                    unexecutable("CONNECT TO NEW TEMPORARY EXTERNAL RESOURCE cannot take a second connection option list")
+                "CONNECT TO $target${options(expression)}"
+            }
+            else -> error("Not an external resource node")
+        }
+    }
+
+    internal fun duckdbExplainSql(expression: DuckdbExplain): String {
+        if (dialect.name != "duckdb") unexecutable("$targetName cannot execute DuckDB EXPLAIN options")
+        expression.explainProblems().forEach(::unexecutable)
+        val analyze = if (expression.args["analyze"] == true) " ANALYZE" else ""
+        val options = expressions(expression).let { if (it.isEmpty()) "" else " ($it)" }
+        val child = sql(expression, "this")
+        return "EXPLAIN$analyze$options $child"
     }
 
     // sqlglot: Generator.summarize_sql
@@ -4980,6 +5225,11 @@ open class Generator(
 
     // sqlglot: Generator.div_sql (base: SAFE_DIVISION=false, TYPED_DIVISION=false)
     open fun divSql(expression: Div): String {
+        // Executable preflight proved the incoming typed operands integral and the
+        // divisor nonzero/NULL. Bare integer atoms need this too: parity does not
+        // annotate their type slots, and falling through would emit fractional /.
+        if(forExecution && dialect.name=="duckdb" && sourceDialect!=null && !sourceDialect.equals("duckdb",true) && expression.args["typed"]==true)
+            return sql(IntDiv(args("this" to expression.left.copy(),"expression" to expression.right.copy())))
         val l = expression.left
         if (!dialectSafeDivision && expression.args["safe"] == true) {
             val r = expression.right

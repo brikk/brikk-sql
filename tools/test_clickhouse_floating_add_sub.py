@@ -99,4 +99,4 @@ class ClickhouseFloatingAddSubEvidenceTest(unittest.TestCase):
                 self.assertEqual(root, frontend["root_node"])
                 self.assertEqual(0, observed["returncode"])
                 self.assertTrue(observed["stdout"].endswith("\tFloat64\n"))
-        self.assertIn("CHSEM-022", (ROOT / "TODO-clickhouse-semantic.md").read_text())
+        self.assertIn("CHSEM-022", (ROOT / "dev-docs/TODO-clickhouse-semantic.md").read_text())

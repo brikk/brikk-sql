@@ -58,7 +58,7 @@ class ClickhouseDivisionTypingEvidenceTest(unittest.TestCase):
             self.assertIn("Code: 153.", native[id]["stderr"])
         for suffix in ("E12", "E18", "E19"):
             self.assertEqual("UNKNOWN", rows["CHSEM-012-" + suffix]["result_type"])
-        backlog = (DATA.parents[2] / "TODO-clickhouse-semantic.md").read_text()
+        backlog = (DATA.parents[2] / "dev-docs/TODO-clickhouse-semantic.md").read_text()
         self.assertIn("CHSEM-013", backlog)
         self.assertIn("CHSEM-014", backlog)
 

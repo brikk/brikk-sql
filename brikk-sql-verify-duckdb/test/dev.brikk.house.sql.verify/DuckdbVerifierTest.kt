@@ -11,6 +11,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertSame
+import java.util.Properties
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class DuckdbVerifierTest {
     @Test
@@ -33,7 +35,16 @@ internal class DuckdbVerifierTest {
             "DISCONNECT",
         )
         DuckdbVerifier().use { verifier ->
-            for (sql in statements) assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
+            for (sql in statements) {
+                if (dev.brikk.house.sql.dialects.mayContainDuckdbRouting(sql)) {
+                    // A parse-only serializer cannot produce a verdict for routing. Keep the
+                    // native syntax control, but never prepare/bind connection-changing SQL.
+                    assertIs<VerifyResult.Unverified>(verifier.verify(sql))
+                    DriverManager.getConnection("jdbc:duckdb:").use { connection ->
+                        assertEquals("not implemented", assertIs<SerializedSql.Failed>(connection.serializeSql(sql)).type)
+                    }
+                } else assertIs<VerifyResult.Accepted>(verifier.verify(sql), sql)
+            }
         }
     }
 
@@ -64,6 +75,33 @@ internal class DuckdbVerifierTest {
         val parser = assertIs<VerifyResult.Rejected>(classifyDuckdbPrepareFailure("Parser Error: bad\nLINE 2: 123 invalid"))
         assertEquals(VerifyError("Parser Error: bad\nLINE 2: 123 invalid", line = 2), parser.error)
         assertIs<VerifyResult.Unverified>(classifyDuckdbPrepareFailure("IO Error: disk unavailable"))
+    }
+
+    @Test
+    fun installCorpusFormsRemainUnverifiedWithoutPreparing() {
+        val prepares = AtomicInteger()
+        val real = DriverManager.getConnection("jdbc:duckdb:", Properties().apply {
+            setProperty("enable_external_access", "false")
+            setProperty("autoload_known_extensions", "false")
+            setProperty("autoinstall_known_extensions", "false")
+        })
+        val parseOnly = Proxy.newProxyInstance(javaClass.classLoader, arrayOf(Connection::class.java)) { _, method, args ->
+            if (method.name == "prepareStatement") {
+                prepares.incrementAndGet()
+                error("Extension management must not bind")
+            }
+            try { method.invoke(real, *(args ?: emptyArray())) } catch (e: InvocationTargetException) { throw e.targetException }
+        } as Connection
+        DuckdbVerifier { parseOnly }.use { verifier ->
+            for (sql in listOf("INSTALL httpfs", "FORCE INSTALL httpfs").flatMap { install ->
+                listOf(install, "$install FROM community", "$install FROM 'https://extensions.duckdb.org'")
+            }) {
+                assertEquals("not implemented", assertIs<SerializedSql.Failed>(real.serializeSql(sql)).type)
+                assertIs<VerifyResult.Unverified>(verifier.verify(sql))
+            }
+            assertIs<VerifyResult.Accepted>(verifier.verify("SELECT 1"))
+            assertEquals(0, prepares.get())
+        }
     }
 
     @Test

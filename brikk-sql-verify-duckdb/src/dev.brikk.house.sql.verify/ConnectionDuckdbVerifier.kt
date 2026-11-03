@@ -5,7 +5,9 @@ import java.sql.SQLException
 import java.util.concurrent.Callable
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -21,6 +23,10 @@ import java.util.concurrent.TimeoutException
  * [timeoutSeconds] bounds the whole call, including connection initialization. [checkCanceled] is
  * polled while the worker runs; its exceptions propagate after requesting cancellation. A helper
  * that finishes opening after cancellation is closed without submitting the parser query.
+ * Input is capped at 1,048,576 UTF-16 units and 256 structural/comment nesting levels.
+ * Two helper workers and two cancellation workers are shared by this classloader. A stuck
+ * transport exhausts that capacity instead of creating unbounded threads; no queued retry
+ * is scheduled. The supplier owns process isolation, this class cannot isolate in-process JNI.
  */
 public class ConnectionDuckdbVerifier(
     private val connect: () -> DuckdbQueryConnection?,
@@ -35,9 +41,9 @@ public class ConnectionDuckdbVerifier(
 
     override fun verify(sql: String): VerifyResult {
         checkCanceled()
-        if ('\u0000' in sql) return VerifyResult.Unverified("DuckDB cannot parse-check SQL that contains a NUL character.")
+        duckdbParseInputIssue(sql,checkCanceled)?.let { return VerifyResult.Unverified(it) }
         val call = Call()
-        val future = WORKERS.submit(Callable {
+        val future = try { WORKERS.submit(Callable {
             try {
                 val opened = connect() ?: return@Callable VerifyResult.Unavailable("DuckDB verification is unavailable: no matching connection.")
                 opened.use {
@@ -47,9 +53,14 @@ public class ConnectionDuckdbVerifier(
                         ?: VerifyResult.Unavailable("DuckDB verification is unavailable: invalid parser response.")
                 }
             } catch (e: SQLException) {
-                VerifyResult.Unavailable("DuckDB verification is unavailable: ${e.reason()}.")
+                VerifyResult.Unavailable(dev.brikk.house.sql.dialects.Dialects.DUCKDB.diagnosticMessage(sql,
+                    "DuckDB verification is unavailable: ${e.reason()}."))
+            } catch (e: LinkageError) {
+                VerifyResult.Unavailable("DuckDB verification is unavailable: the helper driver could not be loaded (${e::class.java.simpleName}).")
             }
-        })
+        }) } catch (_: RejectedExecutionException) {
+            return VerifyResult.Unavailable("DuckDB verification is unavailable: helper capacity is exhausted.")
+        }
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds.toLong())
         try {
             while (true) {
@@ -99,14 +110,21 @@ public class ConnectionDuckdbVerifier(
                 connection
             } ?: return
             // A driver's cancel can block; it must not block the caller's cancellation.
-            WORKERS.execute { runCatching { opened.cancel() } }
+            try {
+                CANCELLERS.execute { runCatching { opened.cancel() } }
+            } catch (_: RejectedExecutionException) {
+                // Broken cancel calls already occupy the bounded cancellation workers.
+                // The caller still cancels its future and never waits for the driver.
+            }
         }
     }
 
     private companion object {
-        val WORKERS = Executors.newCachedThreadPool { task ->
-            Thread(task, "brikk-duckdb-verify").apply { isDaemon = true }
+        fun workers(name: String) = ThreadPoolExecutor(0,2,60,TimeUnit.SECONDS,SynchronousQueue()) { task ->
+            Thread(task,name).apply { isDaemon = true }
         }
+        val WORKERS = workers("brikk-duckdb-verify")
+        val CANCELLERS = workers("brikk-duckdb-verify-cancel")
     }
 }
 

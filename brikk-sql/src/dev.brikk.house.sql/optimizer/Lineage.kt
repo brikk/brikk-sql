@@ -1,8 +1,22 @@
 package dev.brikk.house.sql.optimizer
 
 import dev.brikk.house.sql.ast.Column
+import dev.brikk.house.sql.ast.hasSideEffectingCte
+import dev.brikk.house.sql.ast.hasKeyedCte
+import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
+import dev.brikk.house.sql.ast.isSecureViewDefinition
+import dev.brikk.house.sql.ast.Update
+import dev.brikk.house.sql.ast.Merge
 import dev.brikk.house.sql.ast.DerivedTable
 import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.hasDuckdbParquetContract
+import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
+import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.In
 import dev.brikk.house.sql.ast.Pivot
@@ -194,6 +208,34 @@ private fun prepareLineage(
 ): PreparedLineage {
     val resolvedDialect = dialect ?: Dialects.BASE
     var expression = maybeParseSql(sql, resolvedDialect, copy)
+    if(expression.hasDuckdbRegexSelector())throw SqlglotError("Runtime regex column-selector lineage is not modeled")
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbSnapshot())throw SqlglotError("Snapshot/state lineage is not modeled")
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbGeoJsonContract())throw SqlglotError("GeoJSON Feature/geometry/file lineage is not modeled")
+    if(resolvedDialect.name=="duckdb" && expression.hasDuckdbParquetContract())throw SqlglotError("Parquet file/field-ID/default lineage is not modeled")
+    if (resolvedDialect.name == "duckdb" && expression.walk().any { it.isDuckdbSetval() })
+        throw SqlglotError("SETVAL sequence-state lineage is not modeled")
+    if (expression.isDuckdbNameShow()) throw SqlglotError("SHOW metadata/setting output is not target query-result lineage")
+    if (expression is dev.brikk.house.sql.ast.DuckdbExplain) throw SqlglotError("EXPLAIN plan text has computed provenance, not child-result lineage")
+    if (expression.isDuckdbExternalResourceStatement()) throw SqlglotError("External-resource lifecycle state is not query-result lineage")
+    if (expression.isDuckdbExtensionManagement()) throw SqlglotError("Repository identity/fingerprints are runtime management results, not query-result lineage")
+    if (expression.isSecureViewDefinition()) throw SqlglotError("SECURE VIEW DDL has no query-result lineage; analyze its authored body separately")
+    if (expression.isTriggerDdl()) throw SqlglotError("Trigger DDL does not expose its body's query-result lineage")
+    if (expression is dev.brikk.house.sql.ast.SessionConnect || expression is dev.brikk.house.sql.ast.SessionDisconnect) {
+        throw SqlglotError("Session routing does not expose query-result lineage")
+    }
+    if (expression.hasKeyedCte()) {
+        throw SqlglotError("Cannot infer recursive USING KEY aggregate-state lineage")
+    }
+
+    if (scope == null && (expression is dev.brikk.house.sql.ast.DuckdbPrepare || expression is dev.brikk.house.sql.ast.DuckdbExecute)) {
+        throw SqlglotError("Prepared/session statements do not expose a query result for lineage")
+    }
+
+    // buildScope(UPDATE/MERGE) can return a scalar/source query or FROM table. None is
+    // the statement's output or assignment lineage. Refuse rather than trace the wrong root.
+    if ((expression is Update || expression is Merge) && scope == null) {
+        throw SqlglotError("Cannot build ${expression.key.uppercase()} assignment lineage; sql must be a query")
+    }
 
     if (!sources.isNullOrEmpty()) {
         expression = expand(
@@ -204,6 +246,9 @@ private fun prepareLineage(
         )
     }
 
+    if (scope == null && expression.hasSideEffectingCte()) {
+        throw SqlglotError("Cannot infer assignment lineage across side-effecting CTEs")
+    }
     val ensuredSchema = ensureSchema(schema, dialect = dialect)
 
     var builtScope = scope

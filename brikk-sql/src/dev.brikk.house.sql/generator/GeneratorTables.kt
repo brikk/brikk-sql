@@ -135,6 +135,7 @@ object GeneratorTables {
         SampleProperty::class to PropLocation.POST_SCHEMA,
         SchemaCommentProperty::class to PropLocation.POST_SCHEMA,
         SecureProperty::class to PropLocation.POST_CREATE,
+        DuckdbRecursiveViewProperty::class to PropLocation.POST_CREATE,
         SecurityIntegrationProperty::class to PropLocation.POST_CREATE,
         SerdeProperties::class to PropLocation.POST_SCHEMA,
         SetNode::class to PropLocation.POST_SCHEMA,
@@ -549,6 +550,34 @@ object GeneratorTables {
         reg(Show::class) { e -> showSql(e as Show) }
         reg(HistoricalData::class) { e -> historicaldataSql(e as HistoricalData) }
         reg(Install::class) { e -> installSql(e as Install) }
+        for (node in listOf(DuckdbCreateExtensionRepository::class, DuckdbDropExtensionRepository::class,
+            DuckdbInstallExtension::class, DuckdbLoadExtension::class)) reg(node) { e -> duckdbExtensionSql(e) }
+        for (node in listOf(DuckdbCreateExternalResource::class, DuckdbRegisterExternalResource::class,
+            DuckdbDestroyExternalResource::class, DuckdbShowExternalResources::class, DuckdbExternalResourceSource::class,
+            DuckdbAttachExternalResource::class, DuckdbConnectExternalResource::class)) reg(node) { e -> duckdbExternalResourceSql(e) }
+        reg(DuckdbExplain::class) { e -> duckdbExplainSql(e as DuckdbExplain) }
+        reg(DuckdbBinaryLiteral::class) { e ->
+            if (dialect.name != "duckdb") unexecutable("DuckDB BLOB/BIT literals have no verified cross-target value/type translation")
+            val kind = e.text("kind")
+            val value = e.text("this")
+            require(kind == "X" && value.length % 2 == 0 && value.all { it in "0123456789abcdefABCDEF" } ||
+                kind == "B" && value.all { it == '0' || it == '1' }) { "Invalid DuckDB binary literal AST" }
+            "$kind'$value'"
+        }
+        reg(DuckdbRegexOperator::class) { e ->
+            if (dialect.name != "duckdb") unexecutable("Session-dependent DuckDB regex operators have no verified cross-target translation")
+            val op = (if (e.args["negate"] == true) "!~" else "~") + (if (e.args["insensitive"] == true) "*" else "")
+            fun operand(key: String): String {
+                val node = e.args[key]
+                return if (node is DuckdbRegexOperator) "(${sql(node)})" else sql(node)
+            }
+            "${operand("this")} $op ${operand("expression")}"
+        }
+        reg(DuckdbExplainOption::class) { e ->
+            val name = e.thisArg as? Identifier
+            val keyword = if (name?.quoted != true && name?.name?.uppercase() in setOf("ANALYZE", "ANALYSE")) "ANALYZE" else sql(e, "this")
+            keyword + sql(e, "expression").let { if (it.isEmpty()) "" else " $it" }
+        }
         reg(Summarize::class) { e -> summarizeSql(e as Summarize) }
         reg(Attach::class) { e -> attachSql(e as Attach) }
         reg(Detach::class) { e -> detachSql(e as Detach) }
@@ -678,6 +707,10 @@ object GeneratorTables {
         reg(RecursiveWithSearch::class) { e -> recursivewithsearchSql(e as RecursiveWithSearch) }
         reg(DistanceNd::class) { e -> binary(e as Binary, "<<->>") }
         reg(TriggerExecute::class) { e -> "EXECUTE FUNCTION ${sql(e, "this")}" }
+        reg(DuckdbPrepare::class) { e -> duckdbSessionStatementSql(e) }
+        reg(DuckdbExecute::class) { e -> duckdbSessionStatementSql(e) }
+        reg(DuckdbDeallocate::class) { e -> duckdbSessionStatementSql(e) }
+        reg(DuckdbResetVariable::class) { e -> duckdbSessionStatementSql(e) }
         reg(ExplodingGenerateSeries::class) { e ->
             explodinggenerateseriesSql(e as ExplodingGenerateSeries)
         }
@@ -765,6 +798,10 @@ object GeneratorTables {
         }
         reg(SampleProperty::class) { e -> "SAMPLE BY ${sql(e, "this")}" }
         reg(SecureProperty::class) { _ -> "SECURE" }
+        reg(DuckdbRecursiveViewProperty::class) { _ ->
+            if (dialect.name != "duckdb") unexecutable("${dialect.name} has no verified DuckDB recursive view translation")
+            "RECURSIVE"
+        }
         reg(SecurityIntegrationProperty::class) { _ -> "SECURITY" }
         reg(SetConfigProperty::class) { e -> sql(e, "this") }
         reg(SetProperty::class) { e -> "${if (e.args["multi"] == true) "MULTI" else ""}SET" }

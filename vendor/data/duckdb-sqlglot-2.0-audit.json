@@ -1,0 +1,65 @@
+{
+  "source_summary": {
+    "pinned": {
+      "commit": "a00dc2e5c489214bea53bacbbeba8713f21ebce1",
+      "files": {
+        "sqlglot/dialects/duckdb.py": "4f543970980ce22c8a639c5f5c25a4f5a15812dcfaca7c62f157dc18aaad60e0",
+        "sqlglot/parsers/duckdb.py": "6129765e2cd04208ef37b08826d3fc9631dacfc3e76141aee5d2fa7baa5fe922",
+        "sqlglot/generators/duckdb.py": "2780b010288b2ab662963c1b064d643005e6a09040b6cc4c454a26f38d25c218",
+        "tests/dialects/test_duckdb.py": "851500cfba4ff3c4d603f2c8c4d0bae06e5dd87fee1f9bb2c9a5682eb0a13431"
+      },
+      "outcome_sha256": "c35263e1bc744d6d2072db834f4baa94884d990f4e3680c2e8c74e2f76905c81"
+    },
+    "upstream": {
+      "commit": "6de2df31b0ae8b21155828f575a14dc8903c1b9b",
+      "files": {
+        "sqlglot/dialects/duckdb.py": "e5285b4ce241af63d7038d2cb2470b2b397686ec904a9ca83f02b6fe1a1d7ce8",
+        "sqlglot/parsers/duckdb.py": "7f64ce45cd9e8201f8adce7ecb37be6ee29c80b83c344df699814401fc162780",
+        "sqlglot/generators/duckdb.py": "8eed9a85b1c94e84405f563f12504b4930ddbcd2d9f870aff9ce1fee553e8b5f",
+        "tests/dialects/test_duckdb.py": "42662e23caf53ee1297fd93716b4db71cbbdb4a7c9ba274d325fb7f682e7614e"
+      },
+      "outcome_sha256": "6cfad77e206157ad809468f2c430e548b414454e80bfb4a42407b0f915a5e494"
+    },
+    "history_sha256": "8df5e594fa5907973dccab1484ab0d08834e0fa676b47b3e27c8b2527d46a874"
+  },
+  "review_scope": "DuckDB dialect/parser/generator/tests net changes, 37 touching commits, 18 isolated probes. Not a refresh of global AST/typing/parser or other dialects. Syntax rendering is not executable qualification.",
+  "review": {
+    "549d64b9": "Custom Base64 alphabet semantics: incoming executable qualification stays conservative, DDB20-055/063.",
+    "5b7af1e7": "Retain richer native regex operator/session/ANY-ALL model, DDB20-037; do not replace with a version-only partial/full guess.",
+    "f31f109d": "Port SORT BY keyword removal only to native lexical configuration; parity tables unchanged.",
+    "a32ef636": "Global nested-unknown typing change, not a DuckDB-only port; DDB20-062/073.",
+    "e88e67e6": "Cross-target DATE_TRUNC result typing needs separate qualification, DDB20-055/077.",
+    "3cca3ea4": "Timestamp arithmetic typing/precision remains DDB20-055/077; no broad temporal equivalence claim.",
+    "840347fd": "Reserved-word quoting differs from native keyword catalog; DDB20-055/068, no blind global refresh.",
+    "991d6ce5": "Boundary-counting DATE_DIFF needs native target evidence, DDB20-055/063.",
+    "a4e08982": "Shared parenthesized VALUES/setop parser change; retain parity pin, review via native corpus/precedence gates, not wholesale shared parser replacement.",
+    "fb36fb71": "Shared struct-valued query typing, DDB20-062/073; existing whole-row native facts remain distinct.",
+    "c514be04": "Native trigger model already preserves structured actions and refusal boundaries, DDB20-020.",
+    "31918e9a": "Quoted variable names already preserved and native-tested, DDB20-017.",
+    "8cf42771": "Cleanup within reviewed trigger changes; no separate semantic feature.",
+    "ebd5fb4d": "SQL/JSON constructor clauses must refuse unproved loss instead of being silently discarded, DDB20-055.",
+    "5859d714": "Multi-path JSON extraction must not lose paths; executable safety qualification DDB20-055, not generic name preservation.",
+    "d3758367": "Shared escaping change; retain native string/byte controls and historical corpora rather than refresh unrelated dialects.",
+    "46af6e46": "Native routing model is richer, including option ownership and parse-only restrictions, DDB20-019.",
+    "e3b3e23c": "Explicit/internal join normalization needs native supported/refusal classification, DDB20-055; bare MARK/SINGLE aliases are already pinned in 051.",
+    "4aa189a4": "Incoming Unicode escape-string conversion needs qualification or refusal, DDB20-055; not a native literal alias.",
+    "e0ac5e4e": "Exclusive negative series endpoint semantics need result evidence; DDB20-055/063.",
+    "eb03a972": "Postgres regex flag handling does not replace native DuckDB session-dependent operators; DDB20-037/055.",
+    "dd71d360": "Fractional interval preservation is a real native execution hazard; DDB20-055 refusal until temporal work in 077.",
+    "a97d0357": "Slice step/end placeholders are semantic, not cosmetic; DDB20-055/073.",
+    "a220ffb9": "Retain richer exact/approximate and omitted-count native NEAREST model, DDB20-008.",
+    "65eb0f22": "Global Lambda colon-field removal is not adopted; native canonical LAMBDA behavior remains tested by 051.",
+    "83479d06": "2.0 backticks/star EXCEPT already native-tested; retain current models and ledgers.",
+    "d335f898": "Dynamic JSON path precedence must preserve semantics or refuse, DDB20-051/055.",
+    "68cd4a2d": "Reserved-word corrections reviewed with 840347fd; do not relabel historical generator parity.",
+    "479c4cae": "Shared IS-predicate precedence architecture is not ported wholesale; native executable hazards require explicit qualification/refusal, DDB20-055.",
+    "fc1472a0": "StarRocks map-literal change is outside this DuckDB-only refresh; unrelated dialects unchanged.",
+    "f536a823": "BigQuery percentile/distinct-array changes are not adopted opportunistically; incoming qualification DDB20-055.",
+    "094509aa": "Global SortArray/ArraySort AST merge is breaking corpus structure; retain existing AST, qualify order/null options separately in DDB20-055.",
+    "f814e4cb": "MySQL aggregate semantics are not a DuckDB grammar change; no unrelated dialect refresh.",
+    "e92c2228": "ARRAY_TO_STRING null-replacement coercion needs typed native evidence or conservative refusal, DDB20-055.",
+    "1f8d15bb": "ARRAY_SLICE end-versus-length conversion needs semantic evidence, DDB20-055/073.",
+    "530eab07": "Cleanup; no independent SQL-facing change beyond reviewed array work.",
+    "df0a3006": "ARRAY_INSERT -1 append semantics need target-specific proof, DDB20-055."
+  }
+}

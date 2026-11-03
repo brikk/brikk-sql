@@ -7,24 +7,16 @@ desugared away at parse time.
 Target-specific fixes and other deliberate differences are listed in the
 [extensions registry](../docs/brikk-extensions.md).
 
-Differential gates compare token streams, serialized AST structure, and generated SQL
-against pinned sqlglot (`v30.18.0-43-g3ca82489`) across thousands of corpus cases,
-with explicit expectations for deliberate divergences. Separate semantic tests check
-row results and output schemas. See [parsing research and plan](../docs/parsing-research-and-plan.md)
-for architecture and status. Oracle parity alone does not prove correct row results
-or preservation of the author's original SQL text.
+The API includes parsing, SQL generation, scope resolution, type inference and
+source-preserving pipe lowering. Dialect-specific behavior and supported translations
+are described below.
 
-This module lives at `brikk-sql/` in the standalone SQL repository, alongside
-[metadata](../brikk-sql-metadata/), [verification](../brikk-sql-verify/), and
-[real-engine oracles](../brikk-sql-oracle/). Its Toolchain name remains `brikk-sql`
-and its Maven coordinate remains `dev.brikk.house:brikk-sql-jvm`. The Kotlin
-runtime/compiler consumer lives in [Brikk Engine](https://github.com/brikk/brikk-house/tree/main/brikk-engine);
-Kotlin packages and annotations have not changed.
+Use `dev.brikk.house:brikk-sql-jvm`, with optional [metadata](../brikk-sql-metadata/)
+and [verification](../brikk-sql-verify/) modules. Kotlin execution integration lives in
+[Brikk Engine](https://github.com/brikk/brikk-house/tree/main/brikk-engine).
 
-Since 0.21.0, core targets JVM with Java 17-compatible bytecode and runs its
-tests on JDK 17, including the transitive metadata/serialization dependencies.
+Core requires Java 17, including its metadata and serialization dependencies.
 It is predominantly common Kotlin; the schema-cache file API lives in `src@jvm/`.
-Older Java 21 JARs need replacing with 0.21.0 or a later compatible build.
 
 ## Quick start
 
@@ -212,15 +204,932 @@ The full sqlglot semantic pipeline is ported and oracle-gated:
 - **Native-grammar verification** — the [brikk-sql-verify](../brikk-sql-verify/) modules (JVM, one artifact per
   engine plus an aggregate) check emitted SQL against the target engine's real parser (Doris FE, Trino,
   DuckDB embedded).
-- **Function catalogs + semantics** — the [brikk-sql-metadata](../brikk-sql-metadata/) module (featherweight,
-  ~100KB) ships each engine's registered functions with signatures where extractable,
+- **Function catalogs + semantics** — the [brikk-sql-metadata](../brikk-sql-metadata/) module
+  ships versioned engine function registries with signatures where extractable,
   per-function `SemanticProfile`s (null propagation from Doris's own source; DuckDB
-  parameter names on 96% of overloads), grammar-builtin allowlists for names the
+  captured parameter names), grammar-builtin allowlists for names the
   engine parses at the grammar level instead of registering (Trino `COALESCE`/`CAST`/
   `EXTRACT`, DuckDB `COALESCE`/`GROUPING` — `FunctionCatalog.isKnown`), and the
   probe-verified `HazardRegistry` (trino↔duckdb semantic verdicts with provenance).
   Powers engine-exact `unmappableFunctions(target)` capability checks and
   certification below.
+
+### DuckDB 2.0 native support
+
+DuckDB support targets 2.0.0 LTS with JDBC 2.0.0.0. Core SQL supports nested namespace
+components and distinguishes quoted literal dots; recursive schema browsing/editing is
+not available in the IntelliJ integration. Editor verification parses SQL without running
+it or changing the user's connection settings. The following sections describe individual
+features and their supported behavior.
+
+`RelationScope.analyze` and `RelationScope.complete` also handle DuckDB UPDATE and MERGE expressions.
+SET targets see only the physical target table; values and WHERE see the target plus FROM
+sources, with that frame available to correlated scalar subqueries. FROM joins cannot read
+the target, and RETURNING sees only the target. This is symbol resolution and completion,
+not UPDATE result-shape or assignment-lineage support. MERGE branches expose both sides when
+matched, only the target for NOT MATCHED BY SOURCE, and only the source for NOT MATCHED BY TARGET.
+Its RETURNING also exposes the VARCHAR `merge_action` pseudo-column, unless a real target column
+shadows that name. An incomplete target inventory does not prove the pseudo-column's type.
+Without an explicitly supplied query scope, query-lineage entry points refuse root
+UPDATE/MERGE statements instead of mistaking their last nested query for the statement result.
+MERGE INSERT BY NAME stays structured through
+serde and generation; executable generation refuses it for unproved non-DuckDB targets.
+
+DuckDB NEAREST joins retain their count, mode and ranking expression through parsing, serde,
+qualification and generation. Native 2.0 permits INNER and LEFT joins with a positive int64
+literal count, or an omitted count meaning one. Ranking expressions resolve against candidate
+rows before LEFT join NULL extension. Quoted mode-word aliases remain identifiers. Native
+result tests cover per-row top-k, metric direction, NULL ranks and tie cardinality; they do
+not promise a particular tied winner or future approximate-search recall. Other targets get
+flagged previews and executable refusal, not an invented portable nearest-join translation.
+
+DuckDB 2.0 side-effecting CTEs support INSERT, UPDATE, DELETE and COPY TO bodies. Their
+RETURNING fields feed later CTE/query scopes and completion. Without RETURNING, the pinned
+engine exposes a BIGINT `Count`, not the target table's columns. COPY TO exposes `Count`,
+`Count`/`Files`, or the seven RETURN_STATS fields according to its options; dynamic result
+flags leave the contract unknown. These contracts come from syntax and copied schema facts.
+Analysis never prepares or executes a statement, evaluates a function, or opens an output path.
+
+INSERT/UPDATE RETURNING describe new row images, so their CTE outputs do not inherit old-value
+physical provenance. DELETE can retain direct pre-deletion provenance. Query-root shape inference
+uses these contracts without SELECT-optimizer rewrites. Automatic qualification/star expansion
+and assignment-lineage inference across side-effecting CTEs explicitly refuse where unmodeled;
+ordinary read-only CTEs keep their existing analysis. Cross-target executable generation also
+refuses unverified DuckDB side-effecting CTE translations. Native DuckDB generation preserves
+the producer, references, dependencies and authored materialization hints.
+
+Native result tests verify one execution per statement even for unreferenced/empty consumers
+and NOT MATERIALIZED, plus fresh execution of prepared plans, table rollback and actual COPY
+files. This is the pinned engine's behavior, not an app-side materialization algorithm or a
+promise that exported files roll back. JDBC 2.0.0.0 may classify an outer SELECT as an update
+count when a producer lacks RETURNING. An executeQuery error in that case does not mean the
+write did not run; do not retry the SQL to recover a ResultSet.
+
+DuckDB 2.0 grouping UNNEST stays a scalar grouping expression. Qualification preserves it,
+including projection aliases, ordinals and scalar wrappers, rather than moving it into FROM.
+Native result tests cover repeated values, NULL elements, NULL/empty lists, aggregate inputs,
+zip/padding of grouped UNNESTs and post-aggregate expansion of ungrouped projection UNNESTs.
+List element types feed scopes and shapes; constant `recursive`/`max_depth` options also remove
+the appropriate list levels. Unknown options and recursive struct expansion do not prove a
+single-column type. A non-null list does not prove non-null elements or prevent NULL padding.
+Native binding, not static name resolution, enforces the restrictions on nested UNNEST calls,
+struct expansion, GROUP BY ALL, aggregates and windows inside grouping expressions.
+Non-DuckDB executable generation refuses unverified grouping-UNNEST translations before target
+projection rewrites; previews carry a finding. Ordinary scalar/table UNNEST paths are unchanged.
+
+DuckDB FETCH accepts FIRST/NEXT, ROW/ROWS, an omitted count of one and full count expressions.
+Generation normally canonicalizes it to LIMIT/OFFSET. The parser requires FIRST/NEXT and
+ROW/ROWS ONLY, rejects duplicate pagination, and does not accept WITH TIES or PERCENT. The
+engine still decides count/offset binding, rounding, NULL and negative-value behavior.
+Anonymous pagination parameters retain their authored order through copy, serde and generation.
+For `OFFSET ? FETCH NEXT ?`, DuckDB emits `OFFSET ? LIMIT ?` so existing JDBC bindings do not
+swap meanings. Cross-target execution refuses a pagination rewrite that would reorder these
+parameters; numbered parameters can retain their identity across clause reordering. Tests run
+both authored and generated queries with the same prepared bindings and check CTE/set boundaries.
+
+DuckDB 2.0 JSON mutation calls retain their authored values and paths, including JSON Pointer
+escapes, quoted JSONPath keys, reverse indexes and named arguments. SET/INSERT/REPLACE accept
+one scalar path and one JSON value; REMOVE accepts one scalar path. Path lists, repeated
+path/value pairs and BigQuery strip-null options are not DuckDB overloads. Values such as
+`'"hello"'` are JSON strings; `'hello'` is invalid JSON, and numeric SQL literals need an
+explicit JSON conversion. The library does not quote values or reinterpret paths to make
+these calls resemble another dialect.
+
+Scope/shape contracts return JSON for mutation, deep merge, merge-patch diff and null stripping;
+`json_normalize` returns VARCHAR. Static typing recognizes the pinned positional and fixed named
+signatures, not arbitrary schema-owned UDFs. Native binding still decides argument types and
+JSON/path validity. Nullability follows argument roles: REMOVE may return SQL NULL when removing
+the root; deep merge and patch diff can ignore a SQL NULL base, and a later deep-merge patch can
+replace a SQL NULL intermediate. SQL NULL is not JSON `null`.
+
+Deep merge skips JSON-null object patch members where the original is also an object, while
+merge patch deletes those keys. Arrays replace rather than concatenate. Normalization sorts
+object keys recursively but preserves array order and duplicate keys; it can change numeric
+serialization and is not a cross-engine canonical-byte guarantee. Null stripping removes
+JSON-null object members but retains null array elements and empty containers. Native diff tests
+cover representable round trips, not every JSON document: applying the diff from `{}` to
+`{"a":null}` returns `{}`, because merge-patch null deletes a key. Native tests pin that limit.
+
+The existing JSON nodes and raw function calls preserve these operations without app-side
+JSON evaluation or new AST classes. Cross-target execution refuses unverified same-name
+translations in either direction; previews carry a finding instead of claiming equivalence.
+
+DuckDB VARIANT retains its own binary-value semantics, not JSON text semantics. Static contracts
+cover the documented variant functions and scalar/list-path return dimensions. Extracted fields
+remain nullable, computed VARIANT values; no object-field inventory or embedded SQL type is
+invented. Qualification preserves case-sensitive VARIANT fields and one-based bracket indexes,
+including when the input's type becomes known only from schema facts. Existing native casts,
+DDL, COPY/shredding options, copy and serde remain structured. Cross-target execution refuses
+unproved translations of VARIANT types and functions.
+
+Native tests distinguish VARCHAR-to-VARIANT from JSON-to-VARIANT, missing fields from VARIANT
+nulls, numeric equality from string equality, and literal extraction fields from JSONPath.
+They also verify checkpoint/reopen with shredding enabled and default/explicitly shredded
+Parquet round trips. `variant_group_array` is a macro with aggregate behavior, but native 2.0
+rejects ORDER BY/DISTINCT/FILTER inside that call; ordered input is a separate operation.
+These result tests do not add a JDBC nested-VARIANT reader or promise another engine's semantics.
+
+DuckDB `$name` is a named prepared parameter with an optional session-variable default. It
+must not be rewritten to `getvariable('name')`: an unset `$name` errors, while `getvariable`
+returns SQL NULL. Explicit EXECUTE arguments take precedence; omitted names use the current
+session values at execution time. Numeric `$1`, quoted numeric `$"1"` and anonymous `?` do not
+use that fallback. SET VARIABLE is session state, not SET GLOBAL configuration.
+
+PREPARE bodies, EXECUTE arguments, DEALLOCATE and RESET VARIABLE are structured ASTs. Parameter
+discovery sees the prepared body without preparing it. PREPARE/EXECUTE statement result shapes
+and lineage are not inferred from a nested query body. The legacy unquoted-dollar Placeholder
+shape stays serde-compatible, while quoted dollar names retain their quotes. Exact authored
+occurrences and `SqlFragment.scalarParams` classify dollar parameters as engine sigils, not IDE
+colon substitutions. `duckdbSessionDefaultCandidates(sql)` reports eligible names only; it does
+not prove a variable exists, read its value/type, resolve it, or require a bind prompt. Existing
+editor colon discovery/masking leaves dollar names, dollar-quoted strings and numeric binds alone.
+Cross-target execution refuses unproved variable/default and session-statement translations;
+ordinary authored `:client` substitutions keep their existing translation path.
+
+SQL EXECUTE fallback and JDBC PreparedStatement binding are separate contracts. With the pinned
+2.0.0.0 driver, a direct unbound JDBC named statement reports a parameter-count mismatch, and
+index-based binding is not a named-argument override. Use the client's supported binding API;
+the library adds no retry or driver workaround. JDBC duplicate copies current session variables
+at creation, but later changes remain local. Native tests also prove PREPARE/editor analysis do
+not run writes and that each deliberate EXECUTE runs once with its current defaults.
+
+DuckDB recursive `USING KEY` accepts aggregate payload expressions and explicit destination
+aliases. Plain keys keep their existing Identifier serde shape. The documented `TABLE cte`
+query shorthand renders as `SELECT * FROM cte`. Analysis uses separate contracts for raw
+candidate rows, finalized `recurring.cte` state and the final result. `UNION ALL` feeds raw
+candidates to the next iteration; `UNION` feeds only new/changed finalized rows, with aggregate
+result types. The aggregate arguments themselves read the raw anchor-column contract.
+
+Scopes/completion expose the CTE's declared aliases in each stage. Known aggregate families
+provide final AVG, promoted SUM, COUNT, MIN/MAX, LIST and string-result types; unmodeled
+overloads stay unknown instead of borrowing seed types. The final row is computed, not direct
+seed-value provenance. `recurring.cte` is recognized only in its recursive member and is not
+reported as a physical input. Shape inference reads these contracts without evaluating a
+fixed point. Generic SELECT qualification/type rewrites, lineage and unproved cross-target
+execution refuse keyed aggregate-state transformations; ordinary recursive CTE paths remain.
+
+Native tests cover aggregate output types and aliases, frozen recurring snapshots, UNION versus
+ALL work, a convergent cyclic shortest-path graph and final-state draining without another
+recursive build. Error controls retain native restrictions on aggregate modifiers and key/
+payload targets. The probes are bounded or use native keyed convergence and have query deadlines;
+the library does not prove termination, emulate recursion, or add an app-side materialization rule.
+
+DuckDB CONNECT/DISCONNECT remain session-routing statements, not ATTACH/USE rewrites or query
+outputs. CONNECT accepts an attached catalog name or a literal connection string; options are
+allowed only for strings, using whitespace separators. PostgreSQL/MySQL strings are preserved
+as opaque data. Bare CONNECT and CONNECT LOCAL are parsed native forms but are not implemented
+in pinned 2.0, so executable generation refuses them. A quoted catalog named "LOCAL" is different.
+Other targets get explicit routing refusals, not an invented portable connection operation.
+
+Authored connection strings/options remain in AST, serde and emitted SQL and must be handled as
+sensitive data. DuckDB parser/editor-wrapper/verifier diagnostics redact routing details without
+altering those values. Low-level token/AST dumps and native execution exceptions are not a safe
+logging channel. Routing verification never prepares/binds options, even in the trusted corpus
+oracle; its non-SELECT parse-only limitation remains Unverified. Analysis does not acquire a
+backend, evaluate option expressions, change a user's source connection or reconnect anything.
+
+Native loopback Quack tests cover named versus ephemeral routing, local/remote session state,
+return to local scope, reconnect persistence, forwarded errors and cleanup after authentication
+failure. The fixture uses a random token/port, disables extension auto-install/load and secret
+creation, retains signature verification, and stops its own server. It does not certify live
+PostgreSQL/MySQL deployments or promise an explicit catalog name escapes an active remote route.
+Run that optional fixture with `BRIKK_DUCKDB_QUACK_EXTENSION` set to a signed v2.0.0 file named
+`quack.duckdb_extension`, plus matching httpfs already available. Tests never install it into the
+user's extension store. Without this explicit dependency the new loopback test reports a skip.
+
+DuckDB 2.0 trigger definitions keep one inline INSERT/UPDATE/DELETE/MERGE action. Grammar
+checks do not substitute PostgreSQL EXECUTE FUNCTION, multi-event or WHEN syntax. Qualified
+DROP TRIGGER targets retain the required attached-table identity. Native single-statement
+trigger bodies have script boundaries; compound BEGIN/END bodies remain refused.
+
+Definition scopes/completion expose target fields for UPDATE OF, NEW for supported AFTER INSERT
+row triggers, OLD for AFTER DELETE row triggers, and explicit OLD/NEW TABLE aliases for supported
+AFTER statement triggers. Image columns have target types but computed provenance. Those aliases
+are local to the action and are not physical input tables. Trigger DDL has no body-result shape
+or lineage; SELECT optimizer/type rewrites and unproved cross-target DDL explicitly refuse it.
+Known unsupported timing, granularity, transition and temporary forms also refuse executable
+generation. Native binding still decides schema-dependent validity, dependencies and catalog state.
+
+Native tests verify trigger order, BEFORE/AFTER state, empty statement input, per-row duplicates,
+UPDATE OF, transition audits, outer RETURNING/generated columns, MERGE bodies and rollback.
+MERGE can be an action, including against the trigger's own table; top-level MERGE against a
+trigger-bearing table is a separate unsupported path. Runtime controls pin row RETURNING,
+mixed granularity, row UPDATE/generated/cascading restrictions and dependency/drop behavior.
+Analysis and parse-only verification neither register nor run a definition. No application-side
+trigger execution, mutation retry, or new JDBC result interpretation is introduced.
+
+DuckDB 2.0 SECURE VIEW definitions retain their marker through copying, serde, qualification
+of a non-recursive authored body, catalog definition reads and SQL regeneration. Native tests
+cover filtered results, aliases, replacement/existence/temporary forms, recursive views,
+checkpoint/reopen and database export/import. Secure recursive view syntax has a dedicated
+modifier. The explicit PERSISTENT keyword is rejected for views by native 2.0, even though
+its shared CREATE grammar contains it; omitting TEMP already gives a persistent view.
+Recursive self-reference scope, dependency inventory and optimizer qualification/type rewriting
+are not modeled and explicitly refuse. DDL itself has no query-result shape or lineage. A
+non-recursive authored body can be analyzed separately, but row-contract catalogs do not encode access policy or permission
+to inline a stored view. Unproved cross-target SECURE VIEW translations refuse execution,
+even when another engine uses the same keyword, rather than silently emitting an ordinary view.
+
+SECURE hides internal query plans and statistics for rows hidden by the view. It does not
+encrypt the definition: `duckdb_views()` and `information_schema.views` still report SQL,
+and the definition reader deliberately preserves that SQL and its SECURE marker. An unfiltered
+view may expose statistics about values its caller can already read. Native controls pin
+logical/physical/ANALYZE/JSON plan hiding, filtered-statistics suppression, visible-only outer
+predicate evaluation and SQL-plan export retaining the view reference. This is not a claim of
+general authorization, definition secrecy, timing-side-channel protection or a ban on safe
+predicate pushdown. Persistent secure views require native storage format v2.0.0 or newer;
+older storage fails instead of downgrading the view. Temporary secure views remain possible.
+
+DuckDB 2.0 extension repositories are structured statements, including CREATE/OR REPLACE/
+IF NOT EXISTS, literal PREFIX and PUBLIC KEY(S), and DROP/IF EXISTS. INSTALL AND LOAD,
+INSTALL VERSION, explicit LOAD FROM and LOAD AS retain their operands. Simple INSTALL keeps
+its earlier AST/serde shape. Prefixes, URLs and multiline key bytes remain authored data;
+analysis does not normalize keys, resolve repository names, fetch metadata, install/load code
+or change grammar activation. Parser/editor/verifier diagnostics redact repository details;
+AST/serde/emitted SQL and raw native execution exceptions are still sensitive logging channels.
+
+The spelling of FROM is significant. A repository identifier and a string are not interchangeable:
+for a custom repository, INSTALL AND LOAD FROM 'name' can install successfully and then fail
+to load because the load step loses the repository selection. That partial installation is
+not rolled back, and the library never retries it or rewrites the string into an identifier.
+Repository selection is separate from a grammar profile, and registration does not load a module.
+
+CREATE returns repository_name VARCHAR, prefix VARCHAR and key_fingerprints VARCHAR[]. Those
+are native runtime management results, with computed provenance, not table-column lineage.
+Other extension-management statements have no query output shape. SELECT qualification and
+type rewrites of new management nodes refuse; simple INSTALL keeps its earlier literal-annotation
+contract. Unproved cross-target execution refuses. All verifier channels stay
+parse-only for management, including the trusted corpus oracle; unsupported non-SELECT
+serialization remains Unverified instead of preparing/binding or manufacturing acceptance.
+
+Native tests cover pinned fingerprints, PEM/key rotation, metadata fetched only at explicit
+execution, stored trust across instances, runtime policy tightening and configuration locks.
+The optional signed-binary fixture also tests private repository installs, bare-load isolation,
+string-versus-identifier partial success, wrong-key/origin failures and fresh-session loading
+after key changes or forbidden trust. It does not promise to unload already-resident code.
+Run it with BRIKK_DUCKDB_REPOSITORY_EXTENSION set to a trusted matching v2.0.0 file named
+inet.duckdb_extension. The fixture re-signs a scratch copy with ephemeral RSA keys, registers
+only a private trust directory and installs only into a private extension directory. Signature
+checks remain enabled, auto-install/autoload are disabled, and the source binary is untouched.
+No network repository or user's trust/extension store is used. Without the explicit dependency,
+the signed-binary tests report skips rather than substituting unsigned or unrelated evidence.
+
+DuckDB 2.0 external-resource syntax is structured: CREATE, REGISTER ... FROM <handle>, DESTROY,
+SHOW [ALL], ATTACH TO and CONNECT TO, including NEW TEMPORARY sources. Provider/type strings,
+resource identifiers, handle expressions and option values remain authored data. Creation options
+belong to the resource source; attachment/connection options are a different bag. ATTACH requires
+an AS alias between its bags. CONNECT to a newly provisioned temporary source cannot take a
+second option bag. CREATE/REGISTER without a name can be parsed but executable generation
+refuses the known native binder error instead of inventing a name or changing ownership.
+
+Ordinary SHOW lists the instance's registrations; SHOW ALL invokes native discovery callbacks.
+Both have a fixed eight-column runtime contract with computed provenance, nullable discovery
+fields and an opaque MAP(VARCHAR, VARCHAR) handle, not a guessed provider-specific schema.
+The other management statements expose no query output shape. SELECT qualification/type
+rewrites, lifecycle lineage, handle-subquery dependency inference and unproved cross-target
+execution refuse rather than treating resources as physical tables or inlining their callbacks.
+
+All verifier channels stay parse-only for this syntax and recognizable resource API calls,
+including the trusted corpus oracle. Neither SHOW ALL nor EXPLAIN/prepare is a validation
+fallback: binding options/handles can evaluate expressions, and discovery can call providers.
+Pinned native controls show bind-time sequence effects; autocommit JDBC prepare can also hit
+DuckDB 2.0's internal read-only-transaction error. That error is isolated in a test, with no
+production retry, transaction workaround, lifecycle emulation or change to a user's session.
+Parser/editor/verifier diagnostics redact resource details. AST/serde/generated SQL, native
+execution errors and native listing rows can still contain sensitive handles/URIs and tokens.
+
+Native execution tests use only SQL mock recipes, sequences and owned scratch DuckDB files.
+They cover CREATE versus REGISTER callback counts, quoted names, local versus discovery lists,
+borrowed versus owned attachment cleanup, post-provision failure cleanup, option collisions,
+failed DESTROY retaining registration and explicit repair. CONNECT cleanup is tested against
+the local backend's unsupported-routing error, not a live provider connection. No cloud resource,
+provider extension, remote service, installation, or user's database/resource is touched. These
+tests do not certify provider APIs, billing, polling deadlines or general teardown reliability.
+No dedicated public DuckDB 2.0 documentation page was found for this syntax; the grammar and
+runtime contracts are pinned to native source/tests, and metadata deliberately invents no URL.
+
+DuckDB EXPLAIN has a structured wrapper and ordered option nodes for SQL, FORMAT and ANALYZE,
+with its child statement retained through copy/serde/generation. The lexer keeps EXPLAIN tails
+tokenized, so parameter intervals and authored bind order remain available. Prefix ANALYSE and
+the unquoted ANALYSE option canonicalize to ANALYZE without turning the option into a quoted
+identifier. Invalid option combinations remain inspectable but refuse executable generation;
+unmodeled renderer names, CLI-only WEB and unresolved bindings in ignored ANALYZE arguments
+also refuse. Child statement families still represented by a raw command are preserved for
+inspection, not certified for execution, dependency inference or parameter binding.
+
+ANALYZE's presence enables execution. In native 2.0, even ANALYZE false or ANALYZE 0 executes
+the child; its argument is not a boolean switch and expressions in it are ignored. Repeated
+ANALYZE options do not execute the child repeatedly. SQL occurs once without arguments and
+cannot combine with ANALYZE or FORMAT. FORMAT accepts supported constant names, identifiers
+and DEFAULT, not an arbitrary evaluated expression. Context-specific renderer lookup is not
+emulated by the library, and no browser or renderer UI is launched.
+
+EXPLAIN always returns explain_key VARCHAR and explain_value VARCHAR, including SQL export,
+JSON formatting and ANALYZE; it does not expose the child's row shape or a typed JSON value.
+Child column scopes can be inspected separately from option names, and source inventory uses
+the child. Plan text has computed provenance, not child-result lineage. Automatic wrapper
+qualification/type rewrites and unproved cross-target option/plan translation explicitly refuse.
+
+Native tests distinguish SQL export, plan generation, binding effects and child execution.
+SQL mode exports native optimized SQL without executing the child, but binding range(nextval())
+still advances a sequence. Explicit execution of exported DML is a separate operation; ANALYZE
+executes DML/COPY itself. Neither EXPLAIN nor EXPLAIN SQL is an editor-validation fallback.
+All verifiers remain parse-only for EXPLAIN, with transformer/renderer limitations left
+Unverified rather than binder-based acceptance or a false parser rejection. The existing
+DuckDB text-EXPLAIN editor action remains refused. Tests use owned memory tables, sequences
+and scratch output files; generated SQL/plan text can be sensitive and is not sanitized output.
+
+DuckDB 2.0 OVERLAY accepts either `OVERLAY(string PLACING replacement FROM start [FOR count])`
+or three/four comma-separated positional arguments. Both use the existing Overlay node and
+may regenerate in keyword form. Mixing the two forms is rejected. Bare OVERLAY's special
+grammar rejects named arguments; the quoted ordinary call `"overlay"(...)` accepts them and
+retains its quoted name and authored argument order. Invalid arities stay inspectable without
+losing arguments, but their typing stays unknown and executable generation refuses them.
+
+Successful builtin calls return VARCHAR even when the source is SQL NULL. NULL in any present
+operand propagates; omitted count is distinct from an explicit NULL count. An omitted or
+negative count uses the replacement's Unicode code-point length, zero inserts without removal,
+and starts beyond the source append. Zero/negative starts are accepted and affect the removed
+span, e.g. `overlay('abcdef','XY',0,2)` returns `XYbcdef`, not `XYcdef`. Native tests pin BIGINT
+boundaries, multibyte characters, combining marks and emoji: this is neither byte nor grapheme
+indexing, and the library does not normalize Unicode or emulate the operation with substrings.
+
+Scopes/shapes use the fixed string return type and all present operands' NULL contracts, with
+computed provenance; column lineage/completion still inspect the arguments. Qualified UDFs
+remain ordinary calls with unknown builtin contracts. Unproved DuckDB-to-other-engine and
+reverse same-name translations refuse execution. No generated catalog/corpus is refreshed:
+tests compare the two captured 2.0 overloads with the real engine and confirm absence from 1.5.6.
+The omitted default count is never expanded into a second replacement expression; native
+sequence and prepared-binding controls prove no duplicated evaluation or reordered binds.
+
+DuckDB 2.0 COPY layout options use the native `PARTITION_BY` and `ORDER_BY` names.
+`PARTITION_BY (region, day)` selects output columns; compute a new partition key in the
+source SELECT and refer to its output alias rather than treating `PARTITION_BY` as a
+row-expression clause. `ORDER_BY (abs(value) DESC NULLS LAST, id ASC)` has structured
+ordering terms. It can appear alone or with partitioning, in either option order. The
+parser retains option order, expression order, explicit direction and NULL ordering.
+Omitted ordering defaults remain omitted, so DuckDB resolves them in the executing session.
+Copy/CopyParameter/Tuple/Ordered are existing AST nodes; no new public AST shape is needed.
+
+Native tests inspect physical file rows for Parquet and CSV, multiple partition columns,
+projected aliases, NULL keys, collations and explicit WRITE_PARTITION_COLUMNS. In DuckDB
+2.0, ORDER_BY alone creates an output directory even when its name ends in `.parquet` or
+`.csv`. Partitioned output is sorted within each physical file, including parallel writes
+and file rotation; the library does not promise an order across files or stable ties.
+Neither options nor source expressions are evaluated by static analysis or native
+parse-only validation. Prepared native controls include source, destination and ordering
+parameters and repeated executions. Sequence controls pin once-per-row source evaluation
+and the native plan's twice-per-row volatile sort-key evaluation. The library preserves
+that behavior; it does not promise exactly-once ORDER_BY evaluation or expand sort keys.
+
+Symbolic scopes and completion bind ordinary layout columns/ordering expressions against
+the COPY output row, not the source SELECT's FROM namespace. CTE results remain the COPY
+Count/Files/statistics contract rather than the exported row. Textual ordering SQL and
+dynamic or qualified partition-column lists can round-trip to native execution, but their symbolic
+scope explicitly refuses rather than inventing references. Automatic qualification and
+cross-target layout execution also refuse. Native binder controls distinguish missing
+columns, qualified source names, ordinal constants, unsupported partition expressions and
+ORDER_BY subqueries from syntax errors. Empty ORDER_BY is refused statically; native COPY
+first parses it, then its order-list parser rejects it during binding. COPY itself cannot
+be serialized by json_serialize_sql, so parse-only verifier success is not a binding check.
+DuckDB 2.0 `PARTITION_PATH` retains a scalar expression in the COPY option bag, including
+CASE, function calls and parenthesized expressions. It binds only to unqualified PARTITION_BY
+output columns. Scope completion offers that subset, not every exported column or the source
+SELECT's table namespace. Known aggregates, windows, subqueries, lambdas and qualified column
+references explicitly refuse symbolic scope. Automatic qualification, exported-row lineage
+and unverified cross-target layout execution remain refused. COPY result contracts are still
+Count/Files/statistics. Static analysis and parse-only verification never evaluate the path.
+
+Native controls pin the requirement for PARTITION_BY and the incompatibility with an explicitly
+specified HIVE_FILE_PATTERN, even false. Non-string path results cast natively to VARCHAR.
+Runtime paths must be non-NULL, nonempty after removing empty/dot components, relative to the
+target and free of `..` components. Different partitions cannot share a normalized directory;
+one partition's directory may contain another partition's directory. The library does not
+normalize authored paths, precompute names, provision resources, retry COPY or emulate rollback.
+A runtime failure can follow earlier partition writes. Tests use only isolated local targets.
+
+The bundled metadata already captures `hive_partition_component(VARCHAR, ANY) -> VARCHAR`
+and variadic `path_join(VARCHAR, ...) -> VARCHAR`; generated catalogs are unchanged. The first
+helper encodes both names and values, maps NULL values to `__HIVE_DEFAULT_PARTITION__`, and
+escapes a literal marker value to avoid a collision. Even a NULL name becomes the text `NULL`,
+so successful modeled calls are non-null strings. `path_join` propagates any SQL NULL and
+normalizes its components, unlike the raw PARTITION_PATH expression's directory validation.
+No URL-encoding or host-language path-join substitute is emitted. Qualified same-name UDFs
+retain unknown contracts, and unproved helper translations refuse in both directions.
+Native file controls cover Hive-equivalent escaping, Parquet/CSV/JSON output, nested/prefix
+directories, row sorting, rotation, prepared bindings, repeated executions and per-partition
+volatile path evaluation. No global file order or filesystem-independent helper semantics are
+certified.
+Empty sources have no partitions and do not evaluate even an otherwise invalid path expression.
+The pinned JDBC driver reports the tested empty COPY CTE as update count zero despite its
+outer SELECT. Tests use execute once, not executeQuery followed by a retry; no production
+classification workaround is added.
+
+DuckDB 2.0 `SHOW name` retains its authored SHOW operation and name quoting. It is not a
+DESCRIBE rewrite: `show_behavior='auto'` prefers a matching table, then a setting; `table`
+and `setting` restrict resolution. Qualified names cannot resolve to settings. SHOW of
+tables/views/queries is deprecated in 2.0 in favor of DESCRIBE; a parenthesized query still
+describes its columns regardless of show_behavior. Existing SHOW TABLES/ALL TABLES and
+other legacy command forms retain their previous representation. Symbolic analysis does
+not guess a setting/table result shape or pretend that described-query rows are returned.
+Qualification, result lineage, source dependencies and unproved cross-target SHOW execution
+refuse. Native controls compare modes, collisions, quoted/case-insensitive names, error
+classes, prepared execution and parse-only validation without binding the described query.
+Native prepared SHOW captures its setting value at bind time; a newly executed SHOW sees a
+later SET, but an existing prepared SHOW retains its earlier value. No auto-reprepare or retry
+is added to manufacture a fresh value.
+
+DuckDB 2.0 `setval(sequence_name, value [, is_called])` retains its two/three-argument
+native call. Successful modeled calls return BIGINT and propagate any supplied SQL NULL;
+an omitted is_called defaults natively to true, not NULL. Static shapes use only those
+declarative facts. The library never resolves or invokes a sequence to analyze a fragment.
+Automatic qualification and sequence-state lineage refuse, avoiding volatile alias expansion
+or fictitious state dependencies. Same-name cross-target execution is unproved and refuses.
+Native controls pin default/false nextval behavior, currval, positive/negative increments,
+bounds, NULL calls without mutation, ordered prepared bindings and exactly-once operands.
+Sequence mutations survive ROLLBACK; no compensation/retry is added. Catalog sequence state
+and currval are shared by duplicate connections in the pinned engine, not PostgreSQL-style
+session-local currval. Native parser-only checks do not bind range(setval(...)) or run it.
+
+DuckDB 2.0 regex extraction keeps the third-argument VARCHAR options overload separate
+from numeric groups and name lists. Native same-dialect extraction/replacement generation
+preserves authored options, including invalid options that must still raise native errors;
+it does not strip `e`, restrict flags to another engine's subset, expand default groups or
+drop wrong-arity operands. Native calls retain RE2 replacement/backreference behavior and
+first versus global replacement. New options/name-list or named-role cross-target mappings
+refuse; existing ordinary mappings are not broadened.
+
+Native scope/shape typing reports VARCHAR, VARCHAR[], STRUCT of VARCHAR fields or a list
+of those structs from a valid constant name list. Dynamic/unmodeled name lists/signatures
+stay unknown. The SQLGlot-faithful annotation corpus is unchanged: native shape evidence is
+applied separately. Captured registry return types are nominal VARCHAR/VARCHAR[], while
+portable shape rendering uses the equivalent canonical TEXT spelling.
+Name-list binding changes the actual result type. Scalar missing captures yield empty
+strings; unmatched optional groups in extract_all structs are SQL NULL. Scalar NULL group
+yields an empty string, while extract_all NULL group yields NULL. Options can fail binding
+rather than propagate NULL. Patterns, groups, flags and name-list validity remain native
+binding checks; no host regex engine or invented capture schema is used.
+
+### Native corpus acceptance audits
+
+Static DuckDB analysis models ordinary `dialect_compatibility_mode=NONE`, not arbitrary
+connection modes. Spark compatibility can change lambda indices and filter results while
+the SQL parse tree and active grammar list stay identical. A fresh helper with copied grammar
+is therefore not semantic-session parity. No mode is inferred, replayed or silently installed
+by static analysis; exact matching-helper support remains separately deferred.
+
+Secret SQL retains its explicit opaque same-target contract. Native 2.0 distinguishes
+instance-shared memory storage from owner-only `IN connection` storage. The secret audit
+uses synthetic HTTP configuration only; it neither harvests credentials into metadata nor
+contacts providers. The internal TRANSACTION persist type does not establish a supported
+`CREATE TRANSACTION SECRET` SQL form.
+
+DuckDB reader identifiers are not filename literals. Parsing preserves bare and quoted
+identifiers and string arguments as distinct nodes. The native connection's deprecated
+identifier-conversion policy decides binding; editor parsing neither infers that policy nor
+rewrites identifiers into paths. The focused conversion tests read only a private local CSV.
+
+Native `ANALYSE` and `ANALYZE` use the same structured statistics AST, including target
+column lists. Generation uses `ANALYZE`. EXPLAIN retains its existing structured handling;
+VACUUM keeps its flagged raw-passthrough contract. Native acceptance does not make statistics
+statements bind-free executable editor checks or establish cross-target statistics semantics.
+
+Native parsing supports `SET SCHEMA 'name'` as a structured session assignment and preserves
+the quoted namespace string. Execution still decides whether it exists. DuckDB 2.0 rejects
+nested current namespaces; a schema whose literal name contains a dot is a different case.
+IDE readback uses the existing top-level catalog/schema strategy without splitting that name.
+
+Java UDF calls parse without an installed implementation or argument binding. JDBC 2.0.0.0
+registrations are database-instance-owned: duplicate connections share them, unrelated memory
+instances do not. They report `system.main` and `internal=true`, so those fields alone do not
+prove builtin or persistent ownership. An application that registers functions must keep its
+registration-owned rows out of shared disk inventories; the existing session overlay can hold
+them without persistence. This audit does not add a registration registry or claim that a fresh
+helper reaches the same in-memory instance. Static bundled metadata never learns application UDFs.
+
+The bounded semantic supplement is `vendor/data/duckdb-2.0-bounded-semantic-refresh.json`.
+It records exact DuckDB/Trino/Doris/ClickHouse versions, 44 literal executions and scoped
+comparisons without rewriting older hazard records. SQL-NULL flags are separate from text
+projections, and Doris wire types are not promoted into guessed logical types. Same observed
+projection is not general JSON/VARIANT/regex equivalence or pushdown qualification. Replay
+offline with `tools/duckdb_semantic_audit.py --replay ... --output ...`. Trino 484 evidence
+does not qualify the separate Trino 483 REGEXP_COUNT handoff.
+
+Native typing now preserves binom's HUGEINT result, decimal_average's exact DECIMAL(p,s),
+vertex_extract's DOUBLE and LTTB's typed struct-array fields for proved signatures. The same
+facts reach derived-column completion. Unknown inputs, qualified UDF names, lambda/macro
+ANY results and engine-bound aggregate states stay unknown; type facts do not certify value
+validity, NULL behavior or foreign execution. Historical annotation parity is unchanged.
+
+`DUCKDB_FUNCTION_PROPERTIES` exposes exact built-in registry observations separately from
+the published function-row schema. Alias/stability/side-effect fields do not prove NULL
+handling, argument defaults, named roles or a table output schema. Arbitrary `colN` names
+and same-named UDFs no longer establish reader argument roles. Only the reviewed internal
+reader set retains its verified one-positional boundary. Live settings `typed_value` is
+connection data and is deliberately absent from static snapshots.
+
+Future metadata captures use private extension, secret and temp directories. Core captures
+disable external access; extension captures require `BRIKK_DUCKDB_CAPTURE_EXTENSIONS` to
+name a reviewed TSV with `extension`, absolute local `path` and `sha256` columns. They only
+LOAD signed matching local fixtures, never INSTALL/download or merge old rows. Runtime
+engine/JAR/extension provenance is written separately, including static and zero-row cases.
+No provider is queried. Historical captures keep their actual evidence and are not relabeled
+as fresh merely because an extension version string changed.
+
+`vendor/data/duckdb-2.0-release-triage.json` records every one of the final release body's
+837 PR-title entries, its source body/hash and explicit disposition/owner. Reproduce it
+offline with `tools/duckdb_release_audit.py`. The artifact distinguishes title triage from
+implemented syntax, native result evidence and remaining metadata/type/client work. A
+changed release body requires review, not automatic new ledger entries or release approval.
+
+Executable safety checks cover 43 reviewed native feature families against every other
+registered target profile. New refusals include unqualified MERGE/session/storage behavior,
+bare-NULL CTAS storage types, deep names, regex option flags and temporal boundary/result
+types. Incoming array semantics, Unicode escape strings, custom Base64 alphabets and
+SQL/JSON constructor options require proof rather than same-name rendering.
+
+Two same-target historical renderings are deliberately non-executable: fractional interval
+strings can lose their fraction when split into value/unit syntax, and extra JSON paths
+can disappear. Native counterexamples test both. Ordinary constant SQL, native typed binds
+and the existing qualified same-target features remain available. This refusal matrix is
+not a blanket certification of all SQL or any unrun foreign engine; historical generator
+parity and the remaining type/precision/hazard audits are separate.
+
+The upstream reconciliation is pinned in `vendor/data/duckdb-sqlglot-2.0-audit.json` and
+reproduced by `tools/duckdb_sqlglot_audit.py` using two explicit clean reference checkouts.
+It does not refresh the historical SQLGlot corpus. The SORT BY lexical fix is ported only
+to native mode, so `INSERT INTO s.sort BY NAME ...` works without changing parity tokens.
+Other upstream semantics keep explicit qualification/refusal or follow-up dispositions;
+upstream parsing alone does not replace Brikk's richer native execution contracts.
+
+DuckDB grammar metadata distinguishes registry membership, supported invocation and parse
+acceptance. IF is registered as a macro; COALESCE/GROUPING/GROUPING_ID remain grammar-only.
+POSITION uses its unqualified IN form, not comma arguments. Bare timestamp/time names are
+supported built-ins even though their parenthesized generic calls parse and fail catalog
+resolution. GROUPING calls require grouped binding. These distinctions are native-tested
+and do not turn editor parse checks into bind/execute validation.
+
+Editor parse-only input has a budget of 1,048,576 UTF-16 units and 256 levels of structural
+or nested-comment depth. Quotes, comments and dollar strings do not consume structural
+depth. NUL and malformed UTF-16 refuse before native submission. Budget or engine resource
+limits are unverified. Malformed parser responses, responses over 8,388,608 units or 256
+JSON nesting levels, helper failure, deadline and exhausted capacity are unavailable.
+None is acceptance or a reason to prepare, reconnect or retry user SQL.
+
+Connection-backed verification polls cancellation and shares at most two helper workers
+and two cancellation workers per classloader. A driver that ignores interruption/cancel
+can occupy those workers, but cannot cause an unbounded thread backlog. The caller still
+returns at its deadline. Crash containment requires an out-of-process helper, as used by
+the IntelliJ remote-statement adapter. The embedded `ParseOnlyDuckdbVerifier` remains
+synchronous JNI; input limits do not make it crash-isolated or give it a deadline.
+
+PEG differential controls check aliases, FROM-first, pivot, ALL grouping/ordering, stars,
+arrows/lambdas, join forms, parentheses and each bind-marker family through copy/serde and
+executable generation. Native parse acceptance is kept separate from binding and results.
+In particular, `json -> 'x' = 2` and `(json -> 'x') = 2` have different native trees. Old
+lambda arrows parse but fail binding under the default 2.0 policy; compatibility-mode
+result tests explicitly opt in on their own scratch connection. No user's policy changes.
+
+The parse-only acceptance comparison runs 1.5.6 and 2.0 in separate restricted child JVMs.
+It records runtime/source/JDBC IDs, JDBC hashes, effective settings and each input's origin.
+Parser, expected generator text, tokenizer and serde fixture SQL are checked as authored
+statements. Standalone expression SQL is not silently wrapped and counted as statement
+acceptance. Non-SELECT serialization, transformer errors and transport failures remain
+unverified/unavailable. The comparison never prepares or executes corpus input.
+
+`DuckdbAcceptanceComparisonTest` requires the trusted `BRIKK_DUCKDB_OLD_JDBC` fixture.
+Its report is `build/duckdb-parser-audit/acceptance-comparison.json`. Changes fail against a
+reviewed acceptance fingerprint, independent of the historical SQLGlot parity ledgers.
+The report is syntax evidence, not result, typing, scope or plugin integration evidence.
+
+`DuckdbNativeCorpusCoverageTest` inventories every JSON corpus resource. It checks actual
+DuckDB emissions from registered-source identities, serde and annotated dumps, every
+DuckDB-target transpile direction and its SQL expectations, plus base/DuckDB lexical and
+analysis SQL. Expression-shaped roots use a separately labeled SELECT wrapper. Unsupported
+generation, warnings, opaque commands, native rejection and non-SELECT serialization each
+keep their own classification. Foreign-only scanner/token and historical result evidence
+are inventoried without being relabeled as DuckDB syntax tests.
+
+The full report is `build/duckdb-parser-audit/native-coverage.json`. Its reviewed inventory
+and outcome fingerprints detect dropped or changed cases. They do not waive a parity
+mismatch or certify that a syntax-accepted transpilation preserves behavior.
+
+### Storage compatibility and private fixtures
+
+New DuckDB 2.0 files use format 69, with symbolic default storage compatibility `latest`.
+DuckDB 1.5.6 cannot read that format. Existing files retain their compatibility unless
+explicitly changed; selecting a newer write target does not prove a forced physical-format
+rewrite of old-readable contents. The library preserves ATTACH STORAGE_VERSION and
+storage_compatibility_version settings; it never opens, migrates, repairs or downgrades a
+database as part of parsing/generation.
+
+Native storage controls create only private scratch databases. The 2.0 JDBC engine runs in
+the normal test JVM; 1.5.6 runs in separate child JVMs with its exact runtime/source pin.
+Readonly compatibility failures must leave file hashes unchanged. Explicit v1.5.0-compatible
+INTEGER fixtures remain old-readable, and an old-created file retains its version after a
+2.0 write/checkpoint. A latest write target is tested only on a scratch copy; INTEGER-only
+contents can stay old-readable, and the original stays untouched. Those selected types do
+not certify every newer feature for older files. Native qualified CHECKPOINT is retained
+as opaque command text, not rewritten as a query alias; its raw status and unmodeled bind/
+cross-target boundaries remain explicit.
+No checked-in/user database or consumer dependency pin is modified by these tests.
+
+### S3 URL query text and diagnostic privacy
+
+DuckDB 2.0 treats the question mark and following URL text as part of an S3 object key by
+default. Only the explicitly enabled, deprecated s3_enable_deprecated_url_parameters mode
+interprets legacy options there. The library preserves authored URL bytes and never strips,
+decodes or reinterprets the query text, changes the setting or counts literal `?` as a bind.
+Prefer secrets rather than embedding credentials in URLs.
+The unset extension option reports SQL NULL in its getter; its literal-key behavior is
+proved by actual requests, not by coercing every unknown setting value to false.
+
+S3/signed-URL source or native error context is conservatively omitted from diagnostics;
+authorized AST/serde/executable payloads remain intact. Parse error locations remain usable
+without source-context snippets. Native HTTPFS tests check actual encoded object paths in
+both modes against a private loopback fixture with temporary synthetic credentials. They
+never contact a real provider or record Authorization headers, and parse-only verification
+makes no request. HTTPFS must be explicitly provided for those native controls; no extension
+installation or unrequested connection-policy change is performed.
+
+### Settings and profiling migrations
+
+The 2.0 settings inventory drops custom_profiling_settings, enable_http_logging and
+http_logging_output. Use native tracked_metrics globs and enable_logging('HTTP') rather
+than treating old JSON/HTTP settings as automatic aliases. Historical metadata stays
+versioned. profiling_mode is a deprecated compatibility setter, absent from the ordinary
+inventory: its standard/detailed/all choices behave alike, but SET still enables profiling
+and rejects unknown names. It is not a harmless no-op.
+
+No-output profiling and memory-only HTTP logging controls pin the CALL forms without
+provider/file I/O. Async/read-ahead setting boundaries and native PRAGMA/EXPLAIN renderer
+forms are audited without implementing those engines. Input metadata does not promise the
+type of a live current_setting getter; enable_logging, for example, accepts BOOLEAN while
+its current getter is INTEGER. No current connection values become universal defaults.
+These syntax/result controls do not authorize editor EXPLAIN or prepare/bind validation.
+
+### Native zone, calendar and collation contracts
+
+DuckDB 2.0 zone/calendar/collation behavior is checked against the pinned native engine,
+not a host ICU or Java timezone substitute. Controls include DST gaps/overlaps, half-hour
+changes, a skipped civil date, historical offsets, multiple calendars for one instant,
+locale ordering and collations propagated through list elements and list_contains/position.
+Invalid names remain native errors; analysis never loads an extension or contacts a provider.
+
+Native AT TIME ZONE facts distinguish microsecond TIMESTAMPTZ from named TIMESTAMPTZ_NS.
+DATE and TIMESTAMP_NS attachment yield TIMESTAMPTZ_NS; ordinary TIMESTAMP attachment yields
+TIMESTAMPTZ. Removing a zone from those types yields TIMESTAMP_NS/TIMESTAMP respectively.
+Nanosecond digits and argument order survive generation and serde. Broader type-literal and
+conversion work remains DDB20-077. Executable outgoing AT TIME ZONE/COLLATE/named-NS mappings
+refuse unproved cross-engine policy/precision equivalence. Legacy generator/typing parity
+and historical hazard evidence are unchanged; these samples do not certify every timezone,
+calendar, collation or function-only cross-engine mapping.
+
+### Division and modulo policies
+
+DuckDB 2.0 `/` is floating division: zero can produce Infinity, negative Infinity or NaN,
+even inside TRY and regardless of `error_on_division_by_zero`. `//`, including floating
+operands, and integer/DECIMAL `%` raise on zero by default; the deprecated false setting
+returns NULL instead. FLOAT/DOUBLE `%` retains NaN on zero in either mode. An authored
+TRY catches those errors without converting floating exceptional values to NULL. Generation
+preserves these operators and settings, operand order and evaluation count. FLOAT `//`
+remains fractional FLOAT division; explicit DECIMAL `/` and `//` return DOUBLE, while
+same-declaration DECIMAL modulo keeps its declaration. Native facts preserve those bounded
+types and signed integer widths. Unproved mixed decimal/signedness cases and bare wide
+integer literal widths stay UNKNOWN until the broader numeric-typing audit.
+Integer/modulo nullability stays unknown for potentially zero denominators rather than
+promising non-null output under an unknown session policy.
+
+Executable translation refuses unproved outgoing DuckDB integer/modulo mappings and
+ordinary division with potentially zero divisors. Incoming typed division requires proved
+integral operands and a nonzero/NULL divisor. Other typed cases and SAFE_DIVIDE rewrites
+refuse; the latter can change overflow/NULL behavior
+and duplicate denominator evaluation/binds. DuckDB has no native SAFE_DIVIDE contract.
+Known nonzero constant controls retain their established syntax mappings. Native executable
+typed-integer lowering uses exact `//`, not a DOUBLE/TRUNC/cast detour that loses wide integers.
+The ordinary generator's SQLGlot `safeIntDivision` policy and syntax output remain historical
+parity behavior, not a native 2.0 capability claim. Diagnostic previews retain findings.
+These controls do not certify every cross-engine numeric domain; DDB20-055 remains open.
+
+### Identifier case policy
+
+DuckDB's `preserve_identifier_case` is a VARCHAR policy in 2.0: preserve_case, lowercase
+or uppercase. Legacy true/false spellings remain aliases for preserve_case/lowercase.
+`DuckdbIdentifierCase.fromSetting(value)` decodes known values and returns null for missing
+or unknown facts, never treating an unknown string as false. Lookup remains ASCII
+case-insensitive even for quoted identifiers; non-ASCII letter distinctions are retained.
+
+When a caller explicitly knows the native mode, it can use
+`parseDuckdbNativeOne(sql).withDuckdbIdentifierCase(policy)` before generating/analyzing
+the modeled AST. Only unquoted Identifier nodes are folded, on a copy by default. Quoted
+names, string/path literals, opaque command text and the source tree are not rewritten.
+This is not a connection-setting reader, script SET-state inference or a universal rewrite
+of every free-form name representation. Ordinary fragments preserve authored identifier
+spelling when no mode was supplied. Live catalog names/parameter names stay as harvested;
+do not force them through a boolean or a global lowercase conversion.
+
+### Native NULL column types
+
+DuckDB 2.0 defaults retain a NULL logical type, including `CREATE TABLE ... AS SELECT NULL`.
+`SqlFragment.outputShape` and `RelationScope` retain native NULL facts through derived
+tables, CTEs and NULL-only unions, and distinguish them from explicit INTEGER casts.
+The native catalog spelling `"NULL"` is recognized as the NULL type, not an unknown UDT.
+NULL plus a known concrete UNION type does not acquire an invented integer type.
+
+Direct type-annotation callers can use `nativeDuckdbAnalysisDialect()` with
+`parseDuckdbNativeOne` and `annotateTypes`. The ordinary DuckDB dialect's historical
+SQLGlot annotation contract remains unchanged. These native facts model the 2.0 default,
+not an inferred active session setting. Deprecated `legacy_disable_null_type=true` remains
+a native runtime policy; harvested physical column facts are authoritative for tables
+created under it. Generation does not insert casts or change settings to emulate a mode.
+Explicit `CAST(NULL AS INTEGER)` is the portable way to request an integer column.
+
+### Binary literals
+
+DuckDB 2.0 `X'...'` and `B'...'` parse as native BLOB/BIT literal nodes, not integers or
+VARCHAR with an x/b prefix. Hex digits and leading zero bits survive copy/serde/generation;
+empty literals retain their native spelling and behavior. Typed result facts distinguish
+BINARY, DuckDB BLOB, from BIT, and both literals are non-null. Newline-separated unprefixed
+continuation segments are joined before validating payload length/digits. Odd hex, invalid
+digits, escapes and illegal same-line continuation refuse. Casts and JDBC parameters keep
+their authored order. No cross-target binary-literal mapping is executable without verified
+value/type evidence; ordinary literals in other dialects retain their existing contracts.
+
+### Factorial precedence
+
+DuckDB 2.0 postfix factorial binds as a cast/subscript-level indirection, before prefix
+unary operators, exponentiation and multiplication. Thus `2 * 3!` generates
+`2 * FACTORIAL(3)`, while `(2 * 3)!` keeps the parenthesized product as FACTORIAL's operand.
+The shared Factorial node survives copy/serde; casts on either side retain their order.
+Result facts use INT128, DuckDB's native HUGEINT, and native negative/overflow/type errors
+are not folded away. Executable cross-target factorial translation refuses unproved
+input-width/result/error equivalence. Negated regex/LIKE spellings keep their range-parser
+meaning rather than donating their `!` to the preceding operand.
+
+### Native regex operators
+
+For DuckDB 2.0 execution, use `SqlFragment(sql, "duckdb").toExecutable("duckdb")`.
+Its native parser preserves `~`, `!~`, `~*` and `!~*` as `DuckdbRegexOperator`, including
+ANY/ALL negation and column selectors. Copy and serde retain the operator node and both
+operands. Generation neither reads nor changes session settings and does not duplicate
+operands. DuckDB chooses partial matching by default or full matching under its deprecated
+`regex_match_operator_semantics='full'` setting when it parses the generated SQL.
+Authored `REGEXP_FULL_MATCH` and `REGEXP_MATCHES` stay explicit functions in either mode.
+
+For direct AST use, `parseDuckdbNativeOne(sql)` or `nativeDuckdbParser()` selects the same
+native contract. The ordinary `parseOne`/dialect parser, `.sql()` and top-level `transpile`
+APIs retain historical SQLGlot parity, including its old operator-to-full-match lowering.
+Those legacy APIs are not a native DuckDB 2.0 regex-operator execution contract. Do not
+feed that lowered output to an executor expecting the authored operator's session policy.
+The old parity corpora and ledgers remain unchanged; native behavior has separate tests.
+
+Executable cross-target translation refuses session-dependent operator nodes rather than
+guessing a setting or lowering to a fixed function. Diagnostic previews flag the refusal.
+Scalar predicates have BOOLEAN type and strict scalar nullability. Quantified nullability
+stays unknown rather than borrowing scalar rules for empty arrays or NULL elements.
+Regex star-column selectors retain native SQL but refuse static result shapes, scopes,
+qualification and lineage until their session-dependent column selection is modeled.
+Native view/prepared-statement capture timing remains the engine's policy. This library
+does not rewrite previously persisted views or emulate migration of pre-2.0 definitions.
+
+### Core-extension syntax triage
+
+DuckLake 1.1, Iceberg REST and Delta syntax triage is not storage-engine certification.
+ATTACH preserves authored backend options and typed INTERVAL/date/timestamp literals,
+including MAP parameters/headers. The handwritten `DUCKDB_CORE_EXTENSION_ATTACH_OPTIONS`
+vocabulary distinguishes canonical Iceberg URI from deprecated ENDPOINT and keeps backend
+options separate. It is not a runtime validator, installed-extension claim or a request to
+provision/migrate a catalog, enumerate schemas or contact endpoints. Quack JDBC is not a
+dependency of this checkout; its driver releases belong to the consumer plugin.
+
+Known model gaps remain explicit: the upstream-shaped CREATE serializer can omit storage
+partition/properties clauses, and ALTER storage partition/sort/property actions can be
+opaque or incomplete. `SqlFragment.transpileTo` keeps the original source for those forms
+as a flagged, diagnostic-only preview; `toExecutable`, strict bind discovery, shapes and
+source dependencies refuse. Do not treat the partial parity AST's ordinary `.sql()` output
+as executable storage DDL. Future lossless DDL nodes/round trips are still needed. No
+extension words are newly reserved, and generic DDL remains independent of a guessed
+backend inferred from a catalog name.
+
+AT VERSION/TIMESTAMP and scan snapshot parameters retain their authored syntax, but current
+table facts are not snapshot schema facts. Snapshot qualification, scopes, output facts,
+lineage and unproved cross-target attachment/snapshot transformations refuse. Final-doc
+forms are checked with native parser-only serialization while external access, installation
+and autoload are disabled. No test executes extension ATTACH or storage DDL. Catalog state,
+lazy namespace placeholders, Delta feature/property restrictions and catalog migrations
+remain native callback decisions, not behavior the library emulates.
+
+### GeoJSON import and export
+
+DuckDB 2.0 COPY GEOJSON/GEOJSONL keeps the authored format and option bags. GEOJSON defaults
+to a FeatureCollection and GEOJSONL to newline-delimited Features. Native ARRAY true selects
+a collection and false selects lines; the writer docs' contrary parenthetical is not used
+to invert the SQL. ID_COLUMN/GEOMETRY_COLUMN select output columns; explicit NULL unsets
+selection rather than omitting the option. BBOX remains a GeoJSON writer option, not a
+generic JSON option. Native errors for wrong/missing columns, wrong geometry types and
+using one column as both id and geometry are preserved.
+
+The JSON extension and core GEOMETRY support provide the tested feature; Spatial is not
+loaded and automatic installation/loading stays disabled. Local-file tests inspect actual
+Features, collections, ids, properties, geometry objects and bounding boxes, then round-trip
+through read_json and COPY FROM. Extension inference, geojson true/false, explicit columns,
+pseudo-column name collisions, malformed coordinates and ignore_errors are native behaviors,
+not host-side JSON/geometry emulation. Converter scopes distinguish GEOMETRY and JSON from
+text/BLOB, including strict SQL NULL contracts.
+COPY FROM's FORMAT GEOJSON alone does not force GeoJSON detection for an arbitrary .json/.tmp
+suffix in the pinned engine: a collection can become one ordinary JSON record with NULL
+target fields. Recognized .geojson/.geojsonl names or an authored GEOJSON true read option
+enable the tested Feature handling. The library does not insert that option or retry imports.
+
+Static read schemas require explicit literal columns with non-Hive mode and no unmodeled
+augmentation; otherwise file-dependent geometry/property fields stay unknown. Those are
+declaration facts only: no path is opened or JSON schema inferred to service the editor.
+Known converter return facts stay separate from the SQLGlot annotation corpus. File/Feature
+lineage, automatic qualification and unproved cross-target GeoJSON transformations refuse.
+Prepared selectors preserve bind order, and native parse-only validation never executes
+editor imports, exports, converters or binding expressions. Writer metadata is separate
+from read_json named parameters; no automatic IDE property UI is claimed.
+
+### Parquet writing options
+
+Parquet COPY writing options have a separate handwritten metadata surface,
+`DUCKDB_PARQUET_WRITE_OPTION_TYPES` and `DUCKDB_PARQUET_WRITE_OPTIONS`. It records native
+2.0 binding types and documented value sets, not read_parquet parameters or an exhaustive
+semantic validator. ANY stays ANY for FIELD_IDS/metadata/encryption/SHREDDING and other
+structured or overloaded values. No generated catalog recapture or automatic property UI
+is implied. Native COPY keeps the existing expression/STRUCT/string/numeric/Boolean bags.
+
+Native file controls cover codecs and ZSTD levels, dictionaries/bloom flags, field IDs and
+key-value metadata, row-group sizes/rotation, VARIANT and typed shredding, timestamp UTC
+annotations and INT96 physical storage. DATA_PAGE_SIZE_LIMIT is a positive byte cap at most
+100 MiB; it is best-effort at vector granularity, not a hard guarantee for every page.
+SHREDDING 'auto' is unimplemented in 2.0, and column/type/option errors remain native.
+VARIANT is not rewritten to JSON. Parse-only validation never evaluates option expressions
+or writes a file. Top-level JDBC COPY executes once even when it reports only an update
+count. Unproved cross-target translations of the new encoding options refuse. Encryption
+syntax is checked with a missing-key negative control, not by provisioning keys.
+
+### Parquet declarations and virtual columns
+
+DuckDB 2.0 Parquet scans retain `schema := MAP {field_id_or_name: {name, type, default_value}}`
+and the separate `bound_schema := {name: type}` declaration. A constant schema map declares
+the selected output names/types without opening a file or evaluating defaults. A literal
+bound_schema is modeled only with explicit `hive_partitioning=false`; it requires physical
+columns on demand and does not acquire the map schema's missing-column defaults. Dynamic,
+invalid/unmodeled declarations and qualified same-name UDFs stay unknown. Native binding
+still validates paths, field IDs, casts, defaults, collisions and incompatible options.
+
+`file_row_group_number` is a UBIGINT virtual column, not a named option. Native tests pin
+zero-based file-relative numbering, multiple row groups/files, filtering and physical-column
+shadowing. Internal scope bindings keep virtual columns separate from star-visible columns.
+They are selectable/completable only with a complete physical contract from a declaration or
+provider facts, so unknown files cannot invent a type when a physical column might shadow
+the virtual name. Explicit filename/file_row_number options can make those columns star-visible.
+Aliases and outer joins preserve virtual-column scope; derived stars do not leak hidden names.
+Static shapes use declaration evidence only, leave nullability/provenance conservative, and
+refuse unmodeled optimizer, file/field-ID lineage and cross-target schema transformations.
+Editor analysis and native parse-only validation never read a Parquet path or bind defaults.
+
+### Window catalog verification
+
+DuckDB 2.0 window catalog verification covers the native `window` rows separately from
+scalar and aggregate rows. `SUM(...) OVER (...)` remains an aggregate catalog entry.
+`FunctionCatalog.getAll` and completion identities retain coexisting captured kinds; a
+single-name lookup is not a substitute for that list. No new window implementation or
+result type is inferred from an unknown extension function's name.
+
+The opt-in test fixture is a real C++ `WindowFunction`, not an aggregate or SQL macro.
+It computes partitioned row numbers and registers a same-name scalar in a separate system
+schema, called with its full catalog/schema qualifier. DuckDB shares the scalar/aggregate/
+window namespace within one schema, so this is not a same-schema overload claim. A 10,000-row
+execution, native result metadata, signed private-repository loading, unsigned/tampered
+rejection and independent-connection controls verify the fixture. The build follows DuckDB's
+standard static-linked extension recipe so it also loads through JDBC's non-exported C++ ABI.
+
+Build the Linux amd64 fixture with an exact, clean DuckDB 2.0 source checkout:
+
+```bash
+python3 tools/build_duckdb_window_fixture.py \
+  --source /path/to/duckdb-v2.0.0 --output /tmp/opencode/duckdb-window-fixture/build
+```
+
+The tool verifies source revision `d54cbbe3df17e8e5ce68312f483b4155836112aa` and the official
+static-library archive SHA256, and writes a build manifest. It neither installs nor loads
+the unsigned template. Native tests sign only a scratch copy using ephemeral keys and private
+trust/install directories, with `allow_unsigned_extensions=false` and automatic loading and
+installation disabled. Set `BRIKK_DUCKDB_WINDOW_EXTENSION` to the resulting
+`brikk_window.duckdb_extension` when running `DuckdbWindowCatalogResultTest`. Set
+`BRIKK_DUCKDB_WINDOW_CAPTURE` to a test-owned JSON output path to export the actual before/after
+`DUCKDB_FUNCTIONS` capture, template digest and engine provenance after successful execution.
+
+`DuckdbWindowCompletionTest` consumes that capture in actual IDE completion tests. It checks
+built-in and extension windows before OVER, scalar completion inside an OVER ordering,
+kind-specific icons, distinct same-name lookups and insertion without changing arguments,
+partitioning, ordering or the frame. Run with the same capture/template environment and
+`BRIKK_INTELLIJ_TESTS=DuckdbWindowCompletionTest` through the `intellijPlatform` check.
+The test profile is the shared contributor fed by the live capture; it is not a claim about
+the consumer plugin's connection-refresh lifecycle, automatic extension loading, semantic
+eligibility of every suggestion, or unqualified resolution of every schema-owned name.
 
 ### Certified transpilation
 
@@ -276,8 +1185,9 @@ for schema-aware projection expansion. Invalid known mappings or duplicate schem
 columns raise `ShapeError`. Qualified rename arguments and unrepresentable target
 bindings remain typed refusals. This does not change DDL RENAME support.
 
-Anything the parser does not yet support fails loudly with a `ParseError` raise-gate —
-there is no silent misparsing.
+Unsupported syntax can raise `ParseError` or remain an explicitly raw command where that
+fallback is documented. A rendered preview is not executable qualification; inspect its
+unsupported diagnostics and use the executable-generation API for its refusal checks.
 
 ## Status / known gaps
 
@@ -287,8 +1197,8 @@ there is no silent misparsing.
 - UDF typing is stubbed (`Schema.getUdfType` → UNKNOWN); function `sinceVersion`
   metadata awaits a doris-website docs source; Trino semantic profiles (null handling)
   are not exposed by `SHOW FUNCTIONS`.
-- Hazard coverage is trino↔duckdb only today; other pairs gain entries as they get
-  probe-verified evidence.
+- Semantic hazard records cover specific engine pairs and captured versions. They are
+  not blanket equivalence claims for every function, version or session configuration.
 - Platforms are temporarily narrowed to JVM while Amper KMP publishing matures (the
   code is pure common Kotlin; restore note in `module.yaml`).
 - Per-dialect gate status lives in the `testResources/**/known-failures*.json` ledgers,

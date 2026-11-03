@@ -12,6 +12,8 @@ import dev.brikk.house.sql.parser.TokenizerConfig
  * Port of sqlglot's DuckDB dialect umbrella (reference/sqlglot/sqlglot/dialects/duckdb.py
  * class DuckDB). Tokenizer tables are generated (DuckdbTokenizerTables); the parser and
  * generator subclasses live in DuckdbParser.kt / DuckdbGenerator.kt.
+ * The default parser keeps historical SQLGlot regex parity. Use [nativeDuckdbParser],
+ * [parseDuckdbNativeOne] or SqlFragment for native DuckDB 2.0 operator execution.
  */
 // sqlglot: dialects.duckdb.DuckDB
 open class DuckdbDialect : Dialect() {
@@ -21,6 +23,23 @@ open class DuckdbDialect : Dialect() {
     )
 
     override val name: String get() = "duckdb"
+    override val singleStatementTriggers: Boolean get() = true
+
+    override fun diagnosticMessage(sql: String, message: String): String = when {
+        mayContainDuckdbExternalResources(sql) -> REDACTED_RESOURCE_DIAGNOSTIC
+        mayContainDuckdbRouting(sql) -> REDACTED_ROUTING_DIAGNOSTIC
+        mayContainDuckdbExtensionManagement(sql) -> REDACTED_EXTENSION_DIAGNOSTIC
+        mayContainDuckdbS3UrlData(sql) || mayContainDuckdbS3UrlData(message) -> REDACTED_S3_DIAGNOSTIC
+        else -> message
+    }
+
+    override fun tokenize(sql: String): List<dev.brikk.house.sql.parser.Token> = try {
+        super.tokenize(sql)
+    } catch (error: dev.brikk.house.sql.parser.TokenError) {
+        val safe = diagnosticMessage(sql, error.message.orEmpty())
+        if (safe == error.message) throw error
+        throw dev.brikk.house.sql.parser.TokenError(safe)
+    }
 
     // brikk-native: see Dialect.groupByProjectionAliases.
     override val whereProjectionAliases: Boolean get() = true

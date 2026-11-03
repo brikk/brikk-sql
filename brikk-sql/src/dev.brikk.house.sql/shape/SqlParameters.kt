@@ -2,6 +2,10 @@ package dev.brikk.house.sql.shape
 
 import dev.brikk.house.sql.ast.Semicolon
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
+import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
+import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
+import dev.brikk.house.sql.dialects.isDuckdbCheckpointCommand
 import dev.brikk.house.sql.parser.SqlScriptSnapshot
 import dev.brikk.house.sql.parser.SyntacticRange
 import dev.brikk.house.sql.parser.Token
@@ -16,13 +20,32 @@ import dev.brikk.house.sql.parser.TokenizerConfigs
  * IDE-configured textual substitutions remain a separate platform concern.
  */
 fun parseParameterOccurrences(sql: String, dialect: String): List<ParameterOccurrence> {
-    val source = Dialects.forName(dialect)
+    if(dialect.equals("duckdb",true) && duckdbStorageDdlIssue(sql)!=null)
+        throw dev.brikk.house.sql.generator.UnsupportedError("Storage layout/property DDL parameter binding is not modeled")
+    val source = Dialects.forName(dialect).withNativeDuckdbFacts()
     val tokens = source.tokenize(sql)
-    val parser = source.parser().also { it.captureSourceRanges = true }
+    val parser = source.parser().useNativeDuckdbOperators().also { it.captureSourceRanges = true }
     val statements = parser.parse(tokens, sql).filterNotNull().filterNot { it is Semicolon }
     if (statements.size != 1) throw ShapeError("Parameter discovery requires exactly one statement")
+    if(source.name=="duckdb" && statements.single().isDuckdbCheckpointCommand() && tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER,TokenType.PARAMETER,TokenType.COLON) })
+        throw dev.brikk.house.sql.generator.UnsupportedError("Parameter binding in native CHECKPOINT commands is not modeled")
+    if (statements.single() is dev.brikk.house.sql.ast.DuckdbExplain && statements.single().thisArg is dev.brikk.house.sql.ast.Command &&
+        tokens.any { it.tokenType in setOf(TokenType.PLACEHOLDER, TokenType.PARAMETER, TokenType.COLON) })
+        throw dev.brikk.house.sql.generator.UnsupportedError("Parameter binding in a raw EXPLAIN child is not modeled")
     return parameterOccurrences(statements.single(), tokens)
 }
+
+/**
+ * Named `$name` parameters eligible for DuckDB's execution-time session-variable fallback.
+ * This does not prove a variable exists or has a type/value, does not bind it, and must not
+ * turn it into an IDE substitution or a mandatory prompt. Explicit arguments still win.
+ * Numeric names, including `$"1"`, and anonymous `?` parameters have no such fallback.
+ */
+fun duckdbSessionDefaultCandidates(sql: String): List<ParameterOccurrence> =
+    parseParameterOccurrences(sql, "duckdb").filter { occurrence ->
+        occurrence.style == ParamStyle.NAMED_AT && sql.getOrNull(occurrence.range.start) == '$' &&
+            occurrence.name?.let { name -> name.isNotEmpty() && name.any { it !in '0'..'9' } } == true
+    }
 
 /**
  * [sql] with every named placeholder ([ParamStyle.NAMED_COLON] in any spelling the dialect
@@ -112,7 +135,8 @@ data class SqlScriptParameters(
             val source = Dialects.forName(dialect)
             val typeTokens = if (source.typedQueryParameters) source.parser().typeTokens else null
             val found = binds(text, lexed.tokens, typeTokens, source.halfOpenPartitionRanges, source.questionMarkTernary, positional, source.name, checkCanceled)
-            return SqlScriptParameters(text, dialect, found.first, lexed.failureOffset, lexed.error, if (positional) found.second else emptyList())
+            return SqlScriptParameters(text, dialect, found.first, lexed.failureOffset,
+                lexed.error?.let { source.diagnosticMessage(text, it) }, if (positional) found.second else emptyList())
         }
 
         private enum class Bracket { PAREN, ARRAY, SUBSCRIPT, MAP, TYPE, RANGE }

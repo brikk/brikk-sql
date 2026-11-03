@@ -6,7 +6,19 @@ import dev.brikk.house.sql.ast.Func
 import dev.brikk.house.sql.ast.sqlNames
 import dev.brikk.house.sql.ast.DataType
 import dev.brikk.house.sql.ast.DType
+import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Expression
+import dev.brikk.house.sql.dialects.isDuckdbNameShow
+import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.duckdbRegexName
+import dev.brikk.house.sql.dialects.hasDuckdbParquetCall
+import dev.brikk.house.sql.dialects.hasDuckdbGeoJsonContract
+import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarType
+import dev.brikk.house.sql.dialects.duckdbStorageDdlIssue
+import dev.brikk.house.sql.dialects.hasDuckdbSnapshot
+import dev.brikk.house.sql.dialects.useNativeDuckdbOperators
+import dev.brikk.house.sql.dialects.withNativeDuckdbFacts
+import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
 import dev.brikk.house.sql.ast.Identifier
 import dev.brikk.house.sql.ast.Parameter
 import dev.brikk.house.sql.ast.PipeCall
@@ -18,8 +30,23 @@ import dev.brikk.house.sql.ast.Star
 import dev.brikk.house.sql.ast.Subquery
 import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.With
+import dev.brikk.house.sql.ast.CTE
+import dev.brikk.house.sql.ast.DML
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.desugarPipes
+import dev.brikk.house.sql.ast.hasSideEffectingCte
+import dev.brikk.house.sql.ast.hasKeyedCte
+import dev.brikk.house.sql.ast.isRecurringCteReference
+import dev.brikk.house.sql.ast.isTriggerDdl
+import dev.brikk.house.sql.ast.isDuckdbExtensionManagement
+import dev.brikk.house.sql.ast.isDuckdbExternalResourceStatement
+import dev.brikk.house.sql.dialects.duckdbExternalResourceResult
+import dev.brikk.house.sql.dialects.duckdbExplainResult
+import dev.brikk.house.sql.dialects.duckdbExtensionResult
+import dev.brikk.house.sql.ast.isSecureViewDefinition
+import dev.brikk.house.sql.ast.isDuckdbRecursiveViewDefinition
+import dev.brikk.house.sql.ast.isTriggerName
+import dev.brikk.house.sql.ast.isTriggerTransitionReference
 import dev.brikk.house.sql.ast.namedSelects
 import dev.brikk.house.sql.ast.intoExpr
 import dev.brikk.house.sql.dialects.Dialect
@@ -35,13 +62,22 @@ import dev.brikk.house.sql.optimizer.nestedSet
 import dev.brikk.house.sql.optimizer.normalizeIdentifiers
 import dev.brikk.house.sql.optimizer.qualify
 import dev.brikk.house.sql.optimizer.traverseScope
+import dev.brikk.house.sql.optimizer.dataTypeFromStr
+import dev.brikk.house.sql.scope.CatalogKnowledge
+import dev.brikk.house.sql.scope.ColumnFact
+import dev.brikk.house.sql.scope.ColumnOrigin
+import dev.brikk.house.sql.scope.Knowledge
+import dev.brikk.house.sql.scope.Nullability
+import dev.brikk.house.sql.scope.RelationFact
+import dev.brikk.house.sql.scope.RelationFacts
+import dev.brikk.house.sql.scope.RelationScope
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 
 /**
  * BRIKK-NATIVE (no sqlglot counterpart): a single SQL statement as a composable value —
  * the "(input shape, body, output shape)" fragment from the North-star plan
- * (docs/parsing-research-and-plan.md). Wraps one parsed statement (pipe or standard
+ * (dev-docs/archive/parsing-research-and-plan.md). Wraps one parsed statement (pipe or standard
  * syntax) and exposes its contract surface: scalar parameters, table-valued slots,
  * source tables, output [Shape], column lineage, and a serializable description for the
  * compiler-plugin payload.
@@ -55,11 +91,11 @@ import kotlinx.serialization.Transient
  */
 class SqlFragment(val sql: String, val dialect: String = "") {
 
-    private val dialectObj: Dialect by lazy { Dialects.forName(dialect) }
+    private val dialectObj: Dialect by lazy { Dialects.forName(dialect).withNativeDuckdbFacts() }
     private var parsedFromFirstQuery = false
 
     private val statements: List<Expression> by lazy {
-        val parser = dialectObj.parser()
+        val parser = dialectObj.parser().useNativeDuckdbOperators()
         val parsed = parser.parse(dialectObj.tokenize(sql), sql)
         parsedFromFirstQuery = parser.hasFromFirstQuery
         // The parser represents comments on statement separators with standalone nodes.
@@ -69,6 +105,8 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     /**
      * The parsed statement. Throws [ShapeError] unless the fragment holds exactly one
      * statement — fragments are single composable values by design.
+     * DuckDB fragments use native regex operator nodes, unlike the legacy SQLGlot-parity
+     * dialect parser. Copy/serde retain the operator's session-dependent semantics.
      */
     val ast: Expression by lazy {
         when (statements.size) {
@@ -139,9 +177,16 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         desugarPipes: Boolean,
         forExecution: Boolean,
     ): TranspileResult {
+        val storageIssue=if(dialectObj.name=="duckdb")duckdbStorageDdlIssue(sql)else null
+        if(storageIssue!=null) {
+            if(forExecution)throw dev.brikk.house.sql.generator.UnsupportedError(storageIssue)
+            return TranspileResult(sql.trim(),listOf(storageIssue),rootKind,isRawPassthroughStatement=true)
+        }
         val generator = Dialects.forName(target)
             .generator(pretty = pretty, sourceDialect = dialect.ifBlank { null })
         generator.forExecution = forExecution
+        generator.duckdbNativeSemantics = true
+        if (dialectObj.name == "duckdb") generator.duckdbSessionDefaults = duckdbSessionDefaultCandidates(sql).isNotEmpty()
         // brikk-native: emit-span tracking (generator/SourceMap.kt) — off by default
         generator.trackSpans = trackSourceMap
         // Qualified call: the boolean param shadows the imported desugarPipes function.
@@ -257,6 +302,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * (DFS preorder = textual order), so positional `?` binds line up with named ones.
      */
     val scalarParams: List<ScalarParam> by lazy {
+        if (dialectObj.name == "duckdb") {
+            return@lazy parseParameterOccurrences(sql, dialect).withIndex().groupBy { it.value.style to it.value.name }
+                .map { (key, values) -> ScalarParam(key.second, key.first, values.size, values.map { it.index }) }
+        }
         data class Key(val style: ParamStyle, val name: String?)
 
         val occurrences = LinkedHashMap<Key, MutableList<Int>>()
@@ -340,7 +389,17 @@ class SqlFragment(val sql: String, val dialect: String = "") {
      * use dialect normalization, including its quoted-name rules, as lineage does.
      */
     val sourceTables: List<String> by lazy {
-        val tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || ast.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot dependencies are not modeled")
+        if (ast.isDuckdbNameShow()) throw ShapeError("SHOW target dependencies depend on runtime name resolution")
+        var tree = normalizeIdentifiers(desugarPipes(ast, dialectObj, copy = true), dialect = dialectObj)
+        if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
+            tree = tree.thisArg as? Expression ?: throw ShapeError("EXPLAIN has no structured child")
+            if (tree is dev.brikk.house.sql.ast.Command) throw ShapeError("Raw EXPLAIN child dependencies are not modeled")
+        }
+        if (tree.isDuckdbExternalResourceStatement() && tree.walk().any { it is Select || it is SetOperation })
+            throw ShapeError("External resource handle/option subquery dependencies are not modeled")
+        if (tree.isDuckdbRecursiveViewDefinition()) throw ShapeError("Recursive view self-reference dependencies are not modeled")
+        val sideEffects = tree.hasSideEffectingCte()
         val resolved = java.util.IdentityHashMap<Table, Boolean>()
         for (scope in traverseScope(tree)) {
             // references includes SEMI/ANTI inputs that selectedSources omits.
@@ -366,11 +425,17 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         // DFS arg order: deterministic, though the WITH clause is attached after the
         // Select body parses, so outer sources precede CTE-body sources.
         for (table in tree.findAll<Table>(bfs = false)) {
+            if (table.findAncestor<dev.brikk.house.sql.ast.DuckdbExplainOption>() != null) continue
             // Tables outside query scopes (e.g. DML targets) retain the existing
             // inventory behavior. Functions and unresolved placeholders are not tables.
             val parts = table.parts
-            if (resolved[table] == false || parts.isEmpty() || parts.any { it !is Identifier }) continue
-            out.add(parts.joinToString(".") { it.name })
+            if (parts.isEmpty() || parts.any { it !is Identifier }) continue
+            if (dialectObj.name == "duckdb" && table.isTriggerName()) continue
+            val target = (sideEffects || tree.isTriggerDdl()) && isPhysicalWriteTarget(table)
+            if (dialectObj.name == "duckdb" && !target && table.isTriggerTransitionReference()) continue
+            if (dialectObj.name == "duckdb" && table.isRecurringCteReference()) continue
+            if (!target && (resolved[table] == false || sideEffects && visibleCteReference(table))) continue
+            out.add(catalogPath(parts.map { it.name }))
         }
         out.toList()
     }
@@ -448,6 +513,31 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     }
 
     private fun outputShapeOf(tree: Expression, inputs: ShapeCatalog): Shape {
+        if(tree.hasDuckdbRegexSelector())throw ShapeError("Runtime regex column-selector result facts are not modeled")
+        if(dialectObj.name=="duckdb" && (duckdbStorageDdlIssue(sql)!=null || tree.hasDuckdbSnapshot()))throw ShapeError("Storage DDL/snapshot result facts are not modeled")
+        if(dialectObj.name=="duckdb" && (tree.hasDuckdbGeoJsonContract() || tree.walk().any { it.duckdbGeoJsonScalarType()!=null }))return declarativeCteShape(tree,inputs)
+        if(dialectObj.name=="duckdb" && tree.hasDuckdbParquetCall())return declarativeCteShape(tree,inputs)
+        if (dialectObj.name == "duckdb" && tree.walk().any { it.duckdbRegexName() != null }) return declarativeCteShape(tree, inputs)
+        if (dialectObj.name == "duckdb" && tree.walk().any { it.isDuckdbSetval() }) return declarativeCteShape(tree, inputs)
+        if (tree.isDuckdbNameShow()) throw ShapeError("SHOW output depends on runtime show_behavior/catalog; it is not the target query shape")
+        if (tree is dev.brikk.house.sql.ast.DuckdbExplain) {
+            val output = tree.duckdbExplainResult() ?: throw ShapeError("EXPLAIN options or child context are invalid/unmodeled")
+            return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+        }
+        if (tree.isDuckdbExternalResourceStatement()) {
+            val output = tree.duckdbExternalResourceResult() ?: throw ShapeError("This external-resource statement has no query output shape")
+            return Shape(output.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = it.nullability != Nullability.NON_NULL) })
+        }
+        if (tree.isDuckdbExtensionManagement()) {
+            val result = tree.duckdbExtensionResult() ?: throw ShapeError("This extension/repository management statement has no query output shape")
+            return Shape(result.columns.map { ColumnShape(it.name, it.sqlType!!, nullable = false) })
+        }
+        if (tree.isSecureViewDefinition()) throw ShapeError("SECURE VIEW DDL has no query output shape; analyze its body separately")
+        if (tree.isTriggerDdl()) throw ShapeError("Trigger DDL has no query output shape")
+        if (tree is dev.brikk.house.sql.ast.SessionConnect || tree is dev.brikk.house.sql.ast.SessionDisconnect) {
+            throw ShapeError("Session routing has no query output shape")
+        }
+        if (dialectObj.name == "duckdb" && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
         if (dialectObj.name in setOf("datafusion", "spice")) {
             return dev.brikk.house.sql.scope.datafusionShape(prepared, inputs, dialectObj)
@@ -543,6 +633,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         inputs: ShapeCatalog? = null,
         expandStars: Boolean = false,
     ): String {
+        if (expandStars && inputs != null && dialectObj.name == "duckdb" && (ast.hasSideEffectingCte() || ast.hasKeyedCte())) {
+            throw UnsupportedError("Cannot expand stars or qualify across side-effecting or USING KEY CTEs")
+        }
         var tree = desugarPipes(ast, dialectObj, copy = true)
         val hasRename = tree.findAll<Star>().any { !(it.args["rename"] as? List<*>).isNullOrEmpty() }
         if (expandStars && inputs != null) {
@@ -602,6 +695,71 @@ class SqlFragment(val sql: String, val dialect: String = "") {
 
     // ------------------------------------------------------------------ internals
 
+    private fun isPhysicalWriteTarget(table: Table): Boolean {
+        var target: Expression = table
+        val schema = target.parent as? dev.brikk.house.sql.ast.Schema
+        if (schema?.thisArg === target) target = schema
+        val statement = target.parent ?: return false
+        return statement is DML && statement.thisArg === target &&
+            (statement !is dev.brikk.house.sql.ast.Copy || statement.args["kind"] == true)
+    }
+
+    /** Lexical CTE visibility also covers write producers that the SELECT optimizer cannot model. */
+    private fun visibleCteReference(table: Table): Boolean {
+        if (table.parts.size != 1) return false
+        for (owner in generateSequence(table.parent) { it.parent }) {
+            val with = owner.args["with_"] as? With ?: continue
+            val enclosing = generateSequence(table.parent) { it.parent }.firstOrNull { it is CTE && it.parent === with }
+            val definitions = with.expressionsArg.filterIsInstance<CTE>()
+            val visible = if (with.recursive) definitions else definitions.takeWhile { it !== enclosing }
+            if (visible.any { it.alias == table.name }) return true
+        }
+        return false
+    }
+
+    /** Read the declarative CTE output contract without sending write SQL through SELECT optimizers. */
+    private fun declarativeCteShape(tree: Expression, inputs: ShapeCatalog): Shape {
+        fun fact(shape: Shape, origin: ColumnOrigin) = RelationFact(shape.columns.map { column ->
+            ColumnFact(column.name, column.type, nullability = when (column.nullable) {
+                true -> Nullability.NULLABLE
+                false -> Nullability.NON_NULL
+                null -> Nullability.UNKNOWN
+            }, origin = origin)
+        })
+        val available = tableSlots.mapTo(HashSet()) { it.uppercase() }
+        val slots = LinkedHashMap<String, RelationFact>()
+        for ((name, shape) in inputs.slots) {
+            if (name.uppercase() !in available) throw ShapeError("Unknown slot binding '$name'")
+            slots[name] = fact(shape, ColumnOrigin.DECLARED)
+        }
+        val byName = slots.mapKeys { it.key.uppercase() }
+        slots.putAll(byName) // The generator canonicalizes function calls to upper case.
+        for (table in tree.findAll<Table>()) {
+            val function = table.thisArg as? Anonymous ?: continue
+            byName[function.name.uppercase()]?.let { slots[function.name] = it }
+        }
+        val facts = RelationFacts(
+            tables = inputs.tables.mapValues { fact(it.value, ColumnOrigin.PHYSICAL_TABLE) },
+            slots = slots,
+            calls = slots, // ShapeCatalog slots may have arguments; RelationFacts separates zero-arg slots/calls.
+            catalog = CatalogKnowledge.OPEN,
+        )
+        // Generation and analysis are pure; no prepare/bind, native helper, path read or execution.
+        val scope = RelationScope.analyze(dialectObj.generate(tree.copy()), dialectObj.name, facts)
+        val output = scope.output
+        if (!scope.parsed || output == null || output.knowledge != Knowledge.FULL) {
+            throw ShapeError("Complete declarative output facts are required for this CTE shape")
+        }
+        return Shape(output.columns.map { column ->
+            ColumnShape(column.name, column.sqlType?.let { renderType(dataTypeFromStr(it, dialectObj, udt = true)) } ?: "UNKNOWN",
+                nullable = when (column.nullability) {
+                    Nullability.NON_NULL -> false
+                    Nullability.NULLABLE -> true
+                    Nullability.UNKNOWN -> null
+                }, quoted = dialectObj.caseSensitive(column.name))
+        })
+    }
+
     /** Copy + desugar pipes + rewrite bound slots into plain table references. */
     private fun prepareTree(tree: Expression, inputs: ShapeCatalog): Expression {
         return bindSlots(desugarPipes(tree, dialectObj, copy = true), inputs)
@@ -642,6 +800,10 @@ class SqlFragment(val sql: String, val dialect: String = "") {
                     node.set("this", Identifier(args("this" to slotKey, "quoted" to false)))
                     if (depth >= 2) node.set("db", Identifier(args("this" to SLOT_QUALIFIER, "quoted" to false)))
                     if (depth >= 3) node.set("catalog", Identifier(args("this" to SLOT_QUALIFIER, "quoted" to false)))
+                    // The parser stores components beyond catalog/db in this as Dots as well.
+                    if (depth > 3) node.set("this", Dot.build(List(depth - 3) {
+                        Identifier(args("this" to SLOT_QUALIFIER, "quoted" to false))
+                    } + Identifier(args("this" to slotKey, "quoted" to false))))
                 }
             }
             node
@@ -673,6 +835,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         var depth = 1
         for ((tableName, shape) in inputs.tables) {
             val parts = catalogTableParts(tableName).map { if (it.quoted) dialectObj.generate(it) else it.name }
+            if (parts.size > 3 && dialectObj.name != "duckdb") {
+                throw ShapeError("Nested schema paths are supported only for DuckDB shape catalogs")
+            }
             depth = maxOf(depth, parts.size)
             nestedSet(mapping, parts, columns(shape))
         }
@@ -734,10 +899,15 @@ class SqlFragment(val sql: String, val dialect: String = "") {
     private fun leafName(leaf: Node): String {
         val source = leaf.source
         return if (source is Table) {
-            source.parts.joinToString(".") { it.name }
+            catalogPath(source.parts.map { it.name })
         } else {
             leaf.name
         }
+    }
+
+    /** Keep a literal dotted identifier distinct from several namespace components. */
+    private fun catalogPath(parts: List<String>): String = parts.joinToString(".") {
+        if ('.' in it || '"' in it) "\"${it.replace("\"", "\"\"")}\"" else it
     }
 }
 
@@ -747,7 +917,7 @@ enum class ParamStyle {
     /** `:name` — [Placeholder] with a name. */
     NAMED_COLON,
 
-    /** `@name` — [Parameter]. */
+    /** Engine sigils: `@name`, and authored DuckDB `$name`/`$1`. Not proof a bind needs prompting. */
     NAMED_AT,
 
     /** `?` — anonymous [Placeholder]. */

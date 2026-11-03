@@ -13,18 +13,33 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
     base = "https://duckdb.org/docs/current/",
     statements = listOf(
         // Databases and extensions.
+        // Native 2.0 syntax without a dedicated published documentation page. Do not invent a URL.
+        DocsEntry("ATTACH TO [NEW TEMPORARY] EXTERNAL RESOURCE", null, "ATTACH TO EXTERNAL RESOURCE",
+            "Borrows a registered resource or provisions a temporary one. Creation and attachment options are separate."),
+        DocsEntry("CONNECT TO [NEW TEMPORARY] EXTERNAL RESOURCE", null, "CONNECT TO EXTERNAL RESOURCE",
+            "Routes through a resource endpoint. Binding options and executing recipes are not editor validation."),
+        DocsEntry("CREATE EXTERNAL RESOURCE", null, "CREATE EXTERNAL RESOURCE", "Provisions and registers a named resource through a native recipe."),
+        DocsEntry("REGISTER EXTERNAL RESOURCE", null, "REGISTER EXTERNAL RESOURCE", "Adopts a handle through a native status callback; it does not call create."),
+        DocsEntry("DESTROY EXTERNAL RESOURCE", null, "DESTROY EXTERNAL RESOURCE", "Runs native teardown before removing the registration."),
+        DocsEntry("SHOW [ALL] EXTERNAL RESOURCES", null, "SHOW EXTERNAL RESOURCES", "ALL invokes discovery callbacks; ordinary SHOW lists the local registry."),
         DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "core_extensions/ducklake", "DuckLake",
             "Attaches a DuckLake catalog: tables in Parquet files with their metadata in a catalog database.", literalPrefix = "ducklake:"),
         DocsEntry("ATTACH [DATABASE] [IF NOT EXISTS] [OR REPLACE]", "${STATEMENTS}attach", "ATTACH", "Attaches a database file or another database system."),
         DocsEntry("DETACH", "${STATEMENTS}attach", "DETACH"),
         DocsEntry("USE", "${STATEMENTS}use", "USE"),
         DocsEntry("UPDATE EXTENSIONS", "${STATEMENTS}update_extensions", "UPDATE EXTENSIONS"),
+        DocsEntry("CREATE [OR REPLACE] EXTENSION REPOSITORY", "extensions/extension_repositories", "CREATE EXTENSION REPOSITORY",
+            "Pins repository signing keys. Without explicit keys, execution fetches them from the prefix. Introduced in DuckDB 2.0."),
+        DocsEntry("DROP EXTENSION REPOSITORY", "extensions/extension_repositories", "DROP EXTENSION REPOSITORY"),
+        DocsEntry("[FORCE] INSTALL AND LOAD", "${STATEMENTS}load_and_install", "INSTALL AND LOAD",
+            "Installs then loads an extension. A custom repository identifier and a string are not interchangeable."),
         DocsEntry("[FORCE] INSTALL|LOAD", "${STATEMENTS}load_and_install", "LOAD / INSTALL", "Installs or loads an extension."),
         DocsEntry("[FORCE] CHECKPOINT", "${STATEMENTS}checkpoint", "CHECKPOINT"),
         DocsEntry("VACUUM", "${STATEMENTS}vacuum", "VACUUM"),
         // Schema objects.
         DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] TABLE", "${STATEMENTS}create_table", "CREATE TABLE"),
-        DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] VIEW", "${STATEMENTS}create_view", "CREATE VIEW"),
+        DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] [SECURE] [RECURSIVE] VIEW", "${STATEMENTS}create_view", "CREATE VIEW",
+            "SECURE hides internal query plans and statistics for hidden rows, not the stored SQL definition. Introduced in DuckDB 2.0."),
         DocsEntry("CREATE [OR REPLACE] [TEMP|TEMPORARY] MACRO|FUNCTION", "${STATEMENTS}create_macro", "CREATE MACRO",
             "Creates a scalar or table macro: a function written in SQL."),
         DocsEntry("CREATE [OR REPLACE] [PERSISTENT|TEMPORARY] SECRET", "${STATEMENTS}create_secret", "CREATE SECRET"),
@@ -49,7 +64,10 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
         DocsEntry("SUMMARIZE", "${STATEMENTS}summarize", "SUMMARIZE"),
         DocsEntry("DESC|DESCRIBE", "${STATEMENTS}describe", "DESCRIBE"),
         DocsEntry("SHOW", "${STATEMENTS}show", "SHOW"),
-        DocsEntry("EXPLAIN", "guides/meta/explain", "EXPLAIN"),
+        DocsEntry("EXPLAIN ANALYZE|ANALYSE", "guides/meta/explain_analyze", "EXPLAIN ANALYZE",
+            "Executes the child and returns profiling text. ANALYZE option presence enables execution even with a false argument."),
+        DocsEntry("EXPLAIN", "guides/meta/explain", "EXPLAIN",
+            "SQL exports optimized SQL; FORMAT selects a renderer. Binding can evaluate expressions, so EXPLAIN is not editor validation."),
         DocsEntry("ANALYZE", "${STATEMENTS}analyze", "ANALYZE"),
         DocsEntry("CALL", "${STATEMENTS}call", "CALL"),
         DocsEntry("PREPARE|EXECUTE|DEALLOCATE", "${STATEMENTS}prepare", "PREPARE, EXECUTE, and DEALLOCATE"),
@@ -71,6 +89,7 @@ val DUCKDB_DOCS: EngineDocs = EngineDocs(
                 "duckdb_indexes", "duckdb_keywords", "duckdb_memory", "duckdb_optimizers", "duckdb_schemas", "duckdb_secrets", "duckdb_sequences",
                 "duckdb_settings", "duckdb_tables", "duckdb_temporary_files", "duckdb_types", "duckdb_variables", "duckdb_views")
                 .associateWith { "sql/meta/duckdb_table_functions" } +
-            mapOf("glob" to "sql/functions/utility", "unnest" to "sql/query_syntax/unnest")
+            mapOf("glob" to "sql/functions/utility", "unnest" to "sql/query_syntax/unnest",
+                "duckdb_extension_repositories" to "extensions/extension_repositories")
         ),
 )

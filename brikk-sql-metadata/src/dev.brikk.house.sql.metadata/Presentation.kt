@@ -15,8 +15,8 @@ enum class InvocationSyntax {
 }
 
 /**
- * How the engine's grammar accepts a function-shaped [name], registered or not. [syntaxes]
- * are every form the parser accepts; [template] shows a special form (`CAST(expression AS
+ * Supported invocation forms for a function-shaped [name], registered or not. [syntaxes]
+ * exclude generic calls that parse but do not resolve to that built-in; [template] shows a special form (`CAST(expression AS
  * type)`). A form for a registered function overrides its default `name(arguments)`.
  */
 @Serializable

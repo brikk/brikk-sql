@@ -361,7 +361,7 @@ object DuckdbTokenizerTables {
         "GRANT" to TokenType.GRANT,
         "REVOKE" to TokenType.REVOKE,
         "OPTIMIZE" to TokenType.COMMAND,
-        "PREPARE" to TokenType.COMMAND,
+        "PREPARE" to TokenType.PREPARE,
         "VACUUM" to TokenType.COMMAND,
         "USER-DEFINED" to TokenType.USERDEFINED,
         "//" to TokenType.DIV,
@@ -434,7 +434,7 @@ object DuckdbTokenizerTables {
     val VAR_SINGLE_TOKENS: Set<Char> = setOf('$')
 
     // sqlglot: dialects.DuckDB.Tokenizer.COMMANDS
-    val COMMANDS: Set<TokenType> = setOf(TokenType.COMMAND, TokenType.EXECUTE, TokenType.FETCH, TokenType.RENAME)
+    val COMMANDS: Set<TokenType> = setOf(TokenType.COMMAND, TokenType.FETCH, TokenType.RENAME)
 
     // sqlglot: dialects.DuckDB.Tokenizer.COMMAND_PREFIX_TOKENS
     val COMMAND_PREFIX_TOKENS: Set<TokenType> = setOf(TokenType.BEGIN, TokenType.SEMICOLON)

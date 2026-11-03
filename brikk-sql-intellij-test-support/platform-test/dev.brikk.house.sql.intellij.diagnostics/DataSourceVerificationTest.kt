@@ -100,6 +100,22 @@ class DataSourceVerificationTest : BasePlatformTestCase() {
         }
     }
 
+    /** DDB20-052: malformed editor text travels only inside the remote parse wrapper. */
+    fun testMalformedNativeParseRequestsLeaveTheRemoteIdeConnectionUsable() {
+        withIdeConnection(project, dataSource, otherRequestor()) { user ->
+            user.remoteConnection.createStatement().execute("CREATE SEQUENCE robustness_marker")
+            for (sql in listOf("SELECT ('😀' +)", "SELECT " + "(".repeat(128) + "1",
+                    "SELECT 'unterminated", "SELECT * FROM (VALUES(1)) t(x) JOIN")) {
+                val wrapper = "SELECT system.main.json_serialize_sql('" + sql.replace("'", "''") + "')::VARCHAR"
+                val response = answer(wrapper) as VerifyResult.Rejected
+                assertTrue("the wrapper must report a parse error", response.error.message.contains("\"error\":true"))
+                assertEquals("only the user's connection stays open", 1, helpers())
+            }
+            assertEquals("1", user.queryRows("SELECT nextval('robustness_marker') AS value", 1, 10).single()["value"].toString())
+            assertEquals("42", user.queryRows("SELECT 42 AS value", 1, 10).single()["value"].toString())
+        }
+    }
+
     fun testConnectingAndDisconnectingRestartHighlightingButHelpersDoNot() {
         val restarted = mutableListOf<Project>()
         ApplicationManager.getApplication().messageBus.connect(testRootDisposable).subscribe(

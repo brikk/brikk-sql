@@ -34,7 +34,7 @@ observations stay intact; the first post-fix observations live under `data/dataf
 
 The standalone Doris SQL parser (`fe-sql-parser`) from Apache Doris — the authoritative ANTLR
 grammar, planned to back the JVM-only native-parser adapter (fragment validation /
-engine-exact parsing; see docs/parsing-research-and-plan.md Phase 7). **Pre-release, not
+engine-exact parsing; see dev-docs/archive/parsing-research-and-plan.md Phase 7). **Pre-release, not
 published to any public Maven repository** — Doris publishes connectors/SDKs, not FE core
 modules — so we vendor a locally-built jar.
 

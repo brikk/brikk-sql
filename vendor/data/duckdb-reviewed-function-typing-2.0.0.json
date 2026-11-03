@@ -1,0 +1,19 @@
+{
+  "engine": "2.0.0",
+  "source": "d54cbbe3df",
+  "scope": "Native builtin signature facts, not runtime UDF binding, NULL propagation or cross-target execution qualification.",
+  "typed": {
+    "binom": {"arguments": ["INTEGER", "INTEGER"], "result": "HUGEINT", "limits": "Missing/wider/unknown argument types do not borrow the INTEGER overload."},
+    "decimal_average": {"arguments": ["DECIMAL(p,s)"], "result": "DECIMAL(p,s)", "limits": "Only explicit valid precision/scale facts; no guessed implicit integer/decimal conversion."},
+    "lttb": {"x": ["DOUBLE", "FLOAT", "TIMESTAMP", "TIMESTAMP_S", "TIMESTAMP_MS", "TIMESTAMP_NS", "TIMESTAMPTZ", "TIMESTAMPTZ_NS"], "y": ["DOUBLE", "FLOAT"], "n": "proved signed integer safely widened to BIGINT", "result": "STRUCT(x input_x_type,y input_y_type)[]", "limits": "Bare decimal-text atom annotations are not exact native FLOAT/DOUBLE facts."},
+    "vertex_extract": {"arguments": ["GEOMETRY", "VARCHAR"], "result": "DOUBLE", "limits": "Signature/type facts do not validate geometry contents or coordinate values."}
+  },
+  "retained_unknown": {
+    "invoke": "ANY return is lambda/argument-dependent; an INTEGER sample is not a fixed contract.",
+    "assert_true": "Macro return/argument types are absent; a successful NULL sample is not a general fixed-type or no-error contract.",
+    "variant_to_parquet_variant": "Engine-bound ANY result remains unmodeled.",
+    "aggregate_state_export": "Engine-specific state representation is not a fabricated SQL type or ordinary function return schema."
+  },
+  "existing_json_variant": "Scalar/list/nested key-list, BOOLEAN and UBIGINT signatures retained. Integer/missing-type path arrays do not invent VARCHAR path facts. Embedded VARIANT value types remain opaque.",
+  "native_controls": "24 original/copy/serde/executable SELECT cases, including all 16 LTTB x/y overload combinations and DECIMAL precision/scale boundaries; scope and derived-column completion share the same type facts."
+}

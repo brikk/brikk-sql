@@ -1128,6 +1128,11 @@ open class Parser(
 
     private fun parseError(message: String, token: Token?): ParseError {
         val errorToken = token ?: Token.string("")
+        val safe = dialect.diagnosticMessage(sql, message)
+        if (safe != message) return ParseError("$safe. Line ${errorToken.line}, Col: ${errorToken.col}.", listOf(
+            ParseErrorInfo(safe, errorToken.line, errorToken.col, null, null, null,
+                start = token?.start, end = token?.let { it.end + 1 }),
+        ))
         val highlighted = highlightSql(
             sql = sql,
             positions = listOf(errorToken.start to errorToken.end),
@@ -1541,7 +1546,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._negate_range
-    protected fun negateRange(this_: Expression?): Expression? {
+    protected open fun negateRange(this_: Expression?): Expression? {
         if (this_ == null) return this_
 
         val expr = if (this_ is Escape) this_.thisArg as Expression else this_
@@ -2143,7 +2148,7 @@ open class Parser(
     protected fun parseProjections(): MutableList<Expression> = parseExpressions()
 
     // sqlglot: Parser._parse_with
-    fun parseWith(skipWithToken: kotlin.Boolean = false): With? {
+    open fun parseWith(skipWithToken: kotlin.Boolean = false): With? {
         if (!skipWithToken && !match(TokenType.WITH)) return null
 
         val comments = prevComments
@@ -2224,7 +2229,7 @@ open class Parser(
             raiseError("Expected CTE to have alias")
         }
 
-        val keyExpressions = if (matchTextSeq("USING", "KEY")) parseWrappedIdVars() else null
+        val keyExpressions = if (matchTextSeq("USING", "KEY")) parseCteKeyExpressions() else null
 
         if (!match(TokenType.ALIAS) && !optionalAliasTokenCte) {
             retreat(startIndex)
@@ -2275,6 +2280,8 @@ open class Parser(
             )
         )
     }
+
+    protected open fun parseCteKeyExpressions(): List<Expression> = parseWrappedIdVars()
 
     // sqlglot: Parser._parse_table_alias
     open fun parseTableAlias(aliasTokens: Collection<TokenType>? = null): TableAlias? {
@@ -2773,8 +2780,11 @@ open class Parser(
         }
 
         if (isDbReference) {
-            catalog = db
-            db = table
+            // A schema path can itself have more than two components. Shifting only db
+            // into catalog discarded the outermost name of CREATE/DROP SCHEMA a.b.c.
+            val parts = Table(args("this" to table, "db" to db, "catalog" to catalog)).parts
+            catalog = parts.firstOrNull().takeIf { parts.size > 1 }
+            db = if (parts.size > 2) Dot.build(parts.drop(1)) else parts.lastOrNull()
             table = null
         }
 
@@ -3939,7 +3949,7 @@ open class Parser(
         if (matchTextSeq("BY")) parseCsv { parseBitwise() } else null
 
     // sqlglot: Parser._parse_offset
-    fun parseOffset(this_: Expression? = null): Expression? {
+    open fun parseOffset(this_: Expression? = null): Expression? {
         if (!match(TokenType.OFFSET)) return this_
 
         val count = parseTerm()
@@ -4956,7 +4966,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_trigger_events
-    protected fun parseTriggerEvents(): List<Expression> {
+    protected open fun parseTriggerEvents(): List<Expression> {
         val events = mutableListOf<Expression>()
 
         while (true) {
@@ -4998,7 +5008,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_trigger_referencing_clause
-    protected fun parseTriggerReferencingClause(keyword: String): Expression? {
+    protected open fun parseTriggerReferencingClause(keyword: String): Expression? {
         if (!matchTextSeq(keyword)) return null
         if (!matchTextSeq("TABLE")) {
             raiseError("Expected TABLE after $keyword in REFERENCING clause")
@@ -5038,7 +5048,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_trigger_for_each
-    protected fun parseTriggerForEach(): String? {
+    protected open fun parseTriggerForEach(): String? {
         if (!matchTextSeq("FOR", "EACH")) return null
 
         return if (matchTexts(setOf("ROW", "STATEMENT"))) prevToken.text.uppercase() else null
@@ -5824,7 +5834,7 @@ open class Parser(
     open val copyParamsAreCsv: kotlin.Boolean get() = true
 
     // sqlglot: Parser._parse_copy_parameters
-    protected fun parseCopyParameters(): List<Expression> {
+    protected open fun parseCopyParameters(): List<Expression> {
         val sep = if (copyParamsAreCsv) TokenType.COMMA else null
 
         val options = mutableListOf<Expression>()
@@ -5922,8 +5932,8 @@ open class Parser(
 
         val params = parseWrapped({ parseCopyParameters() }, optional = true)
 
-        // Fallback case
-        if (currToken.exists) {
+        // A COPY nested in a CTE or another query ends at the caller's closing parenthesis.
+        if (currToken.exists && currToken.tokenType != TokenType.R_PAREN) {
             return parseAsCommand(start)
         }
 
@@ -6404,7 +6414,7 @@ open class Parser(
     // sqlglot: Parser._parse_drop
     fun parseDrop(exists: kotlin.Boolean = false): Expression = parseDropWithKind(exists = exists)
 
-    fun parseDropWithKind(kind: String? = null, exists: kotlin.Boolean = false): Expression {
+    open fun parseDropWithKind(kind: String? = null, exists: kotlin.Boolean = false): Expression {
         val start = prevToken
         val temporary = kind == null && match(TokenType.TEMPORARY)
         val materialized = kind == null && matchTextSeq("MATERIALIZED")
@@ -6566,8 +6576,11 @@ open class Parser(
             match(TokenType.THEN)
 
             val then: Expression? = if (match(TokenType.INSERT)) {
-                val star = parseStar()
-                if (star != null) {
+                val byName = matchTextSeq("BY", "NAME")
+                val star = if (byName) null else parseStar()
+                if (byName) {
+                    expression(Insert(args("by_name" to true)))
+                } else if (star != null) {
                     expression(Insert(args("this" to star)))
                 } else {
                     expression(
@@ -9821,7 +9834,7 @@ open class Parser(
     }
 
     // sqlglot: Parser._parse_overlay
-    fun parseOverlay(): Expression {
+    open fun parseOverlay(): Expression {
         fun parseOverlayArg(text: String): Expression? =
             if (match(TokenType.COMMA) || matchTextSeq(text)) parseBitwise() else null
 

@@ -1,0 +1,26 @@
+{
+  "engine": "2.0.0",
+  "source": "d54cbbe3df",
+  "original_capture_commit": "3111faaa2e0420726d75e5a8bfc8d81fd88524f6",
+  "historical_156_sha256": "48a9891b7dac4bc9e13761a46a2fd710dfcb150adc20f8805f51aacd5c8031a8",
+  "historical_200_sha256": "6ed945ba5300dafd73af45c6188341cd8634d87d7b85cc998e16c40e735da606",
+  "historical_provenance": "Version strings were captured but no binary-hash manifest was retained. Different extension versions and row deltas do not alone prove a fresh capture. Historical files remain unchanged.",
+  "extensions": {
+    "fts": {"old_version": "6814ec9", "version": "223b8cb9e6", "old_rows": 3, "rows": 5},
+    "inet": {"old_version": "fe7f60b", "version": "6460362d8a", "old_rows": 12, "rows": 12},
+    "postgres_scanner": {"old_version": "318dabb", "version": "c0f5a3c0c4", "old_rows": 10, "rows": 9},
+    "spatial": {"old_version": "04270fe", "version": "a3dbcd1781", "old_rows": 288, "rows": 287},
+    "sqlite_scanner": {"old_version": "5274128", "version": "e223dc0149", "old_rows": 3, "rows": 3}
+  },
+  "fresh_revalidation": {
+    "scope": "Fresh isolated captures exactly reproduce all historical 2.0 function rows for the five matching-version extensions; no historical files rewritten. HTTPFS and static ICU correctly add zero rows.",
+    "fts": {"version": "223b8cb9e6", "sha256": "d0236578d3758b689c871957ce8654b629b11c8008f7789054a526446c6bf8a3", "rows": 5},
+    "httpfs": {"version": "77392a7207", "sha256": "77e6c429aa04f25da7962572f12b19113e0ce46080fa1365ad66017aadcdb68d", "rows": 0},
+    "icu": {"version": "", "sha256": null, "rows": 0, "origin": "statically linked; engine/JAR provenance applies"},
+    "inet": {"version": "6460362d8a", "sha256": "b1e8776d27d351eceec714c958304eb9011b27a181a4f182e9370a12b939d2c6", "rows": 12},
+    "postgres_scanner": {"version": "c0f5a3c0c4", "sha256": "39e661c5cfb678c9472f5acd88235f84f3ef4126e7444c7c8a01214d9b291601", "rows": 9},
+    "spatial": {"version": "a3dbcd1781", "sha256": "8ec99d875355200316c743ede176e2cb50d2b712d2fa192ccbf19cc245a8d0bc", "rows": 287},
+    "sqlite_scanner": {"version": "e223dc0149", "sha256": "8d66f0661fe4da3b60fb1ef69caaefb102248dfa5a234a8671fed5b4edca441b", "rows": 3}
+  },
+  "future_policy": "Every extension is freshly loaded from an explicit reviewed local path and verified SHA-256 in a private engine. No INSTALL/download, old-row merge or fallback to historical data. Zero-added-row and statically linked extensions keep separate provenance rather than invented function rows or versions."
+}

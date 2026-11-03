@@ -74,11 +74,13 @@ enum class CatalogKnowledge {
  *   Keys match the call's name exactly, case included: they are provider keys, not SQL names.
  * - [tables]: physical tables by name, dotted when qualified (`db.events`), matched by the
  *   dialect's identifier rules, the last parts of a qualified name included.
- *   Components containing dots or double quotes can use SQL double-quote escaping (`"cat"."a.b"`).
+ *   Paths may have any number of components. Quote a component containing a literal dot
+ *   or quote with ANSI double quotes or backticks, for example `db."sales.reports".events`
+ *   or `"cat"."a""b"`.
  * - [calls]: the outputs of table functions, matched exactly like slots, called with any
  *   arguments, in `FROM` or a pipe `CALL`.
  * - [searchPath]: the namespaces a partly qualified table name is looked up in, in order, each a
- *   dotted path as stored (`one.sales`), such as a console's current schema; it supplies the leading
+ *   dotted path as stored (`one.sales`), with the same quoting convention as [tables]. It supplies the leading
  *   components the name leaves out (`sales.orders` in `one.sales` is `one.sales.orders`). A name
  *   several tables match takes the one in the first namespace holding exactly one; when none does,
  *   the table is ambiguous: unknown, never the first match and never reported as missing.

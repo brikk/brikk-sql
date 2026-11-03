@@ -10,6 +10,9 @@ import dev.brikk.house.sql.ast.Coalesce
 import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.Connector
 import dev.brikk.house.sql.ast.DPipe
+import dev.brikk.house.sql.ast.Dot
+import dev.brikk.house.sql.ast.Bracket
+import dev.brikk.house.sql.ast.DType
 import dev.brikk.house.sql.ast.Exists
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Except
@@ -30,7 +33,20 @@ import dev.brikk.house.sql.ast.aliasColumnNames
 import dev.brikk.house.sql.ast.selects
 import dev.brikk.house.sql.ast.sqlName
 import dev.brikk.house.sql.dialects.Dialect
+import dev.brikk.house.sql.dialects.isDuckdbOverlayCall
+import dev.brikk.house.sql.dialects.duckdbOverlayArguments
+import dev.brikk.house.sql.dialects.duckdbPathFunctionName
+import dev.brikk.house.sql.dialects.duckdbPathArguments
+import dev.brikk.house.sql.dialects.isDuckdbSetval
+import dev.brikk.house.sql.dialects.hasDuckdbRegexSelector
+import dev.brikk.house.sql.dialects.duckdbKnownNonZeroDivisor
+import dev.brikk.house.sql.dialects.duckdbSetvalArguments
+import dev.brikk.house.sql.dialects.duckdbRegexName
+import dev.brikk.house.sql.dialects.duckdbRegexArguments
+import dev.brikk.house.sql.dialects.duckdbRegexReturnType
+import dev.brikk.house.sql.dialects.duckdbGeoJsonScalarArguments
 import dev.brikk.house.sql.dialects.Dialects
+import dev.brikk.house.sql.dialects.duckdbJsonCall
 import dev.brikk.house.sql.shape.ShapeCatalog
 import dev.brikk.house.sql.shape.catalogTableParts
 import dev.brikk.house.sql.metadata.FunctionKind
@@ -215,6 +231,7 @@ private class NullabilityAnnotator(
             // --- literals ---
             is Null -> true
             is Literal -> false
+            is dev.brikk.house.sql.ast.DuckdbBinaryLiteral -> false
 
             // --- alias / paren are pass-through wrappers ---
             is Alias -> get(node.thisArg as? Expression)
@@ -226,6 +243,7 @@ private class NullabilityAnnotator(
 
             // --- column references ---
             is Column -> if (column != null) column(node) else columnNullability(node)
+            is Dot, is Bracket -> if (dialect.name == "duckdb" && (node.thisArg as? Expression)?.isType(DType.VARIANT) == true) true else null
 
             // --- CAST / TRY_CAST ---
             // TryCast must precede Cast (TryCast is a subclass of Cast).
@@ -248,6 +266,17 @@ private class NullabilityAnnotator(
             is Func -> functionNullability(node)
 
             // --- generic null-propagating operators (arithmetic, comparison, unary) ---
+            is dev.brikk.house.sql.ast.DuckdbRegexOperator -> {
+                // Quantified comparisons have empty-list and element-NULL semantics,
+                // not scalar strictness. Column selectors are not scalar predicates.
+                val right = (node.expressionArg as? Expression)?.unnest()
+                if (right is dev.brikk.house.sql.ast.Any || right is dev.brikk.house.sql.ast.All || node.hasDuckdbRegexSelector()) null
+                else operatorRule(operands(node))
+            }
+            is dev.brikk.house.sql.ast.IntDiv, is dev.brikk.house.sql.ast.Mod -> {
+                val strict = operatorRule(operands(node))
+                if(dialect.name != "duckdb" || strict == true || (node as Binary).right.duckdbKnownNonZeroDivisor()) strict else null
+            }
             is Binary -> operatorRule(operands(node))
             is Unary -> operatorRule(operands(node))
 
@@ -432,6 +461,44 @@ private class NullabilityAnnotator(
      *      UNKNOWN / none / no catalog -> unknown.
      */
     private fun functionNullability(node: Func): Boolean? {
+        if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Try)return true
+        if(dialect.name=="duckdb" && node is dev.brikk.house.sql.ast.Factorial)return operatorRule(operands(node))
+        if(dialect.name=="duckdb") (node as Expression).duckdbGeoJsonScalarArguments()?.let { return operatorRule(it) }
+        if (dialect.name == "duckdb" && (node as Expression).duckdbRegexName() != null) {
+            if(node.duckdbRegexReturnType()==null)return null
+            val arguments=node.duckdbRegexArguments() ?: return null
+            // Scalar extraction's NULL group yields '', not SQL NULL. Options bind
+            // as non-null constants or error; they do not add nullable successful rows.
+            val count=if(node.duckdbRegexName()=="REGEXP_EXTRACT" || node.duckdbRegexName()=="REGEXP_EXTRACT_ALL" &&
+                arguments.getOrNull(2) is dev.brikk.house.sql.ast.Array)2 else 3
+            return operatorRule(arguments.take(count))
+        }
+        if (dialect.name == "duckdb" && (node as Expression).isDuckdbSetval()) {
+            val arguments = node.duckdbSetvalArguments() ?: return null
+            val verdicts = arguments.map { if (it is dev.brikk.house.sql.ast.Boolean) false else get(it) }
+            return when { verdicts.any { it == true } -> true; verdicts.all { it == false } -> false; else -> null }
+        }
+        if (dialect.name == "duckdb") {
+            val path = (node as Expression).duckdbPathFunctionName()
+            if (path != null) {
+                val arguments = node.duckdbPathArguments() ?: return null
+                return if (path == "HIVE_PARTITION_COMPONENT") false else operatorRule(arguments)
+            }
+        }
+        if (dialect.name == "duckdb" && ((node as Expression).isDuckdbOverlayCall() || node is dev.brikk.house.sql.ast.Overlay))
+            return (node as Expression).duckdbOverlayArguments()?.let(::operatorRule)
+        val json = if (dialect.name == "duckdb") (node as Expression).duckdbJsonCall() else null
+        if (json != null) {
+            val arguments = json.boundArguments ?: return null
+            return when (json.name) {
+                // Removing the root yields SQL NULL even for a non-null document/path.
+                "JSON_REMOVE" -> true
+                // Each patch replaces a SQL NULL intermediate; only the final patch's
+                // SQL nullability determines whether a successful merge has a document.
+                "JSON_DEEP_MERGE", "JSON_MERGE_PATCH_DIFF" -> get(arguments.last())
+                else -> operatorRule(arguments)
+            }
+        }
         // Generic builtin calls retain their SQL name in Anonymous.name; sqlName()
         // returns the node class name. A qualified call may be a schema-owned UDF.
         if (node is Anonymous && node.parent is dev.brikk.house.sql.ast.Dot) return null

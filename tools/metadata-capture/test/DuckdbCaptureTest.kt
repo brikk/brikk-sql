@@ -83,18 +83,11 @@ class DuckdbCaptureTest {
 
     @Test
     fun liveJdbcEngineEqualsTheVendoredDump() {
-        // Installed community extensions belong to the user, not the pinned engine inventory.
-        val extensions = Files.createTempDirectory(Files.createDirectories(java.nio.file.Path.of("build")), "duckdb-capture-")
-        try {
-            val properties = Properties().apply { setProperty("extension_directory", extensions.toAbsolutePath().toString()) }
-            DriverManager.getConnection("jdbc:duckdb:", properties).use { connection ->
+        withDuckdbCaptureEngine { connection ->
                 val version = connection.engineVersion()
                 for (capture in captures) {
                     assertEquals(readDump(vendorData.resolve("duckdb-${capture.name}-$version.tsv")).rows, capture.dump(connection).rows, capture.name)
                 }
-            }
-        } finally {
-            Files.deleteIfExists(extensions)
         }
     }
 

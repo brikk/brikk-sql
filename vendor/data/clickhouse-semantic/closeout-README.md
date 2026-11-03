@@ -95,9 +95,9 @@ explicit unknowns and separately proved errors. It is not ready to be described
 as a full ClickHouse validator or an all-node native-exact type certifier.
 
 On 2026-11-02 the user accepted this bounded, opt-in scope and asked to track later
-improvements. The [deferred backlog](../../../TODO-clickhouse-semantic.md#deferred-improvement-backlog)
+improvements. The [deferred backlog](../../../dev-docs/TODO-clickhouse-semantic.md#deferred-improvement-backlog)
 records CHSEM-024 through CHSEM-034 with priorities, evidence and completion criteria;
-[SQL-08](../../../TODO.md) is the top-level index. If authoritative all-expression
+[SQL-08](../../../dev-docs/TODO.md) is the top-level index. If authoritative all-expression
 metadata or hard rejection is required, resolve generic-fallback provenance/root
 propagation and the selected missing families before that use. No further feature
 work, merge, publication or consumer changes start automatically from this decision.

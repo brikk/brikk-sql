@@ -1,7 +1,9 @@
 package dev.brikk.house.sql.optimizer
 
+import dev.brikk.house.sql.ast.Column
 import dev.brikk.house.sql.ast.ColumnDef
 import dev.brikk.house.sql.ast.Create
+import dev.brikk.house.sql.ast.Dot
 import dev.brikk.house.sql.ast.Expression
 import dev.brikk.house.sql.ast.Func
 import dev.brikk.house.sql.ast.From
@@ -14,7 +16,9 @@ import dev.brikk.house.sql.ast.TableAlias
 import dev.brikk.house.sql.ast.TableFromRows
 import dev.brikk.house.sql.ast.Values
 import dev.brikk.house.sql.ast.With
+import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.ast.nameSequence
+import dev.brikk.house.sql.ast.parts
 import dev.brikk.house.sql.ast.selectStarFrom
 import dev.brikk.house.sql.ast.toIdentifier
 import dev.brikk.house.sql.ast.unpivot
@@ -169,7 +173,7 @@ fun <E : Expression> qualifyTables(
             }
         }
 
-        val tableAliases = mutableMapOf<String, Expression>()
+        val tableAliases = mutableMapOf<List<String>, Expression>()
 
         for ((sourceName, source) in scope.sources.entries.toList()) {
             var name = sourceName
@@ -218,7 +222,7 @@ fun <E : Expression> qualifyTables(
                     columns = functionColumns,
                 )
 
-                val sourceFqn = source.parts.joinToString(".") { it.name }
+                val sourceFqn = source.parts.map { it.name }
                 val hadExplicitAlias = tableAlias != null && tableAlias.name.isNotEmpty()
                 if (!hadExplicitAlias || sourceFqn !in tableAliases) {
                     tableAliases[sourceFqn] =
@@ -273,12 +277,28 @@ fun <E : Expression> qualifyTables(
             }
         }
 
+        for (column in scope.columns) {
+            // Long qualified columns are Column + Dot nodes. Resolve the entire table path
+            // before treating their tail as struct fields. Keep component boundaries in keys.
+            var whole: Expression = column
+            while (whole.parent is Dot && (whole.parent as Dot).thisArg === whole) whole = whole.parent!!
+            if (whole is Dot) {
+                val parts = whole.parts
+                val alias = parts.takeIf { it.all { part -> part is Identifier } }
+                    ?.dropLast(1)?.map { it.name }?.let { tableAliases[it] }
+                if (alias != null) {
+                    scope.replace(whole, Column(args("this" to parts.last().copy(), "table" to alias.copy())))
+                    continue
+                }
+            }
+        }
+
         for (column in localColumns) {
             val columnTable = column.table
 
             if (column.db.isNotEmpty()) {
                 val tableAlias = tableAliases[
-                    column.parts.dropLast(1).joinToString(".") { it.name },
+                    column.parts.dropLast(1).map { it.name },
                 ]
 
                 if (tableAlias != null) {

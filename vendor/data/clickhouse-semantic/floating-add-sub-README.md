@@ -68,7 +68,7 @@ boundary issue, not a floating result-type rule.
 `floating-add-sub-parser-gap-brikk.json` preserves the actual frontend AST shape,
 literal texts, generated SQL and UNKNOWN result; the corresponding native capture
 records successful Float64 controls on both pins. CHSEM-022 is proposed and unchecked
-in TODO-clickhouse-semantic.md. No lexer/parity change is hidden inside CHSEM-021.
+in dev-docs/TODO-clickhouse-semantic.md. No lexer/parity change is hidden inside CHSEM-021.
 
 ## Reproduction and validation
 

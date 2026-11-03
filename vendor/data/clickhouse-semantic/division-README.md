@@ -3,7 +3,7 @@
 The ClickHouse annotator now infers division results from the exact 26.10.2.103
 rules instead of returning UNKNOWN for every enabled-mode integer division.
 The original CHSEM-001–011 work stays complete. Arithmetic follow-ups have their
-own stable IDs in TODO-clickhouse-semantic.md.
+own stable IDs in dev-docs/TODO-clickhouse-semantic.md.
 
 ## Result rules and integration
 

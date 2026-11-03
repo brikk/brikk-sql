@@ -64,6 +64,23 @@ open class DuckdbGenerator(
     // sqlglot: dialect back-reference for annotate_types-driven paths
     override val dialect: Dialect get() = Dialects.DUCKDB
 
+    override fun copyparameterSql(expression: CopyParameter): String {
+        val value = expression.expressionArg
+        if (expression.isDuckdbCopyLayout() && (expression.thisArg as? Expression)?.name.equals("ORDER_BY", true) && value is Tuple) {
+            if (value.expressionsArg.isEmpty() || value.expressionsArg.any { it !is Ordered }) {
+                unexecutable("COPY ORDER_BY requires modeled ordering terms; refusing to drop malformed terms")
+                return super.copyparameterSql(expression)
+            }
+            val terms = value.expressionsArg.filterIsInstance<Ordered>().joinToString(", ") { term ->
+                sql(term, "this") + when (term.args["desc"]) { true -> " DESC"; false -> " ASC"; else -> "" } +
+                    if (term.meta["duckdb_copy_default_null_order"] == true) "" else
+                        when (term.args["nulls_first"]) { true -> " NULLS FIRST"; false -> " NULLS LAST"; else -> "" }
+            }
+            return "ORDER_BY ($terms)"
+        }
+        return super.copyparameterSql(expression)
+    }
+
     // brikk extension #55: DuckDB 2.0.0 has no STRAIGHT_JOIN.
     override val unexecutableJoinWords: Set<String> get() = setOf("STRAIGHT_JOIN")
 
@@ -82,11 +99,24 @@ open class DuckdbGenerator(
     override val queryHints: Boolean get() = false
     override val lastDaySupportsDatePart: Boolean get() = false
     override val limitFetch: String get() = "LIMIT"
+
+    override fun offsetLimitModifiers(expression: Expression, fetch: Boolean, limit: Expression?): List<String> {
+        val original = expression.args["limit"] as? Expression
+        val offset = expression.args["offset"] as? Expression
+        val limitPosition = anonymousPaginationPosition(original)
+        val offsetPosition = anonymousPaginationPosition(offset)
+        // DuckDB accepts OFFSET before LIMIT. Keep anonymous JDBC binds in authored order,
+        // even while canonicalizing FETCH; do not silently swap the caller's two values.
+        if (limitPosition != null && offsetPosition != null && offsetPosition < limitPosition) return listOf(sql(offset), sql(limit))
+        return super.offsetLimitModifiers(expression, fetch, limit)
+    }
     override val structDelimiter: Pair<String, String> get() = "(" to ")"
     override val renameTableWithDb: Boolean get() = false
     override val semiAntiJoinWithSide: Boolean get() = false
     override val castToIntRounds: Boolean get() = true
-    override val safeIntDivision: Boolean get() = true
+    // The default generator retains SQLGlot's historical lowering policy. Native 2.0
+    // executable generation must not classify // as NULL-on-zero.
+    override val safeIntDivision: Boolean get() = !forExecution
     override val tablesampleKeywords: String get() = "USING SAMPLE"
     override val tablesampleSeedKeyword: String get() = "REPEATABLE"
     override val jsonKeyValuePairSep: String get() = ","
@@ -209,6 +239,7 @@ open class DuckdbGenerator(
 
     // sqlglot: DuckDBGenerator.show_sql
     override fun showSql(expression: Show): String {
+        if (expression.isDuckdbNameShow()) return "SHOW " + sql(expression, if (expression.name == "DUCKDB_QUERY") "query" else "target")
         var from = sql(expression, "from_")
         if (from.isNotEmpty()) from = " FROM $from"
         return "SHOW ${expression.name}$from"
@@ -443,6 +474,14 @@ open class DuckdbGenerator(
 
     // sqlglot: generators.duckdb._regexp_extract_sql
     open fun regexpExtractSql(expression: Expression): String {
+        if ((sourceDialect == null || sourceDialect.equals("duckdb",true)) && expression.duckdbRegexArguments() != null) {
+            val values=expression.duckdbRegexArguments()!!
+            // Preserve the existing harmless canonical omission of literal group zero,
+            // never an authored options/name-list/parameter expression.
+            val group=values.getOrNull(2)
+            val native=if(values.size==3 && group is Literal && !group.isString && group.name=="0")values.take(2)else values
+            return func(expression.duckdbRegexName()!!,*native.toTypedArray())
+        }
         var this_ = expression.thisArg as Expression
         var group = expression.args["group"] as? Expression
         var params = expression.args["parameters"] as? Expression
@@ -2065,6 +2104,8 @@ open class DuckdbGenerator(
     // marker) must have 'g' forced. DuckDB-parsed calls carry single_replace=true
     // (DuckdbParser) and keep their literal flags for a byte-identical round trip.
     open fun regexpreplaceSql(expression: RegexpReplace): String {
+        if ((sourceDialect == null || sourceDialect.equals("duckdb",true)) && expression.args["single_replace"] == true && expression.duckdbRegexArguments() != null)
+            return func("REGEXP_REPLACE",*expression.duckdbRegexArguments()!!.toTypedArray())
         var subject = expression.thisArg as? Expression
         val pattern = expression.args["expression"]
         val replacement = expression.args["replacement"] as? Expression ?: Literal.string("")
@@ -2972,6 +3013,7 @@ open class DuckdbGenerator(
                     SequenceProperties::class to GeneratorTables.PropLocation.POST_EXPRESSION,
                     IcebergProperty::class to GeneratorTables.PropLocation.POST_CREATE,
                     SecureProperty::class to GeneratorTables.PropLocation.POST_CREATE,
+                    DuckdbRecursiveViewProperty::class to GeneratorTables.PropLocation.POST_CREATE,
                     TriggerProperties::class to GeneratorTables.PropLocation.POST_EXPRESSION,
                 )
 

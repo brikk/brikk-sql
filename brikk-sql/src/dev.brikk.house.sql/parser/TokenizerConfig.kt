@@ -164,18 +164,28 @@ class TokenizerConfig(
      */
     fun withKeywords(extra: Map<String, TokenType>): TokenizerConfig = copyWith(extra, unescapedSequences)
 
+    /** Native-only keyword removal, without editing generated parity tables or constructor ABI. */
+    internal fun withoutKeywords(names: Set<String>): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences, keywords = keywords - names)
+
     /** This config with additional identifier delimiters, for native lexer rules absent upstream. */
     fun withIdentifiers(extra: Map<Char, String>): TokenizerConfig =
         copyWith(emptyMap(), unescapedSequences, identifiers = identifiers + extra)
+
+    /** Additional prefixed literal spellings, without changing constructor/default ABI. */
+    fun withFormatStrings(extra: Map<String, StringFormat>): TokenizerConfig =
+        copyWith(emptyMap(), unescapedSequences, formatStrings = formatStrings + extra)
 
     private fun copyWith(
         extra: Map<String, TokenType>,
         sequences: Map<String, String>,
         comments: Map<String, String?> = this.comments,
         identifiers: Map<Char, String> = this.identifiers,
+        formatStrings: Map<String, StringFormat> = this.formatStrings,
+        keywords: Map<String, TokenType> = this.keywords + extra,
     ): TokenizerConfig = TokenizerConfig(
         singleTokens = singleTokens,
-        keywords = keywords + extra,
+        keywords = keywords,
         quotes = quotes,
         formatStrings = formatStrings,
         identifiers = identifiers,
