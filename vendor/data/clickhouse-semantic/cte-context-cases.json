@@ -1,0 +1,511 @@
+{
+  "task": "CHSEM-030-A",
+  "execution": [
+    {
+      "id": "CHSEM-030-E01",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+2 AS v,toTypeName(v) FROM c",
+      "category": "ordinary",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E02",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT c.x+2 AS v,toTypeName(v) FROM c",
+      "category": "qualified",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E03",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x AS v,toTypeName(v) FROM c AS q",
+      "category": "relation-alias",
+      "qualified": true,
+      "types": [
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tUInt8\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E04",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x+2 AS y FROM c), e AS (SELECT y*3 AS z FROM d), f AS (SELECT * FROM e) SELECT z+1 AS v,toTypeName(v) FROM f",
+      "category": "chain-star",
+      "qualified": true,
+      "types": [
+        "UInt64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "10\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "10\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E05",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x AS x FROM c) SELECT x+1 AS v,toTypeName(v) FROM d",
+      "category": "identity-alias",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E06",
+      "sql": "WITH c AS (SELECT 1+2 AS x,x*3 AS y) SELECT y+1 AS v,toTypeName(v) FROM c",
+      "category": "computed-alias",
+      "qualified": true,
+      "types": [
+        "UInt64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "10\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "10\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E07",
+      "sql": "WITH c AS (SELECT CAST([1,2] AS Array(UInt8)) AS xs) SELECT arrayMap(x -> x*2,xs) AS v,toTypeName(v) FROM c",
+      "category": "array-input",
+      "qualified": true,
+      "types": [
+        "Array(UInt16)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[2,4]\tArray(UInt16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[2,4]\tArray(UInt16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E08",
+      "sql": "WITH c AS (SELECT CAST([1,2] AS Array(UInt8)) AS xs), d AS (SELECT arrayMap(x -> x+1,xs) AS ys FROM c) SELECT arrayMap(x -> x*2,ys) AS v,toTypeName(v) FROM d",
+      "category": "array-chain",
+      "qualified": true,
+      "types": [
+        "Array(UInt32)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "[4,6]\tArray(UInt32)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "[4,6]\tArray(UInt32)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E09",
+      "sql": "WITH c AS (SELECT CAST(1 AS Nullable(Int8)) AS x) SELECT x*2 AS v,toTypeName(v) FROM c",
+      "category": "nullable",
+      "qualified": true,
+      "types": [
+        "Nullable(Int16)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tNullable(Int16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tNullable(Int16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E10",
+      "sql": "WITH c AS (SELECT CAST(1 AS Float32) AS x), d AS (SELECT x+1 AS y FROM c WHERE x>0 ORDER BY x LIMIT 1) SELECT y*2 AS v,toTypeName(v) FROM d",
+      "category": "filter-order-limit",
+      "qualified": true,
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "4\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "4\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E11",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x+1 AS v,toTypeName(v) FROM (SELECT x FROM c) AS q",
+      "category": "derived",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E12",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x+1 AS v,toTypeName(v) FROM (WITH c AS (SELECT CAST(1 AS UInt32) AS x) SELECT x FROM c) AS q",
+      "category": "nested-shadow",
+      "qualified": true,
+      "types": [
+        "UInt64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E13",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x+b.x AS v,toTypeName(v) FROM c a CROSS JOIN c b",
+      "category": "repeated-reference",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E14",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y) SELECT a.x*b.y AS v,toTypeName(v) FROM c a INNER JOIN d b ON a.x=b.y",
+      "category": "inner-join",
+      "qualified": true,
+      "types": [
+        "UInt32"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tUInt32\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tUInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E15",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT c.* FROM c) SELECT x+1 AS v,toTypeName(v) FROM d",
+      "category": "qualified-star",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E16",
+      "sql": "WITH c AS MATERIALIZED (SELECT CAST(1 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+      "category": "materialized-type-only",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E17",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y), e AS (SELECT a.x*b.y AS z FROM c a INNER JOIN d b ON a.x=b.y) SELECT z+1 AS v,toTypeName(v) FROM e",
+      "category": "join-inside-chain",
+      "qualified": true,
+      "types": [
+        "UInt64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E18",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT DISTINCT x AS y FROM c WHERE x>0 GROUP BY x ORDER BY y LIMIT 1) SELECT y+1 AS v,toTypeName(v) FROM d",
+      "category": "group-distinct",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E19",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x+1 AS v,toTypeName(v) FROM c a CROSS JOIN c b",
+      "category": "qualified-amid-duplicates",
+      "qualified": true,
+      "types": [
+        "UInt16"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E20",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y) SELECT a.x*b.y AS v,toTypeName(v) FROM c a INNER JOIN d b ON a.x=b.y SETTINGS join_use_nulls=1",
+      "category": "inner-join-null-setting",
+      "qualified": true,
+      "types": [
+        "UInt32"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "1\tUInt32\n"
+        },
+        "26.10.2.103": {
+          "stdout": "1\tUInt32\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E21",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM c a CROSS JOIN c b",
+      "category": "ambiguous",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E22",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x+1 AS v,toTypeName(v) FROM c a LEFT JOIN c b ON a.x=b.x",
+      "category": "outer-join-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E23",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x UNION ALL SELECT CAST(2 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+      "category": "set-operation-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n3\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n3\tUInt16\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E24",
+      "sql": "WITH RECURSIVE c AS (SELECT 1 AS x UNION ALL SELECT x+1 FROM c WHERE x<2) SELECT x+1 AS v,toTypeName(v) FROM c",
+      "category": "recursive-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt64\n3\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt64\n3\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E25",
+      "sql": "WITH c AS (SELECT count() AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+      "category": "aggregate-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E26",
+      "sql": "WITH c AS (SELECT unknown_udf(1) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+      "category": "udf-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        },
+        "26.10.2.103": {
+          "error_code": 46,
+          "error_name": "UNKNOWN_FUNCTION"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E27",
+      "sql": "WITH c AS (SELECT CAST(NULL AS Nullable(Int8)) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+      "category": "constant-null-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "\\N\tNullable(Int16)\n"
+        },
+        "26.10.2.103": {
+          "stdout": "\\N\tNullable(Int16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-E28",
+      "sql": "WITH a AS (SELECT x FROM b), b AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM a",
+      "category": "forward-reference-deferred",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "2\tUInt16\n"
+        },
+        "26.10.2.103": {
+          "stdout": "2\tUInt16\n"
+        }
+      }
+    }
+  ]
+}

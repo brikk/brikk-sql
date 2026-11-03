@@ -135,6 +135,8 @@ private class ClickhouseCompositionValidator(
         val physicalValues: Map<Pair<String, String>, Value> = emptyMap(),
         val sqlBoundary: Boolean = false,
         val callableScope: Boolean = false,
+        val nativeQuerySources: Boolean = false,
+        val projectionAliases: MutableMap<String, Value>? = null,
     ) {
         fun blocked(name: String): Boolean {
             var scope: Context? = this
@@ -165,6 +167,8 @@ private class ClickhouseCompositionValidator(
         fun columnValue(column: Column): Value {
             var scope: Context? = this
             while (scope != null) {
+                if (scope.nativeQuerySources && (column.text("db").isNotEmpty() || column.text("catalog").isNotEmpty())) return Value()
+                if (column.table.isEmpty() && scope.uncertainColumns) return Value()
                 val candidates = scope.physicalValues.filterKeys { (table, name) -> name == column.name &&
                     (column.table.isEmpty() || table == column.table) }.values
                 if (column.table.isEmpty() && column.name in scope.values) {
@@ -192,6 +196,12 @@ private class ClickhouseCompositionValidator(
     private val invalidMaps = HashSet<Long>()
     private val blockedFallbacks = HashSet<Long>()
     private var quietFindings = 0
+    private var errorGeneration = 0
+    private var projectionDepth = 0
+    private val inferValues: Boolean get() = inferResults || projectionDepth > 0
+    private var queryScopes: Map<Long, Scope> = emptyMap()
+    private val queryOutputs = HashMap<Long, List<Pair<String, Value>>?>()
+    private val activeQueries = HashSet<Long>()
 
     fun infer(root: Expression): ClickhouseCompositionInference {
         val validation = validate(root)
@@ -202,6 +212,12 @@ private class ClickhouseCompositionValidator(
         if (version != "26.10.2.103") {
             unknown(root, ClickhouseCompositionUnknownReason.ENGINE_VERSION)
             return report()
+        }
+        if (nativeLiterals) {
+            val owner = root.root()
+            if (owner.walk().onEach { checkCanceled() }.any { it is CTE && it.thisArg is Select }) {
+                queryScopes = traverseScope(owner).onEach { checkCanceled() }.associateBy { it.expression.objectId }
+            }
         }
         val visits = ArrayDeque<Visit>()
         visits.addLast(Visit(root, Context()))
@@ -265,6 +281,7 @@ private class ClickhouseCompositionValidator(
         unknowns.putIfAbsent(node.objectId to reason, ClickhouseCompositionUnknown(node, reason))
     }
     private fun error(node: Expression, rule: ClickhouseCompositionRule, message: String) {
+        errorGeneration++
         if (quietFindings > 0) return
         errors.putIfAbsent(node.objectId to rule, ClickhouseCompositionError(node, rule, message))
     }
@@ -297,6 +314,10 @@ private class ClickhouseCompositionValidator(
 
     /** Parameters stay typed even inside a scalar function whose result is unresearched. */
     private fun rememberBinding(node: Expression, context: Context) {
+        if (node is Column && context.nativeQuerySources) {
+            remember(node, context.columnValue(node))
+            return
+        }
         if (node is ClickhouseLambdaArgument) {
             remember(node, context.implicitValue(node.args["ordinal"] as? Int ?: 0))
             return
@@ -340,7 +361,7 @@ private class ClickhouseCompositionValidator(
         if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
         if (inferResults) mapResults[node.objectId]?.let { return it }
         if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
-        val previousErrors = errors.size
+        val previousErrors = errorGeneration
         val (argument, arrays) = map
         if (argument == null || arrays.isEmpty()) {
             unknown(node, ClickhouseCompositionUnknownReason.UNSUPPORTED_CONTEXT); return Value()
@@ -362,8 +383,8 @@ private class ClickhouseCompositionValidator(
             error(argument, ClickhouseCompositionRule.ARRAY_MAP_ARITY,
                 "arrayMap supplies ${arrays.size} array arguments, but its callable requires ${callable.arity}.")
         if (arrays.size > 1) unknown(node, ClickhouseCompositionUnknownReason.ARRAY_LENGTHS)
-        if (inferResults && errors.size > previousErrors) invalidMaps.add(node.objectId)
-        val result = if (inferResults && node.objectId !in invalidMaps && callable.arity == inputs.size &&
+        if (inferValues && errorGeneration > previousErrors) invalidMaps.add(node.objectId)
+        val result = if (inferValues && node.objectId !in invalidMaps && callable.arity == inputs.size &&
             sources.all { it.plain && it.element != null } && output.type != null) {
             val array = arrayType(output.type)
             if (completeType(array)) Value(Family.OTHER, true, element = output, type = array)
@@ -395,7 +416,7 @@ private class ClickhouseCompositionValidator(
             error(node, ClickhouseCompositionRule.HIGHER_ORDER_ARGUMENT_COUNT, "${call.name} requires a callable and data inputs.")
             return Value()
         }
-        val previousErrors = errors.size
+        val previousErrors = errorGeneration
         val sources = call.inputs.map { inputValue(it, context, depth + 1) }
         if (nullDispatch(node, call.argument, sources)) return Value()
         val arity = declaredArity(call.argument)
@@ -468,7 +489,7 @@ private class ClickhouseCompositionValidator(
             }
             else -> Value()
         }
-        if (errors.size > previousErrors) invalidMaps.add(node.objectId)
+        if (errorGeneration > previousErrors) invalidMaps.add(node.objectId)
         if (!supported || node.objectId in invalidMaps || result.type == null || !completeType(result.type)) {
             if (node.objectId !in invalidMaps) unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY)
             result = Value()
@@ -516,7 +537,7 @@ private class ClickhouseCompositionValidator(
             if (second.arity != null && second.arity != 1)
                 error(right, ClickhouseCompositionRule.RIGHT_OPERAND_ARITY, "A right composition operand must take one argument, not ${second.arity}.")
             return rememberCallable(node, Callable(first.arity,
-                if (inferResults && second.arity != 1) Value() else second.result))
+                if (inferValues && second.arity != 1) Value() else second.result))
         }
         if (node is ClickhouseFunctionReference) {
             val facts = facts(node.name, node, context) ?: return Callable()
@@ -633,7 +654,7 @@ private class ClickhouseCompositionValidator(
         val node = raw.unnest()
         if (depth > 128) { unknown(node, ClickhouseCompositionUnknownReason.ANALYSIS_LIMIT); return Value() }
         if (ignored(node)) { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); return Value() }
-        val nestedMap = if (inferResults) arrayMap(node) else null
+        val nestedMap = if (inferValues) arrayMap(node) else null
         if (nestedMap != null) {
             val name = nestedMap.name
             if (context.blocked(name)) { unknown(node, ClickhouseCompositionUnknownReason.NAME_RESOLUTION); return Value() }
@@ -651,9 +672,9 @@ private class ClickhouseCompositionValidator(
             is Tuple -> tupleValue(node.expressionsArg.filterIsInstance<Expression>().map { value(it, context, depth + 1) })
             is EQ, is NEQ, is GT, is GTE, is LT, is LTE -> comparisonValue(node, context, depth)
             is Div -> divisionValue(node, context, depth)
-            is Add, is Sub -> if (inferResults && nativeLiterals) addSubValue(node, context, depth)
+            is Add, is Sub -> if (inferValues && nativeLiterals) addSubValue(node, context, depth)
                 else { unknown(node, ClickhouseCompositionUnknownReason.RESULT_FAMILY); Value() }
-            is Mul -> if (inferResults && nativeLiterals) multiplicationValue(node, context, depth)
+            is Mul -> if (inferValues && nativeLiterals) multiplicationValue(node, context, depth)
                 else scalarValue(node, context, depth)
             is TryCast -> { unknown(node, ClickhouseCompositionUnknownReason.NULL_OR_WRAPPER); Value() }
             is Cast -> {
@@ -671,9 +692,9 @@ private class ClickhouseCompositionValidator(
             }
             else -> {
                 if (clickhouseDivisionCall(node) != null) return remember(node, divisionValue(node, context, depth))
-                if (inferResults && nativeLiterals && clickhouseIntegerAddSubCall(node) != null)
+                if (inferValues && nativeLiterals && clickhouseIntegerAddSubCall(node) != null)
                     return remember(node, addSubValue(node, context, depth))
-                if (inferResults && nativeLiterals && clickhouseMultiplicationCall(node) != null)
+                if (inferValues && nativeLiterals && clickhouseMultiplicationCall(node) != null)
                     return remember(node, multiplicationValue(node, context, depth))
                 scalarValue(node, context, depth)
             }
@@ -964,7 +985,7 @@ private class ClickhouseCompositionValidator(
             is Identifier -> context.namedValue(node.name) ?: Value()
             is Column -> context.columnValue(node)
             is ClickhouseLambdaArgument -> context.implicitValue(node.args["ordinal"] as? Int ?: 0)
-            else -> if (inferResults && arrayMap(node) != null) value(node, context, depth + 1) else declaredValue(node)
+            else -> if (inferValues && arrayMap(node) != null) value(node, context, depth + 1) else declaredValue(node)
         }
         if (inferResults) remember(node, input)
         if (input.plain && input.element != null) return lambdaInput(input.element).copy(constant = null)
@@ -1150,6 +1171,7 @@ private class ClickhouseCompositionValidator(
     }
 
     private fun queryContext(select: Select, inherited: Context): Context {
+        if (nativeLiterals && select.objectId in queryScopes) return relationalQueryContext(select, inherited)
         val names = mutableSetOf<String>()
         for (node in select.walk(prune = { it !== select && (it is Query || it is Subquery || it is Lambda || it is ClickhouseImplicitLambda) })) {
             checkCanceled()
@@ -1192,5 +1214,136 @@ private class ClickhouseCompositionValidator(
         }
         return Context(inherited, lexical = names, columns = columns, uncertainColumns = uncertain,
             values = expressionValues, physicalValues = physicalValues, sqlBoundary = true)
+    }
+
+    /** Structural scope bindings only; generic annotated types are never an input to this proof. */
+    private fun relationalQueryContext(select: Select, inherited: Context): Context {
+        checkCanceled()
+        val names = select.walk(prune = { it !== select && (it is Query || it is Subquery || it is Lambda || it is ClickhouseImplicitLambda) })
+            .onEach { checkCanceled() }.filterIsInstance<Alias>().map { it.alias }.toMutableSet()
+        val definitions = (select.args["with_"] as? With)?.expressionsArg.orEmpty().filterIsInstance<CTE>()
+        names.addAll(definitions.map { it.aliasOrName })
+        val values = mutableMapOf<String, Value>()
+        for (projection in select.expressionsArg.filterIsInstance<Alias>())
+            (projection.thisArg as? Expression)?.let {
+                // An identity alias cannot change which physical column it denotes.
+                if (it !is Column || it.name != projection.alias)
+                    values[projection.alias] = if (ignored(projection)) Value() else declaredValue(it)
+            }
+        for (cte in definitions) (cte.thisArg as? Expression)?.let { values[cte.aliasOrName] = declaredValue(it) }
+        val columns = mutableSetOf<String>()
+        val physical = mutableMapOf<Pair<String, String>, Value>()
+        var uncertain = !safeRelationalSelect(select)
+        val relations = listOfNotNull((select.args["from_"] as? From)?.thisArg as? Expression) +
+            (select.args["joins"] as? List<*>)?.filterIsInstance<Join>().orEmpty().mapNotNull { it.thisArg as? Expression }
+        val duplicateAliases = relations.groupBy { it.aliasOrName }.filterValues { it.size > 1 }.keys
+        for (relation in relations) {
+            checkCanceled()
+            val alias = relation.aliasOrName
+            val source = queryScopes[select.objectId]?.sources?.get(alias)
+            val output = if (!safeRelationalSelect(select) || alias in duplicateAliases || relation.aliasColumnNames.isNotEmpty()) null
+                else when {
+                    source is Scope && source.expression is Select && source.outerColumns.isEmpty() &&
+                        compatibleCteSettings(source.expression as Select, select) -> selectOutput(source.expression as Select)
+                    relation is Table && relation.thisArg is Identifier && !hiddenCteReference(relation) -> {
+                        val nativeSchema = (schema as? MappingSchema)?.takeIf { it.dialect.name == "clickhouse" }
+                        val found = nativeSchema?.find(relation, raiseOnMissing = false) as? Map<*, *>
+                        found?.keys?.map { key -> key.toString() to nativeType(nativeSchema.getColumnType(relation, key.toString())) }
+                    }
+                    else -> null
+                }
+            if (output == null) uncertain = true
+            else for ((name, value) in output) {
+                columns.add(name)
+                val key = alias to name
+                physical[key] = if (key in physical) Value() else value.copy(constant = null)
+            }
+        }
+        return Context(inherited, lexical = names, columns = columns, uncertainColumns = uncertain,
+            values = values, physicalValues = physical, sqlBoundary = true, nativeQuerySources = true, projectionAliases = values)
+    }
+
+    private fun safeRelationalSelect(select: Select): Boolean {
+        if ((select.args["with_"] as? With)?.recursive == true) return false
+        var parent = select.parent
+        while (parent != null && parent !is Query) {
+            if (parent is With && parent.recursive) return false
+            parent = parent.parent
+        }
+        val definitions = (select.args["with_"] as? With)?.expressionsArg.orEmpty().filterIsInstance<CTE>()
+        if (definitions.map { it.aliasOrName }.distinct().size != definitions.size) return false
+        return (select.args["joins"] as? List<*>)?.filterIsInstance<Join>().orEmpty().all {
+            it.text("side").isEmpty() && it.text("kind") in setOf("", "INNER", "CROSS") &&
+                it.text("method") in setOf("", "ALL") && it.args["using"] == null
+        } && select.args["group"]?.let { group ->
+            group !is Expression || listOf("rollup", "cube", "grouping_sets", "totals").all { group.args[it] == null }
+        } != false
+    }
+
+    /** Reused CTEs may be instantiated under different consumer SETTINGS. Do not cache across those modes. */
+    private fun compatibleCteSettings(source: Select, consumer: Select): Boolean {
+        if (!source.walk(prune = { it !== source && it is Query }).onEach { checkCanceled() }
+                .any { clickhouseDivisionCall(it, sessionSettings) != null }) return true
+        return listOf("sql_compatible_division_for_integers", "decimal_check_overflow").all {
+            clickhouseBooleanSetting(source, it, sessionSettings) == clickhouseBooleanSetting(consumer, it, sessionSettings)
+        }
+    }
+
+    /** A forward/self/unsupported CTE reference must never silently bind to a same-named catalog table. */
+    private fun hiddenCteReference(table: Table): Boolean {
+        if (table.db.isNotEmpty() || table.catalog.isNotEmpty()) return false
+        var parent: Expression? = table.parent
+        while (parent != null) {
+            checkCanceled()
+            val definitions = (parent.args["with_"] as? With)?.expressionsArg.orEmpty().filterIsInstance<CTE>()
+            if (definitions.any { it.aliasOrName == table.name }) return true
+            parent = parent.parent
+        }
+        return false
+    }
+
+    /** Demand-driven output inference does not diagnose or execute unused WITH definitions. */
+    private fun selectOutput(select: Select): List<Pair<String, Value>>? {
+        checkCanceled()
+        if (select.objectId in queryOutputs) return queryOutputs[select.objectId]
+        if (activeQueries.size >= 128 || !activeQueries.add(select.objectId)) return null
+        val result = try {
+            if (!safeRelationalSelect(select)) null else {
+                val context = queryContext(select, Context())
+                val output = mutableListOf<Pair<String, Value>>()
+                var complete = true
+                quietFindings++
+                projectionDepth++
+                try {
+                    for (projection in select.expressionsArg.filterIsInstance<Expression>()) {
+                        checkCanceled()
+                        if (ignored(projection)) { complete = false; break }
+                        if (projection.isStar) {
+                            val star = if (projection is Column) projection.thisArg as? Star else projection as? Star
+                            if (star == null || projection.text("db").isNotEmpty() || projection.text("catalog").isNotEmpty() ||
+                                star.args.values.any { it != null && it != emptyList<Any>() } || context.uncertainColumns) {
+                                complete = false; break
+                            }
+                            val qualifier = (projection as? Column)?.table.orEmpty()
+                            val expanded = context.physicalValues.filterKeys { qualifier.isEmpty() || it.first == qualifier }
+                            if (expanded.isEmpty()) { complete = false; break }
+                            output.addAll(expanded.map { it.key.second to it.value })
+                        } else {
+                            val name = projection.aliasOrName
+                            if (name.isEmpty()) { complete = false; break }
+                            val expression = if (projection is Alias) projection.thisArg as? Expression else projection
+                            val projected = expression?.let {
+                                declaredValue(it).takeIf { declared -> declared.type != null } ?: value(it, context, 0)
+                            } ?: Value()
+                            output.add(name to projected)
+                            if (projection is Alias && name !in context.columns) context.projectionAliases?.put(name, projected)
+                        }
+                    }
+                } finally { projectionDepth--; quietFindings-- }
+                if (!complete || output.map { it.first }.distinct().size != output.size) null else output
+            }
+        } finally { activeQueries.remove(select.objectId) }
+        queryOutputs[select.objectId] = result
+        return result
     }
 }

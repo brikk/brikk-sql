@@ -13,7 +13,8 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   the CHSEM-001 through CHSEM-023 scope as opt-in hints and separately proved
   checks, not full validation or native-exact metadata for every AST node.
   CHSEM-024/025 now provide proof provenance and primitive root multiplication
-  typing. Release preparation is authorized; publication and consumer updates
+  typing. CHSEM-030-A adds bounded non-recursive CTE propagation, qualified in
+  local RC2 candidates. Publication and consumer updates
   still need approval. Deferred work, evidence, dependencies and completion criteria:
   [CHSEM-024 through CHSEM-034](TODO-clickhouse-semantic.md#deferred-improvement-backlog).
   The remaining P2 items are not authorized for implementation by this approval.

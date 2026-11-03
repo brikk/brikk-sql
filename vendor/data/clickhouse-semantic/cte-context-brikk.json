@@ -1,0 +1,366 @@
+[
+    {
+        "id": "CHSEM-030-E01",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+2 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x + 2 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E02",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT c.x+2 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT c.x + 2 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E03",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x AS v,toTypeName(v) FROM c AS q",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x AS v, toTypeName(v) FROM c AS q;",
+        "types": [
+            "UInt8"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E04",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x+2 AS y FROM c), e AS (SELECT y*3 AS z FROM d), f AS (SELECT * FROM e) SELECT z+1 AS v,toTypeName(v) FROM f",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x + 2 AS y FROM c), e AS (SELECT y * 3 AS z FROM d), f AS (SELECT * FROM e) SELECT z + 1 AS v, toTypeName(v) FROM f;",
+        "types": [
+            "UInt64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E05",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x AS x FROM c) SELECT x+1 AS v,toTypeName(v) FROM d",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x AS x FROM c) SELECT x + 1 AS v, toTypeName(v) FROM d;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E06",
+        "input_sql": "WITH c AS (SELECT 1+2 AS x,x*3 AS y) SELECT y+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT 1 + 2 AS x, x * 3 AS y) SELECT y + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UInt64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E07",
+        "input_sql": "WITH c AS (SELECT CAST([1,2] AS Array(UInt8)) AS xs) SELECT arrayMap(x -> x*2,xs) AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT CAST([1, 2] AS Array(UInt8)) AS xs) SELECT arrayMap(x -> x * 2, xs) AS v, toTypeName(v) FROM c;",
+        "types": [
+            "Array(UInt16)"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E08",
+        "input_sql": "WITH c AS (SELECT CAST([1,2] AS Array(UInt8)) AS xs), d AS (SELECT arrayMap(x -> x+1,xs) AS ys FROM c) SELECT arrayMap(x -> x*2,ys) AS v,toTypeName(v) FROM d",
+        "generated": "WITH c AS (SELECT CAST([1, 2] AS Array(UInt8)) AS xs), d AS (SELECT arrayMap(x -> x + 1, xs) AS ys FROM c) SELECT arrayMap(x -> x * 2, ys) AS v, toTypeName(v) FROM d;",
+        "types": [
+            "Array(UInt32)"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E09",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS Nullable(Int8)) AS x) SELECT x*2 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT CAST(1 AS Nullable(Int8)) AS x) SELECT x * 2 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "Nullable(Int16)"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E10",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS Float32) AS x), d AS (SELECT x+1 AS y FROM c WHERE x>0 ORDER BY x LIMIT 1) SELECT y*2 AS v,toTypeName(v) FROM d",
+        "generated": "WITH c AS (SELECT CAST(1 AS Float32) AS x), d AS (SELECT x + 1 AS y FROM c WHERE x > 0 ORDER BY x LIMIT 1) SELECT y * 2 AS v, toTypeName(v) FROM d;",
+        "types": [
+            "Float64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E11",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x+1 AS v,toTypeName(v) FROM (SELECT x FROM c) AS q",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x + 1 AS v, toTypeName(v) FROM (SELECT x FROM c) AS q;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E12",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x+1 AS v,toTypeName(v) FROM (WITH c AS (SELECT CAST(1 AS UInt32) AS x) SELECT x FROM c) AS q",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT q.x + 1 AS v, toTypeName(v) FROM (WITH c AS (SELECT CAST(1 AS UInt32) AS x) SELECT x FROM c) AS q;",
+        "types": [
+            "UInt64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E13",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x+b.x AS v,toTypeName(v) FROM c a CROSS JOIN c b",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x + b.x AS v, toTypeName(v) FROM c AS a CROSS JOIN c AS b;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E14",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y) SELECT a.x*b.y AS v,toTypeName(v) FROM c a INNER JOIN d b ON a.x=b.y",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y) SELECT a.x * b.y AS v, toTypeName(v) FROM c AS a INNER JOIN d AS b ON a.x = b.y;",
+        "types": [
+            "UInt32"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E15",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT c.* FROM c) SELECT x+1 AS v,toTypeName(v) FROM d",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT c.* FROM c) SELECT x + 1 AS v, toTypeName(v) FROM d;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E16",
+        "input_sql": "WITH c AS MATERIALIZED (SELECT CAST(1 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS MATERIALIZED (SELECT CAST(1 AS UInt8) AS x) SELECT x + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E17",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y), e AS (SELECT a.x*b.y AS z FROM c a INNER JOIN d b ON a.x=b.y) SELECT z+1 AS v,toTypeName(v) FROM e",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y), e AS (SELECT a.x * b.y AS z FROM c AS a INNER JOIN d AS b ON a.x = b.y) SELECT z + 1 AS v, toTypeName(v) FROM e;",
+        "types": [
+            "UInt64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E18",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT DISTINCT x AS y FROM c WHERE x>0 GROUP BY x ORDER BY y LIMIT 1) SELECT y+1 AS v,toTypeName(v) FROM d",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT DISTINCT x AS y FROM c WHERE x > 0 GROUP BY x ORDER BY y LIMIT 1) SELECT y + 1 AS v, toTypeName(v) FROM d;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E19",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x+1 AS v,toTypeName(v) FROM c a CROSS JOIN c b",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x + 1 AS v, toTypeName(v) FROM c AS a CROSS JOIN c AS b;",
+        "types": [
+            "UInt16"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E20",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y) SELECT a.x*b.y AS v,toTypeName(v) FROM c a INNER JOIN d b ON a.x=b.y SETTINGS join_use_nulls=1",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT CAST(1 AS UInt16) AS y) SELECT a.x * b.y AS v, toTypeName(v) FROM c AS a INNER JOIN d AS b ON a.x = b.y SETTINGS join_use_nulls = 1;",
+        "types": [
+            "UInt32"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-E21",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM c a CROSS JOIN c b",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x + 1 AS v, toTypeName(v) FROM c AS a CROSS JOIN c AS b;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E22",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x+1 AS v,toTypeName(v) FROM c a LEFT JOIN c b ON a.x=b.x",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT a.x + 1 AS v, toTypeName(v) FROM c AS a LEFT JOIN c AS b ON a.x = b.x;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E23",
+        "input_sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x UNION ALL SELECT CAST(2 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT CAST(1 AS UInt8) AS x UNION ALL SELECT CAST(2 AS UInt8) AS x) SELECT x + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E24",
+        "input_sql": "WITH RECURSIVE c AS (SELECT 1 AS x UNION ALL SELECT x+1 FROM c WHERE x<2) SELECT x+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH RECURSIVE c AS (SELECT 1 AS x UNION ALL SELECT x + 1 FROM c WHERE x < 2) SELECT x + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E25",
+        "input_sql": "WITH c AS (SELECT count() AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT count() AS x) SELECT x + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E26",
+        "input_sql": "WITH c AS (SELECT unknown_udf(1) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT unknown_udf(1) AS x) SELECT x + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E27",
+        "input_sql": "WITH c AS (SELECT CAST(NULL AS Nullable(Int8)) AS x) SELECT x+1 AS v,toTypeName(v) FROM c",
+        "generated": "WITH c AS (SELECT CAST(NULL AS Nullable(Int8)) AS x) SELECT x + 1 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-E28",
+        "input_sql": "WITH a AS (SELECT x FROM b), b AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+1 AS v,toTypeName(v) FROM a",
+        "generated": "WITH a AS (SELECT x FROM b), b AS (SELECT CAST(1 AS UInt8) AS x) SELECT x + 1 AS v, toTypeName(v) FROM a;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    }
+]

@@ -1,0 +1,355 @@
+{
+  "engine": {
+    "version": "26.8.34.13",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+    "tag": "clickhouse/clickhouse-server:26.8.34.13",
+    "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.8.34.13\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "a553f0cc81bb62c65fa937be668c8b20afd138495c7bded9d6d158e09538bffd",
+  "brikk_sha256": "345b7532d99d4044849285c70f80acec37b8e68449f16d57f81d3a52a79263d4",
+  "execution": [
+    {
+      "id": "CHSEM-030-E01",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E02",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E03",
+      "returncode": 0,
+      "stdout": "1\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E04",
+      "returncode": 0,
+      "stdout": "10\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E05",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E06",
+      "returncode": 0,
+      "stdout": "10\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E07",
+      "returncode": 0,
+      "stdout": "[2,4]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E08",
+      "returncode": 0,
+      "stdout": "[4,6]\tArray(UInt32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E09",
+      "returncode": 0,
+      "stdout": "2\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E10",
+      "returncode": 0,
+      "stdout": "4\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E11",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E12",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E13",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E14",
+      "returncode": 0,
+      "stdout": "1\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E15",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E16",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E17",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E18",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E19",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E20",
+      "returncode": 0,
+      "stdout": "1\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E21",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E22",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E23",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E24",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n3\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E25",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E26",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `unknown_udf` does not exist. In scope  c. (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-030-E27",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E28",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-030-E01",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E02",
+      "returncode": 0,
+      "stdout": "3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E03",
+      "returncode": 0,
+      "stdout": "1\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E04",
+      "returncode": 0,
+      "stdout": "10\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E05",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E06",
+      "returncode": 0,
+      "stdout": "10\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E07",
+      "returncode": 0,
+      "stdout": "[2,4]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E08",
+      "returncode": 0,
+      "stdout": "[4,6]\tArray(UInt32)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E09",
+      "returncode": 0,
+      "stdout": "2\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E10",
+      "returncode": 0,
+      "stdout": "4\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E11",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E12",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E13",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E14",
+      "returncode": 0,
+      "stdout": "1\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E15",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E16",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E17",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E18",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E19",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E20",
+      "returncode": 0,
+      "stdout": "1\tUInt32\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E21",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E22",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E23",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n3\tUInt16\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E24",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n3\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E25",
+      "returncode": 0,
+      "stdout": "2\tUInt64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E26",
+      "returncode": 46,
+      "stdout": "",
+      "stderr": "Code: 46. DB::Exception: Function with name `unknown_udf` does not exist. In scope  c. (UNKNOWN_FUNCTION)\n"
+    },
+    {
+      "id": "CHSEM-030-E27",
+      "returncode": 0,
+      "stdout": "\\N\tNullable(Int16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-E28",
+      "returncode": 0,
+      "stdout": "2\tUInt16\n",
+      "stderr": ""
+    }
+  ]
+}

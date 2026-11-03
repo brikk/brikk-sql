@@ -80,6 +80,11 @@ MULTIPLICATION = [INTEGER_ADD_SUB[0],
     ("src/Functions/multiply.cpp", "struct MultiplyImpl", "class FunctionSqr"),
     INTEGER_ADD_SUB[3], DIVISION[-1], FLOATING_ADD_SUB[-1],
 ]
+CTE_CONTEXT = [
+    ("src/Analyzer/Resolve/QueryAnalyzer.cpp", "IdentifierResolveResult QueryAnalyzer::tryResolveIdentifierFromCTE(", "IdentifierResolveResult QueryAnalyzer::tryResolveIdentifierInParentScopes("),
+    ("src/Analyzer/Resolve/QueryAnalyzer.cpp", "void QueryAnalyzer::initializeTableExpressionData(", "void QueryAnalyzer::resolveTableFunction("),
+    ("src/Analyzer/Resolve/IdentifierResolver.cpp", "IdentifierResolveResult IdentifierResolver::tryResolveIdentifierFromCrossJoin(", "static bool resolvedIdenfiersFromJoinAreEquals("),
+]
 
 
 def selection(data, begin, end):
@@ -96,16 +101,16 @@ def selection(data, begin, end):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub", "scientific-boundary", "multiplication"), default="higher-order")
+    parser.add_argument("--round", choices=("higher-order", "overload", "division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub", "scientific-boundary", "multiplication", "cte-context"), default="higher-order")
     args = parser.parse_args()
     snapshots = []
     for version, tag in VERSIONS.items():
-        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub", "scientific-boundary", "multiplication") and version != "26.10.2.103":
+        if args.round in ("division", "script-settings", "decimal-division", "decimal-diagnostics", "decimal-runtime", "projection-literals", "integer-add-sub", "floating-add-sub", "scientific-boundary", "multiplication", "cte-context") and version != "26.10.2.103":
             continue
         records = []
         cache = {}
-        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS, "decimal-runtime": DECIMAL_RUNTIME, "projection-literals": PROJECTION_LITERALS, "integer-add-sub": INTEGER_ADD_SUB, "floating-add-sub": FLOATING_ADD_SUB, "scientific-boundary": SCIENTIFIC_BOUNDARY, "multiplication": MULTIPLICATION}[args.round]
-        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016", "decimal-runtime": "CHSEM-017", "projection-literals": "CHSEM-019", "integer-add-sub": "CHSEM-020", "floating-add-sub": "CHSEM-021", "scientific-boundary": "CHSEM-022", "multiplication": "CHSEM-025"}[args.round]
+        selections = {"higher-order": HIGHER_ORDER, "overload": OVERLOAD, "division": DIVISION, "script-settings": SCRIPT_SETTINGS, "decimal-division": DECIMAL_DIVISION, "decimal-diagnostics": DECIMAL_DIAGNOSTICS, "decimal-runtime": DECIMAL_RUNTIME, "projection-literals": PROJECTION_LITERALS, "integer-add-sub": INTEGER_ADD_SUB, "floating-add-sub": FLOATING_ADD_SUB, "scientific-boundary": SCIENTIFIC_BOUNDARY, "multiplication": MULTIPLICATION, "cte-context": CTE_CONTEXT}[args.round]
+        task = {"higher-order": "CHSEM-008", "overload": "CHSEM-009", "division": "CHSEM-012", "script-settings": "CHSEM-014", "decimal-division": "CHSEM-015", "decimal-diagnostics": "CHSEM-016", "decimal-runtime": "CHSEM-017", "projection-literals": "CHSEM-019", "integer-add-sub": "CHSEM-020", "floating-add-sub": "CHSEM-021", "scientific-boundary": "CHSEM-022", "multiplication": "CHSEM-025", "cte-context": "CHSEM-030"}[args.round]
         for index, (path, begin, end) in enumerate(selections, 1):
             url = f"https://raw.githubusercontent.com/ClickHouse/ClickHouse/{tag}/{path}"
             if path not in cache:

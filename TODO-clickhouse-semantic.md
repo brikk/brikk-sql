@@ -26,6 +26,12 @@ Publication and consumer updates still require approval. This supersedes the
 unscheduled status below for those two P1 items and the preparation portion of
 CHSEM-034 only.
 
+The user then authorized CHSEM-030-A before release: a narrow non-recursive CTE
+slice for ordinary/chained projections and aliases, stars/derived relations,
+supported schema inputs and downstream arithmetic/lambdas. Broader CHSEM-030 and
+other P2 families remain deferred. Earlier RC1 qualification does not certify the
+new CTE change; refresh the gates and local candidates before a release handoff.
+
 On 2026-11-02 the user accepted the closeout recommendation: keep this as a bounded,
 opt-in semantic/type-hint foundation with explicit unknowns and separately proved
 errors. It is not a full ClickHouse validator or a guarantee that every populated
@@ -89,6 +95,13 @@ CHSEM IDs or silently broaden their contracts.
   when scope/capture/ambiguity handling, schema ownership and original/generated
   native results have tests, and missing catalog information stays explicit.
   This does not promise full native analyzer parity.
+  CHSEM-030-A is the separately authorized ordinary non-recursive CTE slice;
+  its contract/evidence is in `vendor/data/clickhouse-semantic/cte-context-README.md`.
+  - [x] **CHSEM-030-A: Propagate supported native types through ordinary CTEs.**
+    Completed and qualified with local RC2 artifacts. Covers chains, projection
+    aliases/stars, nested scope/shadowing, supported schema facts and downstream
+    arithmetic/lambdas, plus measured qualified INNER/CROSS joins. The parent item
+    remains open for broader catalog, join, set-operation and correlated context.
 - [ ] **CHSEM-031: Extend explicit session facts when needed.** P2. G05 remains
   intentionally unknown after `SET ...=DEFAULT` without external default facts.
   Design caller-supplied settings/profile/parameter facts or additional SET/DDL
@@ -128,7 +141,42 @@ freshness and skips. Preserve generic parity, source ranges, serde, cancellation
 ownership, explicit mode selection and public binary compatibility. Acceptance of
 this backlog does not authorize work on its items.
 
-## CHSEM-034 release preparation
+## CHSEM-030-A result and current release handoff
+
+The narrow non-recursive CTE slice is complete. Native output inference uses
+structural lexical scope bindings and existing native contracts, never generic
+type slots. Chained/repeated CTEs, aliases/stars, nested WITH/derived queries,
+supported schema inputs and downstream arithmetic/lambdas carry native conditional
+proofs. Simple qualified INNER/CROSS joins are measured. Unknown/ambiguous outputs,
+recursive/set-operation CTEs, outer joins, unsupported functions and conflicting
+definition/consumer division modes remain conservative. Generic typing, API/ABI,
+source/serde/ownership and explicit statement/script separation are preserved.
+
+Evidence: 28 finite cases with 20 qualified and eight deferred controls, plus six
+script cases with four qualified and two deferred. Original/generated outcomes
+match both exact native pins without execution/version skips. Tagged analyzer
+source excerpts and a named refinement for the original CTE counterexample are
+retained under `vendor/data/clickhouse-semantic/cte-context-*`.
+
+Final gates pass 1,545 core tests, 455 other module tests with 61 optional engine
+assumption aborts, 817 IntelliJ tests on 261.25134.95, and 214 Python tests with one
+opt-in skip. The separate enabled release-model gate passes 38 tests. Both CTE
+frontend reports regenerate byte-identically, and source/test fingerprints stay
+unchanged through all final gates and packaging. No ledger or skip was weakened.
+
+Unsigned local SQL `0.23.0-rc.2` and IntelliJ `0.3.1-rc.2` candidates pass all
+15-coordinate alignment, verifier, Java 17 and IDE audits. All 60 payloads/JAR
+integrity and eight packaged-source comparisons pass. The packaged Java 17 API
+smoke now exercises ordinary/chained/array/star CTEs. RC2 supersedes the earlier
+RC1 qualification for this source. Logs, source fingerprints and payload SHA-256
+manifests are in `build/chsem-030-final-gate/`; handoff: `docs/sql-0.23.0.md`.
+
+Stop expansion here. The next agent should release the final ClickHouse semantic
+branch source including CHSEM-030-A, not current main alone or the older RC1
+source. CHSEM-034 still needs final source/version approval, remote release gates
+and publication; consumer adoption remains separately authorized and qualified.
+
+## CHSEM-034 release preparation, RC1 baseline
 
 The user authorized P1 fixes plus release-candidate preparation, not publication
 or consumer updates. CHSEM-024/025 are committed/pushed as `f58dc3d`/`3ae9205`.

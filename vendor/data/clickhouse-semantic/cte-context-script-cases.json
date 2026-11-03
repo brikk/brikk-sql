@@ -1,0 +1,113 @@
+{
+  "task": "CHSEM-030-A",
+  "execution": [
+    {
+      "id": "CHSEM-030-Q01",
+      "sql": "SET sql_compatible_division_for_integers=1; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x/2 AS v,toTypeName(v) FROM c;",
+      "qualified": true,
+      "types": [
+        "UInt8"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3\tUInt8\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-Q02",
+      "sql": "SET sql_compatible_division_for_integers=0; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x/2 AS v,toTypeName(v) FROM c;",
+      "qualified": true,
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-Q03",
+      "sql": "SET sql_compatible_division_for_integers=1; WITH c AS (SELECT CAST([7] AS Array(UInt8)) AS xs), d AS (SELECT arrayMap(x -> x/2,xs) AS ys FROM c) SELECT arrayMap(y -> y+1,ys) AS v,toTypeName(v) FROM d;",
+      "qualified": true,
+      "types": [
+        "Array(UInt16)"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "[4]\tArray(UInt16)\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-Q04",
+      "sql": "SET sql_compatible_division_for_integers=DEFAULT; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x/2 AS v,toTypeName(v) FROM c;",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "stdout": "3.5\tFloat64\n"
+        },
+        "26.10.2.103": {
+          "stdout": "3.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-Q05",
+      "sql": "SET sql_compatible_division_for_integers=1; WITH c AS (SELECT CAST(7 AS UInt8)/2 AS x) SELECT x+1 AS v,toTypeName(v) FROM c SETTINGS sql_compatible_division_for_integers=0;",
+      "qualified": true,
+      "types": [
+        "Float64"
+      ],
+      "rules": [],
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "4.5\tFloat64\n"
+        }
+      }
+    },
+    {
+      "id": "CHSEM-030-Q06",
+      "sql": "WITH c AS (SELECT CAST(7 AS UInt8)/2 AS x), d AS (SELECT x FROM c SETTINGS sql_compatible_division_for_integers=1) SELECT x+1 AS v,toTypeName(v) FROM d SETTINGS sql_compatible_division_for_integers=0",
+      "qualified": false,
+      "types": [
+        "UNKNOWN"
+      ],
+      "rules": [],
+      "boundary": "Conflicting definition/consumer query-local division modes are not rebound by this slice.",
+      "expectations": {
+        "26.8.34.13": {
+          "error_code": 115,
+          "error_name": "UNKNOWN_SETTING"
+        },
+        "26.10.2.103": {
+          "stdout": "4.5\tFloat64\n"
+        }
+      }
+    }
+  ]
+}

@@ -295,6 +295,12 @@ types and original/generated finite/script outcomes are in `multiplication-types
 `multiplication-native/` and `multiplication-script-native/`. Earlier closeout
 captures remain unchanged and stronger facts use named refinements.
 
+CHSEM-030-A's `cte-context-sources.json` adds tagged Apache-2.0 QueryAnalyzer and
+IdentifierResolver excerpts for CTE resolution, projected column types and
+ambiguity. Original/generated finite/session evidence is in `cte-context-native/`
+and `cte-context-script-native/`. Existing arithmetic contracts and historical
+captures remain unchanged.
+
 ## polyglot (DataFusion fixture corpus)
 
 `brikk-sql/testResources/dialect-corpus/datafusion-fixtures.json` is imported by

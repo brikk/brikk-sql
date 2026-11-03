@@ -1,0 +1,80 @@
+[
+    {
+        "id": "CHSEM-030-Q01",
+        "input_sql": "SET sql_compatible_division_for_integers=1; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x/2 AS v,toTypeName(v) FROM c;",
+        "generated": "SET sql_compatible_division_for_integers = 1; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x / 2 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UInt8"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-Q02",
+        "input_sql": "SET sql_compatible_division_for_integers=0; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x/2 AS v,toTypeName(v) FROM c;",
+        "generated": "SET sql_compatible_division_for_integers = 0; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x / 2 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "Float64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-Q03",
+        "input_sql": "SET sql_compatible_division_for_integers=1; WITH c AS (SELECT CAST([7] AS Array(UInt8)) AS xs), d AS (SELECT arrayMap(x -> x/2,xs) AS ys FROM c) SELECT arrayMap(y -> y+1,ys) AS v,toTypeName(v) FROM d;",
+        "generated": "SET sql_compatible_division_for_integers = 1; WITH c AS (SELECT CAST([7] AS Array(UInt8)) AS xs), d AS (SELECT arrayMap(x -> x / 2, xs) AS ys FROM c) SELECT arrayMap(y -> y + 1, ys) AS v, toTypeName(v) FROM d;",
+        "types": [
+            "Array(UInt16)"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-Q04",
+        "input_sql": "SET sql_compatible_division_for_integers=DEFAULT; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x/2 AS v,toTypeName(v) FROM c;",
+        "generated": "SET sql_compatible_division_for_integers = DEFAULT; WITH c AS (SELECT CAST(7 AS UInt8) AS x) SELECT x / 2 AS v, toTypeName(v) FROM c;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    },
+    {
+        "id": "CHSEM-030-Q05",
+        "input_sql": "SET sql_compatible_division_for_integers=1; WITH c AS (SELECT CAST(7 AS UInt8)/2 AS x) SELECT x+1 AS v,toTypeName(v) FROM c SETTINGS sql_compatible_division_for_integers=0;",
+        "generated": "SET sql_compatible_division_for_integers = 1; WITH c AS (SELECT CAST(7 AS UInt8) / 2 AS x) SELECT x + 1 AS v, toTypeName(v) FROM c SETTINGS sql_compatible_division_for_integers = 0;",
+        "types": [
+            "Float64"
+        ],
+        "rules": [],
+        "evidence": [
+            "NATIVE_CONDITIONAL"
+        ],
+        "qualified": true
+    },
+    {
+        "id": "CHSEM-030-Q06",
+        "input_sql": "WITH c AS (SELECT CAST(7 AS UInt8)/2 AS x), d AS (SELECT x FROM c SETTINGS sql_compatible_division_for_integers=1) SELECT x+1 AS v,toTypeName(v) FROM d SETTINGS sql_compatible_division_for_integers=0",
+        "generated": "WITH c AS (SELECT CAST(7 AS UInt8) / 2 AS x), d AS (SELECT x FROM c SETTINGS sql_compatible_division_for_integers = 1) SELECT x + 1 AS v, toTypeName(v) FROM d SETTINGS sql_compatible_division_for_integers = 0;",
+        "types": [
+            "UNKNOWN"
+        ],
+        "rules": [],
+        "evidence": [
+            "UNKNOWN"
+        ],
+        "qualified": false
+    }
+]

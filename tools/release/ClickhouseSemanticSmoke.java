@@ -36,6 +36,22 @@ public final class ClickhouseSemanticSmoke {
             == ClickhouseTypeEvidence.UNKNOWN, "unknown UDF must stay unknown");
         check(typed.getProvenance().factFor(projection(ast.copy(), 0)) == null, "copy must not inherit provenance");
 
+        String[] cteQueries = {
+            "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+2 FROM c",
+            "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT x+2 AS y FROM c) SELECT y*3 FROM d",
+            "WITH c AS (SELECT CAST([1,2] AS Array(UInt8)) AS xs) SELECT arrayMap(x -> x*2,xs) FROM c",
+            "WITH c AS (SELECT CAST(1 AS UInt8) AS x), d AS (SELECT * FROM c) SELECT x FROM d"
+        };
+        String[] cteTypes = {"UInt16", "UInt32", "Array(UInt16)", "UInt8"};
+        for (int i = 0; i < cteQueries.length; i++) {
+            var cteAst = ParserKt.parseOne(cteQueries[i], "clickhouse");
+            var cteResult = ClickhouseTypeProvenanceKt.annotateClickhouseSemanticTypesWithProvenance(
+                cteAst, VERSION, null, () -> Unit.INSTANCE);
+            var fact = cteResult.getProvenance().factFor(projection(cteAst, 0));
+            check(fact.getEvidence() == ClickhouseTypeEvidence.NATIVE_CONDITIONAL, "missing native CTE proof");
+            check(cteTypes[i].equals(fact.getTypeSql()), "wrong CTE type: " + fact.getTypeSql());
+        }
+
         var script = ClickhouseTypeProvenanceKt.annotateClickhouseScriptSemanticTypesWithProvenance(
             "SET sql_compatible_division_for_integers=1; SELECT 1/0", VERSION, null, () -> Unit.INSTANCE);
         check(script.size() == 2, "script framing changed");
@@ -53,6 +69,6 @@ public final class ClickhouseSemanticSmoke {
         } catch (IllegalArgumentException expected) {
             // Exact-pin rejection remains part of the public API contract.
         }
-        System.out.println("Packaged ClickHouse semantic APIs, proof categories, script diagnostics and old result shape: OK");
+        System.out.println("Packaged ClickHouse semantic APIs, CTE propagation, proof categories, script diagnostics and old result shape: OK");
     }
 }

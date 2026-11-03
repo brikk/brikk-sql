@@ -89,6 +89,9 @@ without changing the existing AST-only statement/script APIs or serialization.
 CHSEM-025 [qualifies standalone primitive multiplication](multiplication-README.md)
 and records named refinements for the earlier root-multiplication deviations.
 
+CHSEM-030-A adds [bounded non-recursive CTE output propagation](cte-context-README.md)
+for the existing native type rules, without claiming full complex-query parity.
+
 ## Inputs and evidence
 
 - `cases.json` contains stable CHSEM-001-P01–P02 syntax negatives and

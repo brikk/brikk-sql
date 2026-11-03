@@ -1,0 +1,15 @@
+{
+  "task": "CHSEM-030-A",
+  "refinements": [
+    {
+      "id": "CHSEM-030-R01",
+      "sql": "WITH c AS (SELECT CAST(1 AS UInt8) AS x) SELECT x+2 FROM c",
+      "previous_candidate": "0.23.0-rc.1",
+      "previous_frontend_type": "Nullable(UNKNOWN)",
+      "generic_type_unchanged": "Nullable(UNKNOWN)",
+      "native_type": "UInt16",
+      "evidence": "NATIVE_CONDITIONAL",
+      "witness": "CHSEM-030-E01"
+    }
+  ]
+}

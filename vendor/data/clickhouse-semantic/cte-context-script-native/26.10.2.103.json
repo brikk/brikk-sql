@@ -1,0 +1,91 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "fixture_sha256": "5f2ff9a3f080682fdfefb0da8afba58c105372bac2c20a4f6a8f3492282317a6",
+  "brikk_sha256": "091868eea723f1f2405f31fb14884954ff32a422180efbb1c0c8e34ed7009b52",
+  "execution": [
+    {
+      "id": "CHSEM-030-Q01",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q02",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q03",
+      "returncode": 0,
+      "stdout": "[4]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q04",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q05",
+      "returncode": 0,
+      "stdout": "4.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q06",
+      "returncode": 0,
+      "stdout": "4.5\tFloat64\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CHSEM-030-Q01",
+      "returncode": 0,
+      "stdout": "3\tUInt8\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q02",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q03",
+      "returncode": 0,
+      "stdout": "[4]\tArray(UInt16)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q04",
+      "returncode": 0,
+      "stdout": "3.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q05",
+      "returncode": 0,
+      "stdout": "4.5\tFloat64\n",
+      "stderr": ""
+    },
+    {
+      "id": "CHSEM-030-Q06",
+      "returncode": 0,
+      "stdout": "4.5\tFloat64\n",
+      "stderr": ""
+    }
+  ]
+}
