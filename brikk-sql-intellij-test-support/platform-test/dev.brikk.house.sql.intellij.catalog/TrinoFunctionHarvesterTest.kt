@@ -18,7 +18,7 @@ import kotlinx.coroutines.runBlocking
 
 class TrinoFunctionHarvesterTest : BasePlatformTestCase() {
     /** `SHOW FUNCTIONS` and `version()` answered from rows, as the server's driver returns them. */
-    private class Rows(private val functions: List<List<String?>>, private val version: String? = "483") : CatalogRowSource {
+    private class Rows(private val functions: List<List<String?>>, private val version: String? = "484") : CatalogRowSource {
         override fun forEachRow(sql: String, onRow: (CatalogRow) -> Unit) = when (sql) {
             TrinoFunctionHarvester.SQL_VERSION -> onRow { version }
             TrinoFunctionHarvester.SQL_FUNCTIONS -> functions.forEach { row -> onRow { row.getOrNull(it - 1) } }
@@ -26,18 +26,18 @@ class TrinoFunctionHarvesterTest : BasePlatformTestCase() {
         }
     }
 
-    /** The vendored `SHOW FUNCTIONS` output of Trino 483, from which the bundled catalog is generated. */
+    /** The vendored `SHOW FUNCTIONS` output of Trino 484, from which the bundled catalog is generated. */
     private fun dump(): List<List<String?>> {
         val root = generateSequence(Path.of(System.getProperty("user.dir")).toAbsolutePath()) { it.parent }
-            .first { Files.isRegularFile(it.resolve("vendor/data/trino-functions-483.tsv")) }
-        return Files.readAllLines(root.resolve("vendor/data/trino-functions-483.tsv")).filter(String::isNotBlank).map { it.split('\t') }
+            .first { Files.isRegularFile(it.resolve("vendor/data/trino-functions-484.tsv")) }
+        return Files.readAllLines(root.resolve("vendor/data/trino-functions-484.tsv")).filter(String::isNotBlank).map { it.split('\t') }
     }
 
     fun testTheHarvestOfTheDumpEqualsTheBundledCatalog() {
         val harvest = checkNotNull(TrinoFunctionHarvester.harvest(Rows(dump())))
-        assertEquals("483", harvest.shared.serverVersion)
+        assertEquals("484", harvest.shared.serverVersion)
         assertTrue(harvest.shared.signatures)
-        val bundled = TRINO_METADATA.forServerVersion("483").snapshot.functions.functions
+        val bundled = TRINO_METADATA.forServerVersion("484").snapshot.functions.functions
         val order = compareBy<FunctionDef>({ it.name }, { it.kind })
         assertEquals(bundled.sortedWith(order), harvest.shared.functions.map { it.def }.sortedWith(order))
         assertEquals(SessionFacts.NONE, harvest.session)

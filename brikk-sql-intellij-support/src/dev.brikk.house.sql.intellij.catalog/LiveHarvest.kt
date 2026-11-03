@@ -152,7 +152,11 @@ private fun outcomeOf(harvest: Harvest?): HarvestOutcome = harvest?.let(HarvestO
 private fun failure(e: Exception): HarvestOutcome = if (e is HarvestTimeoutException) HarvestOutcome.TimedOut else HarvestOutcome.Failed(e)
 
 /** Checks the deadline and interruption before each query and row. */
-private class GuardedRows(private val rows: CatalogRowSource, private val deadline: HarvestDeadline) : CatalogRowSource {
+private class GuardedRows(private val rows: CatalogRowSource, private val deadline: HarvestDeadline) : CatalogRowSource, CatalogServerInfoSource {
+    override fun serverInfo(): CatalogServerInfo? {
+        check()
+        return (rows as? CatalogServerInfoSource)?.serverInfo().also { check() }
+    }
     override fun forEachRow(sql: String, onRow: (CatalogRow) -> Unit) {
         check()
         rows.forEachRow(sql) { row ->
@@ -171,9 +175,13 @@ private class GuardedRows(private val rows: CatalogRowSource, private val deadli
  * Catalog rows over a Database Tools connection, whose JDBC objects live in the driver process. The
  * running statement is cancelled and closed by [cancel], since a driver may ignore query timeouts.
  */
-internal class RemoteCatalogRows(private val connection: DatabaseConnectionCore, private val deadline: HarvestDeadline) : CancellableRows {
+internal class RemoteCatalogRows(private val connection: DatabaseConnectionCore, private val deadline: HarvestDeadline) : CancellableRows, CatalogServerInfoSource {
     @Volatile private var active: RemoteStatement? = null
     @Volatile private var cancelled = false
+
+    override fun serverInfo(): CatalogServerInfo? = JdbcNativeUtil.computeRemote {
+        connection.remoteConnection.metaData?.let { CatalogServerInfo(it.databaseProductName, it.databaseProductVersion) }
+    }
 
     override fun forEachRow(sql: String, onRow: (CatalogRow) -> Unit) {
         if (cancelled) throw InterruptedException("The harvest was cancelled")

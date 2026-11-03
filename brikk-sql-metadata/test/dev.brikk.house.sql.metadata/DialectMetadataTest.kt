@@ -71,4 +71,11 @@ class DialectMetadataTest {
         assertEquals(DUCKDB_METADATA.default.functions, DUCKDB_FUNCTION_CATALOG)
         assertEquals("1.5.6" to false, DUCKDB_METADATA.pick("v1.5.5"))
     }
+
+    @Test
+    fun bundledTrinoServes484WithoutMislabelingOlderServers() {
+        assertEquals("484" to true, TRINO_METADATA.pick("484"))
+        assertEquals("484" to false, TRINO_METADATA.pick("483"))
+        assertEquals(KeywordCategory.RESERVED, TRINO_METADATA.default.keywords!!["JSON_SERIALIZE"]?.category)
+    }
 }

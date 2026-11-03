@@ -1,0 +1,2441 @@
+{
+  "schema_version": 1,
+  "fixtures_sha256": "4439ed21d009a0728af397fcc82845e845ddfbd58f018eee76e44eae4c81dc24",
+  "brikk_observations_sha256": "330286560327c4e08468889d0a5f7a0711dbbbbaa425022c4ab3a7a7256c9a6d",
+  "profiles": {
+    "spice-2.4.0-runtime": {
+      "runtime": {
+        "version": "v2.4.0+models",
+        "binary_sha256": "257b9fd8cf1f46c1f4ddf0b6280ba5b6033b79c276ec6840dd5e5d81710b1002",
+        "spicepod_sha256": "a3dfddafb19b7620137fab3d05cf5cdf83dc31f0f187f1dda37f8a687686affd",
+        "cpu_cores": 2,
+        "transport": "isolated loopback HTTP /v1/sql; not Flight/JDBC qualification"
+      },
+      "version_query": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"version\":\"Apache DataFusion 55.2.0, x86_64 on linux\"}]",
+        "rows": [
+          {
+            "version": "Apache DataFusion 55.2.0, x86_64 on linux"
+          }
+        ]
+      },
+      "parser_settings": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"name\":\"datafusion.sql_parser.collect_spans\",\"value\":\"false\",\"description\":\"When set to true, the source locations relative to the original SQL query (i.e. [`Span`](https://docs.rs/sqlparser/latest/sqlparser/tokenizer/struct.Span.html)) will be collected and recorded in the logical plan nodes.\"},{\"name\":\"datafusion.sql_parser.default_null_ordering\",\"value\":\"nulls_max\",\"description\":\"Specifies the default null ordering for query results. There are 4 options: - `nulls_max`: Nulls appear last in ascending order. - `nulls_min`: Nulls appear first in ascending order. - `nulls_first`: Nulls always be first in any order. - `nulls_last`: Nulls always be last in any order. By default, `nulls_max` is used to follow Postgres's behavior. postgres rule: <https://www.postgresql.org/docs/current/queries-order.html>\"},{\"name\":\"datafusion.sql_parser.dialect\",\"value\":\"postgresql\",\"description\":\"Configure the SQL dialect used by DataFusion's parser; supported values include: Generic, MySQL, PostgreSQL, Hive, SQLite, Snowflake, Redshift, MsSQL, ClickHouse, BigQuery, Ansi, DuckDB, Databricks, Spark.\"},{\"name\":\"datafusion.sql_parser.enable_ident_normalization\",\"value\":\"false\",\"description\":\"When set to true, SQL parser will normalize ident (convert ident to lowercase when not quoted)\"},{\"name\":\"datafusion.sql_parser.enable_options_value_normalization\",\"value\":\"false\",\"description\":\"When set to true, SQL parser will normalize options value (convert value to lowercase). Note that this option is ignored and will be removed in the future. All case-insensitive values are normalized automatically.\"},{\"name\":\"datafusion.sql_parser.enable_subquery_sort_elimination\",\"value\":\"true\",\"description\":\"When set to true, DataFusion may remove `ORDER BY` clauses from subqueries or CTEs during SQL planning when their ordering cannot affect the result, such as when no `LIMIT` or other order-sensitive operator depends on them. Disable this option to preserve explicit subquery ordering in the planned query.\"},{\"name\":\"datafusion.sql_parser.map_string_types_to_utf8view\",\"value\":\"true\",\"description\":\"If true, string types (VARCHAR, CHAR, Text, and String) are mapped to `Utf8View` during SQL planning. If false, they are mapped to `Utf8`. Default is true.\"},{\"name\":\"datafusion.sql_parser.parse_float_as_decimal\",\"value\":\"false\",\"description\":\"When set to true, SQL parser will parse float as decimal type\"},{\"name\":\"datafusion.sql_parser.recursion_limit\",\"value\":\"50\",\"description\":\"Specifies the recursion depth limit when parsing complex SQL Queries\"},{\"name\":\"datafusion.sql_parser.support_varchar_with_length\",\"value\":\"true\",\"description\":\"If true, permit lengths for `VARCHAR` such as `VARCHAR(20)`, but ignore the length. If false, error if a `VARCHAR` with a length is specified. The Arrow type system does not have a notion of maximum string length and thus DataFusion can not enforce such limits.\"}]",
+        "rows": [
+          {
+            "name": "datafusion.sql_parser.collect_spans",
+            "value": "false",
+            "description": "When set to true, the source locations relative to the original SQL query (i.e. [`Span`](https://docs.rs/sqlparser/latest/sqlparser/tokenizer/struct.Span.html)) will be collected and recorded in the logical plan nodes."
+          },
+          {
+            "name": "datafusion.sql_parser.default_null_ordering",
+            "value": "nulls_max",
+            "description": "Specifies the default null ordering for query results. There are 4 options: - `nulls_max`: Nulls appear last in ascending order. - `nulls_min`: Nulls appear first in ascending order. - `nulls_first`: Nulls always be first in any order. - `nulls_last`: Nulls always be last in any order. By default, `nulls_max` is used to follow Postgres's behavior. postgres rule: <https://www.postgresql.org/docs/current/queries-order.html>"
+          },
+          {
+            "name": "datafusion.sql_parser.dialect",
+            "value": "postgresql",
+            "description": "Configure the SQL dialect used by DataFusion's parser; supported values include: Generic, MySQL, PostgreSQL, Hive, SQLite, Snowflake, Redshift, MsSQL, ClickHouse, BigQuery, Ansi, DuckDB, Databricks, Spark."
+          },
+          {
+            "name": "datafusion.sql_parser.enable_ident_normalization",
+            "value": "false",
+            "description": "When set to true, SQL parser will normalize ident (convert ident to lowercase when not quoted)"
+          },
+          {
+            "name": "datafusion.sql_parser.enable_options_value_normalization",
+            "value": "false",
+            "description": "When set to true, SQL parser will normalize options value (convert value to lowercase). Note that this option is ignored and will be removed in the future. All case-insensitive values are normalized automatically."
+          },
+          {
+            "name": "datafusion.sql_parser.enable_subquery_sort_elimination",
+            "value": "true",
+            "description": "When set to true, DataFusion may remove `ORDER BY` clauses from subqueries or CTEs during SQL planning when their ordering cannot affect the result, such as when no `LIMIT` or other order-sensitive operator depends on them. Disable this option to preserve explicit subquery ordering in the planned query."
+          },
+          {
+            "name": "datafusion.sql_parser.map_string_types_to_utf8view",
+            "value": "true",
+            "description": "If true, string types (VARCHAR, CHAR, Text, and String) are mapped to `Utf8View` during SQL planning. If false, they are mapped to `Utf8`. Default is true."
+          },
+          {
+            "name": "datafusion.sql_parser.parse_float_as_decimal",
+            "value": "false",
+            "description": "When set to true, SQL parser will parse float as decimal type"
+          },
+          {
+            "name": "datafusion.sql_parser.recursion_limit",
+            "value": "50",
+            "description": "Specifies the recursion depth limit when parsing complex SQL Queries"
+          },
+          {
+            "name": "datafusion.sql_parser.support_varchar_with_length",
+            "value": "true",
+            "description": "If true, permit lengths for `VARCHAR` such as `VARCHAR(20)`, but ignore the length. If false, error if a `VARCHAR` with a length is specified. The Arrow type system does not have a notion of maximum string length and thus DataFusion can not enforce such limits."
+          }
+        ]
+      },
+      "namespace_inventory": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"table_catalog\":\"spice\",\"table_schema\":\"public\",\"table_name\":\"a.b\"},{\"table_catalog\":\"spice\",\"table_schema\":\"public\",\"table_name\":\"mixedrows\"},{\"table_catalog\":\"spice\",\"table_schema\":\"public\",\"table_name\":\"sample\"},{\"table_catalog\":\"spice\",\"table_schema\":\"runtime\",\"table_name\":\"task_history\"}]",
+        "rows": [
+          {
+            "table_catalog": "spice",
+            "table_schema": "public",
+            "table_name": "a.b"
+          },
+          {
+            "table_catalog": "spice",
+            "table_schema": "public",
+            "table_name": "mixedrows"
+          },
+          {
+            "table_catalog": "spice",
+            "table_schema": "public",
+            "table_name": "sample"
+          },
+          {
+            "table_catalog": "spice",
+            "table_schema": "runtime",
+            "table_name": "task_history"
+          }
+        ]
+      },
+      "discovery_smoke": {
+        "routines": {
+          "status": "accepted",
+          "http_status": 200,
+          "evidence": "execution",
+          "raw": "[{\"routine_name\":\"ai\",\"function_type\":\"SCALAR\",\"data_type\":\"String\"},{\"routine_name\":\"embed\",\"function_type\":\"SCALAR\",\"data_type\":\"List(Float32)\"},{\"routine_name\":\"embed\",\"function_type\":\"SCALAR\",\"data_type\":\"List(List(Float32))\"},{\"routine_name\":\"rrf\",\"function_type\":\"SCALAR\",\"data_type\":null},{\"routine_name\":\"rrf\",\"function_type\":\"TABLE\",\"data_type\":\"TABLE\"},{\"routine_name\":\"text_search\",\"function_type\":\"SCALAR\",\"data_type\":null},{\"routine_name\":\"text_search\",\"function_type\":\"TABLE\",\"data_type\":\"TABLE\"},{\"routine_name\":\"truncate\",\"function_type\":\"SCALAR\",\"data_type\":null},{\"routine_name\":\"vector_search\",\"function_type\":\"SCALAR\",\"data_type\":null},{\"routine_name\":\"vector_search\",\"function_type\":\"TABLE\",\"data_type\":\"TABLE\"}]",
+          "rows": [
+            {
+              "routine_name": "ai",
+              "function_type": "SCALAR",
+              "data_type": "String"
+            },
+            {
+              "routine_name": "embed",
+              "function_type": "SCALAR",
+              "data_type": "List(Float32)"
+            },
+            {
+              "routine_name": "embed",
+              "function_type": "SCALAR",
+              "data_type": "List(List(Float32))"
+            },
+            {
+              "routine_name": "rrf",
+              "function_type": "SCALAR",
+              "data_type": null
+            },
+            {
+              "routine_name": "rrf",
+              "function_type": "TABLE",
+              "data_type": "TABLE"
+            },
+            {
+              "routine_name": "text_search",
+              "function_type": "SCALAR",
+              "data_type": null
+            },
+            {
+              "routine_name": "text_search",
+              "function_type": "TABLE",
+              "data_type": "TABLE"
+            },
+            {
+              "routine_name": "truncate",
+              "function_type": "SCALAR",
+              "data_type": null
+            },
+            {
+              "routine_name": "vector_search",
+              "function_type": "SCALAR",
+              "data_type": null
+            },
+            {
+              "routine_name": "vector_search",
+              "function_type": "TABLE",
+              "data_type": "TABLE"
+            }
+          ]
+        },
+        "parameters": {
+          "status": "accepted",
+          "http_status": 200,
+          "evidence": "execution",
+          "raw": "[]",
+          "rows": []
+        },
+        "show_functions": {
+          "status": "accepted",
+          "http_status": 200,
+          "evidence": "execution",
+          "raw": "[{\"function_name\":\"vector_search\",\"return_type\":\"TABLE\",\"parameters\":null,\"parameter_types\":null,\"function_type\":\"TABLE\",\"description\":null,\"syntax_example\":null}]",
+          "rows": [
+            {
+              "function_name": "vector_search",
+              "return_type": "TABLE",
+              "parameters": null,
+              "parameter_types": null,
+              "function_type": "TABLE",
+              "description": null,
+              "syntax_example": null
+            }
+          ]
+        },
+        "list_udfs": {
+          "status": "accepted",
+          "http_status": 200,
+          "evidence": "execution",
+          "raw": "[{\"name\":\"ai\",\"source\":\"builtin\",\"kind\":null,\"volatility\":null,\"from\":null,\"description\":null},{\"name\":\"embed\",\"source\":\"builtin\",\"kind\":null,\"volatility\":null,\"from\":null,\"description\":null},{\"name\":\"rrf\",\"source\":\"builtin\",\"kind\":null,\"volatility\":null,\"from\":null,\"description\":null},{\"name\":\"text_search\",\"source\":\"builtin\",\"kind\":null,\"volatility\":null,\"from\":null,\"description\":null},{\"name\":\"truncate\",\"source\":\"builtin\",\"kind\":null,\"volatility\":null,\"from\":null,\"description\":null},{\"name\":\"vector_search\",\"source\":\"builtin\",\"kind\":null,\"volatility\":null,\"from\":null,\"description\":null}]",
+          "rows": [
+            {
+              "name": "ai",
+              "source": "builtin",
+              "kind": null,
+              "volatility": null,
+              "from": null,
+              "description": null
+            },
+            {
+              "name": "embed",
+              "source": "builtin",
+              "kind": null,
+              "volatility": null,
+              "from": null,
+              "description": null
+            },
+            {
+              "name": "rrf",
+              "source": "builtin",
+              "kind": null,
+              "volatility": null,
+              "from": null,
+              "description": null
+            },
+            {
+              "name": "text_search",
+              "source": "builtin",
+              "kind": null,
+              "volatility": null,
+              "from": null,
+              "description": null
+            },
+            {
+              "name": "truncate",
+              "source": "builtin",
+              "kind": null,
+              "volatility": null,
+              "from": null,
+              "description": null
+            },
+            {
+              "name": "vector_search",
+              "source": "builtin",
+              "kind": null,
+              "volatility": null,
+              "from": null,
+              "description": null
+            }
+          ]
+        }
+      },
+      "cases": [
+        {
+          "id": "DFS-regex-flags",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-like-order",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":false}]",
+            "rows": [
+              {
+                "v": false
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "different-observation"
+        },
+        {
+          "id": "DFS-map-variadic",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":{\"a\":1,\"b\":2}}]",
+            "rows": [
+              {
+                "v": {
+                  "a": 1,
+                  "b": 2
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Map(\\\"entries\\\": non-null Struct(\\\"key\\\": non-null Utf8, \\\"value\\\": Int64), unsorted)\"}]",
+              "rows": [
+                {
+                  "v": "Map(\"entries\": non-null Struct(\"key\": non-null Utf8, \"value\": Int64), unsorted)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":{\"a\":1,\"b\":2}}]",
+            "rows": [
+              {
+                "v": {
+                  "a": 1,
+                  "b": 2
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Map(\\\"entries\\\": non-null Struct(\\\"key\\\": non-null Utf8, \\\"value\\\": Int64), unsorted)\"}]",
+              "rows": [
+                {
+                  "v": "Map(\"entries\": non-null Struct(\"key\": non-null Utf8, \"value\": Int64), unsorted)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-to-char-format",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"01-03-2023\"}]",
+            "rows": [
+              {
+                "v": "01-03-2023"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"01-03-2023\"}]",
+            "rows": [
+              {
+                "v": "01-03-2023"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-array-sort-nulls",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[3,2,1,null]}]",
+            "rows": [
+              {
+                "v": [
+                  3,
+                  2,
+                  1,
+                  null
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[3,2,1,null]}]",
+            "rows": [
+              {
+                "v": [
+                  3,
+                  2,
+                  1,
+                  null
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-date-bin-origin",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"2023-01-01T03:00:00\"}]",
+            "rows": [
+              {
+                "v": "2023-01-01T03:00:00"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Timestamp(ns)\"}]",
+              "rows": [
+                {
+                  "v": "Timestamp(ns)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"2023-01-01T03:00:00\"}]",
+            "rows": [
+              {
+                "v": "2023-01-01T03:00:00"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Timestamp(ns)\"}]",
+              "rows": [
+                {
+                  "v": "Timestamp(ns)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-date-add",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: Failed to coerce arguments to satisfy a call to 'date_add' function: coercion from Date32, Int64 to the signature OneOf(Exact(Date32, Int8), Exact(Date32, Int16), Exact(Date32, Int32)) failed. No function matches the given name and argument types 'date_add(Date32, Int64)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tdate_add(Date32, Int8)\n\tdate_add(Date32, Int16)\n\tdate_add(Date32, Int32)",
+            "message": "Failed to execute query: Error during planning: Failed to coerce arguments to satisfy a call to 'date_add' function: coercion from Date32, Int64 to the signature OneOf(Exact(Date32, Int8), Exact(Date32, Int16), Exact(Date32, Int32)) failed. No function matches the given name and argument types 'date_add(Date32, Int64)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tdate_add(Date32, Int8)\n\tdate_add(Date32, Int16)\n\tdate_add(Date32, Int32)",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: Failed to coerce arguments to satisfy a call to 'date_add' function: coercion from Date32, Int64, Utf8 to the signature OneOf(Exact(Date32, Int8), Exact(Date32, Int16), Exact(Date32, Int32)) failed. No function matches the given name and argument types 'date_add(Date32, Int64, Utf8)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tdate_add(Date32, Int8)\n\tdate_add(Date32, Int16)\n\tdate_add(Date32, Int32)",
+            "message": "Failed to execute query: Error during planning: Failed to coerce arguments to satisfy a call to 'date_add' function: coercion from Date32, Int64, Utf8 to the signature OneOf(Exact(Date32, Int8), Exact(Date32, Int16), Exact(Date32, Int32)) failed. No function matches the given name and argument types 'date_add(Date32, Int64, Utf8)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tdate_add(Date32, Int8)\n\tdate_add(Date32, Int16)\n\tdate_add(Date32, Int32)",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-date-add-int32",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"2024-03-01\"}]",
+            "rows": [
+              {
+                "v": "2024-03-01"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Date32\"}]",
+              "rows": [
+                {
+                  "v": "Date32"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: Failed to coerce arguments to satisfy a call to 'date_add' function: coercion from Date32, Int32, Utf8 to the signature OneOf(Exact(Date32, Int8), Exact(Date32, Int16), Exact(Date32, Int32)) failed. No function matches the given name and argument types 'date_add(Date32, Int32, Utf8)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tdate_add(Date32, Int8)\n\tdate_add(Date32, Int16)\n\tdate_add(Date32, Int32)",
+            "message": "Failed to execute query: Error during planning: Failed to coerce arguments to satisfy a call to 'date_add' function: coercion from Date32, Int32, Utf8 to the signature OneOf(Exact(Date32, Int8), Exact(Date32, Int16), Exact(Date32, Int32)) failed. No function matches the given name and argument types 'date_add(Date32, Int32, Utf8)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tdate_add(Date32, Int8)\n\tdate_add(Date32, Int16)\n\tdate_add(Date32, Int32)",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "generated-rejected"
+        },
+        {
+          "id": "DFS-string-agg-order",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"Bob, Ada\"}]",
+            "rows": [
+              {
+                "v": "Bob, Ada"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"LargeUtf8\"}]",
+              "rows": [
+                {
+                  "v": "LargeUtf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"Bob, Ada\"}]",
+            "rows": [
+              {
+                "v": "Bob, Ada"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"LargeUtf8\"}]",
+              "rows": [
+                {
+                  "v": "LargeUtf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-json-arrow",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"30\"}]",
+            "rows": [
+              {
+                "v": "30"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: Invalid function 'json_extract_scalar'.\nDid you mean 'json_from_scalar'?",
+            "message": "Failed to execute query: Error during planning: Invalid function 'json_extract_scalar'.\nDid you mean 'json_from_scalar'?",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "generated-rejected"
+        },
+        {
+          "id": "DFS-truncate-partition",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":100}]",
+            "rows": [
+              {
+                "v": 100
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":10.0}]",
+            "rows": [
+              {
+                "v": {
+                  "decimal_lexeme": "10.0"
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Float64\"}]",
+              "rows": [
+                {
+                  "v": "Float64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "different-observation"
+        },
+        {
+          "id": "DFS-array-agg-comma",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: ), found: BY at Line: 1, Column: 27\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: ), found: BY at Line: 1, Column: 27\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[1,2]}]",
+            "rows": [
+              {
+                "v": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-array-agg-control",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[2,1]}]",
+            "rows": [
+              {
+                "v": [
+                  2,
+                  1
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[2,1]}]",
+            "rows": [
+              {
+                "v": [
+                  2,
+                  1
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-xor-hash",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":6}]",
+            "rows": [
+              {
+                "v": 6
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": null,
+          "comparison": "no-generated-sql"
+        },
+        {
+          "id": "DFS-xor-caret",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":125.0}]",
+            "rows": [
+              {
+                "v": {
+                  "decimal_lexeme": "125.0"
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Float64\"}]",
+              "rows": [
+                {
+                  "v": "Float64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":125.0}]",
+            "rows": [
+              {
+                "v": {
+                  "decimal_lexeme": "125.0"
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Float64\"}]",
+              "rows": [
+                {
+                  "v": "Float64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-array-contains-op",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-array-contained-op",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-escape-string",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"foo\\nbar\"}]",
+            "rows": [
+              {
+                "v": "foo\nbar"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"foo\\nbar\"}]",
+            "rows": [
+              {
+                "v": "foo\nbar"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-hex-literal",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":4}]",
+            "rows": [
+              {
+                "v": 4
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":4}]",
+            "rows": [
+              {
+                "v": 4
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-json-key-exists",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":true}]",
+            "rows": [
+              {
+                "v": true
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Boolean\"}]",
+              "rows": [
+                {
+                  "v": "Boolean"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-json-named",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":7}]",
+            "rows": [
+              {
+                "v": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":7}]",
+            "rows": [
+              {
+                "v": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-qualify",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":1,\"n\":1}]",
+            "rows": [
+              {
+                "id": 1,
+                "n": 1
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\",\"n\":\"UInt64\"}]",
+              "rows": [
+                {
+                  "id": "Int64",
+                  "n": "UInt64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":1,\"n\":1}]",
+            "rows": [
+              {
+                "id": 1,
+                "n": 1
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\",\"n\":\"UInt64\"}]",
+              "rows": [
+                {
+                  "id": "Int64",
+                  "n": "UInt64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-star-replace",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: ( at Line: 1, Column: 18\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: ( at Line: 1, Column: 18\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: ( at Line: 1, Column: 18\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: ( at Line: 1, Column: 18\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-star-ilike",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: '%date%' at Line: 1, Column: 16\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: '%date%' at Line: 1, Column: 16\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: '%date%' at Line: 1, Column: 16\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: end of statement, found: '%date%' at Line: 1, Column: 16\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-group-order-all",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Schema error: No field named \"ALL\".\nValid fields are t.a, b, t.a, t.b.",
+            "message": "Failed to execute query: Schema error: No field named \"ALL\".\nValid fields are t.a, b, t.a, t.b.",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Schema error: No field named \"ALL\".\nValid fields are t.a, b, t.a, t.b.",
+            "message": "Failed to execute query: Schema error: No field named \"ALL\".\nValid fields are t.a, b, t.a, t.b.",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-default-nulls-desc",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":null},{\"v\":2},{\"v\":1}]",
+            "rows": [
+              {
+                "v": null
+              },
+              {
+                "v": 2
+              },
+              {
+                "v": 1
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":null},{\"v\":2},{\"v\":1}]",
+            "rows": [
+              {
+                "v": null
+              },
+              {
+                "v": 2
+              },
+              {
+                "v": 1
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-star-except",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: SELECT, VALUES, or a subquery in the query body, found: age at Line: 1, Column: 18\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: SELECT, VALUES, or a subquery in the query body, found: age at Line: 1, Column: 18\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: SQL error: ParserError(\"Expected: SELECT, VALUES, or a subquery in the query body, found: age at Line: 1, Column: 18\")",
+            "message": "Failed to execute query: SQL error: ParserError(\"Expected: SELECT, VALUES, or a subquery in the query body, found: age at Line: 1, Column: 18\")",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-case-alias",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"MixedColumn\":7}]",
+            "rows": [
+              {
+                "MixedColumn": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"MixedColumn\":\"Int64\"}]",
+              "rows": [
+                {
+                  "MixedColumn": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"MixedColumn\":7}]",
+            "rows": [
+              {
+                "MixedColumn": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"MixedColumn\":\"Int64\"}]",
+              "rows": [
+                {
+                  "MixedColumn": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-case-folding",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Schema error: No field named mixedcolumn. Did you mean '\"MixedRows\".\"MixedColumn\"'?\nColumn names are case sensitive. You can use double quotes to refer to the \"MixedRows\".\"MixedColumn\" column or disable the datafusion.sql_parser.enable_ident_normalization configuration.\nValid fields are \"MixedRows\".\"MixedColumn\".",
+            "message": "Failed to execute query: Schema error: No field named mixedcolumn. Did you mean '\"MixedRows\".\"MixedColumn\"'?\nColumn names are case sensitive. You can use double quotes to refer to the \"MixedRows\".\"MixedColumn\" column or disable the datafusion.sql_parser.enable_ident_normalization configuration.\nValid fields are \"MixedRows\".\"MixedColumn\".",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Schema error: No field named mixedcolumn. Did you mean '\"MixedRows\".\"MixedColumn\"'?\nColumn names are case sensitive. You can use double quotes to refer to the \"MixedRows\".\"MixedColumn\" column or disable the datafusion.sql_parser.enable_ident_normalization configuration.\nValid fields are \"MixedRows\".\"MixedColumn\".",
+            "message": "Failed to execute query: Schema error: No field named mixedcolumn. Did you mean '\"MixedRows\".\"MixedColumn\"'?\nColumn names are case sensitive. You can use double quotes to refer to the \"MixedRows\".\"MixedColumn\" column or disable the datafusion.sql_parser.enable_ident_normalization configuration.\nValid fields are \"MixedRows\".\"MixedColumn\".",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-case-quoted",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"MixedColumn\":7}]",
+            "rows": [
+              {
+                "MixedColumn": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"MixedColumn\":\"Int64\"}]",
+              "rows": [
+                {
+                  "MixedColumn": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"MixedColumn\":7}]",
+            "rows": [
+              {
+                "MixedColumn": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"MixedColumn\":\"Int64\"}]",
+              "rows": [
+                {
+                  "MixedColumn": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-dotted-identifier",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":9}]",
+            "rows": [
+              {
+                "id": 9
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":9}]",
+            "rows": [
+              {
+                "id": 9
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-catalog-qualified",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":1},{\"id\":2}]",
+            "rows": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":1},{\"id\":2}]",
+            "rows": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-schema-qualified",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":1},{\"id\":2}]",
+            "rows": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":1},{\"id\":2}]",
+            "rows": [
+              {
+                "id": 1
+              },
+              {
+                "id": 2
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-dotted-table-quoted",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":9}]",
+            "rows": [
+              {
+                "id": 9
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"id\":9}]",
+            "rows": [
+              {
+                "id": 9
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"id\":\"Int64\"}]",
+              "rows": [
+                {
+                  "id": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-dotted-table-unquoted",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: table 'spice.a.b' not found",
+            "message": "Failed to execute query: Error during planning: table 'spice.a.b' not found",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: table 'spice.a.b' not found",
+            "message": "Failed to execute query: Error during planning: table 'spice.a.b' not found",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-view-casing",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"MixedColumn\":7}]",
+            "rows": [
+              {
+                "MixedColumn": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"MixedColumn\":\"Int64\"}]",
+              "rows": [
+                {
+                  "MixedColumn": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"MixedColumn\":7}]",
+            "rows": [
+              {
+                "MixedColumn": 7
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"MixedColumn\":\"Int64\"}]",
+              "rows": [
+                {
+                  "MixedColumn": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-view-casing-mismatch",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: table 'spice.public.MixedRows' not found",
+            "message": "Failed to execute query: Error during planning: table 'spice.public.MixedRows' not found",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: table 'spice.public.MixedRows' not found",
+            "message": "Failed to execute query: Error during planning: table 'spice.public.MixedRows' not found",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-arrow-type",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"UInt64\"}]",
+            "rows": [
+              {
+                "v": "UInt64"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"UInt64\"}]",
+            "rows": [
+              {
+                "v": "UInt64"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-dollar-string",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"a;b\"}]",
+            "rows": [
+              {
+                "v": "a;b"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"a;b\"}]",
+            "rows": [
+              {
+                "v": "a;b"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-unknown-function",
+          "original": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: Invalid function 'deliberately_unknown_function'.\nDid you mean 'array_position'?",
+            "message": "Failed to execute query: Error during planning: Invalid function 'deliberately_unknown_function'.\nDid you mean 'array_position'?",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "rejected",
+            "http_status": 400,
+            "evidence": "runtime-error; parsing/planning/execution not inferred",
+            "raw": "Failed to execute query: Error during planning: Invalid function 'deliberately_unknown_function'.\nDid you mean 'array_position'?",
+            "message": "Failed to execute query: Error during planning: Invalid function 'deliberately_unknown_function'.\nDid you mean 'array_position'?",
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "original-not-accepted"
+        },
+        {
+          "id": "DFS-escape-backslash",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"foo\\\\nbar\"}]",
+            "rows": [
+              {
+                "v": "foo\\nbar"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"foo\\\\nbar\"}]",
+            "rows": [
+              {
+                "v": "foo\\nbar"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-escape-quote",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"it's\"}]",
+            "rows": [
+              {
+                "v": "it's"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"it's\"}]",
+            "rows": [
+              {
+                "v": "it's"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-tagged-dollar",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"a;b\"}]",
+            "rows": [
+              {
+                "v": "a;b"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"a;b\"}]",
+            "rows": [
+              {
+                "v": "a;b"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Utf8\"}]",
+              "rows": [
+                {
+                  "v": "Utf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-string-agg-distinct",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"Bob, Ada\"}]",
+            "rows": [
+              {
+                "v": "Bob, Ada"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"LargeUtf8\"}]",
+              "rows": [
+                {
+                  "v": "LargeUtf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"Bob, Ada\"}]",
+            "rows": [
+              {
+                "v": "Bob, Ada"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"LargeUtf8\"}]",
+              "rows": [
+                {
+                  "v": "LargeUtf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-regex-flags-filter",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":1}]",
+            "rows": [
+              {
+                "v": 1
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":1}]",
+            "rows": [
+              {
+                "v": 1
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Int64\"}]",
+              "rows": [
+                {
+                  "v": "Int64"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-date-bin-no-origin",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"2023-01-02T00:00:00\"}]",
+            "rows": [
+              {
+                "v": "2023-01-02T00:00:00"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Timestamp(ns)\"}]",
+              "rows": [
+                {
+                  "v": "Timestamp(ns)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"2023-01-02T00:00:00\"}]",
+            "rows": [
+              {
+                "v": "2023-01-02T00:00:00"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Timestamp(ns)\"}]",
+              "rows": [
+                {
+                  "v": "Timestamp(ns)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-map-arrays",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":{\"a\":1,\"b\":2}}]",
+            "rows": [
+              {
+                "v": {
+                  "a": 1,
+                  "b": 2
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Map(\\\"entries\\\": non-null Struct(\\\"key\\\": non-null Utf8, \\\"value\\\": Int64), unsorted)\"}]",
+              "rows": [
+                {
+                  "v": "Map(\"entries\": non-null Struct(\"key\": non-null Utf8, \"value\": Int64), unsorted)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":{\"a\":1,\"b\":2}}]",
+            "rows": [
+              {
+                "v": {
+                  "a": 1,
+                  "b": 2
+                }
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"Map(\\\"entries\\\": non-null Struct(\\\"key\\\": non-null Utf8, \\\"value\\\": Int64), unsorted)\"}]",
+              "rows": [
+                {
+                  "v": "Map(\"entries\": non-null Struct(\"key\": non-null Utf8, \"value\": Int64), unsorted)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-array-sort-first",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[null,1,3]}]",
+            "rows": [
+              {
+                "v": [
+                  null,
+                  1,
+                  3
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":[null,1,3]}]",
+            "rows": [
+              {
+                "v": [
+                  null,
+                  1,
+                  3
+                ]
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"List(Int64)\"}]",
+              "rows": [
+                {
+                  "v": "List(Int64)"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        },
+        {
+          "id": "DFS-string-agg-scalar-subquery",
+          "original": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"b,b\"}]",
+            "rows": [
+              {
+                "v": "b,b"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"LargeUtf8\"}]",
+              "rows": [
+                {
+                  "v": "LargeUtf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "generated": {
+            "status": "accepted",
+            "http_status": 200,
+            "evidence": "execution",
+            "raw": "[{\"v\":\"b,b\"}]",
+            "rows": [
+              {
+                "v": "b,b"
+              }
+            ],
+            "type_observation": {
+              "status": "accepted",
+              "http_status": 200,
+              "evidence": "execution",
+              "raw": "[{\"v\":\"LargeUtf8\"}]",
+              "rows": [
+                {
+                  "v": "LargeUtf8"
+                }
+              ]
+            },
+            "nullability": "not captured by HTTP; no inferred non-null guarantee"
+          },
+          "comparison": "same-observation"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+product: jvm/app
+
+apply:
+  - ../../publish-targets.module-template.yaml
+
+dependencies:
+  - ../../brikk-sql
+
+settings:
+  jvm:
+    jdk:
+      version: 17
+    release: 17
+  kotlin:
+    version: 2.4.10
+    serialization: json
+  publishing:
+    enabled: false

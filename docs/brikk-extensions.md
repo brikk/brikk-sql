@@ -1986,7 +1986,174 @@ through it), and DuckDB's own `system.main.array_to_string` is a macro that call
 a user `list_aggr` ran even through the qualified helper. A macro's parameters are read as a list column and
 quoted here, so `"select"("a b", "c, d")` round-trips.
 
-## 58. DuckDB native session-statement grammar
+## 58. Trino 484 SQL and metadata
+
+Trino's native parser and captured catalogs now target 484. Handwritten Trino nodes
+preserve SQL/JSON representation, encoding, RETURNING, PASSING, and error clauses;
+interval field ranges and precision; materialized-view EXECUTE; authorization
+principals; and NEAREST relations. The shared window parser already models frame
+exclusion, and Trino generation now emits it. These additions do not change Presto.
+
+User names retain case through normalization in GRANT, REVOKE, CREATE SCHEMA and
+SET AUTHORIZATION. Roles still lowercase. Structured authorization deliberately
+replaces SQLGlot's raw Command nodes in three parser and three annotation corpus
+rows. One additional annotation row records JSON_VALUE's explicit VARCHAR return
+type instead of UNKNOWN. Those seven exact signatures are intentional differences
+from the frozen SQLGlot oracle, covered by Trino484Test and the native 484 parser.
+The earlier SET PROPERTIES ledger rows and signatures are unchanged.
+
+DECIMAL literals retain their inferred precision and scale when converted to CAST,
+so DECIMAL '1.20' remains decimal(3,2) rather than decimal(38,0). Native result tests
+check 484's JSON member order, duplicate keys, numeric scale, scalar quoting,
+interval truncation and precision, window exclusions, and correlated NEAREST rows.
+Unsupported cross-dialect translations of the new SQL/JSON forms fail rather than
+silently discard clauses. Historical pairwise semantic evidence is not relabeled
+as 484 proof; function-gap reports remain candidate mappings, not equivalence claims.
+
+Verification on 2026-10-28: the full `./kotlin test` run passes with 1,704 successful
+methods and 42 optional non-Trino engine assumptions aborted. Both
+`BRIKK_TRINO_TEST_CONTAINER` and `BRIKK_TRINO_CONTAINER` name the isolated stock
+484 container during that run. The 484 result gate covers 28 scalar JSON/interval
+cases, absent-field extraction rejection, all four window exclusions, JSON_TABLE
+input, and correlated NEAREST output. The IDE TrinoFunctionHarvesterTest passes
+all 5 methods on build 261.25134.95. Python tooling has 35 passes and 1 optional
+skip; regenerating 42 catalog/report files produces identical hashes. The task
+container was removed after verification. No release or dependency publication
+was performed.
+
+After integrating main's Doris 4.1.5 support at `36e3a42`, the combined tree passes
+the full Kotlin suite with 1,695 successful methods, 59 optional engine assumptions
+aborted, and zero failures. That integration run has no live engine containers
+configured and does not replace the earlier native Trino 484 evidence. Paired
+484/Doris 4.1.5 JSON evidence remains on the
+[remaining-work list](trino-483-parity-todo.md#remaining-484-work).
+
+## 59. Versioned Trino/Doris JSON evidence and retained Doris JSON_PARSE
+
+The paired Trino 484 / Doris 4.1.5 refresh directly probes exponent rendering,
+decimal scale/precision, duplicate keys/member order, scalar/null behavior and
+legacy JSON paths. Forty-seven paired cases retain raw SQL, results/errors and
+digest/version provenance. Twenty match exactly and twenty-seven differ. Only
+the five corresponding JSON hazard entries are refreshed; other historical
+evidence keeps its original provenance. JSON_EXTRACT and both scalar-extraction
+alternatives now carry conditional warnings instead of unconditional identity.
+JSON_PARSE remains conditional; Doris still has no JSON_FORMAT built-in.
+
+The native regression also found that Doris inherited MySQL's null parseJsonName,
+which removed ParseJSON nodes entirely. CAST(JSON_PARSE(text) AS STRING) could
+therefore return unparsed original text. Doris generation now emits JSON_PARSE;
+MySQL and StarRocks generation retain their earlier behavior. This correction is
+native-evidence-backed, not a claim of SQLGlot parity or unrestricted cross-engine
+equivalence. Trino484Doris415JsonEvidenceTest replays each captured outcome and
+successful same-dialect renderings; Trino484Doris415JsonCertificationTest requires
+the metadata warnings and retained parser. Hazard sync tests check both directions.
+
+Certification's existing conditional-warning policy is unchanged. Consumers that
+require exact JSON text or numeric precision must act on those warnings. Raw
+evidence, reproduction and limits are in
+[the JSON report](research/trino-484-doris-4.1.5-json.md). No public API, release,
+publication or consumer dependency pin changes are included.
+
+## 60. ClickHouse streaming reads and Tuple aggregate combinators
+
+`ClickhouseStream` represents `table [AS alias] [FINAL] [SAMPLE ...] STREAM`
+and its BOUNDED, UNORDERED, CURSOR and WATERMARK options. STREAM no longer becomes
+an implicit alias. Explicit `AS stream`, quoted aliases and tables/columns named
+stream remain available. Cursor and watermark children survive serde; scope analysis
+retains the underlying relation and resolves watermark references against it.
+
+The `-Tuple` aggregate combinator uses the existing combined aggregate nodes, including
+parameterized/nested suffixes and window calls. A second argument list no longer becomes
+an alias list. Other dialects refuse unproved STREAM/Tuple translations rather than
+dropping behavior or emitting an unsupported native call.
+
+Native parse/finite execution evidence targets digest-pinned ClickHouse 26.8.34.13 LTS
+and 26.10.2.103 stable. Streaming execution remains gated by the server's
+`enable_streaming_queries`; generation does not enable it. Named-tuple result checks
+are not a general static tuple-typing or cross-dialect equivalence claim. See
+[the evidence report](research/clickhouse-2026-catchup.md) and `Clickhouse2026CatchupTest`.
+Metadata remains pinned to 26.5.1.1 until the separate catalog step is implemented.
+
+## 61. Versioned ClickHouse metadata and native query/type syntax
+
+Metadata snapshots retain the embedded 26.5.1.1 capture and add official-build
+26.8.34.13 LTS and 26.10.2.103 stable registries. The default catalog uses 26.10.
+Per-name case flags apply to precise lookup/completion, and type-family case flags
+are independent. Legacy lookup and JSON contracts remain unchanged. Existing
+constructor/default bridges and TypeDef.copy entry points are retained.
+
+Native AST nodes cover LIMIT boundary ranges and combined LIMIT BY, AT LOCAL,
+compound intervals, trailing remote/cluster SETTINGS, QBit and MultiPoint. NATURAL
+joins use the existing join method and preserve scope/source identity. Compound
+interval lookahead must not consume TO bounds in WITH FILL or TTL destinations.
+Remote function parsers retain their function-name positions. New aggregate names
+can resolve parameter lists/combinators without reclassifying old window-only ASTs.
+
+Native formatter acceptance is not execution support: both pinned builds reject
+zero-argument year(), and 26.10 rejects OFFSET/negative-count/WITH-TIES combinations
+with boundary LIMIT. Their actual outcomes are pinned, not rewritten into successful
+ordinary expressions. The two-argument year timezone form no longer drops its zone.
+New native-only forms refuse unproved cross-dialect translations, and boundary
+limits do not enter the ordinary pipe-slice arithmetic path.
+
+See [the batch 2 evidence and reproduction](research/clickhouse-2026-batch2.md).
+Function overloads and first-availability facts are not fabricated from embedded
+documentation. Historical semantic proofs and certification policy are unchanged.
+
+## 62. ClickHouse 2026 analysis and structured utilities
+
+ClickhouseStar is a Star with native LIKE/ILIKE name filtering. Qualification,
+shape, relation scope, subquery completion and lineage share that filtering.
+Bare built-in names are recognized in statement contexts without stealing quoted
+or qualified columns, ordinary calls or standalone identifier fragments. Native
+date-part and EXTRACT additions keep units out of column scope; unproved return
+types stay unknown.
+
+Composition, implicit lambdas, local argument references and function designators
+have separate native nodes. Binding contexts follow the captured 26.10 higher-order
+flags. A function-valued `|` cannot become integer BitwiseOr or an unproved
+cross-dialect rewrite. Ordinary bitwise functions and other dialects are unchanged.
+
+Structured utilities cover APPEND INCREMENTAL refresh mode, hypothetical indexes,
+EXPLAIN ANALYZE/WHATIF, enum additions, token/authentication grants, handlers,
+projection indexes/settings, supported projection ALTER and constraint actions,
+and unified SYSTEM background commands. Unrelated Command behavior stays intact.
+New statement-effect information is descriptive, not authorization. Credential
+nodes mask debug output and have explicit redacted SQL rendering; normal SQL and
+serde remain lossless and therefore must not be used as redacted logging formats.
+
+The verifier test asserts that even executing EXPLAIN and credential DDL are only
+hex data in formatQuery. Native DDL vectors are never run. See the
+[batch 3 report](research/clickhouse-2026-batch3.md) for exact coverage, native
+observations, reproduction and unsupported combinations. No failure ledgers or
+historical semantic proofs are relaxed by these additions.
+
+## 63. ClickHouse version-sensitive semantics and final gates
+
+Native TRY_CAST retains its accurate-cast syntax and failure contract rather than
+becoming CAST to Nullable. Its grammar availability is recorded for the measured
+26.10 snapshot, not inferred from the function registry or backported to 26.8.
+Foreign-source legacy lowering and historical semantic certification remain separate.
+
+Source-aware integer division emits diagnostics when the ClickHouse session setting
+is unknown, refuses unproved conversion from explicitly enabled SQL-compatible
+integer mode, and respects measured nested query overrides. Explicit integer mode
+does not inherit the old Float64 typing assumption. Nullable Tuple field extraction
+keeps the container's nullability. PostgreSQL cardinality uses arrayFlattenedLength;
+Trino, native ClickHouse and ordinary Length/ArraySize handling are not globally changed.
+
+Lowered NATURAL pipe joins have original/lowered native evidence on both pins.
+Experimental LATERAL requires proven query-level enablement in executable generation.
+Other existing pipe refusals remain. Current WINDOW VIEW advertising is retired while
+historical patterns and catalog snapshots remain available through their own exports.
+
+The native runner accepts explicit per-pin result/error expectations and the audit
+can capture actual executable pipe lowering and source-aware target examples. Final
+checks cover every earlier batch again without editing failure ledgers or historical
+hazard provenance. See [the final handoff](research/clickhouse-2026-batch4.md) for
+commands, counts, version boundaries, optional skips and remaining limitations.
+
+## 64. DuckDB native session-statement grammar
 
 `parseDuckdbNativeOne`, native analysis and executable parsing recognize the DuckDB 2.0
 delimiter-free `SET SCHEMA 'name'` form as the existing Set/SetItem/EQ AST. Generation uses
@@ -2007,7 +2174,7 @@ ANALYSE/ANALYZE retain their explicitly flagged raw-passthrough contract; they a
 misrepresented as standalone Analyze nodes. Historical token/AST corpora remain unchanged.
 No cross-target statistics execution mapping is inferred from the shared keyword.
 
-## 59. DuckDB native aggregate types and macro defaults
+## 65. DuckDB native aggregate types and macro defaults
 
 Native analysis uses the reviewed SUM overloads rather than SQLGlot's generic BIGINT
 promotion: Boolean and integral inputs through signed HUGEINT produce HUGEINT, unsigned

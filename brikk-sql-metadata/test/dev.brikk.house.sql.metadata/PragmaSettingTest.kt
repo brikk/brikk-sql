@@ -46,6 +46,6 @@ class PragmaSettingTest {
         assertNull(TRINO_METADATA.default.pragmas)
         assertNull(TRINO_METADATA.default.settings)
         assertNull(TRINO_METADATA.default.tableFunctions)
-        assertNull(CLICKHOUSE_METADATA.default.grammarForms)
+        assertNull(CLICKHOUSE_METADATA.forServerVersion("26.8.34.13").snapshot.grammarForms)
     }
 }

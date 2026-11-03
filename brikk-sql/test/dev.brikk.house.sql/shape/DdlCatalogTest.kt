@@ -6,6 +6,14 @@ import kotlin.test.assertEquals
 class DdlCatalogTest {
 
     @Test
+    fun trinoIntervalQualifiersRemainInCatalogTypes() {
+        val type = "INTERVAL DAY(3) TO SECOND(12)"
+        val catalog = DdlCatalog.fromDdl("CREATE TABLE t (v $type)", "trino")
+        assertEquals(type, catalog.tables.getValue("t").columns.single().type)
+        assertEquals(type, SqlFragment("SELECT v FROM t", "trino").outputShape(catalog).columns.single().type)
+    }
+
+    @Test
     fun quotedAndLegacyRawTableNamesRemainUsable() {
         val ddl = "CREATE TABLE \"order-items\" (id BIGINT NOT NULL)"
         val captured = DdlCatalog.fromDdl(ddl, "postgres")

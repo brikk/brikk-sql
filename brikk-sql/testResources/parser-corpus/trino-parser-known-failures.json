@@ -2,6 +2,24 @@
     "sqlglot_version": "v30.22.0-5-ga00dc2e5c",
     "cases": [
         {
+            "id": "assertion:v1:sha256:1752aa42928cc4cb3fe7f7c9a23937eadb8bd5b2ce61833180688f5bd7babaea:1",
+            "sql": "ALTER TABLE people SET AUTHORIZATION alice",
+            "reason": "ast-mismatch at #0: expected Command",
+            "signature": "ast-mismatch:v1:sha256:1cd51de90814e5ad5678171c68dc3ea7b4579bb1ccf3a107267887fdee402e4a"
+        },
+        {
+            "id": "assertion:v1:sha256:760a1c0a173625f306bf499ea5c72a7f4e2a6d7bef6ce862053a2c5b60557484:1",
+            "sql": "ALTER TABLE people SET AUTHORIZATION ROLE PUBLIC",
+            "reason": "ast-mismatch at #0: expected Command",
+            "signature": "ast-mismatch:v1:sha256:b37ec298e4c9e743202df8f6db51787e5c003cf85401e00041ee877b31819923"
+        },
+        {
+            "id": "assertion:v1:sha256:be84d19ea089c65bf8baa2f8e30b9dec15d8bc0346b898294615c7b01bcbe541:1",
+            "sql": "ALTER VIEW people SET AUTHORIZATION alice",
+            "reason": "ast-mismatch at #0: expected Command",
+            "signature": "ast-mismatch:v1:sha256:5fd2a277d8052a953236c60d73b3aa79680db5b9fdd8991005ccdd7303739c7c"
+        },
+        {
             "id": "assertion:v1:sha256:58bb8d32daa12e185066d46c462c0838120fcaf4d20cb1491d65127ce0955671:1",
             "sql": "ALTER TABLE people SET PROPERTIES x = 'y'",
             "reason": "ast-mismatch at #0: expected Command",

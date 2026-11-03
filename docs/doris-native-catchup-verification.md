@@ -1,10 +1,16 @@
 # Doris native catch-up validation
 
-The 2026-10-28 local refresh updates the parser grammar and metadata to 4.1.5 and
-sets the opt-in execution gate to require 4.1.5. It does not run a 4.1.5 server.
-The image pins, results, and commands below document the earlier 4.1.4.1 run.
+The 2026-10-28 parser/metadata refresh initially ran without a 4.1.5 server. The
+subsequent Trino 484 / Doris 4.1.5 JSON follow-up now runs both FE and BE reporting
+`doris-4.1.5-release-917b20be838`, with digest-pinned images and 47 paired JSON
+cases. The full suite passes with 1,726 successful methods and 33 optional engine
+assumptions aborted. Doris's version gate, 100,000-row JSON/Boolean regression
+under both execution modes, and the new JSON replay gates execute live.
+See [current JSON evidence and runtime limits](research/trino-484-doris-4.1.5-json.md).
 
-The last executed native validation target was **Doris 4.1.4.1**, using the official,
+## Historical 4.1.4.1 validation
+
+The earlier native validation target was **Doris 4.1.4.1**, using the official,
 digest-pinned FE and BE images rather than the older 4.1.3 all-in-one image:
 
 | Component | Official image digest |

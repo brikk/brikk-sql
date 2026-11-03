@@ -1,0 +1,170 @@
+{
+  "requests": [
+    {
+      "id": "editor-0",
+      "sql": "SELECT sqrt(1,2)",
+      "operation": "execute"
+    },
+    {
+      "id": "editor-1",
+      "sql": "SELECT sqrt([1,2])",
+      "operation": "execute"
+    },
+    {
+      "id": "editor-2",
+      "sql": "SELECT sqrt(NULL)",
+      "operation": "execute"
+    },
+    {
+      "id": "editor-3",
+      "sql": "SELECT sqrt(CAST(NULL AS STRUCT<a INT>))",
+      "operation": "execute"
+    },
+    {
+      "id": "editor-4",
+      "sql": "SELECT abs(1,2)",
+      "operation": "execute"
+    },
+    {
+      "id": "editor-5",
+      "sql": "SELECT sqrt('4')",
+      "operation": "execute"
+    },
+    {
+      "id": "editor-6",
+      "sql": "SELECT sqrt(4)",
+      "operation": "execute"
+    }
+  ],
+  "responses": {
+    "editor-0": {
+      "evidence": "planning",
+      "id": "editor-0",
+      "message": "Error during planning: Failed to coerce arguments to satisfy a call to 'sqrt' function: coercion from Int64, Int64 to the signature Uniform(1, [Float64, Float32]) failed. No function matches the given name and argument types 'sqrt(Int64, Int64)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tsqrt(Float64/Float32)",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "status": "rejected"
+    },
+    "editor-1": {
+      "evidence": "planning",
+      "id": "editor-1",
+      "message": "Error during planning: Failed to coerce arguments to satisfy a call to 'sqrt' function: coercion from List(Int64) to the signature Uniform(1, [Float64, Float32]) failed. No function matches the given name and argument types 'sqrt(List(Int64))'. You might need to add explicit type casts.\n\tCandidate functions:\n\tsqrt(Float64/Float32)",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "status": "rejected"
+    },
+    "editor-2": {
+      "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+      "evidence": "execution",
+      "fields": [
+        {
+          "name": "sqrt(NULL)",
+          "nullable": true,
+          "type": "Float64"
+        }
+      ],
+      "id": "editor-2",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "rows": [
+        [
+          null
+        ]
+      ],
+      "status": "accepted"
+    },
+    "editor-3": {
+      "evidence": "planning",
+      "id": "editor-3",
+      "message": "Error during planning: Failed to coerce arguments to satisfy a call to 'sqrt' function: coercion from Struct(\"a\": Int32) to the signature Uniform(1, [Float64, Float32]) failed. No function matches the given name and argument types 'sqrt(Struct(\"a\": Int32))'. You might need to add explicit type casts.\n\tCandidate functions:\n\tsqrt(Float64/Float32)",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "status": "rejected"
+    },
+    "editor-4": {
+      "evidence": "planning",
+      "id": "editor-4",
+      "message": "Error during planning: Function 'abs' expects 1 arguments but received 2. No function matches the given name and argument types 'abs(Int64, Int64)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tabs(Numeric(1))",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "status": "rejected"
+    },
+    "editor-5": {
+      "evidence": "planning",
+      "id": "editor-5",
+      "message": "Error during planning: Failed to coerce arguments to satisfy a call to 'sqrt' function: coercion from Utf8 to the signature Uniform(1, [Float64, Float32]) failed. No function matches the given name and argument types 'sqrt(Utf8)'. You might need to add explicit type casts.\n\tCandidate functions:\n\tsqrt(Float64/Float32)",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "status": "rejected"
+    },
+    "editor-6": {
+      "encoding": "Arrow display strings with SQL NULL separate; not a lossless nested/binary codec",
+      "evidence": "execution",
+      "fields": [
+        {
+          "name": "sqrt(Int64(4))",
+          "nullable": true,
+          "type": "Float64"
+        }
+      ],
+      "id": "editor-6",
+      "profile": {
+        "datafusion": "55.2.0",
+        "dialect": "Generic",
+        "id": "datafusion-55.2.0",
+        "identifier_normalization": true,
+        "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+        "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+      },
+      "protocol_version": 1,
+      "rows": [
+        [
+          "2.0"
+        ]
+      ],
+      "status": "accepted"
+    }
+  }
+}

@@ -13,7 +13,7 @@ Keep deferred integration/model work separate from syntax and core semantic fixe
 ## Baseline and how to use this list
 
 - Engine 2.0.0 LTS, source `d54cbbe3df`; JDBC `org.duckdb:duckdb_jdbc:2.0.0.0`.
-- Published SQL libraries `0.20.1`, SQL IntelliJ support `0.2.4`.
+- Earlier audit's published-library baseline: SQL `0.20.1`, SQL IntelliJ support `0.2.4`.
 - SQLGlot reference recorded by the earlier audit: `v30.22.0-5-ga00dc2e5c`.
 - Captured catalog: 1,093 definitions / 2,963 overloads; both 1.5.6 and 2.0.0 dumps remain bundled.
 - DuckDB plugin 0.5.1 was prepared for the new EAP ABI requirement. The user reports
@@ -54,15 +54,56 @@ DuckDB 2.0 catch-up without nested-schema IDE support, then revisit nesting afte
 - Reconcile with current main's Java-17/library/version-line changes, build the integrated
   candidate, check packaged ABI/dependencies and qualify the actual DuckDB plugin/IDE targets.
   Shared-library tests alone do not qualify the consumer distribution.
-- The consumer checkout currently has uncommitted Quack 0.12/cancellation/driver-result work.
-  Treat it as existing user work: review its ownership and intended release inclusion before
-  editing or packaging it. Do not discard, overwrite or silently commit it.
+- The user confirmed that the Quack 0.12 driver adoption belongs in the plugin release.
+  Coordinate its commit with the existing Quack driver-adoption agent in that project; this
+  library merge does not edit or commit the plugin checkout. Earlier committed-only helper
+  tests excluded that adoption as an evidence boundary, not a decision to omit it from release.
 - Confirm exact library/plugin versions and publication targets at a release checkpoint before
   merging/tagging/publishing or changing consumer pins. Previously published versions remain
   immutable; no unrelated consumer adoption is authorized by this scope decision.
 
 All 78 IDs and previous evidence remain intact. The count remains 75/78: deferring a release
 feature does not mark it implemented. Trino REGEXP_COUNT remains separately queued.
+
+## Main integration on 2026-11-02
+
+Merged `origin/main` at `0572f6d` into the DuckDB branch's `85c2f55` parent. Keep main's
+SQL `0.23.0-SNAPSHOT` and IntelliJ support `0.3.1-SNAPSHOT` development streams and
+Java 17 core/metadata/verification-API/Doris-verifier targets. SQL `0.22.0` and support
+`0.3.0` are already published and immutable; this merge is not a release or plugin adoption.
+
+The native coverage inventory needs a separate versioned baseline, not a parity-ledger refresh.
+Comparison against a private committed-only `85c2f55` snapshot shows exactly nine removed
+emission origins: Trino authorization cases 51, 52 and 57 in `ast-corpus/trino-serde.json`,
+`ast-corpus/trino-annotated-serde.json` and `dialect-corpus/trino.json`. Main parses these
+as `TrinoSetAuthorization` and DuckDB generation refuses them, instead of emitting the old
+opaque commands. All nine old emissions were native-rejected. Every common origin retains
+identical SQL, status and error type; no accepted input is lost. Five ClickHouse division
+warnings are also added by main. Inventory hashes include main's unchanged policy/ledger/
+semantic-report refreshes. Keep `native-coverage-baseline.json` intact; the integrated gate
+uses `native-coverage-baseline-main-0572f6d.json`. This remains syntax inventory, not semantics.
+
+### Remaining broad-suite failures, reproduced before the merge
+
+These three failures reproduce individually on the untouched `85c2f55` snapshot with the
+same test environment. They are not fixed or suppressed by this merge, and the full suite
+must not be reported green until they are addressed:
+
+- `DuckdbHermeticCaptureTest.coreCaptureIsRestrictedAndDoesNotSeeUserExtensionOrSecretDirectories`:
+  restricted `INSTALL inet` returns `false` rather than throwing. Investigate the control
+  without weakening capture isolation or enabling installation/network access.
+- `SparkDuckdbArrayResultTest.slicesExecuteWithLengthNegativeStartZeroLengthAndNullSemantics`:
+  the test expects no warnings, but the existing conservative array boundary emits an
+  unqualified-execution warning. Reconcile the assertion with the bounded semantic contract;
+  do not remove the execution guard simply to pass the test.
+- `VerifyCorpusGateTest.duckdbGeneratedSqlIsAcceptedByDuckdbParserModuloLedger`:
+  the DuckDB oracle becomes unavailable with a redacted extension-management diagnostic.
+  Investigate without adding editor prepare/bind or EXPLAIN fallbacks or relaxing the ledger.
+
+Evidence: `/tmp/opencode/ddb20-merge-main-module-tests.log`, the per-module
+`/tmp/opencode/ddb20-merge-parent-*.log` comparisons, and
+`/tmp/opencode/ddb20-merge-coverage-delta.json`. Earlier focused gate results above/below
+retain their original scope; they do not imply that this newly run broad suite passes.
 
 ## SQL grammar, names and statement behavior
 

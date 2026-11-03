@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "scope": "Shared libraries and consumer fixture; production plugin qualification is separate",
+  "base_commit": "e195028",
+  "publication_authorized": false,
+  "weekly_monitoring_enabled": false,
+  "profiles": {
+    "datafusion": "55.2.0; upstream GenericDialect reference and bounded Flight execution embedding",
+    "spice": "v2.4.0+models; pinned PostgreSQL parser reference and checksum-verified released runtime",
+    "jdbc": "org.apache.arrow:flight-sql-jdbc-driver:19.0.0"
+  },
+  "execution_exclusions": ["DFS-010-T1", "DFS-010-T2", "DFS-010-T3", "DFS-010-T4"],
+  "structured_syntax_exclusions": {
+    "id": "DFS-012-S1",
+    "product": "datafusion",
+    "reason": "Opaque Command preservation is not structured AST support, even when native round trips parse",
+    "cases": ["DFS-show-functions", "DFS-show-tables", "DFS-show-columns", "DFS-show-all", "DFS-explain-options", "DFS-explain-analyze", "DFS-explain-plain", "DFS-prepare", "DFS-execute", "DFS-cluster-no-generic-leak"]
+  },
+  "resolved_gaps": ["DFS-GAP-612e0f186332398a"],
+  "gates": {
+    "build": "passed",
+    "release_configuration": {"passed": 38},
+    "core": {"passed": 1363, "aborted": 0, "failed": 0},
+    "remaining_modules": {
+      "passed": 452,
+      "aborted": 61,
+      "failed": 0,
+      "abort_reasons": {
+        "BRIKK_TRINO_TEST_CONTAINER not configured": 17,
+        "BRIKK_CLICKHOUSE_URL not set": 14,
+        "BRIKK_DORIS_TEST_CONTAINER not configured": 10,
+        "BRIKK_POSTGRES_TEST_CONTAINER not configured": 8,
+        "BRIKK_MYSQL_TEST_CONTAINER not configured": 6,
+        "BRIKK_STARROCKS_TEST_CONTAINER not configured": 3,
+        "brikk.chdb.integrationLibrary not configured": 1,
+        "Both native JSON probe engines must be configured": 1,
+        "BRIKK_CHDB_TEST_PYTHON not configured": 1
+      },
+      "note": "Optional unrelated engine tests are not counted as DataFusion or Spice evidence; includes 129 passing metadata tests"
+    },
+    "ide_full_261.25134.95": {"passed": 814, "failed": 0},
+    "ide_final_focused": {
+      "261.25134.95": {"passed": 89, "failed": 0},
+      "262.10968.63": {"passed": 89, "failed": 0},
+      "263.5701.42": {"passed": 89, "failed": 0}
+    },
+    "datafusion_python_contracts": {"passed": 57},
+    "spice_native_python_contracts": {"passed": 3},
+    "local_maven_packaging": "passed",
+    "verifier_publication_audit": "passed",
+    "java17_publication_audit": "passed",
+    "intellij_publication_audit": "passed"
+  },
+  "native_summary": {
+    "datafusion": {
+      "corpus_cases": 76,
+      "original_and_generated_parser_acceptances": 140,
+      "original_and_generated_parser_rejections": 7,
+      "original_and_generated_execution_acceptances": 44,
+      "original_and_generated_execution_rejections": 34,
+      "equal_execution_observations": 22,
+      "no_generated_sql_for_native_rejected_execution": ["DFS-array-agg-comma", "DFS-xor-hash"],
+      "catalog_name_kind_entries": 320,
+      "catalog_relations": 11,
+      "executed_brikk_stages": 10
+    },
+    "spice": {
+      "corpus_cases": 76,
+      "runtime_cases": 40,
+      "original_and_generated_parser_acceptances": 134,
+      "original_and_generated_parser_rejections": 10,
+      "original_and_generated_execution_acceptances": 60,
+      "original_and_generated_execution_rejections": 16,
+      "equal_execution_observations": 30,
+      "no_generated_sql_for_native_rejected_execution": ["DFS-array-agg-comma", "DFS-star-replace", "DFS-star-ilike", "DFS-star-except"],
+      "catalog_name_kind_entries": 447,
+      "catalog_relations": 11,
+      "executed_brikk_stages": 10
+    }
+  },
+  "files": {
+    "brikk-datafusion.json": "ed6379aa77a3500e1b2bc1b2b2251cc27667962a8dad3c7c6f844c50a642e368",
+    "brikk-spice.json": "757be2ce1855edac0980cdd1764a3e6ec91592e5b87cdefc67ff074ca55ac3c2",
+    "datafusion-execution.json": "388179455b95b918c05fe1c63165bdd9b18820abdafa22de564e1c70f74ae659",
+    "datafusion-jdbc.json": "8ea72dfbdf4bd17d6e2fb03931942b2972481aadb3663ed962cf63bc08b018e6",
+    "datafusion-native.json": "3195dec6ce3a5742366b4ab8fe806b9625d8dd346843bcc0792021e3fa52c3be",
+    "spice-execution.json": "1c98a96b1a8f43364023e062e7d3d19de5f774bec83b0da8c844ccf463dba0d2",
+    "spice-jdbc.json": "c65fec795ce9f4f0bc0e4ce8d4e0aac864dc202924717dfcc4616f6bd6c758e7",
+    "spice-native.json": "dbbf8b25c50ac3247c76141c774d84b2b96e02712e2131df9c634a6bc5c5e6f2"
+  }
+}

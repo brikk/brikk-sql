@@ -10,6 +10,8 @@ from release_config import development_version
 GROUP = 'dev.brikk.house'
 PACKAGE = 'dev/brikk/house/sql/verify/'
 JAVA_21 = 65
+JAVA_17 = 61
+JAVA_17_ARTIFACTS = {'brikk-sql-verify-api', 'brikk-sql-verify-doris'}
 STDLIB = ('org.jetbrains.kotlin', 'kotlin-stdlib')
 API = (GROUP, 'brikk-sql-verify-api')
 ENGINES = ['brikk-sql-verify-trino', 'brikk-sql-verify-duckdb', 'brikk-sql-verify-doris',
@@ -37,12 +39,14 @@ NS = {'m': 'http://maven.apache.org/POM/4.0.0'}
 def verify(repository: Path, version: str, artifact: str, dependencies: list) -> None:
     folder = repository / GROUP.replace('.', '/') / artifact / version
     stem = f'{artifact}-{version}'
+    ceiling = JAVA_17 if artifact in JAVA_17_ARTIFACTS else JAVA_21
+    java = ceiling - 44
     with zipfile.ZipFile(folder / f'{stem}.jar') as archive:
         classes = [name for name in archive.namelist() if name.endswith('.class')]
         assert classes, f'{artifact}: no classes'
         for name in classes:
             assert name.startswith(PACKAGE), f'{artifact}: {name} outside {PACKAGE}'
-            assert int.from_bytes(archive.read(name)[6:8], 'big') <= JAVA_21, f'{artifact}: {name} is newer than Java 21'
+            assert int.from_bytes(archive.read(name)[6:8], 'big') <= ceiling, f'{artifact}: {name} is newer than Java {java}'
     with zipfile.ZipFile(folder / f'{stem}-sources.jar') as archive:
         assert any(name.endswith('.kt') for name in archive.namelist()), f'{artifact}: empty sources jar'
 
@@ -61,7 +65,7 @@ def verify(repository: Path, version: str, artifact: str, dependencies: list) ->
     for variant in metadata['variants']:
         for dependency in variant.get('dependencies', []):
             assert (dependency['group'], dependency['module']) in dependencies, f'{artifact}: metadata adds {dependency}'
-    print(f'Verified {artifact}:{version}: {len(classes)} Java 21 classes, dependencies {coordinates}')
+    print(f'Verified {artifact}:{version}: {len(classes)} Java {java}-compatible classes, dependencies {coordinates}')
 
 
 def main() -> None:

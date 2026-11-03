@@ -1,0 +1,11 @@
+{
+  "source": "https://github.com/spiceai/spiceai/blob/78a47787ef74dec52d705bf9e26a0f9b7a26ca94/crates/runtime/src/datafusion/udf.rs",
+  "source_hash_manifest": "dependency-provenance.json",
+  "reason": "The registrations and rerank comment identify scalar stubs used to nest table function calls. They are not ordinary executable scalar implementations.",
+  "entries": [
+    {"name":"vector_search","kind":"SCALAR","native_kind":"SCALAR_STUB"},
+    {"name":"text_search","kind":"SCALAR","native_kind":"SCALAR_STUB"},
+    {"name":"rrf","kind":"SCALAR","native_kind":"SCALAR_STUB"},
+    {"name":"rerank","kind":"SCALAR","native_kind":"SCALAR_STUB"}
+  ]
+}

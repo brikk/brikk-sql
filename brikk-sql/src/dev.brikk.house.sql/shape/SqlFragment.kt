@@ -312,7 +312,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         var ordinal = 0
         for (node in ast.walk(bfs = false)) {
             val key = when {
-                node is Parameter -> Key(ParamStyle.NAMED_AT, node.name.ifEmpty { null })
+                node is Parameter -> Key(if (node.metaOrNull?.get("numbered_dollar_parameter") == true) ParamStyle.NUMBERED_DOLLAR else ParamStyle.NAMED_AT, node.name.ifEmpty { null })
                 node is Placeholder && node.args["kind"] != null -> Key(ParamStyle.NAMED_TYPED, node.text("this"))
                 node is Placeholder && node.text("this").isNotEmpty() ->
                     Key(ParamStyle.NAMED_COLON, node.text("this"))
@@ -539,6 +539,9 @@ class SqlFragment(val sql: String, val dialect: String = "") {
         }
         if (dialectObj.name == "duckdb" && (tree.hasSideEffectingCte() || tree.hasKeyedCte())) return declarativeCteShape(tree, inputs)
         val prepared = prepareTree(tree, inputs)
+        if (dialectObj.name in setOf("datafusion", "spice")) {
+            return dev.brikk.house.sql.scope.datafusionShape(prepared, inputs, dialectObj)
+        }
         val schema = buildSchema(inputs, rejectNormalizedDuplicates = prepared.hasStarRename())
         val qualified = qualify(
             prepared,
@@ -890,7 +893,7 @@ class SqlFragment(val sql: String, val dialect: String = "") {
 
     private fun renderType(type: Expression?): String {
         val dataType = type as? DataType ?: return "UNKNOWN"
-        return Dialects.BASE.generate(dataType)
+        return dev.brikk.house.sql.optimizer.renderType(dataType, dialectObj)
     }
 
     private fun leafName(leaf: Node): String {
@@ -925,6 +928,9 @@ enum class ParamStyle {
      * server binds it, so IDE prompting and masking skip it and generation keeps it as written.
      */
     NAMED_TYPED,
+
+    /** `$n`, a one-based numbered parameter. Repeated numbers share a binding, not an occurrence. */
+    NUMBERED_DOLLAR,
 }
 
 /**

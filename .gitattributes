@@ -1,2 +1,7 @@
 # Preserve upstream Windows-wrapper CRLF without treating carriage returns as trailing whitespace.
 kotlin.bat whitespace=cr-at-eol
+# Preserve hashed capture bytes across checkout platforms, including meaningful empty TSV fields.
+vendor/data/clickhouse-*-26.8.34.13.* -text
+vendor/data/clickhouse-*-26.10.2.103.* -text
+vendor/data/clickhouse-*-26.8.34.13.tsv whitespace=-blank-at-eol
+vendor/data/clickhouse-*-26.10.2.103.tsv whitespace=-blank-at-eol

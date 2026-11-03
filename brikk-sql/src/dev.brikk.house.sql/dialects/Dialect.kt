@@ -386,6 +386,7 @@ object Dialects {
 
     // brikk-native: no sqlglot oracle — see DatafusionDialect.kt.
     val DATAFUSION: Dialect = DatafusionDialect()
+    val SPICE: Dialect = SpiceDialect()
 
     fun forNameOrNull(name: String): Dialect? = when (name.lowercase().trim()) {
         "", "sqlglot" -> BASE
@@ -402,6 +403,7 @@ object Dialects {
         "spark", "sparksql" -> SPARK
         "bigquery" -> BIGQUERY
         "datafusion", "arrow-datafusion" -> DATAFUSION
+        "spice" -> SPICE
         else -> null
     }
 
@@ -411,7 +413,7 @@ object Dialects {
     /** Every accepted spelling (canonical names first, then aliases), for messages and docs. */
     val NAMES: List<String> = listOf(
         "sqlglot", "mysql", "doris", "starrocks", "presto", "trino", "duckdb", "postgres",
-        "clickhouse", "hive", "spark2", "spark", "bigquery", "datafusion",
+        "clickhouse", "hive", "spark2", "spark", "bigquery", "datafusion", "spice",
         // aliases
         "postgresql", "sparksql", "arrow-datafusion",
     )

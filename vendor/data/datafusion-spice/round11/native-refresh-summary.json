@@ -1,0 +1,82 @@
+{
+  "captures": [
+    {
+      "cases": 76,
+      "components": 6,
+      "coverage_gaps": [
+        {
+          "case": "cases/DFS-reset/generated/parse",
+          "id": "DFS-GAP-612e0f186332398a",
+          "observed_at": "datafusion-55.2.0-reference",
+          "reason": "Missing native verdict"
+        }
+      ],
+      "functions": 320,
+      "locked_packages": 63,
+      "manifest_sha256": "bfa8620a44fd44a08bbe363ad72ef98dacb855c40ed673221906b0b4e39397e9",
+      "native_outcomes": {
+        "execute:accepted": 44,
+        "execute:rejected": 34,
+        "parse:accepted": 139,
+        "parse:rejected": 7
+      },
+      "product": "datafusion",
+      "profile": "datafusion-55.2.0-reference",
+      "repositories": {
+        "apache/datafusion": {
+          "commit": "500744d5c25499055e3b2ca46b022bc425989203"
+        }
+      },
+      "self_comparison_changes": 0,
+      "snapshot_id": "3fa91bff9d7c1b6a5ec8df419155efb55e74e55451b4e4f57c63bda035041e29",
+      "unknown_function_schemas": [
+        "TABLE_VALUED:generate_series",
+        "TABLE_VALUED:range"
+      ]
+    },
+    {
+      "cases": 76,
+      "components": 14,
+      "coverage_gaps": [],
+      "functions": 447,
+      "locked_packages": 153,
+      "manifest_sha256": "01e541ed6a72ca6ce941c97d97f20b0a665e876a6b7f571caf9e8fd29c3605a2",
+      "native_outcomes": {
+        "execute:accepted": 60,
+        "execute:rejected": 16,
+        "parse:accepted": 134,
+        "parse:rejected": 10
+      },
+      "product": "spice",
+      "profile": "spice-2.4.0-reference",
+      "repositories": {
+        "spiceai/arrow-rs": {
+          "commit": "2e2cc330c64ac8a9e44d2a5f2da171b391f775b8"
+        },
+        "spiceai/datafusion": {
+          "commit": "cf084aa85dfdc27b4736208f5c132828020774ea"
+        },
+        "spiceai/spiceai": {
+          "commit": "78a47787ef74dec52d705bf9e26a0f9b7a26ca94"
+        }
+      },
+      "self_comparison_changes": 0,
+      "snapshot_id": "d151483feae73c37e210be49df971044e9c1f9a0d3b45275bf852a6773aef792",
+      "unknown_function_schemas": [
+        "TABLE_VALUED:executor_table",
+        "TABLE_VALUED:flatten_json",
+        "TABLE_VALUED:flatten_json_properties",
+        "TABLE_VALUED:generate_series",
+        "TABLE_VALUED:json_tree",
+        "TABLE_VALUED:list_udfs",
+        "TABLE_VALUED:range",
+        "TABLE_VALUED:rerank",
+        "TABLE_VALUED:rrf",
+        "TABLE_VALUED:text_search",
+        "TABLE_VALUED:vector_search"
+      ]
+    }
+  ],
+  "evidence": "fresh captures of the currently pinned profiles, not a new supported release",
+  "schema_version": 1
+}

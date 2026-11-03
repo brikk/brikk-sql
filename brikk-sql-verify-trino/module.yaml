@@ -9,10 +9,10 @@ apply:
 
 dependencies:
   - ../brikk-sql-verify-api: exported
-  # 483 matches the vendored function catalog (vendor/data/trino-functions-483.tsv).
+  # 484 matches the vendored function catalog (vendor/data/trino-functions-484.tsv).
   # trino-parser ships class-file 69, so it needs a JDK 25 runtime; this module's own
   # classes stay Java 21 bytecode.
-  - io.trino:trino-parser:483
+  - io.trino:trino-parser:484
 
 settings:
   publishing:

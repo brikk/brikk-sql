@@ -6,8 +6,8 @@ name: Test
 # release.yml call this workflow first and refuse to publish unless it is green (EVAL-03,
 # TODO-rectify-from-eval.md). Those branches are excluded here so their gate runs once.
 #
-# Requirements satisfied by ubuntu-latest: an embedded PostgreSQL platform archive and JDK 25
-# provisioned by the ./kotlin wrapper. chDB is an external optional-native dependency.
+# Requirements satisfied by ubuntu-latest: an embedded PostgreSQL platform archive and module
+# JDKs (17/21/25) provisioned by ./kotlin. chDB is an external optional-native dependency.
 
 on:
   push:
@@ -60,8 +60,18 @@ jobs:
           TEST_KOTLIN_RELEASE_MODEL: '1'
         run: python3 -m unittest discover -s tools -p 'test_*release*.py'
 
-      - name: Test
-        run: ./kotlin test
+      - name: Test DataFusion and Spice evidence and upgrade contracts (offline)
+        run: |
+          python3 -m unittest discover -s tools -p 'test_*datafusion*.py'
+          python3 -m unittest discover -s tools -p 'test_spice_native_evidence.py'
+
+      # Core contains wall-clock scaling assertions. Do not run its measurements
+      # alongside other module suites, and give its JVM a repeatable resource budget.
+      - name: Test core
+        run: ./kotlin test -m brikk-sql --jvm-args="-Xmx1g -XX:ActiveProcessorCount=2"
+
+      - name: Test remaining modules
+        run: ./kotlin test --exclude-module=brikk-sql
 
       - name: Test IntelliJ platform contracts
         run: ./kotlin check intellijPlatform -m brikk-sql-intellij-support
@@ -73,6 +83,9 @@ jobs:
 
       - name: Audit the SQL verifier publications
         run: python3 tools/verify_verifier_publication.py
+
+      - name: Audit the Java 17 library publications
+        run: python3 tools/verify_java17_publication.py
 
       - name: Audit the SQL IntelliJ support publication
         run: python3 tools/verify_intellij_publication.py

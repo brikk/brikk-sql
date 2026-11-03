@@ -1,0 +1,729 @@
+{
+  "runtime": {
+    "version": "v2.4.0+models",
+    "binary_sha256": "257b9fd8cf1f46c1f4ddf0b6280ba5b6033b79c276ec6840dd5e5d81710b1002",
+    "spicepod_sha256": "a3dfddafb19b7620137fab3d05cf5cdf83dc31f0f187f1dda37f8a687686affd",
+    "cpu_cores": 2,
+    "transport": "isolated loopback Arrow Flight SQL JDBC",
+    "java": "openjdk version \"25.0.2\" 2026-01-20\nOpenJDK Runtime Environment (build 25.0.2+10-69)\nOpenJDK 64-Bit Server VM (build 25.0.2+10-69, mixed mode, sharing)",
+    "java_options": [
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--sun-misc-unsafe-memory-access=allow"
+    ]
+  },
+  "driver": {
+    "url": "https://repo.maven.apache.org/maven2/org/apache/arrow/flight-sql-jdbc-driver/19.0.0/flight-sql-jdbc-driver-19.0.0.jar",
+    "sha256": "d3beee43c613c457789825343368f652d570d76c08799dad38a43a10e569b57f"
+  },
+  "observations": {
+    "jdbc_question": {
+      "status": "accepted",
+      "value": {
+        "parameters": 1,
+        "result": {
+          "rows": [
+            [
+              "8"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      }
+    },
+    "jdbc_numbered": {
+      "status": "accepted",
+      "value": {
+        "parameters": 1,
+        "result": {
+          "rows": [
+            [
+              "8"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      }
+    },
+    "jdbc_repeated": {
+      "status": "accepted",
+      "value": {
+        "parameters": 1,
+        "result": {
+          "rows": [
+            [
+              "14"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      }
+    },
+    "jdbc_values": {
+      "status": "accepted",
+      "value": {
+        "parameters": 2,
+        "result": {
+          "rows": [
+            [
+              "O'Reilly \ud83d\ude00",
+              "9"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "txt",
+              "type": "LONGVARCHAR",
+              "jdbc_type": -1
+            },
+            {
+              "name": "nil",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      }
+    },
+    "jdbc_null": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Can't set null on non-nullable parameter",
+      "causes": [
+        "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter"
+      ]
+    },
+    "jdbc_rebind": {
+      "status": "accepted",
+      "value": [
+        {
+          "rows": [
+            [
+              "8"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        },
+        {
+          "rows": [
+            [
+              "10"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      ]
+    },
+    "jdbc_partial_null": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Can't set null on non-nullable parameter",
+      "causes": [
+        "java.lang.UnsupportedOperationException: Can't set null on non-nullable parameter"
+      ]
+    },
+    "partial_binding_close": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Memory was leaked by query. Memory leaked: (1056)\nAllocator(ROOT) 0/1056/1056/9223372036854775807 (res/actual/peak/limit)\n",
+      "causes": [
+        "java.lang.IllegalStateException: Memory was leaked by query. Memory leaked: (1056)\nAllocator(ROOT) 0/1056/1056/9223372036854775807 (res/actual/peak/limit)\n"
+      ]
+    },
+    "prepare": {
+      "status": "accepted",
+      "value": 0
+    },
+    "execute_same": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Statement did not return a result set",
+      "causes": []
+    },
+    "execute_same_generic": {
+      "status": "accepted",
+      "value": {
+        "update_count": 0
+      }
+    },
+    "execute_other": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Statement did not return a result set",
+      "causes": []
+    },
+    "deallocate": {
+      "status": "accepted",
+      "value": 0
+    },
+    "execute_after_deallocate": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Statement did not return a result set",
+      "causes": []
+    },
+    "parse_error": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Error while executing SQL \"SELECT '\ud83d\ude00' AS x,\n  FROM\": Expected an expression, found: FROM",
+      "causes": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected an expression, found: FROM"
+      ]
+    },
+    "parse_error_position": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Error while executing SQL \"SELECT '\ud83d\ude00' AS x |> BOGUS 1\": Expected a valid binary operator after '|>' at Line: 1, Column: 19",
+      "causes": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 19"
+      ]
+    },
+    "plan_error": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Statement did not return a result set",
+      "causes": []
+    },
+    "plan_error_generic": {
+      "status": "accepted",
+      "value": {
+        "update_count": 0
+      }
+    },
+    "explain": {
+      "status": "accepted",
+      "value": {
+        "rows": [
+          [
+            "logical_plan",
+            "Projection: Int64(1) AS n\n  EmptyRelation: rows=1"
+          ],
+          [
+            "physical_plan",
+            "ProjectionExec: expr=[1 as n]\n  BytesProcessedExec\n    PlaceholderRowExec\n"
+          ]
+        ],
+        "columns": [
+          {
+            "name": "plan_type",
+            "type": "VARCHAR",
+            "jdbc_type": 12
+          },
+          {
+            "name": "plan",
+            "type": "VARCHAR",
+            "jdbc_type": 12
+          }
+        ]
+      }
+    },
+    "explain_analyze": {
+      "status": "accepted",
+      "value": {
+        "rows": [
+          [
+            "Plan with Metrics",
+            "ProjectionExec: expr=[1 as n], metrics=[output_rows=1, elapsed_compute=2.31\u00b5s, output_bytes=8.0 B, output_batches=1, expr_0_eval_time=902ns]\n  BytesProcessedExec, metrics=[]\n    PlaceholderRowExec, metrics=[]\n"
+          ]
+        ],
+        "columns": [
+          {
+            "name": "plan_type",
+            "type": "VARCHAR",
+            "jdbc_type": 12
+          },
+          {
+            "name": "plan",
+            "type": "VARCHAR",
+            "jdbc_type": 12
+          }
+        ]
+      }
+    },
+    "pipes": [
+      {
+        "sql": "SELECT\n  *\nFROM (\n  SELECT\n    1 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n) AS t\nWHERE\n  id > 1\nORDER BY\n  id",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> WHERE id > 1",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> WHERE id > 1\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "2"
+              ],
+              [
+                "2"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "WHERE",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> WHERE id > 1"
+      },
+      {
+        "sql": "WITH __tmp1 AS (\n  SELECT\n    id + 1 AS n\n  FROM (\n    SELECT\n      1 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n  ) AS t\n  ORDER BY\n    id\n)\nSELECT\n  *\nFROM __tmp1",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> SELECT id + 1 AS n",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> SELECT id + 1 AS n\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "3"
+              ],
+              [
+                "2"
+              ],
+              [
+                "3"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "n",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "SELECT",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> SELECT id + 1 AS n"
+      },
+      {
+        "sql": "WITH __tmp1 AS (\n  SELECT\n    *,\n    id + 1 AS n\n  FROM (\n    SELECT\n      1 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n  ) AS t\n  ORDER BY\n    id\n)\nSELECT\n  *\nFROM __tmp1",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> EXTEND id + 1 AS n",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> EXTEND id + 1 AS n\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "2",
+                "3"
+              ],
+              [
+                "1",
+                "2"
+              ],
+              [
+                "2",
+                "3"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              },
+              {
+                "name": "n",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "EXTEND",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> EXTEND id + 1 AS n"
+      },
+      {
+        "sql": "WITH q AS (\n  SELECT\n    *\n  FROM (\n    SELECT\n      1 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n  ) AS t\n  ORDER BY\n    id\n), __tmp1 AS (\n  SELECT\n    q.id\n  FROM q\n)\nSELECT\n  *\nFROM __tmp1",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> AS q |> SELECT q.id",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> AS q |> SELECT q.id\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "2"
+              ],
+              [
+                "1"
+              ],
+              [
+                "2"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "AS",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> AS q |> SELECT q.id"
+      },
+      {
+        "sql": "WITH __tmp1 AS (\n  SELECT\n    *\n  FROM (\n    SELECT\n      1 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n  ) AS t\n  ORDER BY\n    id\n), __tmp2 AS (\n  SELECT\n    count(*) AS n\n  FROM __tmp1 AS t\n)\nSELECT\n  *\nFROM __tmp2",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> AGGREGATE count(*) AS n",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> AGGREGATE count(*) AS n\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "3"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "n",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "AGGREGATE",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> AGGREGATE count(*) AS n"
+      },
+      {
+        "sql": "SELECT DISTINCT\n  *\nFROM (\n  SELECT\n    1 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n) AS t\nORDER BY\n  id",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> DISTINCT",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> DISTINCT\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "1"
+              ],
+              [
+                "2"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "DISTINCT",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> DISTINCT"
+      },
+      {
+        "sql": "SELECT\n  *\nFROM (\n  SELECT\n    1 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n) AS t\nORDER BY\n  id DESC",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> ORDER BY id DESC",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> ORDER BY id DESC\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "2"
+              ],
+              [
+                "2"
+              ],
+              [
+                "1"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "ORDER BY",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> ORDER BY id DESC"
+      },
+      {
+        "sql": "SELECT\n  *\nFROM (\n  SELECT\n    1 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n) AS t\nORDER BY\n  id\nLIMIT 2",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> LIMIT 2",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> LIMIT 2\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "1"
+              ],
+              [
+                "2"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "LIMIT",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> LIMIT 2"
+      },
+      {
+        "sql": "SELECT\n  *\nFROM (\n  SELECT\n    1 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n  UNION ALL\n  SELECT\n    2 AS id\n) AS t\nORDER BY\n  id\nOFFSET 1",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> OFFSET 1",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> OFFSET 1\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "2"
+              ],
+              [
+                "2"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "OFFSET",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> OFFSET 1"
+      },
+      {
+        "sql": "WITH __tmp1 AS (\n  SELECT\n    *,\n    row_number() OVER (ORDER BY id) AS rn\n  FROM (\n    SELECT\n      1 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n    UNION ALL\n    SELECT\n      2 AS id\n  ) AS t\n  ORDER BY\n    id\n)\nSELECT\n  *\nFROM __tmp1",
+        "native_sql": "SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> WINDOW row_number() OVER (ORDER BY id) AS rn",
+        "native": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> WINDOW row_number() OVER (ORDER BY id) AS rn\": Expected a valid binary operator after '|>' at Line: 1, Column: 86",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Expected a valid binary operator after '|>' at Line: 1, Column: 86"
+          ]
+        },
+        "lowered": {
+          "status": "accepted",
+          "value": {
+            "rows": [
+              [
+                "1",
+                "1"
+              ],
+              [
+                "2",
+                "2"
+              ],
+              [
+                "2",
+                "3"
+              ]
+            ],
+            "columns": [
+              {
+                "name": "id",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              },
+              {
+                "name": "rn",
+                "type": "BIGINT",
+                "jdbc_type": -5
+              }
+            ]
+          }
+        },
+        "stage": "WINDOW",
+        "source": "FROM (SELECT 1 AS id UNION ALL SELECT 2 AS id UNION ALL SELECT 2 AS id) t |> ORDER BY id |> WINDOW row_number() OVER (ORDER BY id) AS rn"
+      }
+    ],
+    "set": {
+      "status": "failed",
+      "class": "java.sql.SQLException",
+      "message": "Error while executing SQL \"SET datafusion.sql_parser.enable_ident_normalization = true\": Statements are not allowed: SetVariable",
+      "causes": [
+        "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: INVALID_ARGUMENT: Statements are not allowed: SetVariable"
+      ]
+    },
+    "own_setting": {
+      "status": "accepted",
+      "value": {
+        "rows": [
+          [
+            "false"
+          ]
+        ],
+        "columns": [
+          {
+            "name": "value",
+            "type": "VARCHAR",
+            "jdbc_type": 12
+          }
+        ]
+      }
+    },
+    "other_setting": {
+      "status": "accepted",
+      "value": {
+        "rows": [
+          [
+            "false"
+          ]
+        ],
+        "columns": [
+          {
+            "name": "value",
+            "type": "VARCHAR",
+            "jdbc_type": 12
+          }
+        ]
+      }
+    },
+    "cancellation": {
+      "running_before_cancel": true,
+      "phase": "finished",
+      "cancel": {
+        "status": "accepted",
+        "value": true
+      },
+      "completion": {
+        "status": "accepted",
+        "value": {
+          "status": "failed",
+          "class": "java.sql.SQLException",
+          "message": "Error while executing SQL \"SELECT sum(sin(CAST(value AS DOUBLE)) * cos(CAST(value AS DOUBLE))) FROM generate_series(1, 10000000)\": Cancelling this FlightStream.",
+          "causes": [
+            "org.apache.arrow.driver.jdbc.shaded.org.apache.arrow.flight.FlightRuntimeException: CANCELLED: Cancelling this FlightStream."
+          ]
+        }
+      },
+      "connection_after_cancel": {
+        "status": "accepted",
+        "value": {
+          "rows": [
+            [
+              "1"
+            ]
+          ],
+          "columns": [
+            {
+              "name": "n",
+              "type": "BIGINT",
+              "jdbc_type": -5
+            }
+          ]
+        }
+      }
+    },
+    "other_close": {
+      "status": "accepted",
+      "value": true
+    },
+    "connection_close": {
+      "status": "accepted",
+      "value": true
+    }
+  }
+}

@@ -18,6 +18,12 @@ class SqlFragmentTest {
     private val json = Json
 
     @Test
+    fun trinoIntervalQualifiersRemainInOutputTypes() {
+        val type = "INTERVAL DAY(3) TO SECOND(12)"
+        assertEquals(type, SqlFragment("SELECT CAST(NULL AS $type) AS v", "trino").outputShape().columns.single().type)
+    }
+
+    @Test
     fun separatorCommentsDoNotCreateAnExtraStatement() {
         val fragment = SqlFragment("SELECT :n AS id; -- trailing :not_a_bind\n", "postgres")
         assertEquals("Select", fragment.rootKind)

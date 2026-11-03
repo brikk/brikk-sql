@@ -1,0 +1,25 @@
+{
+  "automatic_promotion": false,
+  "evidence_kind": "controlled-fixture",
+  "files": {
+    "graph.json": "e9a0fe615d5996077c71e3a179b243db3bcbb95df42a7fc449f88678d453d746",
+    "inventory.json": "2d93128015cc62c4c63ce47b3af87642fa5a7c5b0ff66a094bb57f8cf0e585d7",
+    "profile.json": "402725ab971e486e2d7f1bbbeca5b4ae4eaa657d321860a7cc3e351bc087427f",
+    "raw/brikk.json": "2abde86296b3356823477e5a221a79706b02e6a887b44666b9346dc70fe7444b",
+    "raw/cases.json": "050bfd7eddfa4ba05c357e125234f7d409fc46dfc5cb7a3ecb69213c57164c3e",
+    "raw/metadata.json": "ceeacb2c27f90cbd1354d17f4ef66e1806ba4787e971bc68ecea44a0801aafff",
+    "raw/responses.json": "1eb8926fc0cdb38949083eb872cd6df00783836e60a9998cfc4ae8b124b4726f"
+  },
+  "profile": {
+    "embedding": "controlled fixture",
+    "features": [],
+    "id": "controlled-before",
+    "parser_profile": {
+      "dialect": "Generic"
+    },
+    "product": "datafusion",
+    "version": "fixture"
+  },
+  "schema_version": 1,
+  "snapshot_id": "8cdef32c9fbb59f9810bb0d779c7d7a30742d391ae0eb75342df20af987282c3"
+}

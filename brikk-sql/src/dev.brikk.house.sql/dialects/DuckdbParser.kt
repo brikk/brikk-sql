@@ -354,9 +354,9 @@ open class DuckdbParser(
         get() = DuckdbParserTables.SHOW_PARSERS
 
     override fun parseStatement(): Expression? {
-        // brikk extension #58: native ANALYSE shares ANALYZE's statement grammar.
+        // brikk extension #64: native ANALYSE shares ANALYZE's statement grammar.
         if (nativeRegexOperators && match(TokenType.ANALYZE)) return parseNativeAnalyze()
-        // brikk extension #58: native 2.0 adds a delimiter-free SET SCHEMA string form. Keep the
+        // brikk extension #64: native 2.0 adds a delimiter-free SET SCHEMA string form. Keep the
         // historical parser's raw-command classification separate from this grammar.
         if (nativeRegexOperators && currToken.tokenType == TokenType.SET &&
             nextToken.tokenType == TokenType.SCHEMA && tokens.getOrNull(index + 2)?.tokenType == TokenType.STRING) {

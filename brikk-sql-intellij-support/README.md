@@ -12,6 +12,20 @@ no internal-API annotation.
 
 ## API
 
+DataFusion and Spice consumers use `DatafusionFamilyDialect` with separate
+`DatafusionIdeProfile` identities and `DatafusionFamilyParserDefinition`. The shared jar
+registers nothing and maps no generic Flight SQL or PostgreSQL source to these products.
+See [the DFS-007 wiring and parsing contract](../docs/research/datafusion-spice-ide-parsing.md).
+`DatafusionEditorProfile` adds versioned completion, function evidence documentation and
+relation features. See [the DFS-008 registration and inspection contract](../docs/research/datafusion-spice-editor-features.md).
+`ConnectedDatafusionEditorProfile` and the DataFusion/Spice catalog profiles connect those
+features to Flight SQL inventories. See [the DFS-009 transport and cache contract](../docs/research/datafusion-spice-live-catalogs.md).
+`DatafusionNativeErrorProfile` and `DatafusionPipeDialect` add offline diagnostics and opt-in
+Brikk PIPE execution. See [the DFS-010 execution contract and measured driver limits](../docs/research/datafusion-spice-execution.md).
+The [DFS-012 consumer handoff](../docs/datafusion-spice-consumer.md) combines these registrations
+in a tested dual-dialect fixture and lists candidate artifacts and downstream packaging checks.
+Its [support matrix](../docs/datafusion-spice-support.md) keeps execution exclusions explicit.
+
 `queryRows` and `executeStatement` in `dev.brikk.house.sql.intellij.catalog` run queries
 or trusted session initialization over an existing `DatabaseConnectionCore`, without owning
 or closing that connection. Use them from the connection/execution hooks, off the EDT and
@@ -384,7 +398,8 @@ registers no-arg subclasses. The contributor calls each per-file hook at most on
   (`completableFunctions`). Whether parentheses are inserted comes from the invocation
   syntax, not from the overloads: a call inserts `()`, while a grammar bare form
   (`CURRENT_TIMESTAMP`, also when a call is accepted) and a special form (`CAST`) insert only
-  the name. A name written with parentheses reuses an existing `(`, with the caret inside,
+   the name. Special forms match prefixes without regard to case, even when the catalog's
+   ordinary function names are case-sensitive. A name written with parentheses reuses an existing `(`, with the caret inside,
   and gets `()` when accepted with `(`. Only the caret inside new parentheses follows the
   overloads: it goes after `()` when the only overload takes no arguments. Keywords from the profile's
   `keywordCatalog` (the snapshot's by default), all or only reserved ones (`KeywordScope`), except those a later
@@ -863,8 +878,8 @@ bundled function of the same name and kind (a temporary macro shadowing a built-
 back into the completion profile's hooks.
 
 `TrinoFunctionHarvester` reads Trino's `SHOW FUNCTIONS` (and `version()`) with the bundled Trino
-catalog's modeling, which is generated from the same command: the harvest of the vendored 483 dump
-equals the bundled 483 catalog. `TrinoLiveCatalogProfile` (only `dbms` left) uses it once per session
+catalog's modeling, which is generated from the same command: the harvest of the vendored 484 dump
+equals the bundled 484 catalog. `TrinoLiveCatalogProfile` (only `dbms` left) uses it once per session
 with `REPLACE`, in memory, and is off (`enabled = false`) until the Trino plugin turns it on.
 
 ### Executed statements
@@ -939,7 +954,12 @@ source-preserving renderer has no source map and cannot borrow another rendering
 Our public APIs do not carry `ApiStatus.Experimental`. Genuine IntelliJ API annotations are still
 reported by Plugin Verifier. A Compatible verdict does not establish Marketplace approval of them.
 For a support-only patch against already-published core, use `--skip-core-publication` to avoid
-republishing immutable core coordinates. Versions 0.2.1 through 0.2.4 are published on Maven
+republishing immutable core coordinates. The latest release is **0.3.0** for common support,
+the JDBC adapter and the test kit, against SQL core/metadata/verify-api **0.22.0**. All are
+published and verified on Maven Central. See [the release record](../docs/sql-0.22.0.md) and
+[DataFusion/Spice consumer coordinates](../docs/datafusion-spice-consumer.md#released-artifacts).
+
+Earlier versions 0.2.1 through 0.2.4 are published on Maven
 Central from main (0.2.2: `DialectDataSourceResolver` also takes a connection a `sql.dataSourceProvider`
 names for the file itself; 0.2.3: no deprecated, scheduled-for-removal or experimental platform calls
 that have stable equivalents). Version 0.2.4 exposes the existing remote query/session-initialization
@@ -954,9 +974,9 @@ platform copy.
 
 ```sh
 ./kotlin publish mavenLocal -m brikk-sql-intellij-support -m brikk-sql-intellij-test-support --transitive
-python3 tools/publish_intellij_support.py 0.2.4 --core-version 0.20.1 --skip-core-publication --local
+python3 tools/publish_intellij_support.py 0.3.0 --core-version 0.22.0 --skip-core-publication --local
 # For a new public release, set NEXT_SUPPORT_VERSION to an unpublished version:
-python3 tools/publish_intellij_support.py "$NEXT_SUPPORT_VERSION" --core-version 0.20.1 --skip-core-publication
+python3 tools/publish_intellij_support.py "$NEXT_SUPPORT_VERSION" --core-version 0.22.0 --skip-core-publication
 ```
 
 The last command requires the existing Central/signing environment. It publishes common support,

@@ -1,0 +1,352 @@
+{
+  "captured_at": "2026-10-29T00:31:41.996122+00:00",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-M01\",\"formatted\":\"SELECT COLUMNS('^a')\\nFROM t\"}\n{\"id\":\"CH26-M02\",\"formatted\":\"SELECT t.COLUMNS('(?i)^a')\\nFROM t\"}\n{\"id\":\"CH26-M03\",\"formatted\":\"SELECT\\n    LOCALTIME,\\n    LOCALTIMESTAMP,\\n    SESSION_USER,\\n    NOW,\\n    CURRENT_TIMESTAMP,\\n    CURRENT_DATE,\\n    CURRENT_USER\"}\n{\"id\":\"CH26-M04\",\"formatted\":\"SELECT\\n    toDayOfWeek(dt),\\n    toDayOfWeek(dt, 2),\\n    plus(intDiv(minus(__toYearCalendarOnly(dt), 1), 100), 1)\\nFROM t\"}\n{\"id\":\"CH26-M05\",\"formatted\":\"SELECT arrayMap(lower | reverse, ['Hello', 'World'])\"}\n{\"id\":\"CH26-M06\",\"formatted\":\"SELECT arrayMap((_1 * 2) + 1, [1, 2, 3])\"}\n{\"id\":\"CH26-B3-M07\",\"formatted\":\"SELECT\\n    arrayMap(_ + _, [1], [2]),\\n    arrayMap(_2 - _1, [1], [2])\"}\n{\"id\":\"CH26-B3-M08\",\"formatted\":\"SELECT\\n    arrayMap(lower, ['Hello']),\\n    arrayMap(arrayMap(_ + 1, _1), [[1, 2]])\"}\n{\"id\":\"CH26-B3-M09\",\"formatted\":\"SELECT\\n    _1,\\n    _,\\n    t._2,\\n    bitOr(a, b)\\nFROM t\"}\n{\"id\":\"CH26-B3-M10\",\"formatted\":\"SELECT\\n    LOCALTIME,\\n    t.LOCALTIMESTAMP,\\n    SESSION_USER\\nFROM t\"}\n{\"id\":\"CH26-B3-M11\",\"formatted\":\"SELECT COLUMNS('^a_')\\nFROM t\"}\n{\"id\":\"CH26-B3-M12\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(x -> (x + _1), [1]), [10]),\\n    arrayMap(_1 -> (_1 + 1), [1])\"}\n{\"id\":\"CH26-D01\",\"formatted\":\"CREATE MATERIALIZED VIEW v\\nREFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst\\nAS SELECT *\\nFROM src\"}\n{\"id\":\"CH26-B3-D08\",\"formatted\":\"CREATE MATERIALIZED VIEW v\\nREFRESH EVERY 1 DAY OFFSET 1 HOUR RANDOMIZE FOR 1 MINUTE DEPENDS ON db.a, db.b SETTINGS refresh_retries = 2 APPEND INCREMENTAL TO db.dst\\nAS SELECT *\\nFROM db.src\"}\n{\"id\":\"CH26-D02\",\"formatted\":\"CREATE TOKEN VALID FOR toIntervalDay(30) GRANTS (SELECT ON db.t)\"}\n{\"id\":\"CH26-B3-D09\",\"formatted\":\"CREATE TOKEN VALID UNTIL '2026-12-31' GRANTS (SELECT, INSERT ON db.t, SELECT ON db.u)\\nFORMAT TSVRaw\"}\n{\"id\":\"CH26-B3-D10\",\"formatted\":\"CREATE TOKEN VALID UNTIL 'infinity'\"}\n{\"id\":\"CH26-B3-D11\",\"formatted\":\"CREATE USER u IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID FOR toIntervalDay(1) GRANTS (SELECT ON db.t)\"}\n{\"id\":\"CH26-B3-D12\",\"formatted\":\"ALTER USER u ADD IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID UNTIL '2026-12-31' GRANTS (SELECT(x) ON db.t)\"}\n{\"id\":\"CH26-D03\",\"formatted\":\"CREATE HANDLER h URL '\\/test' AS SELECT 1\"}\n{\"id\":\"CH26-B3-D13\",\"formatted\":\"CREATE HANDLER IF NOT EXISTS h ON CLUSTER cluster PROTOCOL ANY URL PREFIX '\\/api' METHODS (GET, POST) TYPE query AS SELECT {id:UInt64}\"}\n{\"id\":\"CH26-B3-D14\",\"formatted\":\"ALTER HANDLER h URL REGEXP '\\/users\\/[0-9]+' METHODS (POST) AS INSERT INTO db.t SELECT 1\"}\n{\"id\":\"CH26-B3-D15\",\"formatted\":\"DROP HANDLER IF EXISTS h ON CLUSTER cluster\"}\n{\"id\":\"CH26-D04\",\"formatted\":\"CREATE HYPOTHETICAL INDEX idx ON t x TYPE minmax GRANULARITY 1\"}\n{\"id\":\"CH26-B3-D16\",\"formatted\":\"CREATE HYPOTHETICAL INDEX IF NOT EXISTS idx ON db.t (x, y) TYPE set(100) GRANULARITY 2\"}\n{\"id\":\"CH26-D05\",\"formatted\":\"EXPLAIN WHATIF\\nSELECT *\\nFROM t\\nWHERE x > 10\"}\n{\"id\":\"CH26-B3-D17\",\"formatted\":\"EXPLAIN WHATIF empirical = 0\\nSELECT *\\nFROM t\\nWHERE x > 10\"}\n{\"id\":\"CH26-D06\",\"formatted\":\"EXPLAIN ANALYZE\\nSELECT 1\"}\n{\"id\":\"CH26-B3-D18\",\"formatted\":\"EXPLAIN ANALYZE processors = 1, time = 0\\nSELECT number\\nFROM numbers(2)\"}\n{\"id\":\"CH26-D07\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3, 'next', 'negative' = -1 ) )\"}\n{\"id\":\"CH26-B3-D19\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` UInt32,\\n    PROJECTION p\\n    (\\n        SELECT x\\n        WHERE x > 0\\n        ORDER BY x\\n    ) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop')\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-B3-D20\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` UInt32,\\n    PROJECTION p INDEX x TYPE minmax\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-B3-D21\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY PROJECTION p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop'))\"}\n{\"id\":\"CH26-B3-D22\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY PROJECTION IF EXISTS p\\n    (\\n        SELECT x\\n        ORDER BY x\\n    ) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop'))\"}\n{\"id\":\"CH26-B3-D23\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY CONSTRAINT IF EXISTS positive CHECK x > 0)\"}\n{\"id\":\"CH26-B3-D24\",\"formatted\":\"SYSTEM PAUSE `db`.`t`\"}\n{\"id\":\"CH26-B3-D25\",\"formatted\":\"SYSTEM REFRESH ALL BACKGROUND\"}\n{\"id\":\"CH26-B3-D26\",\"formatted\":\"ALTER TABLE t\\n    (ADD PROJECTION IF NOT EXISTS p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop') FIRST )\"}\n{\"id\":\"CH26-B3-D27\",\"formatted\":\"ALTER TABLE t\\n    (DROP PROJECTION IF EXISTS p)\"}\n{\"id\":\"CH26-B3-D28\",\"formatted\":\"ALTER TABLE t\\n    (MATERIALIZE PROJECTION p IN PARTITION 1)\"}\n{\"id\":\"CH26-B3-D29\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY CONSTRAINT positive CHECK x > 0),\\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3 ) )\"}\n{\"id\":\"CH26-B3-N01\",\"formatted\":null}\n{\"id\":\"CH26-B3-N02\",\"formatted\":null}\n{\"id\":\"CH26-B3-N03\",\"formatted\":null}\n{\"id\":\"CH26-B3-N04\",\"formatted\":null}\n{\"id\":\"CH26-B3-N05\",\"formatted\":null}\n{\"id\":\"CH26-B3-N06\",\"formatted\":null}\n{\"id\":\"CH26-B3-N07\",\"formatted\":null}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CH26-M01",
+      "formatted": "SELECT COLUMNS('^a')\nFROM t"
+    },
+    {
+      "id": "CH26-M02",
+      "formatted": "SELECT t.COLUMNS('(?i)^a')\nFROM t"
+    },
+    {
+      "id": "CH26-M03",
+      "formatted": "SELECT\n    LOCALTIME,\n    LOCALTIMESTAMP,\n    SESSION_USER,\n    NOW,\n    CURRENT_TIMESTAMP,\n    CURRENT_DATE,\n    CURRENT_USER"
+    },
+    {
+      "id": "CH26-M04",
+      "formatted": "SELECT\n    toDayOfWeek(dt),\n    toDayOfWeek(dt, 2),\n    plus(intDiv(minus(__toYearCalendarOnly(dt), 1), 100), 1)\nFROM t"
+    },
+    {
+      "id": "CH26-M05",
+      "formatted": "SELECT arrayMap(lower | reverse, ['Hello', 'World'])"
+    },
+    {
+      "id": "CH26-M06",
+      "formatted": "SELECT arrayMap((_1 * 2) + 1, [1, 2, 3])"
+    },
+    {
+      "id": "CH26-B3-M07",
+      "formatted": "SELECT\n    arrayMap(_ + _, [1], [2]),\n    arrayMap(_2 - _1, [1], [2])"
+    },
+    {
+      "id": "CH26-B3-M08",
+      "formatted": "SELECT\n    arrayMap(lower, ['Hello']),\n    arrayMap(arrayMap(_ + 1, _1), [[1, 2]])"
+    },
+    {
+      "id": "CH26-B3-M09",
+      "formatted": "SELECT\n    _1,\n    _,\n    t._2,\n    bitOr(a, b)\nFROM t"
+    },
+    {
+      "id": "CH26-B3-M10",
+      "formatted": "SELECT\n    LOCALTIME,\n    t.LOCALTIMESTAMP,\n    SESSION_USER\nFROM t"
+    },
+    {
+      "id": "CH26-B3-M11",
+      "formatted": "SELECT COLUMNS('^a_')\nFROM t"
+    },
+    {
+      "id": "CH26-B3-M12",
+      "formatted": "SELECT\n    arrayMap(arrayMap(x -> (x + _1), [1]), [10]),\n    arrayMap(_1 -> (_1 + 1), [1])"
+    },
+    {
+      "id": "CH26-D01",
+      "formatted": "CREATE MATERIALIZED VIEW v\nREFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst\nAS SELECT *\nFROM src"
+    },
+    {
+      "id": "CH26-B3-D08",
+      "formatted": "CREATE MATERIALIZED VIEW v\nREFRESH EVERY 1 DAY OFFSET 1 HOUR RANDOMIZE FOR 1 MINUTE DEPENDS ON db.a, db.b SETTINGS refresh_retries = 2 APPEND INCREMENTAL TO db.dst\nAS SELECT *\nFROM db.src"
+    },
+    {
+      "id": "CH26-D02",
+      "formatted": "CREATE TOKEN VALID FOR toIntervalDay(30) GRANTS (SELECT ON db.t)"
+    },
+    {
+      "id": "CH26-B3-D09",
+      "formatted": "CREATE TOKEN VALID UNTIL '2026-12-31' GRANTS (SELECT, INSERT ON db.t, SELECT ON db.u)\nFORMAT TSVRaw"
+    },
+    {
+      "id": "CH26-B3-D10",
+      "formatted": "CREATE TOKEN VALID UNTIL 'infinity'"
+    },
+    {
+      "id": "CH26-B3-D11",
+      "formatted": "CREATE USER u IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID FOR toIntervalDay(1) GRANTS (SELECT ON db.t)"
+    },
+    {
+      "id": "CH26-B3-D12",
+      "formatted": "ALTER USER u ADD IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID UNTIL '2026-12-31' GRANTS (SELECT(x) ON db.t)"
+    },
+    {
+      "id": "CH26-D03",
+      "formatted": "CREATE HANDLER h URL '/test' AS SELECT 1"
+    },
+    {
+      "id": "CH26-B3-D13",
+      "formatted": "CREATE HANDLER IF NOT EXISTS h ON CLUSTER cluster PROTOCOL ANY URL PREFIX '/api' METHODS (GET, POST) TYPE query AS SELECT {id:UInt64}"
+    },
+    {
+      "id": "CH26-B3-D14",
+      "formatted": "ALTER HANDLER h URL REGEXP '/users/[0-9]+' METHODS (POST) AS INSERT INTO db.t SELECT 1"
+    },
+    {
+      "id": "CH26-B3-D15",
+      "formatted": "DROP HANDLER IF EXISTS h ON CLUSTER cluster"
+    },
+    {
+      "id": "CH26-D04",
+      "formatted": "CREATE HYPOTHETICAL INDEX idx ON t x TYPE minmax GRANULARITY 1"
+    },
+    {
+      "id": "CH26-B3-D16",
+      "formatted": "CREATE HYPOTHETICAL INDEX IF NOT EXISTS idx ON db.t (x, y) TYPE set(100) GRANULARITY 2"
+    },
+    {
+      "id": "CH26-D05",
+      "formatted": "EXPLAIN WHATIF\nSELECT *\nFROM t\nWHERE x > 10"
+    },
+    {
+      "id": "CH26-B3-D17",
+      "formatted": "EXPLAIN WHATIF empirical = 0\nSELECT *\nFROM t\nWHERE x > 10"
+    },
+    {
+      "id": "CH26-D06",
+      "formatted": "EXPLAIN ANALYZE\nSELECT 1"
+    },
+    {
+      "id": "CH26-B3-D18",
+      "formatted": "EXPLAIN ANALYZE processors = 1, time = 0\nSELECT number\nFROM numbers(2)"
+    },
+    {
+      "id": "CH26-D07",
+      "formatted": "ALTER TABLE t\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3, 'next', 'negative' = -1 ) )"
+    },
+    {
+      "id": "CH26-B3-D19",
+      "formatted": "CREATE TABLE t\n(\n    `x` UInt32,\n    PROJECTION p\n    (\n        SELECT x\n        WHERE x > 0\n        ORDER BY x\n    ) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop')\n)\nENGINE = MergeTree\nORDER BY x"
+    },
+    {
+      "id": "CH26-B3-D20",
+      "formatted": "CREATE TABLE t\n(\n    `x` UInt32,\n    PROJECTION p INDEX x TYPE minmax\n)\nENGINE = MergeTree\nORDER BY x"
+    },
+    {
+      "id": "CH26-B3-D21",
+      "formatted": "ALTER TABLE t\n    (MODIFY PROJECTION p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop'))"
+    },
+    {
+      "id": "CH26-B3-D22",
+      "formatted": "ALTER TABLE t\n    (MODIFY PROJECTION IF EXISTS p\n    (\n        SELECT x\n        ORDER BY x\n    ) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop'))"
+    },
+    {
+      "id": "CH26-B3-D23",
+      "formatted": "ALTER TABLE t\n    (MODIFY CONSTRAINT IF EXISTS positive CHECK x > 0)"
+    },
+    {
+      "id": "CH26-B3-D24",
+      "formatted": "SYSTEM PAUSE `db`.`t`"
+    },
+    {
+      "id": "CH26-B3-D25",
+      "formatted": "SYSTEM REFRESH ALL BACKGROUND"
+    },
+    {
+      "id": "CH26-B3-D26",
+      "formatted": "ALTER TABLE t\n    (ADD PROJECTION IF NOT EXISTS p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop') FIRST )"
+    },
+    {
+      "id": "CH26-B3-D27",
+      "formatted": "ALTER TABLE t\n    (DROP PROJECTION IF EXISTS p)"
+    },
+    {
+      "id": "CH26-B3-D28",
+      "formatted": "ALTER TABLE t\n    (MATERIALIZE PROJECTION p IN PARTITION 1)"
+    },
+    {
+      "id": "CH26-B3-D29",
+      "formatted": "ALTER TABLE t\n    (MODIFY CONSTRAINT positive CHECK x > 0),\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3 ) )"
+    },
+    {
+      "id": "CH26-B3-N01",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B3-N02",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B3-N03",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B3-N04",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B3-N05",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B3-N06",
+      "formatted": null
+    },
+    {
+      "id": "CH26-B3-N07",
+      "formatted": null
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-M01\",\"formatted\":\"SELECT COLUMNS('^a')\\nFROM t\"}\n{\"id\":\"CH26-M02\",\"formatted\":\"SELECT t.COLUMNS('(?i)^a')\\nFROM t\"}\n{\"id\":\"CH26-M03\",\"formatted\":\"SELECT\\n    LOCALTIME,\\n    LOCALTIMESTAMP,\\n    SESSION_USER,\\n    NOW,\\n    CURRENT_TIMESTAMP,\\n    CURRENT_DATE,\\n    CURRENT_USER\"}\n{\"id\":\"CH26-M04\",\"formatted\":\"SELECT\\n    toDayOfWeek(dt),\\n    toDayOfWeek(dt, 2),\\n    plus(intDiv(minus(__toYearCalendarOnly(dt), 1), 100), 1)\\nFROM t\"}\n{\"id\":\"CH26-M05\",\"formatted\":\"SELECT arrayMap(lower | reverse, ['Hello', 'World'])\"}\n{\"id\":\"CH26-M06\",\"formatted\":\"SELECT arrayMap((_1 * 2) + 1, [1, 2, 3])\"}\n{\"id\":\"CH26-B3-M07\",\"formatted\":\"SELECT\\n    arrayMap(_ + _, [1], [2]),\\n    arrayMap(_2 - _1, [1], [2])\"}\n{\"id\":\"CH26-B3-M08\",\"formatted\":\"SELECT\\n    arrayMap(lower, ['Hello']),\\n    arrayMap(arrayMap(_ + 1, _1), [[1, 2]])\"}\n{\"id\":\"CH26-B3-M09\",\"formatted\":\"SELECT\\n    _1,\\n    _,\\n    t._2,\\n    bitOr(a, b)\\nFROM t\"}\n{\"id\":\"CH26-B3-M10\",\"formatted\":\"SELECT\\n    LOCALTIME,\\n    t.LOCALTIMESTAMP,\\n    SESSION_USER\\nFROM t\"}\n{\"id\":\"CH26-B3-M11\",\"formatted\":\"SELECT COLUMNS('^a_')\\nFROM t\"}\n{\"id\":\"CH26-B3-M12\",\"formatted\":\"SELECT\\n    arrayMap(arrayMap(x -> (x + _1), [1]), [10]),\\n    arrayMap(_1 -> (_1 + 1), [1])\"}\n{\"id\":\"CH26-D01\",\"formatted\":\"CREATE MATERIALIZED VIEW v\\nREFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst\\nAS SELECT *\\nFROM src\"}\n{\"id\":\"CH26-B3-D08\",\"formatted\":\"CREATE MATERIALIZED VIEW v\\nREFRESH EVERY 1 DAY OFFSET 1 HOUR RANDOMIZE FOR 1 MINUTE DEPENDS ON db.a, db.b SETTINGS refresh_retries = 2 APPEND INCREMENTAL TO db.dst\\nAS SELECT *\\nFROM db.src\"}\n{\"id\":\"CH26-D02\",\"formatted\":\"CREATE TOKEN VALID FOR toIntervalDay(30) GRANTS (SELECT ON db.t)\"}\n{\"id\":\"CH26-B3-D09\",\"formatted\":\"CREATE TOKEN VALID UNTIL '2026-12-31' GRANTS (SELECT, INSERT ON db.t, SELECT ON db.u)\\nFORMAT TSVRaw\"}\n{\"id\":\"CH26-B3-D10\",\"formatted\":\"CREATE TOKEN VALID UNTIL 'infinity'\"}\n{\"id\":\"CH26-B3-D11\",\"formatted\":\"CREATE USER u IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID FOR toIntervalDay(1) GRANTS (SELECT ON db.t)\"}\n{\"id\":\"CH26-B3-D12\",\"formatted\":\"ALTER USER u ADD IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID UNTIL '2026-12-31' GRANTS (SELECT(x) ON db.t)\"}\n{\"id\":\"CH26-D03\",\"formatted\":\"CREATE HANDLER h URL '\\/test' AS SELECT 1\"}\n{\"id\":\"CH26-B3-D13\",\"formatted\":\"CREATE HANDLER IF NOT EXISTS h ON CLUSTER cluster PROTOCOL ANY URL PREFIX '\\/api' METHODS (GET, POST) TYPE query AS SELECT {id:UInt64}\"}\n{\"id\":\"CH26-B3-D14\",\"formatted\":\"ALTER HANDLER h URL REGEXP '\\/users\\/[0-9]+' METHODS (POST) AS INSERT INTO db.t SELECT 1\"}\n{\"id\":\"CH26-B3-D15\",\"formatted\":\"DROP HANDLER IF EXISTS h ON CLUSTER cluster\"}\n{\"id\":\"CH26-D04\",\"formatted\":\"CREATE HYPOTHETICAL INDEX idx ON t x TYPE minmax GRANULARITY 1\"}\n{\"id\":\"CH26-B3-D16\",\"formatted\":\"CREATE HYPOTHETICAL INDEX IF NOT EXISTS idx ON db.t (x, y) TYPE set(100) GRANULARITY 2\"}\n{\"id\":\"CH26-D05\",\"formatted\":\"EXPLAIN WHATIF\\nSELECT *\\nFROM t\\nWHERE x > 10\"}\n{\"id\":\"CH26-B3-D17\",\"formatted\":\"EXPLAIN WHATIF empirical = 0\\nSELECT *\\nFROM t\\nWHERE x > 10\"}\n{\"id\":\"CH26-D06\",\"formatted\":\"EXPLAIN ANALYZE\\nSELECT 1\"}\n{\"id\":\"CH26-B3-D18\",\"formatted\":\"EXPLAIN ANALYZE processors = 1, time = 0\\nSELECT number\\nFROM numbers(2)\"}\n{\"id\":\"CH26-D07\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3, 'next', 'negative' = -1 ) )\"}\n{\"id\":\"CH26-B3-D19\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` UInt32,\\n    PROJECTION p\\n    (\\n        SELECT x\\n        WHERE x > 0\\n        ORDER BY x\\n    ) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop')\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-B3-D20\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` UInt32,\\n    PROJECTION p INDEX x TYPE minmax\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-B3-D21\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY PROJECTION p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop'))\"}\n{\"id\":\"CH26-B3-D22\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY PROJECTION IF EXISTS p\\n    (\\n        SELECT x\\n        ORDER BY x\\n    ) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop'))\"}\n{\"id\":\"CH26-B3-D23\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY CONSTRAINT IF EXISTS positive CHECK x > 0)\"}\n{\"id\":\"CH26-B3-D24\",\"formatted\":\"SYSTEM PAUSE `db`.`t`\"}\n{\"id\":\"CH26-B3-D25\",\"formatted\":\"SYSTEM REFRESH ALL BACKGROUND\"}\n{\"id\":\"CH26-B3-D26\",\"formatted\":\"ALTER TABLE t\\n    (ADD PROJECTION IF NOT EXISTS p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop') FIRST )\"}\n{\"id\":\"CH26-B3-D27\",\"formatted\":\"ALTER TABLE t\\n    (DROP PROJECTION IF EXISTS p)\"}\n{\"id\":\"CH26-B3-D28\",\"formatted\":\"ALTER TABLE t\\n    (MATERIALIZE PROJECTION p IN PARTITION 1)\"}\n{\"id\":\"CH26-B3-D29\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY CONSTRAINT positive CHECK x > 0),\\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3 ) )\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CH26-B3-E01",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E02",
+      "returncode": 0,
+      "stdout": "1\t2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E03",
+      "returncode": 0,
+      "stdout": "1\t3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E04",
+      "returncode": 0,
+      "stdout": "Time\tDateTime\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E05",
+      "returncode": 0,
+      "stdout": "7\t0\t21\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E06",
+      "returncode": 0,
+      "stdout": "['olleh','dlrow']\t[3,5,7]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E07",
+      "returncode": 0,
+      "stdout": "[3]\t[1]\t3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E08",
+      "returncode": 0,
+      "stdout": "[[2,3]]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E09",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: The function composition `f | g` can be used only where a function is expected: as an argument of a higher-order function such as arrayMap. For bitwise OR, use the function bitOr. In scope SELECT 1 | 2. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CH26-B3-E10",
+      "returncode": 0,
+      "stdout": "[[11]]\t[2]\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CH26-B3-E01",
+      "sql": "SELECT * LIKE 'a%' FROM (SELECT 1 AS abc, 2 AS Abc, 3 AS xyz)",
+      "returncode": 0,
+      "stdout": "1\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E02",
+      "sql": "SELECT t.* ILIKE 'a%' FROM (SELECT 1 AS abc, 2 AS Abc, 3 AS xyz) AS t",
+      "returncode": 0,
+      "stdout": "1\t2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E03",
+      "sql": "SELECT * LIKE 'a\\\\_%' FROM (SELECT 1 AS a_one, 2 AS ab, 3 AS a_two)",
+      "returncode": 0,
+      "stdout": "1\t3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E04",
+      "sql": "SELECT toTypeName(LOCALTIME), toTypeName(LOCALTIMESTAMP), toTypeName(SESSION_USER)",
+      "returncode": 0,
+      "stdout": "Time\tDateTime\tString\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E05",
+      "sql": "SELECT date_part('isodow', toDate('2026-10-25')), EXTRACT(DOW FROM toDate('2026-10-25')), EXTRACT(CENTURY FROM toDate('2026-10-25'))",
+      "returncode": 0,
+      "stdout": "7\t0\t21\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E06",
+      "sql": "SELECT arrayMap(lower | reverse, ['Hello', 'World']), arrayMap(_1 * 2 + 1, [1, 2, 3])",
+      "returncode": 0,
+      "stdout": "['olleh','dlrow']\t[3,5,7]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E07",
+      "sql": "SELECT arrayMap(_ + _, [1], [2]), arrayMap(_2 - _1, [1], [2]), bitOr(1, 2)",
+      "returncode": 0,
+      "stdout": "[3]\t[1]\t3\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E08",
+      "sql": "SELECT arrayMap(arrayMap(_ + 1, _1), [[1, 2]])",
+      "returncode": 0,
+      "stdout": "[[2,3]]\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-B3-E09",
+      "sql": "SELECT 1 | 2",
+      "returncode": 36,
+      "stdout": "",
+      "stderr": "Code: 36. DB::Exception: The function composition `f | g` can be used only where a function is expected: as an argument of a higher-order function such as arrayMap. For bitwise OR, use the function bitOr. In scope SELECT 1 | 2. (BAD_ARGUMENTS)\n"
+    },
+    {
+      "id": "CH26-B3-E10",
+      "sql": "SELECT arrayMap(arrayMap(x -> x + _1, [1]), [10]), arrayMap(_1 -> _1 + 1, [1])",
+      "returncode": 0,
+      "stdout": "[[11]]\t[2]\n",
+      "stderr": ""
+    }
+  ]
+}

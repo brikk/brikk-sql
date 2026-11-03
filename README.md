@@ -19,7 +19,7 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql](brikk-sql/README.md) | `brikk-sql-jvm` | Tokenizer, AST, dialects, parser, generator, optimizer, lineage, and schema/shape analysis. |
 | [brikk-sql-metadata](brikk-sql-metadata/) | `brikk-sql-metadata-jvm` | Function/type catalogs and evidence-backed semantic metadata; exported by core. |
 | [brikk-sql-verify-api](brikk-sql-verify-api/) | `brikk-sql-verify-api` | `SqlVerifier` contract, four-state `VerifyResult`, and editor-ready error positions; re-exports `brikk-sql-jvm`. |
-| [brikk-sql-verify-trino](brikk-sql-verify-trino/) | `brikk-sql-verify-trino` | Trino verifier over trino-parser 483 (Java 25 runtime). |
+| [brikk-sql-verify-trino](brikk-sql-verify-trino/) | `brikk-sql-verify-trino` | Trino verifier over trino-parser 484 (Java 25 runtime). |
 | [brikk-sql-verify-duckdb](brikk-sql-verify-duckdb/) | `brikk-sql-verify-duckdb` | DuckDB corpus-gate verifier, restricted standalone editor parser, and connection-backed parse-only verifier. |
 | [brikk-sql-verify-doris](brikk-sql-verify-doris/) | `brikk-sql-verify-doris` | Doris FE parser verifier, single statement or every error in a script. |
 | [brikk-sql-verify-shardingsphere](brikk-sql-verify-shardingsphere/) | `brikk-sql-verify-shardingsphere` | Advisory ShardingSphere grammars for PostgreSQL, MySQL, Hive and ClickHouse. Exclude `org.apache.groovy:groovy`: parsing never uses it and Toolchain cannot publish the exclusion. |
@@ -28,21 +28,26 @@ All artifacts use the **`dev.brikk.house`** group:
 | [brikk-sql-oracle](brikk-sql-oracle/) | `brikk-sql-oracle` | Heavyweight PostgreSQL and chDB ClickHouse engine checks. |
 | [brikk-sql-intellij-support](brikk-sql-intellij-support/README.md) | `brikk-sql-intellij-support` | Embedded IntelliJ action, snapshot and console-preparation mechanics; independently versioned. |
 
-Core and metadata target JVM for current publications and retain the `-jvm`
-coordinates. They emit Java 21-compatible bytecode, as do the verification
-modules; trino-parser itself, and so the Trino verifier and the aggregate, need a
-Java 25 runtime. The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
+Core and metadata retain their JVM `-jvm` coordinates. Since 0.21.0, core,
+metadata, verification API and Doris verifier target **Java 17** and run their
+suites on JDK 17, so they can be embedded in Doris's JVM. Other verifiers and IDE
+support retain Java 21 bytecode; trino-parser itself, and so the Trino verifier
+and aggregate, need a Java 25 runtime. Java 17 consumers should use the individual
+Doris verifier, not the aggregate. Older published JARs are not retroactively
+retargeted; use 0.21.0 or a later build with the Java 17 change.
+See [Java 17 embedding and verification](docs/java17-compatibility.md).
+The heavyweight oracle consumes `dev.brikk.house:brikk-chdb:0.16.0`
 from Maven Central, without a sibling source checkout or bundled native engine.
 
-Latest core, metadata, verify and oracle release: **`0.20.1`**. SQL IntelliJ
-support is independently versioned at **`0.2.4`**. Current core development
-snapshot: **`0.20.0-SNAPSHOT`**.
+Latest core, metadata, verify and oracle release: **`0.22.0`**. SQL IntelliJ
+support is independently versioned at **`0.3.0`**. Current development snapshots:
+SQL **`0.23.0-SNAPSHOT`**, IntelliJ support **`0.3.1-SNAPSHOT`**.
 
 ```kotlin
 repositories { mavenCentral() }
 dependencies {
-    implementation("dev.brikk.house:brikk-sql-jvm:0.20.1")
-    // Optional: implementation("dev.brikk.house:brikk-sql-verify:0.20.1")
+    implementation("dev.brikk.house:brikk-sql-jvm:0.22.0")
+    // Optional, Java 25 runtime: implementation("dev.brikk.house:brikk-sql-verify:0.22.0")
 }
 ```
 
@@ -50,13 +55,20 @@ dependencies {
 
 Supported names: `sqlglot` (also `""`), `mysql`, `doris`, `starrocks`, `postgres`
 (`postgresql`), `duckdb`, `presto`, `trino`, `clickhouse`, `hive`, `spark2`, `spark`
-(`sparksql`), `bigquery`, and `datafusion` (`arrow-datafusion`). Names are
+(`sparksql`), `bigquery`, `datafusion` (`arrow-datafusion`), and `spice`. Names are
 case-insensitive. Use `read=<dialect>` when parsing and `write=<dialect>` when
 transpiling.
 
 SQLGlot-backed dialects are checked differentially against the pinned Python
-oracle. DataFusion is Brikk-native: its gates use polyglot fixtures, DataFusion
-sqllogictest parse acceptance, and hand assertions instead. StarRocks is pinned
+oracle. DataFusion and Spice are Brikk-native: their gates use pinned native references,
+fixtures, and hand assertions. Spice's development support targets v2.4.0's PostgreSQL
+parser profile, case-preserving identifiers, native functions/operators, and structured
+utility statements. See [Spice core support and limits](docs/research/spice-core-dialect.md).
+The shared-library qualification targets DataFusion 55.2.0 and Spice v2.4.0 with explicit
+[feature and transport boundaries](docs/datafusion-spice-support.md). A tested
+[dual-dialect consumer fixture and wiring guide](docs/datafusion-spice-consumer.md) prepares
+one IntelliJ plugin for both products; packaged plugin qualification remains downstream work.
+StarRocks is pinned
 to 4.1.4 with a versioned catalog and a deliberately partial evidence-backed
 semantic matrix; unprobed functions do not receive inferred certification.
 
@@ -64,6 +76,35 @@ See the [core API guide](brikk-sql/README.md),
 [corpus coverage policy](docs/corpus-coverage.md), and
 [vendor provenance](vendor/README.md). Current priorities and ownership:
 [work list](TODO.md) (`SQL-*`).
+
+The Trino target is **484**, including its SQL/JSON constructor and
+serialization forms, interval precision, window-frame exclusion and NEAREST
+relations. The native parser and captured metadata use the same version.
+See [the compatibility notes](docs/brikk-extensions.md#58-trino-484-sql-and-metadata).
+
+ClickHouse `STREAM` reads and the `-Tuple` aggregate combinator have native
+parse/finite-result checks against pinned 26.8.34.13 LTS and 26.10.2.103 builds.
+Streaming execution still requires the server setting `enable_streaming_queries`.
+Metadata now has 26.5.1.1, 26.8.34.13 LTS and 26.10.2.103 stable snapshots, with
+26.10.2.103 as the unknown-server default. Boundary LIMIT forms, NATURAL JOIN,
+AT LOCAL, compound intervals, trailing remote-function SETTINGS, QBit and MultiPoint
+have structured parser coverage. Native execution limits remain explicit: the
+pinned engines reject `year()` and some LIMIT-range combinations.
+See the [batch 1](docs/research/clickhouse-2026-catchup.md) and
+[batch 2 evidence](docs/research/clickhouse-2026-batch2.md).
+
+The [batch 3 evidence](docs/research/clickhouse-2026-batch3.md) covers name-filtered
+stars, bare built-ins, date-part analysis, higher-order composition/implicit arguments,
+and structured refresh, index, EXPLAIN, authentication, handler and ALTER forms.
+DDL coverage is parse-only. EXPLAIN ANALYZE is explicitly classified as executing
+its enclosed query; the editor verifier still only formats SQL passed as data.
+
+The eight-step catch-up is complete within the [final coverage and limits](docs/research/clickhouse-2026-batch4.md).
+Native TRY_CAST keeps its accurate-cast behavior, integer division retains
+setting-dependent diagnostics, nullable tuple fields keep nullability, and
+PostgreSQL cardinality uses the all-dimensions count without changing Trino's
+outer-array behavior. Lowered NATURAL joins are measured on both pins; LATERAL
+remains experimental and setting-dependent. Historical semantic proofs are unchanged.
 
 New in `0.17.0`: [source-preserving executable lowering](docs/source-preserving-lowering.md)
 retains proved native text while lowering pipes and reports regenerated intervals.
@@ -100,9 +141,20 @@ generation, `NEAREST` joins, session routing, triggers, nested schemas, DML CTEs
 DuckDB instance and active extension grammar profile. Unlike the restricted standalone
 editor parser, it can use registered custom PEG grammars. The IDE consumer owns grammar
 selection and connection setup; the shared parser does not infer or install extensions.
-SQL IntelliJ support `0.2.4` exposes its existing query and trusted session-initialization helpers
+Since `0.2.4`, SQL IntelliJ support exposes its existing query and trusted session-initialization helpers
 so consumers can configure isolated helpers without duplicating remote JDBC handling.
 Both releases are published on Maven Central from commit `1387aad`.
+
+SQL `0.22.0` and IntelliJ support `0.3.0` publish the merged DataFusion and Spice shared-library
+support, including structured utilities, analysis, catalogs and editor integrations. Both are
+verified on Maven Central. See [the release record](docs/sql-0.22.0.md) and the
+[released consumer coordinates](docs/datafusion-spice-consumer.md#released-artifacts).
+Production plugin packaging and the documented Flight transport exclusions remain separate.
+
+The earlier `0.21.0` release published Trino 484, Doris 4.1.5 parser/metadata, the versioned paired
+JSON evidence and Java 17 embedding support for core, metadata, verifier API and
+Doris verifier. Those SQL artifacts were published on Maven Central from `fcd1b91`.
+At that release, IntelliJ support stayed at 0.2.4. See [its release record](docs/sql-0.21.0.md).
 
 ## Build and test
 
@@ -139,7 +191,8 @@ IntelliJ support has its own version and scoped release command; build tooling i
 never published. The template owns sources, POM metadata and repository URLs.
 
 - Push to `main`: build, full tests, and Maven Local publication gate, then publish
-  `0.20.0-SNAPSHOT` to `https://central.sonatype.com/repository/maven-snapshots/`.
+  SQL `0.23.0-SNAPSHOT` and IDE support `0.3.1-SNAPSHOT` to
+  `https://central.sonatype.com/repository/maven-snapshots/`.
 - Push `release/<version>` or manually dispatch the release workflow: the same
   gate, then signed Maven Central release bundles.
 - Local snapshot: `./kotlin publish centralSnapshots`.
@@ -152,6 +205,14 @@ never published. The template owns sources, POM metadata and repository URLs.
 - IDE support release: `python3 tools/publish_intellij_support.py <support-version>`.
   Add `--core-version <version>` only when explicitly releasing core and metadata
   prerequisites too. This command never releases verify/oracle.
+
+Development snapshot bases must be newer than their latest published stable
+versions. After a stable release, advance the SQL template and all three aligned
+IDE support descriptors as appropriate; release launchers restore their input
+templates and do not advance development versions automatically. Release-policy
+tests compare these descriptors with the stable versions recorded above. The old
+`0.20.0-SNAPSHOT`/`0.2.3-SNAPSHOT` builds are historical, not the current development
+streams. Stable `0.22.0` and `0.3.0` coordinates remain unchanged.
 
 Required GitHub organization/repository secrets:
 `KOTLIN_TOOLCHAIN_MAVENCENTRAL_USERNAME`, `KOTLIN_TOOLCHAIN_MAVENCENTRAL_PASSWORD`,

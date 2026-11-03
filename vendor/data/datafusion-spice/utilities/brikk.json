@@ -1,0 +1,1255 @@
+{
+    "schema_version": 1,
+    "dialect": "datafusion",
+    "evidence": "local parser and generator observations only",
+    "cases": [
+        {
+            "id": "show-functions",
+            "sql": "SHOW FUNCTIONS LIKE '%json%'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionShow(this=FUNCTIONS, expression=Literal(this=%json%, is_string=true), filter=LIKE, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW FUNCTIONS LIKE '%json%'"
+        },
+        {
+            "id": "show-functions-ilike",
+            "sql": "SHOW FUNCTIONS ILIKE 'ABS'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionShow(this=FUNCTIONS, expression=Literal(this=ABS, is_string=true), filter=ILIKE, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW FUNCTIONS ILIKE 'ABS'"
+        },
+        {
+            "id": "show-functions-where",
+            "sql": "SHOW FUNCTIONS WHERE name = 'abs'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "EQ",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=FUNCTIONS, expression=EQ(this=Column(this=Identifier(this=name, quoted=false)), expression=Literal(this=abs, is_string=true)), filter=WHERE, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW FUNCTIONS WHERE name = 'abs'"
+        },
+        {
+            "id": "show-tables",
+            "sql": "SHOW TABLES",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow"
+                    ],
+                    "ast": "DatafusionShow(this=TABLES, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW TABLES"
+        },
+        {
+            "id": "show-tables-from",
+            "sql": "SHOW TABLES FROM cat.public LIKE 'a%'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Dot",
+                        "Literal",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=TABLES, target=Dot(this=Identifier(this=cat, quoted=false), expression=Identifier(this=public, quoted=false)), scope=FROM, expression=Literal(this=a%, is_string=true), filter=LIKE, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW TABLES FROM cat.public LIKE 'a%'"
+        },
+        {
+            "id": "show-tables-in",
+            "sql": "SHOW FULL TABLES IN \"cat.one\".public WHERE name = 'x'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Dot",
+                        "EQ",
+                        "Identifier",
+                        "Identifier",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=TABLES, target=Dot(this=Identifier(this=cat.one, quoted=true), expression=Identifier(this=public, quoted=false)), scope=IN, expression=EQ(this=Column(this=Identifier(this=name, quoted=false)), expression=Literal(this=x, is_string=true)), filter=WHERE, full=true, extended=false)"
+                }
+            ],
+            "generated": "SHOW FULL TABLES IN \"cat.one\".public WHERE name = 'x'"
+        },
+        {
+            "id": "show-columns",
+            "sql": "SHOW COLUMNS FROM sample",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=COLUMNS, target=Identifier(this=sample, quoted=false), scope=FROM, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW COLUMNS FROM sample"
+        },
+        {
+            "id": "show-columns-quoted",
+            "sql": "SHOW EXTENDED FULL COLUMNS IN \"a.b\" LIKE 'id%'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionShow(this=COLUMNS, target=Identifier(this=a.b, quoted=true), scope=IN, expression=Literal(this=id%, is_string=true), filter=LIKE, full=true, extended=true)"
+                }
+            ],
+            "generated": "SHOW EXTENDED FULL COLUMNS IN \"a.b\" LIKE 'id%'"
+        },
+        {
+            "id": "show-fields",
+            "sql": "SHOW FIELDS FROM t",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=FIELDS, target=Identifier(this=t, quoted=false), scope=FROM, full=false, extended=false)"
+                }
+            ],
+            "generated": "SHOW FIELDS FROM t"
+        },
+        {
+            "id": "show-all",
+            "sql": "SHOW ALL",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=SETTING, expressions=[Identifier(this=ALL, quoted=false)])"
+                }
+            ],
+            "generated": "SHOW ALL"
+        },
+        {
+            "id": "show-setting",
+            "sql": "SHOW datafusion.execution.batch_size",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=SETTING, expressions=[Identifier(this=datafusion, quoted=false), Identifier(this=execution, quoted=false), Identifier(this=batch_size, quoted=false)])"
+                }
+            ],
+            "generated": "SHOW datafusion execution batch_size"
+        },
+        {
+            "id": "show-time-zone",
+            "sql": "SHOW time zone",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionShow(this=SETTING, expressions=[Identifier(this=time, quoted=false), Identifier(this=zone, quoted=false)])"
+                }
+            ],
+            "generated": "SHOW time zone"
+        },
+        {
+            "id": "show-empty",
+            "sql": "SHOW",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow"
+                    ],
+                    "ast": "DatafusionShow(this=SETTING)"
+                }
+            ],
+            "generated": "SHOW"
+        },
+        {
+            "id": "explain",
+            "sql": "EXPLAIN SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN SELECT 1"
+        },
+        {
+            "id": "explain-analyze",
+            "sql": "EXPLAIN ANALYZE FORMAT pgjson SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=pgjson, quoted=false))], list=false)"
+                }
+            ],
+            "generated": "EXPLAIN ANALYZE FORMAT pgjson SELECT 1"
+        },
+        {
+            "id": "explain-options",
+            "sql": "EXPLAIN (ANALYZE, METRICS 'rows,timing', LEVEL dev, FORMAT pgjson) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=METRICS), expression=Literal(this=rows,timing, is_string=true)), PropertyEQ(this=Var(this=LEVEL), expression=Identifier(this=dev, quoted=false)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=pgjson, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE, METRICS 'rows,timing', LEVEL dev, FORMAT pgjson) SELECT 1"
+        },
+        {
+            "id": "explain-verbose",
+            "sql": "EXPLAIN ANALYZE VERBOSE FORMAT 'tree' SELECT $1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Parameter",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Parameter(this=Literal(this=1, is_string=false))]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=VERBOSE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=FORMAT), expression=Literal(this=tree, is_string=true))], list=false)"
+                }
+            ],
+            "generated": "EXPLAIN ANALYZE VERBOSE FORMAT 'tree' SELECT $1"
+        },
+        {
+            "id": "explain-booleans",
+            "sql": "EXPLAIN (ANALYZE 'on', VERBOSE OFF, TIMING 0, SUMMARY false, COSTS 1) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Literal",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Var"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Literal(this=on, is_string=true)), PropertyEQ(this=Var(this=VERBOSE), expression=Identifier(this=OFF, quoted=false)), PropertyEQ(this=Var(this=TIMING), expression=Var(this=0)), PropertyEQ(this=Var(this=SUMMARY), expression=Identifier(this=false, quoted=false)), PropertyEQ(this=Var(this=COSTS), expression=Var(this=1))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE 'on', VERBOSE OFF, TIMING 0, SUMMARY false, COSTS 1) SELECT 1"
+        },
+        {
+            "id": "explain-last-wins-off",
+            "sql": "EXPLAIN (ANALYZE, ANALYZE FALSE) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Var",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Var(this=TRUE)), PropertyEQ(this=Var(this=ANALYZE), expression=Identifier(this=FALSE, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE, ANALYZE FALSE) SELECT 1"
+        },
+        {
+            "id": "explain-last-wins-on",
+            "sql": "EXPLAIN (ANALYZE FALSE, ANALYZE TRUE) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Identifier(this=FALSE, quoted=false)), PropertyEQ(this=Var(this=ANALYZE), expression=Identifier(this=TRUE, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE FALSE, ANALYZE TRUE) SELECT 1"
+        },
+        {
+            "id": "explain-option-order",
+            "sql": "EXPLAIN (TIMING OFF, METRICS all, SUMMARY true, LEVEL dev) SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), expressions=[PropertyEQ(this=Var(this=TIMING), expression=Identifier(this=OFF, quoted=false)), PropertyEQ(this=Var(this=METRICS), expression=Identifier(this=all, quoted=false)), PropertyEQ(this=Var(this=SUMMARY), expression=Identifier(this=true, quoted=false)), PropertyEQ(this=Var(this=LEVEL), expression=Identifier(this=dev, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (TIMING OFF, METRICS all, SUMMARY true, LEVEL dev) SELECT 1"
+        },
+        {
+            "id": "explain-nested-query",
+            "sql": "EXPLAIN ((SELECT 1))",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Subquery",
+                        "Subquery",
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExplain(this=Subquery(this=Subquery(this=Select(expressions=[Literal(this=1, is_string=false)]))), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN ((SELECT 1))"
+        },
+        {
+            "id": "explain-parenthesized",
+            "sql": "EXPLAIN (SELECT 1 UNION ALL SELECT 2)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Subquery",
+                        "Union",
+                        "Select",
+                        "Select",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExplain(this=Subquery(this=Union(this=Select(expressions=[Literal(this=1, is_string=false)]), distinct=false, expression=Select(expressions=[Literal(this=2, is_string=false)]))), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN (SELECT 1 UNION ALL SELECT 2)"
+        },
+        {
+            "id": "explain-show",
+            "sql": "EXPLAIN SHOW TABLES",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "DatafusionShow"
+                    ],
+                    "ast": "DatafusionExplain(this=DatafusionShow(this=TABLES, full=false, extended=false), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN SHOW TABLES"
+        },
+        {
+            "id": "explain-reset",
+            "sql": "EXPLAIN RESET datafusion.execution.batch_size",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "DatafusionReset",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=DatafusionReset(expressions=[Identifier(this=datafusion, quoted=false), Identifier(this=execution, quoted=false), Identifier(this=batch_size, quoted=false)]), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN RESET datafusion.execution.batch_size"
+        },
+        {
+            "id": "explain-create",
+            "sql": "EXPLAIN CREATE TABLE t (id INT)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Create",
+                        "Schema",
+                        "Table",
+                        "ColumnDef",
+                        "Identifier",
+                        "Identifier",
+                        "DataType"
+                    ],
+                    "ast": "DatafusionExplain(this=Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, concurrently=false), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN CREATE TABLE t (id INT)"
+        },
+        {
+            "id": "explain-insert",
+            "sql": "EXPLAIN INSERT INTO t VALUES (1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Insert",
+                        "Table",
+                        "Values",
+                        "Identifier",
+                        "Tuple",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExplain(this=Insert(is_function=false, this=Table(this=Identifier(this=t, quoted=false)), stored=false, by_name=false, exists=false, partition=false, settings=false, default=false, expression=Values(expressions=[Tuple(expressions=[Literal(this=1, is_string=false)])]), overwrite=false, ignore=false, source=false), list=false)"
+                }
+            ],
+            "generated": "EXPLAIN INSERT INTO t VALUES (1)"
+        },
+        {
+            "id": "prepare",
+            "sql": "PREPARE p(INT) AS SELECT $1 + 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "Select",
+                        "Add",
+                        "Parameter",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=false), expressions=[DataType(this=INT, nested=false)], typed=true, expression=Select(expressions=[Add(this=Parameter(this=Literal(this=1, is_string=false)), expression=Literal(this=1, is_string=false))]))"
+                }
+            ],
+            "generated": "PREPARE p(INT) AS SELECT $1 + 1"
+        },
+        {
+            "id": "prepare-untyped",
+            "sql": "PREPARE p AS SELECT $1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "Select",
+                        "Parameter",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=false), typed=false, expression=Select(expressions=[Parameter(this=Literal(this=1, is_string=false))]))"
+                }
+            ],
+            "generated": "PREPARE p AS SELECT $1"
+        },
+        {
+            "id": "prepare-quoted",
+            "sql": "PREPARE \"p.q\"(DECIMAL(18,3), VARCHAR) AS SELECT $1, $2",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "DataType",
+                        "Select",
+                        "DataTypeParam",
+                        "DataTypeParam",
+                        "Parameter",
+                        "Parameter",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p.q, quoted=true), expressions=[DataType(this=DECIMAL, expressions=[DataTypeParam(this=Literal(this=18, is_string=false)), DataTypeParam(this=Literal(this=3, is_string=false))], nested=false), DataType(this=VARCHAR, nested=false)], typed=true, expression=Select(expressions=[Parameter(this=Literal(this=1, is_string=false)), Parameter(this=Literal(this=2, is_string=false))]))"
+                }
+            ],
+            "generated": "PREPARE \"p.q\"(DECIMAL(18, 3), VARCHAR) AS SELECT $1, $2"
+        },
+        {
+            "id": "prepare-backticks",
+            "sql": "PREPARE `p`(INT) AS SELECT $1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "Select",
+                        "Parameter",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=true), expressions=[DataType(this=INT, nested=false)], typed=true, expression=Select(expressions=[Parameter(this=Literal(this=1, is_string=false))]))"
+                }
+            ],
+            "generated": "PREPARE \"p\"(INT) AS SELECT $1"
+        },
+        {
+            "id": "prepare-single-quoted",
+            "sql": "PREPARE 'p.q'(INT) AS SELECT $1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "Select",
+                        "Parameter",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p.q, quoted=true), expressions=[DataType(this=INT, nested=false)], typed=true, expression=Select(expressions=[Parameter(this=Literal(this=1, is_string=false))]))"
+                }
+            ],
+            "generated": "PREPARE \"p.q\"(INT) AS SELECT $1"
+        },
+        {
+            "id": "prepare-cte",
+            "sql": "PREPARE p(INT) AS WITH x AS (SELECT $1 AS n) SELECT n FROM x",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "Select",
+                        "Column",
+                        "From",
+                        "With",
+                        "Identifier",
+                        "Table",
+                        "CTE",
+                        "Identifier",
+                        "Select",
+                        "TableAlias",
+                        "Alias",
+                        "Identifier",
+                        "Parameter",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=false), expressions=[DataType(this=INT, nested=false)], typed=true, expression=Select(expressions=[Column(this=Identifier(this=n, quoted=false))], from_=From(this=Table(this=Identifier(this=x, quoted=false))), with_=With(expressions=[CTE(this=Select(expressions=[Alias(this=Parameter(this=Literal(this=1, is_string=false)), alias=Identifier(this=n, quoted=false))]), alias=TableAlias(this=Identifier(this=x, quoted=false)))])))"
+                }
+            ],
+            "generated": "PREPARE p(INT) AS WITH x AS (SELECT $1 AS n) SELECT n FROM x"
+        },
+        {
+            "id": "prepare-insert",
+            "sql": "PREPARE p(INT) AS INSERT INTO t VALUES ($1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "Insert",
+                        "Table",
+                        "Values",
+                        "Identifier",
+                        "Tuple",
+                        "Parameter",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=false), expressions=[DataType(this=INT, nested=false)], typed=true, expression=Insert(is_function=false, this=Table(this=Identifier(this=t, quoted=false)), stored=false, by_name=false, exists=false, partition=false, settings=false, default=false, expression=Values(expressions=[Tuple(expressions=[Parameter(this=Literal(this=1, is_string=false))])]), overwrite=false, ignore=false, source=false))"
+                }
+            ],
+            "generated": "PREPARE p(INT) AS INSERT INTO t VALUES ($1)"
+        },
+        {
+            "id": "prepare-show",
+            "sql": "PREPARE p AS SHOW TABLES",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DatafusionShow"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=false), typed=false, expression=DatafusionShow(this=TABLES, full=false, extended=false))"
+                }
+            ],
+            "generated": "PREPARE p AS SHOW TABLES"
+        },
+        {
+            "id": "execute",
+            "sql": "EXECUTE p(20)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExecute(this=Identifier(this=p, quoted=false), expressions=[Literal(this=20, is_string=false)], parenthesized=true)"
+                }
+            ],
+            "generated": "EXECUTE p(20)"
+        },
+        {
+            "id": "execute-bare",
+            "sql": "EXECUTE p",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExecute(this=Identifier(this=p, quoted=false), parenthesized=false)"
+                }
+            ],
+            "generated": "EXECUTE p"
+        },
+        {
+            "id": "execute-empty",
+            "sql": "EXECUTE p()",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExecute(this=Identifier(this=p, quoted=false), parenthesized=true)"
+                }
+            ],
+            "generated": "EXECUTE p()"
+        },
+        {
+            "id": "execute-values",
+            "sql": "EXECUTE \"p.q\"('O''Reilly 😀', NULL, [1,2], 2 + 3)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Identifier",
+                        "Literal",
+                        "Null",
+                        "Array",
+                        "Add",
+                        "Literal",
+                        "Literal",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExecute(this=Identifier(this=p.q, quoted=true), expressions=[Literal(this=O'Reilly 😀, is_string=true), Null(), Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false), Add(this=Literal(this=2, is_string=false), expression=Literal(this=3, is_string=false))], parenthesized=true)"
+                }
+            ],
+            "generated": "EXECUTE \"p.q\"('O''Reilly 😀', NULL, ARRAY[1, 2], 2 + 3)"
+        },
+        {
+            "id": "execute-qualified",
+            "sql": "EXECUTE cat.p(1, 'x')",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Dot",
+                        "Literal",
+                        "Literal",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExecute(this=Dot(this=Identifier(this=cat, quoted=false), expression=Identifier(this=p, quoted=false)), expressions=[Literal(this=1, is_string=false), Literal(this=x, is_string=true)], parenthesized=true)"
+                }
+            ],
+            "generated": "EXECUTE cat.p(1, 'x')"
+        },
+        {
+            "id": "execute-unwrapped",
+            "sql": "EXECUTE p 1, 'x'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Identifier",
+                        "Literal",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExecute(this=Identifier(this=p, quoted=false), expressions=[Literal(this=1, is_string=false), Literal(this=x, is_string=true)], parenthesized=false)"
+                }
+            ],
+            "generated": "EXECUTE p 1, 'x'"
+        },
+        {
+            "id": "cluster-backticks",
+            "sql": "CREATE TABLE `t` (id INT) CLUSTER BY (id)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ClusterProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Paren",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=true)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Paren(this=Column(this=Identifier(this=id, quoted=false)))])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE \"t\" (id INT) CLUSTER BY (id)"
+        },
+        {
+            "id": "cluster-tuple",
+            "sql": "CREATE TABLE t (id INT, n INT) CLUSTER BY (id, n)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ColumnDef",
+                        "ClusterProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Identifier",
+                        "DataType",
+                        "Tuple",
+                        "Column",
+                        "Column",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false)), ColumnDef(this=Identifier(this=n, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Tuple(expressions=[Column(this=Identifier(this=id, quoted=false)), Column(this=Identifier(this=n, quoted=false))])])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t (id INT, n INT) CLUSTER BY (id, n)"
+        },
+        {
+            "id": "cluster-keys",
+            "sql": "CREATE TABLE t (id INT, n INT) CLUSTER BY id, n",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ColumnDef",
+                        "ClusterProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Identifier",
+                        "DataType",
+                        "Column",
+                        "Column",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false)), ColumnDef(this=Identifier(this=n, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Column(this=Identifier(this=id, quoted=false)), Column(this=Identifier(this=n, quoted=false))])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t (id INT, n INT) CLUSTER BY id, n"
+        },
+        {
+            "id": "cluster-expression",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY (id + 1)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ClusterProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Paren",
+                        "Add",
+                        "Column",
+                        "Literal",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Paren(this=Add(this=Column(this=Identifier(this=id, quoted=false)), expression=Literal(this=1, is_string=false)))])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t (id INT) CLUSTER BY (id + 1)"
+        },
+        {
+            "id": "cluster-function",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY abs(id)",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "Create",
+                    "nodes": [
+                        "Create",
+                        "Schema",
+                        "Properties",
+                        "Table",
+                        "ColumnDef",
+                        "ClusterProperty",
+                        "Identifier",
+                        "Identifier",
+                        "DataType",
+                        "Abs",
+                        "Column",
+                        "Identifier"
+                    ],
+                    "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=id, quoted=false), kind=DataType(this=INT, nested=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[ClusterProperty(expressions=[Abs(this=Column(this=Identifier(this=id, quoted=false)))])]), concurrently=false)"
+                }
+            ],
+            "generated": "CREATE TABLE t (id INT) CLUSTER BY abs(id)"
+        },
+        {
+            "id": "script",
+            "sql": "-- 😀\r\nPREPARE p(INT) AS SELECT $1; EXECUTE p(2); SHOW FUNCTIONS LIKE 'abs'; EXPLAIN SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionPrepare",
+                    "nodes": [
+                        "DatafusionPrepare",
+                        "Identifier",
+                        "DataType",
+                        "Select",
+                        "Parameter",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionPrepare(this=Identifier(this=p, quoted=false), expressions=[DataType(this=INT, nested=false)], typed=true, expression=Select(expressions=[Parameter(this=Literal(this=1, is_string=false))]))"
+                },
+                {
+                    "root": "DatafusionExecute",
+                    "nodes": [
+                        "DatafusionExecute",
+                        "Identifier",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExecute(this=Identifier(this=p, quoted=false), expressions=[Literal(this=2, is_string=false)], parenthesized=true)"
+                },
+                {
+                    "root": "DatafusionShow",
+                    "nodes": [
+                        "DatafusionShow",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionShow(this=FUNCTIONS, expression=Literal(this=abs, is_string=true), filter=LIKE, full=false, extended=false)"
+                },
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), list=false)"
+                }
+            ],
+            "generated": "PREPARE p(INT) AS SELECT $1 /* 😀 */; EXECUTE p(2); SHOW FUNCTIONS LIKE 'abs'; EXPLAIN SELECT 1"
+        },
+        {
+            "id": "comments",
+            "sql": "EXPLAIN /* planning */ (ANALYZE FALSE, FORMAT pgjson) SELECT '😀'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionExplain",
+                    "nodes": [
+                        "DatafusionExplain",
+                        "Select",
+                        "PropertyEQ",
+                        "PropertyEQ",
+                        "Literal",
+                        "Var",
+                        "Identifier",
+                        "Var",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionExplain(this=Select(expressions=[Literal(this=😀, is_string=true)]), expressions=[PropertyEQ(this=Var(this=ANALYZE), expression=Identifier(this=FALSE, quoted=false)), PropertyEQ(this=Var(this=FORMAT), expression=Identifier(this=pgjson, quoted=false))], list=true)"
+                }
+            ],
+            "generated": "EXPLAIN (ANALYZE FALSE, FORMAT pgjson) SELECT '😀' /* planning */"
+        },
+        {
+            "id": "bad-show-filter",
+            "sql": "SHOW FUNCTIONS LIKE",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected SHOW pattern. Line 1, Col: 19.\n  SHOW FUNCTIONS LIKE"
+        },
+        {
+            "id": "bad-show-where",
+            "sql": "SHOW TABLES WHERE name =",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'expression' missing for EQ. Line 1, Col: 24.\n  SHOW TABLES WHERE name ="
+        },
+        {
+            "id": "bad-show-target",
+            "sql": "SHOW COLUMNS FROM",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected identifier. Line 1, Col: 17.\n  SHOW COLUMNS FROM"
+        },
+        {
+            "id": "bad-show-tail",
+            "sql": "SHOW TABLES trailing",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Invalid expression / Unexpected token. Line 1, Col: 20.\n  SHOW TABLES trailing"
+        },
+        {
+            "id": "bad-explain-body",
+            "sql": "EXPLAIN",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected statement. Line 1, Col: 7.\n  EXPLAIN"
+        },
+        {
+            "id": "bad-explain-select",
+            "sql": "EXPLAIN SELECT (",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'this' missing for Paren. Line 1, Col: 16.\n  EXPLAIN SELECT ("
+        },
+        {
+            "id": "bad-explain-empty",
+            "sql": "EXPLAIN () SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected list item. Line 1, Col: 17.\n  EXPLAIN () SELECT 1"
+        },
+        {
+            "id": "bad-explain-order",
+            "sql": "EXPLAIN VERBOSE ANALYZE SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected table name but got <Token token_type: TokenType.SELECT, text: SELECT, line: 1, col: 30, start: 24, end: 29, lineStart: 1, colStart: 25, comments: []>. Line 1, Col: 30.\n  EXPLAIN VERBOSE ANALYZE SELECT 1"
+        },
+        {
+            "id": "bad-explain-format",
+            "sql": "EXPLAIN (FORMAT json) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported EXPLAIN format. Line 1, Col: 21.\n  EXPLAIN (FORMAT json) SELECT 1"
+        },
+        {
+            "id": "bad-explain-value",
+            "sql": "EXPLAIN (FORMAT) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected EXPLAIN option value. Line 1, Col: 16.\n  EXPLAIN (FORMAT) SELECT 1"
+        },
+        {
+            "id": "bad-explain-boolean",
+            "sql": "EXPLAIN (ANALYZE 2) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected EXPLAIN boolean. Line 1, Col: 19.\n  EXPLAIN (ANALYZE 2) SELECT 1"
+        },
+        {
+            "id": "bad-explain-metrics",
+            "sql": "EXPLAIN (METRICS 'rows,bad') SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported EXPLAIN metrics. Line 1, Col: 28.\n  EXPLAIN (METRICS 'rows,bad') SELECT 1"
+        },
+        {
+            "id": "bad-explain-level",
+            "sql": "EXPLAIN (LEVEL trace) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported EXPLAIN level. Line 1, Col: 21.\n  EXPLAIN (LEVEL trace) SELECT 1"
+        },
+        {
+            "id": "bad-explain-option",
+            "sql": "EXPLAIN (BUFFERS) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported EXPLAIN option BUFFERS. Line 1, Col: 17.\n  EXPLAIN (BUFFERS) SELECT 1"
+        },
+        {
+            "id": "bad-explain-comma",
+            "sql": "EXPLAIN (ANALYZE,) SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected identifier. Line 1, Col: 18.\n  EXPLAIN (ANALYZE,) SELECT 1"
+        },
+        {
+            "id": "bad-prepare-name",
+            "sql": "PREPARE 1 AS SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected identifier. Line 1, Col: 9.\n  PREPARE 1 AS SELECT 1"
+        },
+        {
+            "id": "bad-prepare-types",
+            "sql": "PREPARE p() AS SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected list item. Line 1, Col: 14.\n  PREPARE p() AS SELECT 1"
+        },
+        {
+            "id": "bad-prepare-comma",
+            "sql": "PREPARE p(INT,) AS SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected list item. Line 1, Col: 15.\n  PREPARE p(INT,) AS SELECT 1"
+        },
+        {
+            "id": "bad-prepare-as",
+            "sql": "PREPARE p SELECT 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected AS in PREPARE. Line 1, Col: 16.\n  PREPARE p SELECT 1"
+        },
+        {
+            "id": "bad-prepare-body",
+            "sql": "PREPARE p AS SELECT (",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'this' missing for Paren. Line 1, Col: 21.\n  PREPARE p AS SELECT ("
+        },
+        {
+            "id": "bad-execute-name",
+            "sql": "EXECUTE 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected identifier. Line 1, Col: 9.\n  EXECUTE 1"
+        },
+        {
+            "id": "bad-execute-comma",
+            "sql": "EXECUTE p(1,)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected list item. Line 1, Col: 13.\n  EXECUTE p(1,)"
+        },
+        {
+            "id": "bad-execute-close",
+            "sql": "EXECUTE p(1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected ). Line 1, Col: 11.\n  EXECUTE p(1"
+        },
+        {
+            "id": "bad-execute-tail",
+            "sql": "EXECUTE p(1) trailing",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Invalid expression / Unexpected token. Line 1, Col: 21.\n  EXECUTE p(1) trailing"
+        },
+        {
+            "id": "bad-cluster-empty",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY ()",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected cluster expression. Line 1, Col: 37.\n  CREATE TABLE t (id INT) CLUSTER BY ()"
+        },
+        {
+            "id": "bad-cluster-comma",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY (id,)",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected cluster expression. Line 1, Col: 40.\n  CREATE TABLE t (id INT) CLUSTER BY (id,)"
+        },
+        {
+            "id": "bad-cluster-missing",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected cluster expression. Line 1, Col: 34.\n  CREATE TABLE t (id INT) CLUSTER BY"
+        },
+        {
+            "id": "bad-cluster-tail",
+            "sql": "CREATE TABLE t (id INT) CLUSTER BY (id) nonsense",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Unsupported or malformed CREATE TABLE CLUSTER BY. Line 1, Col: 48.\n  CREATE TABLE t (id INT) CLUSTER BY (id) nonsense"
+        },
+        {
+            "id": "bad-script-tail",
+            "sql": "SHOW TABLES; SELECT (",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'this' missing for Paren. Line 1, Col: 21.\n  SHOW TABLES; SELECT ("
+        }
+    ]
+}

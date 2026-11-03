@@ -1,0 +1,288 @@
+{
+  "captured_at": "2026-10-28T19:53:36.292613+00:00",
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-S01\",\"formatted\":\"SELECT x\\nFROM t\\nSTREAM\"}\n{\"id\":\"CH26-S02\",\"formatted\":\"SELECT a.x\\nFROM db.t AS a\\nFINAL\\nSAMPLE 1 \\/ 2\\nSTREAM BOUNDED UNORDERED\\nWHERE a.x > 0\\nLIMIT 2\"}\n{\"id\":\"CH26-S03\",\"formatted\":\"SELECT ts\\nFROM t\\nSTREAM BOUNDED CURSOR {'shard': {'part': 2}} WATERMARK FOR ts AS ts - toIntervalSecond(1) IDLE TIMEOUT INTERVAL 2000 MILLISECOND\\nLIMIT 2\"}\n{\"id\":\"CH26-S04\",\"formatted\":\"SELECT x\\nFROM\\n(\\n    SELECT x\\n    FROM t\\n) AS a\\nSTREAM BOUNDED\\nLIMIT 2\"}\n{\"id\":\"CH26-A01\",\"formatted\":\"SELECT\\n    sumTuple(t),\\n    quantileTuple(0.5)(t)\\nFROM src\"}\n{\"id\":\"CH26-A02\",\"formatted\":\"SELECT\\n    sumTupleIf(t, x > 0),\\n    quantileExactTupleIf(0.5)(t, x > 0)\\nFROM src\"}\n{\"id\":\"CH26-A03\",\"formatted\":\"SELECT\\n    sumTuple(t) OVER (PARTITION BY k),\\n    quantileTuple(0.5)(t) OVER (PARTITION BY k)\\nFROM src\"}\n{\"id\":\"CH26-Q01\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 3\\n AFTER number >= 5\"}\n{\"id\":\"CH26-Q02\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT\\n UNTIL number >= 3\"}\n{\"id\":\"CH26-Q03\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT\\n AFTER number >= 2\\n UNTIL number >= 6\"}\n{\"id\":\"CH26-Q04\",\"formatted\":\"SELECT number\\nFROM numbers(10)\\nORDER BY number ASC\\nLIMIT 2\\n AFTER number IN (2, 6) ALL\"}\n{\"id\":\"CH26-Q05\",\"formatted\":\"SELECT year()\"}\n{\"id\":\"CH26-Q06\",\"formatted\":\"SELECT *\\nFROM a\\nNATURAL LEFT JOIN b\"}\n{\"id\":\"CH26-Q07\",\"formatted\":\"SELECT toTimeZone(dt, timeZone())\\nFROM t\"}\n{\"id\":\"CH26-Q08\",\"formatted\":\"SELECT (toIntervalHour(1), toIntervalMinute(30))\"}\n{\"id\":\"CH26-Q09\",\"formatted\":\"SELECT *\\nFROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)\"}\n{\"id\":\"CH26-T01\",\"formatted\":\"CREATE TABLE t\\n(\\n    `v` QBit(Float32, 128, 32)\\n)\\nENGINE = MergeTree\\nORDER BY tuple()\"}\n{\"id\":\"CH26-T02\",\"formatted\":\"CREATE TABLE t\\n(\\n    `g` MultiPoint\\n)\\nENGINE = MergeTree\\nORDER BY tuple()\"}\n{\"id\":\"CH26-M01\",\"formatted\":\"SELECT COLUMNS('^a')\\nFROM t\"}\n{\"id\":\"CH26-M02\",\"formatted\":\"SELECT t.COLUMNS('(?i)^a')\\nFROM t\"}\n{\"id\":\"CH26-M03\",\"formatted\":\"SELECT\\n    LOCALTIME,\\n    LOCALTIMESTAMP,\\n    SESSION_USER\"}\n{\"id\":\"CH26-M04\",\"formatted\":\"SELECT toDayOfWeek(dt)\\nFROM t\"}\n{\"id\":\"CH26-M05\",\"formatted\":\"SELECT arrayMap(lower | reverse, ['Hello', 'World'])\"}\n{\"id\":\"CH26-M06\",\"formatted\":\"SELECT arrayMap((_1 * 2) + 1, [1, 2, 3])\"}\n{\"id\":\"CH26-D01\",\"formatted\":\"CREATE MATERIALIZED VIEW v\\nREFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst\\nAS SELECT *\\nFROM src\"}\n{\"id\":\"CH26-D02\",\"formatted\":\"CREATE TOKEN VALID FOR toIntervalDay(30) GRANTS (SELECT ON db.t)\"}\n{\"id\":\"CH26-D03\",\"formatted\":\"CREATE HANDLER h URL '\\/test' AS SELECT 1\"}\n{\"id\":\"CH26-D04\",\"formatted\":\"CREATE HYPOTHETICAL INDEX idx ON t x TYPE minmax GRANULARITY 1\"}\n{\"id\":\"CH26-D05\",\"formatted\":\"EXPLAIN WHATIF\\nSELECT *\\nFROM t\\nWHERE x > 10\"}\n{\"id\":\"CH26-D06\",\"formatted\":\"EXPLAIN ANALYZE\\nSELECT 1\"}\n{\"id\":\"CH26-D07\",\"formatted\":\"ALTER TABLE t\\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3 ) )\"}\n{\"id\":\"CH26-P01\",\"formatted\":\"WITH\\n    c AS MATERIALIZED\\n    (\\n        SELECT 1\\n    )\\nSELECT *\\nFROM c\"}\n{\"id\":\"CH26-P02\",\"formatted\":\"CREATE TABLE t\\n(\\n    `x` Int32,\\n    PROJECTION p\\n    (\\n        SELECT x\\n        WHERE x > 0\\n        ORDER BY x\\n    )\\n)\\nENGINE = MergeTree\\nORDER BY x\"}\n{\"id\":\"CH26-P03\",\"formatted\":\"SELECT x LIKE 'a!_%' ESCAPE '!'\\nFROM t\"}\n{\"id\":\"CH26-P04\",\"formatted\":\"SELECT (j['key1'])['key2']\\nFROM t\"}\n{\"id\":\"CH26-P05\",\"formatted\":\"SELECT CAST(NULL, 'Nullable(Tuple(x Int32, y String))')\"}\n{\"id\":\"CH26-P06\",\"formatted\":\"SELECT sum(x) OVER (ORDER BY y ASC GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING)\\nFROM t\"}\n{\"id\":\"CH26-P07\",\"formatted\":\"SELECT *\\nFROM\\n(\\n    SELECT *\\n    FROM\\n    (\\n        SELECT\\n            y,\\n            count() AS c\\n        FROM\\n        (\\n            SELECT *\\n            FROM\\n            (\\n                SELECT *\\n                FROM t\\n            )\\n            WHERE x > 1\\n        )\\n        GROUP BY y\\n    )\\n    ORDER BY c DESC\\n)\\nLIMIT 10\"}\n{\"id\":\"CH26-P08\",\"formatted\":\"SELECT *\\nFROM t\"}\n{\"id\":\"CH26-P09\",\"formatted\":\"SELECT\\n    [1, 2, 3],\\n    accurateCastOrNull('abc', 'INTEGER')\"}\n{\"id\":\"CH26-P10\",\"formatted\":\"SELECT sumMap(value, key)\\nFROM t\"}\n{\"id\":\"CH26-P11\",\"formatted\":\"SELECT *\\nFROM t\\nLEFT JOIN LATERAL\\n(\\n    SELECT x\\n    FROM u\\n    WHERE u.id = t.id\\n    LIMIT 2\\n) AS s ON true\"}\n{\"id\":\"CH26-N01\",\"formatted\":null}\n{\"id\":\"CH26-N02\",\"formatted\":null}\n{\"id\":\"CH26-N03\",\"formatted\":null}\n",
+    "stderr": ""
+  },
+  "parsed": [
+    {
+      "id": "CH26-S01",
+      "formatted": "SELECT x\nFROM t\nSTREAM"
+    },
+    {
+      "id": "CH26-S02",
+      "formatted": "SELECT a.x\nFROM db.t AS a\nFINAL\nSAMPLE 1 / 2\nSTREAM BOUNDED UNORDERED\nWHERE a.x > 0\nLIMIT 2"
+    },
+    {
+      "id": "CH26-S03",
+      "formatted": "SELECT ts\nFROM t\nSTREAM BOUNDED CURSOR {'shard': {'part': 2}} WATERMARK FOR ts AS ts - toIntervalSecond(1) IDLE TIMEOUT INTERVAL 2000 MILLISECOND\nLIMIT 2"
+    },
+    {
+      "id": "CH26-S04",
+      "formatted": "SELECT x\nFROM\n(\n    SELECT x\n    FROM t\n) AS a\nSTREAM BOUNDED\nLIMIT 2"
+    },
+    {
+      "id": "CH26-A01",
+      "formatted": "SELECT\n    sumTuple(t),\n    quantileTuple(0.5)(t)\nFROM src"
+    },
+    {
+      "id": "CH26-A02",
+      "formatted": "SELECT\n    sumTupleIf(t, x > 0),\n    quantileExactTupleIf(0.5)(t, x > 0)\nFROM src"
+    },
+    {
+      "id": "CH26-A03",
+      "formatted": "SELECT\n    sumTuple(t) OVER (PARTITION BY k),\n    quantileTuple(0.5)(t) OVER (PARTITION BY k)\nFROM src"
+    },
+    {
+      "id": "CH26-Q01",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT 3\n AFTER number >= 5"
+    },
+    {
+      "id": "CH26-Q02",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT\n UNTIL number >= 3"
+    },
+    {
+      "id": "CH26-Q03",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT\n AFTER number >= 2\n UNTIL number >= 6"
+    },
+    {
+      "id": "CH26-Q04",
+      "formatted": "SELECT number\nFROM numbers(10)\nORDER BY number ASC\nLIMIT 2\n AFTER number IN (2, 6) ALL"
+    },
+    {
+      "id": "CH26-Q05",
+      "formatted": "SELECT year()"
+    },
+    {
+      "id": "CH26-Q06",
+      "formatted": "SELECT *\nFROM a\nNATURAL LEFT JOIN b"
+    },
+    {
+      "id": "CH26-Q07",
+      "formatted": "SELECT toTimeZone(dt, timeZone())\nFROM t"
+    },
+    {
+      "id": "CH26-Q08",
+      "formatted": "SELECT (toIntervalHour(1), toIntervalMinute(30))"
+    },
+    {
+      "id": "CH26-Q09",
+      "formatted": "SELECT *\nFROM clusterAllReplicas('default', system.query_log, SETTINGS skip_unavailable_shards = 1)"
+    },
+    {
+      "id": "CH26-T01",
+      "formatted": "CREATE TABLE t\n(\n    `v` QBit(Float32, 128, 32)\n)\nENGINE = MergeTree\nORDER BY tuple()"
+    },
+    {
+      "id": "CH26-T02",
+      "formatted": "CREATE TABLE t\n(\n    `g` MultiPoint\n)\nENGINE = MergeTree\nORDER BY tuple()"
+    },
+    {
+      "id": "CH26-M01",
+      "formatted": "SELECT COLUMNS('^a')\nFROM t"
+    },
+    {
+      "id": "CH26-M02",
+      "formatted": "SELECT t.COLUMNS('(?i)^a')\nFROM t"
+    },
+    {
+      "id": "CH26-M03",
+      "formatted": "SELECT\n    LOCALTIME,\n    LOCALTIMESTAMP,\n    SESSION_USER"
+    },
+    {
+      "id": "CH26-M04",
+      "formatted": "SELECT toDayOfWeek(dt)\nFROM t"
+    },
+    {
+      "id": "CH26-M05",
+      "formatted": "SELECT arrayMap(lower | reverse, ['Hello', 'World'])"
+    },
+    {
+      "id": "CH26-M06",
+      "formatted": "SELECT arrayMap((_1 * 2) + 1, [1, 2, 3])"
+    },
+    {
+      "id": "CH26-D01",
+      "formatted": "CREATE MATERIALIZED VIEW v\nREFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst\nAS SELECT *\nFROM src"
+    },
+    {
+      "id": "CH26-D02",
+      "formatted": "CREATE TOKEN VALID FOR toIntervalDay(30) GRANTS (SELECT ON db.t)"
+    },
+    {
+      "id": "CH26-D03",
+      "formatted": "CREATE HANDLER h URL '/test' AS SELECT 1"
+    },
+    {
+      "id": "CH26-D04",
+      "formatted": "CREATE HYPOTHETICAL INDEX idx ON t x TYPE minmax GRANULARITY 1"
+    },
+    {
+      "id": "CH26-D05",
+      "formatted": "EXPLAIN WHATIF\nSELECT *\nFROM t\nWHERE x > 10"
+    },
+    {
+      "id": "CH26-D06",
+      "formatted": "EXPLAIN ANALYZE\nSELECT 1"
+    },
+    {
+      "id": "CH26-D07",
+      "formatted": "ALTER TABLE t\n    (MODIFY COLUMN `status` ADD ENUM VALUES ( 'new' = 3 ) )"
+    },
+    {
+      "id": "CH26-P01",
+      "formatted": "WITH\n    c AS MATERIALIZED\n    (\n        SELECT 1\n    )\nSELECT *\nFROM c"
+    },
+    {
+      "id": "CH26-P02",
+      "formatted": "CREATE TABLE t\n(\n    `x` Int32,\n    PROJECTION p\n    (\n        SELECT x\n        WHERE x > 0\n        ORDER BY x\n    )\n)\nENGINE = MergeTree\nORDER BY x"
+    },
+    {
+      "id": "CH26-P03",
+      "formatted": "SELECT x LIKE 'a!_%' ESCAPE '!'\nFROM t"
+    },
+    {
+      "id": "CH26-P04",
+      "formatted": "SELECT (j['key1'])['key2']\nFROM t"
+    },
+    {
+      "id": "CH26-P05",
+      "formatted": "SELECT CAST(NULL, 'Nullable(Tuple(x Int32, y String))')"
+    },
+    {
+      "id": "CH26-P06",
+      "formatted": "SELECT sum(x) OVER (ORDER BY y ASC GROUPS BETWEEN CURRENT ROW AND 1 FOLLOWING)\nFROM t"
+    },
+    {
+      "id": "CH26-P07",
+      "formatted": "SELECT *\nFROM\n(\n    SELECT *\n    FROM\n    (\n        SELECT\n            y,\n            count() AS c\n        FROM\n        (\n            SELECT *\n            FROM\n            (\n                SELECT *\n                FROM t\n            )\n            WHERE x > 1\n        )\n        GROUP BY y\n    )\n    ORDER BY c DESC\n)\nLIMIT 10"
+    },
+    {
+      "id": "CH26-P08",
+      "formatted": "SELECT *\nFROM t"
+    },
+    {
+      "id": "CH26-P09",
+      "formatted": "SELECT\n    [1, 2, 3],\n    accurateCastOrNull('abc', 'INTEGER')"
+    },
+    {
+      "id": "CH26-P10",
+      "formatted": "SELECT sumMap(value, key)\nFROM t"
+    },
+    {
+      "id": "CH26-P11",
+      "formatted": "SELECT *\nFROM t\nLEFT JOIN LATERAL\n(\n    SELECT x\n    FROM u\n    WHERE u.id = t.id\n    LIMIT 2\n) AS s ON true"
+    },
+    {
+      "id": "CH26-N01",
+      "formatted": null
+    },
+    {
+      "id": "CH26-N02",
+      "formatted": null
+    },
+    {
+      "id": "CH26-N03",
+      "formatted": null
+    }
+  ],
+  "brikk_parse_query": {
+    "returncode": 0,
+    "stdout": "{\"id\":\"CH26-S01\",\"formatted\":\"SELECT x\\nFROM t\\nSTREAM\"}\n{\"id\":\"CH26-S02\",\"formatted\":\"SELECT a.x\\nFROM db.t AS a\\nFINAL\\nSAMPLE 1 \\/ 2\\nSTREAM BOUNDED UNORDERED\\nWHERE a.x > 0\\nLIMIT 2\"}\n{\"id\":\"CH26-S03\",\"formatted\":\"SELECT ts\\nFROM t\\nSTREAM BOUNDED CURSOR {'shard': {'part': 2}} WATERMARK FOR ts AS ts - toIntervalSecond('1') IDLE TIMEOUT INTERVAL 2000 MILLISECOND\\nLIMIT 2\"}\n{\"id\":\"CH26-S04\",\"formatted\":\"SELECT x\\nFROM\\n(\\n    SELECT x\\n    FROM t\\n) AS a\\nSTREAM BOUNDED\\nLIMIT 2\"}\n{\"id\":\"CH26-A01\",\"formatted\":\"SELECT\\n    sumTuple(t),\\n    quantileTuple(0.5)(t)\\nFROM src\"}\n{\"id\":\"CH26-A02\",\"formatted\":\"SELECT\\n    sumTupleIf(t, x > 0),\\n    quantileExactTupleIf(0.5)(t, x > 0)\\nFROM src\"}\n{\"id\":\"CH26-A03\",\"formatted\":\"SELECT\\n    sumTuple(t) OVER (PARTITION BY k),\\n    quantileTuple(0.5)(t) OVER (PARTITION BY k)\\nFROM src\"}\n",
+    "stderr": ""
+  },
+  "execution": [
+    {
+      "id": "CH26-E01",
+      "returncode": 0,
+      "stdout": "1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E02",
+      "returncode": 0,
+      "stdout": "1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E03",
+      "returncode": 0,
+      "stdout": "(3,6)\t(2,4)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E04",
+      "returncode": 0,
+      "stdout": "(3,6)\t(2,4)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E05",
+      "returncode": 0,
+      "stdout": "(3,6)\t['a','b']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E06",
+      "returncode": 0,
+      "stdout": "(1,2)\n(1,2)\n",
+      "stderr": ""
+    }
+  ],
+  "brikk_execution": [
+    {
+      "id": "CH26-E01",
+      "sql": "SELECT x FROM t STREAM BOUNDED LIMIT 2",
+      "returncode": 0,
+      "stdout": "1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E02",
+      "sql": "SELECT x FROM t STREAM BOUNDED WATERMARK FOR ts AS ts - INTERVAL '1' SECOND IDLE TIMEOUT INTERVAL 1 SECOND LIMIT 2",
+      "returncode": 0,
+      "stdout": "1\n2\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E03",
+      "sql": "SELECT sumTuple((number + 1, (number + 1) * 2)), quantileExactTuple(0.5)((number + 1, (number + 1) * 2)) FROM numbers(2)",
+      "returncode": 0,
+      "stdout": "(3,6)\t(2,4)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E04",
+      "sql": "SELECT sumTupleIf((number, number * 2), number > 0), quantileExactTupleIf(0.5)((number, number * 2), number > 0) FROM numbers(3)",
+      "returncode": 0,
+      "stdout": "(3,6)\t(2,4)\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E05",
+      "sql": "SELECT sumTuple(CAST((number + 1, (number + 1) * 2) AS Tuple(a UInt64, b UInt64))) AS v, tupleNames(v) FROM numbers(2)",
+      "returncode": 0,
+      "stdout": "(3,6)\t['a','b']\n",
+      "stderr": ""
+    },
+    {
+      "id": "CH26-E06",
+      "sql": "SELECT sumTuple((number, number * 2)) OVER () FROM numbers(2)",
+      "returncode": 0,
+      "stdout": "(1,2)\n(1,2)\n",
+      "stderr": ""
+    }
+  ]
+}

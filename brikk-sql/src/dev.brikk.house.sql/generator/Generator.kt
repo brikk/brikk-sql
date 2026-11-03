@@ -752,6 +752,17 @@ open class Generator(
             return if (isTruthyArg(value)) sql(value) else ""
         }
 
+        val nativeDialect = expression.metaOrNull?.get("native_only_dialect") as? String
+        if (nativeDialect != null && nativeDialect != dialect.name) {
+            throw UnsupportedError("${expression::class.simpleName} requires a $nativeDialect-specific translation")
+        }
+
+        if (dialect.name != "clickhouse" &&
+            (expression is CombinedAggFunc || expression is CombinedParameterizedAgg) &&
+            "Tuple" in expression.name) {
+            throw UnsupportedError("ClickHouse -Tuple aggregate combinators require a dialect-specific translation")
+        }
+
         sourcePreservingSql?.invoke(expression)?.let { return it }
 
         // brikk-native: span recording — push a child collector for this node's frame
@@ -762,6 +773,11 @@ open class Generator(
         val sql = try {
             when {
                 handler != null -> handler(this, expression)
+                // These Trino 484 forms have no proved cross-dialect lowering. A Func
+                // fallback would silently discard their RETURNING/PASSING/error clauses.
+                expression is TrinoJsonConstructor || expression is TrinoJsonSerialize ||
+                    expression is TrinoJsonScalar || expression is TrinoJsonPathCall ->
+                    throw UnsupportedError("${expression::class.simpleName} requires a Trino-specific translation")
                 expression is Func -> functionFallbackSql(expression)
                 expression is Property -> propertySql(expression)
                 else -> throw UnsupportedError(
@@ -5244,6 +5260,7 @@ open class Generator(
             }
         }
 
+        dev.brikk.house.sql.dialects.checkClickhouseDivision(this, expression)
         return binary(expression, "/")
     }
 

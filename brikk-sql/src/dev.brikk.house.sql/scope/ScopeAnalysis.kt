@@ -37,7 +37,6 @@ import dev.brikk.house.sql.parser.Token
 import dev.brikk.house.sql.parser.TokenError
 import dev.brikk.house.sql.parser.TokenType
 import dev.brikk.house.sql.parser.Tokenizer
-import dev.brikk.house.sql.shape.catalogTableParts
 
 /** Identifier-only dotted paths, including the Column-under-Dot representation of long names. */
 internal fun Expression.scopeIdentifierParts(): List<Identifier>? {
@@ -226,6 +225,21 @@ internal class CaretCompletion(
         fun none(kind: PositionKind) = ScopeCompletion(kind, null, start, end, edit.prefix, emptyList())
         val (parsed, splices) = recover(edit.marked) ?: return none(PositionKind.OTHER)
         val edits = listOf(edit.inserted) + splices
+        val completionFacts = if (facts.callSites.isEmpty()) facts else facts.copy(callSites = buildMap {
+            for ((absolute, fact) in facts.callSites) {
+                if (absolute !in range) continue
+                var position: Int? = absolute - range.first
+                for (splice in edits) {
+                    val before = position ?: break
+                    position = when {
+                        before < splice.start -> before
+                        before >= splice.end -> before + splice.length - (splice.end - splice.start)
+                        else -> null // Recovery replaced this call; its old facts cannot identify a new one.
+                    }
+                }
+                position?.let { put(range.first + it, fact) }
+            }
+        })
         val names = SourceNames(range.first, parsed.tokens)
         for (statement in parsed.statements) {
             val (lowered, origins) = try {
@@ -238,22 +252,24 @@ internal class CaretCompletion(
             // Long table names store their final components inside Dots, not directly on Table.
             while (parent is Dot) parent = parent.parent
             val markerParent = marker.parent
+            val nativeRole = dev.brikk.house.sql.shape.datafusionCallSite(text, edit.start, dialect.name, checkCanceled)?.role
+            val datasetArgument = nativeRole in setOf(dev.brikk.house.sql.shape.DatafusionArgumentRole.DATASET, dev.brikk.house.sql.shape.DatafusionArgumentRole.SEARCH_INPUT)
             val kind = when {
+                parent is Column && datasetArgument -> PositionKind.RELATION
                 parent is Table -> PositionKind.RELATION
                 markerParent is Dot && markerParent.expressionArg === marker -> PositionKind.COLUMN
                 parent is Column && parent.thisArg === marker -> PositionKind.COLUMN
                 parent is Column -> PositionKind.QUALIFIER
-                parent is Table -> PositionKind.RELATION
                 else -> PositionKind.OTHER
             }
             if (kind != PositionKind.COLUMN && kind != PositionKind.RELATION) return none(kind)
-            val evaluator = ScopeEvaluator(dialect, facts, names, origins, checkCanceled, MARKER)
+            val evaluator = ScopeEvaluator(dialect, completionFacts, names, origins, checkCanceled, MARKER)
             val root = Env(emptyList(), null)
             if (lowered.isQuery()) evaluator.query(lowered, root)
             else if (!evaluator.statement(lowered, root)) return none(PositionKind.OTHER)
             if (kind == PositionKind.RELATION) {
-                val table = parent as Table
-                val qualifier = table.parts.filterIsInstance<Identifier>().dropLast(1).map { it.name }
+                val qualifier = if (parent is Column) parent.parts.filterIsInstance<Identifier>().dropLast(1)
+                    else (parent as Table).parts.filterIsInstance<Identifier>().dropLast(1)
                 return ScopeCompletion(kind, null, start, end, edit.prefix, relations(evaluator.caretCtes.orEmpty(), qualifier, start, end, edit.quoted))
             }
             val site = evaluator.caret ?: return ScopeCompletion(kind, Knowledge.UNKNOWN, start, end, edit.prefix, emptyList())
@@ -301,6 +317,7 @@ internal class CaretCompletion(
         }
         val bindings = evaluator.findBindings(frame, qualifier)
         if (bindings.isNotEmpty()) return bindings.flatMap { it.allColumns } to bindings.fold(Knowledge.FULL) { knowledge, it -> worst(knowledge, it.knowledge) }
+        evaluator.nestedFields(frame, qualifier)?.let { return it }
         // A struct's fields are beyond the facts; an unknown qualifier names nothing, unless an open relation may hold the struct.
         val field = evaluator.unqualified(frame, qualifier.first())
         return emptyList<ScopeColumn>() to if (field.candidates.isNotEmpty()) Knowledge.UNKNOWN else field.knowledge
@@ -310,18 +327,22 @@ internal class CaretCompletion(
      * What a FROM item may name: CTEs in scope and the facts' tables, slots and table functions;
      * after a qualifier, the tables under it, inserted without it.
      */
-    private fun relations(ctes: List<Cte>, qualifier: List<String>, start: Int, end: Int, quoted: Boolean): List<CompletionItem> {
+    private fun relations(ctes: List<Cte>, qualifier: List<Identifier>, start: Int, end: Int, quoted: Boolean): List<CompletionItem> {
         fun relation(name: String, kind: RelationKind, fact: RelationFact?, source: String?, declaration: ScopeRange? = null) =
             ScopeRelation(name, kind, fact?.knowledge ?: Knowledge.FULL, source, fact?.provenance, declaration)
-        val tables = facts.tables.mapNotNull { (key, fact) ->
-            val parts = catalogTableParts(key).map { it.name }
-            if (parts.size <= qualifier.size || parts.take(qualifier.size).zip(qualifier).any { (a, b) -> !a.equals(b, ignoreCase = true) }) return@mapNotNull null
+        val tables = facts.tables.entries.distinctBy { catalogPathParts(it.key) }.mapNotNull { (key, fact) ->
+            val parts = catalogPathParts(key)
+            if (parts.size <= qualifier.size || parts.take(qualifier.size).zip(qualifier).any { (stored, written) ->
+                if (dialect.name in setOf("datafusion", "spice")) stored != dialect.normalizeIdentifier(written.copy()).name else !stored.equals(written.name, ignoreCase = true)
+            }) return@mapNotNull null
             val name = parts.drop(qualifier.size).joinToString(".")
             CompletionItem(name, CompletionKind.RELATION, parts.drop(qualifier.size).joinToString(".") { insertText(it, quoted, columns = false) },
                 start, end, "table", null, relation = relation(name, RelationKind.TABLE, fact, key))
         }
         if (qualifier.isNotEmpty()) return tables
-        val visible = ctes.asReversed().distinctBy { it.name.name.lowercase() }.map { cte ->
+        val visible = ctes.asReversed().distinctBy {
+            if (dialect.name in setOf("datafusion", "spice")) dialect.normalizeIdentifier(it.name.copy()).name else it.name.name.lowercase()
+        }.map { cte ->
             CompletionItem(cte.name.name, CompletionKind.RELATION, insertText(cte.name.name, quoted, columns = false), start, end, "CTE", null,
                 relation = ScopeRelation(cte.name.name, RelationKind.CTE, cte.row.knowledge, cte.name.name))
         }

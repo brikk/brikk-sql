@@ -21,10 +21,11 @@ open class ClickhouseDialect : Dialect() {
     override val tableFunctionArgumentsDeclareColumns: Boolean get() = true
 
     // brikk-native PIPE evidence: a ClickHouse 26.7 server ran the lowered stages (the function
-    // catalog and keywords are pinned to a different engine, ClickHouse 26.5.1.1 via chdb). The
-    // lowered CALL and RENAME do not run; core refuses or blocks NATURAL JOIN, PIVOT and UNPIVOT.
+    // catalog has separate 26.5/26.8/26.10 snapshots; that does not relabel the pipe evidence). The
+    // lowered CALL and RENAME do not run; core still refuses or blocks PIVOT and UNPIVOT.
+    // NATURAL JOIN additionally has pinned 26.8/26.10 original/lowered evidence in batch 4.
     override val pipeRunnableStages: Set<String> get() = PIPE_STAGES_RUN_EVERYWHERE + setOf(
-        "DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN",
+        "DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN", "NATURAL JOIN",
     )
 
     override val name: String get() = "clickhouse"
@@ -77,8 +78,7 @@ open class ClickhouseDialect : Dialect() {
     // sqlglot: ClickHouse.EXPRESSION_METADATA (sqlglot/typing/clickhouse.py)
     override val expressionMetadata get() = GeneratedTypingMetadata.CLICKHOUSE
 
-    // ClickHouse 26.5.1.1 system.functions dump; generated deterministically from the
-    // vendored engine registry by tools/generate_clickhouse_functions.py.
+    // Latest pinned stable snapshot. Historical engines select CLICKHOUSE_METADATA.forServerVersion.
     override val functionCatalog: FunctionCatalog get() = CLICKHOUSE_FUNCTION_CATALOG
 
     override val tokenizerConfig: TokenizerConfig get() = TOKENIZER_CONFIG

@@ -1,0 +1,18 @@
+{
+  "verified_on": "2026-10-28",
+  "platform": "linux/amd64",
+  "engines": [
+    {
+      "version": "26.8.34.13",
+      "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.8.34.13-lts",
+      "tag": "clickhouse/clickhouse-server:26.8.34.13",
+      "image": "clickhouse/clickhouse-server@sha256:8b28eb09479c36c4533eec7a6268917d04ba3a6fd90e3f4205f70e761b6d7779"
+    },
+    {
+      "version": "26.10.2.103",
+      "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+      "tag": "clickhouse/clickhouse-server:26.10.2.103",
+      "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+    }
+  ]
+}

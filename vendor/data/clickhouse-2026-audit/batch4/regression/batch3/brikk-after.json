@@ -1,0 +1,336 @@
+[
+    {
+        "id": "CH26-M01",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseStar(like=Literal(this=a%, is_string=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT * LIKE 'a%' FROM t"
+    },
+    {
+        "id": "CH26-M02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=ClickhouseStar(ilike=Literal(this=a%, is_string=true)), table=Identifier(this=t, quoted=false))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT t.* ILIKE 'a%' FROM t"
+    },
+    {
+        "id": "CH26-M03",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseBuiltin(this=LOCALTIME), ClickhouseBuiltin(this=LOCALTIMESTAMP), ClickhouseBuiltin(this=SESSION_USER), ClickhouseBuiltin(this=NOW), ClickhouseBuiltin(this=CURRENT_TIMESTAMP), ClickhouseBuiltin(this=CURRENT_DATE), ClickhouseBuiltin(this=CURRENT_USER)])",
+        "generated": "SELECT LOCALTIME, LOCALTIMESTAMP, SESSION_USER, NOW, CURRENT_TIMESTAMP, CURRENT_DATE, CURRENT_USER"
+    },
+    {
+        "id": "CH26-M04",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseDatePart(this=Literal(this=isodow, is_string=true), expression=Column(this=Identifier(this=dt, quoted=false))), ClickhouseExtract(this=Var(this=DOW), expression=Column(this=Identifier(this=dt, quoted=false))), ClickhouseExtract(this=Var(this=CENTURY), expression=Column(this=Identifier(this=dt, quoted=false)))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT date_part('isodow', dt), EXTRACT(DOW FROM dt), EXTRACT(CENTURY FROM dt) FROM t"
+    },
+    {
+        "id": "CH26-M05",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=Hello, is_string=true), Literal(this=World, is_string=true)], value_constructor=false), expression=ClickhouseComposition(this=ClickhouseFunctionReference(this=Identifier(this=lower, quoted=false)), expression=ClickhouseFunctionReference(this=Identifier(this=reverse, quoted=false))))])",
+        "generated": "SELECT arrayMap(lower | reverse, ['Hello', 'World'])"
+    },
+    {
+        "id": "CH26-M06",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Add(this=Mul(this=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1), expression=Literal(this=2, is_string=false)), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(_1 * 2 + 1, [1, 2, 3])"
+    },
+    {
+        "id": "CH26-B3-M07",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=arrayMap, expressions=[ClickhouseImplicitLambda(this=Add(this=ClickhouseLambdaArgument(this=Identifier(this=_, quoted=false), ordinal=1), expression=ClickhouseLambdaArgument(this=Identifier(this=_, quoted=false), ordinal=2)), expressions=[Identifier(this=_1, quoted=false), Identifier(this=_2, quoted=false)]), Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=2, is_string=false)], value_constructor=false)]), Anonymous(this=arrayMap, expressions=[ClickhouseImplicitLambda(this=Sub(this=ClickhouseLambdaArgument(this=Identifier(this=_2, quoted=false), ordinal=2), expression=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1)), expressions=[Identifier(this=_1, quoted=false), Identifier(this=_2, quoted=false)]), Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=2, is_string=false)], value_constructor=false)])])",
+        "generated": "SELECT arrayMap(_ + _, [1], [2]), arrayMap(_2 - _1, [1], [2])"
+    },
+    {
+        "id": "CH26-B3-M08",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=Hello, is_string=true)], value_constructor=false), expression=ClickhouseFunctionReference(this=Identifier(this=lower, quoted=false))), Transform(this=Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Transform(this=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1), expression=ClickhouseImplicitLambda(this=Add(this=ClickhouseLambdaArgument(this=Identifier(this=_, quoted=false), ordinal=1), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)])), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(lower, ['Hello']), arrayMap(arrayMap(_ + 1, _1), [[1, 2]])"
+    },
+    {
+        "id": "CH26-B3-M09",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=_1, quoted=false)), Column(this=Identifier(this=_, quoted=false)), Column(this=Identifier(this=_2, quoted=false), table=Identifier(this=t, quoted=false)), Anonymous(this=bitOr, expressions=[Column(this=Identifier(this=a, quoted=false)), Column(this=Identifier(this=b, quoted=false))])], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT _1, _, t._2, bitOr(a, b) FROM t"
+    },
+    {
+        "id": "CH26-B3-M10",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=Identifier(this=LOCALTIME, quoted=true)), Column(this=Identifier(this=LOCALTIMESTAMP, quoted=false), table=Identifier(this=t, quoted=false)), Column(this=Identifier(this=SESSION_USER, quoted=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT \"LOCALTIME\", t.LOCALTIMESTAMP, \"SESSION_USER\" FROM t"
+    },
+    {
+        "id": "CH26-B3-M11",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseStar(like=Literal(this=a\\_%, is_string=true))], from_=From(this=Table(this=Identifier(this=t, quoted=false))))",
+        "generated": "SELECT * LIKE 'a\\\\_%' FROM t"
+    },
+    {
+        "id": "CH26-B3-M12",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=10, is_string=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Transform(this=Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), expression=Lambda(this=Add(this=Identifier(this=x, quoted=false), expression=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1)), expressions=[Identifier(this=x, quoted=false)])), expressions=[Identifier(this=_1, quoted=false)])), Transform(this=Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), expression=Lambda(this=Add(this=Identifier(this=_1, quoted=false), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(arrayMap(x -> x + _1, [1]), [10]), arrayMap(_1 -> _1 + 1, [1])"
+    },
+    {
+        "id": "CH26-D01",
+        "root": "Create",
+        "ast": "Create(this=Table(this=Identifier(this=v, quoted=false)), kind=VIEW, replace=false, refresh=false, unique=false, expression=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=src, quoted=false)))), exists=false, properties=Properties(expressions=[MaterializedProperty(), ClickhouseRefresh(this=AutoRefreshProperty(this=Interval(this=Literal(this=1, is_string=true), unit=Var(this=MINUTE)), cadence=EVERY, append=true)), ToTableProperty(this=Table(this=Identifier(this=dst, quoted=false)))]), concurrently=false)",
+        "generated": "CREATE MATERIALIZED VIEW v REFRESH EVERY 1 MINUTE APPEND INCREMENTAL TO dst AS SELECT * FROM src"
+    },
+    {
+        "id": "CH26-B3-D08",
+        "root": "Create",
+        "ast": "Create(this=Table(this=Identifier(this=v, quoted=false)), kind=VIEW, replace=false, refresh=false, unique=false, expression=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=src, quoted=false), db=Identifier(this=db, quoted=false)))), exists=false, properties=Properties(expressions=[MaterializedProperty(), ClickhouseRefresh(this=AutoRefreshProperty(this=Interval(this=Literal(this=1, is_string=true), unit=Var(this=DAY)), cadence=EVERY, offset=Interval(this=Literal(this=1, is_string=true), unit=Var(this=HOUR)), randomize=Interval(this=Literal(this=1, is_string=true), unit=Var(this=MINUTE)), expressions=[Table(this=Identifier(this=a, quoted=false), db=Identifier(this=db, quoted=false)), Table(this=Identifier(this=b, quoted=false), db=Identifier(this=db, quoted=false))], settings=SettingsProperty(expressions=[EQ(this=Column(this=Identifier(this=refresh_retries, quoted=false)), expression=Literal(this=2, is_string=false))]), append=true)), ToTableProperty(this=Table(this=Identifier(this=dst, quoted=false), db=Identifier(this=db, quoted=false)))]), concurrently=false)",
+        "generated": "CREATE MATERIALIZED VIEW v REFRESH EVERY 1 DAY OFFSET 1 HOUR RANDOMIZE FOR 1 MINUTE DEPENDS ON db.a, db.b SETTINGS refresh_retries = 2 APPEND INCREMENTAL TO db.dst AS SELECT * FROM db.src"
+    },
+    {
+        "id": "CH26-D02",
+        "root": "ClickhouseCreateToken",
+        "ast": "ClickhouseCreateToken(valid_kind=FOR, valid=Interval(this=Literal(this=30, is_string=false), unit=Var(this=DAY)), grants=[ClickhouseGrant(this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), expressions=[Var(this=SELECT)])])",
+        "generated": "CREATE TOKEN VALID FOR INTERVAL 30 DAY GRANTS (SELECT ON db.t)"
+    },
+    {
+        "id": "CH26-B3-D09",
+        "root": "ClickhouseCreateToken",
+        "ast": "ClickhouseCreateToken(grants=[ClickhouseGrant(this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), expressions=[Var(this=SELECT), Var(this=INSERT)]), ClickhouseGrant(this=Table(this=Identifier(this=u, quoted=false), db=Identifier(this=db, quoted=false)), expressions=[Var(this=SELECT)])], valid_kind=UNTIL, valid=Literal(this=2026-12-31, is_string=true), format=Identifier(this=TSVRaw, quoted=false))",
+        "generated": "CREATE TOKEN VALID UNTIL '2026-12-31' GRANTS (SELECT, INSERT ON db.t, SELECT ON db.u) FORMAT TSVRaw"
+    },
+    {
+        "id": "CH26-B3-D10",
+        "root": "ClickhouseCreateToken",
+        "ast": "ClickhouseCreateToken(valid_kind=UNTIL, valid=Literal(this=infinity, is_string=true))",
+        "generated": "CREATE TOKEN VALID UNTIL 'infinity'"
+    },
+    {
+        "id": "CH26-B3-D11",
+        "root": "ClickhouseUserAuthentication",
+        "ast": "ClickhouseUserAuthentication(this=Identifier(this=u, quoted=false), kind=CREATE, exists=false, add=false, expressions=[ClickhouseAuthenticationMethod(this=Var(this=sha256_password), expression=ClickhouseCredential([REDACTED]), valid_kind=FOR, valid=Interval(this=Literal(this=1, is_string=false), unit=Var(this=DAY)), grants=[ClickhouseGrant(this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), expressions=[Var(this=SELECT)])])])",
+        "generated": "CREATE USER u IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID FOR INTERVAL 1 DAY GRANTS (SELECT ON db.t)"
+    },
+    {
+        "id": "CH26-B3-D12",
+        "root": "ClickhouseUserAuthentication",
+        "ast": "ClickhouseUserAuthentication(this=Identifier(this=u, quoted=false), kind=ALTER, exists=false, add=true, expressions=[ClickhouseAuthenticationMethod(this=Var(this=sha256_password), expression=ClickhouseCredential([REDACTED]), valid_kind=UNTIL, valid=Literal(this=2026-12-31, is_string=true), grants=[ClickhouseGrant(this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), expressions=[Anonymous(this=SELECT, expressions=[Identifier(this=x, quoted=false)])])])])",
+        "generated": "ALTER USER u ADD IDENTIFIED WITH sha256_password BY 'fixture-not-a-secret' VALID UNTIL '2026-12-31' GRANTS (SELECT(x) ON db.t)"
+    },
+    {
+        "id": "CH26-D03",
+        "root": "ClickhouseHandler",
+        "ast": "ClickhouseHandler(this=Identifier(this=h, quoted=false), kind=CREATE, exists=false, url=Literal(this=/test, is_string=true), expression=Select(expressions=[Literal(this=1, is_string=false)]))",
+        "generated": "CREATE HANDLER h URL '/test' AS SELECT 1"
+    },
+    {
+        "id": "CH26-B3-D13",
+        "root": "ClickhouseHandler",
+        "ast": "ClickhouseHandler(this=Identifier(this=h, quoted=false), kind=CREATE, exists=true, cluster=Literal(this=cluster, is_string=true), protocol=Identifier(this=ANY, quoted=false), url=Literal(this=/api, is_string=true), match=PREFIX, methods=[Var(this=GET), Var(this=POST)], type=Identifier(this=query, quoted=false), expression=Select(expressions=[Placeholder(this=Var(this=id), kind=DataType(this=UBIGINT, nested=false, nullable=false))]))",
+        "generated": "CREATE HANDLER IF NOT EXISTS h ON CLUSTER 'cluster' PROTOCOL ANY URL PREFIX '/api' METHODS (GET, POST) TYPE query AS SELECT {id:UInt64}"
+    },
+    {
+        "id": "CH26-B3-D14",
+        "root": "ClickhouseHandler",
+        "ast": "ClickhouseHandler(this=Identifier(this=h, quoted=false), kind=ALTER, exists=false, url=Literal(this=/users/[0-9]+, is_string=true), match=REGEXP, methods=[Var(this=POST)], expression=Insert(is_function=false, this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), stored=false, by_name=false, exists=false, partition=false, settings=false, default=false, expression=Select(expressions=[Literal(this=1, is_string=false)]), overwrite=false, ignore=false, source=false))",
+        "generated": "ALTER HANDLER h URL REGEXP '/users/[0-9]+' METHODS (POST) AS INSERT INTO db.t SELECT 1"
+    },
+    {
+        "id": "CH26-B3-D15",
+        "root": "ClickhouseHandler",
+        "ast": "ClickhouseHandler(this=Identifier(this=h, quoted=false), kind=DROP, exists=true, cluster=Literal(this=cluster, is_string=true))",
+        "generated": "DROP HANDLER IF EXISTS h ON CLUSTER 'cluster'"
+    },
+    {
+        "id": "CH26-D04",
+        "root": "ClickhouseHypotheticalIndex",
+        "ast": "ClickhouseHypotheticalIndex(this=Identifier(this=idx, quoted=false), table=Table(this=Identifier(this=t, quoted=false)), expression=Tuple(expressions=[Column(this=Identifier(this=x, quoted=false))]), type=Identifier(this=minmax, quoted=false), exists=false)",
+        "generated": "CREATE HYPOTHETICAL INDEX idx ON t (x) TYPE minmax"
+    },
+    {
+        "id": "CH26-B3-D16",
+        "root": "ClickhouseHypotheticalIndex",
+        "ast": "ClickhouseHypotheticalIndex(this=Identifier(this=idx, quoted=false), table=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), expression=Tuple(expressions=[Column(this=Identifier(this=x, quoted=false)), Column(this=Identifier(this=y, quoted=false))]), type=Anonymous(this=set, expressions=[Literal(this=100, is_string=false)]), granularity=Literal(this=2, is_string=false), exists=true)",
+        "generated": "CREATE HYPOTHETICAL INDEX IF NOT EXISTS idx ON db.t (x, y) TYPE set(100) GRANULARITY 2"
+    },
+    {
+        "id": "CH26-D05",
+        "root": "ClickhouseExplain",
+        "ast": "ClickhouseExplain(this=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))), where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=10, is_string=false)))), kind=WHATIF)",
+        "generated": "EXPLAIN WHATIF SELECT * FROM t WHERE x > 10"
+    },
+    {
+        "id": "CH26-B3-D17",
+        "root": "ClickhouseExplain",
+        "ast": "ClickhouseExplain(this=Select(expressions=[Star()], from_=From(this=Table(this=Identifier(this=t, quoted=false))), where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=10, is_string=false)))), kind=WHATIF, settings=ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=empirical, quoted=false), expression=Literal(this=0, is_string=false))]))",
+        "generated": "EXPLAIN WHATIF empirical = 0 SELECT * FROM t WHERE x > 10"
+    },
+    {
+        "id": "CH26-D06",
+        "root": "ClickhouseExplain",
+        "ast": "ClickhouseExplain(this=Select(expressions=[Literal(this=1, is_string=false)]), kind=ANALYZE)",
+        "generated": "EXPLAIN ANALYZE SELECT 1"
+    },
+    {
+        "id": "CH26-B3-D18",
+        "root": "ClickhouseExplain",
+        "ast": "ClickhouseExplain(this=Select(expressions=[Column(this=Identifier(this=number, quoted=false))], from_=From(this=Table(this=Anonymous(this=numbers, expressions=[Literal(this=2, is_string=false)])))), kind=ANALYZE, settings=ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=processors, quoted=false), expression=Literal(this=1, is_string=false)), PropertyEQ(this=Identifier(this=time, quoted=false), expression=Literal(this=0, is_string=false))]))",
+        "generated": "EXPLAIN ANALYZE processors = 1, time = 0 SELECT number FROM numbers(2)"
+    },
+    {
+        "id": "CH26-D07",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=status, quoted=false), kind=ENUM, exists=false, expressions=[EQ(this=Literal(this=new, is_string=true), expression=Literal(this=3, is_string=false)), Literal(this=next, is_string=true), EQ(this=Literal(this=negative, is_string=true), expression=Neg(this=Literal(this=1, is_string=false)))])], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MODIFY COLUMN status ADD ENUM VALUES ('new' = 3, 'next', 'negative' = -1)"
+    },
+    {
+        "id": "CH26-B3-D19",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=UINT, nested=false, nullable=false)), ClickhouseProjection(this=Identifier(this=p, quoted=false), expression=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], where=Where(this=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))), order=Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])), index=false, settings=ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=deduplicate_merge_projection_mode, quoted=false), expression=Literal(this=drop, is_string=true))]))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (x UInt32, PROJECTION p (SELECT x WHERE x > 0 ORDER BY x) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop')) ENGINE=MergeTree ORDER BY x"
+    },
+    {
+        "id": "CH26-B3-D20",
+        "root": "Create",
+        "ast": "Create(this=Schema(this=Table(this=Identifier(this=t, quoted=false)), expressions=[ColumnDef(this=Identifier(this=x, quoted=false), kind=DataType(this=UINT, nested=false, nullable=false)), ClickhouseProjection(this=Identifier(this=p, quoted=false), expression=Column(this=Identifier(this=x, quoted=false)), index=true, type=Identifier(this=minmax, quoted=false))]), kind=TABLE, replace=false, refresh=false, unique=false, exists=false, properties=Properties(expressions=[EngineProperty(this=Identifier(this=MergeTree, quoted=false)), Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])]), concurrently=false)",
+        "generated": "CREATE TABLE t (x UInt32, PROJECTION p INDEX x TYPE minmax) ENGINE=MergeTree ORDER BY x"
+    },
+    {
+        "id": "CH26-B3-D21",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=p, quoted=false), kind=PROJECTION, exists=false, expression=ClickhouseProjection(this=Identifier(this=p, quoted=false), expression=Column(this=Identifier(this=x, quoted=false)), index=true, type=Identifier(this=minmax, quoted=false), settings=ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=deduplicate_merge_projection_mode, quoted=false), expression=Literal(this=drop, is_string=true))])))], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MODIFY PROJECTION p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop')"
+    },
+    {
+        "id": "CH26-B3-D22",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=p, quoted=false), kind=PROJECTION, exists=true, expression=ClickhouseProjection(this=Identifier(this=p, quoted=false), expression=Select(expressions=[Column(this=Identifier(this=x, quoted=false))], order=Order(expressions=[Ordered(this=Column(this=Identifier(this=x, quoted=false)), nulls_first=false)])), index=false, settings=ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=deduplicate_merge_projection_mode, quoted=false), expression=Literal(this=drop, is_string=true))])))], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MODIFY PROJECTION IF EXISTS p (SELECT x ORDER BY x) WITH SETTINGS (deduplicate_merge_projection_mode = 'drop')"
+    },
+    {
+        "id": "CH26-B3-D23",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=positive, quoted=false), kind=CHECK, exists=true, expression=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false)))], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MODIFY CONSTRAINT IF EXISTS positive CHECK x > 0"
+    },
+    {
+        "id": "CH26-B3-D24",
+        "root": "ClickhouseSystem",
+        "ast": "ClickhouseSystem(kind=PAUSE, this=Table(this=Identifier(this=t, quoted=false), db=Identifier(this=db, quoted=false)), all=false)",
+        "generated": "SYSTEM PAUSE db.t"
+    },
+    {
+        "id": "CH26-B3-D25",
+        "root": "ClickhouseSystem",
+        "ast": "ClickhouseSystem(kind=REFRESH, all=true)",
+        "generated": "SYSTEM REFRESH ALL BACKGROUND"
+    },
+    {
+        "id": "CH26-B3-D26",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=p, quoted=false), kind=ADD PROJECTION, exists=true, expression=ClickhouseProjection(this=Identifier(this=p, quoted=false), expression=Column(this=Identifier(this=x, quoted=false)), index=true, type=Identifier(this=minmax, quoted=false), settings=ClickhouseFunctionSettings(expressions=[PropertyEQ(this=Identifier(this=deduplicate_merge_projection_mode, quoted=false), expression=Literal(this=drop, is_string=true))])), first=true)], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t ADD PROJECTION IF NOT EXISTS p INDEX x TYPE minmax WITH SETTINGS (deduplicate_merge_projection_mode = 'drop') FIRST"
+    },
+    {
+        "id": "CH26-B3-D27",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=p, quoted=false), kind=DROP PROJECTION, exists=true, first=false)], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t DROP PROJECTION IF EXISTS p"
+    },
+    {
+        "id": "CH26-B3-D28",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=p, quoted=false), kind=MATERIALIZE PROJECTION, exists=false, first=false, partition=Partition(expressions=[Literal(this=1, is_string=false)]))], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MATERIALIZE PROJECTION p IN PARTITION 1"
+    },
+    {
+        "id": "CH26-B3-D29",
+        "root": "Alter",
+        "ast": "Alter(this=Table(this=Identifier(this=t, quoted=false)), kind=TABLE, exists=false, actions=[ClickhouseAlterAction(this=Identifier(this=positive, quoted=false), kind=CHECK, exists=false, expression=GT(this=Column(this=Identifier(this=x, quoted=false)), expression=Literal(this=0, is_string=false))), ClickhouseAlterAction(this=Identifier(this=status, quoted=false), kind=ENUM, exists=false, expressions=[EQ(this=Literal(this=new, is_string=true), expression=Literal(this=3, is_string=false))])], only=false, not_valid=false, check=false, cascade=false, iceberg=false)",
+        "generated": "ALTER TABLE t MODIFY CONSTRAINT positive CHECK x > 0, MODIFY COLUMN status ADD ENUM VALUES ('new' = 3)"
+    },
+    {
+        "id": "CH26-B3-N01",
+        "error": "CREATE HANDLER requires URL. Line 1, Col: 28.\n  CREATE HANDLER h AS SELECT \u001b[4m1\u001b[0m"
+    },
+    {
+        "id": "CH26-B3-N02",
+        "error": "Invalid handler method. Line 1, Col: 41.\n  CREATE HANDLER h URL '/x' METHODS (PATCH\u001b[4m)\u001b[0m AS SELECT 1"
+    },
+    {
+        "id": "CH26-B3-N03",
+        "error": "Duplicate validity clause. Line 1, Col: 49.\n  CREATE TOKEN VALID FOR INTERVAL 1 DAY VALID \u001b[4mUNTIL\u001b[0m 'infinity'"
+    },
+    {
+        "id": "CH26-B3-N04",
+        "error": "Expected grant privilege. Line 1, Col: 22.\n  CREATE TOKEN GRANTS (\u001b[4m)\u001b[0m"
+    },
+    {
+        "id": "CH26-B3-N05",
+        "error": "Expected index expression. Line 1, Col: 42.\n  CREATE HYPOTHETICAL INDEX idx ON t () \u001b[4mTYPE\u001b[0m minmax"
+    },
+    {
+        "id": "CH26-B3-N06",
+        "error": "Required keyword: 'this' missing for Paren. Line 1, Col: 24.\n  EXPLAIN ANALYZE SELECT \u001b[4m(\u001b[0m"
+    },
+    {
+        "id": "CH26-B3-N07",
+        "error": "Expected column-name pattern. Line 1, Col: 18.\n  SELECT * LIKE \u001b[4mFROM\u001b[0m t"
+    },
+    {
+        "id": "CH26-B3-E01",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseStar(like=Literal(this=a%, is_string=true))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=abc, quoted=false)), Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=Abc, quoted=false)), Alias(this=Literal(this=3, is_string=false), alias=Identifier(this=xyz, quoted=false))]))))",
+        "generated": "SELECT * LIKE 'a%' FROM (SELECT 1 AS abc, 2 AS Abc, 3 AS xyz)"
+    },
+    {
+        "id": "CH26-B3-E02",
+        "root": "Select",
+        "ast": "Select(expressions=[Column(this=ClickhouseStar(ilike=Literal(this=a%, is_string=true)), table=Identifier(this=t, quoted=false))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=abc, quoted=false)), Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=Abc, quoted=false)), Alias(this=Literal(this=3, is_string=false), alias=Identifier(this=xyz, quoted=false))]), alias=TableAlias(this=Identifier(this=t, quoted=false)))))",
+        "generated": "SELECT t.* ILIKE 'a%' FROM (SELECT 1 AS abc, 2 AS Abc, 3 AS xyz) AS t"
+    },
+    {
+        "id": "CH26-B3-E03",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseStar(like=Literal(this=a\\_%, is_string=true))], from_=From(this=Subquery(this=Select(expressions=[Alias(this=Literal(this=1, is_string=false), alias=Identifier(this=a_one, quoted=false)), Alias(this=Literal(this=2, is_string=false), alias=Identifier(this=ab, quoted=false)), Alias(this=Literal(this=3, is_string=false), alias=Identifier(this=a_two, quoted=false))]))))",
+        "generated": "SELECT * LIKE 'a\\\\_%' FROM (SELECT 1 AS a_one, 2 AS ab, 3 AS a_two)"
+    },
+    {
+        "id": "CH26-B3-E04",
+        "root": "Select",
+        "ast": "Select(expressions=[Typeof(this=ClickhouseBuiltin(this=LOCALTIME)), Typeof(this=ClickhouseBuiltin(this=LOCALTIMESTAMP)), Typeof(this=ClickhouseBuiltin(this=SESSION_USER))])",
+        "generated": "SELECT toTypeName(LOCALTIME), toTypeName(LOCALTIMESTAMP), toTypeName(SESSION_USER)"
+    },
+    {
+        "id": "CH26-B3-E05",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseDatePart(this=Literal(this=isodow, is_string=true), expression=Anonymous(this=toDate, expressions=[Literal(this=2026-10-25, is_string=true)])), ClickhouseExtract(this=Var(this=DOW), expression=Anonymous(this=toDate, expressions=[Literal(this=2026-10-25, is_string=true)])), ClickhouseExtract(this=Var(this=CENTURY), expression=Anonymous(this=toDate, expressions=[Literal(this=2026-10-25, is_string=true)]))])",
+        "generated": "SELECT date_part('isodow', toDate('2026-10-25')), EXTRACT(DOW FROM toDate('2026-10-25')), EXTRACT(CENTURY FROM toDate('2026-10-25'))"
+    },
+    {
+        "id": "CH26-B3-E06",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=Hello, is_string=true), Literal(this=World, is_string=true)], value_constructor=false), expression=ClickhouseComposition(this=ClickhouseFunctionReference(this=Identifier(this=lower, quoted=false)), expression=ClickhouseFunctionReference(this=Identifier(this=reverse, quoted=false)))), Transform(this=Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false), Literal(this=3, is_string=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Add(this=Mul(this=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1), expression=Literal(this=2, is_string=false)), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(lower | reverse, ['Hello', 'World']), arrayMap(_1 * 2 + 1, [1, 2, 3])"
+    },
+    {
+        "id": "CH26-B3-E07",
+        "root": "Select",
+        "ast": "Select(expressions=[Anonymous(this=arrayMap, expressions=[ClickhouseImplicitLambda(this=Add(this=ClickhouseLambdaArgument(this=Identifier(this=_, quoted=false), ordinal=1), expression=ClickhouseLambdaArgument(this=Identifier(this=_, quoted=false), ordinal=2)), expressions=[Identifier(this=_1, quoted=false), Identifier(this=_2, quoted=false)]), Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=2, is_string=false)], value_constructor=false)]), Anonymous(this=arrayMap, expressions=[ClickhouseImplicitLambda(this=Sub(this=ClickhouseLambdaArgument(this=Identifier(this=_2, quoted=false), ordinal=2), expression=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1)), expressions=[Identifier(this=_1, quoted=false), Identifier(this=_2, quoted=false)]), Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), Array(expressions=[Literal(this=2, is_string=false)], value_constructor=false)]), Anonymous(this=bitOr, expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)])])",
+        "generated": "SELECT arrayMap(_ + _, [1], [2]), arrayMap(_2 - _1, [1], [2]), bitOr(1, 2)"
+    },
+    {
+        "id": "CH26-B3-E08",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Array(expressions=[Literal(this=1, is_string=false), Literal(this=2, is_string=false)], value_constructor=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Transform(this=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1), expression=ClickhouseImplicitLambda(this=Add(this=ClickhouseLambdaArgument(this=Identifier(this=_, quoted=false), ordinal=1), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)])), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(arrayMap(_ + 1, _1), [[1, 2]])"
+    },
+    {
+        "id": "CH26-B3-E09",
+        "root": "Select",
+        "ast": "Select(expressions=[ClickhouseComposition(this=Literal(this=1, is_string=false), expression=Literal(this=2, is_string=false))])",
+        "generated": "SELECT 1 | 2"
+    },
+    {
+        "id": "CH26-B3-E10",
+        "root": "Select",
+        "ast": "Select(expressions=[Transform(this=Array(expressions=[Literal(this=10, is_string=false)], value_constructor=false), expression=ClickhouseImplicitLambda(this=Transform(this=Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), expression=Lambda(this=Add(this=Identifier(this=x, quoted=false), expression=ClickhouseLambdaArgument(this=Identifier(this=_1, quoted=false), ordinal=1)), expressions=[Identifier(this=x, quoted=false)])), expressions=[Identifier(this=_1, quoted=false)])), Transform(this=Array(expressions=[Literal(this=1, is_string=false)], value_constructor=false), expression=Lambda(this=Add(this=Identifier(this=_1, quoted=false), expression=Literal(this=1, is_string=false)), expressions=[Identifier(this=_1, quoted=false)]))])",
+        "generated": "SELECT arrayMap(arrayMap(x -> x + _1, [1]), [10]), arrayMap(_1 -> _1 + 1, [1])"
+    }
+]

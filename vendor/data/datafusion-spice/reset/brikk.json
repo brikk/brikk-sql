@@ -1,0 +1,304 @@
+{
+    "schema_version": 1,
+    "dialect": "datafusion",
+    "evidence": "local parser and generator observations only",
+    "cases": [
+        {
+            "id": "DFS-reset",
+            "sql": "RESET datafusion.execution.batch_size",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=datafusion, quoted=false), Identifier(this=execution, quoted=false), Identifier(this=batch_size, quoted=false)])"
+                }
+            ],
+            "generated": "RESET datafusion.execution.batch_size"
+        },
+        {
+            "id": "reset-all-name",
+            "sql": "RESET ALL",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=ALL, quoted=false)])"
+                }
+            ],
+            "generated": "RESET ALL"
+        },
+        {
+            "id": "reset-quoted-parts",
+            "sql": "RESET \"MiXeD\".\"a.b\"",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=MiXeD, quoted=true), Identifier(this=a.b, quoted=true)])"
+                }
+            ],
+            "generated": "RESET \"MiXeD\".\"a.b\""
+        },
+        {
+            "id": "reset-quoted-whole",
+            "sql": "RESET 'datafusion.execution.batch_size'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=datafusion.execution.batch_size, quoted=true)])"
+                }
+            ],
+            "generated": "RESET \"datafusion.execution.batch_size\""
+        },
+        {
+            "id": "reset-escape",
+            "sql": "RESET E'a\\tb'",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=a\tb, quoted=true)])"
+                }
+            ],
+            "generated": "RESET \"a\tb\""
+        },
+        {
+            "id": "reset-adjacent",
+            "sql": "RESET a b",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=a, quoted=false), Identifier(this=b, quoted=false)])"
+                }
+            ],
+            "generated": "RESET a.b"
+        },
+        {
+            "id": "reset-time-zone",
+            "sql": "RESET time zone",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=time, quoted=false), Identifier(this=zone, quoted=false)])"
+                }
+            ],
+            "generated": "RESET time.zone"
+        },
+        {
+            "id": "reset-empty-identifier",
+            "sql": "RESET \"\"",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=, quoted=true)])"
+                }
+            ],
+            "generated": "RESET \"\""
+        },
+        {
+            "id": "reset-unicode",
+            "sql": "RESET \"😀\"",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=😀, quoted=true)])"
+                }
+            ],
+            "generated": "RESET \"😀\""
+        },
+        {
+            "id": "reset-quote-escape",
+            "sql": "RESET \"a\"\"b\"",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=a\"b, quoted=true)])"
+                }
+            ],
+            "generated": "RESET \"a\"\"b\""
+        },
+        {
+            "id": "reset-comments",
+            "sql": "RESET a /* comment */ . b",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=a, quoted=false), Identifier(this=b, quoted=false)])"
+                }
+            ],
+            "generated": "RESET a /* comment */.b"
+        },
+        {
+            "id": "reset-script",
+            "sql": "RESET a; SELECT 1",
+            "status": "accepted",
+            "statements": [
+                {
+                    "root": "DatafusionReset",
+                    "nodes": [
+                        "DatafusionReset",
+                        "Identifier"
+                    ],
+                    "ast": "DatafusionReset(expressions=[Identifier(this=a, quoted=false)])"
+                },
+                {
+                    "root": "Select",
+                    "nodes": [
+                        "Select",
+                        "Literal"
+                    ],
+                    "ast": "Select(expressions=[Literal(this=1, is_string=false)])"
+                }
+            ],
+            "generated": "RESET a; SELECT 1"
+        },
+        {
+            "id": "reset-no-name",
+            "sql": "RESET",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 5.\n  RESET"
+        },
+        {
+            "id": "reset-leading-dot",
+            "sql": "RESET .a",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 7.\n  RESET .a"
+        },
+        {
+            "id": "reset-trailing-dot",
+            "sql": "RESET a.",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 8.\n  RESET a."
+        },
+        {
+            "id": "reset-double-dot",
+            "sql": "RESET a..b",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 9.\n  RESET a..b"
+        },
+        {
+            "id": "reset-number",
+            "sql": "RESET 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 7.\n  RESET 1"
+        },
+        {
+            "id": "reset-assignment",
+            "sql": "RESET a = 1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 9.\n  RESET a = 1"
+        },
+        {
+            "id": "reset-comma",
+            "sql": "RESET a,b",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 8.\n  RESET a,b"
+        },
+        {
+            "id": "reset-colon-bind",
+            "sql": "RESET :name",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 7.\n  RESET :name"
+        },
+        {
+            "id": "reset-numbered-bind",
+            "sql": "RESET $1",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 7.\n  RESET $1"
+        },
+        {
+            "id": "reset-operator",
+            "sql": "RESET a - b",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 9.\n  RESET a - b"
+        },
+        {
+            "id": "reset-national-string",
+            "sql": "RESET N'x'",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 10.\n  RESET N'x'"
+        },
+        {
+            "id": "reset-hex-string",
+            "sql": "RESET X'41'",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Expected configuration parameter. Line 1, Col: 11.\n  RESET X'41'"
+        },
+        {
+            "id": "reset-malformed-tail",
+            "sql": "RESET a; SELECT (",
+            "status": "rejected",
+            "error_class": "dev.brikk.house.sql.parser.ParseError",
+            "message": "Required keyword: 'this' missing for Paren. Line 1, Col: 17.\n  RESET a; SELECT ("
+        }
+    ]
+}

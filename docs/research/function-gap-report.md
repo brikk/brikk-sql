@@ -20,6 +20,9 @@ Refresh everything with a single deterministic run:
 ```bash
 python3 tools/function_gap_report.py
 ```
+Use `--engine trino` to refresh only pairs involving Trino, preserving the other
+pair records. Catalog sizes and `dialectEvidence` describe the current captures;
+each pair's `sourceEvidence` and `targetEvidence` record its own snapshot.
 
 ## Method
 
@@ -76,35 +79,35 @@ parser/codegen function registry as explicitly weaker relationship evidence.
 
 | engine | functions |
 |---|---|
-| sqlglot | 648 |
-| mysql | 662 |
-| doris | 721 |
+| sqlglot | 653 |
+| mysql | 667 |
+| doris | 704 |
 | starrocks | 820 |
-| presto | 674 |
-| trino | 441 |
-| duckdb | 782 |
-| postgres | 666 |
+| presto | 679 |
+| trino | 442 |
+| duckdb | 997 |
+| postgres | 671 |
 | clickhouse | 1570 |
-| hive | 661 |
-| spark2 | 678 |
-| spark | 697 |
-| bigquery | 682 |
+| hive | 666 |
+| spark2 | 683 |
+| spark | 702 |
+| bigquery | 687 |
 | datafusion | 0 |
 
 ## Bucket counts per pair
 
 | pair | total | A | A-arity-suspect | B | B-render-err | C (c1/c2) | C (c3 only) | D |
 |---|---|---|---|---|---|---|---|---|
-| duckdb->trino | 782 | 127 | 3 | 81 | 0 | 9 | 26 | 539 |
+| duckdb->trino | 997 | 127 | 4 | 82 | 0 | 9 | 26 | 753 |
 | duckdb->doris | 782 | 181 | 2 | 56 | 1 | 14 | 37 | 494 |
 | duckdb->starrocks | 782 | 146 | 2 | 66 | 1 | 7 | 25 | 538 |
 | duckdb->clickhouse | 782 | 152 | 0 | 58 | 0 | 7 | 32 | 533 |
-| trino->duckdb | 441 | 150 | 5 | 52 | 2 | 0 | 9 | 230 |
-| trino->doris | 441 | 178 | 4 | 37 | 0 | 3 | 7 | 216 |
-| trino->starrocks | 441 | 148 | 5 | 48 | 1 | 1 | 2 | 242 |
-| trino->clickhouse | 441 | 115 | 0 | 55 | 0 | 4 | 21 | 246 |
+| trino->duckdb | 442 | 150 | 6 | 52 | 2 | 0 | 9 | 231 |
+| trino->doris | 442 | 173 | 4 | 38 | 0 | 3 | 7 | 221 |
+| trino->starrocks | 442 | 148 | 5 | 48 | 1 | 1 | 2 | 243 |
+| trino->clickhouse | 442 | 115 | 0 | 61 | 0 | 2 | 21 | 243 |
 | doris->duckdb | 721 | 191 | 1 | 57 | 3 | 12 | 16 | 445 |
-| doris->trino | 721 | 151 | 3 | 62 | 0 | 15 | 7 | 486 |
+| doris->trino | 704 | 147 | 3 | 61 | 0 | 15 | 7 | 474 |
 | doris->starrocks | 721 | 310 | 3 | 22 | 1 | 11 | 5 | 373 |
 | doris->clickhouse | 721 | 156 | 0 | 41 | 0 | 10 | 109 | 405 |
 | starrocks->duckdb | 820 | 173 | 2 | 54 | 1 | 1 | 11 | 581 |
@@ -112,7 +115,7 @@ parser/codegen function registry as explicitly weaker relationship evidence.
 | starrocks->doris | 820 | 351 | 4 | 7 | 0 | 3 | 7 | 452 |
 | starrocks->clickhouse | 820 | 163 | 0 | 37 | 0 | 4 | 39 | 577 |
 | clickhouse->duckdb | 1570 | 98 | 0 | 71 | 6 | 43 | 22 | 1336 |
-| clickhouse->trino | 1570 | 65 | 0 | 79 | 1 | 33 | 19 | 1374 |
+| clickhouse->trino | 1570 | 65 | 0 | 86 | 1 | 33 | 18 | 1368 |
 | clickhouse->doris | 1570 | 104 | 0 | 61 | 0 | 47 | 105 | 1253 |
 | clickhouse->starrocks | 1570 | 92 | 0 | 68 | 0 | 44 | 37 | 1329 |
 | starrocks->sqlglot | 820 | 198 | 0 | 11 | 0 | 7 | 10 | 594 |
@@ -402,8 +405,6 @@ Candidates (c1/c2):
 
 | source | kind | candidate target | evidence | via |
 |---|---|---|---|---|
-| day_of_month | scalar | todayofmonth | c1 | node-class sql_names |
-| day_of_year | scalar | todayofyear | c1 | node-class sql_names |
 | to_date | scalar | cast | c1 | parsed under dialect 'postgres' |
 | to_timestamp | scalar | fromunixtimestamp | c1 | parsed under dialect 'duckdb' |
 
@@ -919,7 +920,6 @@ Lexical hints (c3 - low confidence, verify manually):
 | extractall | scalar | regexp_extract_all |
 | greatcircledistance | scalar | great_circle_distance |
 | isfinite | scalar | is_finite |
-| isinfinite | scalar | is_infinite |
 | jsonextract | scalar | json_extract |
 | mapconcat | scalar | map_concat |
 | mapfilter | scalar | map_filter |
@@ -1548,6 +1548,7 @@ overload. Trino-target rows may be false alarms (no variadic data in TSV).
 |---|---|
 | bit_count | scalar |
 | date_add | macro |
+| to_base | scalar |
 | to_timestamp | scalar |
 
 ### duckdb -> doris
@@ -1572,6 +1573,7 @@ overload. Trino-target rows may be false alarms (no variadic data in TSV).
 | date_add | scalar |
 | listagg | aggregate |
 | reduce | scalar |
+| to_base | scalar |
 | to_timestamp | scalar |
 
 ### trino -> doris
@@ -1766,7 +1768,6 @@ semantically equivalent. Treat these as high-priority semantics reviews.
 | from_hex | unhex | `UNHEX(a1)` |
 | from_iso8601_date | cast | `CAST(a1 AS DATE)` |
 | length | char_length | `CHAR_LENGTH(a1)` |
-| levenshtein_distance | levenshtein | `LEVENSHTEIN(a1, a2)` |
 | log10 | log | `LOG(10, a1)` |
 | log2 | log | `LOG(2, a1)` |
 | map | array_map | `ARRAY_MAP()` |
@@ -1822,9 +1823,9 @@ semantically equivalent. Treat these as high-priority semantics reviews.
 | to_unixtime | time_to_unix | `TIME_TO_UNIX(a1)` |
 | transform | arraymap | `arrayMap(a2, a1)` |
 | truncate | trunc | `trunc(a1)` |
-| var_pop | variance_pop | `VARIANCE_POP(a1)` |
+| var_pop | varpop | `varPop(a1)` |
 | var_samp | varsamp | `varSamp(a1)` |
-| week | week_of_year | `WEEK_OF_YEAR(a1)` |
+| week | toisoweek | `toISOWeek(a1)` |
 
 ### doris -> duckdb
 
@@ -2845,6 +2846,7 @@ Renders to a name absent from the target catalog (suspect translations):
 | bitwise_xor_agg | BitwiseXorAgg | `BIT_XOR(a1)` |
 | day_of_week | DayOfWeekIso | `DAYOFWEEK_ISO(a1)` |
 | from_utf8 | Decode | `DECODE(a1, 'utf-8')` |
+| levenshtein_distance | Levenshtein | `LEVENSHTEIN(a1, a2)` |
 | sha256 | SHA2Digest | `S_H_A2_DIGEST(a1, 256)` |
 | sha512 | SHA2Digest | `S_H_A2_DIGEST(a1, 512)` |
 | to_utf8 | Encode | `ENCODE(a1, 'utf-8')` |
@@ -2885,9 +2887,6 @@ Renders to a name absent from the target catalog (suspect translations):
 | count_if | CountIf | `countIf(a1)` |
 | date_add | DateAdd | `DATE_ADD(A1, a2, a3)` |
 | date_parse | StrToTime | `STR_TO_TIME(a1, a2)` |
-| day_of_week | DayOfWeekIso | `DAYOFWEEK_ISO(a1)` |
-| dow | DayOfWeekIso | `DAYOFWEEK_ISO(a1)` |
-| doy | DayOfYear | `DAY_OF_YEAR(a1)` |
 | from_utf8 | Decode | `DECODE(a1, 'utf-8')` |
 | json_parse | ParseJSON | `PARSE_JSON(a1)` |
 | sequence | GenerateSeries | `GENERATE_SERIES(a1, a2)` |
@@ -3049,8 +3048,10 @@ Renders to a name absent from the target catalog (suspect translations):
 | currentschemas | CurrentSchemas | `CURRENT_SCHEMAS(a1)` |
 | farmfingerprint64 | FarmFingerprint | `FARM_FINGERPRINT(a1)` |
 | ifnull | Coalesce | `COALESCE(a1)` |
+| isinfinite | IsInf | `IS_INF(a1)` |
 | jarowinklersimilarity | JarowinklerSimilarity | `JAROWINKLER_SIMILARITY(a1, a2)` |
 | substringindex | SubstringIndex | `SUBSTRING_INDEX(a1, a2, a3)` |
+| toisoyear | YearOfWeekIso | `YEAR_OF_WEEK_ISO(a1)` |
 | version | CurrentVersion | `VERSION()` |
 
 ### clickhouse -> doris

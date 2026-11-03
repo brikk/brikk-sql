@@ -63,8 +63,18 @@ class PipeStagePhrasesTest : TestCase() {
         assertDoesntContain(pipeStagePhrases("trino"), "STRAIGHT_JOIN", "ASOF JOIN", "NATURAL JOIN", "CALL")
         assertDoesntContain(pipeStagePhrases("duckdb"), "STRAIGHT_JOIN")
         assertDoesntContain(pipeStagePhrases("doris"), "STRAIGHT_JOIN", "NATURAL JOIN")
-        assertTrue(lowerForExecution(sample("clickhouse", "NATURAL JOIN"), "clickhouse") is PipeLowering.Refused)
-        assertDoesntContain(pipeStagePhrases("clickhouse"), "NATURAL JOIN", "STRAIGHT_JOIN")
+        assertDoesntContain(pipeStagePhrases("clickhouse"), "STRAIGHT_JOIN")
+    }
+
+    fun testClickhouseNaturalJoinPhrasesKeepThePinnedLoweringEvidence() {
+        // Batch-4 native probes execute this authored pipe and its actual lowering on
+        // ClickHouse 26.8.34.13 and 26.10.2.103. NATURAL is no longer a refused stage.
+        assertTrue("NATURAL JOIN" in pipeStagePhrases("clickhouse"))
+        lowered("clickhouse", "NATURAL JOIN")
+        val sql = "FROM numbers(2) |> AS a |> NATURAL LEFT JOIN (SELECT 0 number, 'R' r) b |> SELECT number,r |> ORDER BY number"
+        val result = lowerForExecution(sql, "clickhouse")
+        assertTrue(result.toString(), result is PipeLowering.Ok && result.blockers.isEmpty())
+        assertFalse((result as PipeLowering.Ok).sql.contains("|>"))
     }
 
     fun testADialectWithoutEvidenceGetsEveryParsedPhrase() {

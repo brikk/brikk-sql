@@ -21,8 +21,10 @@ and its Maven coordinate remains `dev.brikk.house:brikk-sql-jvm`. The Kotlin
 runtime/compiler consumer lives in [Brikk Engine](https://github.com/brikk/brikk-house/tree/main/brikk-engine);
 Kotlin packages and annotations have not changed.
 
-Publications currently target JVM, with Java 21-compatible bytecode. The core is
-predominantly common Kotlin; the schema-cache file API lives in `src@jvm/`.
+Since 0.21.0, core targets JVM with Java 17-compatible bytecode and runs its
+tests on JDK 17, including the transitive metadata/serialization dependencies.
+It is predominantly common Kotlin; the schema-cache file API lives in `src@jvm/`.
+Older Java 21 JARs need replacing with 0.21.0 or a later compatible build.
 
 ## Quick start
 

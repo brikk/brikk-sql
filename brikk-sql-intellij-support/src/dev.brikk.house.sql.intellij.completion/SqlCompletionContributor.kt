@@ -36,6 +36,7 @@ import dev.brikk.house.sql.metadata.MetadataSnapshot
 import dev.brikk.house.sql.metadata.TableFunctionInfo
 import dev.brikk.house.sql.metadata.definitionOf
 import dev.brikk.house.sql.docs.sqlPropertyAt
+import dev.brikk.house.sql.intellij.dialect.DatafusionEditorProfile
 
 /**
  * Completes the profile's functions and keywords from metadata (property keys only with [PROPERTY_COMPLETION]).
@@ -52,9 +53,10 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
         val source = PipeText.of(file)
         val before = source.text.substring(0, source.textOffset(prefixAt(file, parameters.offset).first).coerceIn(0, source.text.length))
         val context = SqlNameContext.of(before, profile.metadata.dialect, ProgressManager::checkCanceled)
-        val position = context?.let {
+        val ordinary = context?.let {
             functionPosition(it.tokens, profile.tablePositions, profile.stagePhrases, { name -> name in reads.snapshot.functions })
         } ?: FunctionPosition.UNKNOWN
+        val position = (profile as? DatafusionEditorProfile)?.position(file, prefixAt(file, parameters.offset).first, ordinary) ?: ordinary
         val inCode = context?.inCode != false
         val functions = if (inCode) completeFunctions(parameters, result, reads, position, context) else emptySet()
         if (PROPERTY_COMPLETION) completeTableFunctionArguments(parameters, result, reads)
@@ -107,7 +109,7 @@ public abstract class SqlCompletionContributor(private val profile: SqlCompletio
  * prototype, or a routine of the platform's builtin catalog. A data source's or the user's routine
  * of the same name is never one.
  */
-private fun LookupElement.isBaseBuiltin(): Boolean = when (val target = `object`) {
+internal fun LookupElement.isBaseBuiltin(): Boolean = when (val target = `object`) {
     is BuiltinFunction.Prototype -> true
     is SqlResolveResult -> target.targetSymbol?.dasObject.let { it is DasRoutine && isBuiltinCatalogObject(it) }
     else -> false
@@ -169,13 +171,22 @@ private fun completeFunctions(
     }
     val qualifier = if (context != null) context.qualifier
     else PsiTreeUtil.getParentOfType(parameters.position, SqlReferenceExpression::class.java, false)?.qualifierExpression?.text
-    val sink = if (reads.snapshot.functions.caseSensitive) result else result.caseInsensitive()
+    val caseSensitive = reads.snapshot.functions.caseSensitive
+    val insensitive = result.caseInsensitive()
     val names = HashSet<String>()
     val positions = profile.tablePositions
+    val native = profile as? DatafusionEditorProfile
+    val nativeFilter = native?.offerFilter(file, prefixAt(file, parameters.offset).first)
+    val nativeDecorator = native?.decorator(file, reads.snapshot)
     fun offer(entry: FunctionPresentation, serverOnly: Boolean) {
         if (!position.offers(entry, positions)) return
+        if (nativeFilter?.invoke(entry) == false) return
         val wrapper = positions.wrapper?.takeIf { position == FunctionPosition.TABLE && positions.wraps(entry) }
-        sink.addElement(profile.lookup(entry, serverOnly, wrapper))
+        // Grammar forms such as TRY_CAST are keywords even when ordinary function
+        // names in the same catalog are case-sensitive.
+        val sink = if (caseSensitive && InvocationSyntax.SPECIAL_FORM !in entry.syntaxes) result else insensitive
+        val item = profile.lookup(entry, serverOnly, wrapper)
+        sink.addElement(nativeDecorator?.invoke(item, entry) ?: item)
         names += entry.name.uppercase()
     }
     val rule = gates.qualifier
@@ -374,7 +385,7 @@ private class Parentheses(private val insertsByDefault: Boolean, private val arg
 }
 
 /** The identifier or number run ending at [offset], read from the document so a completion dummy does not matter. */
-private fun prefixAt(file: PsiFile, offset: Int): Pair<Int, Int> {
+internal fun prefixAt(file: PsiFile, offset: Int): Pair<Int, Int> {
     val text = file.viewProvider.contents
     val end = offset.coerceIn(0, text.length)
     var start = end

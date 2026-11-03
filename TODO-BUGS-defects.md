@@ -24,4 +24,9 @@ The previous 162-item inventory remains resolved:
 - 3 Trino `ALTER TABLE ... SET PROPERTIES` AST differences are intentional,
   verifier-backed grammar-legality extensions rather than defects. They remain
   in the exact parser and annotation parity ledgers and are documented in
-  `docs/brikk-extensions.md` section 8.
+   `docs/brikk-extensions.md` section 8.
+
+The Trino 484 upgrade additionally protects 3 structured SET AUTHORIZATION
+parser rows and their annotation counterparts, plus explicit JSON_VALUE return
+typing. These are intentional extensions, not newly exposed defects. See
+`docs/brikk-extensions.md` section 58.

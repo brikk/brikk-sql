@@ -40,6 +40,51 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Spice SQL reference adapter
+
+`tools/datafusion-reference/src/spice.rs` adapts the statement-level CLUSTER BY parser
+wrapper from [Spice.ai OSS](https://github.com/spiceai/spiceai),
+`crates/runtime/src/datafusion/planner/mod.rs`, release v2.4.0 at commit
+`78a47787ef74dec52d705bf9e26a0f9b7a26ca94`. Copyright 2024-2026 The Spice.ai OSS
+Authors, licensed under the Apache License 2.0. The adapter calls DFParser directly
+and adds script splitting with absolute error-position preservation. Its source header
+records the changes; the repository's LICENSE supplies the Apache license text.
+
+Fixtures under `vendor/data/datafusion-spice/` contain SQL examples adapted from the
+[Spice SQL documentation](https://spiceai.org/docs/reference/sql) and authored regression
+controls. Historical documentation observations are explicitly distinguished from native
+release evidence. `vendor/data/spice/2.4.0/` and `vendor/data/datafusion/55.2.0/` record
+versioned registry/settings facts and parser/execution results from Apache-2.0-licensed
+Spice/DataFusion software. The released Spice binary is downloaded for local checks and
+is not redistributed here. Source revisions and checksums are in the provenance manifests.
+
+`vendor/data/datafusion-spice/round5/source-evidence.json` includes excerpts from the
+same Spice release's search, JSON and decision implementations. Copyright 2024-2026
+The Spice.ai OSS Authors, Apache License 2.0; each excerpt records its source lines and URL.
+The same attribution applies to `round8/editor-source-evidence.json` and its named-argument
+and decision-result excerpts from that pinned release.
+
+`vendor/data/datafusion-spice/flight-investigation/source-evidence.json` includes Flight
+protocol and parameter-schema excerpts from the same Spice release, plus Apache Arrow Java
+19.0.0 at commit `b410fb26d01c7cefc4c6e3443a53562164001371`. The Arrow sources are licensed
+to the Apache Software Foundation under Apache License 2.0. Source paths, line ranges,
+hashes and Maven source-artifact provenance accompany the excerpts.
+
+`tools/datafusion-reference/src/flight.rs` adapts the Apache DataFusion Flight SQL example
+at commit `500744d5c25499055e3b2ca46b022bc425989203`,
+`datafusion-examples/examples/flight/sql_server.rs`, under Apache License 2.0.
+The fixture changes context ownership checks, schema retention, product information,
+statement planning/execution, and loopback startup. It uses no external example datasets.
+The same Apache attribution applies to the separate DFS-010 execution variant,
+`tools/datafusion-reference/src/flight_execution.rs`, which adds parameter batches,
+utility/query schema separation and lazy result streams.
+
+`GeneratedDatafusionFunctionCatalog.kt` and `GeneratedSpiceFunctionCatalog.kt` are generated
+from these runtime/registry facts. Function descriptions and examples retain the source
+engines' documentation through the metadata evidence API. Their capture hashes and pinned
+source overrides identify the exact inputs; generated code does not imply a broader engine
+or build compatibility claim.
+
 ## Apache Doris
 
 Doris-derived artifacts are included from https://github.com/apache/doris and
@@ -79,12 +124,13 @@ See vendor/README.md for provenance and the refresh procedure.
 
 ## Trino
 
-`vendor/data/trino-functions-483.tsv` and the generated
+`vendor/data/trino-functions-484.tsv` and the generated
 `brikk-sql-metadata/.../GeneratedTrinoFunctionCatalog.kt` contain the built-in function
 registry (names, signatures, kinds) extracted from [Trino](https://github.com/trinodb/trino)
-version 483 via its own `SHOW FUNCTIONS` statement (see vendor/README.md for the generation
-method). `vendor/data/trino-keywords-483.tsv` and `GeneratedKeywords.kt` hold the keyword
-spellings and reservation read from the trino-grammar 483 lexer and parser. Trino is
+version 484 via its own `SHOW FUNCTIONS` statement (see vendor/README.md for the generation
+method). `vendor/data/trino-keywords-484.tsv` and `GeneratedKeywords.kt` hold the keyword
+spellings and reservation read from the trino-grammar 484 lexer and parser. Historical
+483 captures remain available under `vendor/data/`. Trino is
 licensed under the Apache License 2.0. No Trino code is included — only registry and
 grammar data.
 
@@ -126,6 +172,28 @@ SOFTWARE.
 `system.functions`; `vendor/data/clickhouse-keywords-26.5.1.1.tsv` and
 `GeneratedKeywords.kt` hold its `system.keywords`. No ClickHouse source code is included in the catalog artifact.
 ClickHouse is licensed under the Apache License 2.0; see vendor/README.md for provenance.
+
+`vendor/data/clickhouse-2026-audit/` includes native formatter output and finite-query
+results from official ClickHouse 26.8.34.13 LTS and 26.10.2.103 stable builds. STREAM
+grammar handling follows the pinned Apache-2.0 upstream parser; source links and
+immutable engine digests are recorded with the fixtures. Brikk's AST observations
+and regression cases are separate from the historical function catalog.
+
+The official-build registry, type, settings, build-option and embedded-documentation
+captures `vendor/data/clickhouse-*-26.8.34.13.*` and `clickhouse-*-26.10.2.103.*`
+and their generated Kotlin metadata also derive from those Apache-2.0 ClickHouse
+builds. Capture manifests retain the exact image digests, queries and SHA-256 hashes.
+No documentation prose is treated as a machine-readable function signature.
+
+The ClickHouse batch-3 parser/analyzer corrections and audit fixtures reference the
+same Apache-2.0 upstream's v26.10.2.103-stable parser and function-composition source.
+The fixture file records the source URLs; native observations retain the image
+digests. No source statement from the DDL fixtures is executed by the verifier.
+
+The final batch-4 behavior captures and regression reruns use those same immutable
+Apache-2.0 ClickHouse images. The PostgreSQL cardinality source contract is cited
+from the PostgreSQL array-functions documentation, separately from the native
+ClickHouse target results; this is not a live PostgreSQL equivalence capture.
 
 ## polyglot (DataFusion fixture corpus)
 

@@ -1,0 +1,34 @@
+[
+  {
+    "batch": "batch1",
+    "fixture": "vendor/data/clickhouse-2026-audit/cases.json",
+    "tasks": [
+      "CH26-002"
+    ],
+    "audit_passed": true,
+    "native_passed": true,
+    "summary": "26.8.34.13 45 parse observations; 6 native execution outcomes; 6 generated execution outcomes; 0 version-inapplicable cases\n26.10.2.103 45 parse observations; 6 native execution outcomes; 6 generated execution outcomes; 0 version-inapplicable cases"
+  },
+  {
+    "batch": "batch2",
+    "fixture": "vendor/data/clickhouse-2026-audit/batch2-cases.json",
+    "tasks": [
+      "CH26-003",
+      "CH26-004"
+    ],
+    "audit_passed": true,
+    "native_passed": true,
+    "summary": "26.8.34.13 45 parse observations; 13 native execution outcomes; 13 generated execution outcomes; 9 version-inapplicable cases\n26.10.2.103 45 parse observations; 22 native execution outcomes; 22 generated execution outcomes; 0 version-inapplicable cases"
+  },
+  {
+    "batch": "batch3",
+    "fixture": "vendor/data/clickhouse-2026-audit/batch3-cases.json",
+    "tasks": [
+      "CH26-005",
+      "CH26-006"
+    ],
+    "audit_passed": true,
+    "native_passed": true,
+    "summary": "26.8.34.13 48 parse observations; 5 native execution outcomes; 5 generated execution outcomes; 5 version-inapplicable cases\n26.10.2.103 48 parse observations; 10 native execution outcomes; 10 generated execution outcomes; 0 version-inapplicable cases"
+  }
+]

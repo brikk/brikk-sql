@@ -20,13 +20,32 @@ public data class LiveInventory(
     val signatures: Boolean,
     val keywords: List<KeywordDef>? = null,
     val extensions: List<String> = emptyList(),
-)
+    val nativeCatalog: NativeCatalog? = null,
+) {
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(serverVersion: String?, functions: List<LiveFunction>, signatures: Boolean,
+        keywords: List<KeywordDef>? = null, extensions: List<String> = emptyList()) :
+        this(serverVersion, functions, signatures, keywords, extensions, null)
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(serverVersion: String? = this.serverVersion, functions: List<LiveFunction> = this.functions,
+        signatures: Boolean = this.signatures, keywords: List<KeywordDef>? = this.keywords,
+        extensions: List<String> = this.extensions): LiveInventory =
+        copy(serverVersion, functions, signatures, keywords, extensions, nativeCatalog)
+}
 
 /**
  * Facts that belong to one database session, such as temporary macros, extensions the session loaded
  * or catalogs it attached. They are kept per session in memory and never persisted.
  */
-public data class SessionFacts(val functions: List<LiveFunction> = emptyList(), val extensions: List<String> = emptyList()) {
+public data class SessionFacts(val functions: List<LiveFunction> = emptyList(), val extensions: List<String> = emptyList(),
+    val inventory: LiveInventory? = null, val namespace: List<String> = emptyList()) {
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public constructor(functions: List<LiveFunction> = emptyList(), extensions: List<String> = emptyList()) : this(functions, extensions, null, emptyList())
+
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    public fun copy(functions: List<LiveFunction> = this.functions, extensions: List<String> = this.extensions): SessionFacts =
+        copy(functions, extensions, inventory, namespace)
     public companion object {
         public val NONE: SessionFacts = SessionFacts()
     }

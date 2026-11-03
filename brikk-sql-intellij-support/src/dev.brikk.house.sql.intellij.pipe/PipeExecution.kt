@@ -85,6 +85,12 @@ public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteI
             ?: (event.getData(PlatformCoreDataKeys.FILE_EDITOR) as? TextEditor)?.editor ?: return ExecutionClaim.DECLINED
         val candidate = dialect.executionCandidate(editor, option)
         if (candidate == null || !dialect.containsPipe(candidate)) return ExecutionClaim.DECLINED
+        val smartRange = if (option.execSelection == DatabaseSettings.EXECUTE_SELECTION_SMART_EXPAND && editor.selectionModel.hasSelection()) {
+            val ranges = dialect.scriptRanges(editor.document.text).filter {
+                it.start < editor.selectionModel.selectionEnd && it.end > editor.selectionModel.selectionStart
+            }
+            ranges.takeIf { it.isNotEmpty() }?.let { TextRange(it.first().start, it.last().end) }
+        } else null
         val destination = PipeDestination(dialect, console)
         dialect.refusalsNotified(console.project) {
             dialect.scriptRanges(candidate).firstNotNullOfOrNull { it.boundaryError }?.let { throw SqlExecutionRefusal(it) }
@@ -109,7 +115,18 @@ public class PipeExecuteInterceptor(private val dialect: PipeDialect) : ExecuteI
                             JdbcConsoleProvider.chooseStatements(info, "Nothing to run", true) { selected ->
                                 dialect.refusalsNotified(console.project) {
                                     prepared.requireCurrent()
-                                    dialect.execute(console, editor, selected, info.execOption, destination)
+                                    var runnable = selected
+                                    if (smartRange != null && selected.statements().none { dialect.containsPipe(it.text()) }) {
+                                        // An opaque native statement can make stock smart expansion return a clause.
+                                        // Ask stock model preparation for the pinned whole range, preserving its binds and file.
+                                        if (editor is EditorWindow || info.file.virtualFile != info.originalFile.virtualFile)
+                                            throw SqlExecutionRefusal("Select the complete PIPE statement in the SQL editor.")
+                                        runnable = JdbcConsoleProvider.findScriptModelNoInject(console.project, info.file, editor, smartRange, info.execOption)?.model
+                                            ?: throw SqlExecutionRefusal("The selected PIPE statement could not be prepared.")
+                                        if (runnable.statements().none { dialect.containsPipe(it.text()) })
+                                            throw SqlExecutionRefusal("The selected PIPE fragment did not expand to its statement. Select the complete PIPE statement.")
+                                    }
+                                    dialect.execute(console, editor, runnable, info.execOption, destination)
                                 }
                             }
                         }
@@ -156,12 +173,13 @@ internal class PipeDestination(private val dialect: PipeDialect, private val con
     private val session = console.session
     private val dataSource = console.dataSource
     private val url = dataSource.url
+    private val identity = dialect.connectionIdentity(session)
     private val namespace = namespaceOf(console)
 
     fun requireCurrent(current: JdbcConsole) {
         if (!dialect.isEnabled(current.project)) throw SqlExecutionRefusal("PIPE was disabled during preparation.")
         if (current !== console || !current.isValid || current.session !== session || current.dataSource !== dataSource ||
-            dataSource.url != url || !dialect.ownsSession(session) || namespaceChanged(current)
+            dataSource.url != url || dialect.connectionIdentity(session) != identity || !dialect.ownsSession(session) || namespaceChanged(current)
         ) throw SqlExecutionRefusal("The destination changed during preparation. Run the query again.")
     }
 

@@ -1,6 +1,7 @@
 """Offline release regression tests; no credentials or Maven uploads required."""
 
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -58,6 +59,39 @@ class ReleaseVersionTest(unittest.TestCase):
         self.assertIn('version: "0.20.0"', template)
         self.assertNotIn("mavenCentral", template)
         self.assertNotIn("signArtifacts", template)
+
+
+class DevelopmentVersionPolicyTest(unittest.TestCase):
+    def stable_version(self, pattern):
+        match = re.search(pattern, (ROOT / "README.md").read_text())
+        self.assertIsNotNone(match, "README must record the latest published stable versions")
+        return tuple(map(int, validate_version(match.group(1)).split(".")))
+
+    def snapshot_base(self, path):
+        version = development_version(path.read_text())
+        self.assertTrue(version.endswith("-SNAPSHOT"), f"Expected a development snapshot in {path}: {version}")
+        base = validate_version(version.removesuffix("-SNAPSHOT"))
+        return version, tuple(map(int, base.split(".")))
+
+    def test_sql_snapshot_sorts_after_the_latest_stable_release(self):
+        _, base = self.snapshot_base(ROOT / "publish.module-template.yaml")
+        stable = self.stable_version(r"Latest core, metadata, verify and oracle release:\s+\*\*`([^`]+)`\*\*")
+        self.assertGreater(base, stable, "Advance the development version after recording a stable release")
+
+    def test_all_ide_snapshots_align_and_sort_after_the_latest_stable_release(self):
+        stable = self.stable_version(r"support is independently versioned at\s+\*\*`([^`]+)`\*\*")
+        versions = set()
+        for artifact in ("brikk-sql-intellij-support", "brikk-sql-intellij-jdbc-support", "brikk-sql-intellij-test-support"):
+            version, base = self.snapshot_base(ROOT / artifact / "module.yaml")
+            versions.add(version)
+            self.assertGreater(base, stable, f"{artifact} must follow the published stable support version")
+        self.assertEqual(1, len(versions), "The three IDE support artifacts must use the same version")
+
+    def test_current_development_versions_are_documented(self):
+        readme = (ROOT / "README.md").read_text()
+        for path in (ROOT / "publish.module-template.yaml", ROOT / "brikk-sql-intellij-support/module.yaml"):
+            version, _ = self.snapshot_base(path)
+            self.assertIn(f"`{version}`", readme)
 
 
 class ReleaseLauncherTest(unittest.TestCase):

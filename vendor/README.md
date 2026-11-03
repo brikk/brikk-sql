@@ -8,6 +8,28 @@ moment upstream publishes.
 This is distinct from `reference/` (gitignored full clones of upstream repos used as porting
 oracles) — `vendor/` contents are committed and shipped-adjacent.
 
+## DataFusion and Spice reference evidence
+
+`data/datafusion/55.2.0/` and `data/spice/2.4.0/` hold the initial version-pinned
+parser/execution evidence and dependency manifests. `data/datafusion-spice/` holds
+the stable audit SQL, current Brikk observations, and the separately labeled historical
+documentation audit. These are development fixtures, not a bundled engine or a claim
+that a production Spice dialect has shipped.
+
+Reproduction instructions and profile boundaries are in
+[`tools/datafusion-reference/README.md`](../tools/datafusion-reference/README.md).
+The Rust tools lock both dependency graphs. Spice execution requires the checksum-verified
+released binary and runs in a disposable local runtime. Updates must retain old evidence,
+review new dependency pins and profile changes, regenerate captures, and run the protocol
+and native controls. See the [baseline findings](../docs/research/datafusion-spice-reference-baseline.md).
+
+The same version directories now contain full `metadata-capture.json` files. Capture with
+`tools/capture_datafusion_spice_metadata.py`, then regenerate the Kotlin catalogs with
+`tools/generate_datafusion_metadata.py`. Runtime SQL signatures are representative samples;
+only matched finite registry constraints become strict overload entries. Source-backed
+Spice overrides identify scalar stubs without inventing signatures. Historical baseline
+observations stay intact; the first post-fix observations live under `data/datafusion-spice/round2/`.
+
 ## `lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar`
 
 The standalone Doris SQL parser (`fe-sql-parser`) from Apache Doris — the authoritative ANTLR
@@ -322,7 +344,7 @@ symbol, `\N` when not from a grammar), in the dump format above.
 
 | File | Source | Refresh |
 |---|---|---|
-| `trino-keywords-483.tsv` | trino-grammar 483: lexer tokens with a one-word literal; UNRESERVED when the parser's `nonReserved` rule can start with the token, else RESERVED. The capture checks the reserved set equals `io.trino.sql.ReservedIdentifiers` (313 keywords, 83 reserved) | bump `io.trino:trino-parser` in `tools/metadata-capture/module.yaml`, `./kotlin run -m metadata-capture -- trino-keywords` |
+| `trino-keywords-484.tsv` | trino-grammar 484: lexer tokens with a one-word literal; UNRESERVED when the parser's `nonReserved` rule can start with the token, else RESERVED. The capture checks the reserved set equals `io.trino.sql.ReservedIdentifiers` (316 keywords, 84 reserved). The historical 483 dump is retained. | bump `io.trino:trino-parser` in `tools/metadata-capture/module.yaml`, `./kotlin run -m metadata-capture -- trino-keywords` |
 | `doris-keywords-4.1.5.tsv` | the same reading of `vendor/lib/doris-fe-sql-parser-4.1.5-g917b20be8387.jar` (565 keywords) | `./kotlin run -m metadata-capture -- doris-keywords` after refreshing the jar |
 | `clickhouse-keywords-26.5.1.1.tsv` | ClickHouse 26.5.1.1 `system.keywords` via `chdb` 4.2.1 with `chdb-core` 26.5.0 (`SELECT version()` = `26.5.1.1`), captured 2026-10-11. The table has no reservation column, so every category is UNKNOWN; many entries are phrases (`ADD COLUMN`) | see below |
 
@@ -333,32 +355,34 @@ python3 -c "import chdb; open('vendor/data/clickhouse-keywords-<ver>.tsv','w').w
 
 Pin `chdb-core` explicitly: `chdb` 4.2.1 alone resolves a newer engine.
 
-## `data/trino-functions-483.tsv`
+## `data/trino-functions-484.tsv`
 
-Trino **483**'s complete built-in function registry (`SHOW FUNCTIONS`), one row per
+Trino **484**'s complete built-in function registry (`SHOW FUNCTIONS`), one row per
 overload, 6 tab-separated columns: name, return type, argument types, function type,
-deterministic, description. 900 rows / 441 distinct names (via generator: 442 defs /
-808 overloads — 372 scalar, 57 aggregate, 11 window, 2 table).
+deterministic, description. 915 rows / 442 distinct names (via generator: 443 defs /
+825 overloads, with 373 scalar, 57 aggregate, 11 window, and 2 table definitions).
 
 | | |
 |---|---|
 | Source | Trino — https://github.com/trinodb/trino |
-| Version | 483 (official `trinodb/trino:483` container image) |
+| Version | 484 (official `trinodb/trino:484` container image) |
+| Image digest | `sha256:2704eb53935af5e582d63d6033e9bf99d20c325e9b0e30b1016ef59a4773979f` |
+| Captured | 2026-10-28, `SELECT version()` = `484` |
 | License | Apache License 2.0 (extracted registry data; see ATTRIBUTIONS.md) |
 
 ### Generation method
 
-**Method A (container dump)** — the official `trinodb/trino:483` server image bundles the
+**Method A (container dump)** — the official `trinodb/trino:484` server image bundles the
 geospatial *and* ML plugins, so `SHOW FUNCTIONS` on a stock container lists their functions
 (`ST_*`, `bing_tile*`, `geometry_*`, `great_circle_distance`, `convex_hull_agg`,
 `learn_*`, `regress`, `classify`, …). This is why the 483 dump has ~100 more names than the
 old 481 dump, which used the in-JVM harness (Method B) that never loaded those plugins.
 
 ```bash
-docker run -d --name trino-dump trinodb/trino:483
+docker run -d --name trino-dump trinodb/trino:484
 # wait until `docker exec trino-dump trino --execute "SELECT 1"` succeeds, then:
 docker exec trino-dump trino --execute "SHOW FUNCTIONS" --output-format=TSV \
-    > vendor/data/trino-functions-483.tsv
+    > vendor/data/trino-functions-484.tsv
 docker rm -f trino-dump
 ```
 
@@ -366,8 +390,8 @@ Refresh on a version bump: dump from the new `trinodb/trino:<version>` image, sa
 `data/trino-functions-<version>.tsv`, then re-run `tools/generate_trino_functions.py`
 (TSV -> `GeneratedTrinoFunctionCatalog.kt`). The output is version-pinned and reproducible.
 
-The previous `data/trino-functions-481.tsv` (Method B, 746 rows, no geospatial/ML) has been
-superseded and removed.
+The 483 function capture is retained as historical evidence. The previous 481 capture
+(Method B, 746 rows, no geospatial/ML) was superseded and removed.
 
 Known caveats (carried into the generated Kotlin header): `SHOW FUNCTIONS` does not flag
 variadics (arity is a lower bound), parametric types / type variables appear literally
@@ -377,7 +401,59 @@ exposes **neither parameter names nor null-handling metadata**, so
 Populating Trino profiles would require scraping the engine sources (`@SqlNullable` /
 `RETURNS NULL ON NULL INPUT` on the java implementations) — future work.
 
+## `data/trino-484-doris-4.1.5-json/`
+
+Hand-owned JSON probe inputs and raw paired execution evidence captured on
+2026-10-28 against Trino 484 and Doris FE/BE 4.1.5-release-917b20be838.
+`vectors.json` contains 47 paired expressions; `results.json` includes exact
+queries, stdout/stderr, exit codes, SQL NULL/value distinctions, engine versions
+and image digests. Query IDs and capture timestamps are retained, not normalized
+to make recaptures look byte-identical. See
+[the scoped report](../docs/research/trino-484-doris-4.1.5-json.md) for exact image
+pins, runtime limits, counterexamples and reproduction commands.
+
+Refresh with `tools/probe_trino_doris_json.py` against disposable containers, then
+review semantic changes before updating the golden results and hazard registry.
+Never infer universal equivalence from matching samples or replace historical
+non-JSON evidence with these versions. The metadata generator consumes the reviewed
+`brikk-sql/testResources/semantics/trino-doris-hazards.json`, not raw probe counts.
+
+## `data/clickhouse-2026-audit/`
+
+Targeted 2026 SQL audit and STREAM/Tuple-combinator regression evidence. `engines.json`
+pins official 26.8.34.13 LTS and 26.10.2.103 stable images by digest; `cases.json` records
+stable case IDs and native acceptance/execution expectations. Native JSON captures include
+raw parser output and exact native/generated finite-query results. Brikk before/after captures
+record ASTs, output and errors, not semantic certification. Reproduce with
+`tools/probe_clickhouse_2026.py` and `tools/clickhouse_2026_audit.kts`; see
+`docs/research/clickhouse-2026-catchup.md` for commands, provenance and limitations.
+These probes do not replace or relabel the historical 26.5.1.1 catalogs or hazard evidence.
+ClickHouse-derived parser output is Apache-2.0 licensed.
+
+The final ClickHouse `batch4-cases.json` and `batch4/` evidence cover setting/version
+differences, retained regression forms and actual original/lowered results. Per-pin
+expected results/errors keep older-engine failures visible. Fresh reruns of the first
+three batches are saved under `batch4/regression/`, not over older captures or the
+historical semantic-hazard evidence. See `docs/research/clickhouse-2026-batch4.md`.
+
+The ClickHouse audit's `batch3-cases.json` and `batch3/` evidence cover analysis
+corrections and structured DDL/EXPLAIN on the same pinned engines. DDL and executing
+EXPLAIN statements are supplied to native formatQuery as hex data only. The separate
+finite execution vectors are SELECT expressions, not tokens, handlers or mutations.
+See `docs/research/clickhouse-2026-batch3.md` for grammar provenance and limitations.
+
 ## `data/clickhouse-functions-26.5.1.1.tsv`
+
+The original embedded capture below is retained. Current official-build captures
+for **26.8.34.13** and **26.10.2.103** are versioned alongside it. Their
+`clickhouse-capture-<version>.json` manifests pin exact engine images, queries and
+content hashes. `tools/capture_clickhouse_metadata.py` reproduces function, table
+function, keyword and type-family registries, selected query settings, build options
+and embedded documentation. `system.statements` is recorded as unavailable on 26.8.
+Documentation syntax and introduction strings are raw evidence, not inferred
+overloads or first-availability facts. See `docs/research/clickhouse-2026-batch2.md`.
+`tools/generate_clickhouse_functions.py` renders all captured snapshots by default;
+the public catalog alias uses 26.10.2.103. The historical files are not relabeled.
 
 ClickHouse **26.5.1.1**'s complete function registry (`system.functions`), one row per
 function, 4 tab-separated columns: `name`, `is_aggregate`, `case_insensitive`, `alias_to`.

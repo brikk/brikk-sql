@@ -419,7 +419,27 @@ class TypeAnnotator(
             if (source is Scope) {
                 val expression = source.expression
 
-                if (expression is UDTF) {
+                if (expression is dev.brikk.house.sql.ast.TrinoNearest) {
+                    val fields = LinkedHashMap<String, Any>()
+                    val duplicates = mutableSetOf<String>()
+                    for ((name, binding) in source.selectedSources) {
+                        val types = if (binding.second is Table) {
+                            val table = binding.second as Table
+                            schema.columnNames(table).associateWith { column -> schema.getColumnType(table, column) }
+                        } else {
+                            getScopeSourceSelects(source, name)
+                        }
+                        for ((column, type) in types) {
+                            if (column in fields) duplicates.add(column)
+                            fields[column] = type
+                        }
+                    }
+                    for (duplicate in duplicates) fields.remove(duplicate)
+                    val aliases = expression.aliasColumnNames
+                    result = if (aliases.isEmpty()) fields else fields.entries.mapIndexed { i, entry ->
+                        (aliases.getOrNull(i) ?: entry.key) to entry.value
+                    }.toMap()
+                } else if (expression is UDTF) {
                     if (expression is Lateral && expression.thisArg is Unnest) {
                         val unnest = expression.thisArg as Unnest
                         val fields = LinkedHashMap<String, Any>()
@@ -640,16 +660,62 @@ class TypeAnnotator(
                 continue
             }
 
+            val nativeType = DatafusionTypes.infer(expr, dialect)
+            if (nativeType != null) {
+                setType(expr, nativeType)
+                continue
+            }
+
             // brikk extension #49: PostgreSQL JSON_VALUE has explicit RETURNING
             // evidence, or its documented TEXT default (not a fabricated path type).
-            if (expr is JSONValue && dialect.name == "postgres") {
+            if (expr is JSONValue && dialect.name in setOf("postgres", "trino")) {
                 setType(expr, expr.args["returning"] as? DataType ?: DType.TEXT)
+                continue
+            }
+            if (expr is dev.brikk.house.sql.ast.TrinoJsonSerialize && dialect.name == "trino") {
+                val returning = expr.args["returning"] as? Expression
+                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+                setType(expr, type as? DataType ?: DType.VARCHAR)
+                continue
+            }
+            if (expr is dev.brikk.house.sql.ast.TrinoJsonPathCall && dialect.name == "trino") {
+                val returning = expr.args["returning"] as? Expression
+                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+                setType(expr, type as? DataType ?: if (expr.text("kind") == "JSON_EXISTS") DType.BOOLEAN else DType.VARCHAR)
+                continue
+            }
+            if (expr is dev.brikk.house.sql.ast.JSONArray && dialect.name == "trino") {
+                val returning = expr.args["return_type"] as? Expression
+                val type = if (returning is dev.brikk.house.sql.ast.TrinoJsonInput) returning.thisArg else returning
+                setType(expr, type as? DataType ?: DType.VARCHAR)
                 continue
             }
 
             val duckdbJson = if (dialect.name == "duckdb") expr.duckdbJsonCall() else null
             val duckdbTemporalCast = if (dialect.name == "duckdb" && dialect.supportsNullType) expr.duckdbTemporalCastType() else null
             val spec = expressionMetadata[expr::class]
+
+            if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.Div &&
+                dev.brikk.house.sql.dialects.clickhouseBooleanSetting(expr, "sql_compatible_division_for_integers") == true) {
+                // divideExact's integer width depends on actual operand types. Do not report Float64
+                // just because the dialect's historical default uses fractional division.
+                val real = listOf(expr.left, expr.right).any { it.isType(DType.FLOAT, DType.DOUBLE) }
+                setType(expr, if (real) DType.DOUBLE else DType.UNKNOWN)
+                continue
+            }
+
+            if (dialect.name == "clickhouse" && expr is dev.brikk.house.sql.ast.ClickhouseBuiltin) {
+                setType(expr, when (expr.name.uppercase()) {
+                    "LOCALTIME" -> DType.TIME
+                    "LOCALTIMESTAMP", "NOW", "CURRENT_TIMESTAMP" -> DType.DATETIME
+                    "SESSION_USER", "CURRENT_USER" -> DType.VARCHAR
+                    "CURRENT_DATE" -> DType.DATE
+                    else -> DType.UNKNOWN
+                })
+                continue
+            }
+            // Composition and implicit lambdas are function values, never integer operators.
+            // Keep their types unknown until argument-aware function typing is available.
 
             when {
                 duckdbTemporalCast != null -> setType(expr,duckdbTemporalCast)
@@ -702,6 +768,16 @@ class TypeAnnotator(
         }
 
         if (source is Table) {
+            val function = source.thisArg as? Anonymous
+            if (dialect.name == "spice" && source.db.isEmpty() && source.catalog.isEmpty() && function != null && SpiceCalls.name(function) != null) {
+                val type = SpiceCalls.type(function, expr.name) { input, name ->
+                    val cte = if (input.db.isEmpty()) sourceScope?.cteSources?.get(input.name) as? Scope else null
+                    if (cte != null) getScopeSourceSelects(sourceScope ?: scope, input.name)[name] as? DataType
+                    else schema.getColumnType(input, name)
+                }
+                setType(expr, type ?: DType.UNKNOWN)
+                return
+            }
             var tableColType: Any? = schema.getColumnType(source, expr)
             if (
                 tableColType is DataType &&
@@ -1603,7 +1679,10 @@ class TypeAnnotator(
         } else if (thisType != null && thisType.isType(DType.STRUCT)) {
             for (e in thisType.expressionsArg.filterIsInstance<Expression>()) {
                 if (e.name == (expression.expressionArg as Expression).name) {
-                    setType(expression, e.args["kind"])
+                    val kind = e.args["kind"]
+                    if (dialect.name == "clickhouse" && thisType.args["nullable"] == true && kind is DataType) {
+                        setType(expression, kind.copy().also { it.set("nullable", true) })
+                    } else setType(expression, kind)
                     break
                 }
             }

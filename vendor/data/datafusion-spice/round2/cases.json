@@ -1,0 +1,612 @@
+{
+  "schema_version": 1,
+  "description": "Round 2 native regression corpus; original baseline retained unchanged.",
+  "sources": {
+    "scalar": "https://spiceai.org/docs/reference/sql/scalar_functions",
+    "aggregate": "https://spiceai.org/docs/reference/sql/aggregate_functions",
+    "operators": "https://spiceai.org/docs/reference/sql/operators",
+    "search": "https://spiceai.org/docs/reference/sql/search",
+    "json": "https://spiceai.org/docs/reference/sql/json",
+    "select": "https://spiceai.org/docs/reference/sql/select",
+    "prepared": "https://spiceai.org/docs/reference/sql/prepared_statements",
+    "authored": "Brikk regression controls and statement inventory, 2026-10-30"
+  },
+  "cases": [
+    {
+      "id": "DFS-regex-flags",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT regexp_like('ABC', 'abc', 'i') AS v"
+    },
+    {
+      "id": "DFS-like-order",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT like('spice.ai', 'spice%') AS v"
+    },
+    {
+      "id": "DFS-map-variadic",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT map('a', 1, 'b', 2) AS v"
+    },
+    {
+      "id": "DFS-to-char-format",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT to_char('2023-03-01'::date, '%d-%m-%Y') AS v"
+    },
+    {
+      "id": "DFS-array-sort-nulls",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT array_sort([3, NULL, 1, 2], 'DESC', 'NULLS LAST') AS v"
+    },
+    {
+      "id": "DFS-date-bin-origin",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT date_bin(INTERVAL '1 day', TIMESTAMP '2023-01-02 02:00:00', '2023-01-01T03:00:00') AS v"
+    },
+    {
+      "id": "DFS-date-add",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT date_add(DATE '2024-02-27', 3) AS v"
+    },
+    {
+      "id": "DFS-date-add-int32",
+      "area": "rewrite",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT date_add(DATE '2024-02-27', CAST(3 AS INT)) AS v"
+    },
+    {
+      "id": "DFS-string-agg-order",
+      "area": "rewrite",
+      "source": "aggregate",
+      "execute": true,
+      "sql": "SELECT string_agg(name, ', ' ORDER BY name DESC) AS v FROM (VALUES ('Ada'), ('Bob')) AS t(name)"
+    },
+    {
+      "id": "DFS-json-arrow",
+      "area": "rewrite",
+      "source": "json",
+      "execute": true,
+      "sql": "SELECT '{\"user\":{\"age\":30}}' -> 'user' ->> 'age' AS v"
+    },
+    {
+      "id": "DFS-truncate-partition",
+      "area": "rewrite",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT truncate(10, 101) AS v"
+    },
+    {
+      "id": "DFS-array-agg-comma",
+      "area": "documentation-discrepancy",
+      "source": "select",
+      "execute": true,
+      "sql": "SELECT array_agg(c, ORDER BY d) AS v FROM (VALUES (1, 2), (2, 1)) AS t(c, d)"
+    },
+    {
+      "id": "DFS-array-agg-control",
+      "area": "control",
+      "source": "aggregate",
+      "execute": true,
+      "sql": "SELECT array_agg(c ORDER BY d) AS v FROM (VALUES (1, 2), (2, 1)) AS t(c, d)"
+    },
+    {
+      "id": "DFS-xor-hash",
+      "area": "lexer",
+      "source": "operators",
+      "execute": true,
+      "sql": "SELECT 5 # 3 AS v"
+    },
+    {
+      "id": "DFS-xor-caret",
+      "area": "control",
+      "source": "operators",
+      "execute": true,
+      "sql": "SELECT 5 ^ 3 AS v"
+    },
+    {
+      "id": "DFS-array-contains-op",
+      "area": "lexer",
+      "source": "operators",
+      "execute": true,
+      "sql": "SELECT make_array(1,2,3) @> make_array(1,3) AS v"
+    },
+    {
+      "id": "DFS-array-contained-op",
+      "area": "lexer",
+      "source": "operators",
+      "execute": true,
+      "sql": "SELECT make_array(1,3) <@ make_array(1,2,3) AS v"
+    },
+    {
+      "id": "DFS-escape-string",
+      "area": "lexer",
+      "source": "operators",
+      "execute": true,
+      "sql": "SELECT E'foo\\nbar' AS v"
+    },
+    {
+      "id": "DFS-hex-literal",
+      "area": "lexer",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT bitmap_count(x'0F') AS v"
+    },
+    {
+      "id": "DFS-json-key-exists",
+      "area": "control",
+      "source": "json",
+      "execute": true,
+      "sql": "SELECT '{\"color\":\"black\"}' ? 'color' AS v"
+    },
+    {
+      "id": "DFS-json-named",
+      "area": "control",
+      "source": "json",
+      "execute": true,
+      "sql": "SELECT json_get_int('{\"a\":{\"b\":7}}', 'a', 'b') AS v"
+    },
+    {
+      "id": "DFS-vector-two-args",
+      "area": "function-collision",
+      "source": "search",
+      "execute": false,
+      "sql": "SELECT * FROM vector_search(documents, 'hello')"
+    },
+    {
+      "id": "DFS-search-nested",
+      "area": "function-collision",
+      "source": "search",
+      "execute": false,
+      "sql": "SELECT * FROM rrf(vector_search(documents, 'hello'), text_search(documents, 'hello', body), join_key => 'id')"
+    },
+    {
+      "id": "DFS-search-options",
+      "area": "search",
+      "source": "search",
+      "execute": false,
+      "sql": "SELECT * FROM rerank(vector_search(documents, 'hello', limit => 50), document => 'body', model => 'local', limit => 10)"
+    },
+    {
+      "id": "DFS-ai-named",
+      "area": "ai",
+      "source": "authored",
+      "execute": false,
+      "sql": "SELECT ai_if(body, 'refund', model => 'local', on_error => 'null') FROM documents"
+    },
+    {
+      "id": "DFS-bind-dollar",
+      "area": "parameter-ast",
+      "source": "prepared",
+      "execute": false,
+      "sql": "SELECT $1, $2 WHERE $1 > $2"
+    },
+    {
+      "id": "DFS-bind-question",
+      "area": "parameter-ast",
+      "source": "prepared",
+      "execute": false,
+      "sql": "SELECT ? WHERE ? > 1"
+    },
+    {
+      "id": "DFS-show-functions",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "SHOW FUNCTIONS LIKE '%json%'"
+    },
+    {
+      "id": "DFS-show-tables",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "SHOW TABLES"
+    },
+    {
+      "id": "DFS-show-columns",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "SHOW COLUMNS FROM sample"
+    },
+    {
+      "id": "DFS-show-all",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "SHOW ALL"
+    },
+    {
+      "id": "DFS-explain-options",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "EXPLAIN (ANALYZE, METRICS 'rows,timing', LEVEL dev, FORMAT pgjson) SELECT 1"
+    },
+    {
+      "id": "DFS-explain-analyze",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "EXPLAIN ANALYZE FORMAT pgjson SELECT 1"
+    },
+    {
+      "id": "DFS-explain-plain",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "EXPLAIN SELECT 1"
+    },
+    {
+      "id": "DFS-prepare",
+      "area": "statement",
+      "source": "prepared",
+      "execute": false,
+      "sql": "PREPARE p(INT) AS SELECT $1 + 1"
+    },
+    {
+      "id": "DFS-execute",
+      "area": "statement",
+      "source": "prepared",
+      "execute": false,
+      "sql": "EXECUTE p(20)"
+    },
+    {
+      "id": "DFS-create",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE TABLE t (id INT, name VARCHAR)"
+    },
+    {
+      "id": "DFS-ctas",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE TABLE t AS SELECT 1 AS id"
+    },
+    {
+      "id": "DFS-cluster-by",
+      "area": "spice-extension",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE TABLE t (id INT) CLUSTER BY (id)"
+    },
+    {
+      "id": "DFS-cluster-no-generic-leak",
+      "area": "negative",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE TABLE `t` (id INT) CLUSTER BY (id)"
+    },
+    {
+      "id": "DFS-create-view",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE VIEW v AS SELECT 1 AS id"
+    },
+    {
+      "id": "DFS-alter-table",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "ALTER TABLE t ADD COLUMN value INT"
+    },
+    {
+      "id": "DFS-drop-table",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "DROP TABLE IF EXISTS t"
+    },
+    {
+      "id": "DFS-copy",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "COPY (SELECT 1) TO 'output.csv' STORED AS CSV"
+    },
+    {
+      "id": "DFS-external-table",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "CREATE EXTERNAL TABLE t (id INT) STORED AS CSV LOCATION 'input.csv'"
+    },
+    {
+      "id": "DFS-insert",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "INSERT INTO t VALUES (1)"
+    },
+    {
+      "id": "DFS-update",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "UPDATE t SET id = 2 WHERE id = 1"
+    },
+    {
+      "id": "DFS-delete",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "DELETE FROM t WHERE id = 1"
+    },
+    {
+      "id": "DFS-merge",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN UPDATE SET id = s.id WHEN NOT MATCHED THEN INSERT (id) VALUES (s.id)"
+    },
+    {
+      "id": "DFS-set",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "SET datafusion.execution.batch_size = 1024"
+    },
+    {
+      "id": "DFS-reset",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "RESET datafusion.execution.batch_size"
+    },
+    {
+      "id": "DFS-use",
+      "area": "statement",
+      "source": "authored",
+      "execute": false,
+      "sql": "USE spice.public"
+    },
+    {
+      "id": "DFS-qualify",
+      "area": "query",
+      "source": "select",
+      "execute": true,
+      "sql": "SELECT id, row_number() OVER (ORDER BY id) AS n FROM (VALUES (2), (1)) AS t(id) QUALIFY n = 1"
+    },
+    {
+      "id": "DFS-star-replace",
+      "area": "query",
+      "source": "select",
+      "execute": true,
+      "sql": "SELECT * REPLACE (upper(name) AS name) FROM (VALUES ('Ada')) AS t(name)"
+    },
+    {
+      "id": "DFS-star-ilike",
+      "area": "query",
+      "source": "select",
+      "execute": true,
+      "sql": "SELECT * ILIKE '%date%' FROM (SELECT DATE '2024-01-01' AS order_date, 1 AS id) AS t"
+    },
+    {
+      "id": "DFS-group-order-all",
+      "area": "query",
+      "source": "select",
+      "execute": true,
+      "sql": "SELECT a, max(b) AS b FROM (VALUES (1, 2), (1, 3)) AS t(a,b) GROUP BY ALL ORDER BY ALL"
+    },
+    {
+      "id": "DFS-default-nulls-desc",
+      "area": "ordering",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT v FROM (VALUES (1), (NULL), (2)) AS t(v) ORDER BY v DESC"
+    },
+    {
+      "id": "DFS-star-except",
+      "area": "query",
+      "source": "select",
+      "execute": true,
+      "sql": "SELECT * EXCEPT (age) FROM (SELECT 'Ada' AS name, 30 AS age) AS t"
+    },
+    {
+      "id": "DFS-case-alias",
+      "area": "identifiers",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT MixedColumn FROM (SELECT 7 AS MixedColumn) AS MixedRows"
+    },
+    {
+      "id": "DFS-case-folding",
+      "area": "identifiers",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT mixedcolumn FROM (SELECT 7 AS MixedColumn) AS MixedRows"
+    },
+    {
+      "id": "DFS-case-quoted",
+      "area": "identifiers",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT \"MixedColumn\" FROM (SELECT 7 AS \"MixedColumn\") AS t"
+    },
+    {
+      "id": "DFS-dotted-identifier",
+      "area": "identifiers",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT \"a.b\".id FROM (SELECT 9 AS id) AS \"a.b\""
+    },
+    {
+      "id": "DFS-catalog-qualified",
+      "area": "namespace",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT id FROM spice.public.sample ORDER BY id"
+    },
+    {
+      "id": "DFS-schema-qualified",
+      "area": "namespace",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT id FROM public.sample ORDER BY id"
+    },
+    {
+      "id": "DFS-dotted-table-quoted",
+      "area": "namespace",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT id FROM \"a.b\""
+    },
+    {
+      "id": "DFS-dotted-table-unquoted",
+      "area": "namespace-negative",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT id FROM a.b"
+    },
+    {
+      "id": "DFS-view-casing",
+      "area": "namespace",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT \"MixedColumn\" FROM mixedrows"
+    },
+    {
+      "id": "DFS-view-casing-mismatch",
+      "area": "namespace-negative",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT \"MixedColumn\" FROM MixedRows"
+    },
+    {
+      "id": "DFS-arrow-type",
+      "area": "types",
+      "source": "scalar",
+      "execute": true,
+      "sql": "SELECT arrow_typeof(arrow_cast(1, 'UInt64')) AS v"
+    },
+    {
+      "id": "DFS-script",
+      "area": "script",
+      "source": "authored",
+      "execute": false,
+      "sql": "SELECT 1; SELECT 2"
+    },
+    {
+      "id": "DFS-script-bad-tail",
+      "area": "negative",
+      "source": "authored",
+      "execute": false,
+      "sql": "SELECT 1; SELECT ("
+    },
+    {
+      "id": "DFS-comment-bad-tail",
+      "area": "negative",
+      "source": "authored",
+      "execute": false,
+      "sql": "SELECT 1; /* unterminated"
+    },
+    {
+      "id": "DFS-empty-comment",
+      "area": "script",
+      "source": "authored",
+      "execute": false,
+      "sql": "-- no statement"
+    },
+    {
+      "id": "DFS-unicode-error",
+      "area": "negative",
+      "source": "authored",
+      "execute": false,
+      "sql": "SELECT '😀';\r\nSELECT é + )"
+    },
+    {
+      "id": "DFS-dollar-string",
+      "area": "lexer",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT $$a;b$$ AS v"
+    },
+    {
+      "id": "DFS-unknown-function",
+      "area": "control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT deliberately_unknown_function(1) AS v"
+    },
+    {
+      "id": "DFS-escape-backslash",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT E'foo\\\\nbar' AS v"
+    },
+    {
+      "id": "DFS-escape-quote",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT E'it\\'s' AS v"
+    },
+    {
+      "id": "DFS-tagged-dollar",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT $tag$a;b$tag$ AS v"
+    },
+    {
+      "id": "DFS-string-agg-distinct",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT string_agg(DISTINCT name, ', ' ORDER BY name DESC) AS v FROM (VALUES ('Ada'), ('Bob'), ('Ada')) AS t(name)"
+    },
+    {
+      "id": "DFS-regex-flags-filter",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT count(*) AS v FROM (VALUES ('Abc'), ('xyz')) AS t(s) WHERE regexp_like(s, '^a', 'i')"
+    },
+    {
+      "id": "DFS-date-bin-no-origin",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT date_bin(INTERVAL '1 day', TIMESTAMP '2023-01-02 02:00:00') AS v"
+    },
+    {
+      "id": "DFS-map-arrays",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT map(['a', 'b'], [1, 2]) AS v"
+    },
+    {
+      "id": "DFS-array-sort-first",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT array_sort([3, NULL, 1], 'ASC', 'NULLS FIRST') AS v"
+    },
+    {
+      "id": "DFS-string-agg-scalar-subquery",
+      "area": "round2-control",
+      "source": "authored",
+      "execute": true,
+      "sql": "SELECT string_agg((SELECT name FROM (VALUES ('a'), ('b')) AS t(name) ORDER BY name DESC LIMIT 1), ',') AS v FROM (VALUES (1), (2)) AS u(id)"
+    }
+  ],
+  "baseline_sha256": "8f503f81eb2aa9882c2960e8e65f1933513ac3c53bce528712492e32c48d440c"
+}

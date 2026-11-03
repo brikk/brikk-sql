@@ -1,0 +1,1481 @@
+{
+  "profile": {
+    "version": "v2.4.0+models",
+    "binary_sha256": "257b9fd8cf1f46c1f4ddf0b6280ba5b6033b79c276ec6840dd5e5d81710b1002",
+    "spicepod_sha256": "a3dfddafb19b7620137fab3d05cf5cdf83dc31f0f187f1dda37f8a687686affd",
+    "cpu_cores": 2,
+    "transport": "isolated loopback HTTP /v1/sql; not Flight/JDBC qualification"
+  },
+  "cases": {
+    "arrow-0": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int8\"}]",
+        "rows": [
+          {
+            "v": "Int8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-1": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int16\"}]",
+        "rows": [
+          {
+            "v": "Int16"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-2": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int32\"}]",
+        "rows": [
+          {
+            "v": "Int32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-3": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-4": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"UInt8\"}]",
+        "rows": [
+          {
+            "v": "UInt8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-5": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"UInt16\"}]",
+        "rows": [
+          {
+            "v": "UInt16"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-6": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"UInt32\"}]",
+        "rows": [
+          {
+            "v": "UInt32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-7": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"UInt64\"}]",
+        "rows": [
+          {
+            "v": "UInt64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-8": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float32\"}]",
+        "rows": [
+          {
+            "v": "Float32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-9": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-10": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Utf8\"}]",
+        "rows": [
+          {
+            "v": "Utf8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-11": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"LargeUtf8\"}]",
+        "rows": [
+          {
+            "v": "LargeUtf8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-12": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Utf8View\"}]",
+        "rows": [
+          {
+            "v": "Utf8View"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-13": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Binary\"}]",
+        "rows": [
+          {
+            "v": "Binary"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-14": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"LargeBinary\"}]",
+        "rows": [
+          {
+            "v": "LargeBinary"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-15": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Decimal128(18, 3)\"}]",
+        "rows": [
+          {
+            "v": "Decimal128(18, 3)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-16": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Decimal256(40, 6)\"}]",
+        "rows": [
+          {
+            "v": "Decimal256(40, 6)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-17": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Timestamp(ns)\"}]",
+        "rows": [
+          {
+            "v": "Timestamp(ns)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-18": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Timestamp(\u00b5s, \\\"UTC\\\")\"}]",
+        "rows": [
+          {
+            "v": "Timestamp(\u00b5s, \"UTC\")"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-19": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Date32\"}]",
+        "rows": [
+          {
+            "v": "Date32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-20": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Date64\"}]",
+        "rows": [
+          {
+            "v": "Date64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-21": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Time64(ns)\"}]",
+        "rows": [
+          {
+            "v": "Time64(ns)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-22": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Duration(ms)\"}]",
+        "rows": [
+          {
+            "v": "Duration(ms)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-23": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Interval(MonthDayNano)\"}]",
+        "rows": [
+          {
+            "v": "Interval(MonthDayNano)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-24": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"List(Int64)\"}]",
+        "rows": [
+          {
+            "v": "List(Int64)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-25": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"LargeList(Utf8)\"}]",
+        "rows": [
+          {
+            "v": "LargeList(Utf8)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-26": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"FixedSizeList(3 x Float32)\"}]",
+        "rows": [
+          {
+            "v": "FixedSizeList(3 x Float32)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-27": {
+      "status": "rejected",
+      "http_status": 400,
+      "evidence": "runtime-error; parsing/planning/execution not inferred",
+      "raw": "Failed to execute query: Execution error: Unsupported type 'Struct(a Int64, b Utf8)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error unknown token: a",
+      "message": "Failed to execute query: Execution error: Unsupported type 'Struct(a Int64, b Utf8)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error unknown token: a",
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-28": {
+      "status": "rejected",
+      "http_status": 400,
+      "evidence": "runtime-error; parsing/planning/execution not inferred",
+      "raw": "Failed to execute query: Execution error: Unsupported type 'Map(Utf8, Int64)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error expected double quoted string for Field, got 'Utf8'",
+      "message": "Failed to execute query: Execution error: Unsupported type 'Map(Utf8, Int64)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error expected double quoted string for Field, got 'Utf8'",
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "arrow-29": {
+      "status": "rejected",
+      "http_status": 400,
+      "evidence": "runtime-error; parsing/planning/execution not inferred",
+      "raw": "Failed to execute query: Execution error: Unsupported type 'Union(Int64, Utf8)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error finding UnionMode for Union, got Int64",
+      "message": "Failed to execute query: Execution error: Unsupported type 'Union(Int64, Utf8)'. Must be a supported arrow type name such as 'Int32' or 'Timestamp(ns)'. Error finding UnionMode for Union, got Int64",
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "integer": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "float": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1.5}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "1.5"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "sum": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "avg": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "1.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "count": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "sqrt": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":2.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "2.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "decimal-add": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":3.000}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "3.000"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Decimal128(13, 3)\"}]",
+        "rows": [
+          {
+            "v": "Decimal128(13, 3)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "decimal-div": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":0.500000}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "0.500000"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Decimal128(17, 6)\"}]",
+        "rows": [
+          {
+            "v": "Decimal128(17, 6)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "int-div": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "array": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":[1,2]}]",
+      "rows": [
+        {
+          "v": [
+            1,
+            2
+          ]
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"List(Int64)\"}]",
+        "rows": [
+          {
+            "v": "List(Int64)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "struct": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":{\"a\":1,\"b\":\"x\"}}]",
+      "rows": [
+        {
+          "v": {
+            "a": 1,
+            "b": "x"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Struct(\\\"a\\\": Int64, \\\"b\\\": Utf8)\"}]",
+        "rows": [
+          {
+            "v": "Struct(\"a\": Int64, \"b\": Utf8)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "map": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":{\"a\":1}}]",
+      "rows": [
+        {
+          "v": {
+            "a": 1
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Map(\\\"entries\\\": non-null Struct(\\\"key\\\": non-null Utf8, \\\"value\\\": Int64), unsorted)\"}]",
+        "rows": [
+          {
+            "v": "Map(\"entries\": non-null Struct(\"key\": non-null Utf8, \"value\": Int64), unsorted)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "null": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":null}]",
+      "rows": [
+        {
+          "v": null
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Null\"}]",
+        "rows": [
+          {
+            "v": "Null"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "timestamp": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":\"2024-01-02T03:04:05\"}]",
+      "rows": [
+        {
+          "v": "2024-01-02T03:04:05"
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Timestamp(ns)\"}]",
+        "rows": [
+          {
+            "v": "Timestamp(ns)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "interval": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":\"2 days\"}]",
+      "rows": [
+        {
+          "v": "2 days"
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Interval(MonthDayNano)\"}]",
+        "rows": [
+          {
+            "v": "Interval(MonthDayNano)"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "using-order": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"a\":1,\"id\":2,\"b\":3}]",
+      "rows": [
+        {
+          "a": 1,
+          "id": 2,
+          "b": 3
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"a\":\"Int64\",\"id\":\"Int64\",\"b\":\"Int64\"}]",
+        "rows": [
+          {
+            "a": "Int64",
+            "id": "Int64",
+            "b": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "qualified-using": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"a\":1,\"id\":2,\"id\":2,\"b\":3}]",
+      "rows": [
+        {
+          "a": 1,
+          "id": 2,
+          "b": 3
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"a\":\"Int64\",\"id\":\"Int64\",\"b\":\"Int64\"}]",
+        "rows": [
+          {
+            "a": "Int64",
+            "id": "Int64",
+            "b": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "where-alias": {
+      "status": "rejected",
+      "http_status": 400,
+      "evidence": "runtime-error; parsing/planning/execution not inferred",
+      "raw": "Failed to execute query: Schema error: No field named v.\nValid fields are t.a.",
+      "message": "Failed to execute query: Schema error: No field named v.\nValid fields are t.a.",
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "lateral-alias": {
+      "status": "rejected",
+      "http_status": 400,
+      "evidence": "runtime-error; parsing/planning/execution not inferred",
+      "raw": "Failed to execute query: Schema error: No field named v.\nValid fields are t.a.",
+      "message": "Failed to execute query: Schema error: No field named v.\nValid fields are t.a.",
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "unnest": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1},{\"v\":2}]",
+      "rows": [
+        {
+          "v": 1
+        },
+        {
+          "v": 2
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "json-get": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Union(Sparse, 0: (\\\"null\\\": Null), 1: (\\\"bool\\\": non-null Boolean), 2: (\\\"int\\\": non-null Int64), 3: (\\\"float\\\": non-null Float64), 4: (\\\"str\\\": non-null Utf8), 5: (\\\"array\\\": non-null Utf8, metadata: {\\\"ARROW:extension:metadata\\\": \\\"{}\\\", \\\"ARROW:extension:name\\\": \\\"arrow.json\\\", \\\"is_json\\\": \\\"true\\\"}), 6: (\\\"object\\\": non-null Utf8, metadata: {\\\"ARROW:extension:metadata\\\": \\\"{}\\\", \\\"ARROW:extension:name\\\": \\\"arrow.json\\\", \\\"is_json\\\": \\\"true\\\"}))\"}]",
+        "rows": [
+          {
+            "v": "Union(Sparse, 0: (\"null\": Null), 1: (\"bool\": non-null Boolean), 2: (\"int\": non-null Int64), 3: (\"float\": non-null Float64), 4: (\"str\": non-null Utf8), 5: (\"array\": non-null Utf8, metadata: {\"ARROW:extension:metadata\": \"{}\", \"ARROW:extension:name\": \"arrow.json\", \"is_json\": \"true\"}), 6: (\"object\": non-null Utf8, metadata: {\"ARROW:extension:metadata\": \"{}\", \"ARROW:extension:name\": \"arrow.json\", \"is_json\": \"true\"}))"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "json-int": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int64\"}]",
+        "rows": [
+          {
+            "v": "Int64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "json-text": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":\"1\"}]",
+      "rows": [
+        {
+          "v": "1"
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Utf8\"}]",
+        "rows": [
+          {
+            "v": "Utf8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "flatten": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"path\":\"a\",\"parent_path\":\"\",\"key\":\"a\",\"value\":\"1\",\"type\":\"integer\"}]",
+      "rows": [
+        {
+          "path": "a",
+          "parent_path": "",
+          "key": "a",
+          "value": "1",
+          "type": "integer"
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"path\":\"Utf8\",\"parent_path\":\"Utf8\",\"key\":\"Utf8\",\"value\":\"Utf8\",\"type\":\"Utf8\"}]",
+        "rows": [
+          {
+            "path": "Utf8",
+            "parent_path": "Utf8",
+            "key": "Utf8",
+            "value": "Utf8",
+            "type": "Utf8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "tree": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"key\":null,\"value\":\"{\\\"a\\\":1}\",\"type\":\"object\",\"atom\":null,\"id\":0,\"parent\":null,\"fullkey\":\"$\",\"path\":null},{\"key\":\"a\",\"value\":\"1\",\"type\":\"integer\",\"atom\":\"1\",\"id\":1,\"parent\":0,\"fullkey\":\"$.a\",\"path\":\"$\"}]",
+      "rows": [
+        {
+          "key": null,
+          "value": "{\"a\":1}",
+          "type": "object",
+          "atom": null,
+          "id": 0,
+          "parent": null,
+          "fullkey": "$",
+          "path": null
+        },
+        {
+          "key": "a",
+          "value": "1",
+          "type": "integer",
+          "atom": "1",
+          "id": 1,
+          "parent": 0,
+          "fullkey": "$.a",
+          "path": "$"
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"key\":\"Utf8\",\"value\":\"Utf8\",\"type\":\"Utf8\",\"atom\":\"Utf8\",\"id\":\"Int64\",\"parent\":\"Int64\",\"fullkey\":\"Utf8\",\"path\":\"Utf8\"}]",
+        "rows": [
+          {
+            "key": "Utf8",
+            "value": "Utf8",
+            "type": "Utf8",
+            "atom": "Utf8",
+            "id": "Int64",
+            "parent": "Int64",
+            "fullkey": "Utf8",
+            "path": "Utf8"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "sqrt-f32": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":2.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "2.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float32\"}]",
+        "rows": [
+          {
+            "v": "Float32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "power-f32": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":8.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "8.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "avg-f32": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":2.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "2.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "sum-f32": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":2.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "2.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "floor-int": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":2.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "2.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float64\"}]",
+        "rows": [
+          {
+            "v": "Float64"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "floor-f32": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":2.0}]",
+      "rows": [
+        {
+          "v": {
+            "decimal_lexeme": "2.0"
+          }
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Float32\"}]",
+        "rows": [
+          {
+            "v": "Float32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "length": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int32\"}]",
+        "rows": [
+          {
+            "v": "Int32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "length-large": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int32\"}]",
+        "rows": [
+          {
+            "v": "Int32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    },
+    "length-view": {
+      "status": "accepted",
+      "http_status": 200,
+      "evidence": "execution",
+      "raw": "[{\"v\":1}]",
+      "rows": [
+        {
+          "v": 1
+        }
+      ],
+      "type_observation": {
+        "status": "accepted",
+        "http_status": 200,
+        "evidence": "execution",
+        "raw": "[{\"v\":\"Int32\"}]",
+        "rows": [
+          {
+            "v": "Int32"
+          }
+        ]
+      },
+      "nullability": "not captured by HTTP; no inferred non-null guarantee"
+    }
+  }
+}

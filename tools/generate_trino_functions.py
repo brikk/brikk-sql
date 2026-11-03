@@ -33,7 +33,7 @@ Modeling decisions (from the recipe's caveats, documented in the generated heade
     see vendor/README.md.
 
 Usage: python3 tools/generate_trino_functions.py [<tsv-path>]
-       (default: vendor/data/trino-functions-483.tsv)
+       (default: vendor/data/trino-functions-484.tsv)
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-DEFAULT_TSV = ROOT / "vendor" / "data" / "trino-functions-483.tsv"
+DEFAULT_TSV = ROOT / "vendor" / "data" / "trino-functions-484.tsv"
 OUT = ROOT / "brikk-sql-metadata" / "src" / "dev.brikk.house.sql.metadata" / "GeneratedTrinoFunctionCatalog.kt"
 
 KIND_MAP = {

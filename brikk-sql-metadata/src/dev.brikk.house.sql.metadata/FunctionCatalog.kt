@@ -192,7 +192,16 @@ class FunctionCatalog(
     val functions: List<FunctionDef>,
     val grammarBuiltins: Set<String> = emptySet(),
     val caseSensitive: Boolean = false,
+    /** Registered names/aliases that override a case-sensitive dialect's default. */
+    val caseInsensitiveNames: Set<String> = emptySet(),
 ) {
+    // Binary compatibility: the constructor and defaults bridge before per-name case policy.
+    @Deprecated("Binary compatibility only", level = DeprecationLevel.HIDDEN)
+    constructor(
+        functions: List<FunctionDef>, grammarBuiltins: Set<String> = emptySet(), caseSensitive: Boolean = false,
+    ) : this(functions, grammarBuiltins, caseSensitive, emptySet())
+
+    private val insensitiveKeys = caseInsensitiveNames.map(String::uppercase).toSet()
 
     private val byName: Map<String, FunctionDef> = buildMap {
         for (def in functions) {
@@ -238,8 +247,9 @@ class FunctionCatalog(
     /** Every def registered under [name] (primary name or alias), across kinds, by [caseSensitive]. */
     fun getAll(name: String): List<FunctionDef> = allByName[nameKey(name)].orEmpty()
 
-    /** [name] as the dialect compares names: unchanged when [caseSensitive], else uppercased. */
-    internal fun nameKey(name: String): String = if (caseSensitive) name else name.uppercase()
+    /** Name key under the dialect default and any captured per-name case-insensitive overrides. */
+    internal fun nameKey(name: String): String =
+        if (caseSensitive && name.uppercase() !in insensitiveKeys) name else name.uppercase()
 
     operator fun contains(name: String): Boolean = byName.containsKey(name.uppercase())
 

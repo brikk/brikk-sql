@@ -1,0 +1,956 @@
+{
+  "schema_version": 1,
+  "fixtures_sha256": "5f4f4159ee2ece4abcc95a7534b21fc1edfbf8be1d8c7f364f9b467c437216c6",
+  "brikk_observations_sha256": "cfcf72d6d65cd04dc3bd50543e90b10765a1addb6783b6e85ae4879bb9520caf",
+  "profiles": {
+    "datafusion-55.2.0": {
+      "binary_sha256": "fd17acc93e434f1439919d13a36cf92c146b368aa33146361560ef4e7e7170a5",
+      "cases": [
+        {
+          "id": "DFS-reset",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "DFS-reset/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"datafusion\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"execution\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"batch_size\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET datafusion.execution.batch_size"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "DFS-reset/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"datafusion\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"execution\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"batch_size\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET datafusion.execution.batch_size"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-all-name",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-all-name/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"ALL\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET ALL"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-all-name/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"ALL\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET ALL"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-quoted-parts",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-quoted-parts/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"MiXeD\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"a.b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET MiXeD.a.b"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-quoted-parts/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"MiXeD\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"a.b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET MiXeD.a.b"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-quoted-whole",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-quoted-whole/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"datafusion.execution.batch_size\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET datafusion.execution.batch_size"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-quoted-whole/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"datafusion.execution.batch_size\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET datafusion.execution.batch_size"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-escape",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-escape/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\\tb\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a\tb"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-escape/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\\tb\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a\tb"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-adjacent",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-adjacent/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a.b"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-adjacent/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a.b"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-time-zone",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-time-zone/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"time\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"zone\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET time.zone"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-time-zone/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"time\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"zone\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET time.zone"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-empty-identifier",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-empty-identifier/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET "
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-empty-identifier/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET "
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-unicode",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-unicode/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"😀\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET 😀"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-unicode/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"😀\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET 😀"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-quote-escape",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-quote-escape/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\\\"b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a\"b"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-quote-escape/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\\\"b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a\"b"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-comments",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-comments/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a.b"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-comments/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) }), Identifier(Ident { value: \"b\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a.b"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-script",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-script/original/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a"
+                },
+                {
+                  "ast_debug": "Statement(Query(Query { with: None, body: Select(Select { select_token: TokenWithSpan { token: Word(Word { value: \"SELECT\", quote_style: None, keyword: SELECT }), span: Span(Location(1,10)..Location(1,16)) }, optimizer_hints: [], distinct: None, select_modifiers: None, top: None, top_before_distinct: false, projection: [UnnamedExpr(Value(ValueWithSpan { value: Number(\"1\", false), span: Span(Location(1,17)..Location(1,18)) }))], exclude: None, into: None, from: [], lateral_views: [], prewhere: None, selection: None, connect_by: [], group_by: Expressions([], []), cluster_by: [], distribute_by: [], sort_by: [], having: None, named_window: [], qualify: None, window_before_qualify: false, value_table_mode: None, flavor: Standard }), order_by: None, limit_clause: None, fetch: None, locks: [], for_clause: None, settings: None, format_clause: None, pipe_operators: [] }))",
+                  "kind": "Query",
+                  "sql": "SELECT 1"
+                }
+              ],
+              "status": "accepted"
+            }
+          },
+          "generated": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-script/generated/parse",
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "statements": [
+                {
+                  "ast_debug": "Reset(Variable(ObjectName([Identifier(Ident { value: \"a\", quote_style: None, span: Span(Location(0,0)..Location(0,0)) })])))",
+                  "kind": "Reset",
+                  "sql": "RESET a"
+                },
+                {
+                  "ast_debug": "Statement(Query(Query { with: None, body: Select(Select { select_token: TokenWithSpan { token: Word(Word { value: \"SELECT\", quote_style: None, keyword: SELECT }), span: Span(Location(1,10)..Location(1,16)) }, optimizer_hints: [], distinct: None, select_modifiers: None, top: None, top_before_distinct: false, projection: [UnnamedExpr(Value(ValueWithSpan { value: Number(\"1\", false), span: Span(Location(1,17)..Location(1,18)) }))], exclude: None, into: None, from: [], lateral_views: [], prewhere: None, selection: None, connect_by: [], group_by: Expressions([], []), cluster_by: [], distribute_by: [], sort_by: [], having: None, named_window: [], qualify: None, window_before_qualify: false, value_table_mode: None, flavor: Standard }), order_by: None, limit_clause: None, fetch: None, locks: [], for_clause: None, settings: None, format_clause: None, pipe_operators: [] }))",
+                  "kind": "Query",
+                  "sql": "SELECT 1"
+                }
+              ],
+              "status": "accepted"
+            }
+          }
+        },
+        {
+          "id": "reset-no-name",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-no-name/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: EOF\")",
+              "position": null,
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-leading-dot",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-leading-dot/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: . at Line: 1, Column: 7\")",
+              "position": {
+                "byte_offset": 6,
+                "column": 7,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 6
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-trailing-dot",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-trailing-dot/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: EOF\")",
+              "position": null,
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-double-dot",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-double-dot/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: . at Line: 1, Column: 9\")",
+              "position": {
+                "byte_offset": 8,
+                "column": 9,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 8
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-number",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-number/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: 1 at Line: 1, Column: 7\")",
+              "position": {
+                "byte_offset": 6,
+                "column": 7,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 6
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-assignment",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-assignment/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: = at Line: 1, Column: 9\")",
+              "position": {
+                "byte_offset": 8,
+                "column": 9,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 8
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-comma",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-comma/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: , at Line: 1, Column: 8\")",
+              "position": {
+                "byte_offset": 7,
+                "column": 8,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 7
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-colon-bind",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-colon-bind/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: : at Line: 1, Column: 7\")",
+              "position": {
+                "byte_offset": 6,
+                "column": 7,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 6
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-numbered-bind",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-numbered-bind/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: $1 at Line: 1, Column: 7\")",
+              "position": {
+                "byte_offset": 6,
+                "column": 7,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 6
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-operator",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-operator/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: - at Line: 1, Column: 9\")",
+              "position": {
+                "byte_offset": 8,
+                "column": 9,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 8
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-national-string",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-national-string/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: N'x' at Line: 1, Column: 7\")",
+              "position": {
+                "byte_offset": 6,
+                "column": 7,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 6
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-hex-string",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-hex-string/original/parse",
+              "message": "SQL error: ParserError(\"Expected: configuration parameter, found: X'41' at Line: 1, Column: 7\")",
+              "position": {
+                "byte_offset": 6,
+                "column": 7,
+                "column_units": "unicode-scalars",
+                "line": 1,
+                "utf16_offset": 6
+              },
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        },
+        {
+          "id": "reset-malformed-tail",
+          "original": {
+            "parse": {
+              "evidence": "parse-only",
+              "id": "reset-malformed-tail/original/parse",
+              "message": "SQL error: ParserError(\"Expected: an expression, found: EOF\")",
+              "position": null,
+              "profile": {
+                "datafusion": "55.2.0",
+                "dialect": "Generic",
+                "id": "datafusion-55.2.0",
+                "identifier_normalization": true,
+                "revision": "500744d5c25499055e3b2ca46b022bc425989203",
+                "scope": "upstream parser and in-memory engine; optional Spice/JSON/Spark functions absent"
+              },
+              "protocol_version": 1,
+              "status": "rejected"
+            }
+          },
+          "generated": {}
+        }
+      ]
+    }
+  }
+}

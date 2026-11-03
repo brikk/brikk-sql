@@ -7,7 +7,11 @@ object StringEscapeProfiles {
     val STARROCKS: TokenizerConfig = StarrocksTokenizerTables.CONFIG
     val DUCKDB: TokenizerConfig = DuckdbTokenizerTables.CONFIG
     val POSTGRES: TokenizerConfig = PostgresTokenizerTables.CONFIG
-    val CLICKHOUSE: TokenizerConfig = ClickhouseTokenizerTables.CONFIG
+    val CLICKHOUSE: TokenizerConfig = ClickhouseTokenizerTables.CONFIG.withKeywords(
+        // Keep these statements tokenized for native structured parsing. Unhandled forms
+        // still explicitly fall back to Command in ClickhouseDdlParser.
+        mapOf("EXPLAIN" to TokenType.DESCRIBE, "SYSTEM" to TokenType.VAR),
+    )
 
     // sqlglot: _Dialect.ESCAPED_SEQUENCES. Do not generate escapes which just drop a backslash.
     fun escapedSequences(config: TokenizerConfig): Map<String, String> = buildMap {

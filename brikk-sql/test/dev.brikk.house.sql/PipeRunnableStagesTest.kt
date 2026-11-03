@@ -21,7 +21,7 @@ class PipeRunnableStagesTest {
         "trino" to everywhere + setOf("TABLESAMPLE", "UNION"),
         "duckdb" to everywhere + setOf("CALL", "DROP", "SET", "RENAME", "PIVOT", "UNPIVOT", "TABLESAMPLE", "UNION", "ASOF JOIN", "NATURAL JOIN", "POSITIONAL JOIN"),
         "doris" to everywhere + setOf("DROP", "SET", "UNION", "ASOF JOIN"),
-        "clickhouse" to everywhere + setOf("DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN"),
+        "clickhouse" to everywhere + setOf("DROP", "SET", "TABLESAMPLE", "ALL JOIN", "ANY JOIN", "ASOF JOIN", "ARRAY JOIN", "NATURAL JOIN"),
     )
 
     @Test

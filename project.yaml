@@ -13,6 +13,7 @@ modules:
   - brikk-sql-verify-duckdb
   - brikk-sql-verify-shardingsphere
   - brikk-sql-verify-trino
+  - tools/dialect-audit
   - tools/metadata-capture
 
 plugins:

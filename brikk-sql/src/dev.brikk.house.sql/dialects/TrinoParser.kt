@@ -35,6 +35,24 @@ import dev.brikk.house.sql.ast.Table
 import dev.brikk.house.sql.ast.UniquePredicate
 import dev.brikk.house.sql.ast.Var
 import dev.brikk.house.sql.ast.WhileBlock
+import dev.brikk.house.sql.ast.TrinoJsonInput
+import dev.brikk.house.sql.ast.TrinoJsonConstructor
+import dev.brikk.house.sql.ast.TrinoJsonSerialize
+import dev.brikk.house.sql.ast.TrinoJsonScalar
+import dev.brikk.house.sql.ast.TrinoJsonPathCall
+import dev.brikk.house.sql.ast.Anonymous
+import dev.brikk.house.sql.ast.JSONArray
+import dev.brikk.house.sql.ast.TrinoIntervalQualifier
+import dev.brikk.house.sql.ast.TrinoIntervalValue
+import dev.brikk.house.sql.ast.TrinoMaterializedViewExecute
+import dev.brikk.house.sql.ast.TrinoNearest
+import dev.brikk.house.sql.ast.TrinoSetAuthorization
+import dev.brikk.house.sql.ast.TrinoCreateSchema
+import dev.brikk.house.sql.ast.GrantPrincipal
+import dev.brikk.house.sql.ast.DataType
+import dev.brikk.house.sql.ast.Interval
+import dev.brikk.house.sql.ast.Neg
+import dev.brikk.house.sql.ast.Paren
 import dev.brikk.house.sql.ast.args
 import dev.brikk.house.sql.parser.ErrorLevel
 import dev.brikk.house.sql.parser.NodeFactory
@@ -63,8 +81,26 @@ open class TrinoParser(
     // sqlglot: Trino.SUPPORTS_USER_DEFINED_TYPES = False
     override val supportsUserDefinedTypes: Boolean get() = false
 
+    private var nearestInputDepth = 0
+
     override val typeLiteralParsers: Map<DType, (Parser, Expression?, Expression) -> Expression?>
-        get() = super.typeLiteralParsers + temporalLiteralParsers
+        get() = super.typeLiteralParsers + temporalLiteralParsers + decimalLiteralParsers
+
+    private val decimalLiteralParsers = mapOf<DType, (Parser, Expression?, Expression) -> Expression?>(
+        DType.DECIMAL to { _, literal, dataType ->
+            // DECIMAL '1.20' is decimal(3,2), not CAST('1.20' AS DECIMAL), whose
+            // default scale is zero. 484's JSON model makes that lost scale visible.
+            val text = literal?.name.orEmpty().removePrefix("+").removePrefix("-")
+            if (text.matches(Regex("[0-9]+(?:\\.[0-9]*)?|\\.[0-9]+"))) {
+                val scale = text.substringAfter('.', "").length
+                val precision = text.count { it.isDigit() }.coerceAtLeast(1)
+                dataType.set("expressions", listOf(precision, scale).map {
+                    DataTypeParam(args("this" to Literal.number(it)))
+                })
+            }
+            expression(Cast(args("this" to literal, "to" to dataType)))
+        },
+    )
 
     private val temporalLiteralParsers = listOf(DType.TIMESTAMP, DType.TIMESTAMPTZ, DType.TIME, DType.TIMETZ)
         .associateWith { { _: Parser, literal: Expression?, dataType: Expression ->
@@ -135,11 +171,276 @@ open class TrinoParser(
         allowIdentifiers: kotlin.Boolean,
         withCollation: kotlin.Boolean,
     ): Expression? {
+        // JSON(x) is a constructor or ordinary function, never a parameterized type.
+        if (checkFunc && currToken.tokenType == TokenType.JSON && nextToken.tokenType == TokenType.L_PAREN) return null
+        if (currToken.tokenType == TokenType.INTERVAL) {
+            val start = index
+            advance()
+            val qualifier = parseIntervalQualifier()
+            if (qualifier != null && hasIntervalPrecision(qualifier)) {
+                return expression(DataType(args("this" to Interval(args("unit" to qualifier)))))
+            }
+            retreat(start)
+        }
         if (currToken.text.equals("NUMBER", ignoreCase = true)) {
             advance()
             return expression(dev.brikk.house.sql.ast.DataType(args("this" to dev.brikk.house.sql.ast.DType.NUMBER)))
         }
         return super.parseTypes(checkFunc, schema, allowIdentifiers, withCollation)
+    }
+
+    private fun hasIntervalPrecision(qualifier: TrinoIntervalQualifier): kotlin.Boolean =
+        qualifier.args["leading_precision"] != null || qualifier.args["fractional_precision"] != null
+
+    private fun parseIntervalPrecision(): Expression? =
+        parseNumber() ?: parseIdVar() ?: raiseError("Expected interval precision")
+
+    private fun parseIntervalQualifier(): TrinoIntervalQualifier? {
+        val fields = listOf("YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND")
+        if (currToken.text.uppercase() !in fields) return null
+        val field = currToken.text.uppercase()
+        advance()
+        var leading: Expression? = null
+        var fractional: Expression? = null
+        if (match(TokenType.L_PAREN)) {
+            leading = parseIntervalPrecision()
+            if (field == "SECOND" && match(TokenType.COMMA)) fractional = parseIntervalPrecision()
+            matchRParen()
+        }
+        var end: String? = null
+        if (matchTextSeq("TO")) {
+            if (currToken.text.uppercase() !in fields) raiseError("Expected ending interval field")
+            end = currToken.text.uppercase()
+            advance()
+            if (end == "SECOND" && match(TokenType.L_PAREN)) {
+                fractional = parseIntervalPrecision()
+                matchRParen()
+            }
+        }
+        return expression(TrinoIntervalQualifier(args(
+            "this" to Var(args("this" to field)), "leading_precision" to leading,
+            "fractional_precision" to fractional, "end" to end?.let { Var(args("this" to it)) },
+        )))
+    }
+
+    override fun parseType(parseInterval: kotlin.Boolean, fallbackToIdentifier: kotlin.Boolean): Expression? {
+        if (parseInterval && currToken.tokenType == TokenType.INTERVAL) {
+            val start = index
+            advance()
+            val negative = match(TokenType.DASH)
+            if (!negative) match(TokenType.PLUS)
+            val value = parseString()
+            val qualifier = if (value != null) parseIntervalQualifier() else null
+            if (qualifier != null && (hasIntervalPrecision(qualifier) || negative)) {
+                return parseColumnOps(expression(Interval(args(
+                    "this" to if (negative) Neg(args("this" to value)) else value,
+                    "unit" to qualifier,
+                ))))
+            }
+            retreat(start)
+        }
+        return super.parseType(parseInterval, fallbackToIdentifier)
+    }
+
+    override fun parsePrimary(): Expression? {
+        val primary = super.parsePrimary()
+        if (primary is Paren && currToken.text.uppercase() in setOf("YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND") &&
+            (nextToken.tokenType in setOf(TokenType.L_PAREN, TokenType.ALIAS) || nextToken.text.equals("TO", ignoreCase = true))) {
+            return expression(TrinoIntervalValue(args("this" to primary, "qualifier" to parseIntervalQualifier())))
+        }
+        return primary
+    }
+
+    override fun parseLambda(alias: kotlin.Boolean): Expression? {
+        val value = super.parseLambda(alias)
+        if (!alias && value is Paren && currToken.text.uppercase() in setOf("YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND")) {
+            return expression(TrinoIntervalValue(args("this" to value, "qualifier" to parseIntervalQualifier())))
+        }
+        return value
+    }
+
+    override fun parseFunction(
+        functions: Map<String, (List<Expression?>) -> Expression>?, anonymous: kotlin.Boolean,
+        optionalParens: kotlin.Boolean, anyToken: kotlin.Boolean,
+    ): Expression? {
+        if (!anonymous && prevToken.tokenType != TokenType.DOT && currToken.tokenType == TokenType.JSON &&
+            nextToken.tokenType == TokenType.L_PAREN && isJsonConstructor()) {
+            advance(2)
+            val result = expression(TrinoJsonConstructor(args("this" to parseTrinoJsonInput())))
+            matchRParen()
+            return result
+        }
+        return super.parseFunction(functions, anonymous, optionalParens, anyToken)
+    }
+
+    private fun isJsonConstructor(): kotlin.Boolean {
+        if (tokens.getOrNull(index + 2)?.tokenType in setOf(TokenType.R_PAREN, TokenType.DISTINCT)) return false
+        var depth = 0
+        for (token in tokens.drop(index + 2)) {
+            when (token.tokenType) {
+                TokenType.L_PAREN, TokenType.L_BRACKET -> depth++
+                TokenType.R_PAREN -> if (depth == 0) return true else depth--
+                TokenType.R_BRACKET -> depth--
+                TokenType.COMMA -> if (depth == 0) return false
+                else -> Unit
+            }
+        }
+        return false
+    }
+
+    fun parseTrinoJsonInput(): Expression? {
+        val value = parseDisjunction() ?: raiseError("Expected SQL/JSON input")
+        return parseTrinoJsonRepresentation(value)
+    }
+
+    private fun parseTrinoJsonRepresentation(value: Expression?): Expression? {
+        if (value == null) return null
+        if (!matchTextSeq("FORMAT", "JSON")) return value
+        val encoding = if (matchTextSeq("ENCODING")) {
+            if (!matchTexts(setOf("UTF8", "UTF16", "UTF32"))) raiseError("Expected JSON encoding")
+            Var(args("this" to prevToken.text.uppercase()))
+        } else null
+        return expression(TrinoJsonInput(args("this" to value, "encoding" to encoding)))
+    }
+
+    fun parseTrinoJsonSerialize(): Expression {
+        val value = parseTrinoJsonInput()
+        val returning = if (match(TokenType.RETURNING)) {
+            parseTrinoJsonRepresentation(parseTypes() ?: raiseError("Expected JSON_SERIALIZE return type"))
+        } else null
+        val error = parseOnHandling("ERROR", "NULL", "ERROR")
+        return expression(TrinoJsonSerialize(args("this" to value, "returning" to returning, "on_error" to error)))
+    }
+
+    fun parseTrinoJsonArray(): Expression {
+        val values = if (currToken.tokenType == TokenType.R_PAREN || currToken.tokenType == TokenType.RETURNING ||
+            currToken.text.equals("ABSENT", ignoreCase = true) ||
+            (currToken.tokenType == TokenType.NULL && nextToken.tokenType == TokenType.ON)) emptyList()
+        else parseCsv { parseTrinoJsonInput() }
+        val nullHandling = parseOnHandling("NULL", "NULL", "ABSENT")
+        val returning = if (match(TokenType.RETURNING)) parseTrinoJsonRepresentation(parseTypes()) else null
+        // Preserve the earlier AST shape for the ordinary function-shaped form.
+        if (nullHandling == null && returning == null && values.none { it is TrinoJsonInput }) {
+            return expression(Anonymous(args("this" to "JSON_ARRAY", "expressions" to values)))
+        }
+        return expression(JSONArray(args("expressions" to values, "null_handling" to nullHandling, "return_type" to returning)))
+    }
+
+    private fun parseTrinoJsonPathCall(kind: String): TrinoJsonPathCall {
+        val input = parseTrinoJsonInput()
+        if (!match(TokenType.COMMA)) raiseError("Expected SQL/JSON path")
+        val path = parseBitwise() ?: raiseError("Expected SQL/JSON path")
+        val pathName = if (match(TokenType.ALIAS)) parseIdVar() else null
+        val passing = if (matchTextSeq("PASSING")) parseCsv {
+            val value = parseTrinoJsonInput()
+            if (!match(TokenType.ALIAS)) raiseError("Expected AS in SQL/JSON PASSING argument")
+            expression(dev.brikk.house.sql.ast.Alias(args("this" to value, "alias" to parseIdVar())))
+        } else emptyList()
+        return expression(TrinoJsonPathCall(args(
+            "this" to input, "kind" to kind, "path" to path, "path_name" to pathName, "passing" to passing,
+        )))
+    }
+
+    fun parseTrinoJsonExists(): Expression {
+        val invocation = parseTrinoJsonPathCall("JSON_EXISTS")
+        invocation.set("on_condition", parseOnHandling("ERROR", "TRUE", "FALSE", "UNKNOWN", "ERROR"))
+        if (invocation.args["on_condition"] == null && invocation.thisArg !is TrinoJsonInput &&
+            invocation.args["path_name"] == null && invocation.expressionsArg.isEmpty() &&
+            (invocation.args["passing"] as? List<*>).isNullOrEmpty()) {
+            return expression(Anonymous(args("this" to "JSON_EXISTS", "expressions" to listOf(invocation.thisArg, invocation.args["path"]))))
+        }
+        return invocation
+    }
+
+    override fun parseAlter(): Expression {
+        val start = index
+        val kind = when {
+            matchTextSeq("MATERIALIZED", "VIEW") -> "MATERIALIZED VIEW"
+            matchTexts(setOf("TABLE", "VIEW", "SCHEMA")) -> prevToken.text.uppercase()
+            else -> null
+        }
+        if (kind != null) {
+            val target = parseTableParts(schema = true)
+            if (matchTextSeq("SET", "AUTHORIZATION")) {
+                return expression(TrinoSetAuthorization(args(
+                    "this" to target, "kind" to kind,
+                    "principal" to (parseGrantPrincipal() ?: raiseError("Expected authorization principal")),
+                )))
+            }
+        }
+        retreat(start)
+        if (matchTextSeq("MATERIALIZED", "VIEW")) {
+            val view = parseTableParts(schema = true)
+            if (matchTextSeq("EXECUTE")) {
+                val procedure = parseIdVar() ?: raiseError("Expected materialized view procedure")
+                val parentheses = match(TokenType.L_PAREN)
+                val arguments = if (parentheses) parseCsv { parseLambda() } else emptyList()
+                if (parentheses) matchRParen()
+                val where = if (match(TokenType.WHERE)) parseDisjunction() else null
+                return expression(TrinoMaterializedViewExecute(args(
+                    "this" to view, "procedure" to procedure, "expressions" to arguments,
+                    "parentheses" to parentheses, "where" to where,
+                )))
+            }
+        }
+        retreat(start)
+        return super.parseAlter()
+    }
+
+    override fun parseCreate(): Expression {
+        val start = index
+        if (match(TokenType.SCHEMA)) {
+            val exists = parseExists(not_ = true)
+            val target = parseTableParts(schema = true)
+            if (matchTextSeq("AUTHORIZATION")) {
+                val principal = parseGrantPrincipal() ?: raiseError("Expected schema authorization principal")
+                val properties = if (match(TokenType.WITH)) parseWrappedCsv({ parseKeyValueProperty() }) else emptyList()
+                return expression(TrinoCreateSchema(args(
+                    "this" to target, "exists" to exists, "principal" to principal,
+                    "properties" to properties,
+                )))
+            }
+        }
+        retreat(start)
+        return super.parseCreate()
+    }
+
+    override fun parseGrantPrincipal(): Expression? {
+        val kind = if (matchTexts(setOf("USER", "ROLE"))) prevToken.text.uppercase() else null
+        val principal = parseIdVar() ?: return null
+        return expression(GrantPrincipal(args("this" to principal, "kind" to kind)))
+    }
+
+    override fun parseTable(
+        schema: kotlin.Boolean, joins: kotlin.Boolean, aliasTokens: Collection<TokenType>?,
+        parseBracket: kotlin.Boolean, isDbReference: kotlin.Boolean, parsePartition: kotlin.Boolean,
+        consumePipe: kotlin.Boolean,
+    ): Expression? {
+        if (!schema && !isDbReference && currToken.text.equals("NEAREST", ignoreCase = true) &&
+            nextToken.tokenType == TokenType.L_PAREN && tokens.getOrNull(index + 2)?.tokenType == TokenType.FROM) {
+            advance(3)
+            nearestInputDepth++
+            val relation = try {
+                parseTable(joins = true) ?: raiseError("Expected NEAREST relation")
+            } finally {
+                nearestInputDepth--
+            }
+            val where = if (match(TokenType.WHERE)) parseDisjunction() else null
+            if (!matchTextSeq("MATCH")) raiseError("Expected NEAREST MATCH predicate")
+            val match = parseDisjunction() ?: raiseError("Expected NEAREST MATCH predicate")
+            matchRParen()
+            val nearest = expression(TrinoNearest(args("this" to relation, "where" to where, "match" to match)))
+            nearest.set("alias", parseTableAlias(aliasTokens))
+            if (joins) for (join in parseJoins()) nearest.append("joins", join)
+            return nearest
+        }
+        return super.parseTable(schema, joins, aliasTokens, parseBracket, isDbReference, parsePartition, consumePipe)
+    }
+
+    override fun parseTableAlias(aliasTokens: Collection<TokenType>?): dev.brikk.house.sql.ast.TableAlias? {
+        // MATCH terminates the input relation of NEAREST, rather than naming its alias.
+        if (nearestInputDepth > 0 && currToken.text.equals("MATCH", ignoreCase = true)) return null
+        return super.parseTableAlias(aliasTokens)
     }
 
     override fun parseAtTimeZone(this_: Expression?): Expression? {
@@ -458,6 +759,17 @@ open class TrinoParser(
     open fun parseJsonQuery(): Expression {
         // sqlglot: `self._match(TokenType.COMMA) and self._parse_bitwise()` — absent
         // comma yields False (serde dumps false), matching the Python arg-presence
+        val start = index
+        val invocation = parseTrinoJsonPathCall("JSON_QUERY")
+        if (invocation.thisArg is TrinoJsonInput || invocation.args["path_name"] != null ||
+            !(invocation.args["passing"] as? List<*>).isNullOrEmpty() || currToken.tokenType == TokenType.RETURNING) {
+            if (match(TokenType.RETURNING)) invocation.set("returning", parseTrinoJsonRepresentation(parseTypes()))
+            invocation.set("option", parseVarFromOptions(jsonQueryOptions, raiseUnmatched = false))
+            invocation.set("quote", parseJsonQueryQuote())
+            invocation.set("on_condition", parseOnCondition())
+            return invocation
+        }
+        retreat(start)
         val this_ = parseBitwise()
         val expr: kotlin.Any? = if (match(TokenType.COMMA)) parseBitwise() else false
         return expression(
@@ -476,6 +788,15 @@ open class TrinoParser(
 
     // sqlglot: Parser._parse_json_value (base parser method reached via FUNCTION_PARSERS)
     open fun parseJsonValue(): Expression {
+        val start = index
+        val invocation = parseTrinoJsonPathCall("JSON_VALUE")
+        if (invocation.thisArg is TrinoJsonInput || invocation.args["path_name"] != null ||
+            !(invocation.args["passing"] as? List<*>).isNullOrEmpty()) {
+            if (match(TokenType.RETURNING)) invocation.set("returning", parseTypes())
+            invocation.set("on_condition", parseOnCondition())
+            return invocation
+        }
+        retreat(start)
         val this_ = parseBitwise()
         match(TokenType.COMMA)
         val path = parseBitwise()
@@ -586,6 +907,7 @@ object TrinoParserTables {
             )
         }
         put("VERSION", fromArgList(listOf(), false) { CurrentVersion(it) })
+        put("JSON_SCALAR", fromArgList(listOf("this"), false) { TrinoJsonScalar(it) })
         // sqlglot: parser.build_logarithm with Trino.LOG_BASE_FIRST = True (base order)
         put("LOG", ::buildLogarithm)
     }
@@ -596,6 +918,9 @@ object TrinoParserTables {
             "TRIM" to { p -> p.parseTrim() },
             "JSON_QUERY" to { p -> (p as TrinoParser).parseJsonQuery() },
             "JSON_VALUE" to { p -> (p as TrinoParser).parseJsonValue() },
+            "JSON_SERIALIZE" to { p -> (p as TrinoParser).parseTrinoJsonSerialize() },
+            "JSON_ARRAY" to { p -> (p as TrinoParser).parseTrinoJsonArray() },
+            "JSON_EXISTS" to { p -> (p as TrinoParser).parseTrinoJsonExists() },
             "LISTAGG" to { p -> (p as PrestoParser).parseStringAgg() },
         )
 }

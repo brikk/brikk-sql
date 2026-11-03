@@ -1,0 +1,55 @@
+{
+  "engine": {
+    "version": "26.10.2.103",
+    "release": "https://github.com/ClickHouse/ClickHouse/releases/tag/v26.10.2.103-stable",
+    "tag": "clickhouse/clickhouse-server:26.10.2.103",
+    "image": "clickhouse/clickhouse-server@sha256:b2bfa4d8399ee9973868cc5c1754cb506a6f4b86fbddc41010cc090beb55c85e"
+  },
+  "version_query": {
+    "returncode": 0,
+    "stdout": "26.10.2.103\n",
+    "stderr": ""
+  },
+  "captures": {
+    "functions": {
+      "query": "SELECT name, is_aggregate, case_insensitive, alias_to, introduced_in, deterministic, higher_order FROM system.functions ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-functions-26.10.2.103.tsv",
+      "sha256": "5d807867ec84f6d0b7cffd6e460b2f3c5d19c10bffe0657105e005c939358ba2"
+    },
+    "table-functions": {
+      "query": "SELECT name, allow_readonly, description FROM system.table_functions ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-table-functions-26.10.2.103.tsv",
+      "sha256": "38a2c056e04845fcd398e886a8bb37a7ec993327482281eb1d0af7cd15baa2bb"
+    },
+    "keywords": {
+      "query": "SELECT keyword AS word, 'UNKNOWN' AS category, '' AS token FROM system.keywords ORDER BY keyword FORMAT TSVWithNames",
+      "file": "clickhouse-keywords-26.10.2.103.tsv",
+      "sha256": "1897564dbac82e199def0963b8e5613b8c577128c66fb7402aaadc2c1d8daa30"
+    },
+    "types": {
+      "query": "SELECT name, case_insensitive, alias_to, description, syntax, introduced_in FROM system.data_type_families ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-types-26.10.2.103.tsv",
+      "sha256": "6a7ce92d18989556583b890b805e0ad462930a4c9668f476074db2194df61a33"
+    },
+    "settings": {
+      "query": "SELECT name, type, default, alias_for, is_obsolete, tier, description FROM system.settings WHERE name IN ('enable_streaming_queries','enable_nullable_tuple_type','allow_nullable_tuple_in_extracted_subcolumns','allow_experimental_lateral_join','sql_compatible_division_for_integers','enable_trino_dialect','enable_json_ast_dialect','allow_experimental_eval_table_function','enable_ipcrypt','enable_xgboost','enable_elasticsearch','enable_analyzer','allow_experimental_analyzer','allow_experimental_window_view','compatibility','session_timezone','timezone','join_default_strictness','group_by_use_nulls','validate_group_by_all_key_types','max_bytes_before_external_distinct','max_bytes_ratio_before_external_distinct','max_bytes_before_external_set','run_query_in_background','query_cache_for_subqueries','ai_function_text_default_credentials','ai_function_embedding_default_credentials','enable_logsql_dialect','enable_pco_codec','enable_alp_codec','allow_experimental_codecs') ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-settings-26.10.2.103.tsv",
+      "sha256": "0f390d7f7d3757e0a6ad5eb543df8170ef5f274fe2bbeb1c7bb0101cd2833b4e"
+    },
+    "documentation": {
+      "query": "SELECT name, toString(type) AS type, source, description FROM system.documentation WHERE name IN ('LIMIT','FROM','JOIN','CREATE TOKEN','CREATE HANDLER','QBit','MultiPoint','Tuple','year','arrayTopK','arrayBottomK','MVTEncode','groupFormat','randomHadamardTransform','xxHash64Spark','dictGetRoot','gini','mergedJSONPatch','notHas','parseQueryToJSON','formatQueryFromJSON','arrayFlattenedLength','parseISO8601Duration','hierarchicalKMeans','assignCentroid','arrayMinIndex','arrayMaxIndex','arrayRemoveAt','mapRemove','mapEntries','mapContainsKeyValue','obfuscate','elasticsearch','predictXGBoost','normalizedQueryHashUnordered') ORDER BY type, name FORMAT JSONEachRow",
+      "file": "clickhouse-documentation-26.10.2.103.jsonl",
+      "sha256": "74f4827562a0561d736004c622b86cec9bea97a4abdf43646d4ef7d0576f5574"
+    },
+    "statements": {
+      "query": "SELECT name, syntax, description, parent_name, related FROM system.statements ORDER BY name FORMAT JSONEachRow",
+      "file": "clickhouse-statements-26.10.2.103.jsonl",
+      "sha256": "bb1b63977cace7c9f307405689326924110149c5106b25fccdc333a3e87f3b81"
+    },
+    "build-options": {
+      "query": "SELECT name, value FROM system.build_options ORDER BY name FORMAT TSVWithNames",
+      "file": "clickhouse-build-options-26.10.2.103.tsv",
+      "sha256": "193eeaaa4e62a222bd13c9fa3c5e40e7c221eab98b6424c23d74a5cd98aa5290"
+    }
+  }
+}

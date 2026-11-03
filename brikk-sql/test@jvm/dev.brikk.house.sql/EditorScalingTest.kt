@@ -9,13 +9,14 @@ import kotlin.test.assertTrue
 
 /**
  * Editor entry points must stay linear: four times the input may take at most ten times as
- * long (linear is about four, quadratic about sixteen). Timings are the best of several runs.
+ * long (linear is about four, quadratic about sixteen). Warm both sizes before sampling and
+ * collect discarded results outside each timed run so earlier samples do not fill its heap.
  */
 class EditorScalingTest {
 
     private fun bestMillis(block: () -> Unit): Double {
-        repeat(2) { block() }
         return (1..5).minOf {
+            System.gc()
             val start = System.nanoTime()
             block()
             (System.nanoTime() - start) / 1e6
@@ -25,6 +26,7 @@ class EditorScalingTest {
     private fun assertLinear(name: String, input: (Int) -> String, run: (String) -> Unit) {
         val small = input(1)
         val large = input(4)
+        repeat(2) { run(small); run(large) }
         val smallMillis = bestMillis { run(small) }
         val largeMillis = bestMillis { run(large) }
         println("$name: ${small.length} chars %.1f ms, ${large.length} chars %.1f ms".format(smallMillis, largeMillis))
