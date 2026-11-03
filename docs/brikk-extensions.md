@@ -713,7 +713,7 @@ round-trips, and every rendering is accepted by the real Doris FE parser.
   (the same types in current Doris). `PARTITION IF NOT EXISTS p ...` inside a CREATE TABLE
   definition list is accepted and the flag dropped (a no-op for a new table; the ALTER
   TABLE ADD PARTITION form keeps it).
-- **Backlog:** `TODO-doris-ddl.md` tracks the remaining Doris DDL gaps (statement-level
+- **Backlog:** `dev-docs/TODO-doris-ddl.md` tracks the remaining Doris DDL gaps (statement-level
   DDL, generator renderings the FE rejects).
 - **Corpus/ledger impact:** none — no Python-oracle corpus case exercises these inputs,
   and all ledgers are unchanged.
@@ -2026,7 +2026,7 @@ the full Kotlin suite with 1,695 successful methods, 59 optional engine assumpti
 aborted, and zero failures. That integration run has no live engine containers
 configured and does not replace the earlier native Trino 484 evidence. Paired
 484/Doris 4.1.5 JSON evidence remains on the
-[remaining-work list](trino-483-parity-todo.md#remaining-484-work).
+[remaining-work list](../dev-docs/archive/trino-483-parity-todo.md#remaining-484-work).
 
 ## 59. Versioned Trino/Doris JSON evidence and retained Doris JSON_PARSE
 

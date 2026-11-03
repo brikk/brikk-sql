@@ -105,6 +105,16 @@ Evidence: `/tmp/opencode/ddb20-merge-main-module-tests.log`, the per-module
 `/tmp/opencode/ddb20-merge-coverage-delta.json`. Earlier focused gate results above/below
 retain their original scope; they do not imply that this newly run broad suite passes.
 
+The merge is committed/pushed as `5d025a8`. Build and all 1,558 core tests pass, including
+published JVM bridge tests. The integrated DuckDB verifier suite passes 271 tests with
+12 optional fixture assumptions. Compiled core/metadata/verification-API/Doris-verifier
+classes retain Java 17 bytecode. Offline release tooling passes 42 tests with one opt-in skip.
+The shared IntelliJ-support run executes 826 tests; its two reported failures are live-window
+completion controls lacking `BRIKK_DUCKDB_WINDOW_CAPTURE`, not passed/qualified controls.
+Supply and validate the signed native capture before rerunning that full gate. Do not fabricate
+a capture, suppress assertions or treat the missing fixture as plugin release qualification.
+Log: `/tmp/opencode/ddb20-merge-main-shared-ide-tests.log`. No plugin repository was edited.
+
 ## SQL grammar, names and statement behavior
 
 - [x] `DDB20-001` Nested schemas: core qualification, scope and lineage [DONE].

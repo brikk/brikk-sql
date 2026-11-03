@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * BRIKK-NATIVE (no sqlglot counterpart): the shape/contract model consumed by pipeline
  * construction, the future compiler plugin, and IDE tooling. A [Shape] is the ordered
  * column signature of a table, fragment output, or table-valued slot — the "(input
- * shape, body, output shape)" contract from docs/parsing-research-and-plan.md
+ * shape, body, output shape)" contract from dev-docs/archive/parsing-research-and-plan.md
  * ("North star: composable, parameterized pipe fragments").
  */
 

@@ -3,7 +3,7 @@
 This is the active **SQL-owned** index. Keep the exact cases, fixtures and
 verification instructions in the linked detailed trackers; these `SQL-*` IDs
 name the top-level outcomes. Do not relabel verifier-backed intentional
-divergences as bugs ([extension registry](docs/brikk-extensions.md)). Compiler
+divergences as bugs ([extension registry](../docs/brikk-extensions.md)). Compiler
 integration is tracked separately in [Brikk Engine](https://github.com/brikk/brikk-house/blob/main/TODO.md);
 native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/brikk-chdb/blob/main/TODO.md).
 
@@ -13,7 +13,7 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   decisions on `FORK`/`TEE` and terminal operators; then land parsing/validation,
   multi-output desugaring, and fidelity certification in separate phases. Do
   **not** silently represent compute-once or atomic multi-write guarantees as
-  independent statements. Details: [multi-output pipe design](docs/design/pipe-multi-output.md),
+  independent statements. Details: [multi-output pipe design](design/pipe-multi-output.md),
   especially §6–7. Engine's eventual DSL/runner surface is `ENG-07`.
 - [ ] **SQL-02 — Close version-qualified transpile gaps.** Nine ledgered cases
   for older Postgres, DuckDB, Spark and ClickHouse versions remain because a
@@ -35,15 +35,15 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   Remaining consumer integration is tracked as Engine `ENG-01`.
   Engine applies its slot/binding edits before lowering and decides
   *when* to call it, not how generic SQL is parsed or lowered. API, proofs,
-  supported/refused boundaries and delivery: [source-preserving lowering](docs/source-preserving-lowering.md).
+  supported/refused boundaries and delivery: [source-preserving lowering](../docs/source-preserving-lowering.md).
   Consumer policy:
   [Engine's SQL-preservation policy](https://github.com/brikk/brikk-house/blob/main/brikk-engine/README.md#sql-preservation).
-- [ ] **SQL-06 — Prepare DuckDB 2.0 compatibility when the release is pinned.**
-  Audit the new PEG parser, SQL grammar, function catalog and native verifier
-  against a versioned 2.0 release; do not claim preview compatibility as a
-  final contract. Details: [DuckDB 2.0 checklist](TODO-duckdb-2.0.md). This is a
-  prospective checklist against the current 1.5.6 baseline, not certification
-  of the preview or final 2.0 engine.
+- [ ] **SQL-06 — Integrate and release the DuckDB 2.0 catch-up.** The reference is final
+  DuckDB 2.0.0 / JDBC 2.0.0.0, not a preview or the former 1.5.6 baseline. The bounded
+  audit has 75 of 78 items complete; remaining broad-suite failures and release checks
+  are explicit in the [DuckDB checklist](TODO-duckdb-2.0.md). Recursive IDE schemas,
+  general matching-session helpers and a new executor remain deferred. No release or
+  downstream dependency adoption follows from checklist completion alone.
 
 ## Maintenance (lower priority)
 
@@ -51,10 +51,8 @@ native resource packaging is tracked in [brikk-chdb](https://github.com/brikk/br
   compiler warnings removed; shared SemVer validation and Toolchain-native release
   overrides with CI regression tests; Doris parser JAR checksum/current-grammar
   check; structural hazard assertions; standalone mise compiler pin removed.
-  Details: [EVAL-15](TODO-rectify-from-eval.md).
+  Details: [EVAL-15](archive/TODO-rectify-from-eval.md).
 
-Completed/non-actionable trackers are kept for provenance:
-[parser defects](TODO-BUGS-defects.md), [generator parity](TODO-BUGS-generation.md),
-[new coverage](TODO-BUGS-newcoverage.md), [typing](TODO-BUGS-types.md),
-[DataFusion fixtures](TODO-datafusion.md), and
-[the current upstream pin](TODO-sqlglot-catchup.md).
+Completed plans with useful detail are in the [archive](archive/README.md).
+Empty completed trackers have been removed. Protected dialect differences remain in the
+[extension registry](../docs/brikk-extensions.md), not in the active backlog.

@@ -2,7 +2,7 @@
 
 > This file owns every current SQLGlot parity case whose source or target is
 > BigQuery. The oracle is the pinned SQLGlot reference at
-> `v30.18.0-43-g3ca82489` in `reference/sqlglot/`.
+> `v30.22.0-5-ga00dc2e5c` in `reference/sqlglot/`.
 >
 > The authoritative cases remain in
 > `brikk-sql/testResources/dialect-corpus/*-transpile-known-failures.json`.

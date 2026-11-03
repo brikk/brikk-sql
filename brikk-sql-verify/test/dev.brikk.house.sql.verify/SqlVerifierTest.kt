@@ -359,7 +359,7 @@ class SqlVerifierTest {
                 "PROPERTIES ('parser'='english') COMMENT 'c') DUPLICATE KEY (k)",
             "CREATE TABLE t (k INT, v INT) DUPLICATE KEY (k) DISTRIBUTED BY HASH (k) BUCKETS 1 ROLLUP (r1(k, v))",
             "CREATE TABLE t (k INT, v INT) ROLLUP (r1(k, v), r2(k, v) DUPLICATE KEY (k) PROPERTIES ('a'='b'))",
-            // group A of TODO-doris-ddl.md: legacy spellings, AGG_STATE, typed VARIANT, partition lists
+            // group A of dev-docs/TODO-doris-ddl.md: legacy spellings, AGG_STATE, typed VARIANT, partition lists
             "CREATE TABLE t (a DATETIME(3), b DATE, c DATETIME(0))",
             "CREATE TABLE t (k INT, v AGG_STATE<sum(INT)> GENERIC, w AGG_STATE<max_by(INT NOT NULL, VARCHAR(10) NULL)> GENERIC) " +
                 "AGGREGATE KEY (k)",
@@ -379,7 +379,7 @@ class SqlVerifierTest {
             "CREATE TABLE t (k INT, a VARCHAR(20), d DATETIME) UNIQUE KEY (k, d) ORDER BY (a, d) " +
                 "PARTITION BY RANGE (DATE_TRUNC(d, 'DAY')) () DISTRIBUTED BY HASH (k) BUCKETS 16",
             "CREATE TABLE t (v VARIANT<MATCH_NAME 'a*':INT, MATCH_NAME_GLOB 'b?':STRING, 'c':INT>)",
-            // statement-level DDL (TODO-doris-ddl.md C1/C3): REFRESH, CREATE INDEX, ALTER TABLE
+            // statement-level DDL (dev-docs/TODO-doris-ddl.md C1/C3): REFRESH, CREATE INDEX, ALTER TABLE
             // partition / rollup / swap actions, ALTER MATERIALIZED VIEW, DESC ALL, LIKE WITH ROLLUP
             "REFRESH MATERIALIZED VIEW db.mv AUTO",
             "REFRESH MATERIALIZED VIEW mv PARTITIONS (p1)",

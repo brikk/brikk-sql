@@ -1,12 +1,12 @@
 # TODO - mixed-dialect transpile rewrites (in scope)
 
 > `brikk-sql` is a Kotlin port of Python `sqlglot`, pinned to
-> `v30.18.0-43-g3ca82489`. The reference clone at `reference/sqlglot/` is the
+> `v30.22.0-5-ga00dc2e5c`. The reference clone at `reference/sqlglot/` is the
 > oracle for this backlog.
 >
 > This file tracks only transpile parity cases that do not involve BigQuery.
-> BigQuery work is in `TODO-bigquery.md`. Brikk-native DataFusion work is in
-> `TODO-datafusion.md` because SQLGlot has no DataFusion dialect.
+> BigQuery work is in `dev-docs/TODO-bigquery.md`. Brikk-native DataFusion has its own
+> support contract in `docs/datafusion-spice-support.md` because SQLGlot has no DataFusion dialect.
 >
 > The authoritative cases are the committed
 > `brikk-sql/testResources/dialect-corpus/*-transpile-known-failures.json`

@@ -449,16 +449,16 @@ fixture passes without increasing unreviewed IntelliJ API risk.
 
 - Core dialects and registry: `brikk-sql/src/dev.brikk.house.sql/dialects/`.
 - Existing DataFusion gates: `DatafusionDialectTest`, `DatafusionFixtureTest`,
-  `DatafusionSltParseTest`, `DatafusionPipeSmokeTest`, and `TODO-datafusion.md`.
+  `DatafusionSltParseTest`, `DatafusionPipeSmokeTest`, and `docs/datafusion-spice-support.md`.
 - Metadata: `brikk-sql-metadata/src/dev.brikk.house.sql.metadata/`; generators/captures in
   `tools/` and versioned raw evidence in `vendor/data/`.
 - Verification contracts: `brikk-sql-verify-api`; optional native adapters remain separate.
 - IDE: `brikk-sql-intellij-support` dialect, parser, lexer, editor, completion, docs, relation,
   catalog, diagnostics, host, and pipe packages; JDBC and platform-test support modules.
-- Existing contracts: [engine analysis](engine-analysis-contract.md),
-  [source-preserving lowering](source-preserving-lowering.md),
-  [IDE support API](../brikk-sql-intellij-support/README.md), and
-  [vendor provenance](../vendor/README.md).
+- Existing contracts: [engine analysis](../../docs/engine-analysis-contract.md),
+  [source-preserving lowering](../../docs/source-preserving-lowering.md),
+  [IDE support API](../../brikk-sql-intellij-support/README.md), and
+  [vendor provenance](../../vendor/README.md).
 
 ## Upstream references
 

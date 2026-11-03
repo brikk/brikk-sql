@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 /**
- * EVAL-01 (TODO-rectify-from-eval.md): the base generator must render every internal
+ * EVAL-01 (dev-docs/archive/TODO-rectify-from-eval.md): the base generator must render every internal
  * `TsOrDsTo{Time,Timestamp,Datetime,Date}` coercion node, never leak its pseudo-function
  * name (`TS_OR_DS_TO_*`) into target SQL.
  *

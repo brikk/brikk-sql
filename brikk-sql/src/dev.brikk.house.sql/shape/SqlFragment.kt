@@ -77,7 +77,7 @@ import kotlinx.serialization.Transient
 /**
  * BRIKK-NATIVE (no sqlglot counterpart): a single SQL statement as a composable value —
  * the "(input shape, body, output shape)" fragment from the North-star plan
- * (docs/parsing-research-and-plan.md). Wraps one parsed statement (pipe or standard
+ * (dev-docs/archive/parsing-research-and-plan.md). Wraps one parsed statement (pipe or standard
  * syntax) and exposes its contract surface: scalar parameters, table-valued slots,
  * source tables, output [Shape], column lineage, and a serializable description for the
  * compiler-plugin payload.

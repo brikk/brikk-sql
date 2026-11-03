@@ -7,24 +7,16 @@ desugared away at parse time.
 Target-specific fixes and other deliberate differences are listed in the
 [extensions registry](../docs/brikk-extensions.md).
 
-Differential gates compare token streams, serialized AST structure, and generated SQL
-against pinned sqlglot (`v30.18.0-43-g3ca82489`) across thousands of corpus cases,
-with explicit expectations for deliberate divergences. Separate semantic tests check
-row results and output schemas. See [parsing research and plan](../docs/parsing-research-and-plan.md)
-for architecture and status. Oracle parity alone does not prove correct row results
-or preservation of the author's original SQL text.
+The API includes parsing, SQL generation, scope resolution, type inference and
+source-preserving pipe lowering. Dialect-specific behavior and supported translations
+are described below.
 
-This module lives at `brikk-sql/` in the standalone SQL repository, alongside
-[metadata](../brikk-sql-metadata/), [verification](../brikk-sql-verify/), and
-[real-engine oracles](../brikk-sql-oracle/). Its Toolchain name remains `brikk-sql`
-and its Maven coordinate remains `dev.brikk.house:brikk-sql-jvm`. The Kotlin
-runtime/compiler consumer lives in [Brikk Engine](https://github.com/brikk/brikk-house/tree/main/brikk-engine);
-Kotlin packages and annotations have not changed.
+Use `dev.brikk.house:brikk-sql-jvm`, with optional [metadata](../brikk-sql-metadata/)
+and [verification](../brikk-sql-verify/) modules. Kotlin execution integration lives in
+[Brikk Engine](https://github.com/brikk/brikk-house/tree/main/brikk-engine).
 
-Since 0.21.0, core targets JVM with Java 17-compatible bytecode and runs its
-tests on JDK 17, including the transitive metadata/serialization dependencies.
+Core requires Java 17, including its metadata and serialization dependencies.
 It is predominantly common Kotlin; the schema-cache file API lives in `src@jvm/`.
-Older Java 21 JARs need replacing with 0.21.0 or a later compatible build.
 
 ## Quick start
 
@@ -212,15 +204,23 @@ The full sqlglot semantic pipeline is ported and oracle-gated:
 - **Native-grammar verification** — the [brikk-sql-verify](../brikk-sql-verify/) modules (JVM, one artifact per
   engine plus an aggregate) check emitted SQL against the target engine's real parser (Doris FE, Trino,
   DuckDB embedded).
-- **Function catalogs + semantics** — the [brikk-sql-metadata](../brikk-sql-metadata/) module (featherweight,
-  ~100KB) ships each engine's registered functions with signatures where extractable,
+- **Function catalogs + semantics** — the [brikk-sql-metadata](../brikk-sql-metadata/) module
+  ships versioned engine function registries with signatures where extractable,
   per-function `SemanticProfile`s (null propagation from Doris's own source; DuckDB
-  parameter names on 96% of overloads), grammar-builtin allowlists for names the
+  captured parameter names), grammar-builtin allowlists for names the
   engine parses at the grammar level instead of registering (Trino `COALESCE`/`CAST`/
   `EXTRACT`, DuckDB `COALESCE`/`GROUPING` — `FunctionCatalog.isKnown`), and the
   probe-verified `HazardRegistry` (trino↔duckdb semantic verdicts with provenance).
   Powers engine-exact `unmappableFunctions(target)` capability checks and
   certification below.
+
+### DuckDB 2.0 native support
+
+DuckDB support targets 2.0.0 LTS with JDBC 2.0.0.0. Core SQL supports nested namespace
+components and distinguishes quoted literal dots; recursive schema browsing/editing is
+not available in the IntelliJ integration. Editor verification parses SQL without running
+it or changing the user's connection settings. The following sections describe individual
+features and their supported behavior.
 
 `RelationScope.analyze` and `RelationScope.complete` also handle DuckDB UPDATE and MERGE expressions.
 SET targets see only the physical target table; values and WHERE see the target plus FROM
@@ -1185,8 +1185,9 @@ for schema-aware projection expansion. Invalid known mappings or duplicate schem
 columns raise `ShapeError`. Qualified rename arguments and unrepresentable target
 bindings remain typed refusals. This does not change DDL RENAME support.
 
-Anything the parser does not yet support fails loudly with a `ParseError` raise-gate —
-there is no silent misparsing.
+Unsupported syntax can raise `ParseError` or remain an explicitly raw command where that
+fallback is documented. A rendered preview is not executable qualification; inspect its
+unsupported diagnostics and use the executable-generation API for its refusal checks.
 
 ## Status / known gaps
 
@@ -1196,8 +1197,8 @@ there is no silent misparsing.
 - UDF typing is stubbed (`Schema.getUdfType` → UNKNOWN); function `sinceVersion`
   metadata awaits a doris-website docs source; Trino semantic profiles (null handling)
   are not exposed by `SHOW FUNCTIONS`.
-- Hazard coverage is trino↔duckdb only today; other pairs gain entries as they get
-  probe-verified evidence.
+- Semantic hazard records cover specific engine pairs and captured versions. They are
+  not blanket equivalence claims for every function, version or session configuration.
 - Platforms are temporarily narrowed to JVM while Amper KMP publishing matures (the
   code is pure common Kotlin; restore note in `module.yaml`).
 - Per-dialect gate status lives in the `testResources/**/known-failures*.json` ledgers,

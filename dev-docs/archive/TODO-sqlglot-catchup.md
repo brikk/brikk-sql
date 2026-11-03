@@ -69,7 +69,7 @@ canonicalization, and full simplification passes.
 ## Engine analysis compatibility gate
 
 Before adopting upstream's `infer_schema` removal, run the hand-owned
-[Engine analysis contract](docs/engine-analysis-contract.md). It protects legacy
+[Engine analysis contract](../../docs/engine-analysis-contract.md). It protects legacy
 best-effort shape discovery, Engine's two-step preparation/strict-validation
 path, explicit disabled inference, and published JVM/default-bridge signatures.
 The new upstream-shaped overloads now have direct no-inference tests; shape,

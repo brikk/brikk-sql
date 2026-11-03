@@ -12,11 +12,11 @@ import kotlinx.serialization.json.jsonObject
 /**
  * The sqlglot commit every oracle-derived fixture under `testResources/` must have been
  * generated from. Bump this together with the fixtures when re-pinning (see
- * TODO-sqlglot-catchup.md); the generators in `tools/` stamp `sqlglot_version` from
+ * dev-docs/archive/TODO-sqlglot-catchup.md); the generators in `tools/` stamp `sqlglot_version` from
  * `git describe --tags` of `reference/sqlglot`.
  */
 /**
- * EVAL-05 (TODO-rectify-from-eval.md): fail loudly when any fixture is out of sync with the
+ * EVAL-05 (dev-docs/archive/TODO-rectify-from-eval.md): fail loudly when any fixture is out of sync with the
  * pin. Before this test, a stale `v30.12.0` stamp sat unnoticed in two files and one generator
  * hardcoded its VERSION string, so "all gates green" could not be read as "matches the pin".
  *

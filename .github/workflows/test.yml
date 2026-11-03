@@ -4,7 +4,7 @@ name: Test
 # corpus gates in brikk-sql and the engine verify gates in brikk-sql-oracle — on every pull
 # request and feature-branch push. For main and release/**, snapshot.yml and
 # release.yml call this workflow first and refuse to publish unless it is green (EVAL-03,
-# TODO-rectify-from-eval.md). Those branches are excluded here so their gate runs once.
+# dev-docs/archive/TODO-rectify-from-eval.md). Those branches are excluded here so their gate runs once.
 #
 # Requirements satisfied by ubuntu-latest: an embedded PostgreSQL platform archive and module
 # JDKs (17/21/25) provisioned by ./kotlin. chDB is an external optional-native dependency.
@@ -91,7 +91,7 @@ jobs:
         run: python3 tools/verify_intellij_publication.py
 
       # On a red gate, build/ledger-actual contains the review artifacts needed to update
-      # committed *-known-failures.json ledgers (see TODO-BUGS-*.md).
+      # committed *-known-failures.json ledgers (see dev-docs/TODO-BUGS-*.md).
       - name: Upload actual ledgers
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

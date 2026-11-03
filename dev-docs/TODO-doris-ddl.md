@@ -20,7 +20,7 @@
 Run: `./kotlin test -m brikk-sql --include-classes='dev.brikk.house.sql.DorisDialectTest'`
 and `./kotlin test -m brikk-sql-verify --include-classes='dev.brikk.house.sql.verify.SqlVerifierTest'`.
 
-Release follow-up: [Doris 4.1.4 SQL review](docs/research/doris-4.1.4-sql-gaps.md)
+Release follow-up: [Doris 4.1.4 SQL review](../docs/research/doris-4.1.4-sql-gaps.md)
 records the PR sources and original gaps addressed by the 4.1.4 support below.
 
 ---

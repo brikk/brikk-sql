@@ -11,7 +11,7 @@ Reference grammar: Trino 484
 
 No items from the original 483 parity list remain open. This is not a claim that
 every Trino construct or cross-dialect translation has complete semantic coverage.
-See [extension 58](brikk-extensions.md#58-trino-484-sql-and-metadata) for the upgrade.
+See [extension 58](../../docs/brikk-extensions.md#58-trino-484-sql-and-metadata) for the upgrade.
 
 ## Remaining 484 work
 
@@ -29,7 +29,7 @@ dependency remains at 0.7.0; publishing refreshed artifacts and updating that
 consumer pin are separate release/integration work, not completed by this branch.
 
 Completed evidence and validation are in the
-[Trino 484 / Doris 4.1.5 JSON report](research/trino-484-doris-4.1.5-json.md).
+[Trino 484 / Doris 4.1.5 JSON report](../../docs/research/trino-484-doris-4.1.5-json.md).
 
 ## Verification
 

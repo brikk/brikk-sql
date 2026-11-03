@@ -17,12 +17,12 @@
 
 Every checkbox means the implementation and focused regressions are verified, not
 just that a diff was read. Already-equivalent behavior needs evidence before being
-marked complete. Keep [intentional divergences](docs/brikk-extensions.md), including
+marked complete. Keep [intentional divergences](../../docs/brikk-extensions.md), including
 DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by count.
 
 ## Inference API and Engine compatibility — first batch
 
-- [x] Add hand-owned [Engine analysis contract tests](docs/engine-analysis-contract.md)
+- [x] Add hand-owned [Engine analysis contract tests](../../docs/engine-analysis-contract.md)
   for partial/empty catalogs, generic input refinement, two-step strict validation,
   alias/scope/slot rules, type/nullability/quoting and published JVM bridges.
 - [x] **INF-01:** reconcile upstream `infer_schema` removal (`b8333a81f0`, #8552).
@@ -210,7 +210,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   were removed at refresh. WeightString is now in the generated manifest; its temporary
   target-only contract is retired. Native Doris shared lexical/IF/date/property probes
   now pass on live Doris 4.1.4.1, with version, nullable-Boolean hotfix and VARIANT/
-  TIMESTAMPTZ checks. See [native evidence](docs/doris-native-catchup-verification.md).
+  TIMESTAMPTZ checks. See [native evidence](../../docs/doris-native-catchup-verification.md).
   No publication requested.
 - [x] **PG-01 — JSON_VALUE:** improve PostgreSQL generation
   (`a00dc2e5c4`, #8579); path/scalar/default/error/null behavior and target grammar.
@@ -255,7 +255,7 @@ DuckDB DDB-001. Never regenerate away consumer contracts or approve failures by 
   candidate before final integration; SQL-side tests do not replace Kotlin plugin tests.
   Exact core/metadata JARs from `dd1ea09` pass 163 peer tests, relocated CLI/IDE plugin
   assembly, the smoke build and ten exact IDE-compiler fixtures; peer source/main
-  remain unchanged. See [candidate evidence](docs/engine-candidate-verification.md).
+  remain unchanged. See [candidate evidence](../../docs/engine-candidate-verification.md).
 - [x] Commit/push the requested rounds on `sqlglot-catchup`, then merge into `main`
   with `0.20.0-SNAPSHOT` on explicit user request. Snapshot publication is delegated
   to the existing test-gated CI workflow; stable release remains out of scope.

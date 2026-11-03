@@ -1,7 +1,7 @@
 # DataFusion and Spice reference baseline
 
 Date: 2026-10-30. Worktree: `spice-support`. Implements the initial reference work for
-DFS-001 and DFS-002 in [the support plan](../spice-datafusion-support-plan.md).
+DFS-001 and DFS-002 in [the support plan](../../dev-docs/archive/spice-datafusion-support-plan.md).
 
 ## Delivered
 

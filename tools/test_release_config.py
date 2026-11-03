@@ -88,10 +88,10 @@ class DevelopmentVersionPolicyTest(unittest.TestCase):
         self.assertEqual(1, len(versions), "The three IDE support artifacts must use the same version")
 
     def test_current_development_versions_are_documented(self):
-        readme = (ROOT / "README.md").read_text()
+        guide = (ROOT / "dev-docs/CONTRIBUTING.md").read_text()
         for path in (ROOT / "publish.module-template.yaml", ROOT / "brikk-sql-intellij-support/module.yaml"):
             version, _ = self.snapshot_base(path)
-            self.assertIn(f"`{version}`", readme)
+            self.assertIn(f"`{version}`", guide)
 
 
 class ReleaseLauncherTest(unittest.TestCase):

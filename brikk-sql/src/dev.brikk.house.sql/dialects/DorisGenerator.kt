@@ -533,7 +533,7 @@ open class DorisGenerator(
 
     // ------------------------------------------------------------------
     // brikk-native (docs/brikk-extensions.md #19): column-definition renderings the Doris
-    // FE rejects when inherited from MySQL (TODO-doris-ddl.md group B). Each FE-verified.
+    // FE rejects when inherited from MySQL (dev-docs/TODO-doris-ddl.md group B). Each FE-verified.
     // ------------------------------------------------------------------
 
     // `k INT KEY` — Doris has no PRIMARY KEY column constraint; KEY marks a key column.

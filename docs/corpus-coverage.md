@@ -56,7 +56,7 @@ stale; those exact keys have been removed, leaving `qualify-corpus/known-failure
 empty. The historical table above still records the original 13 failures. This
 qualification result does not establish complete struct-array or offset conversion
 support across dialects; remaining BigQuery transpile parity is tracked in
-`TODO-bigquery.md`.
+`dev-docs/TODO-bigquery.md`.
 
 ## Base deferral
 

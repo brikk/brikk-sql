@@ -21,7 +21,7 @@ class DuckdbReleaseAuditTest(unittest.TestCase):
         original = re.findall(r"https://github.com/duckdb/duckdb/pull/(\d+)", actual["source"]["body"])
         self.assertEqual([int(i) for i in original], [row["pr"] for row in actual["rows"]])
         self.assertEqual(len(original), len(set(original)))
-        ids = set(re.findall(r"^- \[[ x]\] `(DDB20-\d{3})`", (ROOT / "TODO-duckdb-2.0.md").read_text(), re.M))
+        ids = set(re.findall(r"^- \[[ x]\] `(DDB20-\d{3})`", (ROOT / "dev-docs/TODO-duckdb-2.0.md").read_text(), re.M))
         for row in actual["rows"]:
             self.assertTrue(set(row["owners"]) <= ids, row)
             self.assertTrue(row["reason"])

@@ -4,7 +4,7 @@ Status: proposal, for owner review. No code changes yet.
 Scope: GoogleSQL's multi-output and terminal pipe operators in brikk-sql — AST, desugar,
 shape layer, certification, and the Kotlin-DSL surface they must serve.
 Spec: `reference/googlesql/docs/pipe-syntax.md` (anchors cited per section below).
-Prior decision context: `docs/parsing-research-and-plan.md` open-question #4 said
+Prior decision context: `dev-docs/archive/parsing-research-and-plan.md` open-question #4 said
 "read side only for now; TEE/FORK later, write-side/terminal ops later." This doc is
 the "later."
 
