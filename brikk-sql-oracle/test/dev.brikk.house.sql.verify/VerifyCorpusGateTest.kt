@@ -3,6 +3,8 @@ package dev.brikk.house.sql.verify
 import dev.brikk.house.sql.dialects.Dialects
 import kotlin.test.Test
 import kotlin.test.fail
+import kotlin.test.assertContains
+import kotlin.test.assertFailsWith
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -39,6 +41,12 @@ class VerifyCorpusGateTest {
 
     @Serializable
     private data class Ledger(val engine: String, val cases: List<LedgerCase>)
+
+    @Serializable
+    private data class UnverifiedCase(val sql: String, val reason: String)
+
+    @Serializable
+    private data class UnverifiedCorpus(val engine: String, val cases: List<UnverifiedCase>)
 
     private val json = Json { ignoreUnknownKeys = true }
     private val ledgerJson = Json { prettyPrint = true }
@@ -82,6 +90,29 @@ class VerifyCorpusGateTest {
 
     @Test
     fun duckdbGeneratedSqlIsAcceptedByDuckdbParserModuloLedger() = runGate("duckdb")
+
+    @Test
+    fun explicitUnverifiedCasesNeverWaiveUnavailableUnexpectedOrStaleOutcomes() {
+        fun verifier(result: VerifyResult) = object : SqlVerifier {
+            override val engine = "duckdb"
+            override fun verify(sql: String): VerifyResult = if (sql == "SELECT 1") VerifyResult.Accepted else result
+            override fun verifyExpression(sql: String): VerifyResult = result
+        }
+        val empty = Ledger("duckdb", emptyList())
+        val unexpected = assertFailsWith<AssertionError> {
+            runGateWith("duckdb", "unexpected-control", listOf("SELECT 42"), empty, verifier(VerifyResult.Unverified("control")))
+        }
+        assertContains(unexpected.message.orEmpty(), "case 0")
+        val unavailable = assertFailsWith<AssertionError> {
+            runGateWith("duckdb", "unavailable-control", listOf("INSTALL httpfs"), empty, verifier(VerifyResult.Unavailable("control")))
+        }
+        assertContains(unavailable.message.orEmpty(), "case 0")
+        val forms = json.decodeFromString(UnverifiedCorpus.serializer(), ledgerResource("duckdb-verify-unverified.json")).cases.map { it.sql }
+        val stale = assertFailsWith<AssertionError> {
+            runGateWith("duckdb", "stale-control", forms, empty, verifier(VerifyResult.Accepted))
+        }
+        assertContains(stale.message.orEmpty(), "STALE unverified classifications")
+    }
 
     /**
      * Postgres gate: re-generates postgres-serde.json through brikk's postgres pipeline and
@@ -147,11 +178,18 @@ class VerifyCorpusGateTest {
 
         val dialect = Dialects.forName(engine)
         val ledgered = ledger.cases.associateBy { it.sql }
+        val unverifiedCases = if (engine == "duckdb") json.decodeFromString(
+            UnverifiedCorpus.serializer(), ledgerResource("duckdb-verify-unverified.json"),
+        ).also { check(it.engine == engine) }.cases else emptyList()
+        val expectedUnverified = unverifiedCases.associateBy { it.sql }
+        check(expectedUnverified.size == unverifiedCases.size && unverifiedCases.all { it.reason.isNotBlank() })
+        check(expectedUnverified.keys.intersect(ledgered.keys).isEmpty()) { "Unverified classifications cannot waive reject-ledger entries" }
+        val unverified = LinkedHashMap<String, Pair<String, String>>()
         // sql -> (generated, engine error)
         val failures = LinkedHashMap<String, Pair<String, String>>()
         var accepted = 0
 
-        for (sourceSql in sqls) {
+        for ((index, sourceSql) in sqls.withIndex()) {
             val generated = try {
                 dialect.generate(dialect.parseOne(sourceSql))
             } catch (e: Exception) {
@@ -164,7 +202,11 @@ class VerifyCorpusGateTest {
             // expression grammar. A reject means neither native entry point accepts the SQL.
             val asStatement = verifier.verify(generated)
             if (!asStatement.isVerdict) {
-                fail("$engine verifier became unavailable during $label: ${summarize(asStatement)}")
+                if (asStatement is VerifyResult.Unverified && sourceSql in expectedUnverified) {
+                    unverified[sourceSql] = generated to summarize(asStatement)
+                    continue
+                }
+                fail("$engine verifier became unavailable during $label case $index: ${summarize(asStatement)}")
             }
             val result = if (asStatement is VerifyResult.Accepted) {
                 asStatement
@@ -172,7 +214,7 @@ class VerifyCorpusGateTest {
                 verifier.verifyExpression(generated)
             }
             if (!result.isVerdict) {
-                fail("$engine expression verifier became unavailable during $label: ${summarize(result)}")
+                fail("$engine expression verifier became unavailable during $label case $index: ${summarize(result)}")
             }
             if (result is VerifyResult.Accepted) {
                 accepted += 1
@@ -197,13 +239,23 @@ class VerifyCorpusGateTest {
         }
         val actualFile = oracleLedgerActualFile("$label-verify-ledger-actual.json")
         actualFile.writeText(ledgerJson.encodeToString(JsonObject.serializer(), actualLedger))
+        if (engine == "duckdb") oracleLedgerActualFile("$label-unverified-ledger-actual.json").writeText(
+            ledgerJson.encodeToString(JsonObject.serializer(), buildJsonObject {
+                put("engine", engine)
+                put("cases", buildJsonArray { for ((sql, outcome) in unverified) add(buildJsonObject {
+                    put("sql", sql); put("generated", outcome.first); put("status", "unverified"); put("reason", outcome.second)
+                }) })
+            }),
+        )
 
         val unledgered = failures.keys - ledgered.keys
         val stale = ledgered.keys - failures.keys
+        val staleUnverified = expectedUnverified.keys - unverified.keys
 
-        println("VerifyCorpusGateTest[$label]: $accepted accepted / ${failures.size} ledgered (of ${sqls.size})")
+        println("VerifyCorpusGateTest[$label]: $accepted accepted / ${failures.size} ledgered / ${unverified.size} explicitly unverified (of ${sqls.size})")
 
         val problems = mutableListOf<String>()
+        if (staleUnverified.isNotEmpty()) problems.add("STALE unverified classifications: ${staleUnverified.joinToString()}")
         if (unledgered.isNotEmpty()) {
             problems.add(
                 "${unledgered.size} UNLEDGERED rejects (showing up to 20):\n" +

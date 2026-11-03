@@ -100,8 +100,10 @@ must not be reported green until they are addressed:
   control expects the exact conservative warning and asserts strict executable refusal for
   each example, while retaining the actual native result checks. No production guard changed.
 - `VerifyCorpusGateTest.duckdbGeneratedSqlIsAcceptedByDuckdbParserModuloLedger`:
-  the DuckDB oracle becomes unavailable with a redacted extension-management diagnostic.
-  Investigate without adding editor prepare/bind or EXPLAIN fallbacks or relaxing the ledger.
+  fixed: the gate demanded a verdict for six INSTALL forms that intentionally return
+  `Unverified`. Those exact inputs now have separate explicit classifications, reported
+  independently from accepted/rejected outcomes; unexpected refusals or stale classifications
+  still fail. The reject ledger stays unchanged. Native controls require zero prepare calls.
 
 Evidence: `/tmp/opencode/ddb20-merge-main-module-tests.log`, the per-module
 `/tmp/opencode/ddb20-merge-parent-*.log` comparisons, and

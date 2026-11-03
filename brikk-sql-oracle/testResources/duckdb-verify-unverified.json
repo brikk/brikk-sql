@@ -1,0 +1,29 @@
+{
+    "engine": "duckdb",
+    "cases": [
+        {
+            "sql": "INSTALL httpfs",
+            "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
+        },
+        {
+            "sql": "INSTALL httpfs FROM community",
+            "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
+        },
+        {
+            "sql": "INSTALL httpfs FROM 'https://extensions.duckdb.org'",
+            "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
+        },
+        {
+            "sql": "FORCE INSTALL httpfs FROM community",
+            "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
+        },
+        {
+            "sql": "FORCE INSTALL httpfs FROM 'https://extensions.duckdb.org'",
+            "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
+        },
+        {
+            "sql": "FORCE INSTALL httpfs",
+            "reason": "INSTALL is not serialized by the parse-only channel; extension management must never fall back to prepare/bind."
+        }
+    ]
+}
