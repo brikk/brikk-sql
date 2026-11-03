@@ -83,11 +83,10 @@ warnings are also added by main. Inventory hashes include main's unchanged polic
 semantic-report refreshes. Keep `native-coverage-baseline.json` intact; the integrated gate
 uses `native-coverage-baseline-main-0572f6d.json`. This remains syntax inventory, not semantics.
 
-### Remaining broad-suite failures, reproduced before the merge
+### Release gate fixes
 
-These three failures reproduce individually on the untouched `85c2f55` snapshot with the
-same test environment. They are not fixed or suppressed by this merge, and the full suite
-must not be reported green until they are addressed:
+The initial broad-suite run exposed three failures, reproduced individually on the untouched
+`85c2f55` snapshot. They are now fixed separately without suppressing tests or removing guards:
 
 - `DuckdbHermeticCaptureTest.coreCaptureIsRestrictedAndDoesNotSeeUserExtensionOrSecretDirectories`:
   fixed: DuckDB 2.0 exempts official repositories from `enable_external_access=false`.
@@ -104,21 +103,39 @@ must not be reported green until they are addressed:
   `Unverified`. Those exact inputs now have separate explicit classifications, reported
   independently from accepted/rejected outcomes; unexpected refusals or stale classifications
   still fail. The reject ledger stays unchanged. Native controls require zero prepare calls.
+- Shared window completion: rebuilt the pinned C++ fixture, signed a scratch copy and passed
+  all three native controls before producing its capture. The full shared IDE gate now passes
+  all 826 tests on 261.25134.95 with that capture. CI checks out the exact header revision,
+  verifies the static-library digest, builds the template and generates the real capture during
+  native tests before requiring it for the IDE gate. No fabricated rows or skipped assertions.
 
 Evidence: `/tmp/opencode/ddb20-merge-main-module-tests.log`, the per-module
 `/tmp/opencode/ddb20-merge-parent-*.log` comparisons, and
 `/tmp/opencode/ddb20-merge-coverage-delta.json`. Earlier focused gate results above/below
 retain their original scope; they do not imply that this newly run broad suite passes.
 
-The merge is committed/pushed as `5d025a8`. Build and all 1,558 core tests pass, including
+The initial merge was committed/pushed as `5d025a8`. Its build and all 1,558 core tests passed, including
 published JVM bridge tests. The integrated DuckDB verifier suite passes 271 tests with
 12 optional fixture assumptions. Compiled core/metadata/verification-API/Doris-verifier
 classes retain Java 17 bytecode. Offline release tooling passes 42 tests with one opt-in skip.
-The shared IntelliJ-support run executes 826 tests; its two reported failures are live-window
-completion controls lacking `BRIKK_DUCKDB_WINDOW_CAPTURE`, not passed/qualified controls.
-Supply and validate the signed native capture before rerunning that full gate. Do not fabricate
-a capture, suppress assertions or treat the missing fixture as plugin release qualification.
-Log: `/tmp/opencode/ddb20-merge-main-shared-ide-tests.log`. No plugin repository was edited.
+That initial shared IntelliJ-support run executed 826 tests; its two reported failures were live-window
+completion controls lacking `BRIKK_DUCKDB_WINDOW_CAPTURE`; that initial run did not qualify them.
+The signed native capture and successful rerun above replace that missing-fixture result.
+Historical log: `/tmp/opencode/ddb20-merge-main-shared-ide-tests.log`.
+The repaired gate is `/tmp/opencode/ddb20-fix4-shared-ide.log`: all 826 tests pass.
+The four fixes add no production IntelliJ calls, internal/experimental annotations or API-risk
+suppressions. Shared-support bytecode containment checks pass; the existing approved optional
+JDBC introspector factory is unchanged. No plugin repository was edited.
+
+### Current release status
+
+Ready for the scoped library release. All four gate issues above are resolved.
+Final local CI-equivalent checks pass: build; 1,558 core tests; 734 other-module tests
+with 68 optional engine/fixture assumptions; 826 shared IDE tests; 110 offline Python tests;
+Maven Local publication and the verifier, Java 17 and IntelliJ artifact checks. Zero failures.
+The six INSTALL corpus cases remain explicitly unverified, never counted as accepted.
+The release exclusions above remain unchanged. No tag, remote publication or plugin pin change
+was made. Results and log paths: `/tmp/opencode/ddb20-release-final-result.json`.
 
 ## SQL grammar, names and statement behavior
 

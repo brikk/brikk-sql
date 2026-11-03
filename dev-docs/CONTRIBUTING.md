@@ -22,6 +22,24 @@ controls need their documented fixtures or engine URLs. The live DuckDB window-c
 controls require a genuine signed-fixture capture through `BRIKK_DUCKDB_WINDOW_CAPTURE`.
 Current release blockers and missing fixtures are tracked in [the DuckDB work list](TODO-duckdb-2.0.md).
 
+### Native window fixture
+
+The shared IntelliJ suite needs a real native window-function capture. CI builds it from
+DuckDB revision `d54cbbe3df17e8e5ce68312f483b4155836112aa` and checksum-pinned static libraries.
+For local runs, supply a clean checkout at that exact revision:
+
+```sh
+python3 tools/build_duckdb_window_fixture.py --source /path/to/duckdb --output build/duckdb-window-fixture
+export BRIKK_DUCKDB_WINDOW_EXTENSION="$PWD/build/duckdb-window-fixture/brikk_window.duckdb_extension"
+export BRIKK_DUCKDB_WINDOW_CAPTURE="$PWD/build/duckdb-window-fixture/catalog.json"
+./kotlin test -m brikk-sql-verify-duckdb --include-classes='*DuckdbWindowCatalogResultTest*'
+./kotlin check intellijPlatform -m brikk-sql-intellij-support
+```
+
+The native test signs a scratch copy with test-only keys, loads it in a private instance,
+executes the window controls and writes the capture. The IDE gate validates that capture.
+Do not substitute hand-written rows or install this fixture into a user's database.
+
 No sibling Engine checkout or native chDB installation is needed for the standard tests.
 The oracle resolves `dev.brikk.house:brikk-chdb:0.16.0` from Maven Central.
 Corpus failures write review files under `build/ledger-actual/`; do not blindly copy those
