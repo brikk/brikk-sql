@@ -96,9 +96,9 @@ must not be reported green until they are addressed:
   installs, zero loopback HTTP requests, unchanged installed inventory, denied LOAD/config
   changes and scratch cleanup. Explicit local-extension capture remains a separate opt-in.
 - `SparkDuckdbArrayResultTest.slicesExecuteWithLengthNegativeStartZeroLengthAndNullSemantics`:
-  the test expects no warnings, but the existing conservative array boundary emits an
-  unqualified-execution warning. Reconcile the assertion with the bounded semantic contract;
-  do not remove the execution guard simply to pass the test.
+  fixed as `slicePreviewsKeepMeasuredResultsWithoutClaimingExecutableSupport`: the result
+  control expects the exact conservative warning and asserts strict executable refusal for
+  each example, while retaining the actual native result checks. No production guard changed.
 - `VerifyCorpusGateTest.duckdbGeneratedSqlIsAcceptedByDuckdbParserModuloLedger`:
   the DuckDB oracle becomes unavailable with a redacted extension-management diagnostic.
   Investigate without adding editor prepare/bind or EXPLAIN fallbacks or relaxing the ledger.
